@@ -18,6 +18,105 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Runaway impl-generate retry loop can no longer self-amplify** — the 3-attempt cap counted
+  prior failures by paginating issue comments and fell back to "0 failures" whenever the count
+  API call rate-limited, so every failure re-dispatched forever (issue #1010 flooded ~1,200
+  Actions runs in 38h). The counter now fails closed (an unreadable count = cap reached, no
+  auto-retry) and correctly sums per-page counts on issues with >100 comments (audit 2026-07-15
+  Critical#1).
+- **`spec-create.yml` PR/issue bodies show real content again** — three quoted heredocs
+  (`<<'EOF'`) never expanded variables, shipping literal `$SPEC_CONTENT` into PR bodies; bodies
+  are now built via unquoted heredocs (literal backticks escaped so no command substitution)
+  and passed with `--body-file`. The post-merge comment also lists all 15 generate labels
+  (audit 2026-07-15 High#3).
+- **`impl-merge.yml` no longer closes issues early** — the auto-close step read a stale
+  hardcoded 11-library list while 4 JS libraries were still pending; it now derives the list
+  from `core/constants.py` `SUPPORTED_LIBRARIES` at run time (audit 2026-07-15 High#4).
+- **Local evaluator accepts what the pipeline actually emits** — `scripts/evaluate-plot.py`
+  looked for `plot.png` while implementations emit `plot-{light,dark}.png`, auto-rejecting
+  every compliant impl; it is now theme-aware via `ANYPLOT_THEME` (legacy `plot.png` still
+  accepted), runs impls with the theme env set, and its big static rubric is sent as a cached
+  system prompt (Anthropic prompt caching) instead of being re-billed per call
+  (audit 2026-07-15 High#5, Medium#25).
+- **Async Cloud SQL fallback actually works** — the Cloud SQL connector path wrapped a sync
+  pg8000 engine in `async_sessionmaker`, deferring a crash to the first request; it now uses
+  the connector's async path (`create_async_engine` + `async_creator` with asyncpg) and closes
+  via `close_async()` (audit 2026-07-15 High#6).
+- **API robustness triple** — MCP `search_specs_by_tags` no longer crashes on impls with NULL
+  `impl_tags`; `DatabaseQueryError` returns a generic client message instead of reflecting raw
+  SQLAlchemy error text (full detail still logged server-side); `api/cache.py` prunes per-key
+  locks when a factory raises (404-probe traffic no longer grows `_locks` unbounded) and holds
+  strong references to background refresh tasks so stale-while-revalidate can't be jammed by
+  GC (audit 2026-07-15 Medium#1/#3/#4/#22).
+- **Library/language registry updates reach the prod DB** — the Postgres seed switched from
+  `on_conflict_do_nothing` to an upsert, so version/description changes in `core/constants.py`
+  propagate instead of being silently dropped (audit 2026-07-15 Medium#2).
+- **Dark-mode overlay controls and dropdown surfaces** — the copy button, action pills and
+  loading pill on catalog/spec cards reused hardcoded white; they now share the theme-aware
+  `overlayButtonSx` helper, and MUI Menu/Popover papers are wired to `var(--bg-elevated)` /
+  `var(--ink)` so filter dropdowns follow the theme (audit 2026-07-15 High#1/#2).
+- **CORS origins come from config again** — `api/main.py` hardcoded `https://anyplot.ai`,
+  leaving the promised `https://www.anyplot.ai` origin blocked and `settings.cors_origins`
+  dead; the middleware now reads the settings list (audit 2026-07-15 Low).
+- **Agentic runbook fixes** — workflow-module artifacts land in `agentic/runs/` again (a
+  doubled path segment wrote to `agentic/agentic/runs/`), and the run-timeout error derives
+  its duration from the actual timeout instead of a hardcoded "5 minutes"
+  (audit 2026-07-15 Medium#30, Low).
+- **Documentation reconciled with the 15-library reality** — generation/similarity/repair
+  prompts, `prompts/workflow-prompts/README.md`, `/prime`, `.github/copilot-instructions.md`,
+  and `agentic/docs/project-guide.md` no longer claim 9/11 Python-only libraries; the repair
+  prompt says attempt `{ATTEMPT}/4` matching the workflow; `docs/reference/plausible.md` drops
+  the removed `potd_dismiss`/PlotOfTheDay events; the README documents Streamable HTTP as the
+  only MCP transport (the SSE endpoint is gone); stale `plot.png` code examples are
+  theme-aware; a leaked personal `file://` path was scrubbed from a palette doc
+  (audit 2026-07-15 Medium#14/#24/#26/#27/#31/#32/#33).
+
+### Security
+
+- **Issue templates no longer auto-apply workflow trigger labels** — `spec-request` /
+  `report-pending` previously flowed unauthenticated issue text straight into write-privileged
+  Claude agents; the labels must now be added by a maintainer (GitHub requires triage rights to
+  label), which puts a human review in front of every agent run (audit 2026-07-15 High#7).
+- **Composite actions SHA-pinned** — `setup-node`/`setup-r`/`setup-julia` used floating tags
+  while every workflow pins to SHAs; all four `uses:` refs are now SHA-pinned and the
+  Dependabot `github-actions` entry covers the composite-action directories so the pins stay
+  fresh (audit 2026-07-15 Medium#13).
+- **Frontend nginx ships security headers** — new `app/security-headers.conf` (CSP tuned to
+  Plausible/GCS/API needs, `nosniff`, `X-Frame-Options SAMEORIGIN`, `Referrer-Policy`, HSTS)
+  included in both server blocks and re-included in every `add_header` location
+  (audit 2026-07-15 Medium#21).
+
+### Added
+
+- **Bot-served pages got a real SEO surface** — `seo_home()` now emits the site-level JSON-LD
+  (`WebApplication`, `WebSite`+`SearchAction`, `Organization`) that previously only lived in the
+  SPA shell nginx never serves to bots, plus a descriptive title/meta and real body copy;
+  `/seo-proxy/plots` and `/seo-proxy/specs` render a server-side link to every spec hub, so
+  crawlers can reach all 324 hubs (they were orphans); `Google-InspectionTool`/`GoogleOther`
+  UAs are now routed to the bot pages like Googlebot (audit 2026-07-15 High#10/#11,
+  Medium#40/#41).
+- **`core/palette.py` unit tests** — the last untested core module now has coverage: pool
+  contract, semantic anchors, theme-adaptive neutrals, lazy cmaps and the
+  matplotlib-free-import guarantee (audit 2026-07-15 Medium#28).
+- **Impl check constraints exist as a migration** — `ck_quality_score_range` /
+  `ck_review_verdict_valid` lived only in the ORM; a new alembic migration adds them (with
+  pre-normalization of violating rows and a real downgrade) (audit 2026-07-15 Medium#18).
+- **Repo health:** PR template with changelog/docs checklist and an `.editorconfig` mirroring
+  ruff + frontend conventions (audit 2026-07-15 Medium#29).
+
+### Changed
+
+- **Frontend a11y pass** — card actions reveal on `:focus-within` and stay visible on touch
+  devices instead of hover-only; the NavBar search button and nav links have `:focus-visible`
+  outlines; mobile nav/theme-toggle tap targets reach 44px; off-palette Tailwind green and a
+  rogue Python-blue were replaced with imprint palette hues; `AppDataProvider`/theme context
+  values are memoized so consumers stop re-rendering every frame (audit 2026-07-15
+  Medium#7/#10/#11/#12).
+- **Frontend production image builds on `node:22-alpine`** — `node:20` is EOL April 2026; 22
+  matches the JS render harness (audit 2026-07-15 Medium#16).
+
+### Fixed
+
 - **Global keyboard shortcuts no longer hijack focused elements on `/plots`** — the
   window-level Space/Enter/Backspace handler now bails out when the keystroke targets an
   interactive element (button, link, focused card/chip/toggle), so keyboard-activating a card
