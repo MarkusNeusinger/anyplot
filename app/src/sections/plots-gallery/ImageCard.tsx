@@ -15,7 +15,8 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { BATCH_SIZE, type ImageSize, LANG_DISPLAY, libExt } from 'src/constants';
 import { useCodeFetch } from 'src/hooks';
-import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import { useTheme as useAppTheme } from 'src/hooks/useLayoutContext';
+import { colors, fontSize, overlayButtonSx, semanticColors, typography } from 'src/theme';
 import type { PlotImage } from 'src/types';
 import { buildSrcSet, getFallbackSrc, getResponsiveSizes } from 'src/utils/responsiveImage';
 import { useThemedPreviewUrl } from 'src/utils/themedPreview';
@@ -68,6 +69,7 @@ export const ImageCard = memo(function ImageCard({
 }: ImageCardProps) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm')); // < 600px
+  const { isDark } = useAppTheme();
   const imgUrl = useThemedPreviewUrl(image) ?? image.url;
 
   const labelFontSize = imageSize === 'compact' ? fontSize.xs : fontSize.md;
@@ -252,21 +254,22 @@ export const ImageCard = memo(function ImageCard({
             {'>>> .copied'}
           </Box>
         )}
-        {/* Copy button - appears on hover */}
+        {/* Copy button - revealed on hover/focus, always visible on touch */}
         <IconButton
           onClick={handleCopyCode}
           disabled={copyState === 'loading'}
           aria-label="Copy code"
           sx={{
+            ...overlayButtonSx(isDark),
             position: 'absolute',
             top: 8,
             right: 8,
-            bgcolor: 'rgba(255,255,255,0.9)',
-            color: semanticColors.mutedText,
             opacity: 0,
             transition: 'opacity 0.2s, color 0.2s',
-            '.MuiCard-root:hover &': { opacity: 1 },
-            '&:hover': { bgcolor: 'rgba(255,255,255,1)', color: colors.primary },
+            '.MuiCard-root:hover &, .MuiCard-root:focus-within &': { opacity: 1 },
+            // Hover-only reveal excludes touch users — keep it visible on
+            // coarse/hoverless pointers.
+            '@media (hover: none)': { opacity: 1 },
           }}
         >
           {copyState === 'loading' ? (

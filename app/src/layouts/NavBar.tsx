@@ -25,14 +25,19 @@ const linkSx = {
   color: 'var(--ink-soft)',
   textDecoration: 'none',
   position: 'relative' as const,
-  padding: '4px 0',
+  display: 'inline-block',
+  // On xs the padding grows the tap target to >= 44px; the negative margin
+  // compensates so the masthead layout doesn't shift.
+  padding: { xs: '14px 8px', sm: '4px 0' },
+  margin: { xs: '-14px -8px', sm: 0 },
   transition: 'color 0.2s',
   '&::after': {
     content: '""',
     position: 'absolute' as const,
-    bottom: 0,
-    left: 0,
-    right: 0,
+    // Keep the hover underline hugging the text despite the xs tap padding
+    bottom: { xs: '10px', sm: 0 },
+    left: { xs: '8px', sm: 0 },
+    right: { xs: '8px', sm: 0 },
     height: '1px',
     background: colors.primary,
     transform: 'scaleX(0)',
@@ -43,6 +48,12 @@ const linkSx = {
     color: 'var(--ink)',
     '&::after': { transform: 'scaleX(1)' },
   },
+  '&:focus-visible': {
+    outline: `2px solid ${colors.primary}`,
+    // Pull the ring back toward the text on xs, where the box carries the
+    // invisible tap padding
+    outlineOffset: { xs: '-10px', sm: '2px' },
+  },
 } as const;
 
 const activeLinkSx = {
@@ -52,10 +63,11 @@ const activeLinkSx = {
     content: '"•"',
     color: colors.primary,
     position: 'absolute' as const,
-    left: -12,
+    // Offsets track the xs tap padding so the bullet stays next to the text
+    left: { xs: '-4px', sm: '-12px' },
     fontSize: '18px',
     lineHeight: 1,
-    top: '3px',
+    top: { xs: '13px', sm: '3px' },
   },
 } as const;
 
@@ -203,9 +215,19 @@ export function NavBar() {
           cursor: 'pointer',
           transition: 'color 0.2s',
           textAlign: 'right',
+          position: 'relative',
+          // On xs the padding grows the tap target to >= 44px; the negative
+          // margin compensates so the masthead layout doesn't shift.
+          padding: { xs: '14px 8px', sm: 0 },
+          margin: { xs: '-14px -8px', sm: 0 },
           '& .subj': { opacity: 0.55, transition: 'opacity 0.2s' },
           '&:hover': { color: colors.primary },
           '&:hover .subj': { opacity: 0.8 },
+          // `all: unset` strips the UA focus ring — restore a visible one
+          '&:focus-visible': {
+            outline: `2px solid ${colors.primary}`,
+            outlineOffset: { xs: '-10px', sm: '2px' },
+          },
         }}
       >
         <span className="subj">plots</span>.search()

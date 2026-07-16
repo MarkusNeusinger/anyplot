@@ -6,7 +6,9 @@ import Grid from '@mui/material/Grid';
 
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import type { ImageSize } from 'src/constants';
+import { useTheme } from 'src/hooks/useLayoutContext';
 import { ImageCard } from 'src/sections/plots-gallery/ImageCard';
+import { overlaySurfaceColor } from 'src/theme';
 import type { LanguageInfo, LibraryInfo, PlotImage, SpecInfo } from 'src/types';
 
 interface ImagesGridProps {
@@ -46,6 +48,7 @@ export function ImagesGrid({
   onCardClick,
   onTrackEvent,
 }: ImagesGridProps) {
+  const { isDark } = useTheme();
   // Grid columns: normal = max 3 cols, compact = max 6 cols
   const gridColumns = useMemo(
     () =>
@@ -172,7 +175,8 @@ export function ImagesGrid({
               left: '50%',
               transform: 'translateX(-50%)',
               zIndex: 50,
-              bgcolor: 'rgba(255,255,255,0.9)',
+              // Theme-aware overlay surface — a white pill glares in dark mode
+              bgcolor: overlaySurfaceColor(isDark),
               borderRadius: 3,
               px: 3,
               py: 1.5,
