@@ -23,12 +23,12 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `ix_specs_tags` GIN index can never serve (sequential scan on every MCP tag search) and which
   let LIKE metacharacters in tag values wildcard-match; on PostgreSQL it now emits per-category
   JSONB containment (`tags @> …`), and the SQLite test fallback escapes LIKE metacharacters
-  (audit 2026-07-15 Medium#17).
+  (audit 2026-07-15 Medium#17) (#9644).
 - **Feedback rate limiting no longer trusts a spoofable header entry** — `/feedback` keyed its
   per-IP rate limit and duplicate suppression on the client-controlled *first* `x-forwarded-for`
   entry, so a caller could evade the limit or poison another user's bucket; it now prefers
   Cloudflare's `cf-connecting-ip` and otherwise uses the rightmost, infrastructure-appended
-  entry (audit 2026-07-15 Medium#20).
+  entry (audit 2026-07-15 Medium#20) (#9644).
 
 ### Changed
 
@@ -37,12 +37,12 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   full multi-MB code corpus through the DB per request; the MCP tools now resolve code
   *presence* via a lightweight id probe (`get_ids_with_code`) and the images endpoint fetches
   only its own library's code (`get_by_library_with_code`); the now-unused `get_all_with_code()`
-  was removed (audit 2026-07-15 Medium#5, issue #7696).
+  was removed (audit 2026-07-15 Medium#5, issue #7696) (#9644).
 
 ### Added
 
 - **`CODE_OF_CONDUCT.md`** — Contributor Covenant 2.1, linked from `docs/contributing.md`
-  (closes the last repo-health gap from audit 2026-07-15 Medium#29).
+  (closes the last repo-health gap from audit 2026-07-15 Medium#29) (#9644).
 
 - **Runaway impl-generate retry loop can no longer self-amplify** — the 3-attempt cap counted
   prior failures by paginating issue comments and fell back to "0 failures" whenever the count
