@@ -101,6 +101,40 @@ def _create_cloud_sql_engine_sync():
     return engine
 
 
+def _create_cloud_sql_engine_async():
+    """Create async engine using Cloud SQL Python Connector with asyncpg.
+
+    Must be called from a running event loop (init_db). The connector is bound
+    to that loop so ``connect_async`` — and later ``close_async`` in close_db —
+    run on the same loop as the engine. This replaces the old fallback that
+    wrapped the *sync* pg8000 engine in async_sessionmaker, which passed
+    startup but raised on the first request.
+    """
+    global _connector
+
+    from google.cloud.sql.connector import Connector, IPTypes
+
+    connector = Connector(loop=asyncio.get_running_loop())
+    _connector = connector
+
+    async def get_conn():
+        return await connector.connect_async(
+            INSTANCE_CONNECTION_NAME, "asyncpg", user=DB_USER, password=DB_PASS, db=DB_NAME, ip_type=IPTypes.PUBLIC
+        )
+
+    engine = create_async_engine(
+        "postgresql+asyncpg://",
+        async_creator=get_conn,
+        pool_size=DEFAULT_POOL_SIZE,
+        max_overflow=DEFAULT_MAX_OVERFLOW,
+        pool_pre_ping=True,
+        echo=ENVIRONMENT == "development",
+    )
+
+    logger.info(f"Created async Cloud SQL engine: {INSTANCE_CONNECTION_NAME} (PUBLIC IP)")
+    return engine
+
+
 def _create_direct_engine():
     """Create sync engine using direct DATABASE_URL connection."""
     url = _normalize_db_url(DATABASE_URL, "asyncpg")
@@ -189,9 +223,9 @@ async def init_db() -> None:
     if DATABASE_URL:
         engine = _create_direct_engine()
     elif INSTANCE_CONNECTION_NAME:
-        # For async, use sync pg8000 wrapped - Cloud Run should use DATABASE_URL
-        engine = _create_cloud_sql_engine_sync()
-        logger.warning("Using sync Cloud SQL engine - consider using DATABASE_URL for async support")
+        # Async Cloud SQL Connector path (asyncpg). A sync pg8000 engine wrapped
+        # in async_sessionmaker would defer the failure to the first request.
+        engine = _create_cloud_sql_engine_async()
     else:
         logger.warning("No database configuration found - running without database")
         return
@@ -226,7 +260,10 @@ async def close_db() -> None:
         logger.info("Database engine disposed")
 
     if _connector:
-        _connector.close()  # Use sync close
+        # The async connector is bound to the running event loop (init_db), so
+        # it must be closed with close_async(); the sync close() would block on
+        # run_coroutine_threadsafe(...).result() against that same loop.
+        await _connector.close_async()
         _connector = None
         logger.info("Cloud SQL connector closed")
 

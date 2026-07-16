@@ -309,7 +309,7 @@ class TestCloseDb:
 
     @pytest.mark.asyncio
     async def test_closes_connector(self, monkeypatch):
-        """Should close Cloud SQL connector."""
+        """Should close Cloud SQL connector via its async close."""
         import importlib
 
         import core.database.connection as conn
@@ -317,12 +317,13 @@ class TestCloseDb:
         importlib.reload(conn)
 
         mock_connector = MagicMock()
+        mock_connector.close_async = AsyncMock()
         conn._connector = mock_connector
         conn.engine = None
 
         await conn.close_db()
 
-        mock_connector.close.assert_called_once()
+        mock_connector.close_async.assert_awaited_once()
         assert conn._connector is None
 
 
@@ -570,8 +571,8 @@ class TestInitDbWithCloudSql:
     """Tests for init_db with Cloud SQL Connector."""
 
     @pytest.mark.asyncio
-    async def test_warns_with_sync_engine(self, monkeypatch, caplog):
-        """Should warn when using sync Cloud SQL engine in async context."""
+    async def test_creates_async_cloud_sql_engine(self, monkeypatch):
+        """Should create the async Cloud SQL engine (never the sync pg8000 one)."""
         monkeypatch.setenv("DATABASE_URL", "")
         monkeypatch.setenv("INSTANCE_CONNECTION_NAME", "project:region:instance")
 
@@ -585,10 +586,55 @@ class TestInitDbWithCloudSql:
 
         mock_engine = MagicMock()
 
-        with patch.object(conn, "_create_cloud_sql_engine_sync", return_value=mock_engine):
+        with (
+            patch.object(conn, "_create_cloud_sql_engine_async", return_value=mock_engine) as mock_create_async,
+            patch.object(conn, "_create_cloud_sql_engine_sync") as mock_create_sync,
+        ):
             await conn.init_db()
 
+            mock_create_async.assert_called_once()
+            mock_create_sync.assert_not_called()
             assert conn.engine == mock_engine
+            assert conn.AsyncSessionLocal is not None
 
         conn.engine = None
         conn.AsyncSessionLocal = None
+
+
+class TestCreateCloudSqlEngineAsync:
+    """Tests for _create_cloud_sql_engine_async function."""
+
+    @pytest.mark.asyncio
+    async def test_uses_async_creator_with_asyncpg(self, monkeypatch):
+        """Should build an asyncpg engine with an async_creator, not a sync creator."""
+        monkeypatch.setenv("DATABASE_URL", "")
+        monkeypatch.setenv("INSTANCE_CONNECTION_NAME", "project:region:instance")
+
+        import importlib
+
+        import core.database.connection as conn
+
+        importlib.reload(conn)
+
+        mock_connector = MagicMock()
+        mock_connector.connect_async = AsyncMock(return_value=MagicMock())
+
+        with (
+            patch("google.cloud.sql.connector.Connector", return_value=mock_connector) as mock_connector_cls,
+            patch("core.database.connection.create_async_engine") as mock_create,
+        ):
+            engine = conn._create_cloud_sql_engine_async()
+
+            # Connector is bound to the running event loop
+            assert mock_connector_cls.call_args[1].get("loop") is not None
+            assert engine == mock_create.return_value
+            assert mock_create.call_args[0][0] == "postgresql+asyncpg://"
+            kwargs = mock_create.call_args[1]
+            assert "async_creator" in kwargs
+            assert "creator" not in kwargs
+
+            # The async creator awaits connect_async with the asyncpg driver
+            await kwargs["async_creator"]()
+            assert mock_connector.connect_async.await_args[0][1] == "asyncpg"
+
+        conn._connector = None

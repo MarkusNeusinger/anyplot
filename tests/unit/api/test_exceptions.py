@@ -118,16 +118,19 @@ class TestDatabaseQueryError:
         exc = DatabaseQueryError("fetch_specs", "Connection pool exhausted")
         assert exc.status_code == 500
 
-    def test_message_format(self) -> None:
-        """Should format message with operation and detail."""
+    def test_message_excludes_raw_detail(self) -> None:
+        """Client-facing message names the operation but never the raw error text."""
         exc = DatabaseQueryError("fetch_specs", "Connection pool exhausted")
         assert "fetch_specs" in exc.message
-        assert "Connection pool exhausted" in exc.message
+        # Raw SQLAlchemy/driver text (SQL fragments, table names, DSN bits)
+        # is server-side only — it must not appear in the reflected message.
+        assert "Connection pool exhausted" not in exc.message
 
-    def test_operation_attribute(self) -> None:
-        """Should store operation attribute."""
+    def test_operation_and_detail_attributes(self) -> None:
+        """Should store operation and detail attributes for server-side logging."""
         exc = DatabaseQueryError("filter_plots", "Timeout")
         assert exc.operation == "filter_plots"
+        assert exc.detail == "Timeout"
 
 
 class TestExceptionHandlers:
@@ -147,6 +150,22 @@ class TestExceptionHandlers:
         content = response.body.decode()
         assert "Test error" in content
         assert "/test/path" in content
+
+    @pytest.mark.asyncio
+    async def test_anyplot_exception_handler_database_query_error(self) -> None:
+        """DatabaseQueryError responses must not reflect raw SQLAlchemy error text."""
+        request = MagicMock(spec=Request)
+        request.url.path = "/plots/filter"
+        exc = DatabaseQueryError("fetch_specs", "(psycopg) SELECT * FROM specs @ postgres://user@host/db")
+
+        response = await anyplot_exception_handler(request, exc)
+
+        assert response.status_code == 500
+        content = response.body.decode()
+        assert "fetch_specs" in content
+        # SQL fragments / table names / DSN bits stay server-side only
+        assert "SELECT" not in content
+        assert "postgres://" not in content
 
     @pytest.mark.asyncio
     async def test_http_exception_handler(self) -> None:
@@ -229,4 +248,6 @@ class TestHelperFunctions:
 
         assert exc_info.value.status_code == 500
         assert "fetch_specs" in str(exc_info.value)
-        assert "Connection failed" in str(exc_info.value)
+        # Raw detail is stored for logging but not reflected in the message
+        assert exc_info.value.detail == "Connection failed"
+        assert "Connection failed" not in str(exc_info.value)

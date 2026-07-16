@@ -198,20 +198,20 @@ async def search_specs_by_tags(
                     if library and impl.library.id not in library:
                         continue
 
-                    # Filter by impl tags
+                    # Filter by impl tags. impl_tags itself may be NULL (impls
+                    # that predate tagging or whose review produced no tags).
+                    impl_tags = impl.impl_tags or {}
                     if dependencies and not any(
-                        dep in (impl.impl_tags.get("dependencies", []) or []) for dep in dependencies
+                        dep in (impl_tags.get("dependencies", []) or []) for dep in dependencies
                     ):
                         continue
-                    if techniques and not any(
-                        tech in (impl.impl_tags.get("techniques", []) or []) for tech in techniques
-                    ):
+                    if techniques and not any(tech in (impl_tags.get("techniques", []) or []) for tech in techniques):
                         continue
-                    if patterns and not any(pat in (impl.impl_tags.get("patterns", []) or []) for pat in patterns):
+                    if patterns and not any(pat in (impl_tags.get("patterns", []) or []) for pat in patterns):
                         continue
-                    if dataprep and not any(dp in (impl.impl_tags.get("dataprep", []) or []) for dp in dataprep):
+                    if dataprep and not any(dp in (impl_tags.get("dataprep", []) or []) for dp in dataprep):
                         continue
-                    if styling and not any(style in (impl.impl_tags.get("styling", []) or []) for style in styling):
+                    if styling and not any(style in (impl_tags.get("styling", []) or []) for style in styling):
                         continue
 
                     matching_impls.append(impl)
