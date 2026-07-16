@@ -16,11 +16,11 @@ keywords = [
 
 dependencies = [
     # Core Framework
-    "fastapi>=0.138.2",
+    "fastapi>=0.139.1",
     "uvicorn[standard]>=0.50.0",
     # MCP Server
     "mcp>=1.28.1",
-    "fastmcp>=3.4.2",
+    "fastmcp>=3.4.4",
     # Database
     "sqlalchemy[asyncio]>=2.0.51",
     "asyncpg>=0.30.0",
@@ -29,17 +29,17 @@ dependencies = [
     "cloud-sql-python-connector[asyncpg,pg8000]>=1.20.3",  # Cloud SQL Connector
     # Data & Plotting
     "pandas>=3.0.3",
-    "numpy>=2.5.0",
+    "numpy>=2.5.1",
     "matplotlib>=3.11.0",
     # Data Science & ML (for plot implementations)
     "scipy>=1.18.0",
     "scikit-learn>=1.9.0",
     "statsmodels>=0.14.0",
     # AI & Cloud
-    "anthropic>=0.113.0",
-    "google-cloud-storage>=3.12.0",
+    "anthropic>=0.116.0",
+    "google-cloud-storage>=3.13.0",
     # Image Processing
-    "pillow>=11.0.0",
+    "pillow>=12.3.0",
     # HTTP Client
     "httpx>=0.28.0",
     # Essentials
@@ -63,26 +63,26 @@ test = [
     "aiosqlite>=0.20.0",  # SQLite async driver for integration tests
 ]
 dev = [
-    "ruff>=0.15.20",
+    "ruff>=0.15.21",
     "pre-commit>=4.6.0",
 ]
 typecheck = [
-    "mypy>=2.1.0",
+    "mypy>=2.3.0",
 ]
 plotting = [
     # Additional plotting libraries (matplotlib already in main dependencies)
     "seaborn>=0.13.0",
-    "plotly>=6.8.0",
+    "plotly>=6.9.0",
     "bokeh>=3.9.1",
     "altair>=6.2.2",
     "plotnine>=0.15.7",
     "pygal>=3.1.3",
     "highcharts-core>=1.11.0",
-    "lets-plot>=4.10.1",
+    "lets-plot>=4.11.0",
     # PNG export dependencies
     "vl-convert-python>=1.7.0",  # altair PNG export
     "kaleido>=1.3.0",            # plotly PNG export
-    "selenium>=4.45.0",          # bokeh/highcharts PNG export
+    "selenium>=4.46.0",          # bokeh/highcharts PNG export
     "webdriver-manager>=4.1.2",  # auto-install chromedriver
     "cairosvg>=2.7.0",           # pygal PNG export
     # Common data science stack used across plot implementations
@@ -98,15 +98,15 @@ plotting = [
     "squarify>=0.4.0",
 ]
 # Per-library dependencies for CI (minimal installs)
-lib-matplotlib = ["matplotlib>=3.11.0", "numpy>=2.5.0", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
-lib-seaborn = ["seaborn>=0.13.0", "matplotlib>=3.11.0", "numpy>=2.5.0", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
-lib-plotly = ["plotly>=6.8.0", "kaleido>=1.3.0", "numpy>=2.5.0", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
-lib-bokeh = ["bokeh>=3.9.1", "numpy>=2.5.0", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0", "selenium>=4.45.0", "webdriver-manager>=4.1.2"]
-lib-altair = ["altair>=6.2.2", "vl-convert-python>=1.7.0", "numpy>=2.5.0", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
-lib-plotnine = ["plotnine>=0.15.7", "numpy>=2.5.0", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
+lib-matplotlib = ["matplotlib>=3.11.0", "numpy>=2.5.1", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
+lib-seaborn = ["seaborn>=0.13.0", "matplotlib>=3.11.0", "numpy>=2.5.1", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
+lib-plotly = ["plotly>=6.9.0", "kaleido>=1.3.0", "numpy>=2.5.1", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
+lib-bokeh = ["bokeh>=3.9.1", "numpy>=2.5.1", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0", "selenium>=4.46.0", "webdriver-manager>=4.1.2"]
+lib-altair = ["altair>=6.2.2", "vl-convert-python>=1.7.0", "numpy>=2.5.1", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
+lib-plotnine = ["plotnine>=0.15.7", "numpy>=2.5.1", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
 lib-pygal = ["pygal>=3.1.3", "cairosvg>=2.7.0", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
-lib-highcharts = ["highcharts-core>=1.11.0", "numpy>=2.5.0", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0", "selenium>=4.45.0", "webdriver-manager>=4.1.2"]
-lib-letsplot = ["lets-plot>=4.10.1", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
+lib-highcharts = ["highcharts-core>=1.11.0", "numpy>=2.5.1", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0", "selenium>=4.46.0", "webdriver-manager>=4.1.2"]
+lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.0.3", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.0"]
 all = [
     "anyplot[test,dev,plotting,typecheck]",
 ]
