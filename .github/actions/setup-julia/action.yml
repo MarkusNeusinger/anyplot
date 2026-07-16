@@ -17,7 +17,7 @@ runs:
       # julia-actions/setup-julia ships every sub-action from one repo and
       # tags them together; pinned to the v2 tag's commit SHA like every
       # workflow-level action in this repo (Dependabot keeps the pin fresh).
-      uses: julia-actions/setup-julia@4c0cb0fce8556fdb04a90347310e5db8b1f98fb9  # v2
+      uses: julia-actions/setup-julia@fa02766e078afaaf09b14210362cee14137e6a32  # v3.0.2
       with:
         version: ${{ inputs.julia-version }}
 
@@ -36,7 +36,7 @@ runs:
     # Speed up subsequent runs — Julia precompilation is slow on cold start.
     # `julia-actions/cache` keys on Project.toml + Manifest.toml.
     - name: Cache Julia depot
-      uses: julia-actions/cache@d10a6fd8f31b12404a54613ebad242900567f2b9  # v2
+      uses: julia-actions/cache@a45e8fa8be21c18a06b7177052533149e61e9b38  # v3.1.0
 
     - name: Install Julia packages
       # `Pkg.instantiate()` restores the exact versions pinned in
