@@ -20,7 +20,7 @@ import Tooltip from '@mui/material/Tooltip';
 
 import { API_URL } from 'src/constants';
 import { useTheme } from 'src/hooks/useLayoutContext';
-import { colors, fontSize, typography } from 'src/theme';
+import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
 import type { Implementation } from 'src/types';
 import { buildDetailSrcSet, DETAIL_SIZES } from 'src/utils/responsiveImage';
 import { selectPreviewHtml, selectPreviewUrl } from 'src/utils/themedPreview';
@@ -196,17 +196,9 @@ export function SpecDetailView({
   const previewHtml = selectPreviewHtml(currentImpl, isDark);
   const interactiveAvailable = !!previewHtml;
 
-  // Overlay action buttons (report/copy/download/open/preview/raw) sit on top of
-  // the preview image. In dark mode the preview is dark, so a bright white button
-  // clashes — adapt the surface and icon ink to the active theme.
-  const overlayButtonSx = {
-    bgcolor: isDark ? 'rgba(36,36,32,0.9)' : 'rgba(255,255,255,0.9)',
-    color: 'var(--ink)',
-    '&:hover': {
-      bgcolor: isDark ? '#242420' : '#fff',
-      color: colors.primary,
-    },
-  } as const;
+  // Overlay action buttons (report/copy/download/open/preview/raw) sit on top
+  // of the preview image — shared theme-aware style, see src/theme/tokens.ts.
+  const overlayBtnSx = overlayButtonSx(isDark);
   const proxyUrl = (url: string) =>
     `${API_URL}/proxy/html?url=${encodeURIComponent(url)}&origin=${encodeURIComponent(window.location.origin)}`;
 
@@ -262,7 +254,7 @@ export function SpecDetailView({
                 rel="noopener noreferrer"
                 onClick={onReport}
                 aria-label="Report issue"
-                sx={overlayButtonSx}
+                sx={overlayBtnSx}
                 size="medium"
               >
                 <FlagOutlinedIcon fontSize="small" />
@@ -278,7 +270,7 @@ export function SpecDetailView({
                   onTrackEvent('view_mode_change', { mode: 'preview', library: selectedLibrary });
                 }}
                 aria-label="Show static preview"
-                sx={overlayButtonSx}
+                sx={overlayBtnSx}
                 size="medium"
               >
                 <ImageOutlinedIcon fontSize="small" />
@@ -290,7 +282,7 @@ export function SpecDetailView({
                   previewHtml && window.open(previewHtml, '_blank', 'noopener,noreferrer')
                 }
                 aria-label="Open raw HTML"
-                sx={overlayButtonSx}
+                sx={overlayBtnSx}
                 size="medium"
               >
                 <OpenInNewIcon fontSize="small" />
@@ -423,7 +415,7 @@ export function SpecDetailView({
                   onReport();
                 }}
                 aria-label="Report issue"
-                sx={overlayButtonSx}
+                sx={overlayBtnSx}
                 size="medium"
               >
                 <FlagOutlinedIcon fontSize="small" />
@@ -449,7 +441,7 @@ export function SpecDetailView({
                     onCopyCode(currentImpl);
                   }}
                   aria-label="Copy code"
-                  sx={overlayButtonSx}
+                  sx={overlayBtnSx}
                   size="medium"
                 >
                   <ContentCopyIcon fontSize="small" />
@@ -464,7 +456,7 @@ export function SpecDetailView({
                     onDownload(currentImpl);
                   }}
                   aria-label="Download PNG"
-                  sx={overlayButtonSx}
+                  sx={overlayBtnSx}
                   size="medium"
                 >
                   <DownloadIcon fontSize="small" />
@@ -482,7 +474,7 @@ export function SpecDetailView({
                     });
                   }}
                   aria-label="Show interactive"
-                  sx={overlayButtonSx}
+                  sx={overlayBtnSx}
                   size="medium"
                 >
                   <PlayArrowIcon fontSize="small" />

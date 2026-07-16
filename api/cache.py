@@ -29,8 +29,9 @@ class _LockPruningTTLCache(TTLCache):
     a separate bounded `_locks` collection cannot:
 
     1. **No unbounded growth** — every lock that gets created either ends up
-       in the cache (and is later pruned via TTL/LRU/explicit-delete) or is
-       cleaned up by clear_cache().
+       in the cache (and is later pruned via TTL/LRU/explicit-delete), is
+       pruned by get_or_set_cache when its factory fails, or is cleaned up
+       by clear_cache().
     2. **No race between lock-eviction and lock-holder** — a lock can only
        disappear once its cache entry has been written, which means any
        in-flight `factory()` will have called `set_cache(key, ...)` before
@@ -55,8 +56,15 @@ _cache: _LockPruningTTLCache = _LockPruningTTLCache(maxsize=settings.cache_maxsi
 # Per-key locks for stampede protection. Plain dict; lifecycle is bound to
 # `_cache` via `_LockPruningTTLCache.__delitem__`. Refresh-locks stored under
 # `_refresh:<key>` never have a corresponding cache entry and are pruned by
-# `_background_refresh` on completion.
+# `_background_refresh` on completion. Cold-miss locks whose factory raised
+# (so no cache entry was ever written) are pruned by `get_or_set_cache`.
 _locks: dict[str, asyncio.Lock] = {}
+
+# Strong references to in-flight background refresh tasks. asyncio only keeps
+# a weak reference to tasks created via create_task, so without this set a
+# refresh task can be garbage-collected mid-flight — leaving its refresh-lock
+# permanently held and jamming stale-while-revalidate for that key.
+_background_tasks: set[asyncio.Task] = set()
 
 
 def _get_lock(key: str) -> asyncio.Lock:
@@ -182,6 +190,7 @@ def clear_spec_cache(spec_id: str) -> int:
     count += clear_cache_by_pattern("filter:")  # Filters might be affected
     count += clear_cache_by_pattern("stats")  # Stats might have changed
     count += clear_cache_by_pattern("sitemap")  # Sitemap includes spec URLs
+    count += clear_cache_by_pattern("seo_spec_index")  # Spec-hub link lists on /seo-proxy/{,plots,specs}
     count += clear_cache_by_pattern(f"seo:{spec_id}")  # SEO proxy pages for this spec
     count += clear_cache_by_pattern(f"og:{spec_id}")  # OG images for this spec
     return count
@@ -267,7 +276,18 @@ async def get_or_set_cache(
         cached = get_cache(key)
         if cached is not None:
             return cast(T, cached)
-        result = await factory()
+        try:
+            result = await factory()
+        except BaseException:
+            # Factory failed → no cache entry will ever be written for this
+            # key, so the eviction hook can never reap the lock. Drop it here
+            # to keep high-cardinality miss traffic (e.g. 404 probes) from
+            # growing `_locks` unbounded. Waiters queued on this lock still
+            # hold a reference and proceed normally; a fresh caller simply
+            # takes a new lock.
+            if key not in _cache:
+                _locks.pop(key, None)
+            raise
         set_cache(key, result)
         return result
 
@@ -278,7 +298,10 @@ def _schedule_refresh(key: str, factory: Callable[[], Awaitable[Any]]) -> None:
     lock = _get_lock(refresh_key)
     if lock.locked():
         return  # refresh already in progress
-    asyncio.create_task(_background_refresh(key, refresh_key, factory, lock))
+    task = asyncio.create_task(_background_refresh(key, refresh_key, factory, lock))
+    # Keep a strong reference until the task finishes — see _background_tasks.
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
 
 
 async def _background_refresh(

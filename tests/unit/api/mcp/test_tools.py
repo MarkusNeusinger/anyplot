@@ -156,6 +156,27 @@ async def test_search_specs_by_tags_no_matches(mock_db_context, mock_spec):
 
 
 @pytest.mark.asyncio
+async def test_search_specs_by_tags_null_impl_tags(mock_db_context, mock_spec):
+    """Impls whose impl_tags is NULL must not crash impl-level filtering."""
+    mock_spec.impls[0].impl_tags = None
+
+    mock_repo = MagicMock()
+    mock_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
+
+    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+        # Library filter alone does not read impl_tags — still matches
+        result = await search_specs_by_tags(library=["matplotlib"])
+        assert len(result) == 1
+
+        # Tag filters simply never match a NULL-tagged impl (no AttributeError)
+        result = await search_specs_by_tags(patterns=["data-generation"])
+        assert len(result) == 0
+
+        result = await search_specs_by_tags(dependencies=["scipy"], techniques=["colorbar"], styling=["minimal"])
+        assert len(result) == 0
+
+
+@pytest.mark.asyncio
 async def test_search_specs_by_tags_dataprep_styling(mock_db_context, mock_spec):
     """Test search_specs_by_tags with dataprep and styling filters."""
     mock_repo = MagicMock()

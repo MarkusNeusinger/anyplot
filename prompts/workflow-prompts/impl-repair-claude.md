@@ -2,7 +2,7 @@
 
 You are repairing the **{LANGUAGE}/{LIBRARY}** implementation for **{SPEC_ID}**.
 
-This is **repair attempt {ATTEMPT}/3**. The previous implementation was rejected.
+This is **repair attempt {ATTEMPT}/4**. The previous implementation was rejected.
 
 ## Step 1: Read the AI review feedback
 
@@ -136,7 +136,7 @@ git config user.email "github-actions[bot]@users.noreply.github.com"
 git add plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}
 git commit -m "fix({LIBRARY}): address review feedback for {SPEC_ID}
 
-Attempt {ATTEMPT}/3 - fixes based on AI review"
+Attempt {ATTEMPT}/4 - fixes based on AI review"
 git push origin {BRANCH}
 ```
 

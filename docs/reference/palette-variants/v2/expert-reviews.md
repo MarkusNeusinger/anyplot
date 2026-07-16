@@ -73,7 +73,7 @@ the rest of the argument relies on:
   is good for CVD safety but reduces semantic-red instant-readability.
 
 This corroborates the project memory note
-[`palette_must_anchor_semantic_red`](file:///home/meake/.claude/projects/-home-meake-projects-anyplot/memory/feedback_palette_must_anchor_semantic_red.md)
+`palette_must_anchor_semantic_red` (local project-memory note)
 — the rule that candidate palettes must allow a true red, via explicit
 seeding if needed.
 
@@ -243,7 +243,7 @@ by position. The picked colour must EXIST in the palette and must be
 **unambiguously identifiable as red/green/blue/etc** when grabbed.
 
 This is documented in the project memory
-[`feedback_palette_semantic_exception`](file:///home/meake/.claude/projects/-home-meake-projects-anyplot/memory/feedback_palette_semantic_exception.md)
+`feedback_palette_semantic_exception` (local project-memory note)
 — the rule that conventions like "bad → red, good → green,
 warning → amber" are first-class concerns, not categorical-distinctness
 edge cases.

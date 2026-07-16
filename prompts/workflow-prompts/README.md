@@ -52,11 +52,11 @@ plain bullet lines and Claude reads them as context.
 
 | Variable | Example | Notes |
 |----------|---------|-------|
-| `LANGUAGE` | `python` | Only `python` supported today; future multi-language work will derive per-spec |
-| `LIBRARY` | `matplotlib` | One of the 9 supported libraries |
+| `LANGUAGE` | `python` | One of `python`, `r`, `julia`, `javascript` — derived per-library from `LIBRARIES_METADATA` in `core/constants.py` |
+| `LIBRARY` | `matplotlib` | One of the 15 supported libraries (see `LIBRARIES_METADATA` in `core/constants.py`) |
 | `SPEC_ID` | `scatter-basic` | Matches `_SPEC_ID_RE` (lowercase alphanum + hyphens) |
 | `PR_NUMBER` | `42` | Pull-request number under review |
-| `ATTEMPT` | `1` / `2` / `3` | Repair attempt counter (1-indexed) |
+| `ATTEMPT` | `1` / `2` / `3` / `4` | Repair attempt counter (1-indexed, max 4) |
 | `BRANCH` | `implementation/scatter-basic/matplotlib` | Branch being worked on |
 
 ## Why External Prompts?

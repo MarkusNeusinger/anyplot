@@ -21,7 +21,7 @@ import Typography from '@mui/material/Typography';
 
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { specPath } from 'src/routes/paths';
-import { colors, fontSize, semanticColors, typography } from 'src/theme';
+import { colors, fontSize, overlayButtonSx, semanticColors, typography } from 'src/theme';
 import type { Implementation } from 'src/types';
 import { buildSrcSet, OVERVIEW_SIZES } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
@@ -146,16 +146,18 @@ function ImplementationCard({
           position: 'relative',
           borderRadius: 3,
           overflow: 'hidden',
-          border: '2px solid rgba(55, 118, 171, 0.2)',
+          // imprint blue (#4467A3, slot 2) — was an off-palette hardcoded blue
+          border: '2px solid rgba(68, 103, 163, 0.2)',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           cursor: 'pointer',
           transition: 'all 0.3s ease',
           '&:hover': {
-            border: '2px solid rgba(55, 118, 171, 0.4)',
+            border: '2px solid rgba(68, 103, 163, 0.4)',
             boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
             transform: 'scale(1.03)',
           },
-          '&:hover .action-buttons': {
+          // Reveal on keyboard focus too, not just hover (WCAG 2.4.7)
+          '&:hover .action-buttons, &:focus-within .action-buttons': {
             opacity: 1,
           },
         }}
@@ -236,6 +238,9 @@ function ImplementationCard({
             gap: 0.5,
             opacity: 0,
             transition: 'opacity 0.2s',
+            // Hover-only reveal excludes touch users — keep the actions
+            // visible on coarse/hoverless pointers.
+            '@media (hover: none)': { opacity: 1 },
           }}
         >
           <Tooltip title=".copy()" disableFocusListener>
@@ -245,10 +250,7 @@ function ImplementationCard({
                 onCopyCode(impl);
               }}
               aria-label="Copy code"
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.9)',
-                '&:hover': { bgcolor: '#fff', color: colors.primary },
-              }}
+              sx={overlayButtonSx(isDark)}
               size="medium"
             >
               <ContentCopyIcon fontSize="small" />
@@ -261,10 +263,7 @@ function ImplementationCard({
                 onDownload(impl);
               }}
               aria-label="Download PNG"
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.9)',
-                '&:hover': { bgcolor: '#fff', color: colors.primary },
-              }}
+              sx={overlayButtonSx(isDark)}
               size="medium"
             >
               <DownloadIcon fontSize="small" />
@@ -280,10 +279,7 @@ function ImplementationCard({
                   e.stopPropagation();
                   onTrackEvent('open_interactive', { spec: specId, library: impl.library_id });
                 }}
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff', color: colors.primary },
-                }}
+                sx={overlayButtonSx(isDark)}
                 size="medium"
               >
                 <OpenInNewIcon fontSize="small" />

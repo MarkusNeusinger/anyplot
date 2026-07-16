@@ -340,6 +340,37 @@ class TestGetOrSetCache:
         # Should not be cached
         assert get_cache("test_stampede_error") is None
 
+    async def test_factory_exception_prunes_lock(self) -> None:
+        """A failing factory must not leak its per-key lock (404-probe traffic
+        would otherwise grow the _locks dict unbounded)."""
+        from api.cache import _locks
+
+        clear_cache()
+
+        async def failing_factory():
+            raise ValueError("DB error")
+
+        for i in range(3):
+            key = f"test_lock_leak_{i}"
+            with pytest.raises(ValueError, match="DB error"):
+                await get_or_set_cache(key, failing_factory)
+            assert key not in _locks
+
+    async def test_successful_factory_keeps_lock_bound_to_entry(self) -> None:
+        """On success the lock stays and is reaped with the cache entry."""
+        from api.cache import _cache, _locks
+
+        clear_cache()
+
+        async def factory():
+            return "value"
+
+        await get_or_set_cache("test_lock_kept", factory)
+        assert "test_lock_kept" in _locks
+
+        del _cache["test_lock_kept"]  # eviction hook prunes the lock
+        assert "test_lock_kept" not in _locks
+
     async def test_stale_while_revalidate_returns_stale(self) -> None:
         """Should return stale value immediately and schedule background refresh."""
         clear_cache()
@@ -368,6 +399,54 @@ class TestGetOrSetCache:
         await asyncio.sleep(0.05)
         assert refresh_called
         assert get_cache("test_swr") == "refreshed"
+
+    async def test_background_refresh_task_strongly_referenced(self) -> None:
+        """The scheduled refresh task must be held in _background_tasks until done
+        (asyncio only keeps weak refs — a GC'd task would jam refresh for the key)."""
+        from api.cache import _background_tasks
+
+        clear_cache()
+
+        async def factory():
+            return "initial"
+
+        await get_or_set_cache("test_swr_taskref", factory, refresh_after=0.01)
+        await asyncio.sleep(0.02)
+
+        release = asyncio.Event()
+
+        async def slow_refresh():
+            await release.wait()
+            return "refreshed"
+
+        await get_or_set_cache("test_swr_taskref", slow_refresh, refresh_after=0.01)
+
+        # While the refresh is in flight, the task is strongly referenced
+        await asyncio.sleep(0)
+        assert len(_background_tasks) == 1
+
+        release.set()
+        await asyncio.sleep(0.02)
+
+        # Done-callback discards the finished task and the refresh landed
+        assert len(_background_tasks) == 0
+        assert get_cache("test_swr_taskref") == "refreshed"
+
+    async def test_refresh_lock_pruned_after_background_refresh(self) -> None:
+        """The `_refresh:<key>` lock is removed once the background refresh ends."""
+        from api.cache import _locks
+
+        clear_cache()
+
+        async def factory():
+            return "v1"
+
+        await get_or_set_cache("test_swr_lockprune", factory, refresh_after=0.01)
+        await asyncio.sleep(0.02)
+        await get_or_set_cache("test_swr_lockprune", factory, refresh_after=0.01)
+        await asyncio.sleep(0.02)
+
+        assert "_refresh:test_swr_lockprune" not in _locks
 
 
 class TestTTLCacheMaxsizeOverflow:
