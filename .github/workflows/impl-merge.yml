@@ -352,9 +352,14 @@ jobs:
           ISSUE: ${{ steps.issue.outputs.number }}
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
         run: |
-          # All supported libraries (mirrors core/constants.py SUPPORTED_LIBRARIES).
-          # ggplot2 (R) and makie (Julia) are non-Python entries; everything else is Python.
-          LIBRARIES="matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot ggplot2 makie"
+          # All supported libraries, read from core/constants.py so this list
+          # can never drift again (a stale hardcoded 11-library copy used to
+          # close issues while the 4 JS libraries were still pending).
+          LIBRARIES=$(python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))")
+          if [ -z "$LIBRARIES" ]; then
+            echo "::error::Could not read SUPPORTED_LIBRARIES from core/constants.py"
+            exit 1
+          fi
 
           # Get current labels on the issue
           LABELS=$(gh issue view "$ISSUE" --json labels -q '.labels[].name' 2>/dev/null || echo "")

@@ -1,6 +1,9 @@
 name: Report Plot Issue
 description: Report a problem with an existing plot (specification or implementation)
-labels: ["report-pending"]
+# No auto-applied labels: `report-pending` triggers a write-privileged Claude
+# agent (report-validate.yml), so a maintainer must review the issue and add
+# the label manually. Auto-labeling let any unauthenticated issue author feed
+# prompt text straight into that agent.
 body:
   - type: markdown
     attributes:

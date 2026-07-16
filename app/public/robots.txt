@@ -1,3 +1,13 @@
+# Intended crawler policy: AI crawlers are WELCOME (see /llms.txt and the MCP
+# server — anyplot's strategy is to be maximally consumable by AI agents).
+#
+# NOTE: Cloudflare's "block AI bots" zone setting currently PREPENDS a managed
+# block (Disallow: / for ClaudeBot, GPTBot, CCBot, Google-Extended, ...) to the
+# live https://anyplot.ai/robots.txt, contradicting this file and llms.txt.
+# Fix lives in the Cloudflare dashboard (zone setting), not in this repo:
+# disable the managed AI-bot block (or switch it to Content-Signal-only) so
+# the live file matches this one.
+
 User-agent: *
 Allow: /
 Disallow: /debug

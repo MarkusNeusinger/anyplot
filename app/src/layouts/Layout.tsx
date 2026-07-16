@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   AppDataContext,
@@ -91,14 +91,22 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     return () => abortController.abort();
   }, []);
 
+  // Memoise the context values — inline object literals would get a fresh
+  // identity on every provider render and re-render all consumers even when
+  // nothing they read has changed.
+  const appDataValue = useMemo(
+    () => ({ specsData, librariesData, languagesData, stats }),
+    [specsData, librariesData, languagesData, stats]
+  );
+  const homeStateValue = useMemo(
+    () => ({ homeState, homeStateRef, setHomeState, saveScrollPosition }),
+    [homeState, saveScrollPosition]
+  );
+
   return (
     <ThemeContext.Provider value={themeMode}>
-      <AppDataContext.Provider value={{ specsData, librariesData, languagesData, stats }}>
-        <HomeStateContext.Provider
-          value={{ homeState, homeStateRef, setHomeState, saveScrollPosition }}
-        >
-          {children}
-        </HomeStateContext.Provider>
+      <AppDataContext.Provider value={appDataValue}>
+        <HomeStateContext.Provider value={homeStateValue}>{children}</HomeStateContext.Provider>
       </AppDataContext.Provider>
     </ThemeContext.Provider>
   );

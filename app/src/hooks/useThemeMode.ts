@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const STORAGE_KEY = 'theme';
 
@@ -71,11 +71,18 @@ export function useThemeMode() {
     });
   }, []);
 
-  return {
-    mode,
-    effective,
-    isDark: effective === 'dark',
-    setMode,
-    cycle,
-  } as const;
+  // Memoised so the object identity is stable across renders — the value is
+  // fed straight into ThemeContext.Provider, and a fresh object per render
+  // would re-render every theme consumer on unrelated provider updates.
+  return useMemo(
+    () =>
+      ({
+        mode,
+        effective,
+        isDark: effective === 'dark',
+        setMode,
+        cycle,
+      }) as const,
+    [mode, effective, setMode, cycle]
+  );
 }

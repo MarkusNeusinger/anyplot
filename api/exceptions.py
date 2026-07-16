@@ -80,19 +80,31 @@ class ValidationError(AnyplotException):
 
 
 class DatabaseQueryError(AnyplotException):
-    """Database query failed (500)."""
+    """Database query failed (500).
+
+    The raw error text (which may contain SQL fragments, table names, or DSN
+    bits) is kept in ``detail`` for server-side logging only — the client-facing
+    ``message`` never includes it (see anyplot_exception_handler).
+    """
 
     def __init__(self, operation: str, detail: str):
-        message = f"Database query failed during '{operation}': {detail}"
+        message = f"Database query failed during '{operation}'"
         super().__init__(message, status_code=500)
         self.operation = operation
+        self.detail = detail
 
 
 # ===== Exception Handlers =====
 
 
 async def anyplot_exception_handler(request: Request, exc: AnyplotException) -> JSONResponse:
-    """Handle AnyplotException and return a standardized JSON response."""
+    """Handle AnyplotException and return a standardized JSON response.
+
+    For DatabaseQueryError the raw driver/SQLAlchemy text is logged here and
+    never reflected — ``exc.message`` is the generic client-safe string.
+    """
+    if isinstance(exc, DatabaseQueryError):
+        logger.error("Database query failed during '%s' on %s: %s", exc.operation, request.url.path, exc.detail)
     return JSONResponse(
         status_code=exc.status_code,
         content={"status": exc.status_code, "message": exc.message, "path": request.url.path},
@@ -180,7 +192,7 @@ def raise_database_query_error(operation: str, detail: str) -> None:
 
     Args:
         operation: The operation that failed (e.g., "fetch_specs", "filter_plots")
-        detail: Error details
+        detail: Error details (logged server-side only, never returned to clients)
 
     Raises:
         DatabaseQueryError: Always raises

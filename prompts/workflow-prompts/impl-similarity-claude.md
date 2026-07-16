@@ -22,7 +22,7 @@ If the spec **explicitly names** a scenario / domain / sample data / shape, all 
 
 ## Step 2: Read all image descriptions
 
-For each `plots/{SPEC_ID}/metadata/python/*.yaml`:
+For each `plots/{SPEC_ID}/metadata/*/*.yaml` (all language subdirectories — `python`, `r`, `julia`, `javascript`):
 
 - Read the `review.image_description` field. The previous review cycle already wrote a plain-English description of the rendered chart there — this is your primary signal.
 - The yaml stem is the library name (`bokeh.yaml` → `bokeh`).
@@ -41,14 +41,14 @@ Look for groups of 2+ libraries where the descriptions reveal the same:
 ### What does NOT count as copying — these are project-mandated
 
 - **Imprint palette positions 1–7.** The data colors are fixed by the style guide; identical colors there are required, not copied.
-- **Plot size and aspect ratio.** Fixed by `prompts/default-style-guide.md` and the per-library prompts. Identical aspect ratios across all 9 libs are correct, expected behavior — never propose "different aspect ratios" as divergence advice.
+- **Plot size and aspect ratio.** Fixed by `prompts/default-style-guide.md` and the per-library prompts. Identical aspect ratios across all 15 libs are correct, expected behavior — never propose "different aspect ratios" as divergence advice.
 - **Theme chrome.** Page background `#FAF8F1` (light) / `#1A1A17` (dark), text inks, etc. flip identically across libs by design.
 
 If a candidate cluster's identical signal is *only* one of the mandated items above, it is not a cluster. Skip it.
 
 ## Step 4: Inspect ambiguous clusters (optional)
 
-If the `image_description` blobs for a candidate cluster don't conclusively show copying — e.g. you can't tell whether two libraries used the same random seed, or whether their domain is genuinely the same — you MAY use the Read tool on `plots/{SPEC_ID}/implementations/{language}/{library}{ext}` for **only those libraries inside the candidate cluster** to verify. (`{language}` is `python` for the Python libraries, `r` for ggplot2, and `julia` for makie; `{ext}` is `.py`, `.R`, or `.jl` accordingly.)
+If the `image_description` blobs for a candidate cluster don't conclusively show copying — e.g. you can't tell whether two libraries used the same random seed, or whether their domain is genuinely the same — you MAY use the Read tool on `plots/{SPEC_ID}/implementations/{language}/{library}{ext}` for **only those libraries inside the candidate cluster** to verify. (`{language}` is `python` for the Python libraries, `r` for ggplot2, `julia` for makie, and `javascript` for chartjs/d3/echarts/highcharts/muix; `{ext}` is `.py`, `.R`, `.jl`, or `.js` accordingly — `.tsx` for muix.)
 
 **Do not read sibling source files for libraries that are not in a candidate cluster.** That wastes tokens and is not what this audit is for.
 
@@ -77,7 +77,7 @@ Shape:
     {}                                                 # no clusters detected
     {"<library-name>": "<one-sentence change_request>", ...}
 
-The keys must be library names that exist as `plots/{SPEC_ID}/metadata/python/<key>.yaml`. The values are single-sentence English strings.
+The keys must be library names that exist as `plots/{SPEC_ID}/metadata/{language}/<key>.yaml` (in any language subdirectory). The values are single-sentence English strings.
 
 After writing the file, print exactly `SIMILARITY_DONE` to stdout and stop.
 

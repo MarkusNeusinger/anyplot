@@ -40,9 +40,21 @@ export function ThemeToggle({ mode, onCycle }: ThemeToggleProps) {
         color: 'var(--ink-muted)',
         textTransform: 'none',
         transition: 'color 0.2s, border-color 0.2s',
+        position: 'relative',
+        // Invisible hit-area extension: brings the tap target to >= 44px on
+        // xs without growing the visible chip.
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: { xs: '-12px', sm: 0 },
+        },
         '&:hover': {
           color: colors.primary,
           borderColor: 'var(--ink-muted)',
+        },
+        '&:focus-visible': {
+          outline: `2px solid ${colors.primary}`,
+          outlineOffset: 2,
         },
       }}
     >

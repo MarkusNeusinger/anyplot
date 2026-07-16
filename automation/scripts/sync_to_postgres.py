@@ -459,14 +459,28 @@ def sync_to_database(session: Session, plots: list[dict]) -> dict:
     """
     stats = {"specs_synced": 0, "specs_removed": 0, "impls_synced": 0, "impls_removed": 0}
 
-    # Seed languages first (libraries.language_id FK requires languages to exist)
+    # Seed languages first (libraries.language_id FK requires languages to exist).
+    # Upsert (not DO NOTHING): version/description edits in core/constants.py must
+    # reach existing rows — DO NOTHING only ever inserted new ones, so registry
+    # updates never made it to prod (highcharts' language flip needed a manual
+    # data migration, a1c7e2f9b8d3). Only the seeded columns are updated; columns
+    # absent from the seed (e.g. languages.created, a server_default timestamp)
+    # are left untouched.
     if LANGUAGES_SEED:
-        stmt = insert(Language).values(LANGUAGES_SEED).on_conflict_do_nothing(index_elements=["id"])
+        language_update_fields = sorted({field for row in LANGUAGES_SEED for field in row} - {"id"})
+        stmt = insert(Language).values(LANGUAGES_SEED)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["id"], set_={field: stmt.excluded[field] for field in language_update_fields}
+        )
         session.execute(stmt)
 
-    # Batch seed all libraries in one statement
+    # Batch upsert all libraries in one statement (same rationale as languages)
     if LIBRARIES_SEED:
-        stmt = insert(Library).values(LIBRARIES_SEED).on_conflict_do_nothing(index_elements=["id"])
+        library_update_fields = sorted({field for row in LIBRARIES_SEED for field in row} - {"id"})
+        stmt = insert(Library).values(LIBRARIES_SEED)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["id"], set_={field: stmt.excluded[field] for field in library_update_fields}
+        )
         session.execute(stmt)
 
     # Collect all spec values and impl values

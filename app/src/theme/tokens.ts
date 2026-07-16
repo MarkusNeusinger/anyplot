@@ -173,6 +173,24 @@ export const proseLinkStyle = {
   },
 } as const;
 
+// Overlay controls (copy/download/open/report buttons, loading pills) sit on
+// top of preview images or fixed above the page. In dark mode those surfaces
+// are dark, so a bright white control clashes — adapt the surface and icon ink
+// to the active theme. `isDark` comes from the theme context (see `useTheme`
+// in src/hooks/useLayoutContext).
+export const overlaySurfaceColor = (isDark: boolean): string =>
+  isDark ? 'rgba(36,36,32,0.9)' : 'rgba(255,255,255,0.9)';
+
+export const overlayButtonSx = (isDark: boolean) =>
+  ({
+    bgcolor: overlaySurfaceColor(isDark),
+    color: 'var(--ink)',
+    '&:hover': {
+      bgcolor: isDark ? '#242420' : '#fff',
+      color: colors.primary,
+    },
+  }) as const;
+
 export const tableStyle = {
   '& .MuiTableCell-root': {
     fontFamily: typography.fontFamily,

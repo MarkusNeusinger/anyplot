@@ -926,6 +926,38 @@ class TestSyncToDatabase:
         assert stats["impls_synced"] == 1
         mock_session.commit.assert_called_once()
 
+    def test_seed_statements_upsert_registry_fields(self):
+        """Language/library seeds must be ON CONFLICT DO UPDATE so registry edits
+        in core/constants.py (version, description, language flips) reach existing
+        rows — DO NOTHING only ever inserted new ones. `id` is never rewritten and
+        languages.created (server-defaulted, not in the seed) is never clobbered."""
+        from sqlalchemy.dialects.postgresql.dml import OnConflictDoUpdate
+
+        mock_session = MagicMock()
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = []
+        mock_session.execute.return_value = mock_result
+
+        sync_to_database(mock_session, [])
+
+        # First two execute calls are the language and library seeds
+        lang_stmt = mock_session.execute.call_args_list[0][0][0]
+        lib_stmt = mock_session.execute.call_args_list[1][0][0]
+
+        lang_clause = lang_stmt._post_values_clause
+        lib_clause = lib_stmt._post_values_clause
+        assert isinstance(lang_clause, OnConflictDoUpdate)
+        assert isinstance(lib_clause, OnConflictDoUpdate)
+
+        lang_updated = {field for field, _ in lang_clause.update_values_to_set}
+        lib_updated = {field for field, _ in lib_clause.update_values_to_set}
+
+        assert "id" not in lang_updated
+        assert "id" not in lib_updated
+        assert {"name", "description", "runtime_version", "documentation_url"} <= lang_updated
+        assert {"name", "description", "version", "language_id", "framework"} <= lib_updated
+        assert "created" not in lang_updated
+
     def test_sync_batches_multiple_specs_and_impls(self):
         """Should batch multiple specs and impls, calling execute fewer times than row count."""
         mock_session = MagicMock()

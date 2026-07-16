@@ -133,7 +133,6 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `report_issue` | `spec`, `library`? | SpecPage.tsx | User clicks "report issue" link |
 | `tag_click` | `param`, `value`, `source` | SpecTabs.tsx, StatsPage.tsx | User clicks a tag chip to filter (`source` ∈ `spec_detail`, `stats`) |
 | `theme_toggle` | `to` | MastheadRule.tsx | User cycles tri-state theme mode (`to` ∈ `system`, `light`, `dark`). The cycle order is `system → light → dark → system`. |
-| `potd_dismiss` | `spec`, `library` | PlotOfTheDay.tsx | User dismisses the plot-of-the-day banner |
 | `view_mode_change` | `mode`, `library` | SpecDetailView.tsx | User toggles preview ↔ interactive view inside a spec detail. `mode` ∈ `preview`, `interactive`. Fires on every toggle in either direction (cf. `open_interactive`, which only fires when the interactive HTML is opened in a new tab). |
 | `library_click` | `source`, `library` | LibrariesPage.tsx | User clicks a library card on `/libraries` to navigate to its filtered plots view. `source` is `libraries_page` from this entry point. |
 | `library_filter` | `source`, `framework` | LibrariesPage.tsx | User clicks a language/framework filter chip on `/libraries` (`framework` carries the chip id; register the prop in the dashboard for breakdowns) |
@@ -160,7 +159,6 @@ carry `spec`, `library`, or `value` for richer breakdowns.
 | `masthead_logo` / `masthead_branch` / `masthead_release` | MastheadRule.tsx | masthead `~/anyplot.ai · main · v1.x.x` |
 | `breadcrumb` | MastheadRule.tsx | breadcrumb segments on non-landing routes |
 | `hero_cta_browse` / `hero_mcp` / `hero_github` | HeroSection.tsx | hero call-to-action + secondary links |
-| `potd_image` / `potd_title` / `potd_source_link` | PlotOfTheDay.tsx | dismissible plot-of-the-day banner |
 | `potd_terminal_image` / `potd_terminal_filename` / `potd_terminal_github` | PlotOfTheDayTerminal.tsx | hero terminal-framed POTD |
 | `featured_thumb` | LandingPage.tsx | featured plot grid |
 | `library_card` | LandingPage.tsx | library cards (carries `value=<library_id>`) |
@@ -361,7 +359,6 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `plot_rotate` | Custom Event | Track plot image rotation on specs page |
 | `nav_click` | Custom Event | Track which UI element on landing/chrome leads users off the root |
 | `theme_toggle` | Custom Event | Track dark/light theme switches |
-| `potd_dismiss` | Custom Event | Track plot-of-the-day banner dismissals |
 | `view_mode_change` | Custom Event | Track preview ↔ interactive toggles in spec detail |
 | `library_click` | Custom Event | Track library-card clicks on the libraries page |
 | `library_filter` | Custom Event | Track language/framework filter-chip clicks on the libraries page |
@@ -456,9 +453,8 @@ User lands on anyplot.ai
 | `report_issue` | `spec`, `library`? | SpecPage.tsx |
 | `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx, AboutPage.tsx, LibrariesPage.tsx, SectionHeader.tsx |
 | `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx, AboutPage.tsx |
-| `nav_click` | `source`, `target`, `spec`?, `library`?, `value`? | NavBar, MastheadRule, HeroSection, SectionHeader, PlotOfTheDay, PlotOfTheDayTerminal, LandingPage |
+| `nav_click` | `source`, `target`, `spec`?, `library`?, `value`? | NavBar, MastheadRule, HeroSection, SectionHeader, PlotOfTheDayTerminal, LandingPage |
 | `theme_toggle` | `to` | MastheadRule.tsx |
-| `potd_dismiss` | `spec`, `library` | PlotOfTheDay.tsx |
 | `view_mode_change` | `mode`, `library` | SpecDetailView.tsx |
 | `library_click` | `source`, `library` | LibrariesPage.tsx |
 | `library_filter` | `source`, `framework` | LibrariesPage.tsx |
@@ -473,7 +469,14 @@ User lands on anyplot.ai
 | `TTFB` | `value`, `rating` | reportWebVitals.ts |
 | `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`? | api/analytics.py (server-side) |
 
-**Total: 31 client-side + 1 server-side = 32 events**
+**Total: 30 client-side + 1 server-side = 31 events**
+
+> Removed events: `potd_dismiss` (and the `nav_click` sources `potd_image` /
+> `potd_title` / `potd_source_link`) died with the dismissible
+> `PlotOfTheDay.tsx` banner — the POTD now lives in `PlotOfTheDayTerminal.tsx`
+> and only emits the `potd_terminal_*` `nav_click` sources. Historical
+> `potd_dismiss` data remains visible in Plausible; the goal can be deleted
+> from the dashboard.
 
 > Every pageview and event additionally carries a `theme` ambient prop (`dark` /
 > `light`). Set in `RootLayout` via `setAnalyticsAmbientProps` whenever the user
@@ -657,7 +660,6 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] Server-side og:image tracking (`og_image_view`) with platform detection
 - [x] Landing-page navigation tracking (`nav_click`)
 - [x] Theme tracking (`theme_toggle` event + `theme` ambient pageview prop)
-- [x] Plot-of-the-day dismissal (`potd_dismiss`)
 
 ### Plausible Dashboard Checklist
 

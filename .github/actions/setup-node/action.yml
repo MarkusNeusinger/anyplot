@@ -16,7 +16,7 @@ runs:
   using: "composite"
   steps:
     - name: Install Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6
       with:
         node-version: ${{ inputs.node-version }}
         # Restore npm's download cache keyed on the committed lockfile so cold

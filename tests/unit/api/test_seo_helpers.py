@@ -10,12 +10,16 @@ from datetime import datetime
 from unittest.mock import MagicMock
 
 from api.routers.seo import (
+    _HOME_JSONLD,
+    _build_home_body,
     _build_impl_html,
     _build_sitemap_xml,
     _build_spec_hub_html,
     _jsonld_script,
     _lastmod,
     _render_bot_html,
+    _spec_index_entries,
+    _spec_links_html,
 )
 from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA
 
@@ -346,6 +350,62 @@ class TestBuildImplHtml:
         assert "<pre>" not in page
         # page is still enriched otherwise
         assert '<a href="https://anyplot.ai/scatter-basic">' in page
+
+
+class TestSpecIndex:
+    """Tests for the spec-hub link index behind /seo-proxy/{,plots,specs}."""
+
+    def _spec(self, spec_id: str, title: str, impls: list | None = None) -> MagicMock:
+        spec = MagicMock()
+        spec.id = spec_id
+        spec.title = title
+        spec.impls = [MagicMock()] if impls is None else impls
+        return spec
+
+    def test_entries_are_title_sorted_and_skip_implless_specs(self) -> None:
+        specs = [
+            self._spec("violin-basic", "Violin Plot"),
+            self._spec("bar-grouped", "Grouped Bar Chart"),
+            self._spec("empty-spec", "Empty Spec", impls=[]),
+        ]
+        assert _spec_index_entries(specs) == [("bar-grouped", "Grouped Bar Chart"), ("violin-basic", "Violin Plot")]
+
+    def test_entries_fall_back_to_id_without_title(self) -> None:
+        assert _spec_index_entries([self._spec("bar-grouped", "")]) == [("bar-grouped", "bar-grouped")]
+
+    def test_links_html_links_every_hub_and_escapes(self) -> None:
+        html_out = _spec_links_html([("bar-grouped", "Grouped Bar Chart"), ("x", "a < b & c")])
+        assert '<a href="https://anyplot.ai/bar-grouped">Grouped Bar Chart</a>' in html_out
+        assert "a &lt; b &amp; c" in html_out
+        assert "<h2>All plot specifications</h2>" in html_out
+
+    def test_links_html_empty_index(self) -> None:
+        assert _spec_links_html([]) == ""
+
+
+class TestHomePage:
+    """Tests for the bot homepage body and site-level JSON-LD."""
+
+    def test_body_uses_spec_count_when_known(self) -> None:
+        body = _build_home_body(324)
+        assert "324 plot specifications" in body
+        assert "Matplotlib" in body  # library list from the canonical registry
+        assert '<a href="https://anyplot.ai/mcp">' in body
+
+    def test_body_without_spec_count(self) -> None:
+        body = _build_home_body(None)
+        assert "hundreds of plot specifications" in body
+
+    def test_jsonld_mirrors_index_html_site_schemas(self) -> None:
+        """WebSite + SearchAction and Organization must match app/index.html."""
+        types = {node["@type"]: node for node in _HOME_JSONLD["@graph"]}
+        assert {"WebApplication", "WebSite", "Organization"} <= set(types)
+        action = types["WebSite"]["potentialAction"]
+        assert action["@type"] == "SearchAction"
+        # /plots?spec= is the only term-carrying catalog param the SPA supports
+        assert action["target"]["urlTemplate"] == "https://anyplot.ai/plots?spec={search_term_string}"
+        assert types["Organization"]["url"] == "https://anyplot.ai"
+        assert types["WebSite"]["url"] == "https://anyplot.ai"
 
 
 class TestDisplayNameMaps:

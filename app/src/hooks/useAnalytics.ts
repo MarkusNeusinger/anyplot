@@ -32,8 +32,8 @@ function debounce<T extends (...args: never[]) => void>(fn: T, delay: number): T
   }) as T;
 }
 
-// Konvertiert Query-Params zu Pfad-Segmenten für Plausible
-// Unterstützt mehrfache Params (AND) und Komma-Werte (OR)
+// Converts query params to path segments for Plausible
+// Supports repeated params (AND) and comma-separated values (OR)
 // /?lib=matplotlib&lib=seaborn → /lib/matplotlib/lib/seaborn
 // /?lib=matplotlib,seaborn → /lib/matplotlib,seaborn
 function buildPlausibleUrl(): string {
@@ -48,7 +48,7 @@ function buildPlausibleUrl(): string {
   const parts = pathname.split('/').filter(Boolean);
   const pathPrefix = parts.length > 0 ? `/${parts.join('/')}` : '';
 
-  // Definierte Reihenfolge der Filter-Kategorien (inkl. impl-level tags).
+  // Defined order of the filter categories (incl. impl-level tags).
   // - `language` covers the spec-hub carousel scope (`/{spec}?language=python`)
   //   that pre-dates the FilterBar lang category.
   // - `lang` covers the new FilterBar category on `/plots?lang=python` —
@@ -71,11 +71,11 @@ function buildPlausibleUrl(): string {
   ];
 
   for (const key of orderedKeys) {
-    // getAll() für mehrfache Params mit gleichem Key (AND-Logik)
+    // getAll() for repeated params with the same key (AND logic)
     const values = params.getAll(key);
     for (const value of values) {
       if (value) {
-        // Komma-Werte bleiben erhalten (OR-Logik)
+        // Comma-separated values are preserved (OR logic)
         segments.push(key, value);
       }
     }
