@@ -179,6 +179,15 @@ class TestClientIpResolution:
         request = self._request({"x-forwarded-for": "198.51.100.7"})
         assert _client_ip(request) == "198.51.100.7"
 
+    def test_skips_empty_trailing_xff_entry(self):
+        # Malformed "ip, " must not key everyone into one empty-string bucket.
+        request = self._request({"x-forwarded-for": "198.51.100.7, "})
+        assert _client_ip(request) == "198.51.100.7"
+
+    def test_whitespace_only_xff_falls_back_to_client_host(self):
+        request = self._request({"x-forwarded-for": " , "})
+        assert _client_ip(request) == "10.0.0.1"
+
     def test_falls_back_to_client_host(self):
         assert _client_ip(self._request({})) == "10.0.0.1"
 

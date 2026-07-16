@@ -16,6 +16,117 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Added
+
+- **`CODE_OF_CONDUCT.md`** — Contributor Covenant 2.1, linked from `docs/contributing.md`
+  (closes the last repo-health gap from audit 2026-07-15 Medium#29) (#9644).
+- **Bot-served pages got a real SEO surface** — `seo_home()` now emits the site-level JSON-LD
+  (`WebApplication`, `WebSite`+`SearchAction`, `Organization`) that previously only lived in the
+  SPA shell nginx never serves to bots, plus a descriptive title/meta and real body copy;
+  `/seo-proxy/plots` and `/seo-proxy/specs` render a server-side link to every spec hub, so
+  crawlers can reach all 324 hubs (they were orphans); `Google-InspectionTool`/`GoogleOther`
+  UAs are now routed to the bot pages like Googlebot (audit 2026-07-15 High#10/#11,
+  Medium#40/#41) (#9642).
+- **`core/palette.py` unit tests** — the last untested core module now has coverage: pool
+  contract, semantic anchors, theme-adaptive neutrals, lazy cmaps and the
+  matplotlib-free-import guarantee (audit 2026-07-15 Medium#28) (#9642).
+- **Impl check constraints exist as a migration** — `ck_quality_score_range` /
+  `ck_review_verdict_valid` lived only in the ORM; a new alembic migration adds them (with
+  pre-normalization of violating rows and a real downgrade) (audit 2026-07-15 Medium#18) (#9642).
+- **Repo health:** PR template with changelog/docs checklist and an `.editorconfig` mirroring
+  ruff + frontend conventions (audit 2026-07-15 Medium#29) (#9642).
+- **Full 2026-07-15 codebase audit report** — persisted output of a 16-auditor `/audit` run
+  with domain-routed cross-validation (`agentic/audits/2026-07-15-all.md`, mirrored to
+  `latest.md`). Health Score 30/100 with correctness (C, 60) as the weak pillar; headlines are a
+  live `heatmap-calendar` retry loop (#1010), 15-library pipeline/config drift, dark-mode
+  white-surface leaks, and 97 reviewer-rejected implementations live on main, plus an open-issue
+  triage with a recommended work queue. Report only, no source changes (#9641).
+- **`llms.txt` for AI agents** — `/llms.txt` previously fell through to the SPA shell (flagged
+  by Lighthouse's Agentic Browsing audit as non-conformant); now a spec-conformant file per
+  llmstxt.org (H1 + summary blockquote + H2 link sections) covering catalog, docs, the MCP
+  endpoint and the repo, served directly in nginx like robots.txt so mapped crawler UAs aren't
+  proxied into a `/seo-proxy/llms.txt` 404 (#9618).
+- **`bot-serving-check.yml` synthetic monitor** — daily scheduled workflow that curls the
+  Cloud Run origin with Googlebot/Twitterbot UAs plus a human-UA control (and an `llms.txt`
+  check) and fails on non-200 or missing per-route titles, so the crawler-only serving path can
+  never break silently again. Targets the origin because Cloudflare's bot management 403s
+  GitHub-runner IPs (#9617, #9619).
+- **Product/UX audit 2026-07-08** (`agentic/audits/2026-07-08-product-ux.md`) — 8-auditor
+  workflow run scoped to pipeline, rating criteria, tabs, and product qualities; Health Score 43,
+  headlined by a critical crawler outage (every bot UA gets 502 from the `@seo_proxy` hop) and
+  quality-score calibration drift (#9616).
+- **Legal page "other projects" block** — below the disclaimer, cross-linking the maintainer's
+  other projects kurrentschrift.ink and cite-citadel, tracked as `external_link` with
+  destinations `kurrentschrift` / `cite_citadel`; deliberately without `noreferrer` so the
+  target sites' analytics can attribute the traffic (#9616).
+
+- **Project skill layer under `.claude/skills/`** — six skills, ported from the kurrentschrift
+  and cite-citadel setups and adapted to anyplot: `verify-frontend` (browser-drive changed flows,
+  both viewports × both themes, cloud playwright-core fallback probe), `verify-api` (read sweep +
+  shared-prod-DB discipline), `verify-core` (pytest/ruff/mypy gates + registry smoke), `open-pr`
+  (gates → PR → CI watch → review-thread resolution with runnable GraphQL recipes),
+  `optimize-skills` (session-transcript retro mining), and `babysit-pipeline` (bulk-generate
+  monitoring with the battle-tested poller scripts promoted from gitignored local state).
+  CLAUDE.md gained a Self-Verification routing table wiring diff paths to the skills (#9615).
+- **`/dependabot` and `/catalog-status` commands** — batch-processing of Dependabot PRs with the
+  GITHUB_TOKEN/auto-merge gotchas encoded, and a reproducible catalog-status report (light/dark
+  migration counts, per-spec library coverage, open impl-PR classification). Both derived from a
+  13-session transcript retro; the same retro added working rules to CLAUDE.md (explicit
+  authorization for external writes, proactive progress reporting, absolute-path discipline)
+  (#9615).
+- **`CHANGELOG.md` introduced, with the v1.0.0–v3.0.0 history backfilled** from the GitHub
+  releases. The per-PR changelog contract is wired into `CLAUDE.md`,
+  `.github/copilot-instructions.md`, and `/pull_request`; a new `/release` command
+  (`agentic/commands/release.md`) codifies the version-bump → tag → GitHub-release flow (#9614).
+- **Design-sync inputs for the anyplot.ai Design System.** `.design-sync/` carries the app-shape
+  sync inputs so the Design System on claude.ai/design can be synced from `app/` via
+  `/design-sync`; MonoLisa is fetched from GCS and never committed (#9213).
+
+### Changed
+
+- **Hot listing paths stop fetching every code blob** — MCP `list_specs` /
+  `search_specs_by_tags` and `/libraries/{id}/images` used `get_all_with_code()`, dragging the
+  full multi-MB code corpus through the DB per request; the MCP tools now resolve code
+  *presence* via a lightweight id probe (`get_ids_with_code`) and the images endpoint fetches
+  only its own library's code (`get_by_library_with_code`); the now-unused `get_all_with_code()`
+  was removed (audit 2026-07-15 Medium#5, issue #7696) (#9644).
+- **Frontend a11y pass** — card actions reveal on `:focus-within` and stay visible on touch
+  devices instead of hover-only; the NavBar search button and nav links have `:focus-visible`
+  outlines; mobile nav/theme-toggle tap targets reach 44px; off-palette Tailwind green and a
+  rogue Python-blue were replaced with imprint palette hues; `AppDataProvider`/theme context
+  values are memoized so consumers stop re-rendering every frame (audit 2026-07-15
+  Medium#7/#10/#11/#12).
+- **Frontend production image builds on `node:22-alpine`** — `node:20` is EOL April 2026; 22
+  matches the JS render harness (audit 2026-07-15 Medium#16) (#9642).
+- **Spec-detail tabs are self-explanatory now** — the Code tab (Spec tab on hub pages) starts
+  open instead of everything collapsed, the selected tab shows a small caret signaling the
+  click-to-collapse toggle, the quality tab reads "Quality 91" (with an explanatory
+  `aria-label`) instead of a bare number, and tabs↔panels got standard `id`/`aria-controls`
+  wiring (audit 2026-07-08 High#5 + Low#1) (#9622).
+- **Bot-served pages now carry the site's actual content** — the crawler-facing HTML
+  (`/seo-proxy/*`, what Googlebot & social bots see) grows from a title+description shell to a
+  real document: spec hubs list and link every implementation, implementation pages embed the
+  full source in a `<pre>` block plus hub/sibling links, both carry the preview image and
+  JSON-LD (`BreadcrumbList`, `ItemList`, `SoftwareSourceCode`), and every bot page ends with a
+  site-wide nav. Display names derive from `core/constants.py`, never hand-maintained (audit
+  2026-07-08 High#6) (#9621).
+- **Gallery cold path prewarmed** — the startup cache prewarm now also computes the two
+  heaviest user-facing payloads, `/plots/filter` (`filter:all`) and `/specs/map`, so the first
+  visitor of a fresh Cloud Run instance no longer waits on the full DB roundtrip for the
+  gallery or the map page (audit 2026-07-08 Quick Win 2) (#9620).
+- **ECharts upgraded 5.5.1 → 6.1.0** — major bump of a rendered charting library; echarts
+  previews regenerate against the new major through the regular pipeline (#9609).
+- **Post-restructure `app/` cleanup:** dead components removed and stale doc paths fixed (#8630);
+  ECharts / MUI X labels shortened in the `/stats` library list (#8666).
+- **Dependencies:** grouped bumps across Python (starlette, cryptography, python-multipart,
+  sqlalchemy, uvicorn, 15-update python-minor group), npm (esbuild, undici), and GitHub Actions
+  (#8668, #8823, #8824, #8864, #8978, #8980, #9074, #9513, #9515).
+
+### Removed
+
+- **Catalog curation: 13 interactive-first specs removed** — plot types whose value is inherently
+  interactive don't fit a static-first catalog (#8645).
+
 ### Fixed
 
 - **Tag search uses the GIN index and stops treating `%`/`_` as wildcards** —
@@ -29,23 +140,6 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   entry, so a caller could evade the limit or poison another user's bucket; it now prefers
   Cloudflare's `cf-connecting-ip` and otherwise uses the rightmost, infrastructure-appended
   entry (audit 2026-07-15 Medium#20) (#9644).
-
-### Changed
-
-- **Hot listing paths stop fetching every code blob** — MCP `list_specs` /
-  `search_specs_by_tags` and `/libraries/{id}/images` used `get_all_with_code()`, dragging the
-  full multi-MB code corpus through the DB per request; the MCP tools now resolve code
-  *presence* via a lightweight id probe (`get_ids_with_code`) and the images endpoint fetches
-  only its own library's code (`get_by_library_with_code`); the now-unused `get_all_with_code()`
-  was removed (audit 2026-07-15 Medium#5, issue #7696) (#9644).
-
-### Added
-
-- **`CODE_OF_CONDUCT.md`** — Contributor Covenant 2.1, linked from `docs/contributing.md`
-  (closes the last repo-health gap from audit 2026-07-15 Medium#29) (#9644).
-
-### Fixed
-
 - **Runaway impl-generate retry loop can no longer self-amplify** — the 3-attempt cap counted
   prior failures by paginating issue comments and fell back to "0 failures" whenever the count
   API call rate-limited, so every failure re-dispatched forever (issue #1010 flooded ~1,200
@@ -98,53 +192,6 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   only MCP transport (the SSE endpoint is gone); stale `plot.png` code examples are
   theme-aware; a leaked personal `file://` path was scrubbed from a palette doc
   (audit 2026-07-15 Medium#14/#24/#26/#27/#31/#32/#33) (#9642).
-
-### Security
-
-- **Issue templates no longer auto-apply workflow trigger labels** — `spec-request` /
-  `report-pending` previously flowed unauthenticated issue text straight into write-privileged
-  Claude agents; the labels must now be added by a maintainer (GitHub requires triage rights to
-  label), which puts a human review in front of every agent run (audit 2026-07-15 High#7) (#9642).
-- **Composite actions SHA-pinned** — `setup-node`/`setup-r`/`setup-julia` used floating tags
-  while every workflow pins to SHAs; all four `uses:` refs are now SHA-pinned and the
-  Dependabot `github-actions` entry covers the composite-action directories so the pins stay
-  fresh (audit 2026-07-15 Medium#13) (#9642).
-- **Frontend nginx ships security headers** — new `app/security-headers.conf` (CSP tuned to
-  Plausible/GCS/API needs, `nosniff`, `X-Frame-Options SAMEORIGIN`, `Referrer-Policy`, HSTS)
-  included in both server blocks and re-included in every `add_header` location
-  (audit 2026-07-15 Medium#21) (#9642).
-
-### Added
-
-- **Bot-served pages got a real SEO surface** — `seo_home()` now emits the site-level JSON-LD
-  (`WebApplication`, `WebSite`+`SearchAction`, `Organization`) that previously only lived in the
-  SPA shell nginx never serves to bots, plus a descriptive title/meta and real body copy;
-  `/seo-proxy/plots` and `/seo-proxy/specs` render a server-side link to every spec hub, so
-  crawlers can reach all 324 hubs (they were orphans); `Google-InspectionTool`/`GoogleOther`
-  UAs are now routed to the bot pages like Googlebot (audit 2026-07-15 High#10/#11,
-  Medium#40/#41) (#9642).
-- **`core/palette.py` unit tests** — the last untested core module now has coverage: pool
-  contract, semantic anchors, theme-adaptive neutrals, lazy cmaps and the
-  matplotlib-free-import guarantee (audit 2026-07-15 Medium#28) (#9642).
-- **Impl check constraints exist as a migration** — `ck_quality_score_range` /
-  `ck_review_verdict_valid` lived only in the ORM; a new alembic migration adds them (with
-  pre-normalization of violating rows and a real downgrade) (audit 2026-07-15 Medium#18) (#9642).
-- **Repo health:** PR template with changelog/docs checklist and an `.editorconfig` mirroring
-  ruff + frontend conventions (audit 2026-07-15 Medium#29) (#9642).
-
-### Changed
-
-- **Frontend a11y pass** — card actions reveal on `:focus-within` and stay visible on touch
-  devices instead of hover-only; the NavBar search button and nav links have `:focus-visible`
-  outlines; mobile nav/theme-toggle tap targets reach 44px; off-palette Tailwind green and a
-  rogue Python-blue were replaced with imprint palette hues; `AppDataProvider`/theme context
-  values are memoized so consumers stop re-rendering every frame (audit 2026-07-15
-  Medium#7/#10/#11/#12).
-- **Frontend production image builds on `node:22-alpine`** — `node:20` is EOL April 2026; 22
-  matches the JS render harness (audit 2026-07-15 Medium#16) (#9642).
-
-### Fixed
-
 - **Global keyboard shortcuts no longer hijack focused elements on `/plots`** — the
   window-level Space/Enter/Backspace handler now bails out when the keystroke targets an
   interactive element (button, link, focused card/chip/toggle), so keyboard-activating a card
@@ -188,92 +235,6 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   product: `/map` + `/debug` pages, `nav_map` source, the previously undocumented
   `library_filter` event with its `framework` prop, and the 15-library value list (audit
   2026-07-08 High#7 repo-side + Medium#10 + Low#12/#15) (#9625).
-
-### Changed
-
-- **Spec-detail tabs are self-explanatory now** — the Code tab (Spec tab on hub pages) starts
-  open instead of everything collapsed, the selected tab shows a small caret signaling the
-  click-to-collapse toggle, the quality tab reads "Quality 91" (with an explanatory
-  `aria-label`) instead of a bare number, and tabs↔panels got standard `id`/`aria-controls`
-  wiring (audit 2026-07-08 High#5 + Low#1) (#9622).
-- **Bot-served pages now carry the site's actual content** — the crawler-facing HTML
-  (`/seo-proxy/*`, what Googlebot & social bots see) grows from a title+description shell to a
-  real document: spec hubs list and link every implementation, implementation pages embed the
-  full source in a `<pre>` block plus hub/sibling links, both carry the preview image and
-  JSON-LD (`BreadcrumbList`, `ItemList`, `SoftwareSourceCode`), and every bot page ends with a
-  site-wide nav. Display names derive from `core/constants.py`, never hand-maintained (audit
-  2026-07-08 High#6) (#9621).
-- **Gallery cold path prewarmed** — the startup cache prewarm now also computes the two
-  heaviest user-facing payloads, `/plots/filter` (`filter:all`) and `/specs/map`, so the first
-  visitor of a fresh Cloud Run instance no longer waits on the full DB roundtrip for the
-  gallery or the map page (audit 2026-07-08 Quick Win 2) (#9620).
-
-### Added
-
-- **Full 2026-07-15 codebase audit report** — persisted output of a 16-auditor `/audit` run
-  with domain-routed cross-validation (`agentic/audits/2026-07-15-all.md`, mirrored to
-  `latest.md`). Health Score 30/100 with correctness (C, 60) as the weak pillar; headlines are a
-  live `heatmap-calendar` retry loop (#1010), 15-library pipeline/config drift, dark-mode
-  white-surface leaks, and 97 reviewer-rejected implementations live on main, plus an open-issue
-  triage with a recommended work queue. Report only, no source changes (#9641).
-- **`llms.txt` for AI agents** — `/llms.txt` previously fell through to the SPA shell (flagged
-  by Lighthouse's Agentic Browsing audit as non-conformant); now a spec-conformant file per
-  llmstxt.org (H1 + summary blockquote + H2 link sections) covering catalog, docs, the MCP
-  endpoint and the repo, served directly in nginx like robots.txt so mapped crawler UAs aren't
-  proxied into a `/seo-proxy/llms.txt` 404 (#9618).
-- **`bot-serving-check.yml` synthetic monitor** — daily scheduled workflow that curls the
-  Cloud Run origin with Googlebot/Twitterbot UAs plus a human-UA control (and an `llms.txt`
-  check) and fails on non-200 or missing per-route titles, so the crawler-only serving path can
-  never break silently again. Targets the origin because Cloudflare's bot management 403s
-  GitHub-runner IPs (#9617, #9619).
-- **Product/UX audit 2026-07-08** (`agentic/audits/2026-07-08-product-ux.md`) — 8-auditor
-  workflow run scoped to pipeline, rating criteria, tabs, and product qualities; Health Score 43,
-  headlined by a critical crawler outage (every bot UA gets 502 from the `@seo_proxy` hop) and
-  quality-score calibration drift (#9616).
-- **Legal page "other projects" block** — below the disclaimer, cross-linking the maintainer's
-  other projects kurrentschrift.ink and cite-citadel, tracked as `external_link` with
-  destinations `kurrentschrift` / `cite_citadel`; deliberately without `noreferrer` so the
-  target sites' analytics can attribute the traffic (#9616).
-
-- **Project skill layer under `.claude/skills/`** — six skills, ported from the kurrentschrift
-  and cite-citadel setups and adapted to anyplot: `verify-frontend` (browser-drive changed flows,
-  both viewports × both themes, cloud playwright-core fallback probe), `verify-api` (read sweep +
-  shared-prod-DB discipline), `verify-core` (pytest/ruff/mypy gates + registry smoke), `open-pr`
-  (gates → PR → CI watch → review-thread resolution with runnable GraphQL recipes),
-  `optimize-skills` (session-transcript retro mining), and `babysit-pipeline` (bulk-generate
-  monitoring with the battle-tested poller scripts promoted from gitignored local state).
-  CLAUDE.md gained a Self-Verification routing table wiring diff paths to the skills (#9615).
-- **`/dependabot` and `/catalog-status` commands** — batch-processing of Dependabot PRs with the
-  GITHUB_TOKEN/auto-merge gotchas encoded, and a reproducible catalog-status report (light/dark
-  migration counts, per-spec library coverage, open impl-PR classification). Both derived from a
-  13-session transcript retro; the same retro added working rules to CLAUDE.md (explicit
-  authorization for external writes, proactive progress reporting, absolute-path discipline)
-  (#9615).
-- **`CHANGELOG.md` introduced, with the v1.0.0–v3.0.0 history backfilled** from the GitHub
-  releases. The per-PR changelog contract is wired into `CLAUDE.md`,
-  `.github/copilot-instructions.md`, and `/pull_request`; a new `/release` command
-  (`agentic/commands/release.md`) codifies the version-bump → tag → GitHub-release flow (#9614).
-- **Design-sync inputs for the anyplot.ai Design System.** `.design-sync/` carries the app-shape
-  sync inputs so the Design System on claude.ai/design can be synced from `app/` via
-  `/design-sync`; MonoLisa is fetched from GCS and never committed (#9213).
-
-### Changed
-
-- **ECharts upgraded 5.5.1 → 6.1.0** — major bump of a rendered charting library; echarts
-  previews regenerate against the new major through the regular pipeline (#9609).
-- **Post-restructure `app/` cleanup:** dead components removed and stale doc paths fixed (#8630);
-  ECharts / MUI X labels shortened in the `/stats` library list (#8666).
-- **Dependencies:** grouped bumps across Python (starlette, cryptography, python-multipart,
-  sqlalchemy, uvicorn, 15-update python-minor group), npm (esbuild, undici), and GitHub Actions
-  (#8668, #8823, #8824, #8864, #8978, #8980, #9074, #9513, #9515).
-
-### Removed
-
-- **Catalog curation: 13 interactive-first specs removed** — plot types whose value is inherently
-  interactive don't fit a static-first catalog (#8645).
-
-### Fixed
-
 - **Crawler 502 outage fixed** — since at least 2026-06-12, every crawler UA (googlebot,
   bingbot, twitterbot, discord, whatsapp, …) received HTTP 502 on every page: the nginx
   `@seo_proxy` hop verifies the upstream TLS chain of `api.anyplot.ai`, which is 4 certificates
@@ -284,6 +245,21 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `PalettePage.tsx` into `PalettePage.helpers.ts` (following the `MapPage.helpers.ts` pattern),
   and the `react-refresh/only-export-components` rule scoped off for test modules
   (`*.test.{ts,tsx}`, `test-utils.tsx`), which never participate in Fast Refresh (#9616).
+
+### Security
+
+- **Issue templates no longer auto-apply workflow trigger labels** — `spec-request` /
+  `report-pending` previously flowed unauthenticated issue text straight into write-privileged
+  Claude agents; the labels must now be added by a maintainer (GitHub requires triage rights to
+  label), which puts a human review in front of every agent run (audit 2026-07-15 High#7) (#9642).
+- **Composite actions SHA-pinned** — `setup-node`/`setup-r`/`setup-julia` used floating tags
+  while every workflow pins to SHAs; all four `uses:` refs are now SHA-pinned and the
+  Dependabot `github-actions` entry covers the composite-action directories so the pins stay
+  fresh (audit 2026-07-15 Medium#13) (#9642).
+- **Frontend nginx ships security headers** — new `app/security-headers.conf` (CSP tuned to
+  Plausible/GCS/API needs, `nosniff`, `X-Frame-Options SAMEORIGIN`, `Referrer-Policy`, HSTS)
+  included in both server blocks and re-included in every `add_header` location
+  (audit 2026-07-15 Medium#21) (#9642).
 
 ## [3.0.0] — 2026-06-10 — Julia & JavaScript, 15 libraries & the Imprint palette
 

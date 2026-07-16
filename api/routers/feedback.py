@@ -43,10 +43,12 @@ def _client_ip(request: Request) -> str:
     Trust order (client → Cloudflare → Cloud Run):
     1. `cf-connecting-ip` — Cloudflare overwrites any client-supplied value on
        proxied traffic, so browsers on anyplot.ai cannot spoof it.
-    2. Rightmost `x-forwarded-for` entry — appended by the trusted
+    2. Rightmost non-empty `x-forwarded-for` entry — appended by the trusted
        infrastructure hop. The *leftmost* entry (used here previously) is
        client-controlled: spoofing it evaded the rate limit and allowed
-       poisoning another user's bucket to lock them out.
+       poisoning another user's bucket to lock them out. Empty entries from
+       malformed headers ("1.2.3.4, ") are skipped so a caller can't force
+       everyone into one shared empty-string bucket.
     3. `request.client.host` as the last resort.
 
     A caller bypassing Cloudflare via the run.app URL can still forge
@@ -58,8 +60,9 @@ def _client_ip(request: Request) -> str:
     if cf_ip:
         return cf_ip
     forwarded = request.headers.get("x-forwarded-for", "")
-    if forwarded:
-        return forwarded.rsplit(",", 1)[-1].strip()
+    for entry in reversed(forwarded.split(",")):
+        if entry.strip():
+            return entry.strip()
     return request.client.host if request.client else ""
 
 
