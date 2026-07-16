@@ -44,6 +44,8 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 - **`CODE_OF_CONDUCT.md`** — Contributor Covenant 2.1, linked from `docs/contributing.md`
   (closes the last repo-health gap from audit 2026-07-15 Medium#29) (#9644).
 
+### Fixed
+
 - **Runaway impl-generate retry loop can no longer self-amplify** — the 3-attempt cap counted
   prior failures by paginating issue comments and fell back to "0 failures" whenever the count
   API call rate-limited, so every failure re-dispatched forever (issue #1010 flooded ~1,200
