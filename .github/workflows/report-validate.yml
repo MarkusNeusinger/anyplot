@@ -3,7 +3,9 @@ run-name: "Validate Report: issue #${{ github.event.issue.number }}"
 
 # Validates and structures user-submitted issue reports
 # Flow:
-# 1. User submits report → report-pending label auto-added
+# 1. User submits report → maintainer reviews and adds report-pending label
+#    (label is NOT auto-applied: adding it requires triage rights, which is
+#    the gate that keeps unauthenticated issue text out of this Claude agent)
 # 2. AI validates spec/impl exists, analyzes issue, posts structured comment
 # 3. Labels updated: report-validated + category + report:spec/impl
 

@@ -15,9 +15,10 @@ runs:
   using: "composite"
   steps:
     - name: Install R
-      # r-lib/actions ships every sub-action from a single repo and tags them together;
-      # `@v2` is the maintained moving tag. Dependabot will pin to a SHA on first run.
-      uses: r-lib/actions/setup-r@v2
+      # r-lib/actions ships every sub-action from a single repo and tags them
+      # together; pinned to the v2 tag's commit SHA like every workflow-level
+      # action in this repo (Dependabot keeps the pin fresh).
+      uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6  # v2
       with:
         r-version: ${{ inputs.r-version }}
         use-public-rspm: true

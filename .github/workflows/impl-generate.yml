@@ -1021,20 +1021,44 @@ jobs:
 
           # Count previous failures via hidden marker comments (more reliable than workflow runs).
           # Paginate so the marker is found even on issues with >30 comments
-          # (which is common because all 9 library impls land on the same issue).
+          # (which is common because all 15 library impls land on the same issue).
+          #
+          # FAIL CLOSED: if the count call errors (rate limit, transient API
+          # failure), we must NOT assume zero prior failures — a zero fallback
+          # turns the 3-attempt cap into an infinite self-retry loop (each
+          # retry adds a failure comment, which makes the count call slower and
+          # more rate-limit-prone, which re-triggers the zero fallback; issue
+          # #1010 flooded ~1,200 Actions runs in 38h exactly this way).
+          # A failed count is therefore treated as cap-reached: no auto-retry.
+          # NB: --paginate applies --jq to EACH page separately, so the filter
+          # emits one per-page count per line; awk sums them into one number
+          # (the old code broke on issues with >100 comments for this reason).
+          # pipefail (Actions bash default) makes a gh failure fail the whole
+          # pipeline, so the fail-closed else-branch still triggers.
           MARKER="<!-- impl-fail:${SPEC_ID}:${LIBRARY} -->"
-          FAILURE_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
-            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
-
-          echo "::notice::Previous failures for ${LIBRARY}/${SPEC_ID}: $FAILURE_COUNT"
+          if FAILURE_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
+            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" \
+            | awk '{ sum += $1 } END { print sum + 0 }'); then
+            echo "::notice::Previous failures for ${LIBRARY}/${SPEC_ID}: $FAILURE_COUNT"
+          else
+            echo "::warning::Failure-count API call failed — failing closed (treating retry cap as reached, no auto-retry)"
+            FAILURE_COUNT=999
+          fi
 
           # FAILURE_COUNT counts marker comments BEFORE this run.
           # 0 → this is attempt 1 fail, 1 → attempt 2 fail, 2 → attempt 3 fail.
           ATTEMPT=$((FAILURE_COUNT + 1))
 
-          # After 2 previous failures (= this is attempt 3) → mark as failed
+          # After 2 previous failures (= this is attempt 3) → mark as failed.
+          # Also entered when the failure count could not be determined
+          # (FAILURE_COUNT=999, fail-closed — see above).
           if [ "$FAILURE_COUNT" -ge 2 ]; then
-            echo "::warning::Marking $LIBRARY as failed after 3 generation attempts"
+            if [ "$FAILURE_COUNT" -eq 999 ]; then
+              CAP_REASON="the failure counter could not be read (failed closed — auto-retry disabled)"
+            else
+              CAP_REASON="3 generation attempts"
+            fi
+            echo "::warning::Marking $LIBRARY as failed: $CAP_REASON"
 
             # Create failed label if needed
             gh label create "impl:${LIBRARY}:failed" --color "d73a4a" \
@@ -1047,9 +1071,9 @@ jobs:
 
             # Post final failure comment with marker
             gh issue comment "$ISSUE" --body "${MARKER}
-          ## :x: ${LIBRARY} Failed (Attempt 3/3)
+          ## :x: ${LIBRARY} Failed (retry cap reached)
 
-          The **${LIBRARY}** implementation for \`${SPEC_ID}\` failed after 3 attempts.
+          The **${LIBRARY}** implementation for \`${SPEC_ID}\` was marked failed after ${CAP_REASON}.
 
           **Reason:** Claude Code failed to create the implementation file.
 
