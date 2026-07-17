@@ -15,6 +15,8 @@ anyplot is a specification-driven platform where **AI generates all plot impleme
 
 All contributions go through GitHub Issues with AI-powered validation and processing.
 
+By participating, you agree to our [Code of Conduct](../CODE_OF_CONDUCT.md).
+
 ---
 
 ## Request a New Plot

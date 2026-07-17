@@ -90,9 +90,10 @@ async def list_specs(limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
     session = await get_mcp_db_session()
     try:
         repo = SpecRepository(session)
-        # `impl.code is not None` below requires the code column on every impl
-        # of every spec in the page — use the eager-loaded variant.
-        specs = await repo.get_all_with_code()
+        specs = await repo.get_all()
+        # `code` is deferred (multi-MB across the catalog); library_count only
+        # needs code *presence*, so probe the non-NULL ids instead of loading blobs.
+        ids_with_code = await ImplRepository(session).get_ids_with_code()
 
         # Apply pagination
         paginated_specs = specs[offset : offset + limit]
@@ -100,7 +101,7 @@ async def list_specs(limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
         # Convert to SpecListItem format
         result = []
         for spec in paginated_specs:
-            impl_count = len([impl for impl in spec.impls if impl.code is not None])
+            impl_count = len([impl for impl in spec.impls if impl.id in ids_with_code])
             item = SpecListItem(
                 id=spec.id, title=spec.title, description=spec.description, tags=spec.tags, library_count=impl_count
             )
@@ -179,10 +180,10 @@ async def search_specs_by_tags(
         # Flatten filter values into a single tag list for repository search
         tag_values: list[str] = [tag for tags in filters.values() for tag in tags]
 
-        # Search by spec-level tags. The fallback path (no tag filter) still
-        # iterates spec.impls below and reads impl.code, so use the
-        # eager-loaded variant — `search_by_tags` already undefers code.
-        specs = await repo.search_by_tags(tag_values) if tag_values else await repo.get_all_with_code()
+        # Search by spec-level tags. `code` stays deferred on both paths —
+        # the loops below only need code *presence*, probed via non-NULL ids.
+        specs = await repo.search_by_tags(tag_values) if tag_values else await repo.get_all()
+        ids_with_code = await ImplRepository(session).get_ids_with_code()
 
         # Apply impl-level filtering if needed
         if library or dependencies or techniques or patterns or dataprep or styling:
@@ -191,7 +192,7 @@ async def search_specs_by_tags(
                 # Check if spec has implementations matching impl-level filters
                 matching_impls = []
                 for impl in spec.impls:
-                    if impl.code is None:
+                    if impl.id not in ids_with_code:
                         continue
 
                     # Filter by library
@@ -228,7 +229,7 @@ async def search_specs_by_tags(
         # Convert to SpecListItem format
         result = []
         for spec in specs:
-            impl_count = len([impl for impl in spec.impls if impl.code is not None])
+            impl_count = len([impl for impl in spec.impls if impl.id in ids_with_code])
             item = SpecListItem(
                 id=spec.id, title=spec.title, description=spec.description, tags=spec.tags, library_count=impl_count
             )
