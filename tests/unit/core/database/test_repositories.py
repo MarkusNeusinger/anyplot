@@ -5,6 +5,7 @@ Uses in-memory SQLite to test repository operations.
 """
 
 import pytest
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.models import Library, Spec
@@ -12,11 +13,13 @@ from core.database.repositories import (
     IMPL_UPDATABLE_FIELDS,
     LANGUAGE_UPDATABLE_FIELDS,
     LIBRARY_UPDATABLE_FIELDS,
+    SPEC_TAG_CATEGORIES,
     SPEC_UPDATABLE_FIELDS,
     ImplRepository,
     LanguageRepository,
     LibraryRepository,
     SpecRepository,
+    _spec_tag_filters,
 )
 
 
@@ -147,6 +150,25 @@ class TestSpecRepository:
         await repo.create({"id": "s1", "title": "To Delete"})
         assert await repo.delete("s1") is True
         assert await repo.get_by_id("s1") is None
+
+    @pytest.mark.asyncio
+    async def test_search_by_tags_sqlite_fallback(self, test_session: AsyncSession) -> None:
+        repo = SpecRepository(test_session)
+        await repo.create({"id": "scatter-basic", "title": "Basic Scatter", "tags": {"plot_type": ["scatter"]}})
+        await repo.create({"id": "bar-basic", "title": "Basic Bar", "tags": {"plot_type": ["bar"]}})
+
+        specs = await repo.search_by_tags(["scatter"])
+        assert [s.id for s in specs] == ["scatter-basic"]
+
+    @pytest.mark.asyncio
+    async def test_search_by_tags_escapes_like_metachars(self, test_session: AsyncSession) -> None:
+        """LIKE metacharacters in a tag value must match literally, not as wildcards."""
+        repo = SpecRepository(test_session)
+        await repo.create({"id": "pct-basic", "title": "Percent", "tags": {"features": ["100%_stacked"]}})
+        await repo.create({"id": "other", "title": "Other", "tags": {"features": ["100x_stacked"]}})
+
+        specs = await repo.search_by_tags(["100%_stacked"])
+        assert [s.id for s in specs] == ["pct-basic"]
 
     @pytest.mark.asyncio
     async def test_delete_nonexistent(self, test_session: AsyncSession) -> None:
@@ -328,3 +350,46 @@ class TestImplRepository:
         loc = await repo.get_loc_per_impl()
         assert len(loc) == 1
         assert loc[0] == ("matplotlib", 2)
+
+    @pytest.mark.asyncio
+    async def test_get_by_library_with_code(self, setup_data: AsyncSession) -> None:
+        repo = ImplRepository(setup_data)
+        await repo.upsert("scatter-basic", "matplotlib", {"code": "import matplotlib"})
+        impls = await repo.get_by_library_with_code("matplotlib")
+        assert len(impls) == 1
+        assert impls[0].spec_id == "scatter-basic"
+        assert impls[0].code == "import matplotlib"
+
+        assert await repo.get_by_library_with_code("seaborn") == []
+
+    @pytest.mark.asyncio
+    async def test_get_ids_with_code(self, setup_data: AsyncSession) -> None:
+        repo = ImplRepository(setup_data)
+        with_code = await repo.upsert("scatter-basic", "matplotlib", {"code": "import matplotlib"})
+        setup_data.add(Spec(id="bar-basic", title="Basic Bar"))
+        await setup_data.commit()
+        codeless = await repo.upsert("bar-basic", "matplotlib", {"code": None})
+
+        ids = await repo.get_ids_with_code()
+        assert with_code.id in ids
+        assert codeless.id not in ids
+
+
+class TestSpecTagFilters:
+    """SQL shape of the tag-search filters per dialect."""
+
+    def test_postgresql_uses_jsonb_containment(self) -> None:
+        filters = _spec_tag_filters(["scatter"], "postgresql")
+        assert len(filters) == len(SPEC_TAG_CATEGORIES)
+        sql = str(filters[0].compile(dialect=postgresql.dialect()))
+        # `tags @> <bind>` with a bare left-hand column — the only shape the
+        # ix_specs_tags GIN index can serve. A CAST on the column would work
+        # too (jsonb→jsonb is a no-op) but this asserts the intent exactly.
+        assert "@>" in sql
+        assert sql.startswith("specs.tags")
+
+    def test_sqlite_falls_back_to_text_like(self) -> None:
+        filters = _spec_tag_filters(["scatter"], "sqlite")
+        assert len(filters) == 1
+        sql = str(filters[0].compile())
+        assert "LIKE" in sql

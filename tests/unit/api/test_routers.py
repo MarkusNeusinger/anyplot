@@ -277,17 +277,19 @@ class TestLibrariesRouter:
 
     def test_library_images_invalid_library(self, client: TestClient) -> None:
         """Library images should return 404 for invalid library."""
-        mock_spec_repo = MagicMock()
-        mock_spec_repo.get_all = AsyncMock(return_value=[])
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_by_library_with_code = AsyncMock(return_value=[])
 
         with (
             patch(DB_CONFIG_PATCH, return_value=True),
             patch("api.routers.libraries.get_cache", return_value=None),
             patch("api.routers.libraries.set_cache"),
-            patch("api.routers.libraries.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.libraries.ImplRepository", return_value=mock_impl_repo),
         ):
             response = client.get("/libraries/invalid_lib/images")
             assert response.status_code == 404
+            # The invalid id must be rejected before any DB round-trip.
+            mock_impl_repo.get_by_library_with_code.assert_not_awaited()
 
     def test_libraries_with_db(self, db_client, mock_lib) -> None:
         """Libraries should return data from DB when configured."""
@@ -323,16 +325,24 @@ class TestLibrariesRouter:
             assert data["libraries"][0]["id"] == "cached_lib"
 
     def test_library_images_with_db(self, db_client, mock_spec) -> None:
-        """Library images should return images from DB."""
+        """Library images should return images from the single-library impl query."""
         client, _ = db_client
 
-        mock_spec_repo = MagicMock()
-        mock_spec_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
+        mock_impl = mock_spec.impls[0]
+        mock_impl.spec_id = "scatter-basic"
+        mock_impl.language_id = "python"
+
+        # A preview-less impl must be filtered out of the response.
+        no_preview_impl = MagicMock()
+        no_preview_impl.preview_url = None
+
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_by_library_with_code = AsyncMock(return_value=[mock_impl, no_preview_impl])
 
         with (
             patch("api.routers.libraries.get_cache", return_value=None),
             patch("api.routers.libraries.set_cache"),
-            patch("api.routers.libraries.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.libraries.ImplRepository", return_value=mock_impl_repo),
         ):
             response = client.get("/libraries/matplotlib/images")
             assert response.status_code == 200
@@ -340,6 +350,7 @@ class TestLibrariesRouter:
             assert data["library"] == "matplotlib"
             assert len(data["images"]) == 1
             assert data["images"][0]["spec_id"] == "scatter-basic"
+            mock_impl_repo.get_by_library_with_code.assert_awaited_once_with("matplotlib")
 
     def test_library_images_cache_hit(self, db_client) -> None:
         """Library images should return cached data when available."""
