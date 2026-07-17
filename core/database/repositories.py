@@ -7,7 +7,8 @@ Provides abstraction layer between API and database models.
 from datetime import datetime, timezone
 from typing import Generic, TypeVar
 
-from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy import ColumnElement, String, cast, func, or_, select, type_coerce
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, undefer
 
@@ -15,6 +16,35 @@ from core.database.models import Feedback, Impl, Language, Library, Spec
 
 
 T = TypeVar("T")
+
+# Spec-level tag categories — the keys of the `tags` JSON object
+# ({plot_type, data_type, domain, features}, see docs/reference/tagging-system.md).
+SPEC_TAG_CATEGORIES = ("plot_type", "data_type", "domain", "features")
+
+
+def _spec_tag_filters(tags: list[str], dialect_name: str) -> list[ColumnElement[bool]]:
+    """Build WHERE filters matching specs whose tags contain any of *tags*.
+
+    On PostgreSQL each (category, tag) pair becomes a JSONB containment
+    predicate (``tags @> '{"<category>": ["<tag>"]}'``) — the operator shape
+    the ``ix_specs_tags`` GIN index can serve. The previous cast-to-text +
+    LIKE forced a sequential scan and treated LIKE metacharacters in tag
+    values as wildcards.
+
+    Other dialects (SQLite in tests) keep the text fallback, with LIKE
+    metacharacters escaped via ``autoescape``.
+    """
+    filters: list[ColumnElement[bool]] = []
+    for tag in tags:
+        if dialect_name == "postgresql":
+            # type_coerce (not cast) keeps the left side a bare `tags` column
+            # in SQL, so the GIN index on `tags` stays applicable.
+            filters.extend(
+                type_coerce(Spec.tags, JSONB).contains({category: [tag]}) for category in SPEC_TAG_CATEGORIES
+            )
+        else:
+            filters.append(cast(Spec.tags, String).contains(f'"{tag}"', autoescape=True))
+    return filters
 
 
 # =============================================================================
@@ -159,26 +189,13 @@ class SpecRepository(BaseRepository[Spec]):
         Lightweight: `Impl.code` stays deferred. Most callers (specs/plots/
         seo/insights/stats/debug routers) only need the listing surface;
         eager-loading every code blob would be a multi-MB regression.
-        Callers that iterate `spec.impls` and read `impl.code` on an async
-        session must use `get_all_with_code()` to avoid MissingGreenlet.
+        Callers that need code must fetch it explicitly (`ImplRepository.get_code`
+        / `get_by_library_with_code`) or code presence via
+        `ImplRepository.get_ids_with_code()` — touching `impl.code` on these
+        results raises MissingGreenlet on AsyncSession.
         """
         impls_loader = selectinload(Spec.impls)
         result = await self.session.execute(select(Spec).options(impls_loader.selectinload(Impl.library)))
-        return list(result.scalars().all())
-
-    async def get_all_with_code(self) -> list[Spec]:
-        """Get all specs with implementations (code + library eager-loaded).
-
-        Use this for paths that read `impl.code` on every implementation —
-        currently only the MCP `list_specs` and `search_specs` tools.
-        Touching `impl.code` after `get_all()` raises MissingGreenlet on
-        AsyncSession because the column is deferred and the lazy-load would
-        emit a sync SELECT.
-        """
-        impls_loader = selectinload(Spec.impls)
-        result = await self.session.execute(
-            select(Spec).options(impls_loader.selectinload(Impl.library), impls_loader.undefer(Impl.code))
-        )
         return list(result.scalars().all())
 
     async def get_ids(self) -> list[str]:
@@ -196,21 +213,18 @@ class SpecRepository(BaseRepository[Spec]):
         return result.scalar_one() or 0
 
     async def search_by_tags(self, tags: list[str]) -> list[Spec]:
-        """Search specs by tags. Eager-loads impls + library + code.
+        """Search specs by tags (matched in any tag category). Eager-loads impls + library.
 
-        impl.library and impl.code are both required by MCP
-        search_specs_by_tags (server.py iterates impls and reads both); not
-        eager-loading them on an async session raises MissingGreenlet.
+        impl.library is required by MCP search_specs_by_tags (server.py reads
+        `impl.library.id` while filtering); not eager-loading it on an async
+        session raises MissingGreenlet. `Impl.code` stays deferred — the MCP
+        caller only needs code *presence*, resolved separately via
+        `ImplRepository.get_ids_with_code()`.
         """
-        filters = []
-        for tag in tags:
-            filters.append(cast(Spec.tags, String).contains(f'"{tag}"'))
-
+        filters = _spec_tag_filters(tags, self.session.get_bind().dialect.name)
         impls_loader = selectinload(Spec.impls)
         result = await self.session.execute(
-            select(Spec)
-            .where(or_(*filters))
-            .options(impls_loader.selectinload(Impl.library), impls_loader.undefer(Impl.code))
+            select(Spec).where(or_(*filters)).options(impls_loader.selectinload(Impl.library))
         )
         return list(result.scalars().all())
 
@@ -334,6 +348,28 @@ class ImplRepository(BaseRepository[Impl]):
             select(Impl).where(Impl.library_id == library_id).options(selectinload(Impl.spec)).order_by(Impl.spec_id)
         )
         return list(result.scalars().all())
+
+    async def get_by_library_with_code(self, library_id: str) -> list[Impl]:
+        """Get all implementations for one library with `code` undeferred.
+
+        Serves /libraries/{id}/images, which renders the code of a single
+        library — undeferring code on an all-specs query would drag every
+        other library's multi-MB blobs along.
+        """
+        result = await self.session.execute(
+            select(Impl).where(Impl.library_id == library_id).options(undefer(Impl.code)).order_by(Impl.spec_id)
+        )
+        return list(result.scalars().all())
+
+    async def get_ids_with_code(self) -> set[str]:
+        """IDs of implementations whose `code` column is non-NULL.
+
+        Lightweight presence probe (id column only, code is never detoasted)
+        for listing surfaces that count or filter "real" implementations —
+        MCP list_specs / search_specs_by_tags — without undeferring blobs.
+        """
+        result = await self.session.execute(select(Impl.id).where(Impl.code.isnot(None)))
+        return {row[0] for row in result.all()}
 
     async def get_code(self, spec_id: str, library_id: str, language_id: str = "python") -> Impl | None:
         """Get a specific implementation with only the code field undeferred."""
