@@ -8,7 +8,7 @@ from api.dependencies import optional_db, require_db
 from api.exceptions import raise_not_found
 from core.config import settings
 from core.constants import LIBRARIES_METADATA, SUPPORTED_LIBRARIES
-from core.database import LibraryRepository, SpecRepository
+from core.database import ImplRepository, LibraryRepository
 from core.database.connection import get_db_context
 from core.utils import strip_noqa_comments
 
@@ -97,23 +97,23 @@ async def get_library_images(library_id: str, db: AsyncSession = Depends(require
     if cached:
         return cached
 
-    repo = SpecRepository(db)
-    specs = await repo.get_all_with_code()
+    # Single-library query with code undeferred — fetching all specs with
+    # code loaded every other library's blobs just to filter them out here.
+    repo = ImplRepository(db)
+    impls = await repo.get_by_library_with_code(library_id)
 
-    images = []
-    for spec in specs:
-        for impl in spec.impls:
-            if impl.library_id == library_id and impl.preview_url:
-                images.append(
-                    {
-                        "spec_id": spec.id,
-                        "library": impl.library_id,
-                        "language": impl.language_id,
-                        "url": impl.preview_url,
-                        "html": impl.preview_html,
-                        "code": strip_noqa_comments(impl.code),
-                    }
-                )
+    images = [
+        {
+            "spec_id": impl.spec_id,
+            "library": impl.library_id,
+            "language": impl.language_id,
+            "url": impl.preview_url,
+            "html": impl.preview_html,
+            "code": strip_noqa_comments(impl.code),
+        }
+        for impl in impls
+        if impl.preview_url
+    ]
 
     result = {"library": library_id, "images": images}
     set_cache(key, result)
