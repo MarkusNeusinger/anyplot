@@ -4,10 +4,11 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.e
 # Picks the N oldest specs (by most-recent implementation `updated` timestamp)
 # and re-dispatches `bulk-generate.yml` for each. Default N=1 per cron tick.
 #
-# Schedule: every 2 hours, skipping the 20:00–23:59 Berlin (CEST) evening
-# window. Berlin CEST evening hours 20, 21, 22, 23 map to UTC 18, 19, 20, 21 —
-# these are intentionally skipped so runs never start during the user's
-# evening. That gives 10 ticks per day.
+# Schedule: every 2 hours, skipping the fixed 18:00–21:59 UTC window so runs
+# never start during the user's evening. The window was sized for Berlin
+# summer time (CEST, UTC+2 → 20:00–23:59 local); Actions cron is always UTC,
+# so under winter time (CET, UTC+1) it covers 19:00–22:59 local instead —
+# accepted drift, not a bug. That gives 10 ticks per day.
 #
 # The tick fires at minute 17 (not :00) on purpose: GitHub's scheduler is
 # most overloaded at the top of the hour and delays/drops `schedule` events

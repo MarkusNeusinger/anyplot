@@ -305,9 +305,11 @@ jobs:
           # 18–21 UTC quiet window), so a >10 h silence means the schedule
           # is starved; re-dispatch it manually with default inputs.
           # Hours 17–21 UTC are skipped so the rescue never launches a
-          # pipeline into the Berlin-evening quiet window the cron itself
+          # pipeline into the fixed 18–21 UTC quiet window the cron itself
           # deliberately avoids (17 included because bulk-generate starts
-          # immediately after dispatch and would spill into it).
+          # immediately after dispatch and would spill into it). Like the
+          # cron, the window is UTC-fixed: it matches Berlin evening under
+          # CEST and sits an hour earlier in local terms under CET.
           LIVENESS_HOURS=10
           HOUR=$(date -u +%-H)
           if (( HOUR >= 17 && HOUR <= 21 )); then
