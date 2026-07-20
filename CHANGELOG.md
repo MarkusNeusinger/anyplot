@@ -136,7 +136,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   at :17 instead of :00 (GitHub documents top-of-hour scheduler overload as a delay/drop
   cause), and `watchdog-stuck-jobs.yml` gained a cron-liveness rescue that re-dispatches
   daily-regen whenever no run has started for >10 h outside the Berlin-evening quiet window,
-  capping any future starvation at roughly half a day.
+  capping any future starvation at roughly half a day (#9649).
 - **Tag search uses the GIN index and stops treating `%`/`_` as wildcards** —
   `SpecRepository.search_by_tags` cast the JSONB `tags` column to text and ran LIKE, which the
   `ix_specs_tags` GIN index can never serve (sequential scan on every MCP tag search) and which
