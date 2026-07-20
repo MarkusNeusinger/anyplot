@@ -129,6 +129,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Scheduled spec regeneration no longer silently starves for days** — GitHub's scheduler
+  had been dropping `daily-regen.yml`'s cron ticks in multi-day streaks since early June
+  (last 13 days: only 5 scheduled runs instead of ~130) while less-frequent crons in the same
+  repo kept firing; every run that did start was green, so nothing alarmed. The cron now fires
+  at :17 instead of :00 (GitHub documents top-of-hour scheduler overload as a delay/drop
+  cause), and `watchdog-stuck-jobs.yml` gained a cron-liveness rescue that re-dispatches
+  daily-regen whenever no run has started for >10 h outside the Berlin-evening quiet window,
+  capping any future starvation at roughly half a day.
 - **Tag search uses the GIN index and stops treating `%`/`_` as wildcards** —
   `SpecRepository.search_by_tags` cast the JSONB `tags` column to text and ran LIKE, which the
   `ix_specs_tags` GIN index can never serve (sequential scan on every MCP tag search) and which

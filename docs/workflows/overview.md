@@ -167,7 +167,8 @@ Located in `.github/workflows/`:
 | `impl-repair.yml` | Fixes rejected implementations |
 | `impl-merge.yml` | Merges approved PRs |
 | `bulk-generate.yml` | Batch implementation generation |
-| `daily-regen.yml` | Cron-driven regeneration of the oldest implementations |
+| `daily-regen.yml` | Cron-driven regeneration of the oldest implementations (fires at :17 past even UTC hours to dodge GitHub's top-of-hour scheduler overload) |
+| `watchdog-stuck-jobs.yml` | 6-hourly safety net: re-dispatches stuck reviews/repairs/merges/generations and rescues daily-regen when its cron is silently starved by GitHub (>10 h without a run) |
 | `report-validate.yml` | Validates user-submitted issue reports |
 | `sync-postgres.yml` | Syncs `plots/` filesystem state to PostgreSQL on push to main |
 | `sync-labels.yml` | Auto-syncs spec/impl labels after manual PR merges |
