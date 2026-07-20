@@ -324,12 +324,12 @@ jobs:
             else
               last_sec=$(date -u -d "$LAST" +%s)
               gap=$(( NOW - last_sec ))
-              gap_h=$(( gap / 3600 ))
+              gap_hm=$(printf '%dh%02dm' $(( gap / 3600 )) $(( (gap % 3600) / 60 )))
               if (( gap > LIVENESS_HOURS * 3600 )); then
-                echo "::warning::daily-regen: no new run on main for ${gap_h}h (> ${LIVENESS_HOURS}h) — schedule starved, re-dispatching"
-                dispatch "daily-regen: cron starved (${gap_h}h silent)" daily-regen.yml
+                echo "::warning::daily-regen: no new run on main for ${gap_hm} (> ${LIVENESS_HOURS}h) — schedule starved, re-dispatching"
+                dispatch "daily-regen: cron starved (${gap_hm} silent)" daily-regen.yml
               else
-                echo "daily-regen liveness: newest run on main created ${gap_h}h ago — healthy"
+                echo "daily-regen liveness: newest run on main created ${gap_hm} ago — healthy"
               fi
             fi
           fi
