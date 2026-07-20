@@ -14,8 +14,8 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.e
 # then (github.com docs on `on.schedule`). This repo has seen multi-day
 # streaks of silently dropped ticks for exactly this workflow while
 # less-frequent crons kept firing. As a second line of defence,
-# watchdog-stuck-jobs.yml re-dispatches this workflow when no run has
-# started for >10 h outside the quiet window.
+# watchdog-stuck-jobs.yml re-dispatches this workflow when main has seen
+# no new run for >10 h outside the quiet window.
 #
 # bulk-generate is serialised via its own concurrency group. Default model is
 # Sonnet for higher implementation quality; can be overridden per manual run.

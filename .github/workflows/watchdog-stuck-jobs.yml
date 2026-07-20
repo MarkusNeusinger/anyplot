@@ -313,19 +313,23 @@ jobs:
           if (( HOUR >= 17 && HOUR <= 21 )); then
             echo "::notice::daily-regen liveness: inside/adjacent to quiet window (UTC hour $HOUR) — check skipped"
           else
-            LAST=$(gh run list --workflow daily-regen.yml --limit 1 \
-              --json startedAt --jq '.[0].startedAt // empty')
+            # --branch main: schedule runs (and rescue dispatches) live on the
+            # default branch; a manual run on a feature branch must not mask a
+            # starved main schedule. createdAt (not startedAt): always set,
+            # even while the newest run is still queued.
+            LAST=$(gh run list --workflow daily-regen.yml --branch main --limit 1 \
+              --json createdAt --jq '.[0].createdAt // empty')
             if [[ -z "$LAST" ]]; then
-              echo "::warning::daily-regen liveness: no runs found — skipping rescue"
+              echo "::warning::daily-regen liveness: no runs found on main — skipping rescue"
             else
               last_sec=$(date -u -d "$LAST" +%s)
               gap=$(( NOW - last_sec ))
               gap_h=$(( gap / 3600 ))
               if (( gap > LIVENESS_HOURS * 3600 )); then
-                echo "::warning::daily-regen last started ${gap_h}h ago (> ${LIVENESS_HOURS}h) — schedule starved, re-dispatching"
+                echo "::warning::daily-regen: no new run on main for ${gap_h}h (> ${LIVENESS_HOURS}h) — schedule starved, re-dispatching"
                 dispatch "daily-regen: cron starved (${gap_h}h silent)" daily-regen.yml
               else
-                echo "daily-regen liveness: last run started ${gap_h}h ago — healthy"
+                echo "daily-regen liveness: newest run on main created ${gap_h}h ago — healthy"
               fi
             fi
           fi
