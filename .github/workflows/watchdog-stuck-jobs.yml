@@ -325,7 +325,10 @@ jobs:
               echo "::warning::daily-regen liveness: no runs found on main — skipping rescue"
             else
               last_sec=$(date -u -d "$LAST" +%s)
-              gap=$(( NOW - last_sec ))
+              # Fresh timestamp: NOW from the top of the script is stale by
+              # however long the A/B scans took.
+              now_c=$(date -u +%s)
+              gap=$(( now_c - last_sec ))
               gap_hm=$(printf '%dh%02dm' $(( gap / 3600 )) $(( (gap % 3600) / 60 )))
               if (( gap > LIVENESS_HOURS * 3600 )); then
                 echo "::warning::daily-regen: no new run on main for ${gap_hm} (> ${LIVENESS_HOURS}h) — schedule starved, re-dispatching"
