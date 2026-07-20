@@ -431,7 +431,7 @@ requires-dist = [
     { name = "cairosvg", marker = "extra == 'lib-pygal'", specifier = ">=2.7.0" },
     { name = "cairosvg", marker = "extra == 'plotting'", specifier = ">=2.7.0" },
     { name = "cartopy", marker = "extra == 'plotting'", specifier = ">=0.24.0" },
-    { name = "cloud-sql-python-connector", extras = ["asyncpg", "pg8000"], specifier = ">=1.20.3" },
+    { name = "cloud-sql-python-connector", extras = ["asyncpg", "pg8000"], specifier = ">=1.20.4" },
     { name = "fastapi", specifier = ">=0.139.1" },
     { name = "fastmcp", specifier = ">=3.4.4" },
     { name = "google-cloud-storage", specifier = ">=3.13.0" },
@@ -874,7 +874,7 @@ wheels = [
 
 [[package]]
 name = "cloud-sql-python-connector"
-version = "1.20.3"
+version = "1.20.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -884,9 +884,9 @@ dependencies = [
     { name = "google-auth" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ad/87/3f424bab34980b7996514d5232134ef868e412a9dcde1ba20345d674f62f/cloud_sql_python_connector-1.20.3.tar.gz", hash = "sha256:4b6f5c376982206fb0e62545c86d23ee49d045f2e71da817a326654cd169149a", size = 44211, upload-time = "2026-05-27T01:38:29.02Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fb/f6/cd4b630fca8f165db508795bc354f14e7155444a25a204b3da356134c3e8/cloud_sql_python_connector-1.20.4.tar.gz", hash = "sha256:fe2dbee747543ad2c720760c53064f0ef42ed04218981e1f7231362a88b3cf44", size = 44205, upload-time = "2026-06-26T23:04:12.62Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/94/ca/626917dd95d17eab155ad5f75360ca668928a0df63cc3259041ffd82ffe5/cloud_sql_python_connector-1.20.3-py3-none-any.whl", hash = "sha256:b4732920b5632be946921fa649a6ddeabfed9447a2b8088d55a6b08919ae3b85", size = 50101, upload-time = "2026-05-27T01:38:27.345Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/38/10a95226732a3d81ebcd157e5cb750b9d52a534e017dd177cc2321aea895/cloud_sql_python_connector-1.20.4-py3-none-any.whl", hash = "sha256:4c1cd8b573d5e9b93a6f390ccf772fa431afdcc32025b1577e2bafa89756a9f6", size = 50099, upload-time = "2026-06-26T23:04:11.098Z" },
 ]
 
 [package.optional-dependencies]
