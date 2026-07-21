@@ -129,7 +129,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
-- **Scheduled spec regeneration no longer silently starves for days** — GitHub's scheduler
+- **Scheduled implementation regeneration no longer silently starves for days** — GitHub's scheduler
   had been dropping `daily-regen.yml`'s cron ticks in multi-day streaks since early June
   (last 13 days: only 5 scheduled runs instead of ~130) while less-frequent crons in the same
   repo kept firing; every run that did start was green, so nothing alarmed. The cron now fires
