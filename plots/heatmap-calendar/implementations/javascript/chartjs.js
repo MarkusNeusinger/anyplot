@@ -93,6 +93,34 @@ const legendBins = [
   { label: `${q2 + 1}+`, color: colorForValue(maxValue) },
 ];
 
+// --- Compact-row layout plugin ----------------------------------------------
+// Chart.js lays out the y-axis box across the full remaining chart height
+// (chartArea.bottom - chartArea.top), independent of the 7-row data domain —
+// with only 7 rows that leaves large gaps between weekday rows compared to
+// the ~53 tightly-packed week columns. Widen the y domain (centered on the
+// true weekday range) right after layout so px-per-row matches px-per-week,
+// giving a compact, touching calendar grid instead of a sparse dot plot.
+const compactRows = {
+  id: "compactRows",
+  afterLayout(chart) {
+    const { x, y } = chart.scales;
+    if (!x || !y) return;
+    const pxPerWeek = Math.abs(x.getPixelForValue(1) - x.getPixelForValue(0));
+    const areaHeight = y.bottom - y.top;
+    const desiredSpan = areaHeight / pxPerWeek;
+    const currentSpan = y.max - y.min;
+    if (desiredSpan > currentSpan) {
+      const center = 3; // midpoint of the Mon(0)..Sun(6) weekday range
+      y.min = center - desiredSpan / 2;
+      y.max = center + desiredSpan / 2;
+      // min/max alone don't affect pixel conversion — LinearScale caches
+      // _startValue/_valueRange in configure() during layout, so it must be
+      // re-run for the new domain to actually move the drawn points/ticks.
+      y.configure();
+    }
+  },
+};
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -107,6 +135,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 
 new Chart(canvas, {
   type: "scatter",
+  plugins: [compactRows],
   data: {
     datasets: [
       {
