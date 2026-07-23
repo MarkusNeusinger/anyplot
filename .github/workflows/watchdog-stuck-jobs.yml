@@ -1,7 +1,7 @@
 name: "Watchdog: Stuck Jobs"
 run-name: "Watchdog: scan ${{ github.event_name == 'workflow_dispatch' && '(manual)' || '(cron)' }}"
 
-# Periodic safety net for the impl pipeline. Catches three failure modes
+# Periodic safety net for the impl pipeline. Catches four failure modes
 # the regular workflows miss:
 #   1. PRs labeled `ai-review-failed` without `ai-review-rescued`
 #      (impl-review-retry.yml normally handles these; watchdog covers
@@ -10,6 +10,8 @@ run-name: "Watchdog: scan ${{ github.event_name == 'workflow_dispatch' && '(manu
 #      (review handed off to repair, repair crashed, nothing else fired).
 #   3. spec-ready issues with `generate:<lib>` or `impl:<lib>:failed` and
 #      no open PR for that (spec, lib) pair after the staleness window.
+#   4. daily-regen's cron silently starved by GitHub's scheduler (no run
+#      for >10 h outside the quiet window) — re-dispatched manually.
 #
 # Retries are bounded per-cause via marker labels:
 #   - `ai-review-rescued`            (review failures)
@@ -294,5 +296,47 @@ jobs:
               esac
             done
           done < <(echo "$ISS_JSON" | jq -c '.[]')
+
+          ##### C) Cron-liveness: rescue a starved daily-regen schedule ######
+          # GitHub silently drops `schedule` ticks for daily-regen (the
+          # repo's most frequent cron) during scheduler overload — observed
+          # as multi-day gaps while this watchdog and bot-serving-check kept
+          # firing. daily-regen ticks are ≤6 h apart (2 h cadence plus the
+          # 18–21 UTC quiet window), so a >10 h silence means the schedule
+          # is starved; re-dispatch it manually with default inputs.
+          # Hours 17–21 UTC are skipped so the rescue never launches a
+          # pipeline into the fixed 18–21 UTC quiet window the cron itself
+          # deliberately avoids (17 included because bulk-generate starts
+          # immediately after dispatch and would spill into it). Like the
+          # cron, the window is UTC-fixed: it matches Berlin evening under
+          # CEST and sits an hour earlier in local terms under CET.
+          LIVENESS_HOURS=10
+          HOUR=$(date -u +%-H)
+          if (( HOUR >= 17 && HOUR <= 21 )); then
+            echo "::notice::daily-regen liveness: inside/adjacent to quiet window (UTC hour $HOUR) — check skipped"
+          else
+            # --branch main: schedule runs (and rescue dispatches) live on the
+            # default branch; a manual run on a feature branch must not mask a
+            # starved main schedule. createdAt (not startedAt): always set,
+            # even while the newest run is still queued.
+            LAST=$(gh run list --workflow daily-regen.yml --branch main --limit 1 \
+              --json createdAt --jq '.[0].createdAt // empty')
+            if [[ -z "$LAST" ]]; then
+              echo "::warning::daily-regen liveness: no runs found on main — skipping rescue"
+            else
+              last_sec=$(date -u -d "$LAST" +%s)
+              # Fresh timestamp: NOW from the top of the script is stale by
+              # however long the A/B scans took.
+              now_c=$(date -u +%s)
+              gap=$(( now_c - last_sec ))
+              gap_hm=$(printf '%dh%02dm' $(( gap / 3600 )) $(( (gap % 3600) / 60 )))
+              if (( gap > LIVENESS_HOURS * 3600 )); then
+                echo "::warning::daily-regen: no new run on main for ${gap_hm} (> ${LIVENESS_HOURS}h) — schedule starved, re-dispatching"
+                dispatch "daily-regen: cron starved (${gap_hm} silent)" daily-regen.yml
+              else
+                echo "daily-regen liveness: newest run on main created ${gap_hm} ago — healthy"
+              fi
+            fi
+          fi
 
           echo "::notice::Watchdog scan complete"
