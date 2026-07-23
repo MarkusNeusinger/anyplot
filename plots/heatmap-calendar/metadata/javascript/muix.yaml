@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-calendar
 created: '2026-07-23T22:24:51Z'
-updated: '2026-07-23T22:30:39Z'
+updated: '2026-07-23T22:46:52Z'
 generated_by: claude-sonnet
 workflow_run: 30048918923
 issue: 1010
@@ -12,60 +12,64 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Creative custom calendar-cell renderer (slots.scatter override with a SquareCell
-    component) produces genuine rounded-rect GitHub-style contribution cells instead
-    of default scatter circles — strong, distinctive MUI X usage.
+  - Custom `SquareCell` marker override (`slots.scatter`) produces genuine rounded-rect
+    GitHub-style contribution cells sized from the band-axis scales, replacing default
+    scatter circles.
+  - Correct sequential Imprint colormap (`t.seq[0]` → `t.seq[1]`, brand green → blue)
+    applied via `zAxis.colorMap`, with a `ContinuousColorLegend` that now carries
+    an explicit "Commits per day" label.
   - 'Clever dual band-axis trick: two x-axis definitions sharing the same week-index
-    data, with topAxis="month" driving month section headers while the primary "week"
-    axis positions the grid — avoids any manual layout math.'
-  - Correct sequential Imprint colormap (t.seq[0] to t.seq[1], brand green to blue)
-    applied to the single-polarity commit-count data via zAxis.colorMap, paired with
-    a ContinuousColorLegend showing the 0-max range.
-  - 'Realistic, varied daily-activity data: distinct weekday/weekend rhythm, deterministic
-    release-day spikes, and a 9-day vacation gap that is genuinely omitted from the
-    points array (not drawn as a neutral cell) — a clean demonstration of "missing
-    dates handled gracefully."'
-  - Deterministic LCG-seeded data generation, clean minimal code, no fake interactivity,
-    skipAnimation set correctly.
+    data, with `topAxis="month"` driving month section headers while the primary "week"
+    axis positions the grid.'
+  - 'Realistic, varied daily-activity data: weekday/weekend rhythm, deterministic
+    release-day spikes, and a 9-day vacation gap genuinely omitted from the points
+    array rather than drawn as a neutral cell.'
+  - Deterministic LCG-seeded (seed 42) data generation, clean imports, `skipAnimation`
+    set, no fake interactivity.
+  - Tick-label font sizes bumped 14→16 and the calendar+legend block's vertical margins
+    tightened, directly addressing both weaknesses raised in the Attempt 1 review.
   weaknesses:
-  - At the ~400px mobile preview width, the weekday and month labels shrink to the
-    point of being hard to read — increase tickLabelStyle fontSize slightly and/or
-    widen categoryGapRatio so labels hold up better at mobile scale.
-  - The ContinuousColorLegend shows only the bare numeric range "0"-"28" with no accompanying
-    label (e.g. "Commits per day") — a first-time viewer has no way to know what the
-    color scale measures. Add a text label near the legend.
-  - Noticeable, slightly asymmetric whitespace above the grid (title-to-grid gap)
-    versus below the legend, since the calendar+legend block is vertically centered
-    in a taller mount than it needs — tighten TOP_MARGIN / GRID_HEIGHT or reduce the
-    centering gap so the composition fills the canvas more tightly.
+  - At the actual mobile preview width (plot-light_400.png), weekday/month tick labels
+    are still small and only marginally legible — the 53-column grid is inherently
+    dense, so even the fontSize 14→16 bump leaves them near the readability floor.
+  - The color scale is domain-fit to the single highest release-day spike (max ≈28),
+    so the bulk of ordinary daily values (roughly 3–10) compress into a narrow, visually
+    similar band near the low end of the green→blue ramp — day-to-day variation among
+    typical days is harder to read than the spikes themselves.
+  - Vertical whitespace above the grid (title-to-grid gap) is still somewhat larger
+    than the gap below the legend (~130 CSS px vs ~96 CSS px) — closer but not fully
+    balanced; could tighten `TOP_MARGIN` slightly further or increase `GRID_HEIGHT`.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "heatmap-calendar · javascript · muix · anyplot.ai" centered at top in dark ink, clearly legible. Month labels (Jan-Dec) run along the top of the grid as section headers, weekday labels (Mon-Sun) run down the left as row labels — both in a softer dark-gray ink, all readable at full resolution. A horizontal ContinuousColorLegend sits bottom-right with a green-to-blue gradient bar and "0" / "28" numeric endpoints, no accompanying units label.
-      Data: 53 weeks x 7 weekdays of rounded-rectangle "day" cells. Low-value cells render in brand green (#009E73-ish), high-value cells shift toward blue (~#4467A3), matching the Imprint sequential colormap. A ~9-day gap in early August (missing vacation days) appears as a genuine blank column, not a neutral-colored cell. Weekday/weekend rhythm and occasional bright "spike" cells (release days) are clearly visible.
-      Legibility verdict: PASS (title, axis labels, and legend numbers are all readable against the light background; legend lacks a units label but that is a content gap, not a legibility failure).
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "heatmap-calendar · javascript · muix · anyplot.ai" centered top in dark ink. Month labels (Jan–Dec) run along the top of the grid as section headers; weekday labels (Mon–Sun) run down the left side. A "Commits per day" text label sits above the bottom-right ContinuousColorLegend, which shows a green→blue gradient bar with "0" and "28" endpoint labels. All chrome text is clearly readable against the light background.
+      Data: Rounded-rectangle "day" cells across a 53-week x 7-weekday grid, colored from brand green (#009E73, low commit counts) through blue (#4467A3, high counts) per the Imprint sequential ramp. Isolated brighter-blue cells mark deterministic release-day spikes. A genuine blank gap appears in early August where a 9-day vacation's dates are simply omitted from the data (no cell drawn), matching the spec's "handle missing dates gracefully" requirement.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, month labels, and weekday labels now rendered in light ink (off-white/soft gray), clearly legible against the dark background — no dark-on-dark failures observed. Legend bar and "0"/"28" labels also correctly flipped to light text.
-      Data: Cell colors are identical to the light render — same green-to-blue gradient, same vacation gap, same spike pattern — confirming only chrome (background + text) flipped between themes, not the data-encoding colors.
-      Legibility verdict: PASS (all title/axis/legend text is clearly readable against the dark background; no dark-on-dark or light-on-light issues in either theme).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, month labels, and weekday labels now render in light ink — clearly legible, no dark-on-dark issues. The "Commits per day" label and legend numeric endpoints also correctly flip to light text.
+      Data: Identical green→blue cell colors and identical vacation gap/spike pattern as the light render — confirms only chrome (background, text color) changed between themes, not the data colormap.
+      Legibility verdict: PASS
+
+    Both renders pass the mandatory theme-readability check; no dark-on-dark or light-on-light failures observed. The actual mobile-scale asset (plot-light_400.png) was also inspected: month/weekday tick labels are legible but still fairly small at that scale — an inherent tension with the dense 53-column grid, improved but not fully resolved since Attempt 1.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
         comment: Explicit font sizes throughout, readable at full resolution in both
-          themes, but weekday/month labels shrink to marginal legibility at ~400px
-          mobile width given the dense 53-column grid
+          themes; tick labels bumped 14->16 since Attempt 1 but still only marginally
+          legible on the actual plot-light_400.png mobile asset given the dense 53-column
+          grid
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -77,39 +81,39 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Rounded-rect day cells are well-sized and clearly visible across
-          the 356-point grid
+        comment: Rounded-rect day cells well-sized and clearly visible across the
+          356-point grid
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue gradient has good contrast and is CVD-safe
+        comment: Sequential green-to-blue gradient has good contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Grid uses full canvas width well, but the composition is vertically
-          centered leaving a somewhat asymmetric top/bottom gap around the calendar+legend
-          block
+        comment: No clipping; calendar+legend block now fills the canvas much more
+          evenly than Attempt 1 (top gap ~130px CSS vs bottom ~96px CSS, closer but
+          not perfectly balanced)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Weekday/month labels are descriptive, but the color legend shows
-          only a bare numeric range (0-28) with no unit/quantity label
+        passed: true
+        comment: Weekday/month labels descriptive; color legend now carries an explicit
+          'Commits per day' label fixing the Attempt 1 gap
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct imprint_seq (brand green to blue) for single-polarity data;
-          theme-correct backgrounds and chrome in both renders; data colors identical
-          across themes
+        comment: 'Correct imprint_seq (brand green -> blue) for single-polarity data;
+          theme-correct #FAF8F1/#1A1A17 backgrounds in both renders; data colors identical
+          across themes'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -117,22 +121,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom rounded-cell renderer built specifically for this chart, not
-          a library default — reads like a purpose-built contribution graph
+        comment: Custom rounded-cell renderer built specifically for this chart reads
+          like a purpose-built contribution graph, not a library default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axis lines/ticks removed, no grid clutter, but whitespace balance
-          around the calendar block could be tighter
+        comment: Axis lines/ticks removed, no grid clutter, whitespace balance around
+          the calendar block tightened since Attempt 1
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color intensity, release-day spikes, and the vacation gap create
-          a visible narrative without needing annotations
+        comment: Weekday/weekend rhythm and release-day spikes create a visible narrative,
+          though the color domain fit to the single max spike compresses ordinary-day
+          variation
     spec_compliance:
       score: 15
       max: 15
@@ -142,29 +147,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct calendar heatmap layout: days as cells, weeks as columns,
-          weekdays as rows'
+        comment: 'Correct calendar heatmap: days as cells, weeks as columns, weekdays
+          as rows'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Weekday y-axis labels, month top headers, sequential colormap, gracefully
-          omitted missing dates, and a color-scale legend are all present
+          omitted missing dates, labeled color-scale legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=week index, Y=weekday, color=commit count — correctly mapped and
-          all data visible
+        comment: X=week index, Y=weekday, color=commit count, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated format; single continuous legend
-          appropriate for continuous data
+        comment: Title exactly matches mandated format; single continuous legend with
+          label appropriate for continuous data
     data_quality:
       score: 15
       max: 15
@@ -175,21 +179,19 @@ review:
         max: 6
         passed: true
         comment: Shows weekday/weekend rhythm, spike days, and a genuine missing-data
-          gap — full feature coverage for this plot type
+          gap
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GitHub-style daily coding activity — realistic, neutral, comprehensible
-          scenario
+        comment: GitHub-style daily coding activity - realistic, neutral, comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Commit counts of roughly 1-28 per day are a plausible real-world
-          range
+        comment: Commit counts of ~1-28/day are a plausible real-world range
     code_quality:
       score: 10
       max: 10
@@ -200,8 +202,7 @@ review:
         max: 3
         passed: true
         comment: 'Clear top-to-bottom flow: imports, RNG helper, data generation,
-          custom marker component, then the exported Chart component — appropriate
-          for a React library'
+          custom marker component, exported Chart component'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,22 +214,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only Box, Typography, ScatterChart, ContinuousColorLegend imported,
-          all used
+        comment: Only Box, Typography, ScatterChart, ContinuousColorLegend, ChartsText
+          imported, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a custom calendar visualization, no fake
-          UI or interactivity
+        comment: Appropriate complexity, no fake UI or interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: Default-exports the component per the harness contract, current MUI
-          X API (colorMap, ContinuousColorLegend)
+          X API, skipAnimation set
     library_mastery:
       score: 9
       max: 10
@@ -247,12 +247,12 @@ review:
         passed: true
         comment: Custom slots.scatter marker override and the dual band-axis month-header
           trick are genuinely MUI-X-specific and not trivially replicated elsewhere
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - patches
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
