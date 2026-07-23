@@ -1,0 +1,272 @@
+library: ggplot2
+language: r
+specification_id: heatmap-calendar
+created: '2026-07-23T22:03:59Z'
+updated: '2026-07-23T22:16:55Z'
+generated_by: claude-sonnet
+workflow_run: 30048156739
+issue: 1010
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - 'Correct GitHub-style calendar heatmap layout (weeks as columns, weekdays Mon-Sun
+    as rows, months as facet sections) with all required spec features present: weekday
+    labels, month header strips, sequential imprint_seq colorbar, and distinct neutral-gray
+    cells for missing dates'
+  - New peak-activity callout (subtle brand-green background wash on the busiest month's
+    facet, an outlined tile on the single-day high, and a narrative subtitle stating
+    both) directly resolves the prior review's 'no explicit visual emphasis' weakness
+    and gives the chart a clear focal point and storytelling arc
+  - Legend title upgraded from 'Commits' to 'Commits (count)', resolving the prior
+    review's VQ-06 units complaint
+  - 'Theme-adaptive chrome (background, strip fills, text, peak-day outline color)
+    correctly flips between light and dark renders while the imprint_seq gradient
+    (#009E73 to #4467A3) data colors stay pixel-identical, with no edge clipping in
+    either render'
+  - 'Clean, reproducible, KISS-structured code: set.seed(42), explicit theme font
+    sizes, correct ragg::agg_png output naming, and realistic synthetic data (seasonal
+    ramp, weekend dip, missing-tracker days)'
+  weaknesses:
+  - x/y axis titles remain NULL (labs(x = NULL, y = NULL)); defensible for a calendar-grid
+    convention since weekday/month labels carry the categorical meaning, but it caps
+    VQ-06 short of an unambiguous full-marks case
+  - The peak-month/peak-day highlight is a solid layered-geom technique but still
+    a fairly common annotation pattern; a more ggplot2-distinctive flourish (e.g.
+    custom guide_colorbar styling, direct data labels on the peak tile) would push
+    Library Mastery further
+  - Typography hierarchy between title (13pt bold) and strip labels (9pt bold) is
+    still fairly flat, carried over from the prior review - slightly more size/weight
+    contrast would sharpen the visual hierarchy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "heatmap-calendar · r · ggplot2 · anyplot.ai" in bold dark ink at top, fully visible with no clipping. Subtitle "Busiest month: May (208 commits) · single-day high: 15 on Mar 03" in soft dark-gray directly below, fully readable. 12 month facets (Jan-Dec, 3 rows x 4 columns) each with a bold dark-ink label on a subtly elevated cream strip. Weekday labels (Mon-Sun) in soft dark-gray on the y-axis of every facet, clearly legible. The May facet has a faint brand-green background wash distinguishing it as the busiest month; the Mar 03 tile has a bold dark-ink outline marking the single-day high. Bottom horizontal colorbar legend "Commits (count)" with ticks at 0/5/10/15 in dark ink, well separated from the bar with no overlap.
+      Data: Tile grid per month, fill = commits, gradient running from brand green (#009E73, low) through teal to blue (#4467A3, high). A handful of neutral-gray tiles mark missing-tracker days, clearly distinguishable from the green-blue gradient. First-series green confirmed at the low end of the continuous scale.
+      Legibility verdict: PASS - all title, subtitle, strip, weekday, and legend text reads clearly against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title and subtitle, now in light/cream ink, fully visible and uncut. Month strips use a dark elevated background (#242420) with light bold text, clearly distinct from the page background. Weekday labels render in light gray, legible against the dark surface. The May facet's highlight wash and the Mar 03 peak-day outline (now a light/cream stroke) are both clearly visible against the dark background. Colorbar legend "Commits (count)" and its 0/5/10/15 ticks render in light gray/cream, easily readable.
+      Data: Tile colors are pixel-identical to the light render (green-to-blue gradient, gray NA cells) - only the chrome (background, strip fills, text, highlight stroke color) flipped, exactly as required.
+      Legibility verdict: PASS - no dark-on-dark failures observed; every title, subtitle, strip, axis, and legend text element is clearly legible against the dark background, and the peak-day outline correctly switched from dark-ink stroke to light stroke for contrast.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All key font sizes explicitly set via theme() overrides; title/subtitle/strip/weekday/legend
+          text is well-proportioned and readable in both themes; subtitle at 8.5pt
+          is the smallest element but still legible at full size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, subtitle, strip labels, weekday labels,
+          tiles, highlight wash/outline, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles (width=0.85, height=0.8) fill their calendar cells well across
+          all 12 facets; peak-day outline is clearly visible without overwhelming
+          neighboring tiles
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue gradient is CVD-safe with good contrast;
+          NA cells use a distinct neutral gray, not a hue-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas well suited to the 3x4 facet grid; good utilization,
+          balanced margins, nothing cut off; no canvas-gate failure
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Legend title now reads 'Commits (count)' with a unit qualifier; x/y
+          axis titles are appropriately omitted since weekday tick labels + month
+          facet titles fully carry the categorical meaning of a calendar grid
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses exactly the imprint_seq stops (#009E73 -> #4467A3) for single-polarity
+          commit data; theme-correct backgrounds and chrome in both renders; data
+          colors identical across themes'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom calendar-alignment data engineering, correct brand gradient,
+          and a new intentional highlight-annotation layer for the busiest month/peak
+          day - clearly above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid fully removed, ticks removed, generous panel spacing, subtly
+          elevated strip backgrounds - well refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak-month background wash + peak-day outline + narrative subtitle
+          together create a clear focal point and guide the viewer to the chart's
+          most important insight - resolves prior review's storytelling gap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct calendar-heatmap / GitHub-contribution-graph type, matching
+          the spec's named application
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Weekday labels, month headers, sequential colormap, missing-date
+          handling, and legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=week-in-month, y=weekday, fill=commits, faceted by month - all
+          data visible across all 12 panels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'heatmap-calendar · r · ggplot2 · anyplot.ai';
+          legend labels match the data (Commits (count), 0-15)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full-year coverage, weekday effect, seasonal trend, missing-data
+          gaps, plus the new busiest-month/peak-day callout
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily commit-count tracking is a real, neutral, comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Poisson-distributed commit counts (roughly 0-15/day) with weekday/seasonal
+          lambda scaling are plausible for a developer's activity
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tibble, ragg all actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Peak-month/peak-day callout logic is appropriately complex for the
+          added feature, no over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png as required
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_tile + facet_wrap + scale_fill_gradient + guide_colorbar
+          usage, plus a clean layered geom_rect/geom_tile composition with inherit.aes=FALSE
+          for the highlight, composed cleanly with theme_minimal()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: The multi-dataset layer composition (geom_rect + geom_tile with independent
+          data/aes on top of the main mapping) showcases ggplot2's grammar-of-graphics
+          strength, an improvement over the prior generic facet_wrap+colorbar-only
+          implementation, though still a fairly common annotation pattern rather than
+          a truly library-unique feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - faceting
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - time-series
+  styling:
+  - custom-colormap
+  - minimal-chrome
+  - publication-ready
