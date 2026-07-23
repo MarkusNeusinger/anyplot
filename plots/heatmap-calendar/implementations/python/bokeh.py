@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-23
@@ -11,7 +11,16 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, FixedTicker, LinearAxis, LinearColorMapper, Span
+from bokeh.models import (
+    BasicTicker,
+    ColorBar,
+    ColumnDataSource,
+    FixedTicker,
+    LinearAxis,
+    LinearColorMapper,
+    Span,
+    Title,
+)
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -81,7 +90,17 @@ peak_row = df.loc[df["value"].idxmax()]
 peak_week = int(peak_row["week_of_year"])
 peak_weekday = weekday_names[peak_row["weekday"]]
 
+# Longest streak of consecutive days with contributions, for the data-driven subtitle
+streak = longest_streak = 0
+for v in df["value"]:
+    streak = streak + 1 if v > 0 else 0
+    longest_streak = max(longest_streak, streak)
+
 title = "heatmap-calendar · python · bokeh · anyplot.ai"
+subtitle = (
+    f"Peak day: {peak_row['date'].strftime('%b %-d')} ({int(peak_row['value'])} contributions) "
+    f"· Longest streak: {longest_streak} days"
+)
 
 # Plot
 p = figure(
@@ -93,9 +112,9 @@ p = figure(
     tools="hover",
     tooltips=[("Date", "@date"), ("Contributions", "@value")],
     toolbar_location=None,
-    min_border_bottom=60,
+    min_border_bottom=50,
     min_border_left=200,
-    min_border_top=300,
+    min_border_top=250,
     min_border_right=260,
 )
 
@@ -108,6 +127,11 @@ p.rect(
     fill_color={"field": "value", "transform": mapper},
     line_color=PAGE_BG,
     line_width=2,
+    # Inspection glyph (bokeh-specific): cells pop under the HoverTool cursor
+    # without any CustomJS wiring, distinct from a plain static rect.
+    hover_fill_alpha=0.75,
+    hover_line_color=INK,
+    hover_line_width=3,
 )
 
 # Peak day focal point — outline only, no fill change
@@ -122,6 +146,12 @@ p.xaxis.visible = False
 month_axis = LinearAxis(ticker=FixedTicker(ticks=month_ticks), major_label_overrides=month_labels, axis_label="Month")
 p.add_layout(month_axis, "above")
 
+# Data-driven subtitle (peak day + longest streak) — placed between the title
+# and the month axis, adding real storytelling instead of a bare default heatmap.
+# Bokeh stacks "above" layout renderers with each new addition inserted closer
+# to the frame, so adding this *after* month_axis puts it above the axis.
+p.add_layout(Title(text=subtitle, text_font_size="26pt", text_color=INK_SOFT, text_font_style="italic"), "above")
+
 # Color bar
 color_bar = ColorBar(
     color_mapper=mapper,
@@ -129,7 +159,7 @@ color_bar = ColorBar(
     label_standoff=12,
     major_label_text_font_size="34pt",
     major_label_text_color=INK_SOFT,
-    title="Contributions",
+    title="Contributions (count)",
     title_text_font_size="34pt",
     title_text_color=INK,
     background_fill_color=ELEVATED_BG,
