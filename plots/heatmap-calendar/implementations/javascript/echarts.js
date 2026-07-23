@@ -34,9 +34,53 @@ function commitSeries(year) {
   });
 }
 
+const MONTH_ABBR = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+function busiestWeek(series) {
+  let bestStart = 0;
+  let bestSum = -1;
+  for (let start = 0; start <= series.length - 7; start++) {
+    const sum = series
+      .slice(start, start + 7)
+      .reduce((acc, [, value]) => acc + value, 0);
+    if (sum > bestSum) {
+      bestSum = sum;
+      bestStart = start;
+    }
+  }
+  const week = series.slice(bestStart, bestStart + 7);
+  const dates = new Set(week.map(([dateStr]) => dateStr));
+  const fmt = (dateStr) => {
+    const d = new Date(dateStr + "T00:00:00Z");
+    return `${MONTH_ABBR[d.getUTCMonth()]} ${d.getUTCDate()}`;
+  };
+  return { dates, label: `${fmt(week[0][0])} – ${fmt(week[6][0])}` };
+}
+
 const years = [2023, 2024];
 const seriesData = years.map((year) => commitSeries(year));
 const maxValue = Math.max(...seriesData.flat().map((d) => d[1]));
+const busiestWeeks = seriesData.map((series) => busiestWeek(series));
+const highlightedData = seriesData.map((series, i) =>
+  series.map(([dateStr, value]) =>
+    busiestWeeks[i].dates.has(dateStr)
+      ? { value: [dateStr, value], itemStyle: { borderColor: t.amber, borderWidth: 2 } }
+      : [dateStr, value],
+  ),
+);
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -62,6 +106,19 @@ chart.setOption({
       top: calendarTop + i * (calendarHeight + calendarGap) - 42,
       textStyle: { color: t.ink, fontSize: 18, fontWeight: 600 },
     })),
+    ...years.map((year, i) => ({
+      text: `Busiest week: ${busiestWeeks[i].label}`,
+      right: 60,
+      top: calendarTop + i * (calendarHeight + calendarGap) - 42,
+      textAlign: "right",
+      textStyle: { color: t.amber, fontSize: 13, fontWeight: 500 },
+    })),
+    {
+      text: "Commits per day",
+      left: "center",
+      bottom: 34,
+      textStyle: { color: t.inkSoft, fontSize: 12, fontWeight: 400 },
+    },
   ],
   visualMap: {
     min: 0,
@@ -94,6 +151,6 @@ chart.setOption({
     type: "heatmap",
     coordinateSystem: "calendar",
     calendarIndex: i,
-    data: seriesData[i],
+    data: highlightedData[i],
   })),
 });
