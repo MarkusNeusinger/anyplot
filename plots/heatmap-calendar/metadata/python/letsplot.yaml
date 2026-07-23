@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:13:44Z'
-updated: '2026-07-23T22:32:43Z'
+updated: '2026-07-23T22:45:34Z'
 generated_by: claude-sonnet
 workflow_run: 30049769147
 issue: 1010
@@ -12,36 +12,10 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
-  strengths:
-  - Theme-adaptive chrome is correctly threaded through PAGE_BG/INK/INK_SOFT tokens
-    and the legend background — both light and dark renders are fully readable, with
-    no dark-on-dark or light-on-light failures
-  - 'Correct Imprint imprint_seq sequential colormap (#009E73 -> #4467A3) applied
-    to the fill scale exactly per the style guide, with identical data colors across
-    both themes'
-  - Subtitle surfaces computed insights (peak month, weekend activity drop %) rather
-    than a plain data dump, and the weekday-vs-weekend contrast is genuinely visible
-    in the grid (Sat/Sun rows read consistently greener/lower than weekday rows)
-  - 'Clean KISS code: single top-to-bottom script, no functions/classes, seeded RNG
-    (np.random.seed(42)), only used imports, and layer_tooltips() used idiomatically
-    for the interactive HTML export'
-  weaknesses:
-  - 'Title omits the language segment required by the spec format `{spec-id} · {language}
-    · {library} · anyplot.ai` — actual title is "heatmap-calendar · letsplot · anyplot.ai",
-    missing "python". Fix: title="heatmap-calendar · python · letsplot · anyplot.ai".'
-  - 'Unbalanced vertical whitespace on the square canvas: the calendar grid + axes
-    occupy roughly the top ~68% of the 2400x2400 canvas in both renders, leaving a
-    large empty band at the bottom with no content. Fix: expand the grid''s vertical
-    footprint (larger tile height/width, reduced top margins, or centering the composition)
-    so margins are balanced top-to-bottom instead of concentrated at the bottom.'
-  - 'The subtitle''s "Peak activity in Dec" claim isn''t visually reinforced — month
-    has no explicit generative effect on value (only weekday + random spikes do),
-    so the ''peak'' month is essentially noise from finite-sample Poisson variation
-    and no visually distinct darker band appears in December. Fix: either soften the
-    subtitle to avoid overstating an incidental month, or add a mild deliberate seasonal
-    effect to the generator so the highlighted month genuinely stands out.'
+  strengths: []
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
