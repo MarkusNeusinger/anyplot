@@ -16,20 +16,21 @@ const rand = () => {
 // --- Data: daily step count (thousands) for 2025, with a handful of gaps ---
 // where the tracker wasn't worn — a realistic "missing data" scenario.
 const YEAR = 2025;
-const DAY_COUNT = 365;
+const yearStart = new Date(Date.UTC(YEAR, 0, 1));
+const yearEnd = new Date(Date.UTC(YEAR + 1, 0, 1));
+const monthName = d3.utcFormat("%b");
 
 const isMissing = (date) => {
-  const m = date.getMonth();
-  const d = date.getDate();
+  const m = date.getUTCMonth();
+  const d = date.getUTCDate();
   return (m === 3 && d >= 14 && d <= 20) || (m === 0 && d === 15) || (m === 8 && d === 7) || (m === 10 && d === 11);
 };
 
-const days = [];
-for (let i = 0; i < DAY_COUNT; i++) {
-  const date = new Date(YEAR, 0, 1 + i);
-  const dayOfYear = i;
-  const dow = date.getDay(); // 0=Sun..6=Sat
-  const isWeekend = dow === 0 || dow === 6;
+// d3-time idiom for calendar-view layouts: Sunday-boundary week count gives the
+// column, (getUTCDay()+6)%7 remaps Sunday=0 to a Monday-first row index.
+const days = d3.utcDays(yearStart, yearEnd).map((date) => {
+  const dayOfYear = d3.utcDay.count(yearStart, date);
+  const isWeekend = date.getUTCDay() === 0 || date.getUTCDay() === 6;
 
   const seasonal = 1.7 * Math.sin((2 * Math.PI * (dayOfYear - 105)) / 365);
   const weekdayAdj = isWeekend ? -0.6 : 1.1;
@@ -37,34 +38,51 @@ for (let i = 0; i < DAY_COUNT; i++) {
   const noise = (rand() - 0.5) * noiseAmp;
   const value = Math.max(0.6, 7.0 + seasonal + weekdayAdj + noise);
 
-  days.push({
+  return {
     date,
-    row: (dow + 6) % 7, // 0=Mon .. 6=Sun
+    row: (date.getUTCDay() + 6) % 7, // 0=Mon .. 6=Sun
+    col: d3.utcSunday.count(yearStart, date),
     value: isMissing(date) ? null : Math.round(value * 10) / 10,
-  });
-}
-
-const firstRow = days[0].row;
-days.forEach((d, i) => {
-  d.col = Math.floor((i + firstRow) / 7);
+  };
 });
-const numWeeks = days[days.length - 1].col + 1;
+const numWeeks = d3.max(days, (d) => d.col) + 1;
 
 const values = days.map((d) => d.value).filter((v) => v !== null);
 const [minVal, maxVal] = d3.extent(values);
 
-// --- Layout -------------------------------------------------------------
-const margin = { left: 86, right: 46 };
+// --- Monthly averages (for the summary panel below the grid) --------------
+const monthlyMeans = d3.rollup(
+  days.filter((d) => d.value !== null),
+  (v) => d3.mean(v, (d) => d.value),
+  (d) => d.date.getUTCMonth(),
+);
+const monthly = d3.range(12).map((m) => ({ m, avg: monthlyMeans.get(m) ?? 0 }));
+const peak = monthly.reduce((a, b) => (b.avg > a.avg ? b : a));
+
+// --- Layout -----------------------------------------------------------------
+const margin = { left: 90, right: 90 };
 const iw = width - margin.left - margin.right;
 const step = iw / numWeeks;
 const cellSize = step * 0.78;
 
-const titleY = 64;
-const subtitleY = 104;
-const monthLabelY = subtitleY + 76;
+const titleY = 60;
+const subtitleY = 98;
+const monthLabelY = subtitleY + 60;
 const gridTop = monthLabelY + 22;
 const gridHeight = 7 * step;
 const gridBottom = gridTop + gridHeight;
+
+const legendY = gridBottom + 56;
+const swatchSize = 24;
+const legendBottom = legendY + swatchSize;
+
+const sectionTitleY = legendBottom + 54;
+const chartTop = sectionTitleY + 30;
+const chartHeight = 140;
+const chartBottom = chartTop + chartHeight;
+const peakAnnotH = 22; // headroom above bars reserved for the "Peak" callout
+const chartInnerTop = chartTop + peakAnnotH;
+const xAxisLabelY = chartBottom + 22;
 
 // --- SVG mount ------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -104,13 +122,9 @@ g.selectAll(".weekday-label")
   .text((d) => d);
 
 // --- Month labels (above the grid) --------------------------------------
-const monthNames = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
-const monthStarts = monthNames.map((name, m) => {
-  const first = days.find((d) => d.date.getMonth() === m && d.date.getDate() === 1);
-  return { name, col: first.col };
+const monthStarts = d3.range(12).map((m) => {
+  const first = days.find((d) => d.date.getUTCMonth() === m && d.date.getUTCDate() === 1);
+  return { name: monthName(Date.UTC(YEAR, m, 1)), col: first.col };
 });
 
 svg
@@ -127,9 +141,6 @@ svg
   .text((d) => d.name);
 
 // --- Legend: "no data" swatch + sequential gradient bar --------------------
-const legendY = gridBottom + 66;
-const swatchSize = 24;
-
 svg
   .append("rect")
   .attr("x", margin.left)
@@ -195,6 +206,65 @@ svg
   .attr("fill", t.inkSoft)
   .style("font-size", "15px")
   .text("More");
+
+// --- Monthly average summary panel (below the legend) ---------------------
+svg
+  .append("text")
+  .attr("x", margin.left)
+  .attr("y", sectionTitleY)
+  .attr("fill", t.ink)
+  .style("font-size", "17px")
+  .style("font-weight", "600")
+  .text("Monthly average — steps (thousands)");
+
+const monthX = d3.scaleBand().domain(d3.range(12)).range([0, iw]).padding(0.3);
+const monthY = d3.scaleLinear().domain([0, d3.max(monthly, (d) => d.avg)]).nice().range([chartBottom, chartInnerTop]);
+
+const chartG = svg.append("g").attr("transform", `translate(${margin.left},0)`);
+
+chartG
+  .append("g")
+  .call(d3.axisLeft(monthY).ticks(3).tickSize(-iw))
+  .call((axis) => axis.select(".domain").remove())
+  .call((axis) => axis.selectAll(".tick line").attr("stroke", t.grid))
+  .call((axis) => axis.selectAll(".tick text").attr("fill", t.inkSoft).style("font-size", "13px"));
+
+chartG
+  .selectAll(".month-bar")
+  .data(monthly)
+  .join("rect")
+  .attr("class", "month-bar")
+  .attr("x", (d) => monthX(d.m))
+  .attr("y", (d) => monthY(d.avg))
+  .attr("width", monthX.bandwidth())
+  .attr("height", (d) => chartBottom - monthY(d.avg))
+  .attr("rx", 2)
+  .attr("fill", (d) => colorScale(d.avg))
+  .attr("stroke", (d) => (d.m === peak.m ? t.ink : "none"))
+  .attr("stroke-width", (d) => (d.m === peak.m ? 2 : 0));
+
+chartG
+  .selectAll(".month-tick")
+  .data(monthly)
+  .join("text")
+  .attr("class", "month-tick")
+  .attr("x", (d) => monthX(d.m) + monthX.bandwidth() / 2)
+  .attr("y", xAxisLabelY)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .text((d) => monthName(Date.UTC(YEAR, d.m, 1)));
+
+// Focal-point annotation: call out the seasonal peak month.
+chartG
+  .append("text")
+  .attr("x", monthX(peak.m) + monthX.bandwidth() / 2)
+  .attr("y", monthY(peak.avg) - 8)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text(`Peak · ${monthName(Date.UTC(YEAR, peak.m, 1))} · ${peak.avg.toFixed(1)}k`);
 
 // --- Title & subtitle -------------------------------------------------------
 svg
