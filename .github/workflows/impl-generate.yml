@@ -422,9 +422,12 @@ jobs:
         id: claude
         continue-on-error: true
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@11ba60486e4aec9ddfeafcf4bb3f00b028ac2c16  # v1 (VALIDATION: July-1 pin, revert after)
+        uses: anthropics/claude-code-action@1298632ce7736903d02a1435002705aa2a594a6c  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # VALIDATION (diagnostic only, revert after): un-hide Claude's output so
+          # the logs reveal exactly which tool calls are being permission-denied.
+          show_full_output: true
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
@@ -442,9 +445,12 @@ jobs:
         if: steps.claude.outcome == 'failure'
         id: claude_retry
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@11ba60486e4aec9ddfeafcf4bb3f00b028ac2c16  # v1 (VALIDATION: July-1 pin, revert after)
+        uses: anthropics/claude-code-action@1298632ce7736903d02a1435002705aa2a594a6c  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # VALIDATION (diagnostic only, revert after): un-hide Claude's output so
+          # the logs reveal exactly which tool calls are being permission-denied.
+          show_full_output: true
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
