@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
-Library: matplotlib 3.10.9 | Python 3.14.4
-Quality: 86/100 | Updated: 2026-04-27
+Library: matplotlib 3.11.1 | Python 3.13.12
+Quality: pending | Updated: 2026-07-23
 """
 
 import os
@@ -15,17 +15,13 @@ from matplotlib.colors import LinearSegmentedColormap
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Theme-adaptive colormap: near-background for zero, green for high activity
-if THEME == "light":
-    _cal_colors = ["#E0EAE3", "#c6e48b", "#7bc96f", "#239a3b", "#196127"]
-else:
-    _cal_colors = ["#2A2A25", "#1a4731", "#2d7040", "#239a3b", "#52c760"]
-cmap = LinearSegmentedColormap.from_list("calendar", _cal_colors, N=256)
+# Imprint sequential colormap (brand green -> blue) — identical across themes,
+# only chrome (background/text) adapts
+cmap = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"], N=256)
+cmap.set_bad(PAGE_BG)
 
 # Data
 np.random.seed(42)
@@ -60,8 +56,13 @@ n_weeks = week_of_year.max() + 1
 heatmap_data = np.full((7, n_weeks), np.nan)
 heatmap_data[dayofweek, week_of_year] = activity
 
+# Zero-activity days (vacation, off days) render as empty cells alongside
+# out-of-range grid padding, so the inactive stretch reads as a clear gap
+# rather than a low value on the imprint_seq scale
+plot_data = np.where(heatmap_data == 0, np.nan, heatmap_data)
+
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 x = np.arange(n_weeks + 1)
@@ -69,10 +70,10 @@ y = np.arange(8)
 mesh = ax.pcolormesh(
     x,
     y,
-    np.ma.masked_invalid(heatmap_data),
+    np.ma.masked_invalid(plot_data),
     cmap=cmap,
-    vmin=0,
-    vmax=np.nanmax(heatmap_data),
+    vmin=np.nanmin(plot_data),
+    vmax=np.nanmax(plot_data),
     edgecolors=PAGE_BG,
     linewidth=1.5,
 )
@@ -104,11 +105,11 @@ ax.tick_params(colors=INK_SOFT, length=0)
 
 # Colorbar
 cbar = plt.colorbar(mesh, ax=ax, orientation="horizontal", pad=0.06, shrink=0.55, aspect=35)
-cbar.ax.tick_params(labelsize=14, labelcolor=INK_SOFT, color=INK_SOFT)
+cbar.ax.tick_params(labelsize=16, labelcolor=INK_SOFT, color=INK_SOFT)
 cbar.set_label("Daily Commits", fontsize=16, color=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
-ax.set_title("heatmap-calendar · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
+ax.set_title("heatmap-calendar · python · matplotlib · anyplot.ai", fontsize=18, fontweight="medium", color=INK, pad=20)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
