@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
-Library: plotnine 0.15.7 | Python 3.13.12
-Quality: 86/100 | Updated: 2026-07-23
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 93/100 | Updated: 2026-07-23
 """
 
 import os
