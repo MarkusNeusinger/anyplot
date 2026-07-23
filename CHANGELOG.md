@@ -129,6 +129,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Scheduled implementation regeneration is harder to starve silently** — `daily-regen.yml`'s
+  cron had gone silent for multi-day stretches (a mix of GitHub's documented top-of-hour
+  scheduler overload and the workflow being manually disabled), and because every run that did
+  start was green, nothing alarmed. The cron now fires at :17 instead of :00, and
+  `watchdog-stuck-jobs.yml` gained a cron-liveness rescue that re-dispatches daily-regen
+  whenever main has seen no new run created for >10 h outside the Berlin-evening quiet window
+  (a manually disabled workflow stays disabled — the rescue cannot and does not re-enable it),
+  capping scheduler-side starvation at typically ~half a day instead of weeks (#9649).
 - **The whole Claude pipeline generates again — CI runs pass the repo's permission allowlist
   explicitly** — since the July 5 `claude-code-action` bump (bundled CLI 2.1.170 → 2.1.195, by
   now 2.1.211), Claude Code ignores `permissions.allow` from a committed `.claude/settings.json`
