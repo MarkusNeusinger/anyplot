@@ -1,0 +1,268 @@
+library: echarts
+language: javascript
+specification_id: heatmap-calendar
+created: '2026-07-23T22:14:45Z'
+updated: '2026-07-23T22:28:41Z'
+generated_by: claude-sonnet
+workflow_run: 30048673485
+issue: 1010
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Idiomatic ECharts calendar coordinate system: two stacked calendar instances
+    (2023/2024) each paired with a heatmap series via calendarIndex, exactly the recommended
+    pattern for this chart type.'
+  - 'Correct Imprint theming throughout: continuous scale bound to t.seq (green->blue),
+    chrome sourced from t.ink/t.inkSoft/t.pageBg, backgrounds theme-correct in both
+    renders with only chrome flipping.'
+  - 'Repair loop addressed both attempt-1 weaknesses well: the visualMap legend now
+    carries a ''Commits per day'' unit caption, and a per-year ''busiest week'' amber-bordered
+    highlight gives the chart a clear focal point and data story.'
+  - Deterministic fixed-seed LCG data generation with a plausible weekday bias (lower
+    weekend activity) plus a streak/rest cycle, giving the calendar visible day-to-day
+    and week-to-week variation.
+  - 'Canvas and mount-node contract respected: animation: false, no explicit width/height
+    or devicePixelRatio, both PNGs land at 3200x1800 with comfortable margins and
+    no clipped elements.'
+  weaknesses:
+  - At ~400px mobile thumbnail scale, the month/weekday/year labels become hard to
+    read because two full years of daily cells are compressed into one row each per
+    calendar -- inherent to the density of a 2-year calendar heatmap, but still a
+    legibility cost.
+  - Data generation and layout now rely on five helper functions (nextRand, datesInYear,
+    commitSeries, busiestWeek, plus the inline fmt closure) rather than flatter inline
+    code -- reasonable for the date arithmetic and week-max search involved, but a
+    KISS deduction versus a flat imports/data/plot script.
+  - Design Excellence is still closer to 'well-configured default plus one highlight'
+    than genuinely distinctive -- the per-cell grid itself has no additional refinement
+    (e.g. no subtle emphasis for weekends vs weekdays) beyond the single busiest-week
+    callout.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Centered dark-ink title "heatmap-calendar · javascript · echarts · anyplot.ai" at top; bold dark "2023"/"2024" year labels; gray "Jan"-"Dec" month labels above each calendar block; gray "Mon"-"Sun" weekday row labels (correctly starting the week at Monday per spec); amber "Busiest week: <date range>" callout per year; horizontal visualMap legend at the bottom labeled "0" to "8" with a "Commits per day" caption underneath. All text is clearly dark-on-light and readable.
+      Data: Calendar cells for every day of 2023 and 2024 filled with a continuous sequential gradient from brand green (#009E73) through teal to blue (#4467A3) -- matches imprint_seq. The busiest week in each year is outlined with a thin amber (#DDCC77) border, standing out clearly from the unhighlighted cells.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Same title, year, month, weekday labels and busiest-week callouts, now rendered in white/light-gray/amber against the dark surface; cell borders flip from off-white to near-black to match the page background; visualMap legend text and "Commits per day" caption are light-colored and clearly visible.
+      Data: Cell colors are identical to the light render (green-to-blue gradient, same busiest-week amber border) -- only chrome flipped as required. No dark-on-dark or light-on-light failures observed anywhere (title, year labels, month/weekday labels, legend text, and callouts all remain legible).
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, fully readable at full size in both
+          themes; becomes hard to read at ~400px mobile scale because two full years
+          of daily cells compress into one row each -- inherent to this dense chart
+          type.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, year/month/weekday labels, busiest-week
+          callouts, or legend.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Calendar cells sized appropriately for two years of daily data; amber
+          highlight border on busiest-week cells is clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential gradient plus amber highlight; no red-green
+          as sole signal, good contrast in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two calendars plus legend fill the canvas well with balanced margins;
+          nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: visualMap legend now carries the 'Commits per day' unit caption fixing
+          attempt-1's unlabeled scale.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential data uses imprint_seq (t.seq, green->blue); amber highlight
+          uses the semantic amber anchor; backgrounds theme-correct in both renders.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Per-year titles, cell-border segmentation, and the amber busiest-week
+          highlight show clear design intent above a generic default, though not yet
+          publication/FiveThirtyEight-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid via matched-background cell borders, generous whitespace,
+          clean typography hierarchy.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Busiest-week amber highlight + callout text now gives each year a
+          clear focal point, fixing attempt-1's 'raw grid, no hierarchy' weakness.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct calendar heatmap via ECharts' native calendar coordinate
+          system.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Weekday labels (Mon-Sun), month labels, sequential colormap, and
+          color-scale legend all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date mapped to calendar grid position, value mapped to color; all
+          731 days across both years visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly 'heatmap-calendar · javascript · echarts · anyplot.ai';
+          legend correctly labeled 0-8 with unit caption.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Weekday bias (lower weekend activity), streak/rest cycles, and a
+          highlighted peak week show varied daily/weekly patterns.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily open-source commit counts is a real, neutral, immediately comprehensible
+          scenario matching the spec's own example.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-8 commits/day is a realistic range for individual daily commit
+          activity.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Five helper functions (nextRand, datesInYear, commitSeries, busiestWeek,
+          fmt) rather than flat inline code -- justified by date arithmetic and week-max
+          search, but a KISS deduction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42), fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the injected echarts global is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or over-engineering; complexity is proportionate to the
+          calendar/highlight logic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'echarts.init on #container with setOption and animation:false, current
+          API, no deprecated calls.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Textbook use of the calendar coordinate system paired with a heatmap
+          series via calendarIndex -- the recommended ECharts pattern for this exact
+          chart type.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Multiple calendar instances via calendarIndex, custom cellSize, per-data-point
+          itemStyle overrides for the busiest-week highlight -- features that would
+          be far harder to replicate in most other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - custom-colormap
+  - edge-highlighting
