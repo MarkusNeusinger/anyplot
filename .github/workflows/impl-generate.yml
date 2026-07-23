@@ -425,9 +425,6 @@ jobs:
         uses: anthropics/claude-code-action@1298632ce7736903d02a1435002705aa2a594a6c  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # VALIDATION (diagnostic only, revert after): un-hide Claude's output so
-          # the logs reveal exactly which tool calls are being permission-denied.
-          show_full_output: true
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
@@ -448,9 +445,6 @@ jobs:
         uses: anthropics/claude-code-action@1298632ce7736903d02a1435002705aa2a594a6c  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # VALIDATION (diagnostic only, revert after): un-hide Claude's output so
-          # the logs reveal exactly which tool calls are being permission-denied.
-          show_full_output: true
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
@@ -463,43 +457,6 @@ jobs:
             - EXT: ${{ steps.inputs.outputs.ext }}
             - SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
             - IS_REGENERATION: ${{ steps.existing.outputs.is_regeneration }}
-
-      # ========================================================================
-      # VALIDATION TEST — inspect what Claude produced, then STOP before any
-      # side-effecting steps (PR / GCS / issue comment). Remove after test.
-      # ========================================================================
-      - name: TEST — inspect Claude output and stop (validation run)
-        if: always()
-        env:
-          SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
-          LANGUAGE: ${{ steps.inputs.outputs.language }}
-          LIBRARY: ${{ steps.inputs.outputs.library }}
-          EXT: ${{ steps.inputs.outputs.ext }}
-        run: |
-          echo "===== VALIDATION TEST (claude-code-action July-1 pin) ====="
-          IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
-          echo "--- git log (last 3) ---"; git log --oneline -3 || true
-          echo "--- git status --porcelain ---"; git status --porcelain || true
-          echo "--- ls IMPL_DIR ---"; ls -la "$IMPL_DIR" || true
-          for f in "${LIBRARY}${EXT}" plot-light.png plot-dark.png; do
-            if [ -f "$IMPL_DIR/$f" ]; then echo "PRESENT: $f"; else echo "MISSING: $f"; fi
-          done
-          echo "--- claude-execution-output.json summary ---"
-          python3 - <<'PY' || true
-          import json, glob
-          for p in glob.glob('/home/runner/work/_temp/claude-execution-output.json'):
-              try:
-                  d = json.load(open(p))
-                  if isinstance(d, list):
-                      d = d[-1]
-                  print('is_error', d.get('is_error'),
-                        'num_turns', d.get('num_turns'),
-                        'permission_denials_count', d.get('permission_denials_count'))
-              except Exception as e:
-                  print('parse err', e)
-          PY
-          echo "===== END VALIDATION TEST — stopping before side effects ====="
-          exit 1
 
       # ========================================================================
       # Create metadata file (before PR)
@@ -1049,7 +1006,7 @@ jobs:
       # Failure handling: Track failures via comments and auto-retry
       # ========================================================================
       - name: Handle generation failure
-        if: false  # VALIDATION: disabled during test so it can't comment/retry on #1010
+        if: failure() && steps.issue.outputs.number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
