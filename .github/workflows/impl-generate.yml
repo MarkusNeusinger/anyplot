@@ -425,7 +425,7 @@ jobs:
         uses: anthropics/claude-code-action@1298632ce7736903d02a1435002705aa2a594a6c  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model ${{ steps.inputs.outputs.model }}"
+          claude_args: "--model ${{ steps.inputs.outputs.model }} --settings ${{ github.workspace }}/.claude/settings.json"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
           prompt: |
@@ -445,7 +445,7 @@ jobs:
         uses: anthropics/claude-code-action@1298632ce7736903d02a1435002705aa2a594a6c  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model ${{ steps.inputs.outputs.model }}"
+          claude_args: "--model ${{ steps.inputs.outputs.model }} --settings ${{ github.workspace }}/.claude/settings.json"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
           prompt: |
@@ -699,7 +699,7 @@ jobs:
               'specification_id': spec,
               'created': created_ts,
               'updated': ts,
-              # Reflects what claude_args=`--model {model}` actually runs: whatever
+              # Reflects what claude_args='--model {model}' actually runs: whatever
               # Claude Code's current alias for the chosen model resolves to.
               # Use the family name instead of a frozen version string so the
               # metadata doesn't go stale every model release.
