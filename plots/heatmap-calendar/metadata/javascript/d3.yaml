@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: heatmap-calendar
 created: '2026-07-23T22:19:12Z'
-updated: '2026-07-23T22:23:19Z'
+updated: '2026-07-23T22:36:35Z'
 generated_by: claude-sonnet
 workflow_run: 30048540824
 issue: 1010
@@ -12,55 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - Clean, idiomatic D3 join pattern (`selectAll(...).data(...).join("rect")`) with
-    a deterministic fixed-seed LCG for reproducible data since the browser has no
-    seeded RNG.
-  - Correct Imprint `imprint_seq` sequential scale (brand green → blue via `d3.interpolateRgbBasis(t.seq)`),
-    with a legend gradient bar built by sampling the actual color scale rather than
-    a separate hardcoded gradient — colors stay perfectly in sync.
-  - 'Thoughtful missing-data handling: dashed-border neutral cells for gaps, documented
-    with a dedicated "No data" legend swatch, and multiple realistic gap patterns
-    (a multi-day range plus isolated single-day gaps).'
-  - Realistic, neutral dataset (daily step count in thousands) with a believable seasonal
-    curve and weekday/weekend variation.
-  - Full theme-adaptive chrome — identical data colors between light/dark renders,
-    all text legible on both surfaces, no dark-on-dark or light-on-light failures.
+  - 'Directly resolved both Attempt 1 findings: canvas usage grew from ~39% to ~77%
+    of height, and date handling now uses idiomatic d3-time/d3-array utilities (utcDays,
+    utcSunday.count, rollup) instead of manual loops'
+  - New "Peak" annotation + highlighted bar gives the composition a clear, deliberate
+    focal point that was missing before
+  - Correct imprint_seq sequential scale (green → blue) shared identically between
+    the calendar cells, legend gradient, and monthly bars — always in sync
+  - Thoughtful missing-data handling (dashed neutral cells + dedicated legend swatch)
+    with a realistic multi-day + isolated single-day gap pattern
+  - Fully theme-adaptive chrome, confirmed pixel-identical data colors between light/dark
+    renders
   weaknesses:
-  - 'Severe unused whitespace: the calendar grid + legend content ends at y≈697 of
-    the 1800px-tall canvas (~39% of height), leaving roughly 60% of the canvas as
-    a completely empty band at the bottom with no visual content and no counterbalancing
-    whitespace above. Increase `step`/`cellSize` (or scale up margins/legend size
-    proportionally) so the composition fills closer to the recommended 50-80% of canvas
-    height, or otherwise re-balance vertical whitespace instead of leaving it all
-    on one side.'
-  - 'Library Mastery is fairly generic for D3: the grid uses manual date-arithmetic
-    loops instead of D3-idiomatic date/time utilities (e.g. `d3.utcParse`/`d3.timeFormat`,
-    `d3.timeDays`/`d3.timeWeek` for calendar layout) that would better showcase D3''s
-    distinctive time-scale/time-interval features.'
-  - Data Storytelling is present via the color gradient (seasonal + weekday/weekend
-    pattern) but there is no explicit visual emphasis (e.g., a subtle annotation or
-    highlighted band) drawing the eye to the clearest seasonal peak — a missed opportunity
-    for a stronger focal point given the generous canvas space available.
+  - Two-panel layout (calendar + monthly bars) is well-executed but still a fairly
+    conventional composition; a bolder visual link between the highlighted month's
+    bar and its corresponding week(s) in the grid above would push Design Excellence
+    further
+  - Only the single seasonal peak is annotated — a secondary annotation (e.g. the
+    lowest month, or the weekday/weekend contrast visible in the grid banding) could
+    deepen the data story
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "heatmap-calendar · javascript · d3 · anyplot.ai" in bold dark ink, subtitle "Daily step count (thousands) · 2025" in softer dark gray directly below. Month labels (Jan-Dec) run along the top of the grid in medium-weight dark-gray text; weekday labels (Mon-Sun) run down the left side in the same tone. Legend row below the grid shows a dashed-border "No data" swatch on the left and a green→blue gradient bar with "Less"/"More" labels on the right. All text is clearly legible against the light background — no light-on-light issues.
-      Data: 53×7 grid of rounded-rect cells colored on a green(#009E73)→blue sequential scale by step-count value; a handful of cells (a run in mid-April, plus isolated days in Jan/Sep/Nov) render as dashed-border neutral "no data" cells instead. First-series brand green appears at the low end of the scale as expected.
+      Background: Warm off-white, matching #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "heatmap-calendar · javascript · d3 · anyplot.ai", softer dark-gray subtitle "Daily step count (thousands) · 2025", month labels (Jan-Dec) above the grid, weekday labels (Mon-Sun) to the left, "Monthly average — steps (thousands)" section title, bar-chart y-axis ticks and x-axis month ticks, "Peak · Jul · 9.5k" annotation. All clearly readable dark text against the light background.
+      Data: 53x7 calendar grid of rounded cells colored on the green (#009E73) -> blue sequential (imprint_seq) scale by daily step count; dashed-border neutral cells mark missing days (mid-April gap, isolated single days in Jan/Sep/Nov). Legend row shows a dashed "No data" swatch plus a "Less->More" gradient bar sampled live from the same scale. Below, a monthly-average bar chart uses the identical sequential scale per bar, with the July bar outlined in dark ink and a bold "Peak" annotation above it.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title/subtitle/month/weekday layout, now rendered in light ink (near-white title, softer light-gray subtitle/labels/legend text) against the dark background. No dark-on-dark failures — every text element is clearly visible.
-      Data: Same 53×7 grid with identical green→blue cell colors as the light render (confirmed pixel-for-pixel matching hues); missing-data cells show a dashed border in the theme-adaptive grid tone against the elevated dark-bg fill, clearly distinguishable from filled cells.
+      Background: Warm near-black, matching #1A1A17 - not pure black, not light.
+      Chrome: All text (title, subtitle, month/weekday labels, legend text, bar-chart axis ticks, section title, Peak annotation) flips to light ink/gray and remains fully legible. No dark-on-dark failures detected anywhere.
+      Data: Calendar cell colors and bar colors are pixel-identical to the light render (confirmed green->blue hues match); missing-data dashed cells use the theme's elevated dark background fill; the peak-bar outline correctly flips from dark ink to a light stroke for contrast against the dark background.
       Legibility verdict: PASS
-
-    Shared observation (both renders): the grid + legend content occupies only the top ~39% of the 1800px canvas height; the bottom ~60% of the canvas is empty with no counterbalancing whitespace above — flagged as the primary VQ-05/DE-02 weakness in both themes.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -68,71 +56,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (15/17/26px); readable in both themes,
-          no clipping
+        comment: All font sizes explicit; readable in both themes and at ~400px scale
+          given the expected density of a 365-cell calendar heatmap.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No text/data collisions in either render, including the Peak annotation
+          and bar-chart axis.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 365-cell grid with cells sized appropriately for the density; no
-          overlap or invisibility
+        comment: Calendar cells and monthly bars sized appropriately for their density;
+          missing-data cells clearly distinguished via dashed border.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-blue scale, CVD-safe, no red-green sole signal
+        comment: Sequential green-to-blue scale, monotonic luminance, no red-green-only
+          signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Content occupies only ~39% of canvas height (grid+legend end at y~697/1800);
-          ~60% of the canvas is empty whitespace concentrated entirely at the bottom,
-          not balanced
+        passed: true
+        comment: 'Fixed from Attempt 1: composition now spans ~77% of canvas height
+          (vs ~39%), canvas-dimension gate passed, nothing clipped or overflowing.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Weekday + month labels descriptive, subtitle states units (thousands)
-          and year
+        comment: Descriptive title/subtitle and monthly-panel section title with units
+          (thousands).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green->blue) correctly used for single-polarity continuous
-          data; theme-correct chrome and identical data colors across themes
+        comment: 'Uses imprint_seq (green->blue) for continuous data; #FAF8F1/#1A1A17
+          backgrounds correct in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Custom gradient legend sampled from the actual color scale, dashed
-          no-data convention — above default, but undercut by the layout imbalance
+        passed: true
+        comment: Coordinated calendar+bar composition, live-scale gradient legend,
+          clear typographic hierarchy; still a fairly conventional two-panel layout.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        comment: Rounded cells, subtle dashed missing-data styling, but large unbalanced
-          whitespace hurts overall polish
+        passed: true
+        comment: Domain removed on bar-chart y-axis, subtle gridlines, rounded cells,
+          generous section spacing.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Color gradient reveals seasonal + weekday/weekend pattern; no explicit
-          annotation/focal point added
+        passed: true
+        comment: Bold Peak annotation + highlighted bar gives a clear focal point;
+          monthly panel reinforces the seasonal trend visible in the grid.
     spec_compliance:
       score: 15
       max: 15
@@ -141,45 +133,51 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct calendar heatmap layout (weeks as columns, weekdays as rows)
+        passed: true
+        comment: Correct calendar heatmap layout.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Weekday labels, month labels, sequential colormap, missing-date handling,
-          and legend all present
+        passed: true
+        comment: Weekday labels, month labels, sequential colormap, missing-data handling,
+          color legend all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Day cells correctly positioned by ISO weekday row / week column,
-          all 365 days represented
+        passed: true
+        comment: Row=weekday, col=week; all 365 days plotted.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format exact; legend (No data / Less-More) matches the data
-          semantics
+        passed: true
+        comment: Title matches required format; legend labels (Less/More/No data)
+          match the data.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: Shows seasonal variation, weekday/weekend contrast, and both multi-day
-          and single-day gap patterns
+        passed: true
+        comment: Shows grid, weekday/month structure, missing data, legend, and a
+          monthly rollup summary.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Daily step count (thousands) is a real, neutral, comprehensible scenario
+        passed: true
+        comment: Daily step count in thousands, neutral and plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Value range (~0.6-13k steps/day) is realistic for the domain
+        passed: true
+        comment: Values range ~0.6-10.5k with plausible seasonal/weekday variation.
     code_quality:
       score: 10
       max: 10
@@ -188,53 +186,64 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Linear imports -> data -> layout -> draw, no functions/classes
+        passed: true
+        comment: No classes; only small top-level arrow-function helpers (rand, isMissing)
+          as endorsed by the d3.md guide.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fixed-seed LCG for deterministic browser-side randomness
+        passed: true
+        comment: Deterministic fixed-seed LCG, no browser RNG dependency.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only the d3 global used, no unused imports
+        passed: true
+        comment: Only the global d3 is used; no unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriately complex for calendar layout math, no fake functionality
+        passed: true
+        comment: Appropriate complexity; no fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct mount-node contract, current D3 v7 join API
+        passed: true
+        comment: Follows the mount-node contract correctly; current d3 7.9 API; animations
+          not used.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        comment: Good use of join/scaleSequential patterns, but manual date-arithmetic
-          loops instead of d3-time utilities
+        passed: true
+        comment: 'Fixed from Attempt 1: now uses d3.utcDays, d3.utcDay.count, d3.utcSunday.count,
+          d3.rollup/d3.mean instead of manual date-arithmetic loops.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Custom SVG linearGradient legend built by sampling the D3 color scale
-          is a genuine D3-specific technique
-  verdict: REJECTED
+        passed: true
+        comment: d3.rollup-driven secondary panel derived live from the grid data,
+          plus the gradient-legend-from-live-scale technique.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - colorbar
+  - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
+  - groupby-aggregation
   dataprep:
   - time-series
   styling:
-  - custom-colormap
   - gradient-fill
+  - publication-ready
