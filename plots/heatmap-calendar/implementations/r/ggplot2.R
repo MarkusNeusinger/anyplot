@@ -55,19 +55,45 @@ df <- df %>%
   left_join(month_offsets, by = "month_label") %>%
   mutate(week_in_month = (day_of_month - 1 + offset) %/% 7 + 1)
 
+# --- Peak-activity callout: busiest month + single-day high ------------
+month_totals <- df %>%
+  group_by(month_label) %>%
+  summarise(total = sum(commits, na.rm = TRUE), .groups = "drop")
+peak_month_row <- month_totals %>% slice_max(total, n = 1, with_ties = FALSE)
+peak_month     <- peak_month_row$month_label
+peak_panel     <- tibble(month_label = peak_month)
+
+peak_day <- df %>%
+  filter(!is.na(commits)) %>%
+  slice_max(commits, n = 1, with_ties = FALSE)
+
+subtitle_str <- sprintf(
+  "Busiest month: %s (%d commits) · single-day high: %d on %s",
+  peak_month, peak_month_row$total, peak_day$commits, format(peak_day$date, "%b %d")
+)
+
 # --- Plot ---------------------------------------------------------------
 title_str <- "heatmap-calendar · r · ggplot2 · anyplot.ai"
 
 p <- ggplot(df, aes(x = week_in_month, y = day_label, fill = commits)) +
+  geom_rect(
+    data = peak_panel, aes(xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf),
+    inherit.aes = FALSE, fill = IMPRINT_PALETTE[1], alpha = 0.10
+  ) +
   geom_tile(color = PAGE_BG, linewidth = 0.9, width = 0.85, height = 0.8) +
+  geom_tile(
+    data = peak_day, aes(x = week_in_month, y = day_label),
+    inherit.aes = FALSE, fill = NA, color = INK, linewidth = 1.1,
+    width = 0.85, height = 0.8
+  ) +
   scale_fill_gradient(
     low = IMPRINT_PALETTE[1], high = IMPRINT_PALETTE[3],
-    na.value = INK_MUTED, name = "Commits",
+    na.value = INK_MUTED, name = "Commits (count)",
     guide = guide_colorbar(barwidth = 14, barheight = 0.6, ticks = FALSE)
   ) +
   scale_x_continuous(breaks = NULL) +
   facet_wrap(~month_label, ncol = 4) +
-  labs(title = title_str, x = NULL, y = NULL) +
+  labs(title = title_str, subtitle = subtitle_str, x = NULL, y = NULL) +
   theme_minimal(base_size = 8) +
   theme(
     aspect.ratio      = 7 / 6,
@@ -79,7 +105,9 @@ p <- ggplot(df, aes(x = week_in_month, y = day_label, fill = commits)) +
     axis.text.y       = element_text(color = INK_SOFT, size = 8),
     strip.background  = element_rect(fill = ELEVATED_BG, color = NA),
     strip.text        = element_text(color = INK, size = 9, face = "bold"),
-    plot.title        = element_text(color = INK, size = 12, hjust = 0),
+    plot.title        = element_text(color = INK, size = 13, face = "bold", hjust = 0),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 8.5, hjust = 0,
+                                      margin = margin(t = 2, b = 8)),
     legend.position   = "bottom",
     legend.background = element_rect(fill = PAGE_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT, size = 8),
