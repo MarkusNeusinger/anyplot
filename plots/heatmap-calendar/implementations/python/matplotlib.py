@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-23
@@ -78,10 +78,11 @@ mesh = ax.pcolormesh(
     linewidth=1.5,
 )
 
-# Style: weekday labels on y-axis
+# Style: weekday labels on y-axis (kept well below the title's fontsize so the
+# title reads as the clear typographic anchor)
 weekday_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 ax.set_yticks(np.arange(7) + 0.5)
-ax.set_yticklabels(weekday_labels, fontsize=16, color=INK_SOFT)
+ax.set_yticklabels(weekday_labels, fontsize=12, color=INK_SOFT)
 
 # Month labels at top
 month_positions = []
@@ -93,7 +94,7 @@ for month in range(1, 13):
         month_labels.append(pd.Timestamp(2024, month, 1).strftime("%b"))
 
 ax.set_xticks(month_positions)
-ax.set_xticklabels(month_labels, fontsize=16, color=INK_SOFT)
+ax.set_xticklabels(month_labels, fontsize=12, color=INK_SOFT)
 ax.xaxis.tick_top()
 ax.xaxis.set_label_position("top")
 
@@ -104,12 +105,25 @@ ax.invert_yaxis()
 ax.tick_params(colors=INK_SOFT, length=0)
 
 # Colorbar
-cbar = plt.colorbar(mesh, ax=ax, orientation="horizontal", pad=0.06, shrink=0.55, aspect=35)
-cbar.ax.tick_params(labelsize=16, labelcolor=INK_SOFT, color=INK_SOFT)
-cbar.set_label("Daily Commits", fontsize=16, color=INK_SOFT)
+cbar = plt.colorbar(mesh, ax=ax, orientation="horizontal", pad=0.05, shrink=0.55, aspect=35)
+cbar.ax.tick_params(labelsize=12, labelcolor=INK_SOFT, color=INK_SOFT)
+cbar.set_label("Daily Commits", fontsize=12, color=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
 ax.set_title("heatmap-calendar · python · matplotlib · anyplot.ai", fontsize=18, fontweight="medium", color=INK, pad=20)
 
-plt.tight_layout()
+# Caption calling out the two visible narrative moments: the August vacation
+# gap and the late-March deadline spike
+plt.tight_layout(rect=(0, 0.05, 1, 1))
+fig.text(
+    0.5,
+    0.015,
+    "Deadline crunch in late March, followed by a two-week vacation break in August",
+    ha="center",
+    va="bottom",
+    fontsize=10,
+    color=INK_SOFT,
+    style="italic",
+)
+
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
