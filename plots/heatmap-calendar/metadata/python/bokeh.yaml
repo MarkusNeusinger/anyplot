@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:14:26Z'
-updated: '2026-07-23T22:29:00Z'
+updated: '2026-07-23T22:41:47Z'
 generated_by: claude-sonnet
 workflow_run: 30049292327
 issue: 1010
@@ -12,60 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - 'Correct Imprint continuous colormap: imprint_seq (brand green -> blue) built
-    via the canonical 256-stop _lerp_hex ramp, matching the single-polarity nature
-    of contribution counts'
-  - 'Theme chrome fully threaded through: background, title, axis labels, tick labels,
-    outline, and ColorBar all branch on ANYPLOT_THEME with correct tokens in both
-    renders'
-  - Peak-day focal point (outline-only rect on the max-value cell) is a genuine data-storytelling
-    touch that doesn't fake interactivity
-  - Subtle month-divider Span lines (alpha 0.25) give calendar structure without adding
-    a competing grid
-  - GitHub-style weekday ordering (Mon top -> Sun bottom) and month labels placed
-    'above' via a second LinearAxis is idiomatic, low-level bokeh layout composition
-  - 'Realistic, varied synthetic data: weekday/weekend base-rate difference, occasional
-    streak spikes, and occasional zero days give genuine feature coverage'
-  - All font sizes explicitly set (title 50pt, axis labels 42pt, tick/colorbar labels
-    34pt) per the bokeh native-pixel sizing guide
-  - 'Clean KISS structure: single top-to-bottom script, np.random.seed(42), only used
-    imports, HoverTool tooltips add real interactive value without being required
-    by the PNG'
+  - 'Canvas utilization fixed: reducing min_border_top (300→250) and min_border_bottom
+    (60→50) grows the 7-row weekday grid to fill a well-balanced majority of the 3200×1800
+    canvas with no wasted whitespace band'
+  - 'New data-driven subtitle (''Peak day: Feb 9 (14 contributions) · Longest streak:
+    20 days'') paired with the peak-day outline turns the chart from a bare heatmap
+    into one with a clear, immediately legible insight'
+  - ColorBar title changed to 'Contributions (count)' — units now explicit
+  - hover_fill_alpha / hover_line_color on the rect glyph is a genuinely bokeh-specific
+    declarative inspection pattern (no CustomJS needed), building on the existing
+    Span month-dividers and second LinearAxis composition
+  - Correct imprint_seq continuous colormap (brand green → blue) via the canonical
+    256-stop _lerp_hex ramp, unchanged and still correct for this single-polarity
+    data
+  - 'Theme chrome fully threaded through in both renders — backgrounds are exactly
+    #FAF8F1/#1A1A17 (pixel-verified), all text and the ColorBar box use correct theme
+    tokens, no dark-on-dark or light-on-light failures'
+  - 'Realistic, varied synthetic data: weekday/weekend base-rate difference, streak
+    spikes, occasional zero days'
   weaknesses:
-  - 'Canvas utilization is moderate (~48%) rather than optimal 50-80%: the 3200x1800
-    landscape canvas has noticeable unused whitespace above/below the 7-row weekday
-    grid — consider trimming min_border_top/min_border_bottom slightly or enlarging
-    cell height to fill more of the vertical space'
-  - 'Design Excellence is solid but stops short of publication-grade: the peak-day
-    highlight and month dividers are good but the overall composition still reads
-    as ''a well-executed default heatmap'' rather than a fully art-directed graphic
-    — consider adding a brief data-driven subtitle or refining the ColorBar''s proportions/placement
-    for more intentional hierarchy'
-  - 'Library Mastery is correct and idiomatic but not maximally distinctive: HoverTool,
-    ColorBar, and FixedTicker are common across interactive libraries; leaning further
-    into bokeh-only capabilities (e.g. CustomJS-driven linked highlighting, categorical
-    range factors) would raise LM-02'
-  - Colorbar title 'Contributions' is descriptive but has no explicit unit/context
-    beyond the axis label; a slightly more specific label (e.g. 'Contributions (count)')
-    would nudge VQ-06 to a cleaner 'with units' read
+  - 'Library Mastery is correct and now more distinctive but still not maximal: HoverTool
+    + ColorBar remain common patterns across interactive libraries; a fully unique
+    bokeh-only mechanic (e.g. CustomJS-driven linked highlighting, a second linked
+    plot) would be needed for a perfect LM-02'
+  - Design Excellence, while genuinely improved by the subtitle, still reads as a
+    well-executed calendar heatmap rather than a fully art-directed graphic — e.g.
+    the ColorBar could be positioned/sized with more intentional hierarchy relative
+    to the grid
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
-      Chrome: Bold dark title "heatmap-calendar · python · bokeh · anyplot.ai" top-left; italic "Month" axis label with Jan-Dec tick labels along the top; italic "Day of Week" axis label with Mon-Sun tick labels down the left, all in dark ink / soft-gray ticks. A right-side ColorBar titled "Contributions" with ticks 0-14. All text is clearly readable against the light background.
-      Data: A 7-row (weekday) x ~52-week grid of colored rect cells running Jan through Dec, colored on the imprint_seq ramp from brand green (#009E73, low values) toward blue (#4467A3, high values). Faint vertical month-divider lines separate calendar months. One cell (a Friday in February) is outlined in dark ink only (no fill change) marking the year's peak-contribution day — a clear focal point. Weekday/weekend rows show a subtle visible pattern (Sat/Sun cells trend greener/lower than weekdays).
+      Background: Warm off-white, pixel-verified RGB(250,248,241) = #FAF8F1 exactly. Not pure white, not dark.
+      Chrome: Bold dark title "heatmap-calendar · python · bokeh · anyplot.ai" top-left in near-black ink; italic gray subtitle "Peak day: Feb 9 (14 contributions) · Longest streak: 20 days" directly below it; italic "Month" axis label with Jan-Dec tick labels along the top; italic "Day of Week" axis label with Mon-Sun tick labels down the left. A right-side ColorBar titled "Contributions (count)" with ticks 0-14 on an elevated off-white background box. All text is clearly, unambiguously readable against the light background — no light-on-light anywhere.
+      Data: A 7-row (weekday) x 53-week grid of colored rect cells spanning Jan-Dec, colored on the imprint_seq ramp from brand green (#009E73, low values) toward blue (#4467A3, high values). Faint vertical month-divider lines separate calendar months. One cell (a Friday in early February) is outlined in dark ink only, marking the year's peak-contribution day — a clear, explicit focal point that matches the subtitle's claim. The grid now fills a well-balanced majority of the canvas height with minimal unused whitespace above/below.
       Legibility verdict: PASS — no light-on-light text, all chrome and data clearly legible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
-      Chrome: Same title, "Month"/"Day of Week" axis labels, and Jan-Dec / Mon-Sun tick labels, now rendered in light ink (title/axis labels near-white, tick labels light gray) — all clearly visible against the dark background. No dark-on-dark text observed anywhere (tick labels, axis labels, and ColorBar text are all light-colored). ColorBar title/ticks are legible in light text.
-      Data: Identical cell colors to the light render — same green-to-blue imprint_seq ramp values, confirming the categorical/continuous data color is theme-independent. Only the chrome (background, text, outline, divider lines, cell-gap stroke color) flipped to the dark tokens. The peak-day focal cell is now outlined in light ink (white) instead of dark ink, correctly adapting to the theme.
+      Background: Warm near-black, pixel-verified RGB(26,26,23) = #1A1A17 exactly. Not pure black, not light.
+      Chrome: Same title, subtitle, "Month"/"Day of Week" axis labels, and Jan-Dec / Mon-Sun tick labels, now rendered in light ink (title near-white, subtitle/tick labels light gray) — all clearly visible against the dark background. The ColorBar sits on its dark-elevated (#242420) box with light tick/title text. No dark-on-dark text observed anywhere.
+      Data: Identical cell colors to the light render — same green-to-blue imprint_seq ramp values, confirming the continuous data color is theme-independent. Only chrome (background, text, outline, divider lines, cell-gap stroke, ColorBar box) flipped to dark tokens. The peak-day focal cell is now outlined in light ink instead of dark ink, correctly adapting to the theme.
       Legibility verdict: PASS — no dark-on-dark failures; all text and data remain legible.
+
+    Note: pixel-level inspection found a single 1px-wide near-background stripe along the very top row and left column of the canvas in both renders (a Selenium/headless-Chrome screenshot edge artifact, not related to the bokeh figure itself). It is 1px out of 3200/1800 and imperceptible at normal viewing size — not a clipping or legibility issue, so no score impact, but flagged for awareness.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -73,8 +66,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 50pt, axis 42pt, ticks/colorbar
-          34pt); readable in both themes, no clipping
+        comment: All font sizes explicitly set (title 50pt, subtitle 26pt, axis 42pt,
+          ticks/colorbar 34pt); readable in both themes, no clipping
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -96,26 +89,27 @@ review:
         comment: Sequential imprint_seq ramp is CVD-safe; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills ~48% of canvas area; balanced margins but some unused
-          vertical whitespace above/below the 7-row grid
+        comment: 'Fixed from the prior ~48% utilization: reduced min_border_top/bottom
+          now let the grid fill a balanced majority of the canvas, no cut-off content'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Day of Week'' / ''Month'' descriptive; ColorBar titled ''Contributions'''
+        comment: '''Day of Week'' / ''Month'' descriptive; ColorBar now titled ''Contributions
+          (count)'' with explicit units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'imprint_seq (green->blue) correctly used for single-polarity continuous
-          data; both renders theme-correct, backgrounds #FAF8F1/#1A1A17'
+          data; both renders theme-correct, backgrounds pixel-verified #FAF8F1/#1A1A17'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -124,22 +118,23 @@ review:
         max: 8
         passed: true
         comment: Thoughtful additions (peak-day focal outline, subtle month dividers,
-          theme-adaptive ColorBar) clearly above library defaults
+          data-driven subtitle, theme-adaptive ColorBar) clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
         comment: Grid intentionally removed, cell gaps double as separators, four-sided
-          outline kept as the correct heatmap exception; some refinement visible but
-          not maximal polish
+          outline kept as the correct heatmap exception; solid refinement, not maximal
+          polish
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Peak-day highlight plus visible weekday/weekend pattern create real
-          visual hierarchy and a focal point
+        comment: New subtitle explicitly states the peak day/value and longest streak,
+          paired with the peak-cell outline — the viewer immediately sees the insight
+          without hunting for it
     spec_compliance:
       score: 15
       max: 15
@@ -222,7 +217,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/functionality
+        comment: Appropriate complexity, no fake UI/functionality; hover_fill_alpha
+          is a real HoverTool-backed inspection glyph
       - id: CQ-05
         name: Output & API
         score: 1
@@ -231,7 +227,7 @@ review:
         comment: Saves plot-{THEME}.png/.html via output_file+save+Selenium per bokeh's
           required pattern
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -243,13 +239,13 @@ review:
           add_layout — all recommended bokeh patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses some bokeh-specific composition (Span dividers, second LinearAxis
-          via add_layout('above')) but HoverTool/ColorBar patterns are common to most
-          interactive libraries
-  verdict: REJECTED
+        comment: Adds a declarative hover_fill_alpha/hover_line_color inspection glyph
+          (bokeh-specific, no CustomJS) on top of the existing Span dividers and stacked
+          'above' Title/LinearAxis composition
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
