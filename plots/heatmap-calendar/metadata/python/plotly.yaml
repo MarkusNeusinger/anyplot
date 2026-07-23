@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:14:21Z'
-updated: '2026-07-23T22:25:16Z'
+updated: '2026-07-23T22:38:29Z'
 generated_by: claude-sonnet
 workflow_run: 30049167492
 issue: 1010
@@ -12,52 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Correct GitHub-style calendar layout (7 rows x 53 week-columns) with weekday labels
-    on Y and month labels on top-X
-  - 'Handles the year''s trailing partial week correctly: Dec 30-31 populated, Wed-Sun
-    of that same week genuinely left blank rather than faked'
-  - Rich hover via customdata + hovertemplate showing full date and exact commit count
-    per cell
-  - 'Correct imprint_seq Imprint colorscale (#009E73 to #4467A3); data colors identical
-    between light and dark renders, only chrome flips'
-  - Explicit font sizes throughout with theme-adaptive INK/INK_SOFT tokens threaded
-    consistently into every chrome element
-  - Realistic, seeded Poisson-based commit data with weekday/weekend variation, occasional
-    bursts, and sparse zero-activity days
-  - Canvas target hit exactly (width=800, height=450, scale=4 -> 3200x1800), generous
-    margins, nothing clipped in either render
+  - Sqrt-transformed color mapping spreads out the common low-count (0-5) range for
+    readability while raw values are preserved intact for hover text and colorbar
+    tick labels
+  - Peak-day annotation with arrow creates a genuine authored focal point rather than
+    relying on the color scale alone to surface the burst day
+  - Missing calendar cells at the year edge (only Mon/Tue populated in the final week
+    since 2024 starts on a Monday) render as graceful empty gaps instead of a false
+    zero color, correctly satisfying the spec's 'handle missing dates gracefully'
+    requirement
+  - Theme-adaptive chrome is fully threaded through title, tick labels, colorbar (bg/border),
+    and annotation box (bg/border/arrow) — both renders are clean with no dark-on-dark
+    or light-on-light failures
+  - Realistic weekly seasonality (lower weekend activity), occasional bursts, and
+    zero-days give genuine feature coverage for a calendar-heatmap dataset
   weaknesses:
-  - Low-to-mid daily commit counts (the majority of the calendar) compress into visually
-    similar green tones on the 2-stop linear imprint_seq scale - only bursts read
-    distinctly; consider a mild non-linear z transform (sqrt/log1p) or extra colorscale
-    stops so mid-range activity is easier to differentiate
-  - 'Design Excellence is default-leaning: no explicit emphasis technique (annotation,
-    callout, bolded label) calls out burst days or weekly rhythm - hierarchy currently
-    comes only from the raw color scale'
-  - Default plotly axis tick marks (small dashes) are visible at every row boundary
-    along the y-axis line in both themes since ticks='' was never set - minor polish
-    item
-  - LM-02 distinctive-feature usage is limited to hover customization; consider a
-    more plotly-specific feature (range slider, annotation overlay on top burst days)
-    for stronger Library Mastery credit
+  - The peak-annotation callout box sits directly over roughly 6-9 data cells around
+    the Apr 09 peak (Tue/Wed rows), occluding those values behind the box — nudge
+    the box further from the grid or add a slight background transparency so it stops
+    hiding data
+  - At 365+ cell density, low-value distinctions (e.g. 1 vs 2 commits) are hard to
+    separate by color alone even with the sqrt transform — consider stretching the
+    low end of the color range further or accepting this as an inherent density tradeoff
+  - Styling leans mostly on the two-stop sequential colorscale and default heatmap
+    conventions (DE-01/DE-02) — solid execution but there's room for more distinctive
+    polish beyond a well-executed default treatment
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "heatmap-calendar - python - plotly - anyplot.ai" centered top in dark ink, clearly visible. Month labels (Jan-Dec) along top in soft dark gray, weekday labels (Mon-Sun) down the left in the same tone. Colorbar titled "Daily commits" with tick labels 0/5/10/15 in dark ink inside a bordered cream box. All chrome text clearly readable.
-      Data: 7x53 grid of cells colored via green (#009E73) to blue (#4467A3) sequential scale, thin cream gaps between cells. Most cells pale-to-mid green (low activity), scattered blue "burst" cells stand out. First-series/low anchor confirmed #009E73.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface — not pure white.
+      Chrome: Title "heatmap-calendar · python · plotly · anyplot.ai" in dark ink, centered, clearly readable. Month labels (Jan-Dec) along the top in soft ink, weekday labels (Mon-Sun) along the left in soft ink — both fully legible. Colorbar "Daily commits" on the right with tick labels 0/5/10/15, boxed in an elevated cream panel with a soft border — readable. Peak annotation callout ("Peak: 19 commits, Apr 09") in a bordered cream box with a dark arrow pointing to the spike cell — readable, no clipping.
+      Data: Heatmap cells run from brand green (#009E73, low counts) to blue (#4467A3, high counts) via the imprint_seq sequential scale, with thin cream gaps between cells acting as cell separators. First-series green anchors the low end as required.
+      Legibility verdict: PASS — no light-on-light issues, all text has strong contrast against the cream background.
 
     Dark render (plot-dark.png):
-      Background: Near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Title in light cream text, clearly visible against dark background. Month and weekday labels light gray, readable. Colorbar box has dark elevated fill (#242420-ish) with visible border and light-gray text. No dark-on-dark failures.
-      Data: Identical green-to-blue gradient and cell values as the light render - confirmed data colors unchanged, only chrome (background, gaps, colorbar box, text) flips to dark tokens. Minor cosmetic: small default axis tick marks visible at row boundaries on the y-axis line (not a legibility issue).
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface — not pure black.
+      Chrome: Title in light ink, fully readable. Month and weekday labels in light soft-ink, legible. Colorbar box uses the elevated dark panel (#242420) with light text and a light border — clearly readable, no dark-on-dark failure. Peak annotation box similarly uses the dark elevated panel with light text and a light arrow — fully legible against the near-black grid gaps behind it.
+      Data: Cell colors are pixel-identical to the light render (same green-to-blue imprint_seq gradient) — only the chrome (background, text, borders) flips between themes, confirming correct theme-adaptive implementation.
+      Legibility verdict: PASS — no dark-on-dark text, no illegible elements; cell gap lines read as near-black against the near-black background by design (theme-consistent), not as an accessibility problem.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -65,74 +62,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; minor mobile-density
-          caveat inherent to a 53-column calendar grid
+        comment: All text readable in both themes at appropriate sizes; title/labels/colorbar/annotation
+          all thread theme tokens correctly
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No collisions between title, labels, colorbar, or data cells
+        comment: No text-on-text overlap, but the peak annotation box occludes ~6-9
+          data cells beneath it
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: xgap/ygap=2 gives clean cell separation appropriate for a dense 7x53
-          grid
+        comment: Cell gaps and sqrt color transform aid distinguishability, but very
+          close low values (1 vs 2 commits) remain hard to separate at this cell density
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: CVD-safe scale, but low-value cells (the majority) compress into
-          similar greens on the 2-stop linear gradient
+        passed: true
+        comment: imprint_seq is CVD-safe, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Content spans ~97% width / ~89% height with balanced margins; nothing
-          cut off
+        comment: Canvas gate passed (3200x1800), no clipping, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Weekday/month category labels are self-explanatory; colorbar clearly
-          titled
+        comment: Colorbar title 'Daily commits' with unit-bearing ticks, weekday/month
+          labels present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct imprint_seq (#009E73 to #4467A3), theme-correct backgrounds
-          and chrome in both renders, identical data colors'
+        comment: 'imprint_seq (#009E73 -> #4467A3) for single-polarity continuous
+          data; correct theme backgrounds both renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful touches (gap-separated cells, styled colorbar) above raw
-          defaults, but not a genuinely custom/publication-level treatment
+        passed: true
+        comment: Styled colorbar and annotation panels show polish, but the core treatment
+          (2-stop sequential colorscale, standard heatmap grid) is a well-executed
+          default rather than exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Gridlines replaced by background gaps, colorbar boxed/bordered to
-          match theme, but default axis tick marks left enabled
+        passed: true
+        comment: Subtle cell-gap spacing instead of grid lines, generous margins,
+          theme-consistent boxed legend; four spines kept intentionally as the heatmap
+          exception
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Hierarchy is a side effect of the color scale, not an authored emphasis
-          technique (no annotation/callout)
+        passed: true
+        comment: Peak-day annotation is a genuine authored focal point that guides
+          the viewer beyond just reading the color scale
     spec_compliance:
       score: 15
       max: 15
@@ -142,26 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calendar heatmap structure
+        comment: 'Correct calendar-grid heatmap: days as cell rows, weeks as columns'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Weekday labels, month labels, sequential colormap, graceful missing-date
-          handling all present
+          cells, colorbar legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=week index, Y=weekday, all 366 days represented
+        comment: X/Y correct, full year of data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; colorbar legend clearly labeled
+        comment: Title matches mandated format exactly; colorbar serves as a correctly
+          labeled legend
     data_quality:
       score: 15
       max: 15
@@ -171,20 +170,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Baseline activity, weekday/weekend contrast, bursts, and zero-days
-          all present
+        comment: Weekly seasonality, bursts, zero-days, and year-edge missing dates
+          all represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GitHub-style commit activity, neutral real-world scenario
+        comment: GitHub-style commit activity, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-~19 daily commits is realistic for the domain
+        comment: 0-19 commits/day is a sensible range for individual developer activity
     code_quality:
       score: 10
       max: 10
@@ -194,7 +193,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> matrix build -> plot -> save, no functions/classes
+        comment: Flat top-level script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -206,22 +205,24 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy/pandas/plotly + stdlib path-fix boilerplate, all used
+        comment: Only os/sys (path fix), numpy, pandas, plotly.graph_objects, all
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or interactivity
+        comment: Appropriate complexity for calendar-matrix construction, no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image at 800x450 scale=4 -> correct 3200x1800; write_html also
-          emitted
+        comment: write_image at correct landscape dims + write_html, current plotly
+          API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -229,27 +230,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper go.Heatmap + update_layout usage, tickvals/ticktext, structured
-          colorbar dict
+        comment: Idiomatic go.Heatmap with customdata/hovertemplate, colorbar config,
+          reversed categorical y-axis
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: customdata + hovertemplate for rich per-cell hover is genuinely plotly-flavored,
-          but nothing further distinctive
-  verdict: REJECTED
+        passed: true
+        comment: Rich hover via customdata + hovertemplate and an arrow annotation
+          are good plotly-specific touches, though the overall pattern is a common
+          calendar-heatmap approach
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   - manual-ticks
-  - hover-tooltips
-  - html-export
   patterns:
   - data-generation
   - matrix-construction
-  - groupby-aggregation
   dataprep:
   - time-series
   styling:
