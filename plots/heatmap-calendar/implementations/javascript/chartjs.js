@@ -93,30 +93,60 @@ const legendBins = [
   { label: `${q2 + 1}+`, color: colorForValue(maxValue) },
 ];
 
-// --- Compact-row layout plugin ----------------------------------------------
-// Chart.js lays out the y-axis box across the full remaining chart height
-// (chartArea.bottom - chartArea.top), independent of the 7-row data domain —
-// with only 7 rows that leaves large gaps between weekday rows compared to
-// the ~53 tightly-packed week columns. Widen the y domain (centered on the
-// true weekday range) right after layout so px-per-row matches px-per-week,
-// giving a compact, touching calendar grid instead of a sparse dot plot.
-const compactRows = {
-  id: "compactRows",
+// --- Compact-grid layout plugin ---------------------------------------------
+// Chart.js gives the y scale the *entire* leftover chartArea height
+// (chartArea.bottom - chartArea.top) no matter how few data rows it holds —
+// with only 7 weekday rows that leaves a huge dead band above/below a thin
+// data slice, and strands the legend far below it. Right after layout:
+//  1. Shrink the y scale's pixel box down to the height the 7 rows actually
+//     need for square cells (px-per-row == px-per-week), flush under the
+//     month-label row, and pull the legend up to sit close under the grid
+//     instead of pinned to the canvas bottom.
+//  2. Re-center the whole compact title/grid/legend block vertically in the
+//     canvas, so the reclaimed space reads as a balanced frame around a
+//     deliberately compact chart rather than one huge trailing gap.
+const compactGrid = {
+  id: "compactGrid",
   afterLayout(chart) {
     const { x, y } = chart.scales;
+    const legend = chart.legend;
+    const title = chart.titleBlock;
     if (!x || !y) return;
     const pxPerWeek = Math.abs(x.getPixelForValue(1) - x.getPixelForValue(0));
-    const areaHeight = y.bottom - y.top;
-    const desiredSpan = areaHeight / pxPerWeek;
-    const currentSpan = y.max - y.min;
-    if (desiredSpan > currentSpan) {
-      const center = 3; // midpoint of the Mon(0)..Sun(6) weekday range
-      y.min = center - desiredSpan / 2;
-      y.max = center + desiredSpan / 2;
-      // min/max alone don't affect pixel conversion — LinearScale caches
-      // _startValue/_valueRange in configure() during layout, so it must be
-      // re-run for the new domain to actually move the drawn points/ticks.
-      y.configure();
+    const gridHeight = (y.max - y.min) * pxPerWeek; // square cells
+
+    y.top += 6; // small breathing room under the month labels
+    y.bottom = y.top + gridHeight;
+    chart.chartArea.top = y.top;
+    chart.chartArea.bottom = y.bottom;
+    // top/bottom alone don't affect pixel conversion — LinearScale caches
+    // _startPixel/_length in configure() during layout, so it must be
+    // re-run for the new box to actually move the drawn points/ticks.
+    y.configure();
+
+    if (legend) {
+      const legendHeight = legend.bottom - legend.top;
+      legend.top = y.bottom + 24;
+      legend.bottom = legend.top + legendHeight;
+    }
+
+    if (title && legend) {
+      const blockTop = title.top;
+      const blockBottom = legend.bottom;
+      const shiftDown = (chart.height - (blockBottom - blockTop)) / 2 - blockTop;
+      if (shiftDown > 0) {
+        title.top += shiftDown;
+        title.bottom += shiftDown;
+        x.top += shiftDown;
+        x.bottom += shiftDown;
+        y.top += shiftDown;
+        y.bottom += shiftDown;
+        chart.chartArea.top += shiftDown;
+        chart.chartArea.bottom += shiftDown;
+        legend.top += shiftDown;
+        legend.bottom += shiftDown;
+        y.configure();
+      }
     }
   },
 };
@@ -135,7 +165,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 
 new Chart(canvas, {
   type: "scatter",
-  plugins: [compactRows],
+  plugins: [compactGrid],
   data: {
     datasets: [
       {
@@ -179,11 +209,13 @@ new Chart(canvas, {
           boxWidth: 18,
           boxHeight: 18,
           generateLabels: () =>
+            // A subtle page-background stroke (matching the cell borders)
+            // sharpens the visual step between adjacent same-hue bins.
             legendBins.map((bin) => ({
               text: bin.label,
               fillStyle: bin.color,
-              strokeStyle: bin.color,
-              lineWidth: 0,
+              strokeStyle: t.pageBg,
+              lineWidth: 1,
             })),
         },
       },
