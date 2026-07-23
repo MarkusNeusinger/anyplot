@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-23
@@ -68,8 +68,17 @@ df["month"] = df["date"].dt.month
 # This avoids issues with ISO week numbers crossing year boundaries
 df["week_num"] = ((df["date"] - start_date).dt.days + start_date.weekday()) // 7
 
+# Track the single highest-activity day from the unclipped signal (several
+# days tie at the vmax=15 cap post-clip, so the pre-clip value picks one
+# genuine peak rather than an arbitrary tied cell).
+peak_row = df.loc[base_activity.argmax()]
+
 # Create pivot table for heatmap (weekdays as rows, weeks as columns)
 pivot_df = df.pivot(index="weekday", columns="week_num", values="value")
+
+# Explicit mask for missing calendar cells (partial final week) rather than
+# relying on implicit NaN blanking
+missing_mask = pivot_df.isna()
 
 # Weekday labels (Monday at top)
 weekday_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -80,13 +89,16 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
 # Create heatmap with the Imprint sequential colormap; cell borders match the
 # page background so gaps read as "punched out" rather than a harsh fixed color.
+# `mask` makes the partial-final-week handling explicit rather than relying on
+# implicit NaN blanking.
 sns.heatmap(
     pivot_df,
     ax=ax,
+    mask=missing_mask,
     cmap=imprint_seq,
     linewidths=0.8,
     linecolor=PAGE_BG,
-    cbar_kws={"label": "Daily Contributions", "shrink": 0.6, "aspect": 25, "pad": 0.02},
+    cbar_kws={"label": "Daily Contributions", "shrink": 0.7, "aspect": 18, "fraction": 0.035, "pad": 0.015},
     vmin=0,
     vmax=15,
 )
@@ -110,8 +122,16 @@ ax.set_xlabel("")
 ax.set_ylabel("")
 
 # Reserve headroom above the top-mounted month labels so the title doesn't clip
-fig.subplots_adjust(top=0.80, bottom=0.06, left=0.08, right=0.92)
+fig.subplots_adjust(top=0.80, bottom=0.06, left=0.08, right=0.96)
 fig.suptitle("heatmap-calendar · python · seaborn · anyplot.ai", fontsize=12, y=0.96, color=INK)
+fig.text(
+    0.5,
+    0.885,
+    f"Peak day: {peak_row['date']:%b %-d} · {int(peak_row['value'])} contributions",
+    fontsize=9,
+    color=INK_SOFT,
+    ha="center",
+)
 
 # Adjust colorbar chrome to match theme
 cbar = ax.collections[0].colorbar
@@ -121,5 +141,13 @@ cbar.outline.set_edgecolor(INK_SOFT)
 
 # Remove tick marks (keep tick labels) for a clean grid look
 ax.tick_params(top=False, bottom=False, left=False, right=False)
+
+# Ring out the single highest-activity day (the data-storytelling callout
+# above) directly on the grid
+peak_x = peak_row["week_num"] + 0.5
+peak_y = peak_row["weekday"] + 0.5
+ax.plot(
+    peak_x, peak_y, marker="o", markersize=9, markerfacecolor="none", markeredgecolor=INK, markeredgewidth=1.4, zorder=5
+)
 
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
