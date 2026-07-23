@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-23
@@ -30,10 +30,13 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Data - create one year of daily activity data (GitHub-style contribution graph)
 np.random.seed(42)
 
-# Generate dates for one year
+# Generate dates for one year, dropping a short break to exercise the
+# spec's "handle missing dates gracefully" requirement (those days simply
+# have no row, so mark_rect leaves the cell blank/neutral).
 start_date = pd.Timestamp("2024-01-01")
 end_date = pd.Timestamp("2024-12-31")
-dates = pd.date_range(start=start_date, end=end_date, freq="D")
+missing_dates = pd.date_range("2024-07-04", "2024-07-08", freq="D")
+dates = pd.date_range(start=start_date, end=end_date, freq="D").difference(missing_dates)
 
 # Generate realistic activity values (commits/contributions)
 # More activity on weekdays, less on weekends, with some variation
@@ -78,11 +81,14 @@ peak_value = int(peak_day["value"].iloc[0])
 # the single-polarity contribution counts.
 heatmap = (
     alt.Chart(df)
-    .mark_rect(cornerRadius=3)
+    .mark_rect()
     .encode(
         x=alt.X("week_of_year:O", title="", axis=alt.Axis(labels=False, ticks=False, domain=False)),
         y=alt.Y(
-            "weekday_name:O", title="", sort=weekday_names, axis=alt.Axis(labelFontSize=12, domain=False, ticks=False)
+            "weekday_name:O",
+            title="Weekday",
+            sort=weekday_names,
+            axis=alt.Axis(labelFontSize=12, titleFontSize=11, domain=False, ticks=False),
         ),
         color=alt.Color(
             "value:Q",
@@ -107,7 +113,7 @@ month_text = (
 # Highlight ring around the year's busiest day - draws the eye to a focal point
 peak_highlight = (
     alt.Chart(peak_day)
-    .mark_rect(filled=False, stroke=INK, strokeWidth=2, cornerRadius=3)
+    .mark_rect(filled=False, stroke=INK, strokeWidth=2)
     .encode(x=alt.X("week_of_year:O"), y=alt.Y("weekday_name:O", sort=weekday_names))
 )
 
