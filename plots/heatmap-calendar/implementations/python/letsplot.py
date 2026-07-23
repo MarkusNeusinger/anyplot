@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-07-23
@@ -32,10 +32,12 @@ start_date = pd.Timestamp("2024-01-01")
 end_date = pd.Timestamp("2024-12-31")
 dates = pd.date_range(start=start_date, end=end_date, freq="D")
 
-# Generate realistic activity data (like GitHub contributions)
+# Generate realistic activity data (like GitHub contributions), with a mild
+# year-end ramp-up so the "peak in December" narrative is genuinely visible
 values = []
 for date in dates:
-    base = np.random.poisson(5)
+    seasonal_factor = 0.35 + 1.3 * (date.month - 1) / 11
+    base = np.random.poisson(5 * seasonal_factor)
     if date.dayofweek >= 5:
         base = int(base * 0.4)
     if np.random.random() < 0.1:
@@ -88,9 +90,9 @@ plot = (
     )
     + scale_fill_gradient(low=IMPRINT_SEQ_LOW, high=IMPRINT_SEQ_HIGH, name="Activity")
     + scale_y_reverse(breaks=[0, 1, 2, 3, 4, 5, 6], labels=weekday_labels)
-    + scale_x_continuous(breaks=month_positions, labels=month_names, position="top")
+    + scale_x_continuous(breaks=month_positions, labels=month_names)
     + labs(
-        title="heatmap-calendar · letsplot · anyplot.ai",
+        title="heatmap-calendar · python · letsplot · anyplot.ai",
         subtitle=f"Peak activity in {peak_month} · Weekends show ~{weekend_drop_pct}% less activity",
         x="Month (2024)",
         y="Day of Week",
