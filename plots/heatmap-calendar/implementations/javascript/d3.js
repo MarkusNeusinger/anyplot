@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-calendar: Basic Calendar Heatmap
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-07-23
+// Library: d3 7.9.0 | JavaScript 22.23.1
+// Quality: 86/100 | Created: 2026-07-23
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
