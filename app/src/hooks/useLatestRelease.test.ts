@@ -140,8 +140,7 @@ describe('useLatestRelease', () => {
   it('aborts the in-flight fetch on unmount', () => {
     const { unmount } = renderHook(() => useLatestRelease());
     const signal = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0]?.[1]?.signal as
-      | AbortSignal
-      | undefined;
+      AbortSignal | undefined;
     expect(signal).toBeDefined();
     unmount();
     expect(signal!.aborted).toBe(true);

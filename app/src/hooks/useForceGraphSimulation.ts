@@ -381,8 +381,7 @@ export function useForceGraphSimulation({
         const colorBucket = topTypes.includes(v) ? v : null;
         const thumbUrl = selectMapThumbUrl(s, isDark);
         const cached = cache.get(s.id) as
-          | (MapNode & { x?: number; y?: number; vx?: number; vy?: number })
-          | undefined;
+          (MapNode & { x?: number; y?: number; vx?: number; vy?: number }) | undefined;
         const reuse = cached && cached.thumbUrl === thumbUrl;
         // Warm-start preference: keep the simulation's last x/y if we have it
         // (filter / weight tweaks reuse positions and refine in place). Cold
