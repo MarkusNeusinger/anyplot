@@ -96,15 +96,17 @@ const legendBins = [
 // --- Compact-grid layout plugin ---------------------------------------------
 // Chart.js gives the y scale the *entire* leftover chartArea height
 // (chartArea.bottom - chartArea.top) no matter how few data rows it holds —
-// with only 7 weekday rows that leaves a huge dead band above/below a thin
-// data slice, and strands the legend far below it. Right after layout:
-//  1. Shrink the y scale's pixel box down to the height the 7 rows actually
-//     need for square cells (px-per-row == px-per-week), flush under the
-//     month-label row, and pull the legend up to sit close under the grid
-//     instead of pinned to the canvas bottom.
-//  2. Re-center the whole compact title/grid/legend block vertically in the
-//     canvas, so the reclaimed space reads as a balanced frame around a
-//     deliberately compact chart rather than one huge trailing gap.
+// with only 7 weekday rows and 53 columns, shrinking all the way down to
+// bare square cells (px-per-row == px-per-week) leaves the grid a thin,
+// isolated island in a mostly-empty canvas. Right after layout:
+//  1. Grow the row pitch well past the bare square-cell height so the grid
+//     consumes most of the reclaimed vertical space -- cells stay square
+//     (sized by column width in the pointRadius callback below) but rows
+//     get generous breathing room between them -- then pull the legend up
+//     to sit close under the grid instead of pinned to the canvas bottom.
+//  2. Re-center the whole title/grid/legend block vertically in the canvas,
+//     so the composition reads as an intentionally spacious layout rather
+//     than a small block adrift in empty space.
 const compactGrid = {
   id: "compactGrid",
   afterLayout(chart) {
@@ -113,7 +115,9 @@ const compactGrid = {
     const title = chart.titleBlock;
     if (!x || !y) return;
     const pxPerWeek = Math.abs(x.getPixelForValue(1) - x.getPixelForValue(0));
-    const gridHeight = (y.max - y.min) * pxPerWeek; // square cells
+    const squareHeight = (y.max - y.min) * pxPerWeek; // bare square-cell height
+    const available = y.bottom - y.top; // full leftover space before shrink
+    const gridHeight = Math.min(available * 0.72, squareHeight * 2.6);
 
     y.top += 6; // small breathing room under the month labels
     y.bottom = y.top + gridHeight;
@@ -126,7 +130,7 @@ const compactGrid = {
 
     if (legend) {
       const legendHeight = legend.bottom - legend.top;
-      legend.top = y.bottom + 24;
+      legend.top = y.bottom + 28;
       legend.bottom = legend.top + legendHeight;
     }
 
@@ -196,8 +200,8 @@ new Chart(canvas, {
         display: true,
         text: "heatmap-calendar · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22, weight: "500" },
-        padding: { bottom: 18 },
+        font: { size: 26, weight: "500" },
+        padding: { bottom: 24 },
       },
       legend: {
         display: true,
@@ -205,15 +209,21 @@ new Chart(canvas, {
         onClick: () => {},
         labels: {
           color: t.inkSoft,
-          font: { size: 14 },
-          boxWidth: 18,
-          boxHeight: 18,
+          font: { size: 17 },
+          boxWidth: 22,
+          boxHeight: 22,
+          padding: 16,
           generateLabels: () =>
             // A subtle page-background stroke (matching the cell borders)
             // sharpens the visual step between adjacent same-hue bins.
+            // Chart.js's legend draw step reads `legendItem.fontColor` (not
+            // `options.labels.color`) for the text fillStyle, so custom
+            // generateLabels() must set it explicitly or the text falls
+            // back to an uninitialized near-black canvas fillStyle.
             legendBins.map((bin) => ({
               text: bin.label,
               fillStyle: bin.color,
+              fontColor: t.inkSoft,
               strokeStyle: t.pageBg,
               lineWidth: 1,
             })),
@@ -238,7 +248,7 @@ new Chart(canvas, {
         ticks: {
           callback: (value) => monthLabelAt[value] ?? "",
           color: t.inkSoft,
-          font: { size: 14 },
+          font: { size: 16 },
         },
         grid: { display: false },
         border: { display: false },
@@ -254,7 +264,7 @@ new Chart(canvas, {
         ticks: {
           callback: (value) => weekdayLabels[value] ?? "",
           color: t.inkSoft,
-          font: { size: 14 },
+          font: { size: 16 },
         },
         grid: { display: false },
         border: { display: false },
