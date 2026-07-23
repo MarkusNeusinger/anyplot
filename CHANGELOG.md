@@ -130,9 +130,9 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 ### Fixed
 
 - **The whole Claude pipeline generates again — CI runs pass the repo's permission allowlist
-  explicitly** — since the July 5 `claude-code-action` bump (CLI 2.1.170 → 2.1.211), Claude Code
-  ignores `permissions.allow` from `.claude/settings.json` in untrusted workspaces, and a CI
-  checkout is never trusted; every impl-generate/repair, spec-create, polish and similarity run
+  explicitly** — since the July 5 `claude-code-action` bump (bundled CLI 2.1.170 → 2.1.195, by
+  now 2.1.211), Claude Code ignores `permissions.allow` from a committed `.claude/settings.json`
+  in untrusted workspaces, and a CI checkout is never trusted; every impl-generate/repair, spec-create, polish and similarity run
   had its Write/Edit/Bash calls silently denied (19–20 denials per run, zero files produced,
   zero implementations generated repo-wide since July 1). All 12 `claude-code-action` steps now
   pass `--settings .claude/settings.json` in `claude_args`, which the trust gate honors as an
