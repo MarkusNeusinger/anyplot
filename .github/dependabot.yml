@@ -60,7 +60,12 @@ updates:
       # jsdom tests can't catch a broken bundle, so a bump would auto-merge
       # green again. Pinned to 8.0.16; re-test in a browser before lifting.
       - dependency-name: "vite"
-        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+        update-types:
+          [
+            "version-update:semver-patch",
+            "version-update:semver-minor",
+            "version-update:semver-major",
+          ]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
