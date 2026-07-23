@@ -317,7 +317,7 @@ jobs:
           ATTEMPT: ${{ steps.attempts.outputs.display }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model ${{ steps.pr.outputs.model }}"
+          claude_args: "--model ${{ steps.pr.outputs.model }} --settings ${{ github.workspace }}/.claude/settings.json"
           allowed_bots: '*'
           prompt: |
             Read `prompts/workflow-prompts/ai-quality-review.md` and follow those instructions.
