@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
-Library: bokeh 3.9.1 | Python 3.14.4
-Quality: 85/100 | Updated: 2026-07-23
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-07-23
 """
 
 import os
