@@ -230,7 +230,7 @@ jobs:
         uses: anthropics/claude-code-action@1298632ce7736903d02a1435002705aa2a594a6c  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: '--model haiku'
+          claude_args: '--model haiku --settings ${{ github.workspace }}/.claude/settings.json'
           allowed_bots: '*'
           prompt: |
             Read `prompts/workflow-prompts/spec-polish-claude.md` and follow those instructions.
@@ -246,7 +246,7 @@ jobs:
         uses: anthropics/claude-code-action@1298632ce7736903d02a1435002705aa2a594a6c  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: '--model haiku'
+          claude_args: '--model haiku --settings ${{ github.workspace }}/.claude/settings.json'
           allowed_bots: '*'
           prompt: |
             Read `prompts/workflow-prompts/impl-similarity-claude.md` and follow those instructions.

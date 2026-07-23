@@ -129,6 +129,18 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The whole Claude pipeline generates again — CI runs pass the repo's permission allowlist
+  explicitly** — since the July 5 `claude-code-action` bump (bundled CLI 2.1.170 → 2.1.195, by
+  now 2.1.211), Claude Code ignores `permissions.allow` from a committed `.claude/settings.json`
+  in untrusted workspaces, and a CI checkout is never trusted; every impl-generate/repair, spec-create, polish and similarity run
+  had its Write/Edit/Bash calls silently denied (19–20 denials per run, zero files produced,
+  zero implementations generated repo-wide since July 1). All 12 `claude-code-action` steps now
+  pass `--settings .claude/settings.json` in `claude_args`, which the trust gate honors as an
+  explicit opt-in (#9651).
+- **Metadata step no longer executes a comment as a command** — a backtick-quoted fragment
+  inside the double-quoted Python heredoc of impl-generate's "Create library metadata file"
+  step was command-substituted by bash (`--model: command not found` in every run log); the
+  comment now uses single quotes (#9651).
 - **Tag search uses the GIN index and stops treating `%`/`_` as wildcards** —
   `SpecRepository.search_by_tags` cast the JSONB `tags` column to text and ran LIKE, which the
   `ix_specs_tags` GIN index can never serve (sequential scan on every MCP tag search) and which
