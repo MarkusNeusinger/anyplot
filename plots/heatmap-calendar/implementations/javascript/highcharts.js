@@ -84,115 +84,156 @@ for (let m = 0; m < 12; m++) {
   monthTicks.push({ value: weekIndex, label: MONTH_LABELS[m] });
 }
 
-// Discrete swatches standing in for a continuous color-scale legend (no
-// colorAxis legend without the heatmap module — see comment above).
-const LEGEND_STEPS = 4;
-const legendBins = Array.from({ length: LEGEND_STEPS }, (_, i) => {
-  const value = minVisits + ((maxVisits - minVisits) * i) / (LEGEND_STEPS - 1);
-  return { value: Math.round(value), color: valueToColor(value, minVisits, maxVisits) };
-});
+// Peak day — called out with a renderer-drawn callout (see drawPeakCallout),
+// since core Highcharts has no annotations module.
+const peakCell = cells.reduce((best, c) => (c.value > best.value ? c : best), cells[0]);
+
+// Tight vertical band: 7 rows at ~30px pitch, matching the ~28px week-column
+// pitch, so cells read as square rather than stretched across the canvas.
+const MARGIN_TOP = 110;
+const BAND_HEIGHT = 210;
+const MARGIN_BOTTOM = 900 - MARGIN_TOP - BAND_HEIGHT;
 
 // --- Chart -------------------------------------------------------------------
 const title = "heatmap-calendar · javascript · highcharts · anyplot.ai";
 
-Highcharts.chart("container", {
-  chart: {
-    type: "scatter",
-    backgroundColor: "transparent",
-    animation: false,
-    style: { fontFamily: "inherit" },
-    marginLeft: 60,
-    marginRight: 40,
-    marginTop: 130,
-    marginBottom: 90,
-  },
-  credits: { enabled: false },
-  colors: t.palette,
-  title: {
-    text: title,
-    align: "left",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
-  },
-  subtitle: {
-    text: "Daily website visits, 2023 — outage gap in August shown as empty cells",
-    align: "left",
-    style: { color: t.inkSoft, fontSize: "14px" },
-  },
-  xAxis: {
-    min: -0.7,
-    max: weekCount - 0.3,
-    startOnTick: false,
-    endOnTick: false,
-    lineWidth: 0,
-    gridLineWidth: 0,
-    tickWidth: 0,
-    opposite: true,
-    tickPositions: monthTicks.map((m) => m.value),
-    labels: {
-      style: { color: t.inkSoft, fontSize: "14px" },
-      formatter() {
-        const tick = monthTicks.find((m) => m.value === this.value);
-        return tick ? tick.label : "";
+// The core Highcharts bundle has no annotations/colorAxis module, so the
+// gradient legend bar and the peak-day callout are drawn with the SVG
+// renderer directly against the built chart — an idiom specific to
+// Highcharts' rendering engine rather than a generic scatter overlay.
+function drawColorLegend(chart) {
+  const r = chart.renderer;
+  const x0 = chart.plotLeft;
+  const y0 = chart.plotTop + chart.plotHeight + 34;
+  const barWidth = 220;
+  const barHeight = 14;
+
+  r.text("Visits / day", x0, y0 - 10)
+    .css({ color: t.inkSoft, fontSize: "14px", fontWeight: "600" })
+    .add();
+
+  r.rect(x0, y0, 16, 16, 2).attr({ fill: t.grid, "stroke-width": 0 }).add();
+  r.text("No data", x0 + 24, y0 + 13)
+    .css({ color: t.inkSoft, fontSize: "13px" })
+    .add();
+
+  const gx = x0 + 120;
+  r.rect(gx, y0, barWidth, barHeight, 3)
+    .attr({
+      fill: {
+        linearGradient: { x1: 0, y1: 0, x2: 1, y2: 0 },
+        stops: [
+          [0, t.seq[0]],
+          [1, t.seq[1]],
+        ],
       },
+      "stroke-width": 0,
+    })
+    .add();
+  r.text(String(minVisits), gx, y0 + barHeight + 16)
+    .css({ color: t.inkSoft, fontSize: "12px" })
+    .add();
+  r.text(String(maxVisits), gx + barWidth - 20, y0 + barHeight + 16)
+    .css({ color: t.inkSoft, fontSize: "12px" })
+    .add();
+}
+
+function drawPeakCallout(chart) {
+  const px = chart.xAxis[0].toPixels(peakCell.x, false);
+  const py = chart.yAxis[0].toPixels(peakCell.y, false);
+  const below = peakCell.y <= 1; // keep clear of the month-label axis on top rows
+  const labelY = below ? py + 46 : py - 46;
+
+  chart.renderer
+    .label(`Peak: ${peakCell.value} visits (${peakCell.date})`, px, labelY, "callout", px, py)
+    .attr({
+      fill: t.elevatedBg,
+      stroke: t.inkSoft,
+      "stroke-width": 1,
+      padding: 6,
+      r: 4,
+      zIndex: 6,
+    })
+    .css({ color: t.ink, fontSize: "12px", fontWeight: "600" })
+    .add();
+}
+
+Highcharts.chart(
+  "container",
+  {
+    chart: {
+      type: "scatter",
+      backgroundColor: "transparent",
+      animation: false,
+      style: { fontFamily: "inherit" },
+      marginLeft: 60,
+      marginRight: 40,
+      marginTop: MARGIN_TOP,
+      marginBottom: MARGIN_BOTTOM,
     },
-  },
-  yAxis: {
-    title: { text: null },
-    min: -1.5,
-    max: 7.5,
-    startOnTick: false,
-    endOnTick: false,
-    tickPositions: [0, 1, 2, 3, 4, 5, 6],
-    reversed: true,
-    lineWidth: 0,
-    gridLineWidth: 0,
-    tickWidth: 0,
-    labels: {
-      style: { color: t.inkSoft, fontSize: "14px" },
-      formatter() {
-        return WEEKDAY_LABELS[this.value] ?? "";
-      },
-    },
-  },
-  legend: {
-    enabled: true,
-    layout: "horizontal",
-    align: "left",
-    verticalAlign: "bottom",
-    y: 10,
-    itemDistance: 24,
-    itemStyle: { color: t.inkSoft, fontSize: "14px", fontWeight: "normal" },
-    itemHoverStyle: { color: t.ink },
+    credits: { enabled: false },
+    colors: t.palette,
     title: {
-      text: "Visits / day",
+      text: title,
+      align: "left",
+      style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    },
+    subtitle: {
+      text: "Daily website visits, 2023 — outage gap in August shown as empty cells",
+      align: "left",
       style: { color: t.inkSoft, fontSize: "14px" },
     },
+    xAxis: {
+      min: -0.7,
+      max: weekCount - 0.3,
+      startOnTick: false,
+      endOnTick: false,
+      lineWidth: 0,
+      gridLineWidth: 0,
+      tickWidth: 0,
+      opposite: true,
+      tickPositions: monthTicks.map((m) => m.value),
+      labels: {
+        style: { color: t.inkSoft, fontSize: "14px" },
+        formatter() {
+          const tick = monthTicks.find((m) => m.value === this.value);
+          return tick ? tick.label : "";
+        },
+      },
+    },
+    yAxis: {
+      title: { text: null },
+      min: -0.5,
+      max: 6.5,
+      startOnTick: false,
+      endOnTick: false,
+      tickPositions: [0, 1, 2, 3, 4, 5, 6],
+      reversed: true,
+      lineWidth: 0,
+      gridLineWidth: 0,
+      tickWidth: 0,
+      labels: {
+        style: { color: t.inkSoft, fontSize: "14px" },
+        formatter() {
+          return WEEKDAY_LABELS[this.value] ?? "";
+        },
+      },
+    },
+    legend: { enabled: false },
+    tooltip: { enabled: false },
+    plotOptions: {
+      series: { animation: false, enableMouseTracking: false },
+      scatter: {
+        marker: { symbol: "square", radius: 13, states: { hover: { enabled: false } } },
+      },
+    },
+    series: [
+      { name: "Visits", data: cells, showInLegend: false },
+      { name: "No data", data: missingCells, color: t.grid, showInLegend: false },
+    ],
   },
-  tooltip: { enabled: false },
-  plotOptions: {
-    series: { animation: false, enableMouseTracking: false },
-    scatter: {
-      marker: { symbol: "square", radius: 12, states: { hover: { enabled: false } } },
-    },
-  },
-  series: [
-    {
-      name: "Visits",
-      data: cells,
-      showInLegend: false,
-    },
-    {
-      name: "No data",
-      data: missingCells,
-      color: t.grid,
-      showInLegend: true,
-    },
-    ...legendBins.map((bin) => ({
-      name: `${bin.value}`,
-      color: bin.color,
-      data: [],
-      showInLegend: true,
-      marker: { symbol: "square", radius: 12 },
-    })),
-  ],
-});
+  function (chart) {
+    drawColorLegend(chart);
+    drawPeakCallout(chart);
+  }
+);
