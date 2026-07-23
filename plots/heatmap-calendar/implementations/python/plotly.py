@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
 Library: plotly 6.7.0 | Python 3.14.4
 Quality: 88/100 | Updated: 2026-04-27
@@ -24,10 +24,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-
-# Zero-value cell color adapts to theme so empty days don't clash with background
-EMPTY_CELL = "#dde1e7" if THEME == "light" else "#2d333b"
 
 # Data - GitHub-style activity over one year
 np.random.seed(42)
@@ -63,8 +59,8 @@ day_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 month_starts = df.groupby("month")["week_of_year"].min()
 month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-# Sequential green colorscale (GitHub-style) with theme-adaptive empty cells
-colorscale = [[0.0, EMPTY_CELL], [0.25, "#9be9a8"], [0.5, "#40c463"], [0.75, "#30a14e"], [1.0, "#216e39"]]
+# Imprint sequential colorscale (single-polarity: commit count intensity)
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
 
 # Plot
 fig = go.Figure()
@@ -75,12 +71,12 @@ fig.add_trace(
         x=list(range(n_weeks)),
         y=day_labels,
         customdata=hover_dates,
-        colorscale=colorscale,
+        colorscale=imprint_seq,
         showscale=True,
         colorbar={
-            "title": {"text": "Daily commits", "font": {"size": 20, "color": INK}},
-            "tickfont": {"size": 16, "color": INK_SOFT},
-            "thickness": 25,
+            "title": {"text": "Daily commits", "font": {"size": 12, "color": INK}},
+            "tickfont": {"size": 10, "color": INK_SOFT},
+            "thickness": 13,
             "len": 0.6,
             "bgcolor": ELEVATED_BG,
             "bordercolor": INK_SOFT,
@@ -88,16 +84,17 @@ fig.add_trace(
         },
         hoverongaps=False,
         hovertemplate="%{customdata}<br>Commits: %{z}<extra></extra>",
-        xgap=3,
-        ygap=3,
+        xgap=2,
+        ygap=2,
         zmin=0,
     )
 )
 
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "GitHub Activity 2024 · heatmap-calendar · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "heatmap-calendar · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
@@ -105,18 +102,23 @@ fig.update_layout(
         "tickmode": "array",
         "tickvals": list(month_starts.values),
         "ticktext": month_labels,
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "tickfont": {"size": 11, "color": INK_SOFT},
         "side": "top",
         "showgrid": False,
         "linecolor": INK_SOFT,
     },
-    yaxis={"tickfont": {"size": 18, "color": INK_SOFT}, "autorange": "reversed", "showgrid": False, "linecolor": INK_SOFT},
+    yaxis={
+        "tickfont": {"size": 11, "color": INK_SOFT},
+        "autorange": "reversed",
+        "showgrid": False,
+        "linecolor": INK_SOFT,
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    margin={"l": 80, "r": 140, "t": 120, "b": 60},
+    margin={"l": 40, "r": 70, "t": 60, "b": 30},
 )
 
-# Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Save — hard target: 3200 x 1800 (landscape)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
