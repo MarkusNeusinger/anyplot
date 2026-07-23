@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-23
@@ -168,10 +168,10 @@ for i, label in enumerate(WEEKDAY_LABELS):
     node.text = label
 
 # Calendar cells
-for w, wd, color in zip(week_idx, weekdays, cell_colors, strict=True):
+for w, wd, color, day, n in zip(week_idx, weekdays, cell_colors, day_dates, commits, strict=True):
     x = x0 + w * (cell + gap)
     y = y0 + wd * (cell + gap)
-    ET.SubElement(
+    cell_rect = ET.SubElement(
         calendar,
         "rect",
         {
@@ -184,6 +184,10 @@ for w, wd, color in zip(week_idx, weekdays, cell_colors, strict=True):
             "fill": color,
         },
     )
+    # pygal's reactive tooltip JS targets its own chart markup, not hand-drawn
+    # SVG; a native <title> child gives every cell a browser hover tooltip.
+    tooltip_node = ET.SubElement(cell_rect, "title")
+    tooltip_node.text = f"{day.strftime('%b %d, %Y')}: {int(n)} commits"
 
 # Month labels (skip any that would collide with the right edge)
 right_bound = x0 + grid_w - cell * 2.2
@@ -261,7 +265,7 @@ for i, (color, label) in enumerate(zip(legend_colors, legend_labels, strict=True
             "y": str(ly + legend_cell + fs_legend * 0.9),
             "text-anchor": "middle",
             "fill": INK_MUTED,
-            "style": f"font-size:{int(fs_legend * 0.78)}px;font-family:{FONT};",
+            "style": f"font-size:{max(38, int(fs_legend * 0.78))}px;font-family:{FONT};",
         },
     )
     label_node.text = label
