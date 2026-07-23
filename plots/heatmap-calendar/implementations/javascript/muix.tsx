@@ -7,6 +7,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsText } from "@mui/x-charts/ChartsText";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -113,16 +114,22 @@ export default function Chart() {
   // 53 weeks x 7 weekdays is a much wider grid than the 16:9 mount, so a
   // literal square cell would leave most of the canvas empty. Instead give
   // the grid a deliberate, moderately tall row height (a "brick" cell rather
-  // than a pixel-perfect square), size the chart tightly around the grid +
-  // legend, and center that block in the space below the title — that keeps
-  // the legend close to the grid instead of stranded at the canvas edge.
+  // than a pixel-perfect square) that consumes most of the space below the
+  // title, so the calendar+legend block fills the canvas tightly instead of
+  // floating in a taller centered box.
   const LEFT_MARGIN = 68;
   const RIGHT_MARGIN = 28;
   const GAP_RATIO = 0.18;
-  const TOP_MARGIN = 48;
-  const GRID_HEIGHT = 440;
-  const LEGEND_SPACE = 70;
+  const TOP_MARGIN = 40;
+  const GRID_HEIGHT = 560;
+  const LEGEND_SPACE = 56;
   const chartInnerHeight = TOP_MARGIN + GRID_HEIGHT + LEGEND_SPACE;
+  // ContinuousColorLegend right-aligns flush to the chart's own width (not
+  // the margin box), so its max-value label can kiss the true canvas edge —
+  // give the chart a slightly narrower width than the mount so that label
+  // always has breathing room.
+  const LEGEND_EDGE_BUFFER = 36;
+  const chartWidth = width - LEGEND_EDGE_BUFFER;
 
   return (
     <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
@@ -140,9 +147,9 @@ export default function Chart() {
       >
         heatmap-calendar · javascript · muix · anyplot.ai
       </Typography>
-      <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-start" }}>
         <ScatterChart
-          width={width}
+          width={chartWidth}
           height={chartInnerHeight}
           skipAnimation
           disableVoronoi
@@ -165,7 +172,7 @@ export default function Chart() {
               data: weekIndices,
               categoryGapRatio: GAP_RATIO,
               valueFormatter: (weekIdx) => monthLabelByWeek.get(weekIdx) ?? "",
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
               disableTicks: true,
               disableLine: true,
             },
@@ -176,7 +183,7 @@ export default function Chart() {
               scaleType: "band",
               data: WEEKDAY_LABELS,
               categoryGapRatio: GAP_RATIO,
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
               disableTicks: true,
               disableLine: true,
             },
@@ -197,6 +204,18 @@ export default function Chart() {
           slots={{ scatter: SquareCell }}
           slotProps={{ legend: { hidden: true } }}
         >
+          <ChartsText
+            text="Commits per day"
+            x={chartWidth - 8}
+            y={chartInnerHeight - LEGEND_SPACE + 8}
+            style={{
+              fontSize: 14,
+              fill: t.inkSoft,
+              fontFamily: "inherit",
+              textAnchor: "end",
+              dominantBaseline: "hanging",
+            }}
+          />
           <ContinuousColorLegend
             axisId="activity"
             axisDirection="z"
