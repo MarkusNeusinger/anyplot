@@ -2,139 +2,141 @@ library: plotnine
 language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:14:14Z'
-updated: '2026-04-27T01:19:34Z'
+updated: '2026-07-23T22:40:23Z'
 generated_by: claude-sonnet
-workflow_run: 24971288771
+workflow_run: 30049527828
 issue: 1010
-python_version: 3.14.4
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - 'Fully theme-adaptive chrome: INK/INK_SOFT tokens applied to all text elements,
-    backgrounds use PAGE_BG/ELEVATED_BG — both renders are fully readable'
-  - viridis colormap is the correct choice for continuous calendar data; na_value=PAGE_BG
-    elegantly blends zero-activity days with the background
-  - All font sizes explicitly set above the required minimums (title 26pt, axis text
-    18pt, legend 16pt)
-  - Data shows realistic GitHub-style contribution patterns with visible weekend/weekday
-    and seasonal variation
-  - Grid fully removed (panel_grid_major/minor = element_blank()), keeping focus on
-    the data cells
-  - pd.Categorical with reversed order correctly controls Mon–Sun top-to-bottom display
-    in plotnine
-  - Reproducible with np.random.seed(42); clean KISS structure throughout
+  - 'Theme-adaptive chrome is threaded correctly end to end: PAGE_BG/ELEVATED_BG/INK/INK_SOFT
+    tokens drive plot background, panel background, legend background and all text
+    colors, and both renders pass the light/dark legibility check with no dark-on-dark
+    or light-on-light failures.'
+  - Zero-contribution days are mapped to NA with na_value=PAGE_BG and geom_tile(color=PAGE_BG),
+    so empty days blend seamlessly into the panel background in both themes (verified
+    by pixel sampling) — a clean GitHub-style calendar look instead of a jarring placeholder
+    color.
+  - 'Continuous color scale correctly uses the Imprint imprint_seq stops (#009E73
+    -> #4467A3) via scale_fill_gradient, identical between light and dark renders
+    — only chrome flips, exactly as required.'
+  - Deliberate seasonal + weekday data pattern (1.5x boost in Mar/Apr/Sep/Oct, 0.5x
+    dip in Jul/Aug, weekday-vs-weekend contrast, 15% random zero days) gives the heatmap
+    genuine visual hierarchy and a real story instead of flat noise.
+  - Title matches the mandated 'heatmap-calendar · python · plotnine · anyplot.ai'
+    format exactly, and canvas is exactly 3200x1800 (landscape target, gate passed).
+  - 'Idiomatic ggplot grammar: geom_tile + a second geom_text layer with inherit_aes=False
+    for month headers, categorical y-scale reversal to put Monday at the top — clean
+    layered composition rather than post-hoc matplotlib patching.'
   weaknesses:
-  - 'Title format does not follow the required spec: expected ''heatmap-calendar ·
-    plotnine · anyplot.ai'' but got ''Daily Activity 2024 · heatmap-calendar · plotnine
-    · anyplot.ai'' — extra descriptive prefix breaks the convention'
-  - Month labels are shown at the bottom (x-axis) rather than at the top of the grid
-    as specified in the spec ('along the top or as section headers')
-  - 'Design Excellence is mid-range (12/20): styling is clean but generic — removing
-    the legend box border, adding a thin hairline separator between weekdays/weekends,
-    or using a Reds/Blues heatmap instead of generic viridis would lift the aesthetic'
-  - Calendar cells have a tall/narrow aspect ratio (7 rows × 53 columns in 16:9) —
-    a 12:5 or square canvas would give cells a more balanced shape typical of GitHub
-    contribution graphs
-  - 'VQ-03: tile height-to-width ratio makes cells look stretched vertically; a wider
-    figure_size or adjusted aspect would improve cell shape'
+  - 'LM-02: distinctive plotnine/grammar-of-graphics features are used competently
+    (layer composition, NA handling, categorical reversal) but nothing library-uniquely
+    showcase-worthy beyond that (e.g. no coord_flip, facet, or stat layer) — a bit
+    more of plotnine''s distinctive toolkit would lift this further.'
+  - 'DE-03: the spring/fall vs. summer seasonal contrast is present but fairly subtle
+    at a glance — a slightly wider low/high value spread between quiet and busy months
+    would make the visual focal point read faster.'
+  - The spec's 'handle missing dates gracefully' is satisfied in spirit (zero-value
+    days render as neutral/empty cells) but the dataset itself has no literal date
+    gaps (continuous date_range for the full year) — a future iteration could drop
+    a handful of dates entirely to also demonstrate true missing-date handling, not
+    just zero-value handling.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) — PASS, not pure white
-      Chrome: Title "Daily Activity 2024 · heatmap-calendar · plotnine · anyplot.ai" in bold dark ink, clearly readable. Y-axis labels Mon–Sun in dark secondary ink, all legible. X-axis month labels (Jan–Dec) in same dark secondary ink, all readable. Legend title "Contributions" and tick labels (5, 10, 15) are clearly visible against the elevated off-white legend background.
-      Data: viridis colormap from deep purple (low activity) through teal to bright yellow (high activity). Zero/NA days render as off-white background cells, cleanly blending with the panel. Weekend rows (Sat, Sun) visibly darker (lower activity). Spring (Mar–Apr) and fall (Sep–Oct) months show brighter teal/yellow cells indicating higher activity; July–August noticeably darker.
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1), sampled pixel value (250,248,241) — matches the required light page background exactly.
+      Chrome: Bold dark title "heatmap-calendar · python · plotnine · anyplot.ai" centered at top, clearly readable. Month labels (Jan-Dec) run along the top of the grid in soft ink-gray. Weekday labels (Mon-Sun, top to bottom) sit on the left in soft ink-gray. "Contributions" legend with 5/10/15 tick labels sits at the right. All chrome text is dark-on-light and legible.
+      Data: A calendar grid of tiles, one column per week, one row per weekday, spanning Jan-Dec 2024. Filled cells run from brand green (#009E73, low values) through teal to blue (#4467A3, high values) — a sequential imprint_seq gradient. Zero-value days are invisible (blended into the page background) rather than drawn as a jarring placeholder. Visible seasonal pattern: denser/bluer clusters in Mar/Apr and Sep/Oct, sparser and lighter in Jul/Aug, and lighter weekend rows (Sat/Sun) vs. weekdays.
+      Legibility verdict: PASS — no light-on-light text, no unreadable elements, no clipping at any edge.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) — PASS, not pure black
-      Chrome: Title in light ink (#F0EFE8), clearly readable against dark background. Y-axis day labels (Mon–Sun) in lighter secondary ink (#B8B7B0), well readable. X-axis month labels in same lighter ink, all readable. Legend background is dark elevated (#242420) with light text — no dark-on-dark issues detected.
-      Data: viridis data colors are identical to the light render — same purple-to-yellow progression. Zero/NA cells render as near-black, matching the dark background. The seasonal and weekend patterns are identically visible.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome is properly adapted to dark theme.
+      Background: Warm near-black (#1A1A17), sampled pixel value (26,26,23) — matches the required dark page background exactly.
+      Chrome: Same title, month labels, weekday labels, and "Contributions" legend, now rendered in light ink-gray/white against the dark background — all clearly legible, no dark-on-dark failures detected anywhere (title, axis text, legend text and ticks all checked).
+      Data: Pixel sampling confirms the filled-tile colors are byte-identical to the light render (e.g. (0,158,115), (24,138,132), (53,115,153) appear in both images) — only the chrome (background/text) flips between themes, exactly as required. Zero-value days again blend fully into the dark panel background (sampled as the same (26,26,23) as the surrounding chrome) rather than reading as a false "hole."
+      Legibility verdict: PASS — no dark-on-dark text, all chrome and data clearly distinguishable from the background, no clipping at any edge.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 26pt, axis text 18pt, legend
-          title 18pt, legend text 16pt; fully readable in both themes'
+        comment: All chrome text explicitly sized and readable in both themes; small
+          margin held back for tiny month/weekday label sizes (7-9pt) at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month labels and day labels all well-spaced with no collisions
+        comment: No collisions between title, month labels, weekday labels, legend
+          or tiles
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Tiles clearly visible with viridis colormap, but tall/narrow aspect
-          ratio due to 7 rows × 53 columns in 16:9 canvas makes cells sub-optimally
-          shaped
+        comment: Tile grid sized appropriately for the data density; no overplotting
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is perceptually uniform and CVD-safe
+        comment: imprint_seq green->blue sequential gradient, CVD-safe, no red-green
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Calendar grid fills canvas well but legend appears slightly isolated
-          to the right with some empty space
+        comment: Exact 3200x1800 canvas (gate passed), balanced proportions, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Month names and day names as tick labels are self-explanatory; title
-          is descriptive
+        comment: Weekday labels + month headers substitute for axis titles by design;
+          title descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'viridis is the correct sequential colormap for continuous heatmap
-          data; backgrounds #FAF8F1/#1A1A17 correct; chrome fully theme-adaptive'
+        comment: 'Correct imprint_seq stops (#009E73 -> #4467A3), correct theme backgrounds
+          both renders'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 7
         max: 8
-        passed: false
-        comment: Clean and professional but looks like a well-configured library default;
-          no distinctive visual decisions that elevate beyond standard
+        passed: true
+        comment: GitHub-style card-separator technique (border color = page bg), NA
+          blending, cohesive polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid removed, subtle tile borders use PAGE_BG color, legend has elevated
-          background — good refinement but legend border and panel styling could be
-          further polished
+        comment: No grid, no spines/ticks, generous whitespace, minimal chrome
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Data choice creates a clear story: weekend vs weekday activity and
-          seasonal patterns are visibly encoded in the color intensity'
+        comment: Seasonal + weekday contrast creates a real narrative, though fairly
+          subtle at a glance
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,30 +144,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calendar heatmap with days as cells, weeks as columns, months
-          labeled
+        comment: Correct calendar heatmap grid
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Weekday labels, colormap, missing-day handling, color legend all
-          present; month labels shown at bottom rather than top/as section headers
-          as spec requires
+        comment: Weekday labels, month labels, sequential colormap, neutral empty
+          cells, color legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=weeks, Y=day-of-week, fill=value — all correctly mapped
+        comment: Weeks on x, weekdays on y, full year of data shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has extra prefix 'Daily Activity 2024 · ' before spec-id; required
-          format is 'heatmap-calendar · plotnine · anyplot.ai'. Legend label 'Contributions'
-          is clear.
+        passed: true
+        comment: Title matches mandated format exactly; legend label matches data
+          context
     data_quality:
       score: 15
       max: 15
@@ -175,21 +174,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows zero-activity days, weekend/weekday variation, seasonal trends,
-          full year range
+        comment: Shows density variation, weekday patterns, seasonal patterns, and
+          empty-day handling
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GitHub-style contribution graph is a well-known, neutral, real-world
-          scenario
+        comment: Plausible, neutral GitHub-style daily contribution counts
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Daily commit counts 0–17 are realistic for an active developer
+        comment: Poisson(5)-based counts (0-15ish) sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -199,31 +197,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save, no functions or classes
+        comment: No functions/classes, straightforward top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, appropriate complexity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave to plot-{THEME}.png with correct dpi and dimensions
+        comment: Saves plot-{THEME}.png via ggsave, matches library canvas contract
     library_mastery:
       score: 8
       max: 10
@@ -233,27 +231,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert grammar-of-graphics usage: ggplot + geom_tile + scale_fill_cmap
-          + scale_x_continuous with custom breaks + theme() customization'
+        comment: Proper grammar-of-graphics layering, inherit_aes=False for the annotation
+          layer, scale_fill_gradient
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: pd.Categorical with reversed order for y-axis control, na_value=PAGE_BG
-          in scale_fill_cmap, scale_x_continuous with manual month break/label pairs
-          — plotnine-idiomatic patterns
-  verdict: REJECTED
+        comment: NA handling + categorical reversal are competent but not deeply plotnine-unique
+          (no facet/coord_flip/stat layer)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - colorbar
-  - manual-ticks
   patterns:
   - data-generation
-  - long-to-wide
-  dataprep:
-  - time-series
+  - groupby-aggregation
+  dataprep: []
   styling:
-  - custom-colormap
-  - minimal-chrome
+  - publication-ready
