@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: heatmap-calendar
 created: '2026-07-23T22:19:14Z'
-updated: '2026-07-23T22:23:35Z'
+updated: '2026-07-23T22:40:12Z'
 generated_by: claude-sonnet
 workflow_run: 30048797640
 issue: 1010
@@ -12,60 +12,59 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/highcharts/plot-dark.html
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - Correctly uses imprint_seq (green→blue) for the continuous visits-per-day scale,
-    computed via manual RGB interpolation since the core Highcharts bundle has no
-    colorAxis/heatmap module — a well-documented, spec-compliant workaround.
-  - Weekday pattern (weekday busier than weekend), seasonal drift, and the August
-    data-collection outage are all immediately visible at a glance, giving the calendar
-    genuine storytelling value.
-  - 'Theme-adaptive chrome is threaded through correctly: transparent chart background
-    over the page surface, ink/inkSoft tokens for title/subtitle/labels, and the ''No
-    data'' cells use the theme grid token so they read as neutral gray in both themes.'
-  - 'Spec features are all present: Mon-Sun weekday rows on the y-axis, month labels
-    along the top, sequential low-to-high coloring, gracefully handled missing dates,
-    and a color-scale legend.'
-  - Deterministic LCG-seeded data generation, clean KISS-ish script structure, exact
-    mandated title string.
+  - Vertical calendar band is now tight (MARGIN_TOP=110, BAND_HEIGHT=210) so the month
+    header, weekday rows, and legend sit close together, resolving the attempt-1 complaint
+    about uneven internal gaps
+  - Color-scale legend is now a continuous linear-gradient bar (imprint_seq stops)
+    with min/max value labels, replacing the sparse 4-swatch legend from attempt 1
+    and reading as a real continuous scale
+  - New chart.renderer.label(...,'callout',...) peak-day annotation with a leader
+    line is genuinely Highcharts-specific (the built-in 'callout' shape + anchorX/anchorY
+    leader-line idiom), directly addressing the attempt-1 Library Mastery weakness
+  - The post-render callback (third argument to Highcharts.chart) used to draw the
+    gradient legend and callout is itself an idiomatic Highcharts pattern for custom
+    SVG chrome, not a generic overlay hack
+  - Weekday pattern, seasonal drift, and the August outage gap remain immediately
+    visible through color and layout; data colors are pixel-identical between light
+    and dark renders
+  - Theme-adaptive chrome (transparent background, ink/inkSoft tokens, theme-adaptive
+    'No data' cells) and all spec-required features (Mon-Sun rows, month labels, sequential
+    colormap, missing-date handling, legend) remain correct
+  - Deterministic LCG-seeded data, clean structure, exact mandated title string
   weaknesses:
-  - 'Library Mastery is generic: the calendar is built from a plain scatter series
-    with square markers rather than any Highcharts-distinctive mechanism (e.g. leveraging
-    colorAxis-style legend semantics, dataLabels, or point-level styling patterns)
-    — this exact visual could be replicated with near-identical code in any library
-    that supports a scatter/square-marker primitive. Given the core-bundle heatmap-module
-    restriction this is understandable, but nothing in the implementation reaches
-    for what Highcharts specifically offers beyond that baseline.'
-  - 'Layout has uneven whitespace distribution: there''s a large gap between the month-label
-    row and the first weekday row, and another sizeable gap between the last weekday
-    row and the legend, while the calendar band itself is vertically loose (row height
-    much greater than the cell size). Tightening these gaps would make better use
-    of the landscape canvas and read as more intentional.'
-  - The color-scale legend is 4 discrete swatches standing in for what the spec calls
-    a 'color scale legend' — a reasonable workaround given the missing colorAxis module,
-    but a continuous-looking gradient bar (e.g. many thin adjacent swatches) would
-    communicate the scale more faithfully than 4 sparse bins.
-  - 'Design Excellence is solid but not exceptional: the plot works and is legible
-    but doesn''t yet reach ''publication ready'' — e.g. no emphasis/annotation calling
-    out the outage or the highest-traffic day beyond the subtitle text, and the row
-    spacing gives it a slightly plain, evenly-gridded look rather than a refined calendar
-    composition.'
+  - 'Canvas utilization is still weak: tightening the band (fixing the attempt-1 internal-gap
+    complaint) shifted the wasted space rather than removing it — the calendar, legend,
+    and title now cluster in roughly the top 40-45% of the 3200x1800 canvas, leaving
+    a large flat empty region below the legend down to the bottom edge. Increase marker
+    radius / cell pitch and BAND_HEIGHT (or grow MARGIN_TOP moderately and shrink
+    MARGIN_BOTTOM) so the plot content fills closer to 50-80% of the canvas as required
+    by VQ-05'
+  - The core mechanism is still a scatter series with square markers standing in for
+    a heatmap (unavoidable given the core-bundle module restriction, documented in
+    comments) — Library Mastery improved via the renderer-based gradient legend and
+    callout but the primary chart body itself remains a generic scatter primitive
+  - 'Design Excellence is solid but not exceptional: composition still reads as somewhat
+    plain given how much of the canvas is unused; consider filling the extra vertical
+    space with larger cells, more breathing room around the legend, or a secondary
+    visual element instead of leaving it blank'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "heatmap-calendar · javascript · highcharts · anyplot.ai" top-left, dark-gray subtitle below it explaining the outage gap. Month labels (Jan-Dec) run along the top in medium gray; weekday labels (Mon-Sun) run down the left side in the same gray. Legend at bottom-left ("Visits / day" title, "No data" gray swatch + 4 numeric color swatches). All text is clearly dark-on-light and fully readable.
-      Data: 52-53 columns of square cells per weekday row, colored from bright green (low visits) through teal to blue (high visits) — matches the imprint_seq gradient (#009E73 → #4467A3). A visible light-gray gap of ~12 cells in mid-August (two per row) shows the outage. Weekend rows (Sat/Sun) read visibly greener/lower than weekday rows, and a broader seasonal swing is visible across the year.
-      Legibility verdict: PASS.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Bold dark title "heatmap-calendar · javascript · highcharts · anyplot.ai" top-left with a dark-gray subtitle below it explaining the August outage gap. Month labels (Jan-Dec) run along the top of the grid; weekday labels (Mon-Sun) run down the left side, both in medium gray. All fully legible against the light background.
+      Data: 52-53 columns of square cells per weekday row, colored on the imprint_seq gradient from bright green (low visits) through teal to blue (high visits). A ~12-cell light-gray gap in mid-August shows the outage, matching the "No data" legend swatch. A "Peak: 480 visits (2023-01-12)" callout box with a leader line points to the peak cell in early January. Below the grid, a continuous gradient legend bar ("Visits / day", green-to-blue, labeled 67 and 480) plus the "No data" swatch explain the scale. First-series intent (#009E73-adjacent green) anchors the low end of the gradient as expected.
+      Legibility verdict: PASS — all text (title, subtitle, month/weekday labels, legend labels, callout text) is clearly dark-on-light and readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/subtitle now in light cream text, clearly legible against the dark surface. Month and weekday labels are light gray, fully readable. Legend text is light-colored and legible. "No data" cells render as a slightly lighter charcoal gray, distinguishable from the background without being jarring.
-      Data: Cell colors are pixel-identical to the light render (bright green → teal → blue gradient), confirming the data-color/chrome separation. No dark-on-dark or light-on-light failures detected anywhere — title, subtitle, axis labels, and legend text all have strong contrast against the near-black background.
-      Legibility verdict: PASS.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Same title/subtitle now rendered in light cream text, fully legible. Month and weekday labels are light gray and readable. The peak-day callout box uses a dark elevated-surface fill with light text and a soft border, readable against the dark background. No dark-on-dark text was found anywhere.
+      Data: Cell colors are pixel-identical to the light render (green through teal to blue), confirming only chrome flipped. The "No data" outage cells render as a slightly lighter charcoal gray, clearly distinguishable from the near-black page background and from the data cells.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures found; all chrome is theme-correct.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -73,75 +72,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (title 22px, subtitle/labels/legend
-          14px); all readable in both themes with no clipping.
+        comment: All text readable in both themes at full and scaled-down size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No collisions between text, cells, callout, or legend
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Square cell markers (radius 12) are clearly visible and evenly spaced;
-          could be marginally larger for the ~365-cell density.
+        comment: Cells are clearly distinguishable; gradient steps are subtle by design
+          of the interpolation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue scale, no red-green-only signal, good contrast.
+        comment: Green-to-blue sequential gradient, no red-green sole signal, adequate
+          contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Uses most of the canvas width and a reasonable vertical band, but
-          whitespace above the calendar and before the legend is unevenly distributed.
+        passed: false
+        comment: Content (title/grid/legend) fills only ~40-45% of the vertical canvas,
+          leaving a large flat empty region below the legend; falls in the 30-50%
+          'minor issues, wasted space' band
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Weekday/month axes are self-descriptive categorical labels; legend
-          title 'Visits / day' gives the value dimension a clear unit.
+        comment: Weekday and month labels are descriptive; title matches mandated
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Continuous data correctly uses imprint_seq (t.seq[0]→t.seq[1]) manually
-          interpolated; backgrounds and chrome are theme-correct in both renders;
-          data colors identical across themes.
+        comment: imprint_seq gradient used correctly, theme-correct backgrounds, identical
+          data colors across themes
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful continuous gradient and clean chrome removal go above
-          a raw default, but overall composition is still fairly plain/functional.
+        comment: Continuous gradient legend and callout raise polish above a bare
+          scatter-as-heatmap, but unused canvas space keeps it short of publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid, no spines, subtle legend; loses points for uneven whitespace
-          distribution around the calendar band.
+        comment: No grid/spines, tight internal band spacing, but overall whitespace
+          is unbalanced (all excess space pooled at the bottom)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Weekday pattern, seasonal drift, and the outage gap are all immediately
-          visible through color and the missing-cell gap, giving clear visual hierarchy
-          without needing annotations.
+        comment: Peak-day callout plus color gradient and outage gap give the viewer
+          a clear, immediate focal point
     spec_compliance:
       score: 15
       max: 15
@@ -151,30 +149,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Reads unambiguously as a calendar heatmap: weeks as columns, weekdays
-          as rows, color-encoded value.'
+        comment: Calendar heatmap grid with weeks as columns, weekdays as rows
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Weekday y-axis labels, month labels along the top, sequential low-to-high
-          colormap, gracefully handled missing dates, and a color-scale legend are
-          all present.
+        comment: Weekday labels, month labels, sequential colormap, missing-date handling,
+          legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = week index, y = Monday-indexed weekday (reversed for Mon-top
-          ordering), value encoded via cell color; full year of data visible.
+        comment: Week index on x, weekday on y, value mapped to color
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the exact mandated format; legend labels ('No data'
-          + 4 value bins under 'Visits / day') correctly describe the data.
+        comment: Title matches mandated format exactly; legend labels match data (Visits
+          / day, No data)
     data_quality:
       score: 14
       max: 15
@@ -184,23 +179,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows weekday seasonality, yearly seasonal swing, and a missing-data
-          outage — the key features of a calendar heatmap. Could add a secondary anomaly
-          (e.g. a holiday spike) for full coverage.
+        comment: Weekday seasonality, yearly seasonal drift, and a missing-data outage
+          all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily website visits is a real, neutral, comprehensible business
-          scenario.
+        comment: Plausible, neutral website-visits scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Visit counts (~60-500/day) are plausible for a small-to-medium site;
-          weekday/weekend and seasonal multipliers are sensible.
+        comment: Visit counts (roughly 67-480/day) are sensible for the domain
     code_quality:
       score: 9
       max: 10
@@ -210,66 +202,62 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Mostly flat imports→data→chart flow, but includes a few small helper
-          functions (nextRandom, hexToRgb, valueToColor) — justified by the manual
-          color-interpolation workaround, but not pure KISS.
+        comment: Several small helper functions (hexToRgb, valueToColor, drawColorLegend,
+          drawPeakCallout) but each is justified by the core-bundle workaround
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (lcgState = 42) makes data fully deterministic.
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only browser globals used.
+        comment: No imports beyond the Highcharts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; the manual color-mapping workaround
-          is well-commented and justified by the core-bundle module restriction.
+        comment: No fake UI; complexity is proportional to the missing-module workaround
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract (Highcharts.chart('container', …)), animation
-          disabled on chart and series.
+        comment: 'Renders into #container via the harness contract; animation disabled'
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct API usage; the post-render callback for custom SVG chrome
+          is a documented Highcharts idiom
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct API usage (plotOptions, legend, axis config) but the core
-          mechanism is a scatter-series workaround rather than a Highcharts-native
-          calendar/heatmap pattern — the best available option given the core-bundle
-          restriction, but not the library's own recommended pattern.
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic scatter + square-marker usage; nothing here is distinctive
-          to Highcharts specifically — the same visual could be built with minor syntax
-          changes in another library.
-  verdict: REJECTED
+        comment: Renderer-based gradient legend and 'callout' leader-line annotation
+          are Highcharts-specific; the underlying series is still a generic scatter
+          workaround
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
-  - custom-legend
+  - colorbar
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
   - custom-colormap
-  - minimal-chrome
+  - gradient-fill
