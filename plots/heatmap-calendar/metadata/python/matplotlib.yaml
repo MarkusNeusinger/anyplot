@@ -2,58 +2,56 @@ library: matplotlib
 language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:13:42Z'
-updated: '2026-04-27T00:47:15Z'
+updated: '2026-07-23T21:40:00Z'
 generated_by: claude-sonnet
-workflow_run: 24971062359
+workflow_run: 30045612459
 issue: 1010
-python_version: 3.14.4
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Full spec compliance: weekday labels, top month labels, sequential colormap,
-    and colorbar all present and correct'
-  - Theme-adaptive implementation with proper PAGE_BG, INK, INK_SOFT tokens applied
-    to all chrome elements in both renders
-  - Vectorized data generation with realistic patterns (vacation gap in August, deadline
-    spike in late March) that tell a clear story
-  - All spines removed and tick marks hidden (length=0), producing a clean minimal-chrome
-    design above library defaults
-  - Correct output filename pattern plot-{THEME}.png, seed(42) for reproducibility,
-    flat KISS code structure
-  - LinearSegmentedColormap.from_list and np.ma.masked_invalid show competent matplotlib-specific
-    usage
+  - 'Attempt 1''s typographic-hierarchy weakness is resolved: weekday/month tick labels
+    are now 12pt, clearly subordinate to the 18pt title'
+  - New italic caption explicitly narrates both data moments (late-March deadline
+    crunch, August vacation break), directly answering the Attempt 1 "no callout"
+    weakness and improving both DE-03 and overall vertical balance
+  - 'Correct GitHub-style calendar layout: weekdays on the y-axis, months along the
+    top, weeks as columns — matches the spec''s Notes exactly'
+  - Missing/zero-activity days render as true empty cells via NaN + cmap.set_bad(PAGE_BG),
+    so the vacation gap reads as a clear visual gap rather than a low-value cell
+  - 'Both renders remain fully theme-correct: warm off-white/near-black backgrounds,
+    all chrome uses theme-adaptive tokens with no dark-on-dark or light-on-light failures,
+    identical data colors across themes'
+  - Clean, fully vectorized KISS structure with np.random.seed(42), no manual loops
+    for grid construction, all imports used
   weaknesses:
-  - Colorbar tick labels set at 14pt, below the ≥16pt guideline for tick labels —
-    use labelsize=16
-  - Custom theme-adaptive colormap changes data colors between light and dark renders;
-    style guide recommends using a single perceptually-uniform colormap (viridis,
-    cividis, or Greens) so data colors stay identical across themes
-  - 'Mid-range activity cells in the dark render blend somewhat with the near-black
-    background because the dark custom colormap uses very dark greens (#1a4731, #2d7040)
-    — a lighter minimum for dark theme or using a standard cmap would improve visibility'
-  - 'Design Excellence could be raised: consider adding a subtle annotation marking
-    the August vacation gap and the March deadline spike to create an explicit visual
-    hierarchy and narrative focal point'
+  - Title fontsize (18pt) is too generous for its 51-character length — it now spans
+    ~86.5% of the canvas width with only ~6-8% margin on each side, a squeezed look
+    with little breathing room. Reduce to ~13-14pt so it comfortably occupies closer
+    to 60-70% of the width while remaining the clear typographic anchor.
+  - The narrative caption states the two data moments in text but doesn't visually
+    point at the specific grid cells (e.g. a subtle arrow or bracket near the March/August
+    columns) — the last increment toward excellent data storytelling.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, NOT pure white
-      Chrome: Title "heatmap-calendar · matplotlib · anyplot.ai" in dark ink at 24pt, fully readable. Month labels (Jan–Dec) displayed at top of the grid in dark text at 16pt, all readable without overlap. Weekday labels (Mon–Sun) on the left y-axis at 16pt, readable. Colorbar below with "Daily Commits" label at 16pt and tick labels at 14pt (slightly small). All text is dark on light — no light-on-light issues.
-      Data: Green gradient from pale blue-green (#E0EAE3 for zero) to dark green (#196127 for max). August shows a clear inactive gap (pale cells), late March/April shows a high-activity cluster (dark green). Color gradient visually distinguishes activity levels. First series is a custom green scale, not Okabe-Ito #009E73 (heatmap colormap context).
-      Legibility verdict: PASS — all text readable, data colors distinguishable
+      Background: Warm off-white matching #FAF8F1 (confirmed via pixel inspection).
+      Chrome: Title "heatmap-calendar · python · matplotlib · anyplot.ai" in dark ink at 18pt, spans ~86.5% of canvas width (measured via pixel analysis: cols 181-2949 of 3200px). Month labels (Jan-Dec) along top and weekday labels (Mon-Sun) on y-axis at 12pt, clearly subordinate to title. Colorbar below labeled "Daily Commits" with readable ticks. Italic caption at bottom narrates the deadline crunch and vacation break. All fully legible.
+      Data: Continuous green (#009E73) -> blue (#4467A3) sequential gradient (imprint_seq). Empty cells (background-colored) for zero-activity days create a clear August vacation gap; deep-blue cluster visible in late March (deadline spike).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, NOT pure black
-      Chrome: Title in light off-white text, clearly readable against dark background. Month labels and weekday labels rendered in light color (INK_SOFT = #B8B7B0), all readable. Colorbar label and ticks in light text, readable. No dark-on-dark failures for text elements.
-      Data: Colormap adapted for dark theme — zero/empty cells render as very dark green-black (#2A2A25) blending with background, mid-range cells as medium dark green (#1a4731, #2d7040), high-activity cells as bright green (#52c760). The high-activity cells (vacation gap clearly visible as absence, deadline spike visible as bright cells) are distinguishable. However, the mid-range activity cells (values 3–8) use very dark greens that are harder to distinguish from the background compared to the light render.
-      Legibility verdict: PASS with minor concern — text is fully readable, but mid-range data cell contrast against dark background is lower than in the light render due to the theme-adaptive colormap design choice
+      Background: Warm near-black matching #1A1A17.
+      Chrome: Same title now in light ink (#F0EFE8), same month/weekday labels in light gray (#B8B7B0), same colorbar and caption styling — all clearly legible against the dark surface. No dark-on-dark failures.
+      Data: Identical green-to-blue gradient and identical cell values/positions as the light render (same vacation gap, same deadline spike) — confirms only chrome flipped between themes. Brand green remains vivid on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -61,78 +59,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, weekday/month ticks 16pt — explicit sizes set. Colorbar
-          tick labels at 14pt fall below the ≥16pt guideline.
+        comment: Title/tick hierarchy fixed (12pt ticks vs 18pt title); title itself
+          is oversized for its length (see VQ-05)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements well-spaced, no collisions
+        comment: No collisions between text, data, or legend elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Cells clearly visible in light render; mid-range activity cells in
-          dark render show reduced contrast against dark background due to very dark
-          green tones
+        comment: Calendar cells appropriately sized, empty cells clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue green colormap is CVD-safe, no red-green categorical distinction
+        comment: Green-to-blue sequential gradient, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions, calendar fills canvas well, colorbar below is well-positioned,
-          nothing cut off
+        comment: Title measures ~86.5% of canvas width at only 51 characters — fontsize
+          too generous for its length, tight side margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Colorbar label 'Daily Commits' is descriptive; title follows spec
-          format
+        comment: Descriptive month/weekday labels and colorbar label with units-equivalent
+          context (Daily Commits)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Background colors correct (#FAF8F1 light, #1A1A17 dark), chrome
-          adapts correctly. However the data colormap is a custom theme-adaptive sequence
-          that differs between renders, deviating from the ''data colors identical
-          across themes'' rule and the recommended viridis/Greens for heatmaps.'
+        passed: true
+        comment: imprint_seq gradient, correct theme backgrounds in both renders
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: GitHub-style calendar with theme-adaptive design, vacation gap and
-          deadline spike add intentional storytelling context. Clearly above generic
-          defaults but not publication-ready polish.
+        comment: Custom sequential colormap, styled colorbar, and new narrative caption
+          push above generic-with-polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: All spines removed, tick marks hidden (length=0), no grid, generous
-          whitespace. Well above minimal customization.
+        comment: Spines removed, vertical whitespace balance improved by the new caption
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: August vacation gap and March deadline spike create clear visual
-          narrative patterns. Color gradient guides attention to activity peaks. Above
-          default but no explicit annotations or emphasis highlights.
+        comment: Caption explicitly names both narrative moments; a visual pointer
+          to the specific cells would reach excellent
     spec_compliance:
       score: 15
       max: 15
@@ -142,49 +132,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calendar heatmap with grid cells per day
+        comment: Correct calendar heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Weekday labels on y-axis, month labels at top, sequential colormap,
-          color scale legend — all present
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Weeks on x-axis, weekdays on y-axis, value encoded as color — correct
+        comment: Week/day grid correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'heatmap-calendar · matplotlib · anyplot.ai'
+        comment: Title format matches mandated pattern, colorbar labeled
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows daily patterns, weekday vs weekend differences, temporal spikes
-          (deadline), vacation period. Most features covered.
+        comment: Weekday labels, month labels, sequential colormap, missing-day handling,
+          and colorbar legend all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GitHub commit activity is a real, comprehensible, neutral scenario
+        comment: Realistic commit-activity pattern with weekday bias, vacation dip,
+          deadline spike
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0–20+ commits per day is realistic for a developer
+        comment: Sensible daily-commit value range
     code_quality:
       score: 10
       max: 10
@@ -194,33 +184,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → theme tokens → data → plot → save, no
-          functions/classes'
+        comment: No functions/classes, flat vectorized script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas, LinearSegmentedColormap — all
-          used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized operations, no fake UI, clean structure
+        comment: No fake UI, vectorized grid construction
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi and facecolor
+        comment: Saves as plot-{THEME}.png
     library_mastery:
       score: 7
       max: 10
@@ -230,27 +218,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pcolormesh for grid heatmap, masked_invalid for NaN handling, xaxis.tick_top(),
-          colorbar API — idiomatic matplotlib usage above 'correct but not leveraging
-          best patterns'
+        comment: pcolormesh with explicit x/y edges is the right idiomatic tool for
+          a masked calendar grid
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: LinearSegmentedColormap.from_list, np.ma.masked_invalid, xaxis.tick_top(),
-          cbar.outline.set_edgecolor — uses several matplotlib-specific APIs
-  verdict: REJECTED
+        comment: Masked-array + cmap.set_bad() handling, not a rare technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
+  - explicit-figure
   dataprep:
   - time-series
   styling:
   - custom-colormap
-  - minimal-chrome
+  - edge-highlighting

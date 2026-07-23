@@ -129,15 +129,26 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
-- **Scheduled implementation regeneration no longer silently starves for days** — GitHub's scheduler
-  had been dropping `daily-regen.yml`'s cron ticks in multi-day streaks since early June
-  (last 13 days: only 5 scheduled runs instead of ~130) while less-frequent crons in the same
-  repo kept firing; every run that did start was green, so nothing alarmed. The cron now fires
-  at :17 instead of :00 (GitHub documents top-of-hour scheduler overload as a delay/drop
-  cause), and `watchdog-stuck-jobs.yml` gained a cron-liveness rescue that re-dispatches
-  daily-regen whenever main has seen no new run created for >10 h outside the Berlin-evening
-  quiet window, capping any future starvation at typically ~half a day (worst case just under
-  a day, when the >10 h mark lands in the skipped 17–21 UTC checks) instead of weeks (#9649).
+- **Scheduled implementation regeneration is harder to starve silently** — `daily-regen.yml`'s
+  cron had gone silent for multi-day stretches (a mix of GitHub's documented top-of-hour
+  scheduler overload and the workflow being manually disabled), and because every run that did
+  start was green, nothing alarmed. The cron now fires at :17 instead of :00, and
+  `watchdog-stuck-jobs.yml` gained a cron-liveness rescue that re-dispatches daily-regen
+  whenever main has seen no new run created for >10 h outside the Berlin-evening quiet window
+  (a manually disabled workflow stays disabled — the rescue cannot and does not re-enable it),
+  capping scheduler-side starvation at typically ~half a day instead of weeks (#9649).
+- **The whole Claude pipeline generates again — CI runs pass the repo's permission allowlist
+  explicitly** — since the July 5 `claude-code-action` bump (bundled CLI 2.1.170 → 2.1.195, by
+  now 2.1.211), Claude Code ignores `permissions.allow` from a committed `.claude/settings.json`
+  in untrusted workspaces, and a CI checkout is never trusted; every impl-generate/repair, spec-create, polish and similarity run
+  had its Write/Edit/Bash calls silently denied (19–20 denials per run, zero files produced,
+  zero implementations generated repo-wide since July 1). All 12 `claude-code-action` steps now
+  pass `--settings .claude/settings.json` in `claude_args`, which the trust gate honors as an
+  explicit opt-in (#9651).
+- **Metadata step no longer executes a comment as a command** — a backtick-quoted fragment
+  inside the double-quoted Python heredoc of impl-generate's "Create library metadata file"
+  step was command-substituted by bash (`--model: command not found` in every run log); the
+  comment now uses single quotes (#9651).
 - **Tag search uses the GIN index and stops treating `%`/`_` as wildcards** —
   `SpecRepository.search_by_tags` cast the JSONB `tags` column to text and ran LIKE, which the
   `ix_specs_tags` GIN index can never serve (sequential scan on every MCP tag search) and which
