@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
 Library: altair 6.2.2 | Python 3.13.14
-Quality: 88/100 | Updated: 2026-07-23
+Quality: 94/100 | Updated: 2026-07-23
 """
 
 import os

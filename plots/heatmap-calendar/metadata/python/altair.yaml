@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:13:28Z'
-updated: '2026-07-23T22:30:24Z'
+updated: '2026-07-23T22:39:03Z'
 generated_by: claude-sonnet
 workflow_run: 30049410392
 issue: 1010
@@ -12,53 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Sequential Imprint palette (#009E73 → #4467A3 / imprint_seq) is used correctly
-    for the continuous contribution values, and the data colors are pixel-identical
-    between the light and dark renders.'
-  - 'Peak-day highlight (outlined ring) combined with the subtitle callout (''Outlined
-    cell marks the busiest day: Mar 26 (13 contributions)'') creates a genuine focal
-    point instead of a raw data dump.'
-  - Theme-adaptive chrome tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT) are threaded
-    through configure_view/configure_axis/configure_title/configure_legend, so both
-    renders are fully readable with no dark-on-dark or light-on-light failures.
-  - 'All specification features are present: Mon-Sun weekday labels on the y-axis,
-    month section headers along the top, a color-scale legend, and a full year of
-    daily data.'
-  - Idiomatic Altair composition via alt.layer() (heatmap rects + month text + highlight
-    ring) with explicit font sizes set on every text element.
+  - cornerRadius artifact from attempt 1 is gone — mark_rect() cells are now flush
+    with no diamond cross-hatch gaps in either theme.
+  - 'Missing-dates handling is now demonstrated: a 5-day break (Jul 4–8) renders as
+    clean neutral/background cells rather than being silently absent from the dataset.'
+  - Y-axis now carries a descriptive 'Weekday' title, closing the VQ-06 gap flagged
+    in attempt 1.
+  - 'Sequential Imprint scale (#009E73 → #4467A3, imprint_seq) is pixel-identical
+    between light and dark renders — only chrome (background, title, ticks, legend)
+    flips per theme.'
+  - Bold month labels (Jan–Dec) stay clearly legible in bold high-contrast ink against
+    every underlying cell color (green through blue) in both themes — verified via
+    pixel crop, no dark-on-dark or light-on-light failures.
+  - 'Peak-day highlight ring plus subtitle callout (''Outlined cell marks the busiest
+    day: Mar 26 (13 contributions)'') gives the chart a genuine focal point instead
+    of a flat data dump.'
+  - Idiomatic Altair layered composition (`alt.layer(heatmap, month_text, peak_highlight)`)
+    with explicit font sizes on every text mark and theme tokens threaded through
+    configure_view/axis/title/legend.
+  - Canvas lands exactly on the 3200×1800 landscape target with no cropping; all-four-spines
+    frame is the correct exception for an enclosed calendar grid.
   weaknesses:
-  - cornerRadius=3 on ~366 tightly-packed, touching mark_rect cells produces small
-    diamond-shaped gaps of page background at every 4-cell corner intersection across
-    the whole grid, visible as a distracting cross-hatch pattern in both renders —
-    set cornerRadius=0 for the calendar cells, or add a small gap between cells (e.g.
-    via band-scale padding) so rounded corners don't collide.
-  - Both x and y axis titles are left empty (title=''); the layout is self-explanatory
-    via weekday/month labels, but a minimal descriptive axis title would fully satisfy
-    VQ-06 rather than relying only on tick labels and the legend title.
-  - The dataset covers all 366 days of 2024 with no gaps, so the specification's 'handle
-    missing dates gracefully with neutral or empty cells' requirement is never actually
-    exercised — introducing a few missing days would demonstrate that feature.
-  - 'Design Excellence reads as solid-but-default rather than fully polished: beyond
-    the single peak-day annotation there is no further visual hierarchy, and the corner-radius
-    artifact above keeps the visual refinement score down.'
+  - X-axis title is still left empty (title=""); acceptable since month labels serve
+    that role, but a minimal label (e.g. 'Week') would round out VQ-06 fully.
+  - Month labels are overlaid directly on top of the Monday row's data cells rather
+    than sitting in dedicated whitespace above the grid — legible in every sampled
+    case here, but a design choice with less margin for error if a future data run
+    produced very light cell colors.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
-      Chrome: Bold dark title top-left ("Daily Contributions 2024 · heatmap-calendar · python · altair · anyplot.ai"), gray subtitle below it calling out the peak day. Weekday labels (Mon-Sun) run down the left in dark-gray. Bold dark month abbreviations (Jan-Dec) sit above the grid marking month boundaries. A bordered legend box ("Contributions", values 0/5/10/15) sits to the right of the grid. All chrome text renders dark-on-cream and is clearly legible.
-      Data: Grid of ~366 rounded-corner cells (7 rows x ~53 week-columns) colored from vivid green (low values) through teal to blue (high values, up to 15). The single busiest day (late March, Tue row) has a dark outlined ring around its cell. First-series/low-end color is #009E73 as required.
+      Background: Warm off-white, confirmed via pixel sample at (10,10) = RGB(250,248,241) = #FAF8F1 exact match.
+      Chrome: Bold dark title top-left ("Daily Contributions 2024 · heatmap-calendar · python · altair · anyplot.ai") with a gray subtitle calling out the peak day (Mar 26, 13 contributions). Weekday labels (Mon-Sun) run down the left in dark ink; bold month abbreviations (Jan-Dec) sit directly atop the Monday row of cells. A bordered legend box ("Contributions", ticks 0/5/10/15) sits to the right with a dark-elevated-on-cream fill. All text confirmed readable via pixel crop of the "Jul" label (dark bold text over both a green cell and the blank/neutral gap) and the legend column.
+      Data: Sequential Imprint gradient from #009E73 (low) through teal to #4467A3 (high, up to 15), covering the full 2024 calendar as a 7-row x ~53-week grid. A 5-day gap (Jul 4-8) renders as blank/page-colored cells, correctly demonstrating the spec's missing-date handling. The single busiest day (Mar 26) is outlined with a dark 2px ring.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 (not pure black).
-      Chrome: Same layout as light — title and subtitle now render in light/white and light-gray tones, weekday and month labels are light-toned, and the legend box uses a dark elevated fill with light text/border. No dark-on-dark or unreadable elements observed anywhere.
-      Data: Green-to-blue cell colors are identical to the light render (confirmed same #009E73 → #4467A3 range and same value-to-color mapping). The peak-day highlight ring is now a light stroke, still clearly visible against its darker cell.
+      Background: Warm near-black, confirmed via pixel sample at (10,10) = RGB(26,26,23) = #1A1A17 exact match.
+      Chrome: Same layout with title, subtitle, weekday labels, and month labels all flipped to light/white tones; legend box uses a dark-elevated fill with light-gray text and border. The missing-date gap (Jul 4-8) now renders as a near-black column, visually consistent with the page background. No dark-on-dark failures found — pixel crop of the "Jul" label confirms bold white/light text remains fully legible over both the black gap and the surrounding teal/green cells.
+      Data: Green-to-blue gradient and legend swatch colors are pixel-identical to the light render (only chrome flipped, as required). The peak-day highlight ring is a light stroke, still clearly visible against the surrounding cells.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,73 +64,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title spans ~60% of width, well within
-          the ideal range; readable in both themes
+        comment: All text readable in both themes, including bold month labels over
+          every data-color range
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element overlap observed
+        comment: cornerRadius diamond artifact from attempt 1 is gone; no collisions
+          between text/data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells sized and colored for clear distinction across the full year
-          grid
+        comment: Full grid of ~366 cells clearly visible, peak-day ring stands out
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq green-to-blue is CVD-safe, no red-green reliance
+        comment: Green-blue sequential scale, CVD-safe, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, grid + legend use most of the canvas, nothing cut
-          off
+        comment: Exact 3200x1800 landscape canvas, no clipping or overflow
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Both axis titles are empty; relies only on tick labels (weekday/month)
-          and legend title
+        passed: true
+        comment: Y-axis now has descriptive 'Weekday' title (fixed from attempt 1);
+          x-axis relies on month labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73 → #4467A3) correct for single-polarity data,
-          identical across themes, theme-correct chrome'
+        comment: 'First-series #009E73, imprint_seq two-stop range, exact PAGE_BG
+          hex match in both themes, pixel-identical data colors'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful typography and mandated palette, but the corner-radius
-          artifact and thin styling keep it below publication-level polish
+        passed: true
+        comment: Custom sequential palette, subtitle annotation, peak-day storytelling;
+          cornerRadius artifact resolved
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Grid off and ticks removed, but cornerRadius on touching cells creates
-          a distracting diamond cross-hatch pattern across the entire grid
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Peak-day highlight + subtitle callout creates a clear focal point,
-          though the story is limited to a single annotation
+        comment: Clean flush grid (fixed from attempt 1), all-four-spines frame is
+          the correct exception for an enclosed heatmap grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak-day highlight ring + subtitle callout gives a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -142,51 +138,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calendar heatmap layout
+        comment: Correct calendar heatmap via mark_rect grid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Weekday labels, month headers, sequential colormap, and legend all
-          present
+        comment: Weekday labels, month headers, sequential colormap, legend, and now
+          missing-date handling all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: week_of_year on x, weekday_name on y, value as color — correct
+        comment: week_of_year x weekday grid, value via color, correct calendar orientation
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend label 'Contributions'
-          matches the data
+        comment: Title matches mandated format with descriptive prefix; legend label
+          matches data (Contributions)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full year with weekday/weekend variation and a clear outlier day;
-          never exercises the 'missing dates' handling from the spec
+        comment: Full year, weekday/weekend variation, outlier peak day, and now missing-date
+          gap all demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GitHub-style contribution data, neutral tech context
+        comment: GitHub-style contribution counts, neutral topic, plausible weekday/weekend
+          split
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weekday-heavier, weekend-lighter values are realistic for a commit/contribution
-          graph
+        comment: 0-15ish daily contributions is a sensible range for commit-style
+          data
     code_quality:
       score: 10
       max: 10
@@ -196,7 +193,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → plot → save, no functions/classes
+        comment: No functions/classes, flat top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,19 +205,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: alt, numpy, pandas, PIL.Image all used
+        comment: os, sys, altair, numpy, pandas, PIL.Image all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake functionality
+        comment: Appropriate complexity for a layered calendar heatmap, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png/.html saved via current chart.save API
+        comment: Saves plot-{THEME}.png and .html, current vl-convert save API
     library_mastery:
       score: 9
       max: 10
@@ -230,23 +227,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Declarative alt.layer() composition, Title/Legend objects, proper
-          encoding channels
+        comment: Proper encoding types (O/Q/N/T), scale/legend config, configure_*
+          chrome pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Layered grammar-of-graphics composition (rect + text + highlight
-          layer) is characteristically Vega-Lite/Altair
-  verdict: REJECTED
+        comment: alt.layer() grammar-of-graphics composition (rect + text + highlight-ring
+          layers) is characteristically Vega-Lite/Altair
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - layer-composition
-  - colorbar
   - annotations
+  - colorbar
+  - layer-composition
   - html-export
   patterns:
   - data-generation
@@ -255,4 +252,4 @@ impl_tags:
   - time-series
   styling:
   - custom-colormap
-  - edge-highlighting
+  - publication-ready
