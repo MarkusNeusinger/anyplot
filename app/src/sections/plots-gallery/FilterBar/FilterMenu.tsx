@@ -12,8 +12,7 @@ import { getAvailableValues, type SearchResult } from 'src/utils';
 
 /** A keyboard-navigable entry of the dropdown: a category or a concrete value. */
 export type DropdownItem =
-  | { type: 'category'; category: FilterCategory }
-  | ({ type: 'value' } & SearchResult);
+  { type: 'category'; category: FilterCategory } | ({ type: 'value' } & SearchResult);
 
 export interface FilterMenuProps {
   anchorEl: HTMLElement | null;
