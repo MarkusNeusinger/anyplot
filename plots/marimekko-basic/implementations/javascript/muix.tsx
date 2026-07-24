@@ -1,7 +1,3 @@
-// anyplot.ai
-// marimekko-basic: Basic Marimekko Chart
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 89/100 | Created: 2026-07-24
 //# anyplot-orientation: landscape
 // anyplot.ai
 // marimekko-basic: Basic Marimekko Chart
@@ -43,6 +39,11 @@ const columnStarts = columnTotals.reduce((acc, total, i) => {
   acc.push(i === 0 ? 0 : acc[i - 1] + columnTotals[i - 1]);
   return acc;
 }, []);
+// The single standout column (largest revenue total) gets a subtle visual
+// accent so the reader sees the headline insight immediately instead of
+// having to compare all five totals themselves.
+const leaderTotal = Math.max(...columnTotals);
+const leaderIndex = columnTotals.indexOf(leaderTotal);
 
 // MUI X has no built-in mekko/mosaic series, so the tiles are drawn as plain
 // SVG rects positioned with the scales ChartContainer already computed from
@@ -77,6 +78,7 @@ function MekkoTiles() {
           y2={yScale(share)}
           stroke={t.grid}
           strokeWidth={1}
+          strokeOpacity={0.45}
         />
       ))}
       {regions.map((region, colIndex) => {
@@ -85,6 +87,7 @@ function MekkoTiles() {
         const x0 = xScale(colStart);
         const x1 = xScale(colStart + colTotal);
         const colWidth = x1 - x0;
+        const isLeader = colIndex === leaderIndex;
         let cumShare = 0;
 
         return (
@@ -105,6 +108,7 @@ function MekkoTiles() {
                     y={yTop}
                     width={Math.max(colWidth - 3, 0)}
                     height={Math.max(segHeight, 0)}
+                    rx={2}
                     fill={t.palette[rowIndex]}
                     stroke={t.pageBg}
                     strokeWidth={2}
@@ -127,13 +131,32 @@ function MekkoTiles() {
               );
             })}
 
+            {isLeader && (
+              <rect
+                x={x0 - 1}
+                y={drawing.top - 3}
+                width={colWidth + 2}
+                height={drawing.height + 6}
+                rx={4}
+                fill="none"
+                stroke={theme.palette.text.primary}
+                strokeWidth={1.5}
+                strokeOpacity={0.55}
+              />
+            )}
+
             <ChartsText
               x={x0 + colWidth / 2}
               y={drawing.top - 14}
               text={`$${colTotal}M`}
-              fill={theme.palette.text.secondary}
+              fill={
+                isLeader
+                  ? theme.palette.text.primary
+                  : theme.palette.text.secondary
+              }
               style={{
-                fontSize: 14,
+                fontSize: isLeader ? 16 : 14,
+                fontWeight: isLeader ? 700 : 400,
                 textAnchor: "middle",
                 dominantBaseline: "auto",
               }}
@@ -146,6 +169,7 @@ function MekkoTiles() {
               fill={theme.palette.text.primary}
               style={{
                 fontSize: 16,
+                fontWeight: isLeader ? 700 : 400,
                 textAnchor: "middle",
                 dominantBaseline: "hanging",
               }}
