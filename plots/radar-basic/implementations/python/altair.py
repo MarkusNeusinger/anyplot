@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-basic: Basic Radar Chart
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-24
@@ -116,7 +116,11 @@ selection = alt.selection_point(fields=["Employee"])
 
 color_scale = alt.Scale(domain=["Alice", "Bob"], range=[IMPRINT[0], IMPRINT[1]])
 
-domain_y = [-1.45, 1.45]
+# y domain is shifted +0.10 (not centered on 0) to tighten the margin below the
+# lowest label and ease the margin above the highest one — the title sits above
+# the view (not mirrored below it), so a symmetric domain left more empty
+# canvas below the grid than above it once the PNG was padded to a square.
+domain_y = [-1.35, 1.55]
 domain_x = [-1.45 * VIEW_W / VIEW_H, 1.45 * VIEW_W / VIEW_H]
 
 # Static grid rings
@@ -223,7 +227,9 @@ chart = (
         width=VIEW_W,
         height=VIEW_H,
         background=PAGE_BG,
-        title=alt.Title(text="radar-basic · altair · anyplot.ai", fontSize=32, color=INK, fontWeight="bold", offset=24),
+        title=alt.Title(
+            text="radar-basic · python · altair · anyplot.ai", fontSize=29, color=INK, fontWeight="bold", offset=24
+        ),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_legend(
