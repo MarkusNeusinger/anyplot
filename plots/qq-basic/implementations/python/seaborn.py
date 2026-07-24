@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qq-basic: Basic Q-Q Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 65/100 | Updated: 2026-07-24
