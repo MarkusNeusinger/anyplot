@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 quiver-basic: Basic Quiver Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-07-24
@@ -30,7 +30,7 @@ IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#9
 
 # Data — counterclockwise wind rotation around a low-pressure centre (u=-y, v=x)
 np.random.seed(42)
-grid_size = 8  # 8×8 = 64 arrows, well-spaced for discrete legibility
+grid_size = 10  # 10×10 = 100 arrows, matches the spec's suggested density floor
 x_range = np.linspace(-3, 3, grid_size)
 y_range = np.linspace(-3, 3, grid_size)
 X, Y = np.meshgrid(x_range, y_range)
@@ -43,8 +43,10 @@ magnitude = np.sqrt(U**2 + V**2)
 max_mag = magnitude.max()
 norm_mag = magnitude / max_mag
 
-arrow_scale = 0.22
-min_arrow_len = 0.30  # floor so near-centre (low-magnitude) arrows stay visible
+# Scaled down from the 8×8 layout in proportion to the tighter grid spacing
+# (6/7 -> 6/9) so the longest arrows still clear their neighbours.
+arrow_scale = 0.17
+min_arrow_len = 0.23  # floor so near-centre (low-magnitude) arrows stay visible
 
 head_ratio = 0.40
 head_angle = 0.55
@@ -99,7 +101,7 @@ custom_style = Style(
 )
 
 # Plot — thin strokes + dot markers at each segment endpoint clearly
-# distinguish 64 discrete arrow positions rather than sweeping bands
+# distinguish 100 discrete arrow positions rather than sweeping bands
 chart = pygal.XY(
     style=custom_style,
     width=3200,
@@ -111,7 +113,7 @@ chart = pygal.XY(
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
-    title="quiver-basic · pygal · anyplot.ai",
+    title="quiver-basic · python · pygal · anyplot.ai",
     x_title="Longitude (degrees)",
     y_title="Latitude (degrees)",
     show_x_guides=True,
