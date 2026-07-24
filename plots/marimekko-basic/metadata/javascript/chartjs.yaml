@@ -1,0 +1,274 @@
+library: chartjs
+language: javascript
+specification_id: marimekko-basic
+created: '2026-07-24T14:49:02Z'
+updated: '2026-07-24T15:08:28Z'
+generated_by: claude-sonnet
+workflow_run: 30102046034
+issue: 1002
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Creative, technically sound solution to Chart.js''s uniform-bar-width limitation:
+    a fine zero-gap category grid renders genuinely variable-width columns proportional
+    to each region''s total revenue, with a blank slot standing in for the mekko gap
+    between columns.'
+  - Contrast-aware callout labels use a WCAG relative-luminance calculation to pick
+    cream or ink text per segment color, so the '$210M · 42%' style labels stay legible
+    on green, lavender, and blue alike in both themes.
+  - Region data is deliberately differentiated (hardware-led North America/Asia Pacific,
+    software-led Europe, services-led Latin America), giving the chart a real composition
+    story instead of four identical splits.
+  - Correct Imprint palette order (green, lavender, blue) confirmed identical across
+    light/dark; theme-adaptive chrome (ink, grid, background) is correctly threaded
+    through title/legend/axes.
+  - Adaptive label text (falls back from '$210M · 42%' to '42%') avoids clipping/overflow
+    inside narrower segments.
+  weaknesses:
+  - Only the single largest segment per region gets a value callout; smaller segments
+    (e.g. Europe's Hardware/Services slices) have no label at all, so the spec's 'value
+    labels on larger segments' is only partially realized — consider labeling any
+    segment above a minimum width, not just the top one per column.
+  - The `relativeLuminance` helper plus the `afterDatasetsDraw` plugin add real logic
+    beyond the Imports → Data → Plot script shape the code-quality rubric prefers
+    for a 'basic' spec entry — justified by the contrast feature, but worth noting
+    as a minor KISS deviation.
+  - The variable-width bar effect is achieved through a manual 100-slot category grid
+    rather than a native Chart.js layout primitive; worth double-checking that very
+    small regions still get at least one grid slot so they don't disappear at more
+    extreme total-value ratios.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "marimekko-basic · javascript · chartjs · anyplot.ai" in bold dark ink, centered top. Legend below title (Hardware/Software/Services swatches + labels) in dark ink. Y-axis ticks (0%/25%/50%/75%/100%) and axis title "Share of Region Revenue" in dark/soft-dark ink. X-axis region labels (North America, Europe, Asia Pacific, Latin America) centered under each variable-width bar, with axis title "Region — bar width ∝ total revenue" below. All chrome is clearly readable against the light background.
+      Data: Four stacked-bar "columns" of different widths (North America widest, Latin America narrowest), each split into three colored segments: Hardware (brand green #009E73, bottom), Software (lavender #C475FD, middle), Services (blue #4467A3, top). One callout label per region ("$210M · 42%", "$190M · 63%", "$100M · 43%", "$60M · 60%") sits on that region's largest segment, in cream or dark text depending on the segment's background luminance — all legible. First series is confirmed #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis labels now rendered in light ink/cream, clearly readable against the dark background. Grid line on the y-axis is subtle. No dark-on-dark text found anywhere (title, ticks, axis titles, legend, x-axis region names all light and legible).
+      Data: Same three segment colors (green/lavender/blue) and callout labels as the light render — confirmed identical data colors, only chrome (background, text) flipped. Callout text contrast logic still picks legible text color per segment.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 22, axis 16, ticks 14, legend 16,
+          callout 15); readable in both themes with no overflow; relying on style-guide
+          defaults rather than a bespoke tuned hierarchy is the only reason this isn't
+          a perfect 8.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render; callout labels shrink to
+          a shorter form when a segment is too narrow, avoiding overlap/overflow.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Segments are large and clearly visible; bar widths proportional to
+          region totals read clearly at this data scale.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues (green/lavender/blue), no red-green reliance; luminance-based
+          callout text color guarantees contrast on every segment.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills most of the canvas with balanced margins; legend
+          sits directly under the title, close to the plot; nothing cut off (verified
+          via edge crops).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Share of Region Revenue' with % tick suffix; X-axis 'Region
+          — bar width ∝ total revenue' explains the encoding, not generic x/y.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Hardware), then #C475FD (Software), #4467A3
+          (Services) — canonical Imprint order; backgrounds #FAF8F1/#1A1A17 confirmed
+          theme-correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful contrast-aware labeling and clean color use go clearly
+          above library defaults, though it stops short of a fully bespoke publication-level
+          treatment.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X grid removed, y grid kept subtle, generous whitespace around legend/title;
+          some refinement visible but not maximally polished (e.g. plain legend swatches).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Per-region top-segment callouts plus deliberately differentiated
+          regional product mix (hardware-led vs. software-led vs. services-led) create
+          real visual hierarchy and a discoverable insight.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Marimekko/mekko chart — both variable column width (∝ region
+          total) and stacked segment height (∝ share) are present.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Bar widths and segment heights correctly encode the two dimensions,
+          legend distinguishes y-categories, x-axis shows centered category names;
+          only the single largest segment per region gets a value label, not all qualifying
+          larger segments.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = region (width), Y = share of region revenue (height); all data
+          visible across all four regions.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'marimekko-basic · javascript · chartjs · anyplot.ai';
+          legend labels (Hardware/Software/Services) match the dataset labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both width variation (region totals from $100M-$500M) and composition
+          variation (hardware/software/services-led regions) — the full feature set
+          of a marimekko.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible business scenario (regional revenue by product
+          line).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue figures and regional totals ($500M/$300M/$230M/$100M) are
+          plausible and internally consistent.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear Imports → Data → Layout → Chart, but adds a helper
+          function and a plugin object beyond the strict flat-script ideal (justified
+          by the contrast-aware callout feature).
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Chart.js; nothing unused.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; complexity (grid trick, luminance
+          check) is proportional to the real problem being solved.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts a canvas into #container, sets animation:false, current Chart.js
+          API — no filesystem writes.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct stacked-bar API usage (barPercentage/categoryPercentage/stacked
+          scales); the variable-width effect is a manual category-grid workaround
+          rather than a native primitive, but it's the right solution given Chart.js's
+          real constraint.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart.js's plugin hook (afterDatasetsDraw) for dynamic, luminance-aware
+          text overlays with fit-testing — a genuinely library-specific extensibility
+          feature, not just generic chart config.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - grid-styling
