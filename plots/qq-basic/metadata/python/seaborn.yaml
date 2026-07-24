@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:12:43Z'
-updated: '2026-07-24T07:06:26Z'
+updated: '2026-07-24T07:14:20Z'
 generated_by: claude-sonnet
 workflow_run: 30073267766
 issue: 977
@@ -12,84 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 65
+quality_score: 92
 review:
   strengths:
   - 'Genuinely creative reference guide: a 300-replicate 95% simulation envelope built
     with sns.lineplot(estimator=''mean'', errorbar=(''pi'', 95)) instead of a bare
-    y=x line, giving the QQ plot real statistical depth and leaning on seaborn''s
+    y=x line, giving the Q-Q plot real statistical depth and leaning on seaborn''s
     own estimation machinery.'
   - 'Correct Imprint palette usage: sample quantiles use brand green #009E73, and
-    the reference band/line uses the theme-adaptive muted/neutral token in its documented
-    confidence-band role rather than spending a categorical color on it.'
+    the reference band/line uses the theme-adaptive muted/neutral token in its confidence-band
+    role rather than spending a categorical color on it.'
   - Theme-adaptive chrome is threaded consistently through sns.set_theme rc params
-    — both light (#FAF8F1) and dark (#1A1A17) backgrounds verified pixel-exact, fully
-    legible with no dark-on-dark or light-on-light failures.
-  - 'The source code fix for this attempt is correct and verified: ax.set_title now
-    reads ''qq-basic · python · seaborn · anyplot.ai'' (plots/qq-basic/implementations/python/seaborn.py:96)
-    and the marker size was reduced from s=120 to s=90 (line 84) exactly as requested
-    in the Attempt 1 review.'
+    — both light and dark renders are fully legible with no dark-on-dark or light-on-light
+    failures.
+  - 'Both fixes from the Attempt 1 review are correctly applied and now reflected
+    in the render: title reads ''qq-basic · python · seaborn · anyplot.ai'' and marker
+    size was reduced to s=90, sitting comfortably in the density-appropriate range
+    for ~200 points.'
   - Clean, idiomatic KISS structure, reproducible via a seeded np.random.default_rng(42),
-    spines removed, subtle grid.
+    spines removed, subtle grid, realistic mixture-distribution sample (normal core
+    + right-tail bump) that visibly demonstrates the Q-Q deviation the spec asks for.
   weaknesses:
-  - 'BLOCKING PIPELINE FAILURE — stale render used for this review: the plot-light.png
-    / plot-dark.png downloaded from GCS staging for this Attempt 2 review are byte-for-byte
-    the pre-fix Attempt 1 artifacts, NOT a render of the current (already-corrected)
-    source. Evidence: the title rendered in both PNGs still reads ''qq-basic · seaborn
-    · anyplot.ai'' (missing the ''python'' segment) even though plots/qq-basic/implementations/python/seaborn.py:96
-    was fixed by commit fcd543fd9 to read ''qq-basic · python · seaborn · anyplot.ai''
-    — confirmed by running the current source locally, which correctly renders the
-    fixed title. Root cause found in the impl-repair run (github.com/MarkusNeusinger/anyplot/actions/runs/30073755278):
-    the ''Process repaired image'' step logged ''::warning::Missing plot-{light,dark}.png
-    after repair'' — the Claude Code repair step edited the .py file but never executed
-    it to (re)generate plot-light.png/plot-dark.png in the implementation directory.
-    Because those files did not exist, the subsequent ''Upload repaired plot to GCS
-    staging'' step''s `if [ -f plot-light.png ] && [ -f plot-dark.png ]` guard was
-    false, so nothing was uploaded and the stale Attempt-1 images remained in staging
-    and were re-downloaded for this review. This is a rendering-pipeline defect, not
-    a code-quality defect — the source fix is verified correct. Approving on this
-    artifact would promote a non-compliant PNG (missing the mandated language segment,
-    oversized s=120 markers) to production while the repo''s source already has the
-    fix.'
-  - 'As a direct consequence of the above: on the actual reviewed artifact, the title
-    still fails SC-04 (missing the mandated {language} segment) and the marker size
-    is still s=120 (larger than the 50-100 density-appropriate range for this ~200-point
-    scatter) — both are already fixed in source but not reflected in the render.'
-  - 'Minor, non-blocking: only the upper/right tail visibly strays from the reference
-    envelope; the sample could show a touch more variety in deviation (e.g. mild left-tail
-    behavior) for fuller Q-Q feature coverage.'
+  - Only the upper/right tail visibly strays from the reference envelope; the sample
+    could show a touch more variety in deviation (e.g. mild left-tail behavior) for
+    fuller Q-Q feature coverage — minor polish item, not a correctness issue.
+  - In the dense mid-section (theoretical quantiles roughly -1 to 1), overlapping
+    markers merge into a near-continuous ribbon; a hair more transparency or slightly
+    smaller markers there would keep individual points distinguishable, though this
+    does not rise to an Element Visibility failure.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, sampled pixel (250,248,241) = #FAF8F1 exactly, matches spec.
-      Chrome: title "qq-basic · seaborn · anyplot.ai" (dark ink) is clearly legible, but is MISSING the mandated
-        "python" language segment — the source at plots/qq-basic/implementations/python/seaborn.py:96 was fixed
-        to include it, so this render is stale (see Weaknesses). Axis labels "Theoretical Quantiles" /
-        "Sample Quantiles" and softer tick labels are legible. Legend box (cream fill, dark border) reads
-        "Normal reference (95% envelope)" and "Sample quantiles", fully readable.
-      Data: green (#009E73) circular markers at the pre-fix size (s=120) trace sample quantiles against
-        theoretical quantiles from -3 to 3, tracking a dashed gray identity line inside a light-gray 95%
-        simulation-envelope band; markers curve visibly above the envelope for theoretical quantile > ~1.2,
-        showing the intended right-tail deviation from normality.
-      Legibility verdict: PASS (all text readable against the light background) — but content is stale, see weaknesses.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "qq-basic · python · seaborn · anyplot.ai" in dark ink is clearly legible (language segment present, confirming the Attempt 1 fix is now reflected in the render). "Theoretical Quantiles" / "Sample Quantiles" axis labels and softer dark-gray tick labels all readable. Upper-left legend box (cream fill, dark border) reads "Normal reference (95% envelope)" and "Sample quantiles", both fully readable, no overlap with plot data.
+      Data: Green (#009E73) circular markers (s=90) trace standardized sample quantiles against theoretical quantiles from about -3 to 3, closely tracking a dashed gray identity/reference line inside a light-gray 95% simulation-envelope band; markers curve visibly above the envelope for theoretical quantile > ~1.2, showing the intended right-tail deviation from normality.
+      Legibility verdict: PASS — no light-on-light issues anywhere.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, sampled pixel (26,26,23) = #1A1A17 exactly, matches spec.
-      Chrome: title and axis labels render in light ink (near-white), fully legible; tick labels in lighter
-        gray, also legible; legend box (dark-elevated fill, light border) has light text, no dark-on-dark
-        issues anywhere. Same missing "python" segment as the light render (stale artifact, not a new defect).
-      Data: same #009E73 green markers (color parity with light render confirmed), same dashed reference line
-        (light gray) and simulation envelope (dark-gray shading), same upper-tail deviation pattern, same
-        pre-fix s=120 marker size.
-      Legibility verdict: PASS (all text readable against the dark background, no dark-on-dark failures) — but
-        content is stale, see weaknesses.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title and axis labels render in light ink (near-white), fully legible; tick labels in a lighter gray, also legible; legend box (dark-elevated fill, light border) has light text with no dark-on-dark issues anywhere.
+      Data: Same #009E73 green markers (color parity with light render confirmed — only chrome flipped), same dashed reference line (now light gray) and simulation envelope (dark-gray shading), same upper-tail deviation pattern.
+      Legibility verdict: PASS — no dark-on-dark failures found.
 
-    CRITICAL NOTE: Both renders are byte-for-byte the Attempt 1 (pre-fix) artifacts, confirmed by re-running
-    the current committed source locally (title correctly renders as "qq-basic · python · seaborn · anyplot.ai").
-    This is a pipeline rendering failure (repair step did not regenerate PNGs before upload), not a code defect.
-    See review_weaknesses.json item 1 for full root-cause evidence and the score cap applied because of it.
+    Both renders are theme-correct, mutually consistent (identical data colors, only chrome flipped), and correctly reflect the current source — resolving the Attempt 2 staleness issue (title now includes "python", markers are s=90 not the stale s=120).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -103,40 +70,40 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No collisions
+        comment: No collisions between text, legend, and data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: s=120 in the reviewed (stale) render is above the 50-100 density-appropriate
-          range for ~200 points; source already fixed to s=90 but not yet reflected
-          in this render
+        comment: s=90 now sits in the density-appropriate 50-100 range for ~200 points,
+          fixing the prior s=120 issue
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. gray, CVD-safe
+        comment: Green vs. gray, CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced, nothing cut off, canvas gate passed (3200x1800)
+        comment: Balanced, nothing cut off, canvas gate passed (3200x1800, no gate
+          file present)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive per spec
+        comment: 'Descriptive per spec: Theoretical Quantiles / Sample Quantiles'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 first series; backgrounds pixel-verified #FAF8F1/#1A1A17;
-          correct theme-adaptive chrome'
+        comment: '#009E73 first series; backgrounds correct #FAF8F1/#1A1A17; correct
+          theme-adaptive chrome'
     design_excellence:
       score: 15
       max: 20
@@ -159,9 +126,9 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Color contrast creates a focal point on the tail deviation
+        comment: Color contrast and envelope create a focal point on the tail deviation
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -175,21 +142,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Reference guide + axis labels present
+        comment: Reference guide (diagonal envelope) and both axis labels present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=theoretical, Y=standardized sample, correct
+        comment: X=theoretical quantiles, Y=standardized sample quantiles, correct
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title in the reviewed (stale) render is missing the mandated {language}
-          segment; source is already fixed (line 96) but the render does not reflect
-          it
+        passed: true
+        comment: Title now reads 'qq-basic · python · seaborn · anyplot.ai', exact
+          required format; legend labels match data
     data_quality:
       score: 14
       max: 15
@@ -199,19 +165,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Clear right-tail deviation; left tail stays close to envelope
+        comment: Clear right-tail deviation from mixture distribution; left tail stays
+          close to envelope
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible mixture distribution
+        comment: Neutral, plausible mixture distribution (measurement-like data)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: n=200 within recommended range, sensible values
+        comment: n=200 within the 30-500 recommended range, sensible standardized
+          values
     code_quality:
       score: 10
       max: 10
@@ -221,7 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> Data -> Plot -> Save
+        comment: No functions/classes, linear top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -233,19 +201,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy, pandas, seaborn'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity
+        comment: Appropriate complexity, no fake UI; self-contained normal-quantile
+          approximation avoids adding a scipy dependency
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct savefig usage, current API
+        comment: Saves as plot-{THEME}.png, no bbox_inches='tight', current API
     library_mastery:
       score: 9
       max: 10
@@ -255,7 +224,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of sns.lineplot's estimator/errorbar machinery
+        comment: Expert use of sns.lineplot's estimator/errorbar machinery to build
+          the reference envelope
       - id: LM-02
         name: Distinctive Features
         score: 4
@@ -263,17 +233,16 @@ review:
         passed: true
         comment: errorbar=('pi', 95) percentile-interval estimation is a genuinely
           seaborn-specific statistical feature
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - custom-legend
+  techniques: []
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
-  - publication-ready
   - alpha-blending
   - edge-highlighting
   - grid-styling
