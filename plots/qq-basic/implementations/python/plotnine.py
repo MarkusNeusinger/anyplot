@@ -1,15 +1,23 @@
 """ anyplot.ai
 qq-basic: Basic Q-Q Plot
-Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 85/100 | Updated: 2026-04-27
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-07-24
 """
 
 import os
+import sys
 
 import numpy as np
 import pandas as pd
-from plotnine import (
+
+
+# Avoid shadowing the plotnine library when this file is run directly
+_cwd = os.getcwd()
+sys.path = [p for p in sys.path if os.path.abspath(p) != _cwd]
+
+from plotnine import (  # noqa: E402
     aes,
+    annotate,
     element_line,
     element_rect,
     element_text,
@@ -20,39 +28,82 @@ from plotnine import (
     theme,
     theme_minimal,
 )
+from scipy import stats  # noqa: E402
 
 
-# Theme tokens
+# Theme tokens (Imprint palette)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
+AMBER = "#DDCC77"
 
-# Data - sample with slight right skew to demonstrate Q-Q diagnostic capability
+# Data - assembly-line cycle times (seconds). Most parts finish near the
+# 48s target, but a rework subset (equipment slowdown / re-machining) runs
+# slower, producing a heavy right tail that departs from the normality a
+# Six Sigma control chart would otherwise assume.
 np.random.seed(42)
-sample = np.concatenate([np.random.randn(80) * 15 + 50, np.random.randn(20) * 10 + 75])
-df = pd.DataFrame({"sample": sample})
+cycle_time = np.concatenate([np.random.randn(80) * 6 + 48, np.random.randn(20) * 8 + 68])
+df = pd.DataFrame({"cycle_time": cycle_time})
 
-# Plot
+# Locate the tail-departure cluster (for the callout) using the same
+# plotting-position convention as stat_qq/stat_qq_line
+(theo_q, samp_q), (slope, intercept, _r) = stats.probplot(cycle_time, dist="norm")
+fitted = slope * theo_q + intercept
+tail_mask = (theo_q > 0.8) & (samp_q - fitted > (samp_q - fitted).std())
+callout_x = theo_q[tail_mask].mean()
+callout_y = samp_q[tail_mask].max()
+
 plot = (
-    ggplot(df, aes(sample="sample"))
+    ggplot(df, aes(sample="cycle_time"))
+    + annotate(
+        "rect",
+        xmin=0.8,
+        xmax=theo_q.max() + 0.15,
+        ymin=fitted[theo_q > 0.8].min(),
+        ymax=samp_q.max() + 3,
+        fill=AMBER,
+        alpha=0.10,
+    )
     + stat_qq_line(color=INK_SOFT, size=1.2, linetype="dashed")
-    + stat_qq(color=BRAND, alpha=0.7, size=4)
-    + labs(x="Theoretical Quantiles (Standard Normal)", y="Sample Quantiles", title="qq-basic · plotnine · anyplot.ai")
+    + stat_qq(color=BRAND, alpha=0.55, size=2.2)
+    + annotate(
+        "segment",
+        x=callout_x - 0.65,
+        y=callout_y + 4,
+        xend=callout_x - 0.1,
+        yend=callout_y + 0.5,
+        color=INK_SOFT,
+        size=0.6,
+    )
+    + annotate(
+        "text",
+        x=callout_x - 0.7,
+        y=callout_y + 4.5,
+        label="Rework subset: heavy right tail",
+        color=INK_SOFT,
+        size=7,
+        ha="right",
+    )
+    + labs(
+        x="Theoretical Quantiles (Standard Normal)",
+        y="Sample Quantiles (Cycle Time, seconds)",
+        title="qq-basic · python · plotnine · anyplot.ai",
+    )
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-        axis_title=element_text(color=INK, size=20),
-        axis_text=element_text(color=INK_SOFT, size=16),
-        plot_title=element_text(color=INK, size=24),
+        axis_title=element_text(color=INK, size=10),
+        axis_text=element_text(color=INK_SOFT, size=8),
+        plot_title=element_text(color=INK, size=12),
         axis_line=element_line(color=INK_SOFT),
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)

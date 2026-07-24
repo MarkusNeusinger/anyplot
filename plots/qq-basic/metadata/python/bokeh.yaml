@@ -2,51 +2,56 @@ library: bokeh
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:33:05Z'
-updated: '2026-04-27T05:28:24Z'
+updated: '2026-07-24T07:04:27Z'
 generated_by: claude-sonnet
-workflow_run: 24977744925
+workflow_run: 30073477364
 issue: 977
-python_version: 3.14.4
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Perfect visual quality: all text sizes explicitly set above minimum, both themes
-    render cleanly with no legibility failures'
-  - 'Intentional data design: deliberate heavy-tail outliers illustrate the key teaching
-    point of Q-Q plots (tail deviation from reference line)'
-  - 'Full Bokeh interactivity: HoverTool exposes raw height values alongside theoretical
-    and sample quantiles; HTML output retains interactivity'
-  - ColumnDataSource usage enables efficient multi-column hover binding
+  - 95% quantile confidence envelope (varea) adds genuine statistical rigor beyond
+    spec requirements, mirroring R's car::qqPlot convention and directly serving the
+    spec's guidance about identifying genuine deviations
+  - HoverTool with per-point Theoretical Q / Sample Q / Height tooltips plus click-to-hide
+    legend showcases Bokeh's distinctive interactivity without harming the static
+    PNG
+  - Theme-adaptive chrome correctly threaded through title, axis labels, ticks, grid,
+    and legend colors; brand green data color is identical between light and dark
+    renders
+  - Engineered dataset (adult heights core + planted outliers in both tails) produces
+    a Q-Q plot that visibly demonstrates heavy-tail deviation, directly matching the
+    spec notes about revealing skewness/heavy tails/outliers
+  - Canvas is exactly 3200x1800 with no clipped text in either render; toolbar_location=None
+    and min_border_* correctly reserved
   weaknesses:
-  - 'No spine or outline-box removal: the four-sided plot frame looks heavier than
-    needed for a clean scatter; removing top/right axis lines (or setting outline_line_color=None)
-    would add polish'
-  - 'No visual storytelling for outliers: the data tells an interesting heavy-tail
-    story but the viewer must find it unaided — a shaded band around the reference
-    line or a subtle annotation marking the outlier clusters would lift DE-03'
-  - 'Design sophistication is above default but not exceptional: the scatter relies
-    on default Bokeh circle markers; an intentional secondary visual element (e.g.,
-    confidence band or subtle fill around the reference line) would raise DE-01'
+  - Aesthetic sophistication is solid but a fairly standard scatter+line+band composition;
+    DE-01 could go further with a bolder visual treatment (e.g. varying envelope opacity,
+    more distinctive reference-line styling)
+  - Scatter markers (size=14) are adequate but could be slightly larger/bolder to
+    serve as a stronger focal point given the large 3200x1800 canvas and ~100 points
+  - Title fontsize (50pt) for the short mandated title leaves it occupying only ~35%
+    of plot width; within readable range but there is headroom to size it more assertively
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "qq-basic · bokeh · anyplot.ai" in dark INK (#1A1A17), axis labels in dark INK, tick labels in INK_SOFT (#4A4A44) — all clearly readable against the light surface
-      Data: Brand green #009E73 scatter dots with PAGE_BG edges for definition; dashed reference line in INK_SOFT (#4A4A44); legend with elevated #FFFDF6 background
-      Legibility verdict: PASS — no light-on-light failures; all text clearly visible
+      Background: Warm off-white (~#FAF8F1), matches spec.
+      Chrome: Bold dark title "qq-basic · bokeh · anyplot.ai" top-left, clearly readable. Italicized axis labels "Theoretical Quantiles" / "Sample Quantiles" in dark ink, fully legible. Tick labels in a softer gray, legible against the light background. Subtle light-gray gridlines, visible but not dominant. Legend box (top-left, off-white elevated background) lists "95% quantile envelope", "Normal reference", "Sample quantiles" in gray text, all readable, no overlap with data points.
+      Data: Green (#009E73) scatter points form the Q-Q cloud, a dark dashed 45-degree reference line, and a light-gray shaded confidence envelope band behind the line. Points diverge from the reference line in both tails (heavy-tail pattern from the planted outliers), which is the intended visual story.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and axis labels in #F0EFE8 (INK for dark), tick labels in #B8B7B0 (INK_SOFT for dark) — all clearly readable against the dark surface; no dark-on-dark failures observed
-      Data: Same #009E73 brand green scatter dots — identical to light render; dashed reference line now renders in #B8B7B0; legend uses #242420 elevated background with light label text
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements adapt correctly
+      Background: Warm near-black (~#1A1A17), matches spec.
+      Chrome: Title, axis labels, and tick labels are rendered in light/off-white and light-gray tones, fully readable against the dark background — no dark-on-dark issues observed. Grid lines are subtle light gray at low alpha, visible but unobtrusive. Legend box uses a dark elevated background with light-gray text, readable and consistent with the theme.
+      Data: Same green (#009E73) scatter points, same dashed reference line (now rendered in a light gray-white to contrast the dark background), same gray confidence envelope — data colors and shapes are identical to the light render, confirming only chrome flipped as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,71 +59,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, tick
-          labels 22pt, legend 20pt; readable in both themes'
+        comment: Explicit font sizes throughout; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions
+        comment: Legend does not collide with data or axis text
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: size=20, alpha=0.75 well-suited to 100 data points
+        comment: Markers appropriately sized for ~100 points; slightly conservative
+          for the large canvas
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; CVD-safe Okabe-Ito; single series
+        comment: Good contrast, no red-green reliance, brand green reads well on both
+          surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Axes span full data range; reference line anchors both corners; balanced
-          margins
+        comment: Correct 3200x1800 canvas, no overflow or clipping, balanced axis
+          labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Theoretical Quantiles and Sample Quantiles match spec exactly
+        comment: Axis labels match spec-mandated 'Theoretical Quantiles' / 'Sample
+          Quantiles' exactly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; data colors identical
-          across themes; chrome adaptive'
+        comment: 'First series is #009E73; correct FAF8F1/1A1A17 backgrounds in both
+          renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above default: background-colored point edges and proper theming.
-          Not publication-level — lacks intentional emphasis or bespoke typography'
+        passed: true
+        comment: Confidence envelope is a genuine sophistication beyond defaults;
+          overall composition still fairly standard
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid at 10% alpha and toolbar removal are positive; legend styled
-          with elevated fill. No spine removal, default outline box retained
+        passed: true
+        comment: Outline frame removed, subtle grid, italic axis-label styling, generous
+          whitespace via min_border
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Intentional heavy-tail outliers create deviation pattern; no visual
-          annotation or emphasis guides the viewer to the story
+        passed: true
+        comment: Envelope band creates a soft focal hierarchy that draws the eye to
+          genuine tail deviations
     spec_compliance:
       score: 15
       max: 15
@@ -128,28 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Q-Q plot with theoretical vs standardised sample quantiles
+        comment: Correct Q-Q plot construction
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Points matched by quantile, visible 45-degree reference line, both
-          axis labels per spec
+        comment: 45-degree reference line clearly visible, all spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theoretical quantiles on X, z-scored sample quantiles on Y; full
-          range displayed
+        comment: Theoretical quantiles on x, sample quantiles on y, correctly standardised
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: qq-basic · bokeh · anyplot.ai; legend: Normal reference +
-          Sample quantiles'
+        comment: Title matches mandated format; legend labels are descriptive and
+          match the plotted elements
     data_quality:
       score: 15
       max: 15
@@ -159,22 +164,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows normality comparison, tail deviation, and outlier behaviour
-          simultaneously
+        comment: Engineered outliers in both tails visibly demonstrate heavy-tail
+          deviation as called out in spec notes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Adult heights (cm) is a real, neutral domain; outliers are plausible
-          extreme height values
+        comment: Adult heights (cm) is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: mean=170, sd=8 realistic; z-score axis (-3 to 3) standard for Q-Q;
-          n=100 within 30-500 range
+        comment: Mean 170cm, sd 8cm, outliers 145-203cm — realistic human height range
     code_quality:
       score: 10
       max: 10
@@ -184,8 +187,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> tokens -> data -> figure -> glyphs -> chrome
-          -> save'
+        comment: Flat top-level script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,21 +199,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; scipy.stats used for norm.ppf
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; HoverTool is genuine Bokeh interactivity
+        comment: Statistically grounded envelope calculation, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; no deprecated API
+        comment: Saves plot-{THEME}.png and .html via current bokeh API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -219,27 +221,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, HoverTool via add_tools(), toolbar_location=None,
-          theme-adaptive chrome per Bokeh guide
+        comment: ColumnDataSource, figure(), scatter/varea/line used idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: HoverTool with multi-column tooltips (Theoretical Q, Sample Q, raw
-          Height) and HTML export demonstrate Bokeh strengths; could push further
-          with Band model or selection tools
-  verdict: REJECTED
+        passed: true
+        comment: HoverTool tooltips + click_policy='hide' legend + varea confidence
+          band showcase Bokeh-specific strengths
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - selenium
+  - pillow
   techniques:
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - columndatasource
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
   - edge-highlighting
