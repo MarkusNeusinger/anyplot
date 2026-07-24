@@ -2,137 +2,147 @@ library: plotly
 language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:12:55Z'
-updated: '2026-04-29T22:49:10Z'
+updated: '2026-07-24T18:38:20Z'
 generated_by: claude-sonnet
-workflow_run: 25136941031
+workflow_run: 30115323638
 issue: 1014
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotly/plot-dark.html
-quality_score: 80
+quality_score: 85
 review:
   strengths:
-  - Uses plotly's ff.create_quiver — the purpose-built quiver utility — combined with
-    go.Scatter for magnitude color encoding, demonstrating solid library knowledge
-  - All font sizes explicitly set (title 32, axis 24, ticks 18, colorbar 22/18) —
-    fully readable in both renders
-  - Circular rotation field (u=-y, v=x) with viridis magnitude colorscale creates
-    an immediately readable vortex story
-  - Aspect-ratio lock (scaleanchor/scaleratio) preserves vector geometry — correct
-    for a quiver plot
-  - 'Arrow density (15×15 grid, scale_factor=0.2) is well-calibrated: no overlap,
-    each arrow distinguishable'
+  - 'Both previously-flagged blockers are now genuinely fixed and visible in the fresh
+    renders: arrow length grows radially from the calm vortex centre outward (length_frac
+    formula), and peak wind speed now reaches ~28.3 m/s (WIND_SPEED_SCALE=10.0), a
+    plausible severe-storm range instead of a light breeze.'
+  - Direction correctly derived from u=-y, v=x, producing a clean counterclockwise
+    cyclonic rotation that matches the spec's example field.
+  - 'Smart redundant encoding: a go.Scatter layer colored by true wind-speed magnitude
+    (imprint_seq colorscale + colorbar) sits on top of ff.create_quiver, giving a
+    second, more precise magnitude read that plain create_quiver can''t provide on
+    its own.'
+  - 'Theme handling is fully correct in both renders: PAGE_BG/INK/INK_SOFT/GRID all
+    branch on ANYPLOT_THEME and match the required #FAF8F1/#1A1A17 hex values with
+    no dark-on-dark or light-on-light failures.'
+  - 'Imprint palette compliance: arrows use brand green #009E73, and the single-polarity
+    magnitude field correctly uses imprint_seq rather than a diverging or forbidden
+    colormap.'
+  - All font sizes explicitly set (title, axis titles, tick labels, colorbar title/ticks),
+    with the title fontsize dynamically scaled by a documented length ratio so the
+    long mandated title never clips.
+  - Clean, KISS-structured, deterministic script with only the imports actually used.
   weaknesses:
-  - Arrow line color is hardcoded to '#306998' (legacy Python Blue) — explicitly non-compliant
-    per VQ-07; replace with BRAND = '#009E73' for the quiver lines or a neutral INK_SOFT
-    token
-  - Code does not read ANYPLOT_THEME env var and saves to 'plot.png'/'plot.html' instead
-    of 'plot-{THEME}.png'/'plot-{THEME}.html' — theme-adaptive chrome and correct
-    output filenames are missing from the source
-  - 'Axis labels lack units (''X Position'' / ''Y Position'' have no unit annotations);
-    title uses an extra description prefix instead of the canonical ''{spec-id} ·
-    {library} · anyplot.ai'' format (current: ''Circular Flow Field · quiver-basic
-    · plotly · anyplot.ai'')'
-  - 'Design defaults dominate: template=''plotly_white'' with no spine removal, no
-    margin tuning beyond basic values, minimal customisation beyond font sizes — design
-    excellence remains at library-configured-default level'
+  - np.random.seed(42) is set but never used - all data (grid, u, v) is generated
+    deterministically via np.linspace/meshgrid with no calls into np.random. This
+    is harmless dead code but misleadingly implies a stochastic data-generation step
+    that doesn't exist; remove the seed line or use it if randomness is ever added.
+  - 'Design Excellence is solid but not exceptional: the 169-arrow grid plus overlaid
+    scatter dots is still fairly close to a well-composed default rather than a distinctively
+    art-directed chart. Consider a slightly more restrained marker opacity/size or
+    thinner arrow lines near the dense outer rings to let the vortex structure read
+    even more cleanly as a focal point.'
+  - The colorbar's reserved right-hand margin makes the square plot area sit marginally
+    left-of-center; tightening the colorbar thickness/length slightly further would
+    perfect the whitespace balance (currently good, not perfect).
+  - Outer-ring arrowheads sit close to their neighbors given the grid spacing versus
+    max arrow length (~0.32 vs ~0.33 spacing) - not true overlap, but there is little
+    breathing room; a slightly lower scale_factor would give more visual air without
+    losing the magnitude signal.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm cream/off-white consistent with ~#FAF8F1 — not pure white.
-      Chrome: Title "Circular Flow Field · quiver-basic · plotly · anyplot.ai" in dark text, clearly readable. Axis labels "X Position" / "Y Position" readable. Tick labels readable at appropriate size. Colorbar label "Magnitude" with numeric ticks also readable. All chrome legible.
-      Data: 15×15 grid of quiver arrows showing a circular rotation pattern. Arrow lines appear in a consistent blue/teal hue (code specifies #306998). Scatter markers at arrow bases are coloured by the viridis scale — deep purple at centre (low magnitude ≈ 0) transitioning through green to bright yellow at the corners (high magnitude ≈ 2.83). Colorbar on the right encodes magnitude 0.5–2.5+. The vortex structure is immediately apparent.
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "Cyclonic Wind Vortex · quiver-basic · python · plotly · anyplot.ai" in dark ink, clearly readable and centered. Axis titles "X Position (km)" / "Y Position (km)" and tick labels are dark/soft-dark ink, all legible. Grid lines are a subtle light gray, visible but not dominant. Colorbar title "Wind Speed (m/s)" and its tick labels (0-25+) are dark ink, fully readable.
+      Data: A 13x13 grid of brand-green (#009E73) arrows forms a counterclockwise rotational flow pattern (u=-y, v=x). Arrow length clearly grows from short near the calm vortex centre to long at the outer edge, proportional to true wind-speed magnitude. Scatter markers at each arrow base use the green-to-blue imprint_seq sequential gradient keyed to the same magnitude (0 to ~28.3 m/s), growing bluer toward the edges - first-series green confirmed.
+      Legibility verdict: PASS - all text is readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black, consistent with ~#1A1A17 — not pure black.
-      Chrome: Title visible in white/light text against dark background. Axis labels and tick labels appear in light colour — readable. Colorbar "Magnitude" label and ticks visible. No dark-on-dark failures observed.
-      Data: Same viridis coloured markers and arrow pattern as light render — data colours are identical to the light render as required. The bright yellow outer arrows contrast well against the dark background. The deep purple centre arrows are slightly harder to see on dark but still distinguishable.
-      Legibility verdict: PASS — all text readable in light colours against dark background. Note: the dark theme chrome (light text, dark background) is present in the images but the committed source code does not include explicit ANYPLOT_THEME handling — the dark render may originate from a prior pipeline pass. The discrepancy is flagged as a code-level weakness.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, axis titles, tick labels, and colorbar title/ticks all switch to light ink / soft light-gray tokens and remain clearly legible. Grid lines flip to a subtle light-on-dark tone, still subtle but visible.
+      Data: Arrow color (#009E73) and the green-to-blue scatter gradient are pixel-identical to the light render - only chrome flipped, as required. Same radially-growing arrow length and same 0-28.3 m/s colorbar range as the light render.
+      Legibility verdict: PASS - all text is readable against the dark background; no dark-on-dark failures (no black-on-near-black text anywhere).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 32, axis 24, ticks 18, colorbar
-          title 22, colorbar ticks 18. Readable in both themes.'
+        comment: All font sizes explicitly set (title dynamically scaled to length);
+          readable in both themes with no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. 15x15 grid well-spaced.
+        comment: No text overlaps other text, data, or the colorbar
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Arrows clearly visible in both themes. scale_factor=0.2 well-calibrated.
-          Scatter markers size 10 provides good base visibility.
+        comment: Arrow length now correctly scales with relative magnitude (previously
+          flagged, now fixed); outer-ring arrowheads sit fairly close together
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe perceptually uniform colorscale.
+        comment: Green arrows and blue-green sequential gradient are distinguishable
+          from the warm backgrounds in both themes; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions with aspect ratio lock. x-axis extends to ±4 for
-          a ±2 data range, leaving some wasted lateral space.
+        comment: Plot fills a healthy majority of the square canvas with balanced
+          margins; colorbar reserve makes the plot area sit marginally left-of-center
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axis labels 'X Position' / 'Y Position' are descriptive but lack
-          units. Title has extra description prefix.
+        passed: true
+        comment: '"X Position (km)" / "Y Position (km)" - descriptive with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Arrow lines hardcoded to '#306998' (legacy Python Blue) — explicitly
-          non-compliant. Viridis is correct for continuous magnitude data. Chrome
-          appears correct in images but ANYPLOT_THEME handling absent from code.
+        passed: true
+        comment: 'First (only) series is #009E73; continuous magnitude correctly uses
+          imprint_seq (single-polarity); theme-correct chrome in both renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured plotly_white template with intentional viridis colorscale.
-          Above pure defaults but not exceptional — no custom chrome colours, no spine
-          adjustments.
+        comment: Above a bare default via the layered quiver+colorbar composition,
+          but still short of publication-level polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Aspect ratio lock is a nice touch. Explicit font sizes add polish.
-          But template defaults dominate; no spine removal, no grid-opacity tuning.
+        comment: Subtle grid, tightened colorbar sizing since attempt 1, reasonable
+          margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Circular vortex pattern tells an immediate story. Magnitude gradient
-          (dark centre → bright edges) creates natural visual hierarchy and guides
-          the viewer's eye outward.
+        passed: false
+        comment: Length AND color both now grow from the calm centre outward, reinforcing
+          a clear visual hierarchy/focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,31 +150,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct quiver plot using ff.create_quiver — the intended plotly
-          utility.
+        comment: True quiver field via ff.create_quiver
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Uniform grid, arrows with direction encoding, magnitude encoded by
-          colour, mathematical rotation pattern u=-y v=x. All spec features present.
+        comment: Arrow length now proportional to magnitude (previously the key gap),
+          uniform grid spacing, optional magnitude-by-color present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct x/y grid mapping. All data visible within axes.
+        comment: x/y correctly assigned; full grid range visible on both axes
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title contains spec-id, library, and anyplot.ai but adds a human-readable
-          description prefix 'Circular Flow Field ·', making it 4-part instead of
-          canonical 3-part format. No legend needed (colorbar serves as legend).
+        passed: true
+        comment: Title matches "{Descriptive Title} · quiver-basic · python · plotly
+          · anyplot.ai"; no legend needed (single series)
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -172,22 +180,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows circular rotation with magnitude variation. Could show a second
-          field type (e.g. gradient vs rotation) for broader feature coverage.
+        comment: Shows direction, magnitude-by-length, and magnitude-by-color, including
+          the near-zero calm-centre edge case
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Circular vortex is a plausible real-world scenario (cyclone, fluid
-          vortex). Title could name the context more explicitly.
+        comment: Cyclonic wind vortex over a coastal grid - real, neutral meteorology
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Grid range ±2, magnitude 0–2.83 — appropriate and factually consistent
-          for the rotation formula.
+        comment: Peak wind speed ~28.3 m/s is a plausible severe-storm range, fixing
+          the previous light-breeze issue
     code_quality:
       score: 9
       max: 10
@@ -197,34 +205,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure. No functions or classes.
+        comment: Flat top-to-bottom script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: Fully deterministic grid/vector generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, plotly.figure_factory, and plotly.graph_objects — all
-          used.
+        comment: Only numpy, plotly.figure_factory, plotly.graph_objects, os, sys
+          - all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, readable, appropriate complexity.
+        passed: false
+        comment: np.random.seed(42) is set but never used (no np.random calls exist)
+          - harmless but misleading dead code
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as 'plot.png' and 'plot.html' instead of 'plot-{THEME}.png'
-          and 'plot-{THEME}.html'. No ANYPLOT_THEME env var read. Pipeline-level workaround
-          may exist but code does not comply with spec.
+        passed: true
+        comment: write_image(f'plot-{THEME}.png', width=600, height=600, scale=4)
+          + write_html - correct API, correct canvas
     library_mastery:
       score: 7
       max: 10
@@ -234,24 +242,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ff.create_quiver is the idiomatic plotly approach. go.Scatter overlay
-          for colorbar is a correct pattern. Layout updates use plotly's dict API
-          correctly.
+        comment: ff.create_quiver is plotly's dedicated high-level quiver API, correctly
+          parameterized
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: ff.create_quiver is plotly figure_factory specific — not available
-          in most other libraries. Colorbar integration via marker colorscale is a
-          plotly strength.
+        passed: false
+        comment: create_quiver + a layered go.Scatter colorbar overlay is a plotly-specific
+          composition that isn't trivially replicated in other libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - hover-tooltips
-  - html-export
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
@@ -259,3 +264,4 @@ impl_tags:
   - normalization
   styling:
   - custom-colormap
+  - alpha-blending
