@@ -2,45 +2,59 @@ library: plotly
 language: python
 specification_id: polar-basic
 created: '2025-12-23T19:43:18Z'
-updated: '2026-04-30T00:52:09Z'
+updated: '2026-07-24T23:48:36Z'
 generated_by: claude-sonnet
-workflow_run: 25140915972
+workflow_run: 30133743885
 issue: 800
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance and data quality — hourly temperature cycle with realistic
-    values is an ideal polar-basic example
-  - All font sizes explicitly set for high-DPI canvas; theme-adaptive chrome correctly
-    applied throughout both renders
-  - fill=toself with subtle opacity elegantly shows the polar area shape; clockwise
-    time convention with 0h at top is natural
-  - Hover template with customdata hour labels leverages Plotly interactivity well
+  - 'Correctly addressed attempt-1 review feedback: the ''Frequency'' radial axis
+    title is now folded into the outermost tick text (''Frequency 20%'') instead of
+    a separate rotated title, eliminating the tick-label collision flagged previously'
+  - Gridlines and boundary linewidths reduced (radial/angular gridwidth 0.5, angular
+    linewidth 0.75) for a more restrained, refined look in both themes
+  - Theme-adaptive chrome fully threaded through title, tick fonts, grid, legend box,
+    and background — both light and dark renders are fully legible with no dark-on-dark
+    or light-on-light failures
+  - 'Imprint palette applied in canonical order with identical hues across both themes;
+    first series is brand green #009E73'
+  - Realistic, well-scaled wind-rose dataset (2000 observations, von Mises-distributed
+    direction with a clear WSW prevailing direction, gamma-distributed speed binned
+    into 4 realistic km/h buckets) with a fixed seed for reproducibility
+  - Idiomatic go.Barpolar stacked usage with custom hovertemplate, categoryarray for
+    compass ordering, and explicit angular direction/rotation settings
+  - Title matches the mandated '{spec-id} · python · plotly · anyplot.ai' format exactly;
+    square 2400×2400 canvas is the correct choice for a radially-symmetric wind rose
+    and passes the canvas dimension gate
   weaknesses:
-  - Landscape canvas (1600x900) wastes significant corner space for a circular polar
-    plot — switch to square format
-  - Fill opacity (15%) nearly disappears in dark theme — use theme-adaptive fillcolor
-    opacity
-  - Peak annotation visible in rendered images is absent from current code — re-add
-    using fig.add_annotation if intentional
+  - The folded radial tick labels ('15%' and 'Frequency 20%') sit close together along
+    the diagonal radial axis line — still legible and non-overlapping, but a touch
+    dense; a small extra radial offset or slightly smaller font on the last tick would
+    separate them further
+  - The '0%' tick label sits very close to the tiny ENE-sector data wedge near the
+    plot center — minor crowding, not a hard overlap
+  - Aesthetic sophistication is still close to a well-configured default beyond the
+    palette and gridline-weight tuning — a data callout or subtle emphasis on the
+    dominant WSW/SW/SSW sectors would sharpen the storytelling further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "polar-basic · plotly · anyplot.ai" in dark ink, clearly readable. Radial axis title "Temperature (°C)" in dark ink. Angular tick labels (0h–22h) in muted gray INK_SOFT. Radial tick values (0°C–30°C) in muted gray — all readable.
-      Data: Single series in brand green #009E73. Filled polygon (fill="toself") with 15% opacity mint-green fill. Markers size 18 with PAGE_BG edge rings. Line width 3. Peak annotation "Peak 25.4°C / 12:00" at noon position with larger marker. Grid lines subtle rgba(26,26,23,0.12).
-      Legibility verdict: PASS — all text readable against light background
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "polar-basic · python · plotly · anyplot.ai" in dark ink, centered at top, clearly readable. Compass direction labels (N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW) around the perimeter are dark and legible. Radial percentage ticks run along a diagonal (NNE-ward) axis line: "0%", "5%", "10%", "15%", and the outermost tick reads "Frequency 20%" — the axis label is now folded into the last tick text instead of a separate rotated title, so it no longer collides with the "10%"/"15%" tick values (this was the main weakness flagged on attempt 1). The "0%" label sits close to a tiny data wedge near the center but remains fully readable. Legend at the bottom ("Wind speed": 0-10, 10-20, 20-30, 30+ km/h) sits in a bordered off-white box with dark text, clearly separated from the plot.
+      Data: Stacked polar bars per compass direction. First series (0-10 km/h) is brand green #009E73, followed by lavender #C475FD, blue #4467A3, and ochre #BD8233 — canonical Imprint order. The WSW/SW/SSW sectors dominate, forming a clear prevailing-wind focal point; N-through-ESE sectors are near-invisible slivers, consistent with the underlying von Mises-distributed direction data (not a rendering defect).
+      Legibility verdict: PASS — all text is readable, no clipping, only minor label crowding near the center and along the radial axis (noted as weaknesses, not failures).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light #F0EFE8, clearly readable. Axis labels and ticks in muted light #B8B7B0 — all readable. No dark-on-dark failures detected.
-      Data: Brand green #009E73 identical to light render — data colors unchanged. Fill (15% opacity) nearly invisible against dark surface — line and markers still clearly define the shape. "Peak 25.4°C / 12:00" annotation visible.
-      Legibility verdict: PASS — all text readable; minor: fill barely visible in dark theme (fillcolor opacity too low for dark surface)
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, compass labels, tick labels, and legend text render in light ink (INK/INK_SOFT tokens) and are clearly readable against the dark surface — no dark-on-dark failures observed anywhere. The same folded "Frequency 20%" tick-label solution is present and legible.
+      Data: Colors are pixel-identical to the light render — green, lavender, blue, ochre in the same canonical order and the same prevailing-WSW shape. Only the chrome (background, text, grid, legend frame) flipped, as required; the Imprint categorical data colors did not change.
+      Legibility verdict: PASS — no dark-on-dark or unreadable-text failures; same minor crowding caveats as the light render.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -48,75 +62,81 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, ticks 18px — all explicitly set; both
-          themes readable
+        comment: Fonts explicitly sized (title 16, ticks/legend 10) and readable in
+          both themes; minor density where the folded '15%'/'Frequency 20%' tick labels
+          sit close together
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Angular labels well-spaced at 2h intervals, no collisions
+        comment: The attempt-1 'Frequency' title/tick collision is fixed by folding
+          it into the last tick; only minor crowding remains between the '0%' label
+          and a tiny nearby data wedge
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers and line clear; fill at 15% opacity nearly invisible in dark
-          theme
+        comment: Stacked wedges well-sized and distinguishable; near-zero sectors
+          are a data artifact of the WSW-prevailing distribution, not a sizing flaw
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series, colorblind-safe
+        comment: Imprint palette is CVD-safe; 4 series is within the 'color alone
+          is enough' guidance
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Landscape 1600x900 for circular polar chart wastes significant corner
-          space — square canvas preferred
+        passed: true
+        comment: Square 2400x2400 canvas passes the dimension gate; nothing clipped;
+          margins pinned explicitly
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) with units on radial axis
+        comment: Radial axis labeled 'Frequency' with % suffix; angular axis uses
+          standard compass directions
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, theme-adaptive
-          chrome throughout'
+        comment: 'First series #009E73, canonical Imprint order, identical hues across
+          themes, correct theme backgrounds'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured with correct palette and marker edge highlights,
-          but single-color polar fill is not publication-ready
+        passed: true
+        comment: Custom palette and theme tokens throughout, but overall polish stays
+          close to a well-configured default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid opacity 0.12, legend hidden for single series, generous
-          margins
+        comment: Thinner gridlines/boundary (0.5/0.75 width) and the resolved tick-label
+          collision raise refinement over attempt 1, though still fairly close to
+          library defaults
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Peak annotation in images creates focal point but is absent from
-          current code; fill shape and clockwise convention help
+        passed: true
+        comment: Clear WSW-prevailing focal point emerges naturally from the stacked
+          bars and data distribution
     spec_compliance:
       score: 15
       max: 15
@@ -126,27 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct go.Scatterpolar polar chart
+        comment: Correct polar/barpolar wind-rose chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Theta in degrees, radius, visible radial gridlines, angular labels
-          at 2h intervals, clockwise time direction
+        comment: theta, radius, and category (speed bin) all present; angular labels
+          at standard compass intervals; radial gridlines visible but subtle
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hours to angular, temperature to radius; correct clockwise with 0h
-          at top
+        comment: theta=compass direction, r=frequency %, category=speed bin via stacking,
+          all data represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend appropriate for single series
+        comment: Title matches mandated format exactly; legend labels match the speed-bin
+          series
     data_quality:
       score: 15
       max: 15
@@ -156,20 +177,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 24-hour cycle with realistic daily temperature variation
+        comment: 'Full wind-rose feature set: direction distribution, speed-binned
+          stacking, frequency scale'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hourly temperature readings — real-world, neutral, scientifically
-          plausible
+        comment: Plausible, neutral coastal-station wind-rose scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0–30°C range is physically correct for a daily temperature cycle
+        comment: 2000 observations, 0-20%+ frequency scale, realistic speed bins in
+          km/h
     code_quality:
       score: 10
       max: 10
@@ -179,31 +201,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: tokens → data → plot → save'
+        comment: Flat top-level script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used
+        comment: Only os, numpy, plotly.graph_objects, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic dict-style layout config, appropriate complexity
+        comment: Appropriately complex, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current go.Barpolar
+          API
     library_mastery:
       score: 8
       max: 10
@@ -213,15 +236,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct go.Scatterpolar with fill, customdata, tickmode=array — idiomatic
-          but straightforward
+        comment: go.Barpolar is the idiomatic high-level choice for a stacked wind
+          rose
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: fill=toself on polar, customdata hover template, interactive HTML
-          export — clearly Plotly-specific
+        comment: Custom hovertemplate, categoryarray ordering, explicit angularaxis
+          rotation/direction, and the folded-tick-label trick are plotly-specific
+          polar features used well
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -232,7 +256,9 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - binning
   styling:
-  - alpha-blending
   - edge-highlighting
