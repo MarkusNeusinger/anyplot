@@ -296,14 +296,25 @@ jobs:
               --repo "$REPOSITORY" \
               --squash \
               --admin \
-              --delete-branch; then
+              --delete-branch 2> /tmp/merge.err; then
               echo "::notice::Merge successful on attempt $attempt"
+              exit 0
+            fi
+
+            # Second line of defence for the same lost-response case: if the
+            # state probe above is ALSO failing (same brown-out), the merge can
+            # already be done while every retry here reports "already merged"
+            # until the loop exits 1 and the post-merge bookkeeping is skipped.
+            # gh saying the PR is already merged IS the success signal.
+            MERR=$(head -c 500 /tmp/merge.err | tr '\n' ' ')
+            if grep -qiE 'already merged|pull request is (already )?(merged|closed)' /tmp/merge.err; then
+              echo "::notice::PR #${PR_NUM} reported as already merged — continuing to post-merge steps"
               exit 0
             fi
 
             if [ $attempt -lt $MAX_ATTEMPTS ]; then
               DELAY=$((attempt * 10))
-              echo "::warning::Merge failed, retrying in ${DELAY}s..."
+              echo "::warning::Merge failed (${MERR}), retrying in ${DELAY}s..."
               sleep $DELAY
             fi
           done
