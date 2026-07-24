@@ -167,9 +167,11 @@ Run the implementation **twice**, once per theme.
 ```bash
 source .venv/bin/activate
 cd plots/{SPEC_ID}/implementations/{LANGUAGE}
-MPLBACKEND=Agg ANYPLOT_THEME=light python {LIBRARY}.py
-MPLBACKEND=Agg ANYPLOT_THEME=dark  python {LIBRARY}.py
+MPLBACKEND=Agg ANYPLOT_THEME=light python -P {LIBRARY}.py
+MPLBACKEND=Agg ANYPLOT_THEME=dark  python -P {LIBRARY}.py
 ```
+
+> **Why `-P`:** this directory contains one file per library (`matplotlib.py`, `seaborn.py`, `plotly.py`, …). Without `-P` (Python 3.11+ "safe path" flag), Python prepends the script's own directory to `sys.path`, so `import matplotlib.pyplot` inside e.g. `seaborn.py` resolves to the sibling `matplotlib.py` file instead of the real installed package — a `ModuleNotFoundError: 'matplotlib' is not a package` that has nothing to do with your code. `-P` skips that prepend so the real site-packages import wins.
 
 **R (`LANGUAGE=r`)**:
 ```bash
