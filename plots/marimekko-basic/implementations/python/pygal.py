@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 marimekko-basic: Basic Marimekko Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-24
@@ -132,7 +132,13 @@ class Marimekko(Graph):
                 color = self.style.colors[serie_idx % len(self.style.colors)]
                 y_pos = y_bottom - y_offset - segment_height
 
-                serie_group = self.svg.node(mekko_group, class_="series serie-%d color-%d" % (serie_idx, serie_idx))
+                # Class names avoid pygal's built-in "series"/"reactive" selectors
+                # (pygal/css/style.css targets those exact names with a
+                # fill-opacity rule and a text-fill rule), which would otherwise
+                # silently override the explicit fill colors below.
+                serie_group = self.svg.node(
+                    mekko_group, class_="mekko-serie mekko-serie-%d color-%d" % (serie_idx, serie_idx)
+                )
 
                 self.svg.node(
                     serie_group,
@@ -143,7 +149,7 @@ class Marimekko(Graph):
                     height=segment_height,
                     fill=color,
                     stroke=PAGE_BG,
-                    **{"stroke-width": "2", "class": "rect reactive tooltip-trigger"},
+                    **{"stroke-width": "2", "fill-opacity": "1", "class": "mekko-rect tooltip-trigger"},
                 )
 
                 if segment_height > 0.045 * plot_height and bar_width > 0.035 * plot_width:
@@ -333,7 +339,7 @@ chart = Marimekko(
     ink_muted=INK_MUTED,
     grid_color=GRID_COLOR,
     style=custom_style,
-    title="marimekko-basic · pygal · anyplot.ai",
+    title="marimekko-basic · python · pygal · anyplot.ai",
     show_legend=False,
     margin=60,
     margin_top=170,
@@ -356,7 +362,7 @@ html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>marimekko-basic · pygal · anyplot.ai</title>
+    <title>marimekko-basic · python · pygal · anyplot.ai</title>
     <style>
         body {{ margin: 0; padding: 20px; background: {PAGE_BG}; }}
         .container {{ max-width: 100%; margin: 0 auto; }}
