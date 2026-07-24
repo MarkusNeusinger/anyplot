@@ -1,0 +1,246 @@
+library: echarts
+language: javascript
+specification_id: radar-basic
+created: '2026-07-24T16:29:35Z'
+updated: '2026-07-24T16:46:40Z'
+generated_by: claude-sonnet
+workflow_run: 30108965062
+issue: 744
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Radar gridlines now carry numeric value labels (20/40/60/80/100) at regular intervals
+    — directly addresses the attempt-1 SC-02/VQ-06 gap
+  - Correct Imprint palette order (green → lavender → blue) with fully theme-adaptive
+    chrome — both renders legible and correctly styled
+  - 'Data tells a clear story: three phone models show complementary trade-offs (Aurora
+    X dominant except Price Value, Vega Lite the inverse), visible through the overlapping
+    polygons'
+  - Semi-transparent area fills (opacity 0.25) plus a soft shadowBlur glow correctly
+    implement the spec's overlap-visibility requirement while adding a distinctive
+    visual touch
+  - emphasis hover states (thicker line, higher area opacity) leverage an ECharts-specific
+    interactive feature appropriately for a static-preview + HTML-detail library
+  weaknesses:
+  - Aesthetic sophistication is improved but still reads closer to a well-configured
+    library default than an exceptional publication-ready design — consider a more
+    deliberate color treatment or asymmetric layout emphasis to lift DE-01 further
+  - Library mastery is still fairly light — consider one more ECharts-distinctive
+    touch (e.g., per-axis nameGap/custom label rotation, or a radar-specific tooltip
+    formatter surfaced in the HTML view) to push LM-01/LM-02 further
+  - No explicit annotation or callout highlighting the single most interesting trade-off
+    (e.g., Price Value inversion) — would sharpen DE-03's storytelling beyond what
+    color alone conveys
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Bold dark title "radar-basic · javascript · echarts · anyplot.ai" centered at top, clearly readable. Six axis category labels (Battery Life, Build Quality, Price Value, Display, Performance, Camera) in medium-gray at the outer edge, all readable. Radial gridlines now carry numeric value labels (20/40/60/80/100) at regular intervals — fixed from attempt 1. Subtle alternating splitArea bands add faint concentric depth without competing with data. Legend at bottom center ("Aurora X", "Nimbus S", "Vega Lite") in dark, readable text.
+      Data: Three overlapping filled polygons at ~25% opacity with a soft shadowBlur glow around each fill; circular markers, 3px outlines. First series confirmed brand green #009E73, second lavender/purple, third blue. Polygons clearly diverge, communicating real trade-offs between the three phone models.
+      Legibility verdict: PASS — all title, axis-category, tick, and legend text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Title renders in near-white text, clearly legible. Axis category labels in light gray, readable. Numeric gridline labels (20/40/60/80/100) visible and readable. Legend text light-colored and readable. Same subtle alternating splitArea bands.
+      Data: Same three colors as light render — brand green, lavender, blue — confirming data-color identity preserved across themes; only chrome flipped as required. shadowBlur glow is even more visible against the dark surface (soft green halo around the Aurora X fill).
+      Legibility verdict: PASS — no dark-on-dark failures; all title/label/tick/legend text clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 22px, legend 16px, axis-name 15px, axisLabel 12px all explicitly
+          sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No colliding text/data; formatter hiding the center 0 value avoids
+          clutter at the hub
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: symbolSize 8 / lineStyle width 3 appropriate for 3 series over 6
+          sparse axes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues (green/lavender/blue), alpha blending aids overlap
+          reading, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Radar fills ~60% of canvas, balanced margins, legend close to plot,
+          nothing cut off, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed from attempt 1: radar.axisLabel now shown with formatter,
+          numeric rings (20/40/60/80/100) clearly labeled'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Soft shadowBlur/shadowColor glow on area fills and alternating splitArea
+          bands add above-default polish, but overall composition still reads as a
+          well-configured radar rather than a fully bespoke design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: false
+        comment: Subtle grid, generous whitespace, alternating split-area bands give
+          gentle depth; no chartjunk
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Overlapping polygons clearly communicate complementary trade-offs
+          at a glance, no explicit annotation to sharpen the takeaway further
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct radar/spider chart, polygon shape, native closed loop
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed from attempt 1: filled polygons w/ alpha 0.25, legible numeric
+          gridline intervals, axis labels at outer edge, distinct colors + legend,
+          closed polygons all present'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 6 axes show all 3 series correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match series names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three series show clearly differentiated strengths/weaknesses across
+          all 6 attributes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible phone-comparison scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 scale, sensible and internally consistent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear data -> init -> setOption
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only global echarts/tokens used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Correct, standard declarative radar configuration; doesn't push far
+          beyond basic patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Improved from attempt 1: now leverages emphasis (hover line-width/opacity
+          states) and shadowBlur/shadowColor glow — genuine ECharts-specific features,
+          though usage is still fairly light-touch'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
