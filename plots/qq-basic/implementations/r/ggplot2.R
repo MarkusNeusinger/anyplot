@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' qq-basic: Basic Q-Q Plot
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 85/100 | Created: 2026-07-24
+#' Quality: 93/100 | Created: 2026-07-24
 
 library(ggplot2)
 library(ragg)
