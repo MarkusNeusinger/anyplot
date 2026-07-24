@@ -1,14 +1,34 @@
-""" anyplot.ai
+"""anyplot.ai
 marimekko-basic: Basic Marimekko Chart
-Library: altair 6.1.0 | Python 3.14.4
-Quality: 87/100 | Updated: 2026-04-29
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-07-24
 """
+
+import os
+import sys
+
+
+# The file is named altair.py; remove its own directory from sys.path so
+# `import altair` resolves to the library, not this script.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if not p or os.path.abspath(p) != _HERE]
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
-# Data - Market share by region and product line
+# Theme-adaptive chrome tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint categorical palette, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+
+# Data - Revenue by region (bar widths) and product line (segment heights)
 data = {
     "Region": ["North America"] * 4 + ["Europe"] * 4 + ["Asia Pacific"] * 4 + ["Latin America"] * 4,
     "Product": ["Electronics", "Clothing", "Food", "Home"] * 4,
@@ -16,7 +36,7 @@ data = {
         120,
         80,
         60,
-        40,  # North America (total: 300, largest market)
+        40,  # North America (total: 300)
         90,
         70,
         50,
@@ -28,55 +48,54 @@ data = {
         40,
         30,
         35,
-        25,  # Latin America (total: 130, smallest market)
+        25,  # Latin America (total: 130)
     ],
 }
-
 df = pd.DataFrame(data)
 
-# Calculate totals for each region (determines bar widths)
+# Region totals determine bar widths
 region_totals = df.groupby("Region")["Revenue"].sum().reset_index()
 region_totals.columns = ["Region", "RegionTotal"]
 grand_total = region_totals["RegionTotal"].sum()
 region_totals["WidthPct"] = region_totals["RegionTotal"] / grand_total * 100
-
-# Calculate cumulative x positions for each region
 region_totals = region_totals.sort_values("RegionTotal", ascending=False)
 region_totals["x_start"] = region_totals["WidthPct"].cumsum() - region_totals["WidthPct"]
 region_totals["x_end"] = region_totals["WidthPct"].cumsum()
 region_totals["x_mid"] = (region_totals["x_start"] + region_totals["x_end"]) / 2
+region_totals["Label"] = region_totals["Region"] + "\n($" + region_totals["RegionTotal"].astype(int).astype(str) + "M)"
 
-# Merge back to main dataframe
 df = df.merge(region_totals, on="Region")
 
-# Calculate y positions (percentages within each region)
+# Product share within each region determines segment heights
 df["PctWithinRegion"] = df["Revenue"] / df["RegionTotal"] * 100
-
-# Sort by product for consistent stacking order
 product_order = ["Electronics", "Clothing", "Food", "Home"]
 df["ProductOrder"] = df["Product"].map({p: i for i, p in enumerate(product_order)})
 df = df.sort_values(["Region", "ProductOrder"])
-
-# Calculate cumulative y positions within each region
 df["y_end"] = df.groupby("Region")["PctWithinRegion"].cumsum()
 df["y_start"] = df["y_end"] - df["PctWithinRegion"]
+df["y_mid"] = (df["y_start"] + df["y_end"]) / 2
+df["RevenueLabel"] = "$" + df["Revenue"].astype(str) + "M"
 
-# Color palette - Python Blue primary, then colorblind-safe colors
-colors = ["#306998", "#FFD43B", "#4ECDC4", "#E76F51"]
+# Purple (Clothing) is light enough that white text loses contrast; use ink instead.
+TEXT_ON_COLOR = {"Electronics": "#FFFFFF", "Clothing": "#1A1A17", "Food": "#FFFFFF", "Home": "#FFFFFF"}
+df["LabelColor"] = df["Product"].map(TEXT_ON_COLOR)
 
-# Create the Marimekko chart using rect marks
-chart = (
+segments = (
     alt.Chart(df)
-    .mark_rect(stroke="white", strokeWidth=2)
+    .mark_rect(stroke=PAGE_BG, strokeWidth=2)
     .encode(
-        x=alt.X("x_start:Q", axis=None),  # Hide default x-axis
+        x=alt.X("x_start:Q", axis=None),
         x2="x_end:Q",
-        y=alt.Y("y_start:Q", title="Product Mix (%)", scale=alt.Scale(domain=[0, 100])),
+        y=alt.Y(
+            "y_start:Q",
+            axis=alt.Axis(title="Product Mix (%)", labelFontSize=11, titleFontSize=13),
+            scale=alt.Scale(domain=[0, 100]),
+        ),
         y2="y_end:Q",
         color=alt.Color(
             "Product:N",
-            scale=alt.Scale(domain=product_order, range=colors),
-            legend=alt.Legend(title="Product Line", titleFontSize=18, labelFontSize=16, symbolSize=300),
+            scale=alt.Scale(domain=product_order, range=IMPRINT_PALETTE),
+            legend=alt.Legend(title="Product Line", titleFontSize=13, labelFontSize=11, symbolSize=130),
         ),
         tooltip=[
             alt.Tooltip("Region:N", title="Region"),
@@ -85,34 +104,57 @@ chart = (
             alt.Tooltip("PctWithinRegion:Q", title="% of Region", format=".1f"),
         ],
     )
-    .properties(
-        width=1600, height=900, title=alt.Title("marimekko-basic · altair · pyplots.ai", fontSize=28, anchor="middle")
-    )
 )
 
-# Add region labels at the bottom with market size
-region_totals["Label"] = (
-    region_totals["Region"] + "\n($" + (region_totals["RegionTotal"]).astype(int).astype(str) + "M)"
-)
-region_labels = (
-    alt.Chart(region_totals)
-    .mark_text(align="center", baseline="top", dy=15, fontSize=18, fontWeight="bold")
+revenue_labels = (
+    alt.Chart(df)
+    .mark_text(align="center", baseline="middle", fontSize=11, fontWeight="bold")
     .encode(
         x=alt.X("x_mid:Q", scale=alt.Scale(domain=[0, 100])),
-        y=alt.value(900),  # Position at bottom of chart
-        text="Label:N",
+        y=alt.Y("y_mid:Q", scale=alt.Scale(domain=[0, 100])),
+        text="RevenueLabel:N",
+        color=alt.Color("LabelColor:N", scale=None, legend=None),
     )
 )
 
-# Combine chart with labels
-final_chart = (
-    alt.layer(chart, region_labels)
-    .configure_axis(labelFontSize=16, titleFontSize=20, grid=True, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+region_labels = (
+    alt.Chart(region_totals)
+    .mark_text(
+        align="center", baseline="top", dy=10, lineHeight=15, lineBreak="\n", fontSize=12, fontWeight="bold", color=INK
+    )
+    .encode(x=alt.X("x_mid:Q", scale=alt.Scale(domain=[0, 100])), y=alt.value(320), text="Label:N")
 )
 
-# Save as PNG (scale_factor=3 for 4800x2700)
-final_chart.save("plot.png", scale_factor=3.0)
+chart = (
+    alt.layer(segments, revenue_labels, region_labels)
+    .properties(
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        title=alt.Title("marimekko-basic · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+)
 
-# Save as HTML for interactivity
-final_chart.save("plot.html")
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# PAD-only to canonical target (do NOT crop — cropping clips title/axis labels)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
