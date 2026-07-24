@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: letsplot 4.9.0 | Python 3.14.4
 Quality: 81/100 | Updated: 2026-04-27
@@ -40,7 +40,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 EDGE_COLOR = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito categorical palette (first series always #009E73)
+# Imprint categorical palette (first series always #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: A small social network with 20 people in 4 departments
@@ -125,10 +125,10 @@ for group_id, node_indices in group_node_map.items():
     center = group_corners[group_id]
     for idx, ni in enumerate(node_indices):
         angle = (idx / m) * 2 * np.pi
-        positions[ni] = center + 0.09 * np.array([np.cos(angle), np.sin(angle)])
+        positions[ni] = center + 0.14 * np.array([np.cos(angle), np.sin(angle)])
 
 # Intra-group spring layout with centroid anchor (200 iterations)
-k = 0.065
+k = 0.13
 for iteration in range(200):
     displacement = np.zeros((n, 2))
 
@@ -192,9 +192,11 @@ for node in nodes:
             "y": y,
             "label": node["label"],
             "group": group_names[node["group"]],
-            "size": 8 + degree * 2,
+            # Wider spread than a flat linear term so hub nodes (higher degree)
+            # stand out as a clear focal point rather than a subtle size nudge.
+            "size": 6 + degree * 1.8,
             "degree": degree,
-            "label_y": y + 0.065,
+            "label_y": y + 0.095,
         }
     )
 df_nodes = pd.DataFrame(node_data)
@@ -210,17 +212,17 @@ plot = (
         stroke=1.5,
         alpha=0.95,
     )
-    + geom_text(aes(x="x", y="label_y", label="label"), data=df_nodes, size=12, color=INK_SOFT, fontface="bold")
+    + geom_text(aes(x="x", y="label_y", label="label"), data=df_nodes, size=6, color=INK_SOFT, fontface="bold")
     + scale_color_manual(values=IMPRINT, name="Department")
     + scale_size_identity()
     + scale_x_continuous(limits=(-0.05, 1.05))
     + scale_y_continuous(limits=(-0.05, 1.05))
     + labs(title="Office Social Network · network-basic · letsplot · anyplot.ai")
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_title=element_text(size=24, face="bold", color=INK),
+        plot_title=element_text(size=16, face="bold", color=INK),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -228,12 +230,13 @@ plot = (
         panel_grid=element_blank(),
         panel_border=element_blank(),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(size=14, color=INK_SOFT),
-        legend_title=element_text(size=16, face="bold", color=INK),
+        legend_text=element_text(size=12, color=INK_SOFT),
+        legend_title=element_text(size=14, face="bold", color=INK),
         legend_position="right",
+        plot_margin=[15, 15, 10, 10],
     )
 )
 
 # Save
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
