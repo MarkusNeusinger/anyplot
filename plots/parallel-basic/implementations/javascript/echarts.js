@@ -19,7 +19,7 @@ const rand = lcg(42);
 const OPTIMIZERS = ["Adam", "RMSprop", "SGD"];
 const OPT_BONUS = { Adam: 4.5, RMSprop: 2, SGD: 0 };
 const BATCH_SIZES = [16, 32, 64, 128, 256];
-const RUNS_PER_OPTIMIZER = 30;
+const RUNS_PER_OPTIMIZER = 16;
 
 function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v));
@@ -31,11 +31,11 @@ const runsByOptimizer = OPTIMIZERS.map((optimizer) => {
     const learningRate = Math.pow(10, -4 + rand() * 3); // 1e-4 .. 1e-1, log-uniform
     const batchSize = BATCH_SIZES[Math.floor(rand() * BATCH_SIZES.length)];
     const dropout = rand() * 0.5; // 0 .. 0.5
-    const hiddenUnits = 32 + rand() * 480; // 32 .. 512
+    const hiddenUnits = 32 + rand() * 468; // 32 .. 500
 
     const lrPenalty = Math.abs(Math.log10(learningRate) - -2.5) * 5;
     const dropoutPenalty = Math.abs(dropout - 0.25) * 8;
-    const hiddenBonus = (hiddenUnits / 512) * 5;
+    const hiddenBonus = (hiddenUnits / 500) * 5;
     const batchPenalty = (Math.abs(batchSize - 64) / 256) * 3;
     const noise = (rand() - 0.5) * 6;
 
@@ -113,7 +113,7 @@ chart.setOption({
       dim: 3,
       name: "Hidden Units",
       min: 0,
-      max: 512,
+      max: 500,
       nameTextStyle: axisNameStyle,
       axisLabel: axisLabelStyle,
       axisLine: axisLineStyle,
@@ -144,12 +144,24 @@ chart.setOption({
     borderColor: t.grid,
     textStyle: { color: t.ink, fontSize: 14 },
   },
-  series: OPTIMIZERS.map((optimizer, idx) => ({
-    name: optimizer,
-    type: "parallel",
-    smooth: false,
-    lineStyle: { width: 1.8, opacity: 0.55 },
-    emphasis: { lineStyle: { opacity: 0.9, width: 2.5 } },
-    data: runsByOptimizer[idx],
-  })),
+  // Draw back-to-front (SGD, RMSprop, Adam) so Adam's accuracy edge renders on
+  // top of the crossing mesh instead of being buried by later series; colors
+  // stay pinned to each optimizer's canonical Imprint slot regardless of draw order.
+  series: ["SGD", "RMSprop", "Adam"].map((optimizer) => {
+    const idx = OPTIMIZERS.indexOf(optimizer);
+    const isAdam = optimizer === "Adam";
+    return {
+      name: optimizer,
+      type: "parallel",
+      smooth: false,
+      itemStyle: { color: t.palette[idx] },
+      lineStyle: {
+        color: t.palette[idx],
+        width: isAdam ? 2.2 : 1.5,
+        opacity: isAdam ? 0.6 : 0.32,
+      },
+      emphasis: { lineStyle: { opacity: 0.9, width: 2.8 } },
+      data: runsByOptimizer[idx],
+    };
+  }),
 });
