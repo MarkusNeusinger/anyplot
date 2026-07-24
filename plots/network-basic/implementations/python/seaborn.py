@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-24
@@ -99,6 +99,11 @@ edges = [
     (2, 6),
     (8, 11),
     (13, 16),
+    # Direct Team A <-> Team D bridges close the A-B-C-D chain into a loop,
+    # which pulls the force-directed layout into a rounder shape instead of
+    # stretching diagonally and leaving the opposite canvas corners empty
+    (3, 17),
+    (4, 15),
 ]
 
 # Node degree (connection count)
@@ -183,7 +188,7 @@ sns.scatterplot(
 )
 
 # Labels sit just below each node, so text color never clashes with the node fill
-for _, row in df_nodes.iterrows():
+text_artists = [
     ax.text(
         row["x"],
         row["y"] - 0.09,
@@ -195,6 +200,8 @@ for _, row in df_nodes.iterrows():
         color=INK,
         zorder=3,
     )
+    for _, row in df_nodes.iterrows()
+]
 
 title = "network-basic · python · seaborn · anyplot.ai"
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
@@ -224,4 +231,27 @@ legend.get_frame().set_facecolor(ELEVATED_BG)
 legend.get_frame().set_edgecolor(INK_SOFT)
 
 plt.tight_layout()
+
+# Measure the actual rendered label boxes (after the view/layout is final) and
+# nudge any that collide apart horizontally — cheaper than hand-tuning offsets
+# per node, and it adapts automatically if the layout places different nodes
+# close together on a re-run
+fig.canvas.draw()
+renderer = fig.canvas.get_renderer()
+inv = ax.transData.inverted()
+label_boxes = [inv.transform_bbox(t.get_window_extent(renderer)) for t in text_artists]
+for i in range(len(text_artists)):
+    for j in range(i + 1, len(text_artists)):
+        if not label_boxes[i].overlaps(label_boxes[j]):
+            continue
+        left, right = (i, j) if label_boxes[i].x0 < label_boxes[j].x0 else (j, i)
+        overlap_x = min(label_boxes[left].x1, label_boxes[right].x1) - label_boxes[right].x0
+        push = overlap_x / 2 + 0.01
+        xl, yl = text_artists[left].get_position()
+        xr, yr = text_artists[right].get_position()
+        text_artists[left].set_position((xl - push, yl))
+        text_artists[left].set_ha("right")
+        text_artists[right].set_position((xr + push, yr))
+        text_artists[right].set_ha("left")
+
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
