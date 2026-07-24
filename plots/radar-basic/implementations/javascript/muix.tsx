@@ -56,14 +56,16 @@ function RadarLayer() {
 
   return (
     <g>
-      {/* Concentric grid rings at each value level */}
+      {/* Concentric grid rings at each value level — outer ring solid, inner
+          rings lighter/thinner so the nested grid stays subtle at the center */}
       {RINGS.map((level) => (
         <polygon
           key={`ring-${level}`}
           points={polygon(level / MAX)}
           fill="none"
           stroke={GRID}
-          strokeWidth={level === MAX ? 2 : 1.25}
+          strokeWidth={level === MAX ? 2 : 1}
+          strokeOpacity={level === MAX ? 1 : 0.6}
         />
       ))}
 
@@ -95,14 +97,14 @@ function RadarLayer() {
         );
       })}
 
-      {/* Value tick labels along the top spoke */}
+      {/* Value tick labels, offset off the top spoke so they read on their own */}
       {RINGS.map((level) => (
         <text
           key={`tick-${level}`}
-          x={cx + 6}
+          x={cx + 12}
           y={cy - (level / MAX) * R}
           fill={INK_SOFT}
-          fontSize={13}
+          fontSize={15}
           textAnchor="start"
           dominantBaseline="central"
         >
