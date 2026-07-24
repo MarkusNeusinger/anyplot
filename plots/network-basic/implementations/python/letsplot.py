@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-24
@@ -14,8 +14,8 @@ from lets_plot import (
     element_blank,
     element_rect,
     element_text,
+    geom_curve,
     geom_point,
-    geom_segment,
     geom_text,
     ggplot,
     ggsize,
@@ -111,10 +111,10 @@ edges = [
 # Layout: each group anchored to a canvas quadrant, force-directed within each group
 n = len(nodes)
 group_corners = {
-    0: np.array([0.22, 0.77]),  # Research: top-left
-    1: np.array([0.78, 0.77]),  # Marketing: top-right
-    2: np.array([0.22, 0.23]),  # Engineering: bottom-left
-    3: np.array([0.78, 0.23]),  # Design: bottom-right
+    0: np.array([0.18, 0.77]),  # Research: top-left
+    1: np.array([0.84, 0.77]),  # Marketing: top-right
+    2: np.array([0.18, 0.23]),  # Engineering: bottom-left
+    3: np.array([0.84, 0.23]),  # Design: bottom-right
 }
 
 # Place each group's nodes in a circle around their quadrant center
@@ -164,6 +164,16 @@ for iteration in range(200):
         if disp_norm > 0:
             positions[i] += (displacement[i] / disp_norm) * min(disp_norm, 0.025 * cooling)
 
+# The panel maps more pixels per data-unit horizontally than vertically (16:9
+# canvas minus the right-hand legend column), so an isotropic spring layout
+# renders each quadrant's circular cluster as a squashed ellipse. Stretch the
+# vertical spread around each group's centroid to compensate, without shrinking
+# the horizontal footprint that already fills the canvas width.
+Y_ASPECT_COMPENSATION = 1.45
+for i, node in enumerate(nodes):
+    center = group_corners[node["group"]]
+    positions[i][1] = center[1] + (positions[i][1] - center[1]) * Y_ASPECT_COMPENSATION
+
 pos = {node["id"]: positions[i] for i, node in enumerate(nodes)}
 
 # Calculate node degrees for sizing and tooltips
@@ -204,7 +214,14 @@ df_nodes = pd.DataFrame(node_data)
 # Plot — no coord_fixed so the network fills the full 16:9 landscape canvas
 plot = (
     ggplot()
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_edges, color=EDGE_COLOR, size=1.2, alpha=0.40)
+    + geom_curve(
+        aes(x="x", y="y", xend="xend", yend="yend"),
+        data=df_edges,
+        color=EDGE_COLOR,
+        size=1.5,
+        alpha=0.6,
+        curvature=0.15,
+    )
     + geom_point(
         aes(x="x", y="y", color="group", size="size"),
         data=df_nodes,
@@ -233,7 +250,11 @@ plot = (
         legend_text=element_text(size=12, color=INK_SOFT),
         legend_title=element_text(size=14, face="bold", color=INK),
         legend_position="right",
-        plot_margin=[15, 15, 10, 10],
+        legend_key_size=14,
+        legend_spacing=4,
+        legend_box_spacing=6,
+        legend_margin=6,
+        plot_margin=[15, 8, 10, 10],
     )
 )
 
