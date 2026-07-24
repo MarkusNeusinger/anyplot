@@ -80,12 +80,13 @@ jobs:
           #
           # Leaving them alone is safe because the `main` ruleset is NOT
           # strict (see the header) — a Dependabot PR merges while behind,
-          # so it never needs this update at all. It is explicitly NOT safe
-          # to assume Dependabot re-syncs them for us: Dependabot rebases on
+          # so it never needs this update at all. Do NOT justify this by
+          # assuming Dependabot re-syncs them for us: it rebases on
           # conflict / schedule / reopen, not on "merely behind", and it
-          # stops rebasing a PR entirely once a foreign commit is pushed to
-          # the branch. A branch already poisoned by such a commit stays
-          # stuck until someone comments `@dependabot recreate`.
+          # stops rebasing a branch entirely once a foreign commit lands on
+          # it. The point is that the head now stays put, so a branch this
+          # workflow already touched needs its gated run approved exactly
+          # once instead of being re-gated every few minutes.
           CANDIDATES=$(echo "$PRS" | jq -c '
             [ .[]
               | select(.autoMergeRequest != null)

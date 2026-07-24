@@ -165,10 +165,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   auto-merge never fired: PR #9674 accumulated 174 runs in 22 h — 162 `action_required` against
   only 4 green (the original `dependabot[bot]` push). Dependabot branches are now skipped.
   They merge fine while behind (the `main` ruleset is not strict — the file's header claimed
-  otherwise and has been corrected), and branches already poisoned by such a commit need a
-  one-time `@dependabot recreate`, since Dependabot stops rebasing a branch once a foreign
-  commit lands on it. `/dependabot`'s playbook told operators to run that same harmful
-  `update-branch` by hand and now says the opposite (#9772).
+  otherwise and has been corrected). An already-updated branch needs its gated run approved
+  once; that now sticks, because nothing pushes to the branch again. `/dependabot`'s playbook
+  told operators to run that same harmful `update-branch` by hand and now says the opposite
+  (#9772).
 - **anyplot.ai white-screen outage (2026-07-23, ~22:15–23:00 UTC): vite pinned back to
   8.0.16** — the npm-minor Dependabot group (#9657) bumped vite 8.0.16 → 8.1.5, whose rolldown
   1.1.5 bundler emits a broken `mui`/`@emotion` chunk under our `manualChunks` split; the

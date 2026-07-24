@@ -29,10 +29,12 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
      burned 174 runs in 22 h this way. `auto-update-pr-branches.yml` skips Dependabot branches
      for the same reason (#9772).
    - **Already poisoned** (head commit authored by `github-actions[bot]`, checks stuck at
-     `action_required`): comment `@dependabot recreate` on the PR. That force-pushes a fresh
-     `dependabot[bot]`-authored head whose CI is not gated. Approving the pending run via
-     `gh api -X POST repos/{owner}/{repo}/actions/runs/<id>/approve` also works, but only holds
-     until something pushes to the branch again.
+     `action_required`): approve the gated runs once —
+     `gh api -X POST repos/{owner}/{repo}/actions/runs/<id>/approve`. Approved runs do report
+     the required contexts on a bot-authored head (verified on #9674), and since
+     `auto-update-pr-branches.yml` no longer touches these branches the head now stays put, so
+     one approval is enough. `@dependabot recreate` also works and additionally restores a
+     clean `dependabot[bot]` head, but it re-resolves the versions.
    - `mergeStateStatus` is computed async — after any update, poll it a few seconds until it
      stabilizes before deciding (UNKNOWN → BEHIND/CLEAN/BLOCKED).
 3. A dep bump breaking tests/config (e.g. a major with changed exports): consult **Context7**
