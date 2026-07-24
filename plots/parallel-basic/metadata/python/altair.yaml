@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:13:47Z'
-updated: '2026-07-24T10:49:49Z'
+updated: '2026-07-24T11:01:06Z'
 generated_by: claude-sonnet
 workflow_run: 30087011982
 issue: 820
@@ -12,53 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Correct Imprint palette order (green/lavender/blue = positions 1-3) applied consistently,
-    identical hex values across light and dark renders
+  - 'All four attempt-1 weaknesses substantively addressed: title now includes the
+    python language segment (SC-04); base line opacity dropped 0.60->0.40 (highlighted)
+    / 0.08->0.06 (dimmed) to reduce overplotting; dimensions expanded from 4 to 6
+    via two well-chosen derived features (Petal Area, Sepal Aspect Ratio); legend
+    border softened with cornerRadius=4 and thinner strokeWidth=0.5'
+  - Correct Imprint palette order (green/lavender/blue = positions 1-3), identical
+    hex values across light and dark renders
   - Theme-adaptive chrome fully threaded through background, axes, grid, title, and
-    legend - both renders pass the light/dark legibility check with no dark-on-dark
-    or light-on-light issues
-  - 'Genuine altair-native interactivity: selection_point bound to the legend lets
-    users click a species to highlight/dim it, plus tooltips retain original (denormalized)
-    measurement values - a real distinctive feature, not faked'
-  - Subtitle explicitly narrates the key insight (Setosa separates on petal traits,
-    Versicolor/Virginica overlap on sepal traits), giving the chart a clear focal
-    point
-  - Values are min-max normalized to 0-1 per axis for fair cross-dimension comparison,
-    exactly as the spec notes recommend, while tooltips still expose the original
-    units
-  - Reproducible (fixed np.random.seed), clean KISS top-level script with no unused
-    imports
+    legend - both renders pass the light/dark legibility check, no edge clipping on
+    either render
+  - 'Genuine altair-native interactivity: legend-bound selection_point to highlight/dim
+    a species, plus tooltips retaining original (denormalized) measurement values
+    for all 6 dimensions'
+  - Reproducible (fixed seed), clean KISS top-level script, no unused imports
   weaknesses:
-  - Title omits the required language segment - currently 'parallel-basic · altair
-    · anyplot.ai', should be 'parallel-basic · python · altair · anyplot.ai' per SC-04
-  - With ~150 overlapping lines drawn at a fixed opacity=0.60, dense clusters (e.g.
-    the Virginica band near the top of Sepal Length/Petal Length) merge into solid
-    color blobs that obscure individual line paths - lower the base opacity (e.g.
-    ~0.35-0.45) to better combat overplotting per the data-density heuristic
-  - Only 4 dimensions are used, the low end of the spec's recommended 4-10 range -
-    adding 1-2 derived dimensions (e.g. petal area, sepal aspect ratio) would better
-    showcase the multivariate strength of a parallel-coordinates plot
-  - Legend box border (strokeColor=INK_SOFT) is fairly prominent for an otherwise
-    minimal-chrome design - a softer/thinner border or removing it would refine the
-    look further
+  - Overplotting is improved but still present in the densest crossing regions (e.g.
+    the Virginica band near the top of Sepal Length / Petal Length) - with ~150 lines
+    at opacity 0.40, individual paths still blur into solid bands; consider pushing
+    base opacity a bit lower still (~0.25-0.30)
+  - Composition remains fairly standard for a vega-lite line chart - DE-01 stays capped
+    without an extra distinctive touch (e.g. per-axis background shading, a highlighted
+    mean/median reference line, or curve interpolation)
+  - 6 dimensions sit in the lower-middle of the spec's recommended 4-10 range; 1-2
+    more would lean further into showcasing high-dimensional comparison
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white cream, matches #FAF8F1 - not pure white.
-      Chrome: Bold dark title "parallel-basic · altair · anyplot.ai" centered at top, gray subtitle below it ("Setosa separates cleanly on petal traits, while Versicolor and Virginica overlap on sepal traits"). Y-axis titled "Normalized Value" (0.0-1.0) in bold dark text with dark tick labels. X-axis shows 4 dimension labels (Sepal Length (cm), Sepal Width (cm), Petal Length (cm), Petal Width (cm)) in dark text, evenly spaced. Legend box top-right titled "Species" with three swatches/labels. Subtle horizontal gridlines at 0.2 increments.
-      Data: ~150 semi-transparent lines in three colors - green (Setosa, #009E73), lavender (Versicolor, #C475FD), blue (Virginica, #4467A3) - connecting the 4 vertical axes in the classic parallel-coordinates pattern. Green lines drop sharply and cluster near 0 at Petal Length/Petal Width, visually confirming the subtitle's claim of clean separation on petal traits, while purple and blue overlap heavily on the sepal axes.
-      Legibility verdict: PASS - all title, subtitle, axis, tick, and legend text is clearly readable against the light background; no light-on-light text found.
+      Background: Warm off-white (#FAF8F1), matches spec target
+      Chrome: Bold dark title "parallel-basic · python · altair · anyplot.ai" (language segment now present, fixing attempt-1 gap) with gray insight subtitle; Y-axis titled "Normalized Value"; X-axis shows 6 angled (-20deg) dimension labels; Species legend top-right in a rounded, thin-bordered box. All readable, no clipping at any edge (verified via crops of title, legend, both bottom corners).
+      Data: ~150 lines in green (#009E73, Setosa), lavender (#C475FD, Versicolor), blue (#4467A3, Virginica) connecting 6 axes; first series confirmed as brand green
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black.
-      Chrome: Same layout as light - title and axis titles rendered in near-white, tick labels and subtitle in light gray, legend box has a dark elevated fill with light-gray border and light text. Gridlines are faint but visible.
-      Data: Same three hex colors as the light render (green #009E73, lavender #C475FD, blue #4467A3) - confirmed identical data colors, only chrome (background/text/grid/legend) flips between themes. Same separation pattern is visible (green clusters low on petal axes).
-      Legibility verdict: PASS - all title, subtitle, axis, tick, and legend text is clearly readable against the near-black background; no dark-on-dark failures observed; brand green remains vivid on the dark surface.
+      Background: Warm near-black (#1A1A17), matches spec target
+      Chrome: Title/axis titles near-white, tick labels/subtitle light gray, legend uses dark elevated fill with light text/border - only chrome flipped from light render
+      Data: Identical hex values to light render (#009E73/#C475FD/#4467A3) - confirmed unchanged across theme
+      Legibility verdict: PASS - no dark-on-dark failures, brand green vivid on both surfaces
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -66,97 +61,99 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All fonts explicitly sized (title 24px, axis titles 17px, ticks 14-15px,
-          legend 15-17px), readable in both themes; slightly small for legend/subtitle
-          at mobile scale
+        comment: All text readable in both themes, explicit font sizes
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Angled -20deg dimension labels give clean spacing across 6 axes,
+          no collisions
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: No text collisions; dense line crossings are inherent to parallel
-          coordinates and not a text/data collision issue
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: true
-        comment: Fixed opacity=0.60 on ~150 overlapping lines lets dense clusters
-          merge into solid blobs; lower alpha would better fit the data-density heuristic
+        comment: Opacity reduced 0.60->0.40 improves density handling but densest
+          bands still blur
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 3 CVD-safe Imprint hues, no red-green-only signal
+        comment: 3-series Imprint palette, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped, canvas padded correctly to 3200x1800
+        comment: Canvas gate passed, no overflow, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (cm), clear Y-axis title
+        comment: Descriptive dimension labels with units, clear Y-axis title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, canonical Imprint order for the 3 species,
-          correct theme backgrounds in both renders'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Custom Imprint palette, theme-adaptive chrome, styled legend swatches
-          - solid polish but fairly standard parallel-coordinates composition
+        passed: true
+        comment: Custom palette and theme chrome but still a fairly standard composition
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Subtle grid (10% opacity), no view border (strokeWidth=0), but legend
-          box border is fairly prominent for the minimal-chrome aesthetic
+        passed: true
+        comment: Legend border softened (cornerRadius=4, strokeWidth=0.5) per attempt-1
+          feedback
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Subtitle explicitly narrates the key insight and the green cluster's
-          petal-trait separation is a clear, well-supported focal point
+        passed: true
+        comment: Subtitle narrates the insight; 2 new derived dimensions add multivariate
+          depth
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: Correct parallel coordinates plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Normalization, category color coding, alpha transparency for overlap
-          - all spec notes addressed
+        passed: true
+        comment: Normalization, category color coding, alpha for overlap all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Dimension axis and normalized value correctly mapped, all 4 axes
-          show full data range
+        passed: true
+        comment: Dimensions on X, normalized value on Y, all data shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        comment: Legend labels correct, but title omits the required language segment
-          ('python') - should read 'parallel-basic · python · altair · anyplot.ai'
+        passed: true
+        comment: Title now includes python language segment; legend labels match Species
+          values
     data_quality:
       score: 14
       max: 15
@@ -165,19 +162,20 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Covers normalization, category coloring, tooltips with original values,
-          legend interactivity; 4 dimensions is the low end of the recommended 4-10
-          range
+        passed: true
+        comment: 6 dimensions used (up from 4), mid-range of spec's 4-10 recommendation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Classic iris-style flower measurements, plausible and neutral
+        passed: true
+        comment: Plausible Iris-like measurements, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Sensible cm-scale values for sepal/petal measurements per species
+        passed: true
+        comment: Realistic value ranges per species
     code_quality:
       score: 10
       max: 10
@@ -186,28 +184,32 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: No functions/classes, flat top-level script
+        passed: true
+        comment: No functions/classes, top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only altair, numpy, pandas, PIL.Image - all used
+        passed: true
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Real altair selection interactivity, no fake UI
+        passed: true
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-{THEME}.png and .html via current altair 6 API (alt.Title,
-          selection_point)
+        passed: true
+        comment: Saves plot-{THEME}.png and .html, current vl-convert API
     library_mastery:
       score: 8
       max: 10
@@ -216,15 +218,16 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Idiomatic Chart().mark_line().encode() with detail= for per-observation
-          lines, alt.Scale/alt.Legend configuration
+        passed: true
+        comment: Long-format melt + detail encoding is the idiomatic altair parallel-coordinates
+          pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: Legend-bound selection_point for click-to-highlight is a genuinely
-          distinctive altair feature (not visible in static PNG but a real HTML-detail
-          strength)
+        passed: true
+        comment: Legend-bound selection_point interactivity, rich tooltips with denormalized
+          values
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -235,9 +238,7 @@ impl_tags:
   patterns:
   - data-generation
   - wide-to-long
-  - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - alpha-blending
-  - publication-ready
