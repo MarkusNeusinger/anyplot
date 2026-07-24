@@ -1,17 +1,22 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-24
 """
 
 import os
+import sys
 import time
 from pathlib import Path
+
+
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _script_dir]
 
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.models import ColumnDataSource, HoverTool, Span
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -107,21 +112,37 @@ p = figure(
     min_border_right=50,
 )
 
-# Plot parallel coordinates - one polyline per observation, colored by species
+# Plot parallel coordinates - one polyline per observation, colored by species.
+# line_alpha=0.4 (down from 0.5) eases the densest crossover region (Sepal Width)
+# while still preserving the crossing pattern. muted_alpha lets a legend click
+# isolate a single species - a bokeh-distinctive touch beyond the plain HoverTool.
 renderer = p.multi_line(
-    xs="xs", ys="ys", source=source, line_color="color", line_alpha=0.5, line_width=2.5, legend_field="species"
+    xs="xs",
+    ys="ys",
+    source=source,
+    line_color="color",
+    line_alpha=0.4,
+    line_width=2.5,
+    legend_field="species",
+    muted_alpha=0.05,
 )
 
 # Hover shows which species a given line belongs to - bokeh's signature interactive feature
 hover = HoverTool(renderers=[renderer], tooltips=[("Species", "@species")], line_policy="nearest")
 p.add_tools(hover)
 
+# Vertical axis line per dimension - bolder than the shared 0.15-alpha grid so
+# each of the four parallel-coordinate axes reads as a distinct anchor line.
+for x in x_coords:
+    p.add_layout(Span(location=x, dimension="height", line_color=INK_SOFT, line_width=2, line_alpha=0.6))
+
+p.legend.click_policy = "mute"
 p.legend.title = "Species"
 p.legend.location = "top_right"
 p.legend.label_text_font_size = "30pt"
 p.legend.title_text_font_size = "32pt"
 p.legend.background_fill_color = ELEVATED_BG
-p.legend.border_line_color = INK_SOFT
+p.legend.border_line_color = None
 p.legend.label_text_color = INK_SOFT
 p.legend.title_text_color = INK
 
@@ -135,12 +156,20 @@ axis_labels = [
 p.xaxis.ticker = x_coords
 p.xaxis.major_label_overrides = dict(enumerate(axis_labels))
 
-# Text sizes for 3200x1800 px canvas
+# Text sizes and typography for 3200x1800 px canvas - helvetica throughout for
+# a deliberate, publication-grade look rather than bokeh's default font stack
+p.title.text_font = "helvetica"
 p.title.text_font_size = "50pt"
+p.xaxis.axis_label_text_font = "helvetica"
+p.yaxis.axis_label_text_font = "helvetica"
 p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font = "helvetica"
+p.yaxis.major_label_text_font = "helvetica"
 p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_font_size = "34pt"
+p.legend.label_text_font = "helvetica"
+p.legend.title_text_font = "helvetica"
 
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
