@@ -1,7 +1,7 @@
 """ anyplot.ai
 radar-basic: Basic Radar Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-04-29
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-07-24
 """
 
 import importlib
@@ -27,6 +27,12 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+
+# Square canonical inner view (see prompts/library/altair.md "Canvas"). Width and
+# height differ (unlike the data domain, which is symmetric), so the x domain is
+# widened by the same ratio to keep the polar grid circular instead of elliptical.
+VIEW_W, VIEW_H = 500, 460
+TARGET_W, TARGET_H = 2400, 2400
 
 categories = ["Communication", "Technical Skills", "Teamwork", "Problem Solving", "Leadership", "Creativity"]
 n = len(categories)
@@ -105,31 +111,25 @@ for name, vals in [("Alice", alice_vals), ("Bob", bob_vals)]:
         pts_rows.append({"Employee": name, "x": x, "y": y, "value": v, "category": cat})
 df_pts = pd.DataFrame(pts_rows)
 
-
-# GeoJSON polygon helper
-def make_geo(x_c, y_c):
-    return {
-        "type": "Feature",
-        "geometry": {"type": "Polygon", "coordinates": [list(zip(x_c, y_c, strict=True))]},
-        "properties": {},
-    }
-
-
-alice_x_c, alice_y_c = to_xy_closed(alice_vals)
-bob_x_c, bob_y_c = to_xy_closed(bob_vals)
-
 # Click-based interactive selection: click a vertex point to highlight its series
 selection = alt.selection_point(fields=["Employee"])
 
 color_scale = alt.Scale(domain=["Alice", "Bob"], range=[IMPRINT[0], IMPRINT[1]])
+
+# y domain is shifted +0.10 (not centered on 0) to tighten the margin below the
+# lowest label and ease the margin above the highest one — the title sits above
+# the view (not mirrored below it), so a symmetric domain left more empty
+# canvas below the grid than above it once the PNG was padded to a square.
+domain_y = [-1.35, 1.55]
+domain_x = [-1.45 * VIEW_W / VIEW_H, 1.45 * VIEW_W / VIEW_H]
 
 # Static grid rings
 grid_lines = (
     alt.Chart(df_grid)
     .mark_line(strokeWidth=1.5, color=INK_SOFT, opacity=0.3)
     .encode(
-        x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-1.45, 1.45])),
-        y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-1.45, 1.45])),
+        x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=domain_x)),
+        y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=domain_y)),
         detail="level:N",
         order="order:O",
     )
@@ -142,17 +142,23 @@ spokes = (
     .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), detail="cat:N", order="ord:O")
 )
 
-# Static filled polygons (semi-transparent, one geoshape per series)
+# Filled polygons — mark_line with interpolate="linear-closed" draws a closed fill
+# from the same df_series_line data and quantitative x/y scale as the outline layer
+# below, so fill and outline are always coordinate-identical (a prior mark_geoshape +
+# identity-projection approach fit its own bounding box independently of the shared
+# scale, causing the fill to render oversized relative to the outline). fill/fillOpacity
+# are static mark properties (not data-driven encodings) so they cannot collide with
+# the Employee color legend defined on the series_lines layer below.
 alice_fill = (
-    alt.Chart(alt.Data(values=[make_geo(alice_x_c, alice_y_c)]))
-    .mark_geoshape(fill=IMPRINT[0], fillOpacity=0.18, stroke="none")
-    .project(type="identity", reflectY=True)
+    alt.Chart(df_series_line[df_series_line["Employee"] == "Alice"])
+    .mark_line(interpolate="linear-closed", fill=IMPRINT[0], fillOpacity=0.25, stroke=None)
+    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), order="order:O")
 )
 
 bob_fill = (
-    alt.Chart(alt.Data(values=[make_geo(bob_x_c, bob_y_c)]))
-    .mark_geoshape(fill=IMPRINT[1], fillOpacity=0.18, stroke="none")
-    .project(type="identity", reflectY=True)
+    alt.Chart(df_series_line[df_series_line["Employee"] == "Bob"])
+    .mark_line(interpolate="linear-closed", fill=IMPRINT[1], fillOpacity=0.25, stroke=None)
+    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), order="order:O")
 )
 
 # Interactive polygon outlines — click a series to highlight it (dims the other)
@@ -172,6 +178,7 @@ series_lines = (
                 labelFontSize=20,
                 symbolSize=300,
                 symbolStrokeWidth=4,
+                symbolOpacity=1.0,
                 orient="top-right",
                 offset=10,
             ),
@@ -203,24 +210,26 @@ points = (
 # Outer axis category labels
 axis_labels = (
     alt.Chart(df_labels)
-    .mark_text(fontSize=20, fontWeight="bold")
+    .mark_text(fontSize=23, fontWeight="bold")
     .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="label:N", color=alt.value(INK))
 )
 
 # Grid ring value annotations (20, 40, 60, 80, 100) along the top spoke
 ring_labels = (
     alt.Chart(df_ring_labels)
-    .mark_text(fontSize=15, align="left")
+    .mark_text(fontSize=19, align="left")
     .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="label:N", color=alt.value(INK_MUTED))
 )
 
 chart = (
     alt.layer(grid_lines, spokes, alice_fill, bob_fill, series_lines, points, axis_labels, ring_labels)
     .properties(
-        width=1200,
-        height=1200,
+        width=VIEW_W,
+        height=VIEW_H,
         background=PAGE_BG,
-        title=alt.Title(text="radar-basic · altair · anyplot.ai", fontSize=32, color=INK, fontWeight="bold", offset=24),
+        title=alt.Title(
+            text="radar-basic · python · altair · anyplot.ai", fontSize=29, color=INK, fontWeight="bold", offset=24
+        ),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_legend(
@@ -235,5 +244,22 @@ chart = (
     )
 )
 
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# PAD-only to the canonical (2400, 2400) target — never crop (see prompts/library/altair.md "Canvas").
+from PIL import Image
+
+
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TARGET_W or _h > TARGET_H:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TARGET_W}x{TARGET_H}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TARGET_W or _h < TARGET_H:
+    _canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+    _canvas.paste(_img, ((TARGET_W - _w) // 2, (TARGET_H - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
