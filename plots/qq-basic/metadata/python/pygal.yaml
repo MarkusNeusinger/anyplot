@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:13:02Z'
-updated: '2026-07-24T07:07:30Z'
+updated: '2026-07-24T07:13:58Z'
 generated_by: claude-sonnet
 workflow_run: 30073800587
 issue: 977
@@ -12,111 +12,100 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'First series uses brand green #009E73, the flagged slow-response outliers correctly
-    use the amber (#DDCC77) semantic anchor, and the reference line uses the theme-adaptive
-    ink/neutral token — all textbook use of the Imprint palette and its semantic anchors'
-  - All font sizes are explicitly set via the Style object (title/label/major_label/legend/value)
-    and remain legible at full size in both light and dark renders with no dark-on-dark
-    or light-on-light failures
-  - Realistic, neutral API-latency scenario with a genuine right-skewed tail (fast
-    core cluster + slow-request tail), which is exactly the kind of deviation a QQ
-    plot exists to reveal
-  - Fully reproducible (np.random.seed(42)), clean KISS top-to-bottom structure, correct
-    pygal.XY API usage with a thoughtful per-point color/tooltip override to call
-    out the outlier subset
-  - No overlapping elements, no edge clipping, good canvas utilization, and a legend
-    positioned close to the plot
+  - 'First series uses brand green #009E73, outliers use the amber #DDCC77 semantic
+    anchor, and the reference line uses the theme-adaptive ink/neutral token — textbook
+    Imprint palette usage with correct semantic anchors'
+  - Outlier points now have their own explicit legend entry ('Outlier (>2σ)') and
+    the reference line is labeled 'Reference (Normal Fit)', making both the deviation
+    story and the fitted-line convention self-explanatory in the static PNG
+  - Y-axis title shortened to 'Sample Quantiles (ms)', fixing the previous awkward
+    mid-parenthesis line wrap
+  - Grid restrained to y-axis guides only (show_x_guides=False), a deliberate visual-refinement
+    touch beyond the prior configured-default look
+  - All font sizes explicitly set via the Style object, legible at full size in both
+    light and dark renders with no dark-on-dark/light-on-light failures
+  - Realistic, neutral API-latency scenario with a genuine right-skewed tail — exactly
+    the deviation a QQ plot exists to reveal
+  - Fully reproducible (seed=42), clean KISS structure, correct pygal.XY API usage
+    with per-series color/tooltip separation for outliers
+  - No overlapping elements, no edge clipping, good canvas utilization, legend positioned
+    close to the plot
   weaknesses:
-  - The reference line is a fitted normal line (y = mean + std*x) rather than a literal
-    y=x diagonal, while the spec explicitly says 'The 45-degree reference line (y=x)
-    should be clearly visible'. The fitted-line approach is the statistically correct
-    convention when axes are in different units (z-score vs ms) and matches how scipy.stats.probplot
-    / statsmodels qqplot work, but a viewer following the spec's literal wording could
-    be confused — consider a code comment or title note making the y=mean+std*x convention
-    explicit, or standardize the sample axis to z-scores so a literal slope=1 line
-    applies.
-  - The amber-highlighted 'slow response outlier' points have no distinct legend entry
-    — a static PNG viewer (who cannot see the pygal tooltip) has no way to know what
-    the amber color means. Add a small annotation/callout or a third legend swatch
-    labeled something like 'Outlier (>2σ)' so the story reads without hovering.
-  - The y-axis title wraps awkwardly mid-parenthetical ('Sample Quantiles (Response'
-    / 'Time, ms)') — reflow or shorten the label so the line break doesn't split inside
-    the parenthesis.
-  - 'Design Excellence stays close to a well-configured library default (DE-02): the
-    grid renders on both axes at the pygal default look. Consider restraining to a
-    single-axis grid or nudging grid opacity down further, and add one more deliberate
-    refinement (e.g. a subtle emphasis on the flagged tail region) to push past ''good
-    default'' into genuinely polished territory.'
+  - Design Excellence, while improved, still reads as a well-executed configured default
+    rather than a fully publication-level composition — consider one more deliberate
+    flourish (e.g. a subtitle stating the fitted-line formula, or a subtle annotation
+    pointing at the outlier cluster) to push aesthetic sophistication further.
+  - Library Mastery is solid but generic to XY-style libraries generally; leaning
+    further into a pygal-only capability (e.g. per-point tooltip value formatting
+    via `value_formatter`, or `interpolate` styling) would raise distinctiveness.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "qq-basic · python · pygal · anyplot.ai" sits centered at the top in dark ink, comfortably within the canvas (~45-50% of plot width, well short of overflow). X-axis title "Theoretical Quantiles" and Y-axis title "Sample Quantiles (Response Time, ms)" (wrapped onto two lines) are both dark and clearly legible. Tick labels on both axes are dark and readable. A dashed grid is visible on both axes, subtle gray tone, not competing with the data. Legend sits at the bottom-left with two entries: a green swatch "API Response Time" and a gray swatch "Reference (Normal)".
-      Data: Sample points render as brand-green (#009E73) dots tracking closely to the thin ink-colored fitted reference line through the low-to-mid quantile range, curving visibly above the line in the upper tail. The uppermost ~5 points (the synthetic slow-response outliers) are colored amber (#DDCC77), clearly distinct from the green cluster, sitting furthest above the reference line — this is the intended right-skew signal a QQ plot is meant to surface.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Chrome: Title "qq-basic · python · pygal · anyplot.ai" centered at top in dark ink, fully visible with no clipping. Axis titles "Theoretical Quantiles" (x) and "Sample Quantiles (ms)" (y) are dark, single-line, and clearly legible. Tick labels on both axes are dark and readable. A subtle horizontal (y-axis only) gridline set runs across the plot. Legend sits bottom-left with three entries: green "API Response Time", amber "Outlier (>2σ)", and dark "Reference (Normal Fit)".
+      Data: First series (API Response Time) renders in brand green #009E73 tracking the ink-colored fitted reference line closely through the low-to-mid quantile range, curving above the line in the upper tail. The uppermost ~5 points are colored amber #DDCC77 (Outlier >2σ), clearly separated from the green cluster and furthest from the reference line — the intended right-skew signal is immediately visible.
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, both axis titles, and all tick labels render in light/off-white ink, clearly legible against the dark background. The dashed grid is a subtle light-gray tone, visible but unobtrusive. The reference line, which is dark ink on the light render, correctly flips to a light/off-white line here (theme-adaptive neutral token) so it stays visible on the dark background. Legend renders at the bottom-left with the same two entries, both legible.
-      Data: The green (#009E73) and amber (#DDCC77) data point colors are pixel-identical to the light render — only the chrome (background, text, grid, reference line) flipped. No dark-on-dark failures anywhere; every text element and every data point is clearly distinguishable from the near-black surface.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures. Data colors confirmed identical to the light render.
+      Chrome: Title, both axis titles, and all tick labels render in light/off-white ink, fully legible. The reference line correctly flips to a light/off-white tone (theme-adaptive neutral/ink token) so it stays visible against the dark surface. The y-axis gridlines are a subtle light-gray tone. Legend renders identically at bottom-left, fully legible.
+      Data: The green (#009E73) and amber (#DDCC77) data-point colors are pixel-identical to the light render — only the chrome (background, text, grid, reference line) flipped, per the theme-adaptive contract.
+      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark failures.
+
+    Both renders pass the theme-readability check (5c) and no AR-09 edge clipping was observed on either render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set via Style; readable in both themes;
-          minor deduction for the awkward mid-parenthesis line wrap on the y-axis
-          title
+        comment: All font sizes explicitly set via Style object; readable in both
+          themes; y-axis title shortened, no more awkward wrap
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: dots_size=13 with stroke=False for ~100 points is well-sized for
-          a medium-density scatter; outliers pop via color
+        comment: dots_size=13, stroke=False well-sized for ~100 points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/amber/neutral are distinguishable by both hue and lightness,
-          CVD-safe
+        comment: Good contrast, CVD-safe, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot area uses a healthy share of the canvas, legend
-          sits close to the plot, nothing cut off
+        comment: Plot fills the canvas well, balanced margins, legend near plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (ms) on the y-axis
+        comment: Both axes descriptive with units (ms)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, amber semantic anchor for outliers, ink/neutral
-          for reference line, theme-correct chrome and backgrounds in both renders'
+        comment: Brand green first series, amber semantic anchor for outliers, theme-adaptive
+          neutral reference line, theme-correct chrome in both renders
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -124,26 +113,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic palette use (brand green + amber outlier callout
-          + neutral reference line) clearly above library defaults, though not FiveThirtyEight-level
-          polish
+        comment: Thoughtful semantic palette use, clearly above library defaults,
+          not yet full publication-level polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid and colors are customized but the overall look still reads close
-          to a well-configured pygal default
+        comment: Grid now restrained to y-axis guides only, addressing prior feedback;
+          still room for one more refinement touch
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Amber outlier highlighting creates a clear visual focal point on
-          the right-skew tail, but the static PNG lacks a legend/annotation explaining
-          what amber means, so the story isn't fully self-contained
+        comment: Explicit 'Outlier (>2σ)' legend entry makes the right-skew story
+          self-explanatory in the static PNG
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -151,28 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QQ plot via pygal.XY scatter with a diagonal reference line
+        comment: Correct QQ scatter with reference line
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Reference line present and clearly visible, but it's a fitted mean+std*x
-          line rather than the literal y=x the spec text calls out (statistically
-          correct given mismatched axis units, but worth clarifying)
+        comment: Reference line now explicitly labeled 'Reference (Normal Fit)', clarifying
+          the fitted-line convention relative to spec's y=x wording
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = theoretical quantiles, Y = sample quantiles, all data visible
+        comment: Theoretical quantiles on x, sample quantiles on y, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels match the
-          two chart.add() series
+        comment: Title format correct; all three legend labels correct and descriptive
     data_quality:
       score: 14
       max: 15
@@ -182,23 +167,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Clearly shows right-skew/heavy-tail deviation; a single deviation
-          type is demonstrated rather than multiple distribution characteristics,
-          which is reasonable for a 'basic' QQ spec
+        comment: Clearly shows right-skew/heavy-tail deviation; single deviation type,
+          reasonable for a 'basic' spec
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: API response-time latency analysis is a real, neutral, comprehensible
-          scenario
+        comment: API response-time latency analysis, real and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150ms baseline with an exponential slow-tail is a plausible real-world
-          API latency distribution
+        comment: Values and proportions align with realistic API latency figures
     code_quality:
       score: 10
       max: 10
@@ -208,7 +190,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> quantiles -> chart -> save, no functions/classes
+        comment: Imports -> Data -> Plot -> Save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -220,22 +202,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, statistics.NormalDist, os, sys (sys used for the
-          documented path-shadowing guard) — all used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for a QQ plot, no fake functionality, comments
-          explain non-obvious choices
+        comment: Clean, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: render_to_png(f'plot-{THEME}.png') plus interactive HTML export,
-          current pygal API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 7
       max: 10
@@ -245,24 +224,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct pygal.XY + Style usage, though it stays close to standard
-          patterns
+        comment: Correct pygal.XY + Style usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-point dict-based color/tooltip override mixed with plain tuples
-          in a single series, plus native HTML tooltip export, is a genuinely pygal-specific
-          technique
-  verdict: REJECTED
+        comment: Multi-series XY split for outliers plus native HTML tooltip export
+          is pygal-specific, but usage remains fairly generic overall
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep:
   - quantile-calculation
-  styling: []
+  styling:
+  - publication-ready
+  - grid-styling
