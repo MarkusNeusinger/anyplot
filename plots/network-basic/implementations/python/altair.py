@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-07-24
@@ -122,6 +122,18 @@ for iteration in range(150):
         if disp_norm > 0:
             positions[i] += (displacement[i] / disp_norm) * min(disp_norm, 0.1 * cooling)
 
+# Rotate positions so the network's principal axis aligns with the wide (x)
+# canvas dimension. The spring layout otherwise tends to settle into a
+# diagonal band, which — even after per-axis normalization — leaves large
+# empty triangular regions in two corners of the landscape canvas.
+centered = positions - positions.mean(axis=0)
+cov = np.cov(centered.T)
+eigvals, eigvecs = np.linalg.eigh(cov)
+principal = eigvecs[:, np.argmax(eigvals)]
+angle = np.arctan2(principal[1], principal[0])
+rotation = np.array([[np.cos(-angle), -np.sin(-angle)], [np.sin(-angle), np.cos(-angle)]])
+positions = centered @ rotation.T
+
 # Normalize positions to [0.1, 0.9] range
 pos_min = positions.min(axis=0)
 pos_max = positions.max(axis=0)
@@ -134,9 +146,45 @@ for src, tgt in edges:
     degrees[src] += 1
     degrees[tgt] += 1
 
-# Create nodes dataframe. label_y alternates the label's vertical offset by
-# node id parity so labels of adjacent, densely-packed nodes (e.g. the
-# Group D chain) don't collide with each other.
+# Anti-collision label layout: start each label just below its node, in
+# pixel space (the 620x320 view is much wider than tall, so a fixed offset
+# in data units isn't visually isotropic), then run a short repulsion pass
+# so labels that would otherwise collide (Jack/Leo, Noah/Olivia, the
+# Quinn/Ryan/Sara chain, ...) push apart from each other in both x and y
+# instead of overlapping. A spring-back pull toward each label's own base
+# offset (plus a hard clamp on drift distance) keeps every label anchored
+# close to its own node, so it never reads as ambiguous or lands on top of
+# a neighboring marker.
+coords = np.array([pos[node["id"]] for node in nodes])
+VIEW_W, VIEW_H, DOMAIN_SPAN = 620, 320, 1.1
+px_per_x, px_per_y = VIEW_W / DOMAIN_SPAN, VIEW_H / DOMAIN_SPAN
+node_px = coords * np.array([px_per_x, px_per_y])
+base_px_offset = np.tile(np.array([0.0, -24.0]), (n, 1))
+label_px_offset = base_px_offset.copy()
+min_label_dist_px = 62.0
+max_drift_px = 46.0
+for _ in range(60):
+    label_px = node_px + label_px_offset
+    disp = np.zeros((n, 2))
+    for i in range(n):
+        for j in range(i + 1, n):
+            diff = label_px[i] - label_px[j]
+            dist = max(np.linalg.norm(diff), 0.5)
+            if dist < min_label_dist_px:
+                push = (min_label_dist_px - dist) * 0.5 * (diff / dist)
+                disp[i] += push
+                disp[j] -= push
+    label_px_offset += disp
+    label_px_offset += (base_px_offset - label_px_offset) * 0.05
+    drift_norm = np.linalg.norm(label_px_offset, axis=1, keepdims=True)
+    too_far = drift_norm[:, 0] > max_drift_px
+    if too_far.any():
+        label_px_offset[too_far] = label_px_offset[too_far] / drift_norm[too_far] * max_drift_px
+label_offset = label_px_offset / np.array([px_per_x, px_per_y])
+label_dx = label_offset[:, 0]
+label_dy = label_offset[:, 1]
+
+# Create nodes dataframe. label_x/label_y carry the anti-collision offset.
 nodes_df = pd.DataFrame(
     [
         {
@@ -145,10 +193,11 @@ nodes_df = pd.DataFrame(
             "group": node["group"],
             "x": pos[node["id"]][0],
             "y": pos[node["id"]][1],
-            "label_y": pos[node["id"]][1] - (0.048 if node["id"] % 2 == 0 else 0.085),
+            "label_x": pos[node["id"]][0] + label_dx[i],
+            "label_y": pos[node["id"]][1] + label_dy[i],
             "degree": degrees[node["id"]],
         }
-        for node in nodes
+        for i, node in enumerate(nodes)
     ]
 )
 
@@ -188,11 +237,11 @@ nodes_chart = (
     )
 )
 
-# Draw node labels (label_y already carries the anti-collision offset)
+# Draw node labels (label_x/label_y already carry the anti-collision offset)
 labels_chart = (
     alt.Chart(nodes_df)
     .mark_text(fontSize=16, fontWeight="bold", color=INK)
-    .encode(x=alt.X("x:Q"), y=alt.Y("label_y:Q"), text="label:N")
+    .encode(x=alt.X("label_x:Q"), y=alt.Y("label_y:Q"), text="label:N")
 )
 
 # Combine layers with theme-adaptive chrome
@@ -204,7 +253,7 @@ chart = (
         background=PAGE_BG,
         title=alt.Title("network-basic · python · altair · anyplot.ai", fontSize=16),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, continuousWidth=620, continuousHeight=320)
+    .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=620, continuousHeight=320)
     .configure_title(color=INK)
     .configure_legend(
         fillColor=ELEVATED_BG,
