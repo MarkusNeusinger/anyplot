@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
 Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 86/100 | Updated: 2026-04-27
+Quality: 86/100 | Updated: 2026-07-24
 """
 
 import os
@@ -10,12 +10,14 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     element_blank,
     element_line,
     element_rect,
     element_text,
     geom_line,
     geom_point,
+    geom_vline,
     ggplot,
     labs,
     scale_color_manual,
@@ -66,15 +68,26 @@ df_long = pd.melt(df_norm, id_vars=["id", "species"], value_vars=dimensions, var
 dim_map = {dim: i for i, dim in enumerate(dimensions)}
 df_long["dim_num"] = df_long["dimension"].map(dim_map)
 
-# Okabe-Ito colors — first series always #009E73
+# Imprint palette colors — first series always #009E73
 species_order = ["Setosa", "Versicolor", "Virginica"]
 colors = {sp: IMPRINT[i] for i, sp in enumerate(species_order)}
 
 # Plot
 plot = (
     ggplot(df_long, aes(x="dim_num", y="value", group="id", color="species"))
-    + geom_line(alpha=0.35, size=0.8)
+    + geom_vline(xintercept=list(range(len(dimensions))), color=INK_SOFT, size=0.5, alpha=0.4)
+    + geom_line(alpha=0.35, size=1.0)
     + geom_point(size=2.5, alpha=0.55)
+    + annotate(
+        "text",
+        x=2.5,
+        y=0.32,
+        label="Setosa separates cleanly on petal dimensions",
+        color=IMPRINT[0],
+        size=7,
+        ha="center",
+        fontstyle="italic",
+    )
     + scale_color_manual(values=colors, breaks=species_order)
     + scale_x_continuous(
         breaks=list(range(len(dimensions))),
@@ -85,21 +98,22 @@ plot = (
     )
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_blank(),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_blank(),
-        axis_title=element_text(color=INK, size=20),
-        axis_text=element_text(color=INK_SOFT, size=16),
-        axis_text_x=element_text(size=14),
-        plot_title=element_text(color=INK, size=24),
+        axis_title=element_text(color=INK, size=10),
+        axis_text=element_text(color=INK_SOFT, size=8),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
+        plot_title=element_text(color=INK, size=12),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(color=INK_SOFT, size=16),
-        legend_title=element_text(color=INK, size=18),
-        text=element_text(size=14),
+        legend_text=element_text(color=INK_SOFT, size=8),
+        legend_title=element_text(color=INK, size=9),
+        text=element_text(size=8),
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
