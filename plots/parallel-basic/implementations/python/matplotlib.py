@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
-Library: matplotlib 3.11.1 | Python 3.13.12
-Quality: 72/100 | Updated: 2026-07-24
+Library: matplotlib 3.11.0 | Python 3.13.14
+Quality: 80/100 | Updated: 2026-07-24
 """
 
 import os
