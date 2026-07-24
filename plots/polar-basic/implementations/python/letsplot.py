@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 polar-basic: Basic Polar Chart
-Library: letsplot 4.11.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-04-30
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 82/100 | Updated: 2026-07-24
 """
 
 import math
