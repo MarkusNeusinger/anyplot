@@ -2,49 +2,66 @@ library: letsplot
 language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:17:36Z'
-updated: '2026-04-29T22:55:22Z'
+updated: '2026-07-24T18:30:55Z'
 generated_by: claude-sonnet
-workflow_run: 25137393212
+workflow_run: 30116120627
 issue: 1014
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/letsplot/plot-dark.html
-quality_score: 82
+quality_score: 88
 review:
   strengths:
-  - 'Proper theme-adaptive chrome: all six colour tokens correctly applied, readable
-    in both themes'
-  - Font sizes explicitly set at all hierarchy levels (24/20/16 pt)
-  - Very subtle grid (size=0.15, minor grid removed) and clean theme_minimal base
-  - Rotation vector field choice clearly communicates the quiver concept; magnitude
-    colour encoding adds informative dimension
-  - Full dual-format output (PNG + HTML) correct for letsplot
+  - 'Arrow-overlap fix verified: scale_factor=0.08 keeps the longest scaled arrow
+    (~0.34 units at the outer ring, magnitude ~4.24) under the ~0.43-unit grid spacing,
+    so shafts/heads stay visually separated as the spec requires — the prior review''s
+    VQ-02/SC-02 weakness is resolved'
+  - 'Correct Imprint sequential colormap (#009E73 -> #4467A3) mapped to vector magnitude
+    via scale_color_gradient, matching imprint_seq for single-polarity continuous
+    data, identical across both themes'
+  - Theme-adaptive chrome fully threaded through (background, ink, ink_soft, legend
+    box) - both renders pass the legibility check, no dark-on-dark or light-on-light
+    failures
+  - 'Code cleanup verified: dead np.random.seed(42) removed and the redundant normalize-then-rescale
+    formula simplified to a direct U*scale_factor / V*scale_factor multiply, with
+    an explanatory comment on the spacing math'
+  - New layer_tooltips() with custom .line() content (Position, u/v components, magnitude)
+    is a genuine lets-plot-specific interactive feature addressing the prior review's
+    Library Mastery weakness
+  - Arrow length correctly proportional to vector magnitude and direction correctly
+    represents the u=-y, v=x rotation field; canvas is exactly 3200x1800 with both
+    plot-{theme}.png and plot-{theme}.html saved
   weaknesses:
-  - 'VQ-07: scale_color_gradient(low="#306998") uses Python Blue which is explicitly
-    non-compliant — replace with scale_color_viridis(name="Magnitude")'
-  - 'SC-04: Title includes non-standard prefix "Rotation Vector Field · " — change
-    to "quiver-basic · letsplot · anyplot.ai"'
-  - 'VQ-01 minor: legend_text size=14pt is below the 16pt minimum — raise to size=16'
+  - Arrows near the origin (magnitude close to 0) remain very small, close to single
+    points, which slightly hurts element visibility there — this is an inherent property
+    of the rotation field rather than a styling bug, but a slightly larger minimum
+    arrow length or a subtle size floor could improve legibility at the center.
+  - 'Design Excellence is unchanged from the prior attempt: composition is still a
+    standard quiver layout elevated mainly by the magnitude color gradient. A stronger
+    focal point (e.g. annotating the calm center vs. fast outer ring, or a title subtitle
+    framing the story) would raise DE-01/DE-03 further.'
+  - 'Library Mastery: geom_segment + arrow() remains the standard lets-plot workaround
+    since there''s no native quiver geom (idiomatic but not distinctive on its own);
+    the new tooltip content helps, but further leaning into interactivity (e.g. distinct
+    tooltip formatting per magnitude tier) could push LM-02 higher.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "quiver-basic · letsplot · anyplot.ai" (or full prefix version) in dark ink at top left; axis labels "X Position (m)" / "Y Position (m)" in dark text with units; tick labels in INK_SOFT (dark grey) — all clearly readable against light background
-      Data: 225 arrows on 15x15 grid, colour-coded from dark blue (#306998, low magnitude at centre) through cyan/green to bright yellow (#FFD43B, high magnitude at corners); circular rotation pattern clearly visible; arrow line width=1.2 adequate; first series uses #306998 (not #009E73 — VQ-07 violation for continuous data palette)
-      Grid: Extremely subtle (size=0.15), major only — appropriate
-      Legibility verdict: PASS (all text dark-on-light, no readability failures)
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "quiver-basic · python · letsplot · anyplot.ai" in dark ink top-left, fully visible and not clipped at any edge. Axis titles "X Position (m)" / "Y Position (m)" in dark ink, appropriately sized. Tick labels (-4..4 on both axes) in a softer gray-brown, balanced between X and Y axes. Subtle horizontal/vertical gridlines, not dominant. Legend "Magnitude" at right with a boxed, lightly-bordered elevated-background swatch, gradient bar with tick labels 0-4, fully readable and positioned near the plot (not isolated).
+      Data: 15x15 grid of arrows over x,y in [-3,3] forming a counterclockwise circular/rotational flow pattern (u=-y, v=x). Arrows are colored on a continuous sequential scale from brand green (#009E73, near-zero magnitude at the center) to blue (#4467A3, highest magnitude at the outer ring). Outer-ring arrows are now visibly separated (shaft/head no longer merge into neighbors) after the scale_factor reduction to 0.08; near-center arrows are tiny, correctly reflecting near-zero magnitude there.
+      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Dark near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and all labels flip to light cream/off-white tones (INK token = #F0EFE8 in dark theme); tick labels in B8B7B0 — all legible against the dark surface; no dark-on-dark failures detected
-      Data: Arrow colours are identical to light render — same blue (#306998) to yellow (#FFD43B) gradient unchanged, confirming only chrome flips between themes
-      Grid: Faintly visible on dark background, appropriately subtle
-      Legibility verdict: PASS (no dark-on-dark failures; both title and axis labels are light-on-dark and readable)
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, axis titles, tick labels, and legend now rendered in light ink / off-white and soft gray tones, all clearly legible against the dark background. No dark-on-dark failures observed anywhere - text does not blend into the background.
+      Data: Arrow colors are identical to the light render (same green-to-blue sequential gradient) - confirms only chrome flipped between themes, not data colors. Grid lines remain subtle but visible. Outer-ring arrow separation matches the light render.
+      Legibility verdict: PASS - all text is clearly readable against the dark background, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -52,74 +69,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt all explicitly set; legend_text
-          14pt is 2pt below 16pt minimum
+        comment: Explicit font sizes throughout theme(); all text readable in both
+          themes and at reduced scale; title fits without overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No tick, label, or title collisions
+        comment: scale_factor reduced to 0.08 keeps the longest scaled arrow (~0.34)
+          under the grid spacing (~0.43) - outer-ring shafts/heads no longer merge,
+          resolving the prior review's overlap weakness
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Outer arrows well-sized; centre arrows are tiny by physical necessity
-          (near-zero magnitude) but still visible
+        comment: Arrows and color-coding clearly distinguishable; near-origin arrows
+          are very small, correctly reflecting near-zero magnitude there but slightly
+          hurting visibility at the center
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Gradient has adequate luminance variation; no red-green sole encoding
+        comment: Sequential green-to-blue Imprint gradient, CVD-safe, not red-green
+          sole encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas with balanced margins; legend adjacent
-          to data
+        comment: Canvas exactly 3200x1800, balanced margins, no clipping/overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X Position (m) and Y Position (m) with units
+        comment: Descriptive axis labels with units (m)
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: scale_color_gradient(low='#306998') uses Python Blue which is explicitly
-          listed as non-compliant in VQ-07; continuous data must use viridis/cividis/BrBG
+        passed: true
+        comment: 'imprint_seq (#009E73 -> #4467A3) used correctly for single-polarity
+          magnitude; theme-correct backgrounds and chrome in both renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Professionally rendered; visually interesting colour gradient; theme
-          tokens correctly applied; calibrated as well-configured library default
+        comment: Continuous magnitude-color mapping adds polish beyond a flat single-color
+          quiver; composition otherwise standard
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal base + very thin major grid (0.15) + minor grid removed
-          + elevated legend background
+        comment: L-shaped axis lines, subtle theme-adaptive grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Circular rotation field immediately communicates pattern; colour
-          magnitude encoding adds second insight dimension
+        comment: Color gradient creates a clear focal contrast between calm center
+          and fast outer ring, guiding the eye through the flow field
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,53 +146,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: geom_segment + arrow() is correct quiver implementation in letsplot
+        comment: Correct quiver/vector-field representation via geom_segment + arrow()
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid positions, direction, magnitude-proportional length, colour
-          encoding, rotation field all present
+        comment: Direction, magnitude-scaled length, magnitude color, and now sufficient
+          arrow spacing to prevent overlap - all spec notes honored
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y positions correct; u=-y, v=x field correct; xend/yend correctly
-          derived
+        comment: x/y grid positions and vector endpoints correctly mapped, axes show
+          the full field
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has non-standard prefix 'Rotation Vector Field · ' before spec-id;
-          required format is 'quiver-basic · letsplot · anyplot.ai'
+        passed: true
+        comment: Title matches mandated format exactly; legend labeled 'Magnitude'
+          with correct numeric scale
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Grid positions, direction variation, magnitude range near-zero to
-          maximum, 225-arrow density all shown
+        comment: Shows direction, magnitude-proportional length, and magnitude via
+          color - full feature set from the spec
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Circular rotation field with physical units (m) represents realistic
-          fluid vortex; plausible, domain-neutral
+        comment: Classic rotation vector field (u=-y, v=x), physically plausible and
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coordinate range +-3m with scale_factor=0.25 produces appropriate
-          arrow spacing
+        comment: Coordinate range and magnitude values are sensible for a generic
+          flow-field example
     code_quality:
       score: 10
       max: 10
@@ -183,31 +202,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → tokens → data → theme → plot → save
+        comment: No functions/classes; U_scaled/V_scaled simplified to a direct scale_factor
+          multiply, removing the prior convoluted normalize-then-rescale formula
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Data is fully deterministic (meshgrid + closed-form vectors)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering
+        comment: Dead np.random.seed(42) call removed; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API
     library_mastery:
       score: 7
       max: 10
@@ -217,25 +237,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics pattern; arrow() with geom_segment, scale_color_gradient,
-          labs, ggsize, theme layering all idiomatic
+        comment: geom_segment + arrow() is the standard lets-plot idiom for vector
+          fields since there is no native quiver geom
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: arrow() endpoint geometry is letsplot/ggplot2-distinctive; dual PNG+HTML
-          export leverages letsplot interactive capability
+        comment: New layer_tooltips() with custom .line() content (Position, u/v,
+          Magnitude) is a genuine lets-plot-specific interactive feature, addressing
+          the prior review's generic-usage weakness
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - custom-colormap
   - grid-styling
