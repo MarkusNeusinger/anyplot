@@ -49,8 +49,14 @@ chart.setOption({
     indicator: indicators,
     name: { textStyle: { color: t.inkSoft, fontSize: 15 } },
     axisLine: { lineStyle: { color: t.grid } },
+    axisLabel: {
+      show: true,
+      color: t.inkSoft,
+      fontSize: 12,
+      formatter: (value) => (value === 0 ? "" : String(value)),
+    },
     splitLine: { lineStyle: { color: t.grid } },
-    splitArea: { show: false },
+    splitArea: { show: true, areaStyle: { color: [t.pageBg, t.elevatedBg] } },
   },
   series: [
     {
@@ -62,7 +68,16 @@ chart.setOption({
         symbolSize: 8,
         lineStyle: { color: t.palette[i], width: 3 },
         itemStyle: { color: t.palette[i] },
-        areaStyle: { color: t.palette[i], opacity: 0.25 },
+        areaStyle: {
+          color: t.palette[i],
+          opacity: 0.25,
+          shadowBlur: 14,
+          shadowColor: t.palette[i],
+        },
+        emphasis: {
+          lineStyle: { width: 5 },
+          areaStyle: { opacity: 0.45 },
+        },
       })),
     },
   ],
