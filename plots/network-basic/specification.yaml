@@ -6,7 +6,7 @@ title: Basic Network Graph
 
 # Specification tracking
 created: 2025-12-15T20:43:57Z
-updated: 2025-12-15T20:43:57Z
+updated: 2026-07-24T03:46:30Z
 issue: 989
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - network
-    - graph
   data_type:
     - network
     - relational
