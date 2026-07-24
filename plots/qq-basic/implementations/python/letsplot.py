@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qq-basic: Basic Q-Q Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-24
@@ -17,6 +17,7 @@ from lets_plot import (
     element_text,
     geom_qq,
     geom_qq_line,
+    geom_text,
     ggplot,
     ggsize,
     labs,
@@ -44,11 +45,24 @@ np.random.seed(42)
 pressure_psi = stats.t.rvs(df=3, size=150) * 4 + 100
 readings = pd.DataFrame({"pressure_psi": pressure_psi})
 
+# Callout anchored to the sample's own quantile range so it always lands in
+# the empty upper-left corner, calling out the story the data was built to tell
+n = len(pressure_psi)
+callout = pd.DataFrame(
+    {
+        "x": [stats.norm.ppf(0.5 / n)],
+        "y": [readings["pressure_psi"].max()],
+        "label": ["Heavy tails: points bow away\nfrom the reference line at both ends"],
+    }
+)
+
 # Plot - lets-plot's geom_qq/geom_qq_line compute theoretical quantiles and
-# the fitted reference line internally against the standard normal
+# the fitted reference line internally against the standard normal. The
+# reference line is dashed and muted so the sample points read as the primary
+# layer, with the fitted line as a secondary guide.
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_border=element_blank(),
     panel_grid_major=element_line(color=RULE, size=0.5),
     panel_grid_minor=element_blank(),
@@ -60,8 +74,11 @@ anyplot_theme = theme(
 
 plot = (
     ggplot(readings, aes(sample="pressure_psi"))
-    + geom_qq_line(color=INK_SOFT, size=1.2)
+    + geom_qq_line(color=INK_SOFT, size=1.0, linetype="dashed", alpha=0.8)
     + geom_qq(color=BRAND, size=2.5, alpha=0.75)
+    + geom_text(
+        aes(x="x", y="y", label="label"), data=callout, color=INK_SOFT, size=3.2, hjust=0, vjust=1, lineheight=1.2
+    )
     + labs(
         x="Theoretical Quantiles",
         y="Sample Quantiles (Pressure, psi)",
