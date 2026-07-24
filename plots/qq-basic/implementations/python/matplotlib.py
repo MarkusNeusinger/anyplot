@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qq-basic: Basic Q-Q Plot
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-24
@@ -50,8 +50,8 @@ ax.set_facecolor(PAGE_BG)
 # 95% confidence band — points outside reveal non-normality
 ax.fill_between(theoretical_q, ci_low, ci_high, color=BRAND, alpha=0.22, label="95% CI band", zorder=1)
 
-# Sample quantile scatter
-ax.scatter(theoretical_q, sample_q, s=100, alpha=0.75, color=BRAND, edgecolors=PAGE_BG, linewidths=0.8, zorder=3)
+# Sample quantile scatter — smaller markers keep the dense central cluster separable
+ax.scatter(theoretical_q, sample_q, s=70, alpha=0.75, color=BRAND, edgecolors=PAGE_BG, linewidths=0.8, zorder=3)
 
 # Reference line y = x
 ref_lo = min(theoretical_q.min(), sample_q.min())
@@ -66,6 +66,21 @@ ax.plot(
     zorder=2,
 )
 
+# Annotate the upper-tail deviation caused by the hypertensive cohort
+upper_mask = theoretical_q > 1.0
+dev_idx = np.argmax(np.abs(sample_q[upper_mask] - theoretical_q[upper_mask]))
+ann_x, ann_y = theoretical_q[upper_mask][dev_idx], sample_q[upper_mask][dev_idx]
+ax.annotate(
+    "Hypertensive cohort\ndeviates from normal",
+    xy=(ann_x, ann_y),
+    xytext=(-0.55, 2.5),
+    fontsize=7.5,
+    color=INK_SOFT,
+    ha="center",
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "linewidth": 0.8},
+    zorder=4,
+)
+
 # Style
 ax.set_xlabel("Theoretical Quantiles", fontsize=10, color=INK)
 ax.set_ylabel("Sample Quantiles", fontsize=10, color=INK)
@@ -76,7 +91,7 @@ ax.spines["right"].set_visible(False)
 for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
-ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax.xaxis.grid(True, alpha=0.06, linewidth=0.8, color=INK)
 
 leg = ax.legend(fontsize=8, loc="lower right")
 leg.get_frame().set_facecolor(ELEVATED_BG)
