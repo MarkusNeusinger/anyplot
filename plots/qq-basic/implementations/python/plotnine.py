@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 qq-basic: Basic Q-Q Plot
-Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 85/100 | Updated: 2026-07-24
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-07-24
 """
 
 import os
