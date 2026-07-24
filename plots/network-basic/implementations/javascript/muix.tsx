@@ -172,16 +172,40 @@ function NetworkEdges() {
 function NetworkNodes() {
   const xs2 = useXScale();
   const ys2 = useYScale();
+  const screenPos = LAYOUT.map((p) => ({ x: xs2(p.x), y: ys2(p.y) }));
   return (
     <g fontFamily={FONT}>
       {NODES.map((node, i) => {
-        const cx = xs2(LAYOUT[i].x);
-        const cy = ys2(LAYOUT[i].y);
+        const { x: cx, y: cy } = screenPos[i];
         const r = 6 + DEGREES[i] * 3;
+        // Place the label in the widest angular gap between this node's edges, so
+        // it never sits on top of a line (e.g. the Aisha-Ruby bridge edge).
+        const edgeAngles = [];
+        EDGES.forEach(([a, b]) => {
+          if (a === i) edgeAngles.push(Math.atan2(screenPos[b].y - cy, screenPos[b].x - cx));
+          else if (b === i) edgeAngles.push(Math.atan2(screenPos[a].y - cy, screenPos[a].x - cx));
+        });
+        let labelAngle = Math.PI / 2;
+        if (edgeAngles.length > 0) {
+          edgeAngles.sort((a, b) => a - b);
+          let bestGap = -1;
+          for (let k = 0; k < edgeAngles.length; k += 1) {
+            const start = edgeAngles[k];
+            const end = edgeAngles[(k + 1) % edgeAngles.length] + (k === edgeAngles.length - 1 ? 2 * Math.PI : 0);
+            const gap = end - start;
+            if (gap > bestGap) {
+              bestGap = gap;
+              labelAngle = start + gap / 2;
+            }
+          }
+        }
+        const labelDist = r + 15;
+        const lx = cx + Math.cos(labelAngle) * labelDist;
+        const ly = cy + Math.sin(labelAngle) * labelDist;
         return (
           <g key={node.label}>
             <circle cx={cx} cy={cy} r={r} fill={GROUP_COLOR[node.group]} stroke={t.pageBg} strokeWidth={2} />
-            <text x={cx} y={cy + r + 15} fontSize={13} fill={t.ink} textAnchor="middle">
+            <text x={lx} y={ly} fontSize={15} fill={t.ink} textAnchor="middle" dominantBaseline="middle">
               {node.label}
             </text>
           </g>
