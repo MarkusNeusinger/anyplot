@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 marimekko-basic: Basic Marimekko Chart
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-24
@@ -112,7 +112,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     title={
-        "text": "Market Share by Region · marimekko-basic · plotly · anyplot.ai",
+        "text": "Market Share by Region · marimekko-basic · python · plotly · anyplot.ai",
         "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
@@ -155,7 +155,7 @@ fig.update_layout(
         "yanchor": "top",
         "y": 1,
         "xanchor": "left",
-        "x": 0.8,
+        "x": 1.02,
     },
     hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "font": {"color": INK, "size": 10}},
     margin={"l": MARGIN_L, "r": MARGIN_R, "t": MARGIN_T, "b": MARGIN_B},
