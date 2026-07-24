@@ -1,13 +1,27 @@
 """ anyplot.ai
 network-basic: Basic Network Graph
-Library: altair 6.1.0 | Python 3.14.4
-Quality: 65/100 | Updated: 2026-04-27
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-07-24
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme-adaptive chrome tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette (first 4 slots, canonical order — groups are abstract)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Set seed for reproducibility
 np.random.seed(42)
@@ -108,6 +122,18 @@ for iteration in range(150):
         if disp_norm > 0:
             positions[i] += (displacement[i] / disp_norm) * min(disp_norm, 0.1 * cooling)
 
+# Rotate positions so the network's principal axis aligns with the wide (x)
+# canvas dimension. The spring layout otherwise tends to settle into a
+# diagonal band, which — even after per-axis normalization — leaves large
+# empty triangular regions in two corners of the landscape canvas.
+centered = positions - positions.mean(axis=0)
+cov = np.cov(centered.T)
+eigvals, eigvecs = np.linalg.eigh(cov)
+principal = eigvecs[:, np.argmax(eigvals)]
+angle = np.arctan2(principal[1], principal[0])
+rotation = np.array([[np.cos(-angle), -np.sin(-angle)], [np.sin(-angle), np.cos(-angle)]])
+positions = centered @ rotation.T
+
 # Normalize positions to [0.1, 0.9] range
 pos_min = positions.min(axis=0)
 pos_max = positions.max(axis=0)
@@ -120,7 +146,45 @@ for src, tgt in edges:
     degrees[src] += 1
     degrees[tgt] += 1
 
-# Create nodes dataframe
+# Anti-collision label layout: start each label just below its node, in
+# pixel space (the 620x320 view is much wider than tall, so a fixed offset
+# in data units isn't visually isotropic), then run a short repulsion pass
+# so labels that would otherwise collide (Jack/Leo, Noah/Olivia, the
+# Quinn/Ryan/Sara chain, ...) push apart from each other in both x and y
+# instead of overlapping. A spring-back pull toward each label's own base
+# offset (plus a hard clamp on drift distance) keeps every label anchored
+# close to its own node, so it never reads as ambiguous or lands on top of
+# a neighboring marker.
+coords = np.array([pos[node["id"]] for node in nodes])
+VIEW_W, VIEW_H, DOMAIN_SPAN = 620, 320, 1.1
+px_per_x, px_per_y = VIEW_W / DOMAIN_SPAN, VIEW_H / DOMAIN_SPAN
+node_px = coords * np.array([px_per_x, px_per_y])
+base_px_offset = np.tile(np.array([0.0, -24.0]), (n, 1))
+label_px_offset = base_px_offset.copy()
+min_label_dist_px = 62.0
+max_drift_px = 46.0
+for _ in range(60):
+    label_px = node_px + label_px_offset
+    disp = np.zeros((n, 2))
+    for i in range(n):
+        for j in range(i + 1, n):
+            diff = label_px[i] - label_px[j]
+            dist = max(np.linalg.norm(diff), 0.5)
+            if dist < min_label_dist_px:
+                push = (min_label_dist_px - dist) * 0.5 * (diff / dist)
+                disp[i] += push
+                disp[j] -= push
+    label_px_offset += disp
+    label_px_offset += (base_px_offset - label_px_offset) * 0.05
+    drift_norm = np.linalg.norm(label_px_offset, axis=1, keepdims=True)
+    too_far = drift_norm[:, 0] > max_drift_px
+    if too_far.any():
+        label_px_offset[too_far] = label_px_offset[too_far] / drift_norm[too_far] * max_drift_px
+label_offset = label_px_offset / np.array([px_per_x, px_per_y])
+label_dx = label_offset[:, 0]
+label_dy = label_offset[:, 1]
+
+# Create nodes dataframe. label_x/label_y carry the anti-collision offset.
 nodes_df = pd.DataFrame(
     [
         {
@@ -129,9 +193,11 @@ nodes_df = pd.DataFrame(
             "group": node["group"],
             "x": pos[node["id"]][0],
             "y": pos[node["id"]][1],
+            "label_x": pos[node["id"]][0] + label_dx[i],
+            "label_y": pos[node["id"]][1] + label_dy[i],
             "degree": degrees[node["id"]],
         }
-        for node in nodes
+        for i, node in enumerate(nodes)
     ]
 )
 
@@ -141,13 +207,10 @@ edges_df = pd.DataFrame(
     + [{"edge_id": i, "x": pos[tgt][0], "y": pos[tgt][1], "order": 1} for i, (_, tgt) in enumerate(edges)]
 )
 
-# Define group colors (Python Blue, Python Yellow, and colorblind-safe complementary)
-group_colors = ["#306998", "#FFD43B", "#4CAF50", "#FF7043"]
-
-# Draw edges as lines
+# Draw edges as lines (muted, theme-adaptive — structural, not data-categorical)
 edges_chart = (
     alt.Chart(edges_df)
-    .mark_line(strokeWidth=2.5, opacity=0.4, color="#888888")
+    .mark_line(strokeWidth=1.5, opacity=0.45, color=INK_MUTED)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-0.05, 1.05]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.05, 1.05]), axis=None),
@@ -156,39 +219,68 @@ edges_chart = (
     )
 )
 
-# Draw nodes as points (size based on degree)
+# Draw nodes as points (size based on degree; PAGE_BG stroke halos each node
+# against overlapping edges/labels and stays correct in both themes)
 nodes_chart = (
     alt.Chart(nodes_df)
-    .mark_circle(stroke="#333333", strokeWidth=2, opacity=0.9)
+    .mark_circle(stroke=PAGE_BG, strokeWidth=3, opacity=0.95)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-0.05, 1.05]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.05, 1.05]), axis=None),
-        size=alt.Size("degree:Q", scale=alt.Scale(domain=[2, 6], range=[600, 1800]), legend=None),
+        size=alt.Size("degree:Q", scale=alt.Scale(domain=[2, 6], range=[150, 450]), legend=None),
         color=alt.Color(
             "group:N",
-            scale=alt.Scale(domain=["Group A", "Group B", "Group C", "Group D"], range=group_colors),
-            legend=alt.Legend(title="Communities", titleFontSize=18, labelFontSize=16, symbolSize=400),
+            scale=alt.Scale(domain=["Group A", "Group B", "Group C", "Group D"], range=IMPRINT_PALETTE[:4]),
+            legend=alt.Legend(title="Communities", symbolSize=300),
         ),
         tooltip=["label:N", "group:N", "degree:Q"],
     )
 )
 
-# Draw node labels
+# Draw node labels (label_x/label_y already carry the anti-collision offset)
 labels_chart = (
     alt.Chart(nodes_df)
-    .mark_text(fontSize=12, fontWeight="bold", color="#222222")
-    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="label:N")
+    .mark_text(fontSize=16, fontWeight="bold", color=INK)
+    .encode(x=alt.X("label_x:Q"), y=alt.Y("label_y:Q"), text="label:N")
 )
 
-# Combine layers
+# Combine layers with theme-adaptive chrome
 chart = (
     (edges_chart + nodes_chart + labels_chart)
     .properties(
-        width=1600, height=900, title=alt.Title("Social Network · network-basic · altair · pyplots.ai", fontSize=28)
+        width=620,  # inner-view — see prompts/library/altair.md "Canvas — hard rule"
+        height=320,
+        background=PAGE_BG,
+        title=alt.Title("network-basic · python · altair · anyplot.ai", fontSize=16),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=620, continuousHeight=320)
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+    )
 )
 
 # Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+# Pad the saved PNG up to the exact canonical target (3200x1800). Never crop —
+# cropping would clip title/legend text at the edges. See "Canvas" in
+# prompts/library/altair.md.
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
