@@ -1,7 +1,7 @@
 // anyplot.ai
 // radar-basic: Basic Radar Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-07-24
+// Quality: 84/100 | Created: 2026-07-24
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
