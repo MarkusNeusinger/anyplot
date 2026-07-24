@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-07-24
@@ -24,8 +24,10 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     position_nudge,
     scale_x_continuous,
+    scale_y_continuous,
     theme,
 )
 from lets_plot.export import ggsave
@@ -67,6 +69,20 @@ trough_label = highlights.iloc[[1]]
 hour_breaks = [0, 3, 6, 9, 12, 15, 18, 21]
 hour_labels = ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"]
 
+# Donut-hole radial scale: the lower limit sits well below the coldest reading so
+# no hour collapses onto the origin where the 8 angular gridlines converge.
+radius_breaks = [5, 10, 15, 20, 25]
+radius_limits = [-8, 29]
+
+# Distinctive lets-plot touch: formatted hover tooltips on each hourly reading
+point_tooltips = (
+    layer_tooltips()
+    .format("@hour", "{}:00")
+    .format("@temperature", ".1f")
+    .line("Hour|@hour")
+    .line("Temperature|@temperature°C")
+)
+
 # Theme
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -85,11 +101,14 @@ plot = (
     ggplot(df_path, aes(x="hour", y="temperature"))
     + geom_polygon(fill=BRAND, color=BRAND, size=0, alpha=0.15)
     + geom_path(color=BRAND, size=1.2)
-    + geom_point(data=df, color=BRAND, size=3)
+    + geom_point(data=df, color=BRAND, size=3, tooltips=point_tooltips)
     + geom_point(data=highlights, color=BRAND, size=5)
     + geom_text(data=peak_label, mapping=aes(label="label"), color=INK, size=3.5, position=position_nudge(x=-1.6, y=-1))
-    + geom_text(data=trough_label, mapping=aes(label="label"), color=INK, size=3.5, position=position_nudge(y=3))
+    + geom_text(
+        data=trough_label, mapping=aes(label="label"), color=INK, size=3.5, position=position_nudge(x=-1.8, y=9)
+    )
     + scale_x_continuous(breaks=hour_breaks, labels=hour_labels, limits=[0, 24], expand=[0, 0])
+    + scale_y_continuous(breaks=radius_breaks, limits=radius_limits, expand=[0, 0])
     + coord_polar(theta="x", start=0, direction=1)
     + labs(title="polar-basic · letsplot · anyplot.ai", x="", y="Temperature (°C)")
     + ggsize(600, 600)
