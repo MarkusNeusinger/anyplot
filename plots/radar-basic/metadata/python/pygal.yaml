@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: radar-basic
 created: '2025-12-23T18:11:43Z'
-updated: '2026-07-24T16:14:37Z'
+updated: '2026-07-24T20:31:10Z'
 generated_by: claude-sonnet
 workflow_run: 30107728888
 issue: 744
@@ -12,57 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - 'Correct Imprint categorical palette in canonical order — first series is #009E73,
-    second #C475FD, third #4467A3, identical across both renders'
-  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white background
-    in light, warm near-black in dark, all text readable with no dark-on-dark or light-on-light
-    failures'
-  - Clean, deterministic KISS code structure — hardcoded literal data, no functions/classes,
-    importlib workaround to avoid shadowing the installed pygal package by the file's
-    own name
+  - Two-tier radial gridline treatment (faint dotted minor rings at 20/60, slightly
+    firmer dashed major rings at 40/80/100) is a genuine custom design detail beyond
+    the mandated style-guide baseline, visually confirmed in both renders
+  - 'Hero-vs-supporting series contrast now reads immediately: Employee A (hero, highest
+    average) uses a solid 7.5px stroke with 11px dots, while both other series use
+    a dashed 3px stroke (dasharray 14,6) with 5px dots — verified by pixel-level crop
+    inspection'
+  - 'Correct Imprint categorical palette in canonical order (#009E73 / #C475FD / #4467A3),
+    identical data colors between light and dark renders, fully theme-adaptive chrome
+    with no dark-on-dark or light-on-light failures'
+  - Canvas is exactly 2400x2400 (square target, no canvas-gate flag raised); no edge
+    clipping of title, axis labels, or legend in either render
+  - Clean, deterministic KISS code structure with hardcoded literal data and the importlib
+    guard against the file shadowing the installed pygal package
   - Realistic, neutral employee-competency-review scenario with genuinely differentiated
-    profiles per axis (technical expert vs. team leader vs. creative visionary), matching
-    the spec's suggested application
-  - Thoughtful 'hero series' visual hierarchy — the highest-average performer gets
-    a bolder stroke and larger dots, giving the chart a clear focal point beyond a
-    flat default rendering
-  - Title format matches the mandated `radar-basic · python · pygal · anyplot.ai`
-    pattern exactly, and legend labels match the data series
-  - No edge clipping — title, axis labels, and legend are fully visible within the
-    canvas with generous margins; good canvas utilization
+    per-axis profiles (technical expert vs. team leader vs. creative visionary), matching
+    a spec-suggested application
+  - Title and legend both match the mandated format and the series data exactly
   weaknesses:
-  - Design Excellence is still close to the mandated style-guide baseline (theme tokens
-    + Imprint palette) — beyond the hero-series emphasis there's little additional
-    aesthetic polish (e.g. no varying grid ring treatment, no subtler radial-tick
-    styling) that would separate it from a well-configured default
-  - The hero-series emphasis (stroke width 5.5 vs 3.5, dots_size 9 vs 6) is a nice
-    storytelling touch but fairly subtle at a glance — consider sharpening the contrast
-    further (e.g. slightly higher stroke_opacity or dimming the non-hero series a
-    touch more) so the focal point reads immediately
-  - dots_size (6-9) and stroke width (3.5-5.5) are on the modest side for only 6 categories
-    / 18 total data points — sparse radar data like this can support slightly larger
-    markers per the data-density heuristic without crowding
-  - pygal exposes distinctive features not used here (e.g. `print_values=True` for
-    on-chart value labels near dots) that could push Library Mastery beyond generic
-    idiomatic usage
+  - 'LM-02: still no use of pygal''s more distinctive display features (e.g. print_values=True
+    for on-chart value labels, custom value_formatter) — the dash-pattern differentiation
+    is a nice touch but the overall feature set used remains fairly conventional idiomatic
+    pygal.Radar usage'
+  - Non-hero dots (dots_size=5) are now a touch small in absolute terms on the 2400x2400
+    canvas — legible but could be nudged up 1-2px without giving up the hero/non-hero
+    size gap
+  - Value ranges (68-95) stay fairly compressed across all three employees — a slightly
+    wider spread on 1-2 axes would sharpen the multi-series comparison further
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "radar-basic · python · pygal · anyplot.ai" at top in dark ink, clearly legible. Six axis category labels (Communication, Creativity, Leadership, Problem Solving, Teamwork, Technical Skills) placed at the outer edge of each spoke, dark and readable, similar font sizes to each other. Radial scale labels (0/20/40/60/80/100) run down the top (Communication) spoke in a slightly smaller, muted dark tone — legible without competing with the category labels. Dashed hexagonal gridlines are subtle. Legend sits below the chart in a single column with three entries and small color swatches, fully readable, generous spacing from the chart.
-      Data: Three overlapping filled polygons with ~22% opacity fill and solid outline + dot markers at each vertex. First series (Employee A — Technical Expert) is Imprint brand green #009E73 and rendered with a visibly bolder stroke and larger dots (hero emphasis, since Employee A has the highest average score). Second series (Employee B — Team Leader) is lavender/purple #C475FD. Third series (Employee C — Creative Visionary) is blue #4467A3. All three are clearly distinguishable from each other and from the background.
+      Chrome: Title "radar-basic · python · pygal · anyplot.ai" at top in dark ink, clearly legible. Six axis category labels (Communication, Creativity, Leadership, Problem Solving, Teamwork, Technical Skills) sit at the outer edge of each spoke in dark, readable text of similar size. Radial scale labels (0/20/40/60/80/100) run down the top (Communication) spoke in a slightly smaller, muted dark tone. Gridlines now use a two-tier treatment: faint dotted minor rings (20, 60) and slightly firmer dashed major rings (40, 80, 100) — a subtler rhythm than a flat default grid. Legend sits below the chart in a single column with three entries and small color swatches, fully readable with generous spacing from the chart, not clipped.
+      Data: Three overlapping filled polygons with ~22% opacity fill. Employee A — Technical Expert (hero series, highest average score) is brand green #009E73 with a solid, bold 7.5px stroke and large 11px dots. Employee B — Team Leader (#C475FD, lavender) and Employee C — Creative Visionary (#4467A3, blue) both use a thinner dashed 3px stroke and smaller 5px dots, visually receding behind the hero series. All three are clearly distinguishable from each other and from the background; verified at pixel level that the hero solid line contrasts with the two dashed non-hero lines.
       Legibility verdict: PASS — all text is readable against the light background, no overlap between text elements or with data, no clipping at canvas edges.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis category labels, and radial scale labels as the light render, but flipped to light/off-white ink — clearly legible against the dark background, no dark-on-dark failures observed anywhere (title, category labels, tick labels, legend text all light-colored). Gridlines remain subtle.
-      Data: Identical colors to the light render — brand green #009E73 (hero, bolder stroke/larger dots), lavender #C475FD, and blue #4467A3 — confirming only chrome flipped between themes, not data colors.
-      Legibility verdict: PASS — all text is readable against the dark background, no dark-on-dark issues, data colors match the light render exactly, no clipping at canvas edges.
+      Chrome: Same title, axis category labels, radial scale labels, and two-tier gridline treatment as the light render, flipped to light/off-white ink — clearly legible against the dark background, no dark-on-dark failures observed anywhere (title, category labels, tick labels, legend text all light-colored).
+      Data: Identical colors and stroke/dot treatment to the light render — brand green #009E73 hero series (solid, bold), lavender #C475FD and blue #4467A3 non-hero series (dashed, smaller dots) — confirming only chrome flipped between themes, not data colors or styling.
+      Legibility verdict: PASS — all text is readable against the dark background, no dark-on-dark issues, data colors and hero/non-hero styling match the light render exactly, no clipping at canvas edges.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -80,32 +75,33 @@ review:
         comment: No text overlap with other text or data in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Dots and lines clearly visible and distinguishable; could be slightly
-          larger given only 18 total data points
+        comment: Hero series (larger dots, solid thick stroke) clearly distinguishable
+          from dashed, smaller-dot non-hero series; sparse 18-point dataset reads
+          clearly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
         comment: CVD-safe Imprint palette, alpha fill keeps overlaps distinguishable,
-          not relying on hue alone (outline + dot size differ for hero)
+          hero/non-hero also differ by stroke style and size, not hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills a large, balanced portion of the 2400x2400 canvas with
-          legend close below; no cut-off content
+        comment: Canvas is exactly 2400x2400; chart fills a large, balanced portion
+          with legend close below; no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive competency-axis labels; 0-100 radial scale provides the
-          unit context
+        comment: Descriptive competency-axis labels; 0-100 radial scale provides unit
+          context
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -114,31 +110,32 @@ review:
         comment: 'Canonical Imprint order, first series #009E73, identical data colors
           across themes, theme-correct backgrounds'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Applies the mandated style-guide tokens correctly plus a hero-emphasis
-          touch, but overall still reads close to a well-configured default rather
-          than a distinctly custom design
+        passed: true
+        comment: Two-tier dotted/dashed radial gridline treatment and hero-vs-dashed-non-hero
+          line styling are genuine custom design choices beyond the mandated style-guide
+          baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle dashed gridlines, alpha-blended fills, generous whitespace
-          and legend spacing show refinement beyond raw defaults
+        comment: Subtler two-tone gridline rhythm, alpha-blended fills, generous whitespace
+          and legend spacing show clear refinement beyond raw defaults
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Hero-series emphasis and deliberately differentiated employee profiles
-          create visual hierarchy, though the emphasis contrast is somewhat subtle
+        comment: Hero-series emphasis is now sharp (solid thick line + large dots
+          vs. dashed thin lines + small dots for the others), giving an immediate
+          focal point
     spec_compliance:
       score: 15
       max: 15
@@ -232,7 +229,7 @@ review:
         comment: Saves plot-{THEME}.png and plot-{THEME}.html via current render_to_png/render()
           API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -241,21 +238,23 @@ review:
         max: 5
         passed: true
         comment: 'Idiomatic pygal.Radar + Style usage: x_labels, add(), legend_at_bottom,
-          dots_size, stroke_style'
+          dots_size, stroke_style, major/minor guide styling'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses several pygal-specific config options (stroke_style dict, dots_size,
-          legend_at_bottom_columns) but no single standout feature unique to pygal
-  verdict: REJECTED
+        comment: Creative use of per-series stroke_style dasharray plus major/minor
+          guide dasharray for storytelling; still no standout feature like print_values
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
+  - html-export
   patterns:
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
