@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
-Library: plotnine 0.15.3 | Python 3.14.4
+Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-07-24
 """
 
