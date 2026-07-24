@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-07-24
@@ -33,12 +33,24 @@ np.random.seed(42)
 hours = np.arange(24)
 base_temp = 15 + 8 * np.sin((hours - 6) * np.pi / 12)  # peak at noon
 temperature = base_temp + np.random.randn(24) * 1.5
+peak_idx = int(np.argmax(temperature))
 
-# Angular labels at standard cardinal intervals only (00:00, 06:00, 12:00, 18:00)
-# — dense per-hour labels crowd a circular axis; the spec calls for cardinal
-# intervals for time-based data, so the other 20 points stay unlabeled.
+# Angular labels at standard cardinal intervals (00:00, 06:00, 12:00, 18:00),
+# plus a callout on the peak hour to emphasize the diurnal cycle's high point
+# — dense per-hour labels would crowd a circular axis, so every other point
+# stays unlabeled.
 cardinal_hours = {0, 6, 12, 18}
-hour_labels = [f"{h:02d}:00" if h in cardinal_hours else "" for h in hours]
+
+
+def _hour_label(h):
+    if h == peak_idx:
+        return f"{h:02d}:00 (peak)"
+    if h in cardinal_hours:
+        return f"{h:02d}:00"
+    return ""
+
+
+hour_labels = [_hour_label(h) for h in hours]
 
 # Style — canonical pygal sizing for the 2400x2400 canvas (native-pixel family)
 custom_style = Style(
@@ -64,7 +76,7 @@ chart = pygal.Radar(
     title="Hourly Temperature (°C) · polar-basic · python · pygal · anyplot.ai",
     show_legend=False,
     fill=True,
-    dots_size=6,
+    dots_size=9,
     show_y_guides=True,
     inner_radius=0.1,
     margin_top=140,
