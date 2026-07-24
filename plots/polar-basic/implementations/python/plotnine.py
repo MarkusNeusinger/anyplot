@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-07-24
@@ -6,10 +6,16 @@ Quality: 82/100 | Updated: 2026-07-24
 
 import math
 import os
+import sys
 
-import numpy as np
-import pandas as pd
-from plotnine import (
+
+# Prevent this file (plotnine.py) from shadowing the installed plotnine package
+_here = os.path.normpath(os.path.abspath(os.path.dirname(__file__)))
+sys.path = [p for p in sys.path if os.path.normpath(os.path.abspath(p or ".")) != _here]
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from plotnine import (  # noqa: E402
     aes,
     coord_fixed,
     element_blank,
@@ -42,7 +48,7 @@ base_activity = 20 + 40 * np.sin((hours - 6) * np.pi / 12) ** 2
 activity = base_activity + np.random.uniform(-8, 8, 24)
 activity = np.clip(activity, 5, 100)
 
-# Convert hours to angles (0 hours = top, clockwise)
+# Convert hours to angles (0 hours = bottom, increasing counter-clockwise)
 theta = hours * 2 * math.pi / 24 - math.pi / 2
 
 # Convert polar to Cartesian coordinates
@@ -57,10 +63,18 @@ df_closed = pd.concat([df, df.iloc[[0]]], ignore_index=True)
 # Peak point, highlighted below with a larger marker (visual emphasis, no text callout)
 peak_df = df.iloc[[int(np.argmax(activity))]]
 
-# Circular gridlines (at 25, 50, 75, 100 radius)
+# Radial scale sized to the actual data range (+15% headroom) so the shape
+# fills most of the polar area instead of a fixed 0-100 scale compressing it.
+grid_max = math.ceil(activity.max() * 1.15 / 10) * 10
+grid_radii = [grid_max / 4, grid_max / 2, 3 * grid_max / 4, grid_max]
+spoke_radius = grid_max * 1.05
+hour_label_radius = grid_max * 1.22
+axis_limit = grid_max * 1.45
+
+# Circular gridlines
 grid_rows = []
 grid_angles = np.linspace(0, 2 * math.pi, 101)
-for radius in [25, 50, 75, 100]:
+for radius in grid_radii:
     for angle in grid_angles:
         grid_rows.append({"x": radius * np.cos(angle), "y": radius * np.sin(angle), "radius": radius})
 
@@ -71,7 +85,7 @@ spoke_rows = []
 spoke_hours = [0, 3, 6, 9, 12, 15, 18, 21]
 for h in spoke_hours:
     angle = h * 2 * math.pi / 24 - math.pi / 2
-    spoke_rows.append({"x1": 0, "y1": 0, "x2": 105 * np.cos(angle), "y2": 105 * np.sin(angle)})
+    spoke_rows.append({"x1": 0, "y1": 0, "x2": spoke_radius * np.cos(angle), "y2": spoke_radius * np.sin(angle)})
 
 spoke_df = pd.DataFrame(spoke_rows)
 
@@ -79,13 +93,32 @@ spoke_df = pd.DataFrame(spoke_rows)
 label_rows = []
 for h in spoke_hours:
     angle = h * 2 * math.pi / 24 - math.pi / 2
-    label_rows.append({"label": f"{h:02d}:00", "x": 122 * np.cos(angle), "y": 122 * np.sin(angle)})
+    label_rows.append(
+        {"label": f"{h:02d}:00", "x": hour_label_radius * np.cos(angle), "y": hour_label_radius * np.sin(angle)}
+    )
 
 label_df = pd.DataFrame(label_rows)
 
-# Radius labels (activity level scale)
-radius_labels = [{"label": str(r), "x": r + 4, "y": 6} for r in [25, 50, 75, 100]]
+# Radius labels (activity level scale), placed off to the upper-left between
+# the 12:00 and 15:00 spokes — away from the 06:00/18:00 valleys on the
+# horizontal axis where low-activity points would otherwise crowd the labels.
+radius_label_angle = math.radians(100)
+radius_labels = [
+    {"label": str(int(r)), "x": r * math.cos(radius_label_angle) - 6, "y": r * math.sin(radius_label_angle)}
+    for r in grid_radii
+]
 radius_label_df = pd.DataFrame(radius_labels)
+
+# Radial axis title, placed just beyond the outermost ring on the same spoke
+radial_axis_label_df = pd.DataFrame(
+    [
+        {
+            "label": "Activity Level",
+            "x": (grid_max + 14) * math.cos(radius_label_angle) - 6,
+            "y": (grid_max + 14) * math.sin(radius_label_angle),
+        }
+    ]
+)
 
 # Plot — plotnine has no coord_polar (unlike ggplot2), so the circle is built
 # from Cartesian geoms: geom_path/geom_segment for the grid, geom_point/geom_text for data and labels.
@@ -104,11 +137,20 @@ plot = (
     # Hour labels
     + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=11, color=INK_SOFT)
     # Radius value labels
-    + geom_text(aes(x="x", y="y", label="label"), data=radius_label_df, size=9, color=INK_MUTED, ha="left")
+    + geom_text(aes(x="x", y="y", label="label"), data=radius_label_df, size=8, color=INK_MUTED, ha="left")
+    # Radial axis title, describing what the radius numbers measure
+    + geom_text(
+        aes(x="x", y="y", label="label"),
+        data=radial_axis_label_df,
+        size=8,
+        color=INK_MUTED,
+        ha="left",
+        fontweight="bold",
+    )
     + coord_fixed(ratio=1)
-    + scale_x_continuous(limits=(-145, 145))
-    + scale_y_continuous(limits=(-145, 145))
-    + labs(title="Hourly Activity Levels · polar-basic · plotnine · anyplot.ai")
+    + scale_x_continuous(limits=(-axis_limit, axis_limit))
+    + scale_y_continuous(limits=(-axis_limit, axis_limit))
+    + labs(title="Hourly Activity Levels · polar-basic · python · plotnine · anyplot.ai")
     + theme(
         figure_size=(6, 6),
         plot_title=element_text(size=12, ha="center", color=INK),
@@ -120,6 +162,10 @@ plot = (
         panel_grid_minor=element_blank(),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_margin_top=0.01,
+        plot_margin_bottom=0.02,
+        plot_margin_left=0.02,
+        plot_margin_right=0.02,
     )
 )
 
