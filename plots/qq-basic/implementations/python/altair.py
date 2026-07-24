@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qq-basic: Basic Q-Q Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-07-24
@@ -44,27 +44,41 @@ df = pd.DataFrame({"Theoretical Quantiles": theoretical_scaled, "Sample Quantile
 line_min = min(theoretical_scaled.min(), sorted_sample.min())
 line_max = max(theoretical_scaled.max(), sorted_sample.max())
 line_df = pd.DataFrame({"x": [line_min, line_max], "y": [line_min, line_max]})
+label_df = pd.DataFrame({"x": [line_max], "y": [line_max], "label": ["y = x"]})
+
+# Distinctive Altair feature: a pointer-hover selection that enlarges the
+# nearest marker, giving overlapping mid-quantile points an interactive way
+# to be told apart (beyond the static tooltip already on the layer).
+hover = alt.selection_point(on="pointerover", nearest=True, empty=False)
 
 points = (
     alt.Chart(df)
-    .mark_point(size=70, color=BRAND, filled=True, opacity=0.75)
+    .mark_point(size=50, color=BRAND, filled=True, opacity=0.65, stroke=PAGE_BG, strokeWidth=0.5)
     .encode(
         x=alt.X("Theoretical Quantiles:Q", title="Theoretical Quantiles", scale=alt.Scale(zero=False)),
         y=alt.Y("Sample Quantiles:Q", title="Sample Quantiles", scale=alt.Scale(zero=False)),
         tooltip=["Theoretical Quantiles:Q", "Sample Quantiles:Q"],
+        size=alt.condition(hover, alt.value(160), alt.value(50)),
     )
+    .add_params(hover)
 )
 
 reference_line = alt.Chart(line_df).mark_line(color=INK_SOFT, strokeWidth=2, strokeDash=[8, 4]).encode(x="x:Q", y="y:Q")
 
+line_label = (
+    alt.Chart(label_df)
+    .mark_text(align="right", baseline="bottom", dx=-4, dy=-4, fontSize=11, color=INK_SOFT, fontStyle="italic")
+    .encode(x="x:Q", y="y:Q", text="label:N")
+)
+
 chart = (
-    (reference_line + points)
+    (reference_line + line_label + points)
     .properties(
         background=PAGE_BG,
         width=620,
         height=320,
         padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
-        title=alt.Title("qq-basic · python · altair · anyplot.ai", fontSize=16),
+        title=alt.Title("Bolt Torque QC · qq-basic · python · altair · anyplot.ai", fontSize=16),
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
