@@ -1,13 +1,17 @@
-""" anyplot.ai
+"""anyplot.ai
 marimekko-basic: Basic Marimekko Chart
-Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 78/100 | Updated: 2026-04-29
+Library: plotnine 0.15.7 | Python 3.14.4
+Quality: 78/100 | Updated: 2026-07-24
 """
+
+import os
 
 import pandas as pd
 from plotnine import (
     aes,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_rect,
     geom_text,
@@ -20,6 +24,13 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme-adaptive chrome tokens (Imprint palette)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Market share by region and product line
 data = {
@@ -127,19 +138,20 @@ plot_df = pd.DataFrame(rects)
 # Add labels with value for larger segments
 plot_df["label"] = plot_df.apply(lambda r: f"${r['value']}M" if (r["ymax"] - r["ymin"]) > 10 else "", axis=1)
 
-# Color palette for products
-product_colors = {
-    "Electronics": "#306998",  # Python Blue
-    "Software": "#FFD43B",  # Python Yellow
-    "Services": "#4ECDC4",  # Teal
-    "Hardware": "#FF6B6B",  # Coral
-}
+# Imprint palette — canonical categorical order (abstract product lines, no
+# semantic color cue), brand green always first
+product_colors = {"Electronics": "#009E73", "Software": "#C475FD", "Services": "#4467A3", "Hardware": "#BD8233"}
+
+# Title fontsize scales down from the 12pt default since the descriptive
+# prefix pushes the mandated title past the 67-char baseline
+title = "Market Share by Region · marimekko-basic · python · plotnine · anyplot.ai"
+title_fontsize = round(12 * min(1.0, 67 / len(title)))
 
 # Create plot
 plot = (
     ggplot(plot_df)
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="product"), color="white", size=1.0)
-    + geom_text(aes(x="xcenter", y="ycenter", label="label"), size=12, color="black", fontweight="bold")
+    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="product"), color=PAGE_BG, size=1.0)
+    + geom_text(aes(x="xcenter", y="ycenter", label="label"), size=3.2, color=INK, fontweight="bold")
     + scale_fill_manual(values=product_colors)
     + scale_x_continuous(
         breaks=region_totals["xcenter"].tolist(), labels=region_totals["region"].tolist(), expand=(0.01, 0.01)
@@ -148,23 +160,31 @@ plot = (
     + labs(
         x="Market Segment (width = total market size)",
         y="Product Share (%)",
-        title="Market Share by Region · marimekko-basic · plotnine · pyplots.ai",
+        title=title,
+        subtitle="Asia Pacific leads in Electronics revenue ($200M — 53% of its regional market)",
         fill="Product Line",
     )
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text_x=element_text(size=16),
-        axis_text_y=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
-        legend_position="right",
+        figure_size=(8, 4.5),
+        text=element_text(size=7),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major_x=element_blank(),
         panel_grid_minor_x=element_blank(),
+        panel_grid_minor_y=element_blank(),
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
+        plot_title=element_text(size=title_fontsize, ha="center", weight="bold", color=INK),
+        plot_subtitle=element_text(size=8, ha="center", color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text_x=element_text(size=8, color=INK_SOFT),
+        axis_text_y=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=10, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_position="right",
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
