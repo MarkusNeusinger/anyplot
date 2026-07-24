@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: network-basic
 created: '2025-12-23T15:14:50Z'
-updated: '2026-07-24T04:19:37Z'
+updated: '2026-07-24T04:30:45Z'
 generated_by: claude-sonnet
 workflow_run: 30065717537
 issue: 989
@@ -12,129 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Correct Imprint palette order (first series #009E73, then #C475FD/#4467A3/#BD8233
-    for the 3 remaining communities), identical across both themes'
-  - 'Theme-adaptive chrome done thoroughly: value_colors is force-overridden to the
-    theme ink token, working around pygal''s default per-series brightness heuristic
-    that would otherwise put near-black labels on the near-black dark background'
-  - Manually implements a force-directed spring layout (repulsion + attraction + cooling
-    schedule over 200 iterations) since pygal has no native graph/network chart type
-    — a genuinely sophisticated workaround
-  - Node radius encodes node degree (connection count), directly matching the spec's
-    optional size-encodes-degree feature
-  - Four communities are visually distinct and spatially clustered in both renders,
-    with cross-group bridge edges clearly visible, giving the network a legible structure
-    at a glance
-  - Reproducible (np.random.seed(42)), clean KISS top-to-bottom script structure,
-    no unused imports
+  - Canvas utilization is now excellent — the anisotropic stretch (positions[:,0]*12+2,
+    positions[:,1]*8.4+0.3) fills the 16:9 canvas top-to-bottom, closing the empty
+    vertical band flagged in attempt 1
+  - Intra-community edges (solid, width 2.5) vs. cross-community bridge edges (dashed,
+    width 1.6) are now visually distinguished, directly addressing the attempt-1 storytelling
+    feedback and making the community/bridge structure legible at a glance
+  - Community names are now realistic and evocative (Close Friends, Coworkers, Neighbors,
+    College Friends) instead of the generic placeholders from attempt 1
+  - 'Correct Imprint palette order (first series #009E73, then #C475FD/#4467A3/#BD8233),
+    identical across both themes'
+  - 'Theme-adaptive chrome fully correct in both renders: value_colors explicitly
+    forced to the theme ink token, avoiding pygal''s default per-series brightness
+    heuristic that would otherwise cause dark-on-dark label text'
+  - Manual force-directed spring layout (repulsion + attraction + cooling) is a strong
+    technical workaround for pygal's lack of a native network/graph chart type
+  - Node radius encodes node degree, satisfying the spec's optional size-encodes-connections
+    feature
+  - Reproducible (np.random.seed(42)), clean KISS structure, no unused imports
   weaknesses:
-  - Noticeable empty band between the bottom of the node cluster and the legend (roughly
-    the bottom quarter of the canvas is blank) — stretch the y-extent of the layout
-    (e.g. widen the `positions[:, 1]` target range) or otherwise pull the legend closer
-    so the plot fills more of the canvas vertically (VQ-05)
-  - A few node labels sit right against or crossed by edge lines (e.g. 'Ivy', 'Leo')
-    — nudge label offset/positioning so labels clear the connecting edges (VQ-02)
-  - Design excellence is solid but still reads as a fairly literal node-link diagram
-    — consider varying edge opacity/width between intra-community and cross-community
-    (bridge) edges to visually reinforce the 'communities connected by bridges' story
-    (DE-01/DE-03)
-  - Community labels ('Community A/B/C/D') are generic placeholders — not a hard requirement,
-    but a bit more evocative/neutral group naming would strengthen data storytelling
+  - In the densest bottom-right cluster (Paul/Quinn/Ryan/Sara/Tom), several edges
+    cross close to node labels — minor readability risk, not a hard overlap failure
+  - Edge colors (#888888/#BBBBBB) are fixed hexes rather than theme-adaptive tokens
+    (e.g. INK_MUTED) — they happen to read fine in both renders here, but should derive
+    from the theme for consistency
+  - Design excellence is strong but still short of publication-grade — could push
+    further with subtle alpha on bridge edges or edge-length-based curvature to reduce
+    crossing clutter in the bottom-right cluster
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "network-basic · python · pygal · anyplot.ai" is dark, crisp, and centered at top, comfortably within the canvas width. Node labels (names) are dark and legible against the light background. Legend at bottom ("Community A/B/C/D") uses small colored square swatches with dark text, evenly spaced across 4 columns.
-      Data: 20 labeled nodes in 4 color-coded communities (green #009E73 = Community A, purple #C475FD = Community B, blue #4467A3 = Community C, brown/ochre #BD8233 = Community D), connected by gray edge lines. Node circle size varies with degree (higher-connectivity nodes like Carol, Ivy, Noah are visibly larger). Communities are spatially clustered with a handful of longer cross-group "bridge" edges connecting the clusters.
-      Legibility verdict: PASS — all title, node label, and legend text is clearly readable against the light background.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "network-basic · python · pygal · anyplot.ai" in dark ink at top, comfortably sized (~55-60% width, no clipping). Node labels (Alice, Bob, Carol, ... Tom) in dark ink, all legible. Legend at bottom with 4 swatches ("Close Friends", "Coworkers", "Neighbors", "College Friends") in dark ink, clearly readable.
+      Data: 20 nodes colored by 4 communities — #009E73 (green, Close Friends), #C475FD (lavender, Coworkers), #4467A3 (blue, Neighbors), #BD8233 (ochre, College Friends). Node radius scales visibly with degree (e.g. Carol, Noah, Ivy render larger — higher-degree hubs). Intra-community edges are solid gray lines; cross-community bridge edges are dashed and thinner, visually distinguishing local ties from bridging connections. Graph now fills most of the vertical canvas extent (previous empty band beneath the node cluster is closed).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title, node labels, and legend text all render in a light off-white ink color, clearly legible against the dark background — no dark-on-dark text observed anywhere (the implementation explicitly forces value_colors to the theme ink token to avoid pygal's default per-series black/white text heuristic).
-      Data: Same four node colors (#009E73/#C475FD/#4467A3/#BD8233) and same gray edge color, confirmed identical to the light render — only the background and text/chrome flipped as expected. Same clustering and bridge structure is visible.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark or light-on-light failures.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title renders in light off-white ink, fully readable. Node labels are all light-colored — no dark-on-dark failures anywhere (explicit value_colors override works correctly). Legend text is light and readable against the dark background.
+      Data: All 4 community colors are pixel-identical to the light render (#009E73/#C475FD/#4467A3/#BD8233) — only background and text chrome flipped, as required. Solid vs. dashed edge distinction remains visible against the dark background.
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability check; no dark-on-dark or light-on-light failures found. No edge clipping (AR-09) observed on either render.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set via Style; title, node labels, and
-          legend all readable in both themes; title fits comfortably within canvas
-          width
+        comment: All font sizes explicitly set (title 66, label 56, major_label 44,
+          legend 44); readable in both themes, title fits without clipping
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text-on-text overlap; a couple of node labels (e.g. Ivy, Leo)
-          sit tight against crossing edge lines
+        comment: Clean overall; a few edges pass close to labels in the dense bottom-right
+          cluster
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Node sizes and edge stroke width are clearly visible and appropriately
-          sparse for 20 nodes / ~31 edges
+        comment: Node sizes well adapted to degree; solid vs. dashed edges clearly
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue/brown are mutually distinguishable, no red-green-only
-          reliance
+        comment: Four Imprint colors distinguishable, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good horizontal fill (~83% of width) but a sizeable empty band between
-          the node cluster and the legend wastes vertical space
+        comment: Anisotropic layout stretch now fills the canvas well; the attempt-1
+          empty band is closed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels correctly hidden (not meaningful for a force-directed
-          layout); title format correct
+        comment: Title descriptive; axes intentionally hidden as appropriate for a
+          network diagram
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining 3 in canonical Imprint order, identical
-          across themes, correct theme backgrounds'
+        comment: 'First series #009E73, canonical order, theme-correct backgrounds
+          and chrome in both renders'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
-        passed: true
-        comment: Custom spring-layout algorithm and theme-adaptive palette clearly
-          above library defaults
+        comment: Custom spring layout, theme-adaptive palette, and evocative community
+          naming — clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: No axes/grid/spines shown, clean legend, but whitespace distribution
-          is a bit uneven
+        comment: Better canvas utilization, dashed/solid edge distinction adds polish;
+          some visual clutter remains in the densest cluster
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Degree-scaled node size and spatial community clustering give clear
-          visual hierarchy without needing annotations
+        comment: Degree-scaled node size + spatial clustering + solid/dashed edge
+          encoding now clearly tells the community/bridge story
     spec_compliance:
       score: 15
       max: 15
@@ -143,29 +139,23 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct node-link network graph
+        comment: Correct network/node-link diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Force-directed layout, optional degree-based node sizing, and legible
-          non-overlapping labels all present
+        comment: Force-directed layout, degree-encoded size, legible labels, sparse
+          edges — all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: All 20 nodes and 31 edges represented, layout coordinates correctly
-          used
+        comment: Node/edge positions correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title matches mandated format exactly; legend labels correctly identify
-          the 4 communities
+        comment: Title format correct; legend labels match community names
     data_quality:
       score: 15
       max: 15
@@ -174,23 +164,20 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: Shows clustering, cross-group bridges, and degree variation — all
-          key network-graph features
+        comment: Shows intra- and cross-community edges, degree variation, 4 distinct
+          communities
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Neutral, comprehensible social-network friendship scenario with named
-          individuals
+        comment: Realistic social-network scenario with named individuals and evocative
+          group labels
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: 20 nodes / ~31 edges with plausible per-person degree counts for
-          a small social network
+        comment: 20 nodes / 31 edges is sensible for a clear static social-network
+          visualization
     code_quality:
       score: 10
       max: 10
@@ -199,63 +186,52 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: No functions/classes; linear imports -> data -> layout -> style ->
-          chart -> save
+        comment: Imports -> data -> layout -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: np.random.seed(42) set before layout initialization
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Only os, sys, numpy, pygal, Style — all used
+        comment: Only numpy, pygal, os, sys used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: Manual O(n^2) spring layout is appropriately sized for n=20 nodes,
-          no fake functionality
+        comment: Appropriate complexity for a manual layout algorithm, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves plot-{THEME}.png/.svg/.html via current pygal API
+        comment: Saves plot-{THEME}.png/.svg/.html correctly
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Correctly builds a network graph atop pygal.XY using dict-form points
-          and a Style object, since pygal has no native graph chart
+        comment: Builds atop pygal.XY idiomatically since pygal lacks a native graph
+          chart type
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: 'Uses pygal-specific per-point ''node'': {''r'': radius} sizing and
-          None-separated multi-segment line series for edges'
-  verdict: REJECTED
+        comment: Per-point node radius sizing, None-separated multi-segment edge series,
+          and per-series stroke_style dasharray for solid/dashed edge encoding
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - force-directed-layout
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep:
   - normalization
   styling:
-  - minimal-chrome
+  - publication-ready
