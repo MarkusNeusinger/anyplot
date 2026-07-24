@@ -2,78 +2,50 @@ library: bokeh
 language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:12:43Z'
-updated: '2026-04-29T22:56:03Z'
+updated: '2026-07-24T18:21:39Z'
 generated_by: claude-sonnet
-workflow_run: 25137015424
+workflow_run: 30115457206
 issue: 1014
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Viridis colormap correctly applied for continuous magnitude data — colour encodes
-    wind speed exactly as spec suggests
-  - 'All font sizes explicitly set to recommended values: title 28pt, axis labels
-    22pt, tick labels 18pt, subtitle 18pt'
-  - Custom arrow geometry (segment shafts + patch arrowheads) is the correct idiomatic
-    Bokeh approach — no native quiver API exists
-  - Vortex centre marker and Label annotation create a clear focal point and narrative
-  - Subtitle explicitly states what colour encodes, aiding immediate comprehension
-  - 'Theme tokens fully wired through all chrome: title, axis labels, tick labels,
-    grid, axis lines — both renders readable'
-  - Minimum display length enforcement keeps near-zero centre arrows visible rather
-    than collapsing to invisible points
-  - ColumnDataSource used for both segment and patches renderers — correct idiomatic
-    Bokeh data pattern
-  - ColorBar with LinearColorMapper properly attached and sized; background and border
-    use theme tokens
-  - HTML and PNG outputs both saved correctly; deterministic data needs no random
-    seed
+  - Hand-built arrow geometry (shaft + triangular head) correctly compensates for
+    bokeh's lack of a native quiver glyph, including a minimum-display-length floor
+    for near-zero vectors at the vortex centre
+  - Double encoding of magnitude via both arrow length and color adds information
+    density without clutter
+  - Theme-adaptive chrome correctly threaded through title, subtitle, axis labels,
+    ticks, grid, colorbar, and annotations — no dark-on-dark or light-on-light failures
+    in either render
+  - Canvas measured at exactly 3200x1800 with toolbar_location=None and generous min_border_*
+    reservations — no clipping anywhere
+  - 'Both attempt-1 weaknesses cleanly resolved: title now includes the python language
+    token, and the max wind speed is rescaled to a realistic 28.0 km/h peak'
   weaknesses:
-  - 'ColorBar title_text_color not set — in dark mode ''Wind Speed'' title defaults
-    to black on the dark elevated background (#242420), making it invisible or very
-    hard to read; fix: add title_text_color=INK_SOFT to the ColorBar constructor'
-  - Near-centre arrows are very small (minimum display length is only 12% of grid
-    spacing) — they register as tiny stubs at the canvas scale; raising MIN_DISP to
-    ~18% and/or adding a slight opacity to near-zero arrows would improve visibility
-    without misrepresenting the zero-magnitude vortex core
-  - Design excellence ceiling limited by remaining spines (Bokeh shows left/bottom
-    axis lines by default); removing or thinning these would lift DE-02
-  - 'Storytelling could be stronger: a brief annotation noting the maximum wind speed
-    value or region (e.g. at the corners) would complete the narrative arc begun by
-    the vortex-centre label'
+  - Composition is competent but fairly literal (uniform grid + colorbar); consider
+    a stronger focal point or emphasis technique (e.g. bolder treatment of the vortex
+    centre, varied grid density) to lift Design Excellence
+  - No bokeh-distinctive interactive tooling (e.g. HoverTool for per-arrow speed/direction
+    inspection) beyond the static ColorBar/annotations — would raise Library Mastery
+    in a future revision
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — correct, not pure white.
-      Chrome: Title "quiver-basic · bokeh · anyplot.ai" in dark ink, clearly visible. Subtitle
-        "Counterclockwise vortex wind field — colour encodes wind speed" in muted dark ink, readable.
-        X-axis label "East–West Distance (km)" and Y-axis label "North–South Distance (km)" in dark ink
-        with units, readable. Tick labels in dark secondary ink, readable. Grid lines are subtle (alpha 0.15).
-      Data: 15×15 grid of arrows arranged in a clear counterclockwise vortex pattern. Arrows coloured by
-        Viridis — dark blue/purple arrows near the origin (low wind speed), transitioning to teal/green at
-        mid-radius, yellow at the corners (highest speed). Arrowheads rendered as filled triangles.
-        Centre-point marker (circle_dot) visible with "vortex centre" annotation. ColorBar on right with
-        gradient scale, titled "Wind Speed", major labels in readable dark-secondary ink.
-      Legibility verdict: PASS — all main text elements readable; note "Wind Speed" colorbar title may be
-        in default black (hard to confirm at thumbnail scale but readable on light surface).
+      Background: warm off-white, matches #FAF8F1 target
+      Chrome: title "quiver-basic · python · bokeh · anyplot.ai" and subtitle "Counterclockwise vortex wind field — colour encodes wind speed" in dark ink top-left, axis titles and tick labels in dark/soft-dark ink, colorbar title "Wind Speed" and ticks readable, vortex-centre label and max-speed annotation readable and clear of arrow overlap — all confirmed readable via pixel crops
+      Data: 225 arrows on a 15x15 grid colored on the imprint_seq green (#009E73) -> blue (#4467A3) ramp keyed to wind speed; vortex-centre marker and "max 28.0 km/h at corners" annotation both clear of arrow overlap
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — correct, not pure black.
-      Chrome: Title and axis labels rendered in light ink (#F0EFE8), clearly readable against the dark
-        surface. Tick labels in light-secondary ink (#B8B7B0), readable. Subtitle in the same light-secondary
-        colour. Grid lines subtle at alpha 0.15. ColorBar border in INK_SOFT (light border visible).
-        POTENTIAL ISSUE: ColorBar "Wind Speed" title text_color is not explicitly set in code — Bokeh
-        defaults to black, which would render near-invisible on the dark elevated background (#242420).
-        This is the one chrome element that may fail legibility in the dark render.
-      Data: Arrow colours identical to light render (same Viridis palette, same magnitude mapping) — data
-        colours are theme-independent as required. Vortex pattern equally clear against the dark surface.
-        Centre marker and annotation visible.
-      Legibility verdict: PASS for axes/title/ticks; PARTIAL FAIL for ColorBar title ("Wind Speed") which
-        likely defaults to black on dark elevated background — not set via title_text_color=INK_SOFT.
+      Background: warm near-black, matches #1A1A17 target
+      Chrome: title, subtitle, axis labels, tick labels, colorbar text all render in light ink — all confirmed readable, no dark-on-dark failures found anywhere
+      Data: arrow colors identical to light render (same green-to-blue progression, only chrome flipped)
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -81,86 +53,71 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
-          labels 18pt, subtitle 18pt — matches recommended values exactly; readable
-          in both renders'
+        comment: All text readable in both themes at full res
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; arrows uniformly spaced on 15x15 grid; vortex-centre
-          label offset from centre marker
+        comment: No collisions between text, annotations, and arrows
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Most arrows well-sized and visible; near-centre arrows are very small
-          stubs (MIN_DISP = 12% of grid spacing) — visible but marginally so at canvas
-          scale
+        comment: 225 arrows within spec range, distinguishable but on the smaller
+          side
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is a perceptually-uniform, CVD-safe sequential colormap;
-          good luminance gradient from dark blue to yellow
+        comment: imprint_seq ramp, good contrast both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well at 4800x2700; ColorBar integrated on right;
-          balanced margins; no content cut off
+        comment: Exact 3200x1800 canvas, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: East-West Distance (km) and North-South Distance (km) — descriptive
-          with units
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Viridis used correctly for continuous magnitude data; backgrounds
-          #FAF8F1 / #1A1A17 correct; main chrome theme-adaptive; but ColorBar title_text_color
-          not set — defaults to black in dark mode on dark elevated bg, failing chrome
-          compliance for that element'
+        passed: true
+        comment: Correct imprint_seq build and theme-adaptive backgrounds
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Strong design: Viridis colormap well-matched to vortex context,
-          centre marker+annotation add narrative, subtitle provides context, explicit
-          theme tokens throughout — clearly above library defaults but not FiveThirtyEight-level'
+        passed: false
+        comment: Real engineering effort for hand-built arrows, but fairly standard
+          scientific-plot composition
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Outline frame removed (outline_line_color=None), minor ticks removed,
-          grid alpha=0.15 subtle; axis spines remain (Bokeh default left+bottom) —
-          some refinement but not fully polished
+        passed: false
+        comment: Spines removed, subtle grid, reasonable whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Vortex centre focal point with explicit annotation, viridis colour
-          tells speed-at-a-glance story (dark=slow near centre, yellow=fast at edges),
-          subtitle explains the encoding — good hierarchy; a corner max-speed annotation
-          would push this higher
+        passed: false
+        comment: Vortex-centre marker and max-speed annotation add some narrative,
+          no dominant focal point
     spec_compliance:
       score: 15
       max: 15
@@ -170,29 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct quiver/vector-field plot: x/y grid positions, u/v components,
-          arrows with correct direction and magnitude-proportional length'
+        comment: Genuine quiver/vector-field plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Arrows at grid points, direction encodes angle, length proportional
-          to magnitude, 15x15 grid (within 10-20 spec), optional colour encoding present
+        comment: Uniform spacing, scaled length, magnitude-as-color bonus
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: u=-y, v=x circular rotation as spec example suggests; axes show full
-          -2.5 to 2.5 range
+        comment: x/y correct, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'quiver-basic · bokeh · anyplot.ai' matches exact format; ColorBar
-          provides wind-speed legend
+        comment: 'Title now includes the required language segment: quiver-basic ·
+          python · bokeh · anyplot.ai'
     data_quality:
       score: 15
       max: 15
@@ -202,22 +156,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all quiver aspects: rotation direction, magnitude variation
-          from zero (centre) to maximum (corners), uniform grid spacing, scaled arrowheads'
+        comment: Direction, double-encoded magnitude, spacing, reference point all
+          shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Counterclockwise atmospheric vortex wind field — plausible meteorological
-          scenario, neutral topic, real-world units (km)
+        comment: Plausible neutral meteorological framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Axis range -2 to 2 km, wind speed proportional to radius via u=-y/v=x,
-          mathematically consistent and factually plausible
+        comment: Max wind speed rescaled to a realistic 28.0 km/h brisk-breeze peak
     code_quality:
       score: 10
       max: 10
@@ -227,36 +179,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: Imports → Tokens → Data → Arrow geometry → Plot → Save;
-          no functions or classes'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — mathematical function with no random elements;
-          no seed needed
+        comment: Fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: ColorBar/ColumnDataSource/Label/LinearColorMapper/Title
-          all appear in code; Viridis256 used for colormap and patch colours'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Arrow geometry is complex but unavoidable — Bokeh has no native quiver
-          API; code is clear and well-commented at critical steps
+        comment: Appropriately complex arrow-geometry math
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current Bokeh
-          3.x API throughout
+        comment: Correct output files, current bokeh 3.x API
     library_mastery:
       score: 7
       max: 10
@@ -266,31 +213,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource for both segment and patches renderers, proper figure()
-          construction, add_layout for Title/Label/ColorBar, export_png + output_file
-          + save pattern — idiomatic; minor deduction because quiver relies on low-level
-          segment/patches rather than a high-level glyph
+        comment: ColumnDataSource, LinearColorMapper, ColorBar, layered Title
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: ColorBar + LinearColorMapper + Viridis256 combo, patches renderer
-          for arrowhead triangles, Label via add_layout — all Bokeh-specific. Could
-          go further with hover tooltips or server callbacks for interactivity
+        passed: false
+        comment: Good colorbar/annotation usage, no HoverTool or other bokeh-distinctive
+          interactivity
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - colorbar
   - annotations
   - html-export
+  - patches
   patterns:
   - data-generation
   - columndatasource
-  - matrix-construction
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - custom-colormap
-  - grid-styling
+  - minimal-chrome
