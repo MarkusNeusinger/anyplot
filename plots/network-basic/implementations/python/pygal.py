@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-24
@@ -136,7 +136,7 @@ pos_min = positions.min(axis=0)
 pos_max = positions.max(axis=0)
 positions = (positions - pos_min) / (pos_max - pos_min + 1e-6)
 positions[:, 0] = positions[:, 0] * 12 + 2  # X: [2, 14] of a (0, 16) xrange
-positions[:, 1] = positions[:, 1] * 7 + 1  # Y: [1, 8] of a (0, 9) range
+positions[:, 1] = positions[:, 1] * 8.4 + 0.3  # Y: [0.3, 8.7] of a (0, 9) range
 pos = {node["id"]: positions[i] for i, node in enumerate(nodes)}
 
 # Calculate node degrees to encode connection count as dot radius
@@ -148,23 +148,26 @@ NODE_BASE_R = 12
 NODE_R_PER_DEGREE = 5
 
 # Custom style: theme-adaptive chrome, Imprint data colors
-# Edge series comes first so its color is the neutral gray slot
+# Edge series come first (intra-community, then cross-community bridges) so
+# their colors land in the neutral gray slots ahead of the 4 community colors
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=("#888888",) + IMPRINT,
+    colors=("#888888", "#BBBBBB") + IMPRINT,
     # pygal auto-picks black/white per-series for value/label text based on
     # series color brightness, which puts near-black text on the near-black
     # dark background. Force it to the theme-adaptive ink color instead.
-    value_colors=(INK,) * 5,
+    value_colors=(INK,) * 6,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
-    value_font_size=24,
+    # Also sets the label's pixel offset from its node (see label placement
+    # below) - kept large enough to clear the biggest (degree-scaled) nodes.
+    value_font_size=40,
     value_label_font_size=32,
     stroke_width=2.5,
     opacity=1,
@@ -195,21 +198,38 @@ chart = pygal.XY(
     print_values=False,
 )
 
-# Add edges as a single series with lines connecting pairs
+# Split edges into intra-community links and cross-community "bridges", and
+# render each as its own series (solid vs. dashed/thinner) so the bridging
+# structure reads visually instead of as a uniform mesh of gray lines.
 # Each edge is represented as two points connected, with None to break between edges
-edge_points = []
-for src, tgt in edges:
-    x1, y1 = pos[src]
-    x2, y2 = pos[tgt]
-    edge_points.append((x1, y1))
-    edge_points.append((x2, y2))
-    edge_points.append(None)  # Break the line for next edge
+intra_edges = [(s, t) for s, t in edges if nodes[s]["group"] == nodes[t]["group"]]
+bridge_edges = [(s, t) for s, t in edges if nodes[s]["group"] != nodes[t]["group"]]
+
+intra_points = []
+for src, tgt in intra_edges:
+    intra_points.append(tuple(pos[src]))
+    intra_points.append(tuple(pos[tgt]))
+    intra_points.append(None)  # Break the line for next edge
+
+bridge_points = []
+for src, tgt in bridge_edges:
+    bridge_points.append(tuple(pos[src]))
+    bridge_points.append(tuple(pos[tgt]))
+    bridge_points.append(None)  # Break the line for next edge
 
 # Add edges (using None title to exclude from legend)
-chart.add(None, edge_points, stroke=True, show_dots=False, fill=False)
+chart.add(None, intra_points, stroke=True, show_dots=False, fill=False, stroke_style={"width": 2.5, "linecap": "round"})
+chart.add(
+    None,
+    bridge_points,
+    stroke=True,
+    show_dots=False,
+    fill=False,
+    stroke_style={"width": 1.6, "linecap": "round", "dasharray": "10, 8"},
+)
 
 # Group nodes by community; dot radius scales with degree (connection count)
-group_names = ["Community A", "Community B", "Community C", "Community D"]
+group_names = ["Close Friends", "Coworkers", "Neighbors", "College Friends"]
 for group_idx in range(4):
     group_nodes = [node for node in nodes if node["group"] == group_idx]
     node_points = []
