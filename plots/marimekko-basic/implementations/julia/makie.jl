@@ -1,7 +1,7 @@
 # anyplot.ai
 # marimekko-basic: Basic Marimekko Chart
-# Library: Makie.jl 0.22 | Julia 1.11
-# Quality: pending | Created: 2026-07-24
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 88/100 | Created: 2026-07-24
 
 using CairoMakie
 using Colors
