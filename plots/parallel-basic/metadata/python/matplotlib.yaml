@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:11:57Z'
-updated: '2026-07-24T10:42:31Z'
+updated: '2026-07-24T10:48:59Z'
 generated_by: claude-sonnet
 workflow_run: 30086545870
 issue: 820
@@ -12,53 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 88
 review:
   strengths:
-  - 'Correct parallel coordinates construction: 4 dimensions normalized to [0, 1]
-    with lines connecting all axes per observation.'
-  - Factually accurate Iris measurement ranges matching the real dataset (sepal length
-    4.3-7.9 cm, sepal width 2.0-4.4 cm, petal length ~1.3-6.6 cm, petal width 0.1-2.5
-    cm), annotated directly on the x-axis tick labels.
-  - Imprint palette applied correctly in canonical order (Setosa=#009E73 brand green,
-    Versicolor=#C475FD, Virginica=#4467A3), identical across both themes.
-  - Theme-adaptive chrome correctly implemented - both light and dark renders are
-    fully readable with correct backgrounds and no dark-on-dark or light-on-light
-    failures.
-  - Clean KISS code structure, reproducible via np.random.seed(42), correct 3200x1800
-    canvas, and savefig without bbox_inches='tight'.
-  - 'Genuine analytical value: Setosa clearly separates from Versicolor/Virginica
-    in the petal dimensions, which is exactly the kind of pattern parallel coordinates
-    plots are meant to reveal.'
+  - 'All three Attempt-1 weaknesses were fixed: vertical axis reference lines now
+    anchor each dimension position (ax.axvline), the per-row iterrows loop was replaced
+    with a vectorized matplotlib.collections.LineCollection, and alpha was reduced
+    from 0.5 to 0.4 for better strand separation.'
+  - Correct parallel coordinates construction across 4 normalized Iris dimensions,
+    with the added reference lines making the 'each variable is a vertical axis' metaphor
+    explicit.
+  - Imprint palette applied in canonical order (Setosa=#009E73 brand green, Versicolor=#C475FD,
+    Virginica=#4467A3), identical across both themes.
+  - Theme-adaptive chrome is fully correct in both renders - title, axis labels, tick
+    labels, grid, and legend all readable with no dark-on-dark or light-on-light failures.
+  - 'Clean, idiomatic, reproducible code: vectorized LineCollection instead of a per-row
+    loop, np.random.seed(42), correct 3200x1800 canvas, and savefig without bbox_inches=''tight''.'
   weaknesses:
-  - No vertical axis reference lines are drawn at each dimension position (x=0,1,2,3)
-    - the core visual metaphor of parallel coordinates ('each variable as a vertical
-    axis') is only implied by tick labels, not drawn. Add e.g. ax.axvline(xi, color=INK_SOFT,
-    alpha=0.3, linewidth=0.8, zorder=0) for each of the 4 dimension positions to visually
-    anchor the axes - this is standard for parallel coordinate plots and would materially
-    improve Design Excellence and Layout scoring.
-  - The 150 overlapping semi-transparent lines (alpha=0.5) create a cluttered 'hairball'
-    in the Sepal Length / Sepal Width region, obscuring individual patterns - consider
-    a slightly lower alpha (~0.35-0.4) to better separate overlapping strands while
-    keeping category-level color blocks legible.
-  - 'The ''for _, row in df_norm.iterrows(): ax.plot(...)'' loop is non-idiomatic
-    and inefficient for matplotlib - a matplotlib.collections.LineCollection would
-    be the vectorized, idiomatic pattern for many-line plots like this, and would
-    also unlock Library Mastery (distinctive-feature) credit.'
-  - No distinctive matplotlib-specific technique is leveraged (e.g., LineCollection,
-    custom transforms) - the implementation is generic enough that it could be ported
-    to nearly any plotting library with only minor syntax changes.
+  - Legend box (upper right) sits over a dense cluster of Virginica lines near the
+    Petal Length/Petal Width axes, occluding a few peak-value strands behind its opaque
+    fill - consider relocating to 'lower left' or just outside the axes so no data
+    is hidden.
+  - The Sepal Length/Sepal Width region is still a dense overlapping 'hairball' even
+    at alpha=0.4 - consider alpha ~0.3 or a slightly thinner linewidth (1.5-1.8) to
+    further separate the 150 strands.
+  - Aesthetic customization is solid but still close to a well-configured library
+    default - a bit more visual hierarchy (e.g. bolder/darker reference lines, or
+    a one-line subtitle framing the species-separation takeaway) would push it toward
+    publication-level polish.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
-      Chrome: Title "parallel-basic · python · matplotlib · anyplot.ai" in dark ink, clearly visible and centered above the plot. Y-axis label "Normalized Value" in dark ink, rotated, fully legible. X-axis tick labels are two-line labels ("Sepal Length" / "(4.3-7.9 cm)" etc.) in a softer dark gray, all readable with no clipping. Y-axis tick labels (0.0-1.0) in soft dark gray. Faint horizontal grid lines only, subtle. Legend box (upper right) has a light elevated fill with a soft gray border and gray text labels "Setosa", "Versicolor", "Virginica" - all legible against the box.
-      Data: Three color groups of ~50 lines each - green (Setosa, #009E73), lavender/purple (Versicolor, #C475FD), and blue (Virginica, #4467A3). Lines converge/cross heavily between Sepal Length and Sepal Width (dense woven region) but separate cleanly at Petal Length/Petal Width, where the green Setosa cluster drops to near 0 while purple and blue overlap more in the mid-to-upper range. First series is confirmed #009E73 green.
+      Chrome: Title "parallel-basic · python · matplotlib · anyplot.ai" in dark ink, centered above the plot, fully legible. Y-axis label "Normalized Value" in dark ink, rotated, fully legible. Faint vertical reference lines now mark each of the 4 dimension positions (new since Attempt 1). X-axis tick labels are two-line labels ("Sepal Length" / "(4.3-7.9 cm)", etc.) in soft dark gray, all readable with no clipping. Y-axis tick labels (0.0-1.0) in soft dark gray. Subtle horizontal grid lines only. Legend box (upper right) has a light elevated fill with a soft gray border and gray text labels "Setosa", "Versicolor", "Virginica", all legible against the box, though it visually sits over a handful of high-value Virginica strands in that corner.
+      Data: Three color groups of ~50 lines each - green (Setosa, #009E73), lavender (Versicolor, #C475FD), and blue (Virginica, #4467A3), rendered via a vectorized LineCollection at alpha=0.4. Lines converge/cross heavily between Sepal Length and Sepal Width (a dense woven region) but separate cleanly at Petal Length/Petal Width, where the green Setosa cluster drops to near 0 while lavender and blue overlap more in the mid-to-upper range. First series confirmed #009E73 green.
       Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 - not pure black, not light.
-      Chrome: Title, y-axis label, x-axis tick labels, and y-axis tick labels all render in light off-white / light gray tones, clearly visible against the dark background. No dark-on-dark failures observed - every text element (title, both axis labels, both tick label sets, legend text) is legible. Legend box has a dark elevated fill with a lighter gray border and light gray text, readable against the dark background. Grid lines are faint and subtle, matching the dark theme.
-      Data: Same three color groups as the light render - green #009E73, lavender #C475FD, blue #4467A3 - confirmed identical hues to the light render; only the chrome (background, text, grid, legend frame) flipped to the dark theme tokens.
+      Chrome: Title, y-axis label, x-axis tick labels, and y-axis tick labels all render in light off-white/light-gray tones, clearly visible against the dark background. Vertical dimension reference lines are visible at reduced alpha, consistent with the light render. No dark-on-dark failures observed - every text element (title, both axis labels, both tick label sets, legend text) is legible. Legend box has a dark elevated fill with a lighter gray border and light gray text, readable against the dark background.
+      Data: Same three color groups as the light render - green #009E73, lavender #C475FD, blue #4467A3 - confirmed identical hues to the light render; only the chrome (background, text, grid, legend frame, reference lines) flipped to the dark theme tokens.
       Legibility verdict: PASS - all text is clearly readable against the dark background, no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
@@ -70,23 +62,22 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks/legend
-          8pt); well-proportioned and readable in both themes; title fits comfortably.
+        comment: All font sizes explicitly set (title 12pt, axis label 10pt, ticks/legend
+          8pt); readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps other text or data; legend has an opaque elevated
-          background that occludes lines behind it.
+        comment: No text-on-text overlap, but the upper-right legend's opaque box
+          sits over a few peak Virginica strands, hiding them.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 150 lines at alpha=0.5/linewidth=2 are visible and category-distinguishable,
-          but the Sepal Length/Sepal Width region is a dense overlapping mass that
-          could use slightly lower alpha.
+        comment: Alpha reduced to 0.4 (from 0.5) improves separation vs Attempt 1,
+          but the Sepal Length/Sepal Width region is still a dense overlapping mass.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -96,50 +87,49 @@ review:
           distinguishable.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization and balanced margins; missing per-axis vertical
-          reference lines is a structural/clarity gap for this plot type.
+        comment: Vertical per-dimension reference lines now anchor the parallel-coordinates
+          metaphor; good canvas use, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis descriptive; x-axis tick labels include original units and
-          ranges (cm) - exceeds baseline.
+        comment: X-axis tick labels include original units and ranges (cm); y-axis
+          descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; multi-series uses canonical Imprint order;
-          backgrounds and chrome are theme-correct in both renders.'
+        comment: 'First series is #009E73; canonical Imprint order; both renders theme-correct.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default; competent but not distinctive or
-          publication-level.
+        passed: true
+        comment: Reference lines and vectorized rendering add polish beyond a bare
+          library default, but still short of publication-level distinctiveness.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Spines removed, subtle grid, but missing the canonical parallel-coordinates
-          vertical axis lines is a notable refinement gap.
+        passed: true
+        comment: Spines removed, subtle y-grid, and the previously-missing canonical
+          vertical axis lines are now present.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Setosa's clear separation from Versicolor/Virginica in the petal
-          dimensions gives the viewer an immediate visual insight.
+          dimensions gives an immediate visual insight.
     spec_compliance:
       score: 15
       max: 15
@@ -180,7 +170,7 @@ review:
         max: 6
         passed: true
         comment: Shows both clear separation (Setosa) and overlapping ambiguity (Versicolor/Virginica),
-          a realistic and useful demonstration.
+          a realistic demonstration.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -194,7 +184,7 @@ review:
         passed: true
         comment: All ranges match the real Iris dataset's measurement ranges.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -214,14 +204,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas all used.
+        comment: os, matplotlib.pyplot, numpy, pandas, LineCollection all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'for _, row in df_norm.iterrows(): ax.plot(...) is a non-idiomatic,
-          unvectorized loop; not fake functionality, just not clean.'
+        passed: true
+        comment: 'Fixed: the previous non-idiomatic iterrows loop was replaced with
+          a vectorized LineCollection.'
       - id: CQ-05
         name: Output & API
         score: 1
@@ -229,36 +219,36 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png without bbox_inches='tight', correct API usage.
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct Axes-level API usage and custom legend handles, but a per-row
-          plotting loop instead of LineCollection misses the more idiomatic pattern
-          for many-line plots.
+        comment: Correct Axes-level API, custom legend handles, and now a vectorized
+          LineCollection - the idiomatic pattern for many-line plots.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Generic line-plotting technique with no matplotlib-distinctive feature
-          (e.g. LineCollection) leveraged.
-  verdict: REJECTED
+        passed: true
+        comment: LineCollection is a genuine matplotlib-distinctive technique, addressing
+          the prior 'generic, portable to any library' criticism.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   - custom-legend
+  - line-collection
   patterns:
   - data-generation
-  - iteration-over-groups
   - explicit-figure
   dataprep:
   - normalization
   styling:
   - alpha-blending
+  - grid-styling
   - publication-ready
