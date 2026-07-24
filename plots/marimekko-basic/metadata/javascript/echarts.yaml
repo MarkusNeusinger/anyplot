@@ -1,0 +1,257 @@
+library: echarts
+language: javascript
+specification_id: marimekko-basic
+created: '2026-07-24T14:57:14Z'
+updated: '2026-07-24T15:14:03Z'
+generated_by: claude-sonnet
+workflow_run: 30102334178
+issue: 1002
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Fixed the prior WCAG contrast issue: segment label color now switches per-product
+    (white on the green Software / blue Services slots, dark ink on the lighter lavender
+    Hardware / ochre Consulting slots), with a comment explaining the WCAG AA large-text
+    3:1 rationale.'
+  - Added a tooltip formatter surfacing region, product, value, and share-of-column
+    — gives the interactive HTML build a way to inspect exact values for segments
+    too small to carry an inline label.
+  - Correctly implements a non-native Marimekko chart type via an ECharts custom series
+    + renderItem, with column widths proportional to region totals and segment heights
+    proportional to in-column share, matching the source data exactly.
+  - First categorical color is brand green (#009E73), remaining products follow canonical
+    Imprint order; data colors are pixel-identical between light and dark renders.
+  - Theme-adaptive chrome is correct in both renders — no dark-on-dark/light-on-light
+    failures, no clipped text at any edge — and value labels are correctly suppressed
+    on segments too short to hold text without overflow.
+  - Clean, dependency-free, deterministic code with a manually constructed percentage
+    axis and measured-text legend layout.
+  weaknesses:
+  - Leftover duplicate header comment block at the top of the file (two stacked 'anyplot.ai'
+    / library-version / quality-score blocks, lines 1-9) — dead/conflicting comment
+    text that should be cleaned up to a single header.
+  - The manual graphic-based legend remains purely decorative — it cannot toggle series
+    visibility the way ECharts' native legend component would in the interactive HTML
+    output.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Bold dark title "marimekko-basic · javascript · echarts · anyplot.ai" centered at top; manual legend (Software/Hardware/Services/Consulting swatches) below it; a percentage y-axis (0/25/50/75/100%) with a rotated "Share of Column Revenue" label on the left; five variable-width stacked columns for regions, each with a rotated region-name label below and a bold dollar total ($950M/$720M/$760M/$240M/$165M) above. All chrome text is dark and clearly legible against the light background.
+      Data: Column order/colors follow canonical Imprint order — Software = brand green #009E73, Hardware = lavender, Services = blue, Consulting = ochre. In-segment value labels use white text on the green/blue slots and dark ink text on the lavender/ochre slots (the WCAG contrast fix from attempt 1), and are correctly suppressed on segments too short to hold text (e.g. the small Consulting slice in Middle East & Africa).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Identical layout to the light render, with title, legend, axis ticks, rotated region labels, and column totals all flipped to light/white text and clearly readable — no dark-on-dark failures, no clipping at any edge.
+      Data: Segment fill colors are pixel-identical to the light render (green/lavender/blue/ochre) — only chrome flipped, as required. Segment label colors (white vs. dark ink per product) are unchanged from the light render and remain legible against both the segment fill and the dark page background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes; the prior borderline-contrast value
+          labels on lavender/ochre segments now use dark ink instead of white.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; small segments correctly omit inline labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Segment colors and white separator strokes keep every slice clearly
+          distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Per-segment label color now meets WCAG AA large-text contrast on
+          all four palette slots; no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced proportions, canvas gate passed, nothing cut off, title
+          well within bounds.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Share of Column Revenue" axis label plus $M-denominated value/total
+          labels are descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73, canonical Imprint order, correct light/dark
+          backgrounds, identical data colors across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Genuine custom construction of a non-native chart type with computed
+          proportional geometry and a measured-text legend layout.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean, generous whitespace, subtle segment strokes, minimal manual
+          axis chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Width+height double-encoding plus column totals give a clear read;
+          no extra emphasis beyond that baseline.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine Marimekko: both width and height encode data.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Value labels on larger segments, legend distinguishing y-categories,
+          centered region names under variable-width columns — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Column width ∝ region total, segment height ∝ in-column share.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match product names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 x-categories, 4 y-categories within the spec's recommended ranges,
+          varied totals.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral quarterly revenue by region/product-line data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values ($15M-$420M) are sensible magnitudes for regional business
+          revenue.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: 'No classes; procedural with one small textWidth helper. Deduction:
+          a duplicate/leftover header comment block (two stacked anyplot.ai headers,
+          lines 1-9) is dead/conflicting text that should be cleaned up.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded data, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports; only the ANYPLOT globals and echarts are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for building custom geometry; no fake/simulated
+          UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract correctly: echarts.init(#container),
+          chart.setOption, animation: false, no explicit size/devicePixelRatio.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom series + renderItem is the documented ECharts pattern for
+          chart types with no built-in equivalent.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Now includes a tooltip formatter for the interactive build; the manual
+          graphic-based legend still can't toggle series visibility like a native
+          ECharts legend would.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - manual-ticks
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - edge-highlighting
+  - minimal-chrome
