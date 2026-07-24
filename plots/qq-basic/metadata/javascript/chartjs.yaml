@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: qq-basic
 created: '2026-07-24T07:13:48Z'
-updated: '2026-07-24T07:17:27Z'
+updated: '2026-07-24T07:28:07Z'
 generated_by: claude-sonnet
 workflow_run: 30074373978
 issue: 977
@@ -12,51 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/chartjs/plot-dark.html
-quality_score: 84
+quality_score: 92
 review:
   strengths:
-  - 'Correct Q-Q plot construction: sorted sample quantiles plotted against theoretical
-    normal quantiles via Acklam''s inverse-CDF approximation, with a clearly visible
-    dashed 45-degree reference line'
-  - 'Fully deterministic and self-contained: seeded Park-Miller LCG + Box-Muller sampler
-    + inverse-normal rational approximation, no external dependencies'
-  - 'First (and only data) series uses brand green #009E73 correctly; the reference
-    line uses the theme-adaptive ink token rather than a palette color, which is the
-    right semantic choice since it''s a guide, not data'
-  - 'Theme-adaptive chrome verified correctly in both renders: title/axis labels/ticks/grid/legend
-    all flip appropriately, data green is identical across themes'
-  - Title font size scales with title length via the linear formula, keeping the descriptive-prefixed
-    title well within canvas bounds
-  - 'Realistic, neutral data narrative (precision gauge calibration residuals) that
-    also demonstrates the diagnostic value of a Q-Q plot: the S-shaped deviation at
-    both tails visibly signals heavy tails/outliers, matching the spec''s stated use
-    case'
+  - 'Both attempt-1 weaknesses fully resolved: the reference line''s padding now matches
+    the axes'' explicit min/max, so the dashed line reaches the plot corners in both
+    renders; a new tailCalloutPlugin (native Chart.js afterDatasetsDraw hook) draws
+    a leader-line annotation calling out the largest tail deviation'
+  - 'Correct, fully deterministic Q-Q construction: seeded Park-Miller LCG + Box-Muller
+    sampler + Acklam''s inverse-normal rational approximation, no external dependencies'
+  - Theme-adaptive chrome verified in both renders — title/axis labels/ticks/grid/legend/reference-line
+    all flip correctly; data green identical across themes
+  - 'Marker density improved: radius reduced from 6 to 5 with alpha lowered to ~70%,
+    reducing clumping in the dense mid-region (theoretical quantiles -1 to 1)'
+  - Realistic, neutral data narrative (precision gauge calibration residuals) whose
+    S-shaped deviation at both tails visibly demonstrates the diagnostic value of
+    a Q-Q plot
   weaknesses:
-  - 'Design Excellence is fairly standard: relies on default Chart.js scatter+line
-    combo styling with token-based colors; no additional visual device (e.g. a subtle
-    confidence band, or an annotation calling out the largest deviation) to elevate
-    storytelling beyond the bare reference line'
-  - Markers in the dense mid-region (theoretical quantiles roughly -1 to 1) touch/overlap
-    slightly at radius 6 with only ~80% opacity; a touch more transparency or a slightly
-    smaller radius would reduce clumping in that band
-  - The dashed reference line's padding is computed from the data's min/max coordinates
-    (8% of data range) rather than the chart's auto-scaled axis extent, so it visibly
-    stops short of the plot corners instead of spanning the full visible diagonal
+  - Tick label font (13px) is a touch small relative to the axis title font (16px)
+    — could be nudged up 1-2px for stronger visual balance, though currently readable
+    in both themes
+  - Design Excellence, while improved, still relies primarily on token-driven default
+    styling plus one annotation; a secondary visual device (e.g., a subtle shaded
+    confidence band around the reference line) would push storytelling further
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Calibration Residuals · qq-basic · javascript · chartjs · anyplot.ai" in dark ink at top, legend below it with a green swatch labeled "Sample vs. Theoretical" and a dashed-line swatch labeled "Reference Line (y = x)". Axis titles "Theoretical Quantiles" (x) and "Sample Quantiles" (y) in dark ink; tick labels in a softer gray; grid lines are thin and subtle on both axes.
-      Data: ~100 green (#009E73) circular markers with a thin off-white/page-colored edge, tracing an S-curve that hugs a black dashed 45-degree reference line through the middle and bows away at both tails (heavy-tail/outlier signature).
-      Legibility verdict: PASS — all title, legend, axis, and tick text is clearly readable against the light background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Calibration Residuals · qq-basic · javascript · chartjs · anyplot.ai" in dark ink at top; legend below with green swatch ("Sample vs. Theoretical") and dashed-line swatch ("Reference Line (y = x)"); axis titles "Theoretical Quantiles" / "Sample Quantiles" in dark ink; tick labels in softer gray; subtle grid. All readable.
+      Data: ~100 green (#009E73) markers with thin page-bg edge halo, forming an S-curve around a black dashed 45-degree reference line that now spans corner-to-corner. A leader-line annotation ("Largest tail deviation") points at the bottom-left outlier point (~-2.6, -4.0).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and legend text now rendered in near-white/light ink; axis titles and tick labels flip to light tones; grid lines are thin, subtle, and light-toned; the dashed reference line flips from black to white/light so it stays visible against the dark surface.
-      Data: The same ~100 green (#009E73) markers in the identical positions and identical hue as the light render — confirming data colors are unchanged across themes.
-      Legibility verdict: PASS — no dark-on-dark issues; all title, legend, axis, and tick text is clearly readable against the dark background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/legend text in near-white ink; axis titles/tick labels/grid flipped to light tones; reference line flips from black to white/light dashes, still reaching both corners. No dark-on-dark issues.
+      Data: Same ~100 green markers, identical positions and hue as the light render — confirms data colors unchanged across themes. Callout annotation present and legible in soft-ink tone.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -64,71 +57,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes, font sizes explicit, title scales
-          with length
+        comment: All text readable in both themes; tick labels (13px) slightly small
+          relative to axis titles (16px)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No collisions; callout leader line avoids other elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size appropriate for n=100 but points touch slightly in the
-          dense mid-region
+        comment: Marker radius reduced to 5 with ~70% alpha, resolving dense mid-region
+          clumping from attempt 1
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green data vs. neutral dashed line, no red-green reliance
+        comment: Adequate contrast, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), balanced margins, no overflow
+        comment: Canvas gate passed (3200x1800 exact); nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Theoretical Quantiles' / 'Sample Quantiles' labels
+        comment: Descriptive labels with clear units/meaning
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, reference line correctly uses ink token,
-          backgrounds theme-correct in both renders'
+        comment: 'First series #009E73; backgrounds correct in both themes'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Alpha-blended markers with page-bg edge stroke, dashed reference
-          line for hierarchy; otherwise fairly standard combo-chart look
+        comment: Alpha-blended markers with edge halo, dashed reference line, custom
+          callout annotation elevate beyond bare combo chart
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, theme-adaptive borders; nothing
-          beyond expected token usage
+        comment: Subtle grid, generous whitespace, reference line now spans full visible
+          diagonal
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Reference line vs. data creates a clear comparison focal point, but
-          no annotation calls out the visible tail deviation
+        comment: New leader-line callout explicitly surfaces the largest tail deviation
     spec_compliance:
       score: 15
       max: 15
@@ -138,50 +129,47 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Q-Q scatter plot with reference line
+        comment: Correct Q-Q scatter + 45-degree reference line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 45-degree reference line clearly visible, sample vs theoretical quantiles
-          plotted
+        comment: Reference line clearly visible, correct axis labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = theoretical quantiles, Y = sample quantiles, matching spec
+        comment: Theoretical quantiles on x, sample quantiles on y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          are clear
+        comment: Title format correct; legend labels clear
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows full quantile range and a visible tail deviation demonstrating
-          diagnostic value
+        comment: Callout now explicitly surfaces the outlier/heavy-tail diagnostic
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Precision gauge calibration residuals — plausible and neutral
+        comment: Precision gauge calibration residuals; plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: n=100, z-score range -4 to 3 is sensible for standardized residuals
+        comment: z-score range appropriate for n=100 standard-normal draws
     code_quality:
       score: 10
       max: 10
@@ -191,34 +179,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions limited to necessary PRNG/inverse-CDF math, otherwise
-          flat script
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fully deterministic seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses global Chart
+        comment: No imports needed (browser globals only)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity, clean structure
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mounts canvas to #container, animation:false, current Chart.js API'
+        comment: 'Correct mount-node contract, animation: false set'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -226,19 +213,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct combo scatter+line dataset with 'order' z-index control,
-          theme tokens threaded through all options
+        comment: Mixed line+scatter datasets, scale min/max instead of manual ticks
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
         passed: true
-        comment: Uses Chart.js mixed-type datasets (scatter + line in one chart) for
-          the reference-line overlay
+        comment: Native afterDatasetsDraw plugin for the callout is a genuinely distinctive
+          technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   patterns:
   - data-generation
