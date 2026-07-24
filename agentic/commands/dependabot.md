@@ -27,7 +27,7 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
      workflow runs behind manual approval (`action_required`, so the checks never report), and
      Dependabot permanently stops rebasing a branch once a foreign commit lands on it. PR #9674
      burned 174 runs in 22 h this way. `auto-update-pr-branches.yml` skips Dependabot branches
-     for the same reason (#9675).
+     for the same reason (#9772).
    - **Already poisoned** (head commit authored by `github-actions[bot]`, checks stuck at
      `action_required`): comment `@dependabot recreate` on the PR. That force-pushes a fresh
      `dependabot[bot]`-authored head whose CI is not gated. Approving the pending run via

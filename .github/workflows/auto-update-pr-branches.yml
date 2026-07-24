@@ -10,7 +10,7 @@ run-name: "Auto-update PR branches after push to ${{ github.ref_name }}"
 # NOT actually required to merge. This file used to claim the opposite.
 # That means every update-branch call is optional work which also
 # invalidates the green checks on the previous head and forces a full CI
-# re-run. Retiring this workflow is worth evaluating — see #9675; it is
+# re-run. Retiring this workflow is worth evaluating — see #9772; it is
 # kept for now because the ruleset could be tightened again, and because
 # behaviour changes here affect every auto-merge PR in the repo.
 #
