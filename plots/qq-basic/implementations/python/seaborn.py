@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qq-basic: Basic Q-Q Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-24
@@ -81,7 +81,7 @@ sns.scatterplot(
     x=theoretical_q,
     y=sample_q,
     ax=ax,
-    s=120,
+    s=90,
     color=BRAND,
     alpha=0.75,
     edgecolor=PAGE_BG,
@@ -93,7 +93,7 @@ sns.scatterplot(
 # Style
 ax.set_xlabel("Theoretical Quantiles", fontsize=10, color=INK)
 ax.set_ylabel("Sample Quantiles", fontsize=10, color=INK)
-ax.set_title("qq-basic · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_title("qq-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.legend(fontsize=8, loc="upper left")
 ax.spines["top"].set_visible(False)
