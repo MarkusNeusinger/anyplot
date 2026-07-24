@@ -19,23 +19,38 @@ function gaussian(mean, std) {
   return mean + z * std;
 }
 
-const dimensions = ["Price", "Rating", "Monthly Sales", "Inventory"];
+const dimensions = ["Price", "Rating", "Monthly Sales", "Inventory", "Return Rate", "Discount"];
 const formatters = [
   (v) => `$${v.toFixed(0)}`,
   (v) => `${v.toFixed(1)}★`,
   (v) => `${Math.round(v)} units/mo`,
   (v) => `${Math.round(v)} units`,
+  (v) => `${v.toFixed(1)}%`,
+  (v) => `${v.toFixed(1)}%`,
 ];
 
 // Product segments — cheaper items sell in higher volume and carry deeper
 // stock, while premium items command higher price/rating but move slower.
+// Budget items also see more returns and heavier discounting than Premium.
 const segments = [
-  { name: "Budget", means: [25, 3.3, 850, 1200], stds: [8, 0.4, 200, 300] },
-  { name: "Mid-Range", means: [75, 4.0, 420, 600], stds: [20, 0.3, 120, 150] },
-  { name: "Premium", means: [220, 4.6, 95, 150], stds: [60, 0.25, 35, 50] },
+  {
+    name: "Budget",
+    means: [25, 3.3, 850, 1200, 8, 18],
+    stds: [8, 0.4, 200, 300, 2, 5],
+  },
+  {
+    name: "Mid-Range",
+    means: [75, 4.0, 420, 600, 4, 9],
+    stds: [20, 0.3, 120, 150, 1.2, 3],
+  },
+  {
+    name: "Premium",
+    means: [220, 4.6, 95, 150, 1.5, 3],
+    stds: [60, 0.25, 35, 50, 0.6, 1.5],
+  },
 ];
-const clampMin = [5, 1, 10, 10];
-const clampMax = [Infinity, 5, Infinity, Infinity];
+const clampMin = [5, 1, 10, 10, 0, 0];
+const clampMax = [Infinity, 5, Infinity, Infinity, 100, 100];
 
 const samplesPerSegment = 20;
 const products = [];
@@ -55,6 +70,32 @@ segments.forEach((seg, segIndex) => {
 const mins = dimensions.map((_, d) => Math.min(...products.map((p) => p.values[d])));
 const maxs = dimensions.map((_, d) => Math.max(...products.map((p) => p.values[d])));
 
+// --- Interaction: hover a line (or its legend swatch) to spotlight every
+// line in that segment and fade the rest — a lightweight way to trace one
+// group's path across all axes despite 60 overlapping observations.
+const baseOpacity = 0.4;
+const dimmedOpacity = 0.06;
+const highlightOpacity = 0.95;
+
+function highlightSegment(chart, name) {
+  chart.series.forEach((s) => {
+    if (s.graph) s.graph.attr({ opacity: s.name === name ? highlightOpacity : dimmedOpacity });
+  });
+}
+
+function resetOpacities(chart) {
+  chart.series.forEach((s) => {
+    if (s.graph) s.graph.attr({ opacity: baseOpacity });
+  });
+}
+
+function toggleSegmentVisibility(chart, name) {
+  const segmentSeries = chart.series.filter((s) => s.name === name);
+  const anyVisible = segmentSeries.some((s) => s.visible);
+  segmentSeries.forEach((s) => s.setVisible(!anyVisible, false));
+  chart.redraw();
+}
+
 const seenSegments = new Set();
 const lineSeries = products.map((p) => {
   const firstOfSegment = !seenSegments.has(p.segIndex);
@@ -62,14 +103,26 @@ const lineSeries = products.map((p) => {
   return {
     name: p.segment,
     color: t.palette[p.segIndex],
-    lineWidth: 1.5,
-    opacity: 0.5,
+    lineWidth: 1.3,
+    opacity: baseOpacity,
     marker: { enabled: false },
     showInLegend: firstOfSegment,
     data: p.values.map((v, d) => ({
       y: (v - mins[d]) / (maxs[d] - mins[d]),
       custom: { real: v },
     })),
+    events: {
+      mouseOver: function () {
+        highlightSegment(this.chart, this.name);
+      },
+      mouseOut: function () {
+        resetOpacities(this.chart);
+      },
+      legendItemClick: function () {
+        toggleSegmentVisibility(this.chart, this.name);
+        return false;
+      },
+    },
   };
 });
 
@@ -88,7 +141,7 @@ Highcharts.chart("container", {
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
   subtitle: {
-    text: "Product segments across price, rating, sales & inventory (normalized 0–1)",
+    text: "Product segments across price, rating, sales, inventory, returns & discount (normalized 0–1)",
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
