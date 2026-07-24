@@ -1,0 +1,261 @@
+library: makie
+language: julia
+specification_id: qq-basic
+created: '2026-07-24T07:08:52Z'
+updated: '2026-07-24T07:27:25Z'
+generated_by: claude-sonnet
+workflow_run: 30074255668
+issue: 977
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Correct, spec-compliant Q-Q plot with a clear 45° dashed reference line and Imprint-palette
+    green markers, identical between light and dark renders.
+  - Axis labels now include units ("Theoretical Quantiles (ms)" / "Sample Quantiles
+    (ms)"), fully resolving the prior review's VQ-06 gap.
+  - New Makie-native inset Axis showing residuals (sample - theoretical) is a genuinely
+    distinctive, well-executed feature — theme-adaptive elevated background, placed
+    in the empty lower-right corner with zero overlap with the main scatter or reference
+    line.
+  - Deliberately right-skewed reaction-time data gives a textbook Q-Q deviation signature,
+    and the residual panel reinforces that storytelling exactly as the spec's Notes
+    describe (S-curve / skew signature).
+  - Theme-adaptive chrome correctly threaded through both Figure/Axis instances (main
+    + inset); both renders fully legible and theme-correct.
+  weaknesses:
+  - Title still occupies only ~24% of canvas width, unchanged from the prior attempt
+    — consider a further titlesize bump for better visual weight/canvas utilization.
+  - Dense midsection markers (theoretical quantiles ~380-420) still partially merge
+    into a near-solid band in both the main plot and the residual inset — a touch
+    more separation (smaller markers or lower alpha there) would help.
+  - Q-Q deviation coverage still shows only one distribution characteristic (right-skew);
+    a subtle heavy-tail or outlier touch could further demonstrate DQ-01 feature coverage.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "qq-basic · julia · makie · anyplot.ai" centered at top (~24% of canvas width); dark-ink axis labels "Theoretical Quantiles (ms)" (x) and "Sample Quantiles (ms)" (y) — units now present; soft-gray tick labels on both axes; subtle light-gray gridline mesh; top/right spines removed.
+      Data: Single series of #009E73 green circular markers with a thin off-white stroke halo, tracing sample vs. theoretical quantiles from a tight low-end cluster (~130,250), crossing the dark dashed 45° reference line near the center, then arcing progressively above the line toward the top-right (~525,590) — a clear right-skew Q-Q signature. A new inset Axis ("Residuals") sits in the empty lower-right corner on a slightly-elevated off-white panel, plotting theoretical quantile vs. (sample - theoretical) with a dashed zero-line; it mirrors the same green markers and clearly shows the residual's U-then-rise shape without overlapping the main scatter, reference line, or any chrome.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Same title/axis-label layout rendered in light ink; tick labels in lighter soft-gray; grid lines a subtle light overlay at low alpha; reference line now light dashed gray/off-white (correct chrome-only flip); the inset panel's elevated background is a slightly-lighter near-black shade, consistent with the light render's slightly-lighter off-white elevation.
+      Data: Identical #009E73 green markers in both the main scatter and the residual inset — confirmed same data colors, only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes; axis labels now
+          carry units. Title still fills only ~24% of canvas width, below the suggested
+          50-70% for a short title, though not clipped.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render, including the new inset
+          panel.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers well-sized with a stroke halo aiding separation; dense midsection
+          (theoretical quantiles ~380-420) still reads as a near-solid band in both
+          the main scatter and the residual inset, largely inherent to continuous
+          Q-Q data.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good CVD-safe contrast between green markers and gray dashed reference
+          line.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot and inset both fit cleanly within the canvas with balanced margins;
+          inset placed in a genuinely empty region with zero collisions; nothing cut
+          off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis labels now include units (ms), resolving the prior review's
+          gap; title format exact.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is exactly #009E73, identical across themes; backgrounds
+          correct #FAF8F1/#1A1A17; all chrome, including the new inset panel, is theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Beyond bare defaults: theme-adaptive tokens, marker stroke-halo,
+          dashed reference line, and now a themed elevated-background inset diagnostic
+          panel — a genuinely professional touch.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle low-alpha gridlines, generous whitespace;
+          refinement is consistent across the main axis and the new inset.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Deliberately skewed data plus the new residual inset work together
+          to make the Q-Q deviation pattern immediately legible, guiding the reader
+          without extra annotation text.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Q-Q plot: sample vs. theoretical quantiles with reference
+          line.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 45° reference line clearly visible; axis labels now match spec wording
+          with units added.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Theoretical quantiles on x, sample quantiles on y; axes show full
+          data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; no legend needed for single series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Clearly demonstrates right-skew deviation from normality via both
+          the main plot and the residual inset; still shows only one deviation mode
+          rather than also heavy tails or outliers.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Reaction-time-from-cognitive-task scenario is realistic, neutral,
+          and directly motivates the Q-Q use case.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reaction times ~130-600ms with mean 320ms are plausible for human
+          cognitive-task response times.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear structure; one justified helper function (norm_quantile)
+          implementing the normal inverse CDF since Distributions.jl isn't imported.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or over-engineering; inset Axis is a real Makie layout
+          feature, not simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves via save("plot-$(THEME).png", fig; px_per_unit = 2), current
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level Axis/scatter!/lines! usage with theme tokens threaded
+          through consistently across both axes.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Now uses Makie's native nested-Axis-in-grid-cell layout (Relative
+          sizing, halign/valign) to place a companion residual-diagnostic panel —
+          a genuinely Makie-specific technique, resolving the prior review's 'generic
+          usage' weakness.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - inset-axes
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling

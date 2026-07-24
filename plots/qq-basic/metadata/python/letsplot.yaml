@@ -2,126 +2,141 @@ library: letsplot
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:18:29Z'
-updated: '2026-04-27T05:50:45Z'
+updated: '2026-07-24T07:21:19Z'
 generated_by: claude-sonnet
-workflow_run: 24978026205
+workflow_run: 30074020669
 issue: 977
-python_version: 3.14.4
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - Perfect spec and data quality (30/30 combined) — bimodal exam-score data demonstrates
-    QQ plot diagnostic power with clear S-curve deviation
-  - 'Complete theme-adaptive implementation: both light and dark renders have correct
-    backgrounds (#FAF8F1 / #1A1A17), no readability failures in either theme'
-  - Explicit font sizing (title 24, labels 20, ticks 16) and correct 4800x2700px canvas
-    via scale=3
-  - 'Correct Okabe-Ito brand green #009E73 for all data markers; reference line uses
-    adaptive INK_SOFT token for theme compatibility'
+  - 'Attempt-1 weakness fixed: the full four-sided box border is gone, replaced with
+    panel_border=element_blank() and axis_line drawn only on the bottom/left — a cleaner,
+    more minimal frame in both themes'
+  - 'Attempt-1 weakness fixed: a contextual annotation ("Heavy tails: points bow away
+    from the reference line at both ends") now explicitly calls out the insight the
+    data was designed to show, anchored dynamically to the sample''s own quantile
+    range so it always lands in the empty upper-left corner'
+  - Correct, idiomatic use of lets-plot's dedicated geom_qq/geom_qq_line statistical
+    geoms; reference line is a properly fitted (mean/std) line through the sample
+    quantiles, the statistically correct convention for a Q-Q plot against an estimated
+    normal
+  - 'Data tells a clear, textbook story: Student''s t (df=3) draws produce the classic
+    heavy-tailed S-curve bowing away from the reference line at both ends, in a realistic,
+    neutral manufacturing QC calibration scenario'
+  - All font sizes explicitly set (axis_title=12, axis_text=10, plot_title=16, annotation
+    size=3.2); Imprint palette (#009E73 primary) and theme-adaptive chrome are both
+    correctly and identically applied across light/dark renders
+  - Clean KISS structure, seeded RNG, only used imports, correct plot-{THEME}.png/.html
+    output via ggsave(scale=4); canvas is exactly 3200×1800 (landscape target, within
+    gate)
   weaknesses:
-  - 'Design Excellence is the ceiling limiter (11/20): no visual storytelling emphasis
-    or confidence band to guide viewer to the deviation-from-normality insight'
-  - Manual Abramowitz & Stegun inverse-normal CDF implementation (50+ lines of magic
-    constants) is over-engineered; scipy.stats.norm.ppf achieves the same in one line
-  - lets-plot v4.x ships stat_qq / geom_qq — not using them misses the most distinctive
-    feature for this plot type, lowering LM-02 (2/5)
-  - Grid lines at size=0.3 are moderately prominent; spines not explicitly removed
-    — tightening to size=0.15 and removing top/right spines would improve visual refinement
+  - 'Aesthetic still reads as a well-refined default rather than fully publication-grade:
+    a single accent color plus a muted dashed reference line and one text annotation
+    is solid but not yet FiveThirtyEight-level polish — further hierarchy (e.g. subtle
+    emphasis on the tail points themselves) could push Design Excellence higher'
+  - Marker density in the dense mid-quantile cluster (~[-0.7, 0.7] theoretical quantiles)
+    is fairly tight with many overlapping points at size=2.5/alpha=0.75; a touch smaller
+    or slightly lower alpha in that region would ease the crowding without weakening
+    the tail signal
+  - No lets-plot-distinctive feature is leveraged beyond the basic statistical geoms
+    plus a text layer — interactive tooltip customization, faceting, or other library-unique
+    theme features remain unused
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "qq-basic · letsplot · anyplot.ai" in dark ink top-left; y-axis "Sample Quantiles (Exam Scores)" rotated 90°; x-axis "Theoretical Quantiles"; tick labels dark (#4A4A44); all clearly readable
-      Data: 100 scatter points in Okabe-Ito #009E73 (brand green), size 6, alpha 0.75; dark gray diagonal reference line spans full canvas; y-axis ~25–105 (raw exam scores), x-axis −2.5 to 2.6 (z-scores); characteristic S-curve deviation visible in upper tail
-      Legibility verdict: PASS — all text readable, no light-on-light failures
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "qq-basic · python · letsplot · anyplot.ai" in dark ink top-left, clearly legible. X-axis title "Theoretical Quantiles" and y-axis title "Sample Quantiles (Pressure, psi)" in dark ink, both readable and similarly sized. Tick labels in a softer gray ink, all legible and balanced between axes. Subtle light-gray gridlines on both axes, visible but unobtrusive. The panel border is now open — only bottom/left axis lines are drawn, no full four-sided box (fixed from attempt 1). A text annotation "Heavy tails: points bow away from the reference line at both ends" sits in the empty upper-left corner in muted gray ink, fully readable and not overlapping any data.
+      Data: Green (#009E73) circular markers (alpha ~0.75) tracing an S-shaped curve; a dashed, muted dark-gray diagonal reference line runs through the middle. Points closely hug the line in the [-1, 1] theoretical-quantile range and bow away from it at both tails (heavy-tailed signature), with sparse outlier points at each extreme.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title and all axis/tick labels flip to light text (INK token #F0EFE8 / INK_SOFT #B8B7B0); reference line becomes lighter gray — all readable against dark surface; no dark-on-dark failures detected
-      Data: Scatter points remain #009E73 — identical to light render; data colors unchanged between themes as required
-      Legibility verdict: PASS — all text legible in dark mode; no black-on-dark failures
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels rendered in light/off-white ink, all clearly legible against the dark background — no dark-on-dark text found. Gridlines are a muted light-gray, subtle but visible. Same open bottom/left-only axis frame as the light render, now in light ink. The annotation text is legible in light-gray ink against the dark panel, no overlap with data.
+      Data: Same green (#009E73) markers and same S-curve shape/positions as the light render — data colors are identical between themes as required. The dashed reference line is now light-gray (chrome color flipped correctly), clearly visible against the dark panel.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'Explicit sizes: title 24, axis labels 20, ticks 16; all text readable
-          in both renders'
+        comment: All font sizes explicitly set (12/10/16, annotation 3.2), readable
+          in both themes, no overlap or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: No overlapping text or data elements; annotation lands cleanly in
+          the empty upper-left corner
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 100 points at size 6 alpha 0.75 well-adapted to density; reference
-          line clearly visible
+        comment: 150-point markers at size=2.5/alpha=0.75 are visible and reasonably
+          density-adapted; mid-quantile cluster is somewhat tight
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green on off-white/near-black — excellent contrast; CVD-safe
-          Okabe-Ito color
+        comment: Green markers + neutral gray reference line, good contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization; minor empty corners in upper-left and lower-right
-          inherent to QQ plot extent
+        comment: Canvas confirmed exactly 3200x1800; plot fills a large, balanced
+          portion of the canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sample Quantiles (Exam Scores) and Theoretical Quantiles — descriptive
-          with domain context
+        comment: Descriptive axis titles; y-axis includes units (psi)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Data #009E73; light bg #FAF8F1; dark bg #1A1A17; INK/INK_SOFT tokens
-          correctly applied in both themes'
+        comment: 'Primary series is #009E73, identical across themes; backgrounds
+          match #FAF8F1/#1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured minimal default — correct brand colors, clean layout
-          — but not distinctive or publication-ready
+        passed: true
+        comment: Improved over attempt 1 (dashed muted reference line, annotation
+          callout, open axis) but not yet fully publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: theme_minimal base and subtle grid (size 0.3); spines not explicitly
-          removed; grid still moderately prominent
+        passed: true
+        comment: Full box border removed in favor of an open bottom/left axis (fixed
+          from attempt 1); subtle grid, generous whitespace, seamless panel/page blend
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Bimodal data choice is thoughtful and shows interesting deviation,
-          but no confidence band or emphasis guides viewer to the key insight
+        passed: true
+        comment: Annotation now explicitly calls out the heavy-tail deviation the
+          dataset was built to show, anchored to guide the viewer's eye (fixed from
+          attempt 1)
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +146,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct QQ plot: scatter points against diagonal reference line'
+        comment: Correct Q-Q plot via geom_qq + geom_qq_line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sample vs theoretical quantiles, visible reference line, deviation
-          from normality clearly shown
+        comment: Reference line present and clearly visible, sample vs theoretical
+          quantiles mapped
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Theoretical Quantiles (z-scores), Y = Sample Quantiles; all data
-          visible
+        comment: aes(sample=...) correctly maps data; axes show full quantile range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title qq-basic · letsplot · anyplot.ai correct; no legend needed
-          for single series
+        comment: Title format exactly matches required pattern; no legend needed for
+          single series
     data_quality:
       score: 15
       max: 15
@@ -162,24 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal mixture N(50,10)+N(75,5) shows S-curve, upper-tail deviation,
-          and outlier behavior — full QQ diagnostic capability
+        comment: Heavy-tailed t(df=3) distribution clearly shows the classic double-tail
+          bow-away signature
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Exam score context is neutral and plausible; heterogeneous cohort
-          narrative is believable
+        comment: Neutral manufacturing QC calibration scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 100 observations within 30-500 range; scores 25-105 realistic for
-          academic exams
+        comment: Pressure values (85-116 psi) are plausible for the domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -187,60 +199,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → QQ computation → plot →
-          save; no functions or classes'
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used
+        comment: Only used imports (numpy, pandas, lets_plot, scipy.stats, os)
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Manual Abramowitz & Stegun ppf implementation (50+ lines of magic
-          constants) is over-engineered; scipy.stats.norm.ppf is the standard approach
+        passed: true
+        comment: Clean, appropriately simple, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; ggsave with scale=3
-          for 4800x2700px
+        comment: Saves plot-{THEME}.png and .html via ggsave(scale=4), current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct ggplot grammar composition: ggplot() + geom_*() + labs()
-          + theme() + ggsize(); ggsave with scale parameter'
+        comment: Uses lets-plot's dedicated statistical geom_qq/geom_qq_line rather
+          than manual quantile computation, plus a properly layered geom_text annotation
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: HTML export is lets-plot strength; but lets-plot v4.x has stat_qq/geom_qq
-          which was not used — manual QQ computation misses the library's built-in
-          for this exact plot type
-  verdict: REJECTED
+        comment: geom_qq/geom_qq_line are lets-plot-specific convenience geoms, but
+          no further distinctive library feature (interactivity customization, faceting,
+          etc.) is used
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
+  - annotations
   - layer-composition
-  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending

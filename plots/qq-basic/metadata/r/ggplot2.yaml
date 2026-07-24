@@ -1,0 +1,236 @@
+library: ggplot2
+language: r
+specification_id: qq-basic
+created: '2026-07-24T07:05:59Z'
+updated: '2026-07-24T07:19:02Z'
+generated_by: claude-sonnet
+workflow_run: 30074137427
+issue: 977
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Confidence envelope (95% pointwise normal-theory band, narrower in the dense center
+    / wider in the tails) directly answers attempt 1's LM-02/DE-03 feedback with a
+    statistically sound, well-commented addition
+  - Point alpha reduced from 0.75 to 0.6, improving separation in the dense central
+    cluster as attempt 1 suggested
+  - Reference line and confidence band both use the theme-adaptive neutral ink token
+    rather than a palette color -- correct semantic choice since they're baseline/reference
+    elements, not data series
+  - Theme tokens correctly threaded through all chrome; both renders are fully theme-correct
+    with identical data colors
+  - Realistic, neutral shaft-diameter QC dataset (n=150, mean=25.00mm, sd=0.08mm),
+    clean KISS code, correct canvas dimensions
+  weaknesses:
+  - Grid lines use full INK color rather than a lighter/faded tint (library.md's own
+    guidance says "faint INK color") -- at the current 0.15mm linewidth this reads
+    fine, but a slightly lighter shade would give more headroom
+  - coord_fixed() for a literal 1:1 quantile aspect ratio (suggested in attempt 1)
+    still not applied -- would be a small additional distinctive touch
+  - No annotation calls out the specific tail-deviation points now that the confidence
+    band shows some points near/at the envelope edge -- a light callout on the most
+    extreme point would sharpen the story further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Title "qq-basic · r · ggplot2 · anyplot.ai" and subtitle "Shaft diameter QC measurements (n = 150) vs. normal distribution" in dark/soft-dark ink, both fully readable. Axis titles "Theoretical Quantiles" / "Sample Quantiles" and tick labels legible. Both-axis grid, subtle, thin lines.
+      Data: ~150 green (#009E73) points at alpha≈0.6, black 45-degree reference line, light-gray 95% pointwise confidence ribbon narrowing in the dense center and widening in the tails. First series confirmed as #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Title, subtitle, axis titles, and tick labels all flip to light cream / light gray -- no dark-on-dark failures. Grid remains subtle but visible.
+      Data: Identical #009E73 green points to the light render, confirming color consistency across themes. Reference line flips to near-white ink; confidence ribbon renders as a dark gray band from the same theme-adaptive ink token.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; grid uses full INK color rather
+          than a faded tint, minor nitpick at thin 0.15mm width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or ribbon
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Alpha reduced to 0.6 improves point separation; residual center clustering
+          is an inherent QQ-plot feature
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Exact spec wording for both axis titles
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; reference line/ribbon use neutral ink anchor
+          correctly; backgrounds correct in both themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Confidence envelope is a genuine upgrade over attempt 1's plain scatter+line
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Envelope now gives a clear story: tail curvature vs. ordinary sampling
+          variation'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct QQ plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Points, 45-degree reference line, axis labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Theoretical vs sample quantiles correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title format; no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Points, reference line, and confidence band show all QQ diagnostic
+          elements
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft-diameter machining QC, neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 25.00mm +/- 0.08mm sensible tolerance; n=150 within spec range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 + ragg; tibble namespaced
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Confidence-envelope math well-commented with statistical rationale
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png, correct plot-{THEME}.png naming
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: stat_qq()/stat_qq_line() are the canonical ggplot2 approach
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom 95% pointwise confidence envelope is distinctive; coord_fixed()
+          still not used
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
