@@ -2,115 +2,144 @@ library: bokeh
 language: python
 specification_id: marimekko-basic
 created: '2025-12-23T15:16:22Z'
-updated: '2026-04-27T03:39:21Z'
+updated: '2026-07-24T14:43:34Z'
 generated_by: claude-sonnet
-workflow_run: 24974790809
+workflow_run: 30100888972
 issue: 1002
-python_version: 3.14.4
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
-  strengths: []
-  weaknesses: []
+  strengths:
+  - 'Genuine two-dimensional Marimekko structure: bar widths are proportional to each
+    region''s total (via widths dict computed from region_totals) and segment heights
+    are proportional to each product''s share within the region — not a fixed-width
+    stacked bar pretending to be a Marimekko chart.'
+  - 'Real bokeh interactivity: one renderer per product drives an auto-built Legend
+    (legend_label=) plus a shared HoverTool with formatted per-segment tooltips (Region/Product/Value/Share),
+    and legend.click_policy=''hide'' lets users toggle series in the HTML detail view.'
+  - 'Data storytelling: the leading region (Asia Pacific) gets a ★ marker and bold
+    label with its total call-out, giving the chart a clear focal point instead of
+    four visually equal bars.'
+  - Value labels are conditionally shown only on segments large enough to hold them
+    (height > 0.12, width > 0.08), avoiding clutter on the smaller Home & Garden /
+    Latin America segments while still labeling the bars that matter.
+  - 'Canvas and theme discipline: toolbar_location=None plus explicit min_border_*
+    keeps the PNG at exactly 3200x1800 with no clipping, and PAGE_BG/INK/INK_SOFT
+    tokens are threaded through background, title, legend, and region-label colors
+    correctly in both renders.'
+  - 'Palette compliance: first series (Electronics) is #009E73, remaining series follow
+    the canonical Imprint order, and segment border lines use PAGE_BG so the theme-adaptive
+    dividers blend cleanly on both light and dark surfaces.'
+  weaknesses:
+  - Value labels use fixed white text (text_color='white') on every segment, but the
+    Apparel segment's fill (#C475FD, light purple) is bright enough that white-on-purple
+    contrast is noticeably weaker than white-on-green/blue/amber elsewhere in the
+    chart (~2.9:1, under the 3:1 minimum for large bold text) — pick text color per-segment
+    (e.g. dark ink on the lighter purple fill, white elsewhere) or add a thin dark
+    text outline so the $80B/$110B/$150B labels on Apparel read as crisply as the
+    other three products.
+  - Region labels below the bars are static Label() text placed at a fixed y=-0.04
+    regardless of label length; a region name much longer than the current set (e.g.
+    a longer country/segment name) could visually crowd the gap between adjacent bars
+    since spacing isn't dynamically checked — not a problem with the current 4-region
+    dataset but worth a defensive glance if the category count/label length ever changes.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "marimekko-basic · bokeh · anyplot.ai" centered in dark ink, clearly readable. Region labels "North America ($400B)", "Europe ($350B)", "Asia Pacific ($600B)", "Latin America ($150B)" in dark INK color below bars — all readable. Legend text (Electronics/Apparel/Home & Garden/Food & Beverage) in INK_SOFT (#4A4A44) — readable against light background.
-      Data: Four variable-width stacked bars. Colors follow Okabe-Ito in canonical order from bottom: #009E73 (Electronics), #D55E00 (Apparel), #0072B2 (Home & Garden), #CC79A7 (Food & Beverage). White value labels on larger segments (e.g., $120B, $200B) readable on all colored backgrounds. Asia Pacific is widest bar (largest market).
-      Issue: Legend at data-coord x=0.83 overlaps with Asia Pacific bar's Food & Beverage (pink) segment. Pink legend swatch blends into pink bar.
-      Legibility verdict: PASS — all text readable, but legend-bar overlap reduces visual clarity
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "marimekko-basic · bokeh · anyplot.ai" centered at top; a horizontal legend box (Electronics/Apparel/Home & Garden/Food & Beverage with color swatches) sits below the title in its own headroom band, clear of the bars; region names + totals ("North America ($400B)", "Europe ($350B)", "★ Asia Pacific ($600B)" bold, "Latin America ($150B)") sit below each bar in dark ink. All chrome text is clearly readable against the light background.
+      Data: Four variable-width stacked bars (widths proportional to each region's $ total, tallest/widest = Asia Pacific). Segment heights are proportional to each product's share within the region. Colors follow the Imprint palette in canonical order: Electronics=#009E73 (green, first series correct), Apparel=#C475FD (light purple), Home & Garden=#4467A3 (blue), Food & Beverage=#BD8233 (amber). White dollar-value labels appear on segments large enough to hold them; labels on the green/blue/amber segments have strong contrast, labels on the lighter purple Apparel segments are legible but visibly lower-contrast.
+      Legibility verdict: PASS (minor contrast softness on purple-segment labels only, not a failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light cream (#F0EFE8), region labels in light cream, legend text in light gray (#B8B7B0) — all clearly readable against dark background. No dark-on-dark failures detected. White value labels on bar segments remain readable on all four colored backgrounds.
-      Data: Colors are identical to light render — #009E73, #D55E00, #0072B2, #CC79A7 in same positions. Only chrome (backgrounds, text) changes between themes. Data integrity confirmed.
-      Issue: Same legend-bar overlap as light render.
-      Legibility verdict: PASS — all text readable in dark theme
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and region labels render in light ink, clearly visible against the dark background; legend box uses an elevated dark fill (#242420-ish) with a soft INK_SOFT border and light gray label text — no dark-on-dark anywhere. Segment divider lines (rendered in PAGE_BG) correctly flip to the dark background color instead of staying white.
+      Data: Identical four-bar structure and identical segment colors to the light render (#009E73/#C475FD/#4467A3/#BD8233 unchanged) — confirms only chrome flipped between themes, not data colors. White value labels remain readable on green/blue/amber; same mild contrast softness on the purple Apparel segments as in the light render.
+      Legibility verdict: PASS (no dark-on-dark failures; same minor purple-segment label contrast note as light render).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 32pt, region labels 24pt, value
-          labels 22pt, legend text 22pt — all above minimum guidelines'
+        comment: All sizes explicit (title 50pt, legend/ticks 34pt, value labels 28pt
+          bold, region labels 34pt); every element readable in both themes except
+          mildly soft white-on-#C475FD contrast on Apparel segment value labels
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Legend at data-coord x=0.83 falls entirely inside Asia Pacific bar
-          body; all four legend items overlap the Food & Beverage (pink) segment;
-          pink swatch camouflaged against matching pink bar
+        passed: true
+        comment: Legend pinned in headroom above bars, region labels in footroom below
+          — no collisions with data or with each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bar segments clearly visible; white value labels readable on
-          all colored backgrounds
+        comment: Segments clearly visible; value labels shown only on segments large
+          enough to hold them, avoiding clutter on small segments
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; white text on medium-luminance bars
-          provides acceptable contrast
+        comment: Imprint palette hues are CVD-safe and mutually distinguishable by
+          hue, not just red/green
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas well utilized (~70%); minor deduction for legend inside chart
-          body rather than adjacent
+        comment: Bars span nearly full canvas width, balanced headroom/footroom for
+          legend and labels, nothing cut off, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axes intentionally hidden with custom region
-          labels including $ totals
+        comment: Region totals and category names double as axis context; title fully
+          descriptive per spec format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito canonical order; light bg #FAF8F1;
-          dark bg #1A1A17; INK/INK_SOFT theme tokens applied correctly'
+        comment: 'First series #009E73, remaining series in canonical Imprint order,
+          identical across themes, backgrounds theme-correct'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above configured defaults: axes fully hidden, custom manual legend,
-          filtered value labels, region labels with totals. Not publication-ready
-          but thoughtful'
+        comment: Custom Imprint palette, deliberate headroom/footroom hierarchy, above
+          library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No grid, no axes, no outline; white segment separators; theme-adaptive
-          chrome. Deduction for legend on top of data area
+        comment: Axes/grid fully hidden, generous whitespace, theme-adaptive divider
+          lines between segments
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Marimekko format creates natural hierarchy; value labels help. No
-          explicit emphasis or focal point to direct viewer to key insight
+        passed: true
+        comment: Star + bold label calls out the leading region as a clear focal point
+          among the four bars
     spec_compliance:
       score: 15
       max: 15
@@ -120,29 +149,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Marimekko: bar widths proportional to region totals, segment
-          heights proportional to share within region'
+        comment: 'True Marimekko: both width and height encode data, not a fixed-width
+          stacked bar'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Variable widths, proportional stacking, color coding, value labels
-          on larger segments, category labels below bars — all present
+        comment: Width~total, height~share, legend, value labels on larger segments,
+          centered category labels under bars — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct: x-categories=regions (width), y-categories=products (height
-          proportion)'
+        comment: x_category->region width, y_category->product stack, value->segment
+          size, all data represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'marimekko-basic · bokeh · anyplot.ai'; manual legend labels
-          all four products
+        comment: Title matches mandated format exactly; legend labels match product
+          names
     data_quality:
       score: 15
       max: 15
@@ -152,21 +181,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four regions of varied sizes, four products with different proportional
-          mixes — full variation demonstrated
+        comment: 4 regions x 4 products with varying totals and shares exercises both
+          width and height dimensions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Global e-commerce market by region and product category; neutral
-          business scenario
+        comment: Neutral, plausible market-share-by-region-and-product-line scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values $25B-$200B realistic for regional e-commerce market segments
+        comment: Values ($25B-$200B) are sensible and produce a good range of segment
+          sizes
     code_quality:
       score: 10
       max: 10
@@ -176,65 +205,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat: imports → theme tokens → data → rectangle computation → ColumnDataSource
-          → figure → glyphs → labels → legend → save'
+        comment: No functions/classes, flat data + loop structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data — no random elements
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All five imports used: os, export_png/output_file/save, ColumnDataSource/HoverTool/LabelSet,
-          figure'
+        comment: Every import (bokeh models, selenium, pathlib, time) is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake UI elements
+        comment: No fake UI; per-product renderer loop is an appropriate level of
+          complexity for a real legend
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html per the bokeh output
+          contract
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of ColumnDataSource, figure.rect(), LabelSet, HoverTool.
-          Manual legend via p.quad()+p.text() is a workaround; separate p.rect() calls
-          per product with legend_label= would be more idiomatic
+        comment: ColumnDataSource per series, legend_label= for auto-legend, add_layout
+          for Label/LabelSet — all idiomatic bokeh patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: HoverTool with formatted tooltips, LabelSet for overlaid text, ColumnDataSource
-          are distinctively Bokeh; HTML export via output_file/save
-  verdict: REJECTED
+        comment: HoverTool with custom formatted tooltips and legend click_policy='hide'
+          showcase bokeh-specific interactivity beyond the static preview
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
   - annotations
   - html-export
-  - custom-legend
   patterns:
-  - data-generation
   - columndatasource
   - iteration-over-groups
   dataprep:
-  - normalization
+  - cumulative-sum
   styling:
   - minimal-chrome
+  - edge-highlighting
