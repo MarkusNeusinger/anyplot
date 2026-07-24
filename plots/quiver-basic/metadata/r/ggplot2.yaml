@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: quiver-basic
 created: '2026-07-24T18:20:51Z'
-updated: '2026-07-24T18:25:22Z'
+updated: '2026-07-24T18:37:05Z'
 generated_by: claude-sonnet
 workflow_run: 30116255071
 issue: 1014
@@ -12,50 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 92
 review:
   strengths:
-  - 'Correct grammar-of-graphics approach for a quiver plot: geom_segment() + arrow(type="closed")
+  - Wind speed range now genuinely cyclone-force (~5-34 m/s, peaking right at Category
+    1 hurricane strength) instead of the previous light-breeze scale, so the 'Cyclonic
+    Wind Field' title now matches the data (fixes prior DQ-03 weakness)
+  - New dashed eyewall guide ring at the radius of peak tangential speed plus an annotated
+    open-circle 'eye' marker give the plot a clear focal narrative device beyond color/length
+    redundancy alone (fixes prior DE-03 weakness)
+  - Faint dotted reference grid now helps read exact arrow positions across the 170-arrow
+    field without competing visually with the data (fixes prior DE-02 weakness)
+  - 'Correct grammar-of-graphics quiver approach: geom_segment() + arrow(type=''closed'')
     with coord_fixed(ratio = 1) so directions are not visually distorted'
-  - Arrow direction AND magnitude are doubly encoded — length (scaled so the fastest
-    vector spans ~80% of grid spacing) and color (imprint_seq gradient) both track
-    speed, giving a clear visual focal point (calm eye vs. fast outer ring)
+  - Arrow direction AND magnitude are doubly encoded via length and imprint_seq color,
+    giving a clear visual gradient from calm eye to fast outer ring
   - 170-arrow 17x10 grid sits squarely in the spec's recommended 100-400 arrow / 10x10-20x20
-    range, uniformly spaced with no overlap
-  - Theme-adaptive chrome correctly threaded through title/axis/tick/legend colors
+    range, uniformly spaced with no overlap (confirmed by close-up crop around the
+    eye marker on both renders)
+  - Theme-adaptive chrome correctly threaded through title/axis/tick/legend/grid colors
     and both plot + legend backgrounds for light and dark renders
-  - 'Continuous color scale correctly uses imprint_seq stops (#009E73 -> #4467A3)
-    with a proper colorbar legend labeled with units (m/s)'
-  - 'Title format matches the mandated pattern exactly: "Cyclonic Wind Field · quiver-basic
-    · r · ggplot2 · anyplot.ai"'
   - 'Clean, reproducible, single-pass script: set.seed(42), only used imports (ggplot2,
-    dplyr, tidyr, ragg), no functions/classes, correct ragg::agg_png save at the landscape
-    canvas size'
+    dplyr, tidyr, ragg), no functions/classes, correct ragg::agg_png save at the exact
+    landscape canvas size (3200x1800)'
   weaknesses:
-  - Wind speeds top out around ~2.8 m/s (legend max 2.5+) — that's light-breeze strength,
-    not cyclone-force (real cyclonic winds start well above 17 m/s). Labeling this
-    a "Cyclonic Wind Field" while showing sub-3 m/s speeds is a minor domain-plausibility
-    mismatch; either rename to something less storm-specific (e.g. "Rotational Flow
-    Field") or scale the speed values up to a range that reads as genuinely cyclonic.
-  - No grid and no axis border (theme_minimal defaults, panel.grid = element_blank(),
-    axis.ticks = element_blank()) is a valid minimal look, but with 170 arrows spanning
-    the full canvas a very faint y/x reference grid would make it easier to read off
-    exact arrow positions — purely optional polish, not a defect.
-  - 'Design excellence is solid but not exceptional: aside from the color+length redundant
-    encoding there''s no further hierarchy device (e.g. an annotated eye marker or
-    radial guide) to make the "calm eye" story pop even more explicitly.'
+  - Still no library-distinctive technique beyond the baseline geom_segment+arrow()+coord_fixed
+    pattern for the core vector field itself — the new guide ring and eye marker add
+    storytelling but don't showcase a further ggplot2-specific quiver capability.
+  - 'Aesthetic sophistication is strong but not exceptional: the color+length redundant
+    encoding, eyewall ring, and eye annotation cover the main polish opportunities,
+    leaving little further headroom without added complexity.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1-class), not pure white, not dark.
-      Chrome: Title "Cyclonic Wind Field · quiver-basic · r · ggplot2 · anyplot.ai" in dark ink, comfortably sized and fully within the canvas; x-axis label "Distance east of eye (km)" and y-axis label "Distance north of eye (km)" in dark ink, both similarly sized and clearly legible; tick labels (-5, 0, 5 / -5.0 to 5.0) in a slightly softer gray, all readable; legend "Wind speed (m/s)" with a vertical color-bar and numeric ticks (0.5-2.5), housed in a very subtly elevated off-white box.
-      Data: 170 arrows on a 17x10 grid form a clear rotational (cyclonic) pattern — tangential flow circling a calm "eye" near the origin. Arrow color runs from brand green (#009E73, slow, near the eye) to blue (~#4467A3, fast, outer ring), matching the imprint_seq sequential colormap. Arrows are uniformly spaced with no overlap and closed triangular arrowheads.
+      Chrome: Title "Cyclonic Wind Field · quiver-basic · r · ggplot2 · anyplot.ai" in dark ink, ~60% of plot width, comfortably sized and fully within the canvas; x-axis label "Distance east of eye (km)" and y-axis label "Distance north of eye (km)" in dark ink, both similarly sized and clearly legible; tick labels (-5, 0, 5 / -5.0 to 5.0) in a softer gray, all readable; a new faint dotted major grid (both axes) is visible without competing with the data; legend "Wind speed (m/s)" with a vertical color-bar and numeric ticks (10-30), housed in a subtly elevated off-white box.
+      Data: 170 arrows on a 17x10 grid form a clear rotational (cyclonic) pattern — tangential flow circling a calm "eye" near the origin, now marked with an open dark-ink circle and an italic "eye" label directly below it, plus a dashed light-gray eyewall ring at the radius of peak tangential speed. Arrow color runs from brand green (#009E73, slow, near the eye) to blue (~#4467A3, fast, outer ring, ~30-34 m/s), matching the imprint_seq sequential colormap — now genuinely cyclone-force rather than light-breeze speeds. Close-up inspection around the eye marker confirms no overlap between the circle, the "eye" label, the dashed ring, and the nearby arrows.
       Legibility verdict: PASS — all text has strong contrast against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17-class), not pure black, not light.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink (off-white for title/axis titles, softer light gray for tick labels) — fully legible against the dark background, no dark-on-dark failures observed. Legend box uses a barely-lighter dark elevated fill with light text, also legible.
-      Data: Same green-to-blue gradient and same arrow geometry/positions as the light render — data colors are identical between themes, confirming only chrome flipped.
-      Legibility verdict: PASS — title, axis labels, tick labels, and legend text are all clearly readable against the dark surface; no black-on-black or washed-out text detected.
+      Chrome: Same title, axis labels, tick labels, and new dotted grid, now rendered in light ink (off-white for title/axis titles, softer light gray for tick labels and grid) — fully legible against the dark background, no dark-on-dark failures observed. Legend box uses a barely-lighter dark elevated fill with light text, also legible.
+      Data: Same green-to-blue gradient, same arrow geometry/positions, same eye marker (light-ink circle) and dashed eyewall ring as the light render — data colors and annotation geometry are identical between themes, confirming only chrome flipped. Close-up crop around the eye marker shows no overlap issues on this theme either.
+      Legibility verdict: PASS — title, axis labels, tick labels, grid, and legend text are all clearly readable against the dark surface; no black-on-black or washed-out text detected; brand green (#009E73) remains clearly visible near the eye.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -66,14 +64,15 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; all text readable in both themes
-          at full resolution
+        comment: Explicit font sizes throughout; all text (incl. new grid/eye label)
+          readable in both themes at full resolution
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 170 uniformly spaced arrows with no collisions; no text overlap
+        comment: 170 uniformly spaced arrows with no collisions; eye marker + label
+          + eyewall ring do not overlap arrows (verified via close-up crop)
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -92,8 +91,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; title ~60% width; coord_fixed keeps proportions
-          correct; nothing clipped
+        comment: Canvas gate passed (3200x1800); title ~60% width; coord_fixed keeps
+          proportions correct; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,30 +108,31 @@ review:
         comment: 'imprint_seq (#009E73 -> #4467A3) used for continuous magnitude;
           correct theme backgrounds both renders'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Redundant length+color encoding and thoughtful radial-decay data
-          create real polish, above generic defaults
+        comment: Redundant length+color encoding plus the new eyewall guide ring and
+          eye annotation create noticeably more polish than the prior attempt
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: No spines/grid, generous margins, clean minimal chrome; not much
-          beyond that
+        comment: New faint dotted reference grid aids readability without adding clutter;
+          spines still removed, margins generous
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Calm eye vs. fast ring gives a visible focal point, but no further
-          hierarchy device (e.g. eye marker/annotation)
+        comment: Eye marker + label + dashed eyewall ring now give an explicit focal
+          narrative device beyond the calm-eye vs. fast-ring color/length gradient
+          alone
     spec_compliance:
       score: 15
       max: 15
@@ -164,7 +164,7 @@ review:
         passed: true
         comment: Title matches mandated format exactly; legend labeled with units
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -182,11 +182,11 @@ review:
           eye)
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Speeds (~0.5-2.8 m/s) are light-breeze strength, not cyclone-force
-          despite the title's framing — minor scale mismatch
+        comment: Speeds now ~5-34 m/s, peaking at genuine Category-1-hurricane strength,
+          matching the 'Cyclonic' title framing — prior light-breeze mismatch fixed
     code_quality:
       score: 10
       max: 10
@@ -214,7 +214,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/interactivity
+        comment: Appropriate complexity, no fake UI/interactivity, comments explain
+          non-obvious derivations (WIND_SCALE, eyewall radius)
       - id: CQ-05
         name: Output & API
         score: 1
@@ -222,7 +223,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png via ragg::agg_png at correct canvas size
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -234,19 +235,23 @@ review:
           pattern for vector fields
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses coord_fixed and closed arrowheads thoughtfully, but no further
-          library-distinctive technique beyond the baseline approach
+        comment: Layering geom_path guide + dual annotate() calls over the quiver
+          shows more compositional skill than baseline, but no further library-distinctive
+          technique beyond that
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
   - minimal-chrome
+  - alpha-blending
