@@ -32,12 +32,16 @@ const nodes = [
   { id: 19, name: "Max", group: 3 },
 ];
 
+// Edge tuples are [source, target, weight] — weight is a 1-5 tie-strength
+// (e.g. weekly collaboration touchpoints). Cross-department bridges carry a
+// deliberately low weight since they represent occasional handoffs, not the
+// tight day-to-day ties within a team.
 const edges = [
-  [0, 1], [0, 2], [1, 2], [1, 3], [2, 3], [3, 4], [2, 4], [0, 4],
-  [5, 6], [5, 7], [6, 7], [6, 8], [7, 8], [8, 9], [7, 9],
-  [10, 11], [10, 12], [11, 12], [11, 13], [12, 13], [13, 14], [12, 14],
-  [15, 16], [15, 17], [16, 17], [16, 18], [17, 18], [18, 19], [17, 19],
-  [0, 5], [2, 10], [6, 11], [8, 15], [12, 16], [4, 17],
+  [0, 1, 4], [0, 2, 3], [1, 2, 5], [1, 3, 3], [2, 3, 4], [3, 4, 3], [2, 4, 2], [0, 4, 3],
+  [5, 6, 4], [5, 7, 3], [6, 7, 5], [6, 8, 3], [7, 8, 4], [8, 9, 3], [7, 9, 2],
+  [10, 11, 3], [10, 12, 4], [11, 12, 3], [11, 13, 5], [12, 13, 3], [13, 14, 4], [12, 14, 2],
+  [15, 16, 4], [15, 17, 3], [16, 17, 5], [16, 18, 3], [17, 18, 4], [18, 19, 3], [17, 19, 2],
+  [0, 5, 1], [2, 10, 1], [6, 11, 2], [8, 15, 1], [12, 16, 1], [4, 17, 2],
 ];
 
 // Degree (connection count) per node — drives marker size
@@ -45,6 +49,17 @@ const degree = new Array(nodes.length).fill(0);
 edges.forEach(([a, b]) => {
   degree[a] += 1;
   degree[b] += 1;
+});
+
+// Radius follows degree so hub nodes read as visually larger — shared by the
+// node datasets below and the hub-label plugin so both stay in sync.
+const nodeRadius = (id) => 9 + degree[id] * 2;
+
+// Highest-degree node per department — labeled directly on the canvas so the
+// static PNG conveys individual identity, not just department color.
+const hubs = GROUP_NAMES.map((_, g) => {
+  const members = nodes.filter((node) => node.group === g);
+  return members.reduce((best, node) => (degree[node.id] > degree[best.id] ? node : best));
 });
 
 // --- Force-directed layout (Fruchterman-Reingold), deterministic via a fixed-seed LCG ---
@@ -119,19 +134,50 @@ const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Edges: drawn under the node markers via a lightweight inline plugin ---
+// Intra-department ties render heavier and darker (weight-scaled); cross-
+// department bridges render thin and faint so the community structure — not
+// just the connections — is legible at a glance.
 const edgePlugin = {
   id: "networkEdges",
   beforeDatasetsDraw(chart) {
     const { ctx, scales } = chart;
     ctx.save();
     ctx.strokeStyle = t.inkSoft;
-    ctx.globalAlpha = 0.35;
-    ctx.lineWidth = 2;
-    edges.forEach(([a, b]) => {
+    edges.forEach(([a, b, weight]) => {
+      const bridge = nodes[a].group !== nodes[b].group;
+      ctx.globalAlpha = bridge ? 0.18 : 0.22 + weight * 0.035;
+      ctx.lineWidth = bridge ? 1 : 1.4 + weight * 0.3;
       ctx.beginPath();
       ctx.moveTo(scales.x.getPixelForValue(nodes[a].x), scales.y.getPixelForValue(nodes[a].y));
       ctx.lineTo(scales.x.getPixelForValue(nodes[b].x), scales.y.getPixelForValue(nodes[b].y));
       ctx.stroke();
+    });
+    ctx.restore();
+  },
+};
+
+// --- Hub labels: name tags for the highest-degree node per department,
+// drawn on top of everything so the static PNG identifies key individuals ---
+const hubLabelPlugin = {
+  id: "networkHubLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    ctx.save();
+    ctx.font = "600 15px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    hubs.forEach((node) => {
+      const x = scales.x.getPixelForValue(node.x);
+      const y = scales.y.getPixelForValue(node.y) - nodeRadius(node.id) - 6;
+      const text = node.name;
+      const padX = 5;
+      const { width } = ctx.measureText(text);
+      ctx.fillStyle = t.pageBg;
+      ctx.globalAlpha = 0.82;
+      ctx.fillRect(x - width / 2 - padX, y - 15, width + padX * 2, 18);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = t.ink;
+      ctx.fillText(text, x, y);
     });
     ctx.restore();
   },
@@ -145,8 +191,8 @@ const datasets = groupNodes.map((group, g) => ({
   backgroundColor: t.palette[g],
   borderColor: t.pageBg,
   borderWidth: 2,
-  pointRadius: group.map((node) => 9 + degree[node.id] * 2),
-  pointHoverRadius: group.map((node) => 13 + degree[node.id] * 2),
+  pointRadius: group.map((node) => nodeRadius(node.id)),
+  pointHoverRadius: group.map((node) => nodeRadius(node.id) + 4),
   showLine: false,
 }));
 
@@ -154,7 +200,7 @@ const datasets = groupNodes.map((group, g) => ({
 new Chart(canvas, {
   type: "scatter",
   data: { datasets },
-  plugins: [edgePlugin],
+  plugins: [edgePlugin, hubLabelPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
