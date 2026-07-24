@@ -1,7 +1,7 @@
 // anyplot.ai
 // marimekko-basic: Basic Marimekko Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.1
-// Quality: 88/100 | Created: 2026-07-24
+// Quality: 91/100 | Created: 2026-07-24
 //# anyplot-orientation: landscape
 // anyplot.ai
 // marimekko-basic: Basic Marimekko Chart
