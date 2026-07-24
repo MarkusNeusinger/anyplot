@@ -1,0 +1,263 @@
+library: chartjs
+language: javascript
+specification_id: quiver-basic
+created: '2026-07-24T18:27:16Z'
+updated: '2026-07-24T18:34:54Z'
+generated_by: claude-sonnet
+workflow_run: 30116516120
+issue: 1014
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Solved a real Chart.js limitation cleanly: no native quiver/vector chart type
+    exists, so the implementation extends a scatter base with a custom afterDatasetsDraw
+    plugin that draws arrow shafts and heads by hand via scale.getPixelForValue —
+    exactly the pattern the library rules doc recommends for this case, with no forbidden
+    fallback to another library or unpinned plugin'
+  - Color meaningfully encodes vector magnitude (current speed) using the Imprint
+    imprint_seq scale (t.seq[0] -> t.seq[1]), turning the plot into a legible flow-strength
+    map rather than a flat set of same-colored arrows
+  - 'Both renders are theme-correct: warm off-white (#FAF8F1) / warm near-black (#1A1A17)
+    backgrounds, all title/subtitle/axis/tick text readable and correctly mapped from
+    tokens (t.ink, t.inkSoft, t.grid), and the data colors are identical across light
+    and dark'
+  - Axis limits are deliberately padded beyond the data range (-9..9 vs data -7..7)
+    so the longest arrows and their heads never approach the canvas edge, avoiding
+    any AR-09 clipping risk
+  - Data is a realistic, neutral scenario (circular ocean-current rotation field,
+    u=-y, v=x) with correct units (km, km/h) and physically sensible values
+  - Deterministic, dependency-free data generation (no RNG) with a tight, readable
+    single-file structure and correct animation:false / mount-node handling per the
+    JS harness contract
+  weaknesses:
+  - Vectors near the vortex center (x=0,y=0 and its immediate neighbors) have near-zero
+    magnitude, so their arrows shrink to almost nothing and read as plain dots rather
+    than vectors -- visually correct but slightly undercuts at-a-glance readability
+    of the field structure right where curvature is highest; consider a small minimum
+    visual arrow length (decoupled from the color/magnitude encoding) so direction
+    stays legible even at low speed
+  - The subtitle states color encodes current speed in km/h but there is no colorbar
+    or legend tick mapping color to an actual km/h value, so a viewer can see relative
+    speed but not read off absolute magnitude -- a compact colorbar or small min/max
+    legend would elevate this from good to publication-level
+  - Helper functions (hexToRgb, lerpColor) and the plugin object push the file slightly
+    past a strict imports->data->plot->save shape; justified here since Chart.js plugins
+    are inherently object-with-methods and there is no native arrow primitive to call
+    instead, but worth flagging for CQ-01 KISS scoring
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "quiver-basic · javascript · chartjs · anyplot.ai" in bold dark ink at top center; subtitle "Ocean current rotation field — arrow color encodes current speed (km/h)" in softer dark gray beneath it. X-axis title "Eastward distance (km)" and Y-axis title "Northward distance (km)" in dark ink. Tick labels (-9..9 on X, -5..5 on Y) in a slightly lighter ink. Grid lines are thin and pale gray, subtle but visible. All text is clearly legible against the light background -- no light-on-light issues found.
+      Data: A 9x15 grid of small dots with arrows radiating from each, forming a clear rotational (vortex) flow pattern around the origin. Arrow color runs from teal-green near the center (low magnitude) to a blue-gray near the edges (high magnitude), consistent with the Imprint imprint_seq scale. Arrows near the very center are extremely short (near-zero velocity), arrows at the corners are longest.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Same title and subtitle, now rendered in white/light gray, clearly readable against the dark background. Axis titles and tick labels are also light-colored and legible. Grid lines are faint but visible dark-gray-on-black.
+      Data: Same rotational vortex arrow field. Arrow colors are visually identical to the light render (teal-green near center transitioning to blue-gray at the edges) -- confirms only chrome (background/text/grid) flipped between themes, not data colors.
+      Legibility verdict: PASS -- no dark-on-dark failures found; all text remains clearly visible against the near-black surface, and the brand green/teal data color reads well on both surfaces.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set via tokens/font config; title, subtitle,
+          axis titles, and tick labels are well-proportioned and readable in both
+          themes with no clipping or overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Arrows are well-sized for the grid density, but near-zero-magnitude
+          vectors at the vortex center shrink to imperceptible arrows (physically
+          accurate, but slightly reduces legibility right at the center)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential teal-to-blue-gray gradient is CVD-safe and does not rely
+          on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins; padded axis limits
+          prevent any cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (km)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous magnitude encoding correctly uses imprint_seq (t.seq);
+          backgrounds and chrome are theme-correct in both renders; data colors identical
+          across themes
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful continuous color encoding and custom-drawn arrows go clearly
+          above defaults, though not yet full publication-level polish (e.g. no colorbar)
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle theme-correct grid, no legend clutter, generous whitespace
+          -- solid refinement without being exceptional
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color contrast creates a clear visual hierarchy showing current strengthening
+          away from the vortex center, guiding the reader to the flow structure
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine quiver plot: arrows at grid points with direction and magnitude'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: x/y/u/v grid present, uniform spacing, scaled arrow length, plus
+          optional magnitude color-encoding
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, full grid visible within axis bounds
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required 'quiver-basic · javascript · chartjs · anyplot.ai'
+          format; no legend needed for single continuous encoding
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full range of directions and magnitudes across a 9x15 grid
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible ocean-current rotation scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physically sensible rotation field with plausible km/h values
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Slightly beyond imports->data->plot->save due to small color-interpolation
+          helpers and the plugin object, but this is the idiomatic and effectively
+          unavoidable Chart.js pattern for custom canvas drawing
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; no imports needed beyond the global Chart
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a native Chart.js vector-field implementation,
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false set, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Follows the library rules doc''s own recommended pattern for non-native
+          chart types: scatter base + plugin API extension'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Genuine use of Chart.js's low-level plugin/canvas API (afterDatasetsDraw,
+          scale.getPixelForValue) to render a chart type the library has no native
+          support for
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap

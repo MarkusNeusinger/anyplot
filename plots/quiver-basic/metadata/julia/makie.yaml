@@ -1,0 +1,257 @@
+library: makie
+language: julia
+specification_id: quiver-basic
+created: '2026-07-24T18:23:42Z'
+updated: '2026-07-24T18:47:36Z'
+generated_by: claude-sonnet
+workflow_run: 30116384781
+issue: 1014
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Physically-motivated data: a Rankine vortex model (solid-body rotation inside
+    the eyewall, 1/r decay outside, v_max=33 m/s pegged to the Category-1 hurricane
+    threshold) replaces a toy rotation formula, giving the field genuine real-world
+    plausibility.'
+  - 'Thoughtful dual encoding: arrow color always maps to the true, unfloored speed
+    while displayed arrow length is gently floored near the calm core so the 1-2 slowest
+    grid points never shrink to invisible slivers — a well-reasoned, well-commented
+    readability tradeoff.'
+  - aspect = DataAspect() correctly preserves the vortex's circular symmetry; verified
+    by cropping into the core — the rotational flow renders as a true circle, not
+    squashed into an ellipse.
+  - 'Idiomatic Makie composition: the Colorbar is built directly from the arrows!
+    plot object (arrow_plot), and every theme token (PAGE_BG, INK, INK_SOFT) is threaded
+    consistently through Figure, Axis, and Colorbar.'
+  - 'Correct palette compliance: continuous wind-speed data uses a two-stop Imprint
+    sequential colormap (#009E73 → #4467A3), backgrounds match #FAF8F1/#1A1A17 exactly,
+    and data colors are pixel-identical between light and dark renders.'
+  weaknesses:
+  - The dashed eyewall ring at r=3 (intended per the code comment to 'sharpen the
+    storytelling') is effectively invisible in both renders — alpha=0.35 with linewidth=1.2
+    gets lost among the densely-packed colored arrows. Either raise its contrast/opacity/linewidth
+    so it actually reads, or drop it since it isn't earning its keep visually.
+  - Displayed arrow length is floored at 0.18*v_max near the calm core, so length
+    stops being strictly proportional to magnitude there (color carries that signal
+    instead) — a reasonable readability tradeoff, but it's a partial departure from
+    the spec's 'length proportional to magnitude' guidance worth being explicit about.
+  - 'Design Excellence still has headroom versus a top score: the palette is restricted
+    to a 2-stop sequential gradient (a compliance requirement, not a flaw) but no
+    other distinctive framing (e.g. a labeled eye/eyewall annotation, a compass or
+    scale cue) elevates the storytelling beyond the color+rotation pattern itself.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "quiver-basic · julia · makie · anyplot.ai" in bold dark ink, clearly visible. X-axis "X position (km)" and Y-axis "Y position (km)" labels in dark ink, fully legible. Tick labels (-9..9, -3..3) in a softer gray, clearly readable. Subtle light-gray gridlines at each major tick, visible but non-dominant. Colorbar on the right labeled "Wind speed (m/s)" with readable tick labels (0.50-1.25+).
+      Data: 240 arrows arranged on a 20x12 grid forming a clear cyclonic (rotational) flow pattern — arrows curl counter-clockwise around the center, calm/short arrows near the origin, longer/faster arrows in a ring around it, straightening out toward the domain edges. Arrow color runs from teal-green (#009E73, slow) through teal to blue (#4467A3, fast) via the Imprint sequential colormap, correctly encoding the true (unfloored) wind speed. A faint dashed ring intended to mark the eyewall radius is present in code but not perceptible against the arrow field.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, colorbar) is clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels rendered in light off-white ink, clearly visible against the dark background. Tick labels in a lighter gray, clearly legible — no dark-on-dark issue anywhere. Gridlines are a subtle light gray at low opacity, visible but not distracting. Colorbar labels equally legible in light ink.
+      Data: Identical arrow layout, colors, and rotational pattern as the light render — the teal-green-to-blue Imprint sequential colormap is pixel-identical between themes; only the chrome (background, text, grid, spines) has flipped to the dark tokens.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all chrome elements are clearly readable against the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels, and colorbar labels all clearly
+          readable in both themes at appropriate sizes (20/14/12pt).
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between arrows, labels, or the colorbar; layout well
+          separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 240 arrows (20x12 grid) appropriately sized and spaced; core arrows
+          floored so they stay visible without overplotting.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential ramp, no red-green as sole signal, adequate
+          contrast in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; title and colorbar proportioned well; nothing
+          clipped or overflowing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis labels include units (km); colorbar label includes units (m/s).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Two-stop Imprint sequential colormap (#009E73 -> #4467A3) for continuous
+          speed data; correct #FAF8F1/#1A1A17 backgrounds; identical data colors across
+          themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Physically-motivated Rankine vortex model and dual color+length encoding
+          show real design thought beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle gridlines (alpha 0.15), generous
+          whitespace via xlims/ylims and colsize tuning.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Rotational pattern and speed color read clearly, but the eyewall
+          dashed ring meant to sharpen the story is not actually visible in either
+          render.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct quiver/vector-field plot via arrows!.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: x, y, u, v all present on a uniform grid; length is floored near
+          the core so it is not strictly proportional to magnitude everywhere.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped; axes show the full data extent.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches 'quiver-basic · julia · makie · anyplot.ai'; colorbar
+          clearly labeled.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Direction, magnitude (via color), and grid arrangement all shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral meteorological hurricane wind-field context, plausible and
+          non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: v_max=33 m/s matches the real Category-1 hurricane threshold.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set; data generation is deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all actually used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the vortex model; no fake UI or simulated
+          interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current CairoMakie API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: High-level arrows!/Axis/Colorbar API used idiomatically with DataAspect
+          for correct geometry.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Colorbar built directly from the arrows! plot object and DataAspect
+          enforcement are genuine Makie-specific touches.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending

@@ -1,0 +1,248 @@
+library: d3
+language: javascript
+specification_id: radar-basic
+created: '2026-07-24T16:20:10Z'
+updated: '2026-07-24T16:38:26Z'
+generated_by: claude-sonnet
+workflow_run: 30108399851
+issue: 744
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/javascript/d3/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - 'Fully idiomatic D3: every mark (grid rings, spokes, tick labels, category labels,
+    series polygons, point markers, legend) now uses selectAll(...).data(...).join(...)
+    instead of imperative forEach+append loops, directly addressing the prior review''s
+    LM-01 finding'
+  - 'Genuine data storytelling: the largest cross-series gap (Problem Solving, Δ18)
+    is computed from the actual data and highlighted with a shaded sector, dashed
+    connector, halo-stroked Δ badge, and bold axis label — a real focal point rather
+    than decoration'
+  - 'Distinctive D3 feature use: d3.arc() drives the gap-sector highlight and a d3.scaleLinear
+    ring-opacity ramp gives the grid genuine visual hierarchy (outer ring heavier/darker),
+    both new since the prior attempt'
+  - Both renders are theme-correct with zero dark-on-dark or light-on-light failures;
+    data colors (#009E73 first series) are pixel-identical between themes
+  - Radial scale reference now appears on two opposing spokes (top full-opacity, bottom
+    at 55%) instead of only one, improving readability without cluttering all six
+    axes
+  - 'All required spec features present: alpha-filled closed polygons, regular gridlines,
+    outer-edge collision-free labels, distinct colors with legend, deterministic realistic
+    data'
+  - Clean square-canvas layout with balanced margins, legend centered below the chart,
+    zero edge clipping
+  weaknesses:
+  - Overall composition is still a fairly conventional hexagonal radar layout — the
+    gap-highlight is a nice touch but the base chart design isn't dramatically distinctive
+    beyond that single embellishment
+  - LM-02 remains centered on scaleLinear + line generator + arc — no additional distinctive
+    D3 feature (e.g. d3-interpolate easing, custom curve, or voronoi/force touch)
+    to push Library Mastery to a perfect score
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Title "radar-basic · javascript · d3 · anyplot.ai" centered top in bold dark ink, comfortably proportioned. Six category axis labels (Communication, Technical Skills, Teamwork, Leadership, Problem Solving, Adaptability) sit at the outer edge with correct anchoring — none collide with the polygon, grid, or each other. "Problem Solving" renders bold (largest cross-series gap). Radial ticks (20/40/60/80/100) appear on the top (full opacity) and bottom (55% opacity) spokes in soft gray. A pale amber sector shades the Problem Solving wedge, with a dashed amber connector and a "Δ18" badge (white halo stroke for legibility) marking the exact gap. All text is clearly readable against the light background — no light-on-light issues.
+      Data: Two overlapping filled radar polygons at alpha ~0.25 — "Software Engineer" in Imprint palette[0] #009E73 green (outer on most axes) and "Team Average" in Imprint palette[1] purple (inner, converging near Leadership). Point markers have a subtle page-background halo stroke for separation. Legend swatches (green square, purple square) sit centered below the chart, both readable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Same title, axis labels, tick labels, and Δ18 badge now render in light ink and remain fully readable — no dark-on-dark failures anywhere. Grid rings and spokes stay subdued but visible, with the same outer-ring emphasis and gap-axis amber highlight as the light render.
+      Data: Colors are pixel-identical to the light render — #009E73 green and the same purple for Team Average — confirming only chrome flips between themes. Brand green remains vivid against the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes; proportional font sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Anchor logic prevents label/polygon collisions; badge halo avoids
+          crossing-line collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers and strokes clearly visible against both backgrounds
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple pairing has adequate contrast, not a red-green sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced square-canvas proportions, no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive category labels; correctly formatted title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, both renders theme-correct backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Amber gap highlight and ring hierarchy add polish beyond a baseline
+          radar, though the core layout stays conventional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Ring weight/opacity ramp, dashed connector, halo-stroked badge text,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Largest cross-series gap computed from data and called out with shaded
+          sector + connector + badge + bold label
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct radar/spider chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Alpha-filled closed polygons, regular gridlines, outer-edge labels,
+          distinct colors with legend
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 6 axes, 2 series, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match series names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 axes, 2 series within spec's 4-8/1-3 recommendation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral employee-competency data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 scale as recommended by spec
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container per contract, no animation'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Every mark now uses selectAll(...).data(...).join(...) data-join
+          pattern, including nested joins for series/points and legend
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.arc() for sector highlight plus a scaleLinear opacity ramp for
+          grid hierarchy; still centered on scale+line-generator fundamentals
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
