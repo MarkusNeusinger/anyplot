@@ -1,6 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-basic: Basic Radar Chart
-Library: pygal 3.1.0 | Python 3.13.13
+Library: pygal 3.1.3 | Python 3.13.12
 Quality: 90/100 | Updated: 2026-04-29
 """
 
@@ -31,44 +31,67 @@ employee_a = [85, 92, 78, 88, 72, 80]  # Technical Expert: peaks at Technical Sk
 employee_b = [80, 68, 92, 82, 88, 74]  # Team Leader: peaks at Teamwork & Leadership
 employee_c = [72, 76, 70, 74, 85, 95]  # Creative Visionary: peaks at Creativity & Leadership
 
-# Style — font sizes corrected to pixel-based minimums for 3600px canvas
+# Highest overall average becomes the visual "hero" series — bolder stroke and
+# larger dots build a focal point so the viewer immediately spots the top
+# all-round performer, while the other two stay legible but recede slightly.
+series = [
+    ("Employee A — Technical Expert", employee_a),
+    ("Employee B — Team Leader", employee_b),
+    ("Employee C — Creative Visionary", employee_c),
+]
+hero_label, _ = max(series, key=lambda s: sum(s[1]) / len(s[1]))
+
+title = "radar-basic · python · pygal · anyplot.ai"
+
+# Style — native-pixel font sizes targeting ~67 source-px title height at the
+# canonical 2400x2400 square canvas (see default-style-guide.md "Proportional
+# Sizing"); title is well under the 67-char baseline so no length scaling needed.
 custom_style = Style(
+    font_family='"Liberation Sans", "DejaVu Sans", Arial, sans-serif',
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,  # axis category labels: minimum 22px
-    major_label_font_size=18,  # major labels: minimum 18px
-    legend_font_size=18,
-    value_font_size=16,  # spoke value labels: minimum 16px
-    opacity=0.25,
-    opacity_hover=0.6,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    opacity=0.22,
+    opacity_hover=0.55,
+    stroke_opacity=0.9,
 )
 
 # Plot
 chart = pygal.Radar(
-    width=3600,
-    height=3600,
+    width=2400,
+    height=2400,
     style=custom_style,
-    title="radar-basic · pygal · anyplot.ai",
+    title=title,
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=3,
+    legend_at_bottom_columns=1,
     fill=True,
-    dots_size=8,
-    stroke_style={"width": 5, "linecap": "round", "linejoin": "round"},
+    dots_size=6,
+    stroke_style={"width": 3.5, "linecap": "round", "linejoin": "round"},
     show_y_guides=True,
     y_labels_major_every=2,
     range=(0, 100),
+    margin=30,
+    spacing=16,
 )
 
 chart.x_labels = categories
-chart.add("Employee A — Technical Expert", employee_a)
-chart.add("Employee B — Team Leader", employee_b)
-chart.add("Employee C — Creative Visionary", employee_c)
+for label, values in series:
+    is_hero = label == hero_label
+    chart.add(
+        label,
+        values,
+        dots_size=9 if is_hero else 6,
+        stroke_style={"width": 5.5 if is_hero else 3.5, "linecap": "round", "linejoin": "round"},
+    )
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
