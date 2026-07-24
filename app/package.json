@@ -34,7 +34,7 @@
     "react-helmet-async": "^3.0.0",
     "react-router-dom": "^7.18.1",
     "react-syntax-highlighter": "^16.1.1",
-    "web-vitals": "^5.3.0"
+    "web-vitals": "^6.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
