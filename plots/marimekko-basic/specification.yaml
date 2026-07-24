@@ -6,14 +6,13 @@ title: Basic Marimekko Chart
 
 # Specification tracking
 created: 2025-12-15T20:45:01Z
-updated: 2025-12-15T20:45:01Z
+updated: 2026-07-24T14:15:20Z
 issue: 1002
 suggested: MarkusNeusinger
 
 # Classification tags (applies to all library implementations)
 tags:
   plot_type:
-    - marimekko
     - mosaic
   data_type:
     - categorical
