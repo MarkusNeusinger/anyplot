@@ -1,7 +1,7 @@
 // anyplot.ai
 // quiver-basic: Basic Quiver Plot
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-07-24
+// Library: echarts 6.1.0 | JavaScript 22.23.1
+// Quality: 90/100 | Created: 2026-07-24
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
