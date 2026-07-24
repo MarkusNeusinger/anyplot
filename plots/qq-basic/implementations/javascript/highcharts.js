@@ -81,6 +81,27 @@ const pad = (hi - lo) * 0.08;
 const axisMin = lo - pad;
 const axisMax = hi + pad;
 
+// Points beyond this theoretical quantile are the "tail" where the sample
+// visibly bows away from the reference line. They get a larger, fully-opaque
+// marker; the tightly-packed mid-section gets a smaller, translucent one so
+// the S-curve deviation reads clearly instead of the middle overlapping.
+const tailThreshold = 1.15;
+function withAlpha(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+const sampleColor = t.palette[0];
+const midColor = withAlpha(sampleColor, 0.55);
+const scatterData = points.map(([x, y]) => ({
+  x,
+  y,
+  marker: Math.abs(x) > tailThreshold
+    ? { radius: 5.5, fillColor: sampleColor }
+    : { radius: 3.5, fillColor: midColor },
+}));
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: { type: "scatter", backgroundColor: "transparent", animation: false,
@@ -96,7 +117,15 @@ Highcharts.chart("container", {
            min: axisMin, max: axisMax,
            lineColor: t.inkSoft, tickColor: t.inkSoft, gridLineColor: t.grid,
            gridLineWidth: 1,
-           labels: { style: { color: t.inkSoft, fontSize: "14px" } } },
+           labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+           plotBands: [
+             { from: axisMin, to: -tailThreshold, color: withAlpha(sampleColor, 0.06),
+               label: { text: "Deviating tail", align: "left", x: 6, y: 14,
+                        style: { color: t.inkSoft, fontSize: "11px", fontStyle: "italic" } } },
+             { from: tailThreshold, to: axisMax, color: withAlpha(sampleColor, 0.06),
+               label: { text: "Deviating tail", align: "right", x: -6, y: 14,
+                        style: { color: t.inkSoft, fontSize: "11px", fontStyle: "italic" } } },
+           ] },
   yAxis: { title: { text: "Sample Quantiles (z-score)",
                      style: { color: t.inkSoft, fontSize: "16px" } },
            min: axisMin, max: axisMax,
@@ -119,10 +148,9 @@ Highcharts.chart("container", {
     {
       name: "Sample",
       type: "scatter",
-      data: points,
-      color: t.palette[0],
-      marker: { radius: 4.5, fillColor: t.palette[0] },
-      opacity: 0.85,
+      data: scatterData,
+      color: sampleColor,
+      marker: { radius: 3.5, fillColor: midColor },
     },
   ],
 });
