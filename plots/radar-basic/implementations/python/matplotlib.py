@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-basic: Basic Radar Chart
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 49/100 | Updated: 2026-07-24
@@ -82,7 +82,9 @@ ax.plot(
 ax.set_xticks(angles)
 ax.set_xticklabels(categories, fontsize=18, color=INK)
 
-ax.set_ylim(0, 100)
+# Extend past 100 so category labels clear the outer data ring with margin;
+# gridlines/ticks stay capped at 100 to match the spec's 20/40/60/80/100 scale
+ax.set_ylim(0, 118)
 ax.set_yticks([20, 40, 60, 80, 100])
 ax.set_rlabel_position(22.5)
 ax.set_yticklabels(["20", "40", "60", "80", "100"], fontsize=16, color=INK_MUTED)
@@ -103,5 +105,5 @@ leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
-fig.subplots_adjust(left=0.12, right=0.88, top=0.88, bottom=0.16)
+fig.subplots_adjust(left=0.12, right=0.84, top=0.88, bottom=0.16)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
