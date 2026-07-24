@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:12:00Z'
-updated: '2026-07-24T10:50:25Z'
+updated: '2026-07-24T10:57:29Z'
 generated_by: claude-sonnet
 workflow_run: 30086780628
 issue: 820
@@ -12,55 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'Correct chart type: go.Parcoords with 4 numeric dimensions (sepal length/width,
-    petal length/width) and category-coded species, matching the spec''s dimension/category
-    requirements'
+  - 'Fixed the attempt-1 theme-color bug: all three Imprint hues (#009E73 Setosa,
+    #C475FD Versicolor, #4467A3 Virginica) are now pixel-identical between light and
+    dark renders (verified by pixel-sampling the legend swatches) because the discrete
+    colorscale is kept fully opaque instead of alpha-blended against the theme-varying
+    PAGE_BG'
+  - 'Correct chart type: go.Parcoords with 4 numeric dimensions and species color-coding,
+    matching the spec'
   - 'Clever idiomatic workaround for Parcoords'' lack of a native categorical legend:
     a hand-built 3-stop discrete colorscale plus a colorbar with custom tickvals/ticktext
-    (''Setosa'', ''Versicolor'', ''Virginica'') stands in for a real legend'
-  - Descriptive subtitle ('Setosa (green) clusters tightly at low petal dimensions...')
-    gives the plot a clear analytical focal point instead of a bare title
-  - Explicit per-axis ranges (e.g. [4,8] for sepal length) keep all data visible without
-    clipping, and axis labels carry units (cm)
-  - 'Clean, minimal KISS script: single seed (np.random.seed(42)), no unused imports,
-    correct write_image/write_html calls at the exact 800x450 scale=4 canvas target'
-  - Title fits comfortably within the canvas in both themes with no clipping or overflow
-    (verified via edge crops)
+    stands in for a real legend, and now renders correctly in both themes'
+  - Descriptive subtitle narrates the Setosa-separation finding, giving the plot a
+    clear analytical focal point
+  - Explicit per-axis ranges keep all data visible without clipping; axis labels carry
+    units (cm)
+  - 'Clean, minimal KISS script: fixed seed, only used imports, no leftover alpha/rgba
+    helper function, correct canvas-target write_image/write_html calls'
+  - 'Canvas at correct 3200x1800 target; backgrounds verified as #FAF8F1 (light) /
+    #1A1A17 (dark)'
   weaknesses:
-  - 'Data colors are NOT identical between light and dark renders, violating the hard
-    palette rule. Pixel-sampled the legend swatches: Virginica renders as rgb(114,140,183)
-    in light vs rgb(60,86,130) in dark; Setosa renders as rgb(64,181,147) in light
-    vs rgb(9,127,94) in dark. Root cause: line.color uses rgba(hex, 0.75) via the
-    rgba() helper, so the 0.75 alpha composites the categorical hue with PAGE_BG (cream
-    in light, near-black in dark) instead of staying constant — the same bug affects
-    every polyline, not just the colorbar swatch. Fix: keep the Imprint hues at full
-    opacity (or blend against a fixed neutral, not the theme background) so #009E73/#C475FD/#4467A3
-    read as the same color in both themes; use a separate mechanism (e.g. slightly
-    thinner lines, or alpha only in the trace itself without it depending on backdrop)
-    to manage overplotting density instead of tying transparency to a theme-varying
-    background.'
-  - Colorbar-as-legend trick is effective but the resulting swatches look visibly
-    washed out on the light render compared to the more saturated dark render, which
-    is a direct symptom of the alpha/background compositing issue above rather than
-    a good-faith stylistic choice.
+  - 'DQ-01: Uses only the spec''s minimum recommended 4 dimensions (sepal/petal length/width);
+    adding 1-2 more dimensions (e.g. a derived petal_area or an extra measurement)
+    would better demonstrate feature coverage for high-dimensional parallel-coordinates
+    data'
+  - 'DE-02: Styling beyond the legend box is fairly plain/default — could add subtle
+    refinements (e.g. lighter per-axis background banding) typical of a more polished
+    publication-ready parcoords chart'
+  - 'VQ-03: With 150 fully opaque overlapping lines, the densest crossing region (between
+    the Sepal Length and Sepal Width axes) gets visually busy; a slight, theme-independent
+    opacity reduction (blended against a fixed neutral rather than PAGE_BG) or thinner
+    lines could reduce clutter there without reintroducing the theme-color bug'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "parallel-basic · python · plotly · anyplot.ai" and subtitle in dark ink, fully legible, comfortably centered and not clipped at any edge (verified via pixel crop of top and left/bottom margins). Four vertical parallel-coordinate axes labeled "Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)" with dark-ink titles and soft-gray tick numbers, all readable. A bordered legend box on the right reads "Species" with a stacked color swatch and labels "Virginica" / "Versicolor" / "Setosa" in soft-ink text — fully readable, not clipped by the canvas edge.
-      Data: 150 translucent polylines in three hues — green (Setosa), lavender (Versicolor), blue (Virginica) — clustering visibly by species, especially on the Petal Length/Petal Width axes. First series (Setosa) is the brand green as required.
-      Legibility verdict: PASS (all title/axis/tick/legend text clearly readable against the light background; no dark-on-dark or light-on-light issues).
+      Background: Warm off-white, sampled at (250, 248, 241) ≈ #FAF8F1 — matches spec target.
+      Chrome: Title "parallel-basic · python · plotly · anyplot.ai" plus a subtitle narrating the Setosa-separation finding, both in dark ink, fully legible. Four vertical parallel-coordinate axes ("Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)") with dark-ink titles and soft-gray tick numbers. A bordered legend box on the right ("Species") with a 3-block color swatch labeled Virginica / Versicolor / Setosa.
+      Data: 150 fully opaque polylines colored by species — Setosa green (#009E73, sampled (0,158,115)), Versicolor lavender (#C475FD, sampled (196,117,253)), Virginica blue (#4467A3, sampled (68,103,163)). First categorical series (Setosa) is the brand green, matching Imprint canonical order.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title and subtitle render in light ink, fully legible against the near-black surface. Axis titles in light ink, tick numbers in soft light-gray, all readable. Legend box borders and "Species"/species-name text render in light ink against the dark box fill — no dark-on-dark failures.
-      Data: Same three-hue line structure (green/lavender/blue), same clustering pattern as the light render.
-      Legibility verdict: PASS for text — however, pixel-sampling the legend swatches shows the DATA COLORS THEMSELVES are not theme-invariant: Virginica swatch is rgb(114,140,183) in light vs rgb(60,86,130) in dark; Setosa swatch is rgb(64,181,147) in light vs rgb(9,127,94) in dark. This is because line/marker color is built as rgba(hex, 0.75), so the translucent color composites with the theme background (cream vs near-black) instead of staying fixed. This violates the "Imprint palette data colors (positions 1-7) must be identical between light and dark" rule — flagged under VQ-07 and in Weaknesses.
+      Background: Warm near-black, sampled at (26, 26, 23) ≈ #1A1A17 — matches spec target.
+      Chrome: Same title/subtitle/axis/legend text, now in light ink (#F0EFE8-family), fully legible against the dark background — no dark-on-dark failures observed.
+      Data: Pixel-sampled the same three legend swatch positions — Setosa (0,158,115), Versicolor (196,117,253), Virginica (68,103,163) — identical to the light render. This confirms the attempt-1 bug (data colors compositing against PAGE_BG and shifting per theme) is fixed; the Imprint hues are now pixel-identical between themes.
+      Legibility verdict: PASS — all text readable, data colors correctly theme-invariant.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -68,74 +67,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, subtitle, axis titles, tick labels, and legend text all clearly
-          readable in both themes at explicit font sizes
+        comment: All text readable in both themes; subtitle and per-axis range labels
+          slightly small but legible
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text-on-text or text-on-legend collisions; dense line crossings
-          near tick numbers are typical for parcoords and don't obscure labels
+        comment: No text/legend collisions; dense line crossings in the middle axes
+          are inherent to parcoords, not overlap
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 150 lines at alpha=0.75 is a reasonable density choice for medium-density
-          data (~150 obs)
+        comment: 150 opaque lines are distinguishable by species color, though the
+          densest crossing region gets visually busy
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three well-separated hues (green/lavender/blue), not red-green-only
+        comment: Green/purple/blue hues are distinct and CVD-safe; no red-green as
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Title comfortably sized, no overflow/clipping at any canvas edge,
-          correct 3200x1800 landscape canvas
+        comment: Canvas gate passed (3200x1800); good proportions, nothing cut off,
+          legend fully inside canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All 4 axis titles descriptive with units (cm)
+        comment: Descriptive axis labels with units (cm)
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Data colors are NOT identical between light/dark: rgba(hex, 0.75)
-          composites against the theme background, shifting the perceived Imprint
-          hue (e.g. Virginica rgb(114,140,183) light vs rgb(60,86,130) dark). First-series-green
-          rule and canonical ordering are otherwise respected.'
+        passed: true
+        comment: 'FIXED from attempt 1: pixel-sampling confirms all three Imprint
+          hues are identical between light and dark renders; canonical order used;
+          backgrounds correct #FAF8F1/#1A1A17'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful subtitle and legend workaround, but polish undercut by
-          the theme-inconsistent data colors
+        comment: Subtitle storytelling and colorbar-as-legend workaround now execute
+          cleanly with the color bug fixed
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean bordered legend box, generous margins, subtle chrome
+        comment: Clean bordered legend, generous margins, but per-axis panel styling
+          is fairly plain otherwise
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
         comment: Subtitle explicitly narrates the Setosa-separation finding, giving
-          the plot a clear focal point
+          a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -145,27 +145,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel coordinates plot via go.Parcoords
+        comment: go.Parcoords is the correct plot type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 4 numeric dimensions + category color-coding present, within the
-          4-10 dimension / 20-200 obs recommendation
+        comment: Multiple numeric dimensions and category color-coding both present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Explicit per-axis ranges show all data without clipping
+        comment: Axis ranges cover the full data range for each dimension
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{spec-id} · python · plotly · anyplot.ai' format;
-          legend labels match species names
+        comment: Title matches required format; legend labels match species names
     data_quality:
       score: 14
       max: 15
@@ -175,58 +173,55 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Uses the minimum recommended 4 dimensions rather than exploring more
-          (5-10 would show more of the plot type's power)
+        comment: Uses the spec's minimum recommended 4 dimensions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible Iris-analog synthetic data, neutral subject matter
+        comment: Iris-like dataset is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible cm-scale ranges matching real iris measurements
+        comment: Sensible value ranges for flower measurements in cm
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Flat top-level script; one small rgba() helper function is a minor
-          exception to 'no functions'
+        comment: No functions/classes; the attempt-1 rgba() helper has been removed
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) fixed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, plotly.graph_objects — all used
+        comment: Only os, numpy, pandas, plotly.graph_objects, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for the plot
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png/.html output via write_image/write_html
-          at the canonical canvas size
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -234,16 +229,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct go.Parcoords high-level API usage
+        comment: Correct high-level go.Parcoords API usage
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Genuinely distinctive discrete-colorscale-as-legend workaround for
-          Parcoords' lack of a native categorical legend, but its execution introduced
-          the theme-color bug
-  verdict: REJECTED
+        comment: Discrete-colorscale-as-legend workaround is a genuinely distinctive
+          technique for Parcoords, now executed correctly
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -252,6 +246,4 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - alpha-blending
-  - custom-colormap
+  styling: []
