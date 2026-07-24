@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 80/100 | Updated: 2026-07-24
@@ -9,6 +9,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.collections import LineCollection
 
 
 # Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
@@ -79,11 +80,18 @@ ax.set_facecolor(PAGE_BG)
 
 colors = {"setosa": IMPRINT_PALETTE[0], "versicolor": IMPRINT_PALETTE[1], "virginica": IMPRINT_PALETTE[2]}
 
-# Plot parallel coordinates - each line connects values across axes
-x = range(len(numeric_cols))
-for _, row in df_norm.iterrows():
-    y = [row[col] for col in numeric_cols]
-    ax.plot(x, y, color=colors[row["species"]], alpha=0.5, linewidth=2)
+# Vertical reference line at each dimension's axis position - anchors the
+# "each variable is a vertical axis" metaphor that parallel coordinates rely on
+x = np.arange(len(numeric_cols))
+for xi in x:
+    ax.axvline(xi, color=INK_SOFT, alpha=0.3, linewidth=0.8, zorder=0)
+
+# Plot parallel coordinates - vectorized via LineCollection instead of a per-row loop
+segments = np.stack([np.tile(x, (len(df_norm), 1)), df_norm[numeric_cols].to_numpy()], axis=2)
+line_colors = df_norm["species"].map(colors).to_numpy()
+lc = LineCollection(segments, colors=line_colors, alpha=0.4, linewidths=2, zorder=2)
+ax.add_collection(lc)
+ax.set_xlim(x.min() - 0.15, x.max() + 0.15)
 
 # Axis labels with original scale ranges
 ax.set_xticks(x)
