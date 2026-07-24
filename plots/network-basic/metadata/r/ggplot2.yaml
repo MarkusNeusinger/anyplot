@@ -1,0 +1,267 @@
+library: ggplot2
+language: r
+specification_id: network-basic
+created: '2026-07-24T04:12:18Z'
+updated: '2026-07-24T04:27:15Z'
+generated_by: claude-sonnet
+workflow_run: 30065989501
+issue: 989
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Both previously-flagged missing data dimensions (community/group, edge weight)
+    are now fully modeled and visually encoded via color and edge thickness respectively
+  - A legend and caption now explain what node size and edge thickness mean, closing
+    the 'no legend explains size' gap from the prior review
+  - Node label size was increased (2.6 to 3.1) directly in response to the mobile-legibility
+    weakness, with a visible improvement at the 400px mobile crop
+  - Palette and theme-adaptive chrome remain fully compliant in both renders; data
+    colors are pixel-identical between light and dark
+  - Verified overlap-free in all three dense clusters via zoomed crops, with no regressions
+    introduced by the added legend and caption
+  weaknesses:
+  - At mobile scale (~400px), the labels on the lowest-degree nodes (Zoe, Ella, Lucas)
+    are still the tightest to read - not clipped or overlapping, but the smallest
+    text on the canvas; a further nudge (e.g. toward 3.3-3.5) would make VQ-01 airtight
+  - 'Design Excellence is solid but not exceptional: beyond the new color/size/width
+    encodings, there''s no additional refinement (e.g. a subtle stroke or halo distinguishing
+    hub nodes, or varying edge alpha by weight) that would push this from well-executed
+    toward genuinely distinctive'
+  - Library Mastery remains capped by a generic from-scratch force-layout implementation,
+    inherent to ggplot2 lacking network primitives, not something further repair can
+    meaningfully fix without ggraph
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "network-basic · r · ggplot2 · anyplot.ai" is centered at the top in dark ink,
+        clearly legible with a clear margin above it. A bottom legend ("Friend group") explains the
+        three Imprint colors (Circle A/B/C), and a caption below it reads "Node size = number of
+        friendships · edge thickness = friendship strength". Node name labels are set in dark ink
+        below each node and are all legible against the light background, with no overlap onto other
+        text, nodes, or edges (verified via zoomed crops of all three clusters and the legend block).
+      Data: 20 nodes rendered as circles filled with one of three Imprint colors (#009E73 green =
+        Circle A, #C475FD lavender = Circle B, #4467A3 blue = Circle C), sized 3.5-7pt in proportion
+        to each node's degree (hub nodes Owen, Mason, Noah, Leo, Nora are visibly largest). 31 edges
+        are grey (INK_SOFT, alpha 0.45) segments whose thickness now varies with friendship weight -
+        the three cross-circle bridge edges read visibly thinner than the dense within-circle ties.
+      Legibility verdict: PASS - all title, legend, caption, and label text is clearly readable
+        against the light background; no light-on-light or clipped text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, legend, caption, and all 20 node labels are rendered in light ink (#F0EFE8 /
+        #B8B7B0), clearly legible against the dark background. No dark-on-dark text was found
+        anywhere.
+      Data: Node fill colors are pixel-identical Imprint green/lavender/blue to the light render,
+        confirming data colors do not shift between themes - only the background and text ink
+        flipped, as required. Edge thickness-by-weight and node size-by-degree read the same as in
+        the light version.
+      Legibility verdict: PASS - all title, legend, caption, and label text is clearly readable
+        against the dark background; no dark-on-dark failures observed.
+
+    Mobile check: a 400x400 downsample of both renders was also inspected - overall network
+    structure, color grouping, and legend remain readable; the smallest degree-1 node labels (Zoe,
+    Ella, Lucas) are the first to get visually tight but remain legible, not clipped or overlapping.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; label size bumped 2.6->3.1 per prior feedback;
+          lowest-degree node labels still tightest at mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, nodes, or edges, verified in all three
+          clusters plus legend/caption
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Node/edge sizing appropriate for a sparse 20-node/31-edge network;
+          edge-thickness-by-weight adds a useful second channel; degree-1 nodes still
+          smallest at mobile scale
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three well-separated Imprint hues plus consistent ink stroke, no
+          red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 2400x2400, legend adjacent to plot, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format matches spec; axes correctly omitted for non-semantic
+          layout coordinates
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'IMPRINT_PALETTE[1:3] in canonical order, first series #009E73, chrome
+          theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Community color encoding + degree size + weight-based edge thickness
+          is a considered design, above defaults but short of publication-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/grid/axis fully removed, generous whitespace, subtle edge
+          alpha; no extra hub-node emphasis treatment
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three simultaneous encodings (color=community, size=degree, width=tie
+          strength) give a real story without annotations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Clear force-directed node-link network diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes, edges, force layout, degree sizing, plus new community and
+          edge-weight encoding
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Layout coordinates correctly non-semantic; all nodes/edges shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match group
+          data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Now covers labels, degree-sizing, group/community, and edge weight
+          - both prior omissions fixed
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral friendship network with realistic first names
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 20 nodes / 31 edges within spec's 10-50 node range; weights and bridge-edge
+          strengths are sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, only necessary layout loop
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used; tibble called via namespace
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for from-scratch layout, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png at correct dimensions
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic layered composition with scale_size/scale_linewidth/scale_fill_manual
+          and coord_equal
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic force-directed layout, not ggplot2-specific; default score
+          per calibration
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
