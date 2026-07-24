@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:18:29Z'
-updated: '2026-07-24T07:10:59Z'
+updated: '2026-07-24T07:21:19Z'
 generated_by: claude-sonnet
 workflow_run: 30074020669
 issue: 977
@@ -12,53 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
+  - 'Attempt-1 weakness fixed: the full four-sided box border is gone, replaced with
+    panel_border=element_blank() and axis_line drawn only on the bottom/left — a cleaner,
+    more minimal frame in both themes'
+  - 'Attempt-1 weakness fixed: a contextual annotation ("Heavy tails: points bow away
+    from the reference line at both ends") now explicitly calls out the insight the
+    data was designed to show, anchored dynamically to the sample''s own quantile
+    range so it always lands in the empty upper-left corner'
   - Correct, idiomatic use of lets-plot's dedicated geom_qq/geom_qq_line statistical
-    geoms rather than manually computing quantiles
-  - Reference line correctly reflects a fitted (mean/std) line through the sample
-    quantiles rather than a naive y=x, which is the statistically correct convention
-    for a Q-Q plot against an estimated normal
+    geoms; reference line is a properly fitted (mean/std) line through the sample
+    quantiles, the statistically correct convention for a Q-Q plot against an estimated
+    normal
   - 'Data tells a clear, textbook story: Student''s t (df=3) draws produce the classic
-    heavy-tailed S-curve bowing away from the reference line at both ends'
-  - Realistic, neutral manufacturing QC scenario with plausible pressure values (85-116
-    psi)
-  - All font sizes explicitly set (axis_title=12, axis_text=10, plot_title=16), matching
-    library-recommended defaults
+    heavy-tailed S-curve bowing away from the reference line at both ends, in a realistic,
+    neutral manufacturing QC calibration scenario'
+  - All font sizes explicitly set (axis_title=12, axis_text=10, plot_title=16, annotation
+    size=3.2); Imprint palette (#009E73 primary) and theme-adaptive chrome are both
+    correctly and identically applied across light/dark renders
   - Clean KISS structure, seeded RNG, only used imports, correct plot-{THEME}.png/.html
-    output via ggsave(scale=4)
-  - 'Imprint palette respected: primary series is #009E73, identical between light
-    and dark renders; theme-adaptive chrome (background, text, grid) correctly flips
-    between #FAF8F1 and #1A1A17'
+    output via ggsave(scale=4); canvas is exactly 3200×1800 (landscape target, within
+    gate)
   weaknesses:
-  - Panel renders with a full four-sided box border (top/right/bottom/left axis lines)
-    in both themes instead of an open bottom+left axis — reads as a library default
-    rather than a refined, minimal frame; set axis_line to only draw on the bottom/left
-    (or override the top/right panel border to element_blank()) for a cleaner look
-  - No visual hierarchy or annotation calling out the heavy-tail deviation the data
-    was specifically designed to show — a viewer must notice the S-curve themselves;
-    consider a subtle annotation or emphasis marking where sample quantiles depart
-    from the reference line at the tails
-  - 'Design feels like a well-configured default rather than a distinctive, polished
-    chart: palette is minimal (one series + one neutral reference line), grid/whitespace
-    are fine but unremarkable — push aesthetic sophistication further (e.g. slightly
-    refined grid treatment, more deliberate visual hierarchy between line and points)'
-  - geom_qq/geom_qq_line usage is correct but fairly generic within lets-plot's toolkit
-    — no distinctive lets-plot-only feature (e.g. interactive tooltip customization,
-    faceting, or theme features unique to the library) is leveraged beyond the basic
-    statistical geoms
+  - 'Aesthetic still reads as a well-refined default rather than fully publication-grade:
+    a single accent color plus a muted dashed reference line and one text annotation
+    is solid but not yet FiveThirtyEight-level polish — further hierarchy (e.g. subtle
+    emphasis on the tail points themselves) could push Design Excellence higher'
+  - Marker density in the dense mid-quantile cluster (~[-0.7, 0.7] theoretical quantiles)
+    is fairly tight with many overlapping points at size=2.5/alpha=0.75; a touch smaller
+    or slightly lower alpha in that region would ease the crowding without weakening
+    the tail signal
+  - No lets-plot-distinctive feature is leveraged beyond the basic statistical geoms
+    plus a text layer — interactive tooltip customization, faceting, or other library-unique
+    theme features remain unused
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "qq-basic · python · letsplot · anyplot.ai" in dark ink top-left, clearly legible. X-axis title "Theoretical Quantiles" and y-axis title "Sample Quantiles (Pressure, psi)" in dark ink, both readable. Tick labels in a slightly lighter gray-ink, all legible. Subtle light-gray gridlines on both axes, visible but unobtrusive. The panel is enclosed by a thin box border on all four sides (full rectangle frame) rather than an open bottom/left axis.
-      Data: Green (#009E73) circular markers (alpha ~0.75) tracing an S-shaped curve; a solid dark-gray diagonal reference line runs through the middle. Points closely hug the line in the [-1, 1] theoretical-quantile range and bow away from it at both tails (heavy-tailed signature), with sparse outlier points at each extreme.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "qq-basic · python · letsplot · anyplot.ai" in dark ink top-left, clearly legible. X-axis title "Theoretical Quantiles" and y-axis title "Sample Quantiles (Pressure, psi)" in dark ink, both readable and similarly sized. Tick labels in a softer gray ink, all legible and balanced between axes. Subtle light-gray gridlines on both axes, visible but unobtrusive. The panel border is now open — only bottom/left axis lines are drawn, no full four-sided box (fixed from attempt 1). A text annotation "Heavy tails: points bow away from the reference line at both ends" sits in the empty upper-left corner in muted gray ink, fully readable and not overlapping any data.
+      Data: Green (#009E73) circular markers (alpha ~0.75) tracing an S-shaped curve; a dashed, muted dark-gray diagonal reference line runs through the middle. Points closely hug the line in the [-1, 1] theoretical-quantile range and bow away from it at both tails (heavy-tailed signature), with sparse outlier points at each extreme.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, axis titles, and tick labels rendered in light/off-white ink, all clearly legible against the dark background — no dark-on-dark text found. Gridlines are a muted light-gray, subtle but visible. Same full-box panel border as the light render, now in light ink.
-      Data: Same green (#009E73) markers and same S-curve shape/positions as the light render — data colors are identical between themes as required. Reference line is now a light-gray line (chrome color flipped correctly), clearly visible against the dark panel.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels rendered in light/off-white ink, all clearly legible against the dark background — no dark-on-dark text found. Gridlines are a muted light-gray, subtle but visible. Same open bottom/left-only axis frame as the light render, now in light ink. The annotation text is legible in light-gray ink against the dark panel, no overlap with data.
+      Data: Same green (#009E73) markers and same S-curve shape/positions as the light render — data colors are identical between themes as required. The dashed reference line is now light-gray (chrome color flipped correctly), clearly visible against the dark panel.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -70,21 +69,22 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (12/10/16), readable in both themes,
-          no overlap or clipping
+        comment: All font sizes explicitly set (12/10/16, annotation 3.2), readable
+          in both themes, no overlap or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No overlapping text or data elements; annotation lands cleanly in
+          the empty upper-left corner
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
         comment: 150-point markers at size=2.5/alpha=0.75 are visible and reasonably
-          density-adapted; slightly dense in the mid-quantile cluster
+          density-adapted; mid-quantile cluster is somewhat tight
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -96,14 +96,14 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large, balanced portion of the canvas, nothing cut off
+        comment: Canvas confirmed exactly 3200x1800; plot fills a large, balanced
+          portion of the canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles; y-axis includes units (psi), x-axis is inherently
-          unitless (theoretical quantiles)
+        comment: Descriptive axis titles; y-axis includes units (psi)
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -112,30 +112,31 @@ review:
         comment: 'Primary series is #009E73, identical across themes; backgrounds
           match #FAF8F1/#1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 9
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default look; not exceptional
+        passed: true
+        comment: Improved over attempt 1 (dashed muted reference line, annotation
+          callout, open axis) but not yet fully publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid and seamless panel/page background are good, but the
-          full four-sided box border reads as unrefined framing rather than an open,
-          minimal axis
+        passed: true
+        comment: Full box border removed in favor of an open bottom/left axis (fixed
+          from attempt 1); subtle grid, generous whitespace, seamless panel/page blend
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data is displayed but the heavy-tail deviation the dataset was designed
-          to show is not visually emphasized
+        passed: true
+        comment: Annotation now explicitly calls out the heavy-tail deviation the
+          dataset was built to show, anchored to guide the viewer's eye (fixed from
+          attempt 1)
     spec_compliance:
       score: 15
       max: 15
@@ -233,7 +234,7 @@ review:
         max: 5
         passed: true
         comment: Uses lets-plot's dedicated statistical geom_qq/geom_qq_line rather
-          than manual quantile computation
+          than manual quantile computation, plus a properly layered geom_text annotation
       - id: LM-02
         name: Distinctive Features
         score: 3
@@ -242,11 +243,12 @@ review:
         comment: geom_qq/geom_qq_line are lets-plot-specific convenience geoms, but
           no further distinctive library feature (interactivity customization, faceting,
           etc.) is used
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
+  - annotations
   - layer-composition
   patterns:
   - data-generation
