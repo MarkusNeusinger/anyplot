@@ -1,8 +1,7 @@
 // anyplot.ai
 // parallel-basic: Basic Parallel Coordinates Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-07-24
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 92/100 | Created: 2026-07-24
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
 
