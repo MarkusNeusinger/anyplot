@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-calendar: Basic Calendar Heatmap
 // Library: chartjs 4.4.7 | JavaScript 22.23.1
-// Quality: 68/100 | Created: 2026-07-23
+// Quality: 80/100 | Updated: 2026-07-24
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;

@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: heatmap-calendar
 created: '2026-07-23T22:11:11Z'
-updated: '2026-07-23T22:54:58Z'
+updated: '2026-07-24T02:54:33Z'
 generated_by: claude-sonnet
 workflow_run: 30048412396
 issue: 1010
@@ -12,163 +12,131 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/chartjs/plot-dark.html
-quality_score: 68
+quality_score: 80
 review:
   strengths:
-  - 'Clever core-API-only workaround for Chart.js''s lack of a native heatmap type:
-    a scatter dataset with square point markers positioned by (week, weekday), matching
-    the calendar-grid structure the spec requires without reaching for an unsupported
-    plugin.'
-  - 'Sequential Imprint colormap (imprint_seq, brand green -> blue) correctly interpolated
-    per-cell via colorForValue(), and data colors are pixel-identical between the
-    light and dark renders (verified: cell RGB (30,134,136) in both).'
-  - 'Realistic, well-structured synthetic data: per-weekday baseline (busier weekdays,
-    quieter weekends) plus periodic ''hackathon burst'' spikes gives genuine low/medium/high/zero
-    feature coverage rather than a flat dataset.'
-  - Data-driven legend bins (quantile-based) accurately represent the actual color
-    scale, and the previously-flagged 'legend disconnected from the grid' issue is
-    now fixed -- the legend sits close under the grid instead of pinned far below.
-  - 'Title, month labels, and weekday labels are correctly theme-adaptive: pixel-sampled
-    colors match t.ink (#F0EFE8) and t.inkSoft (#B8B7B0) exactly in the dark render,
-    and the mandated title format is used.'
-  - Deterministic LCG-seeded data generation; no fetch/network calls; animation disabled
-    per the mount-node contract.
+  - Correct idiomatic workaround for chartjs's lack of a native calendar/matrix chart
+    type — a `scatter` dataset with square point markers mapped to week/weekday coordinates
+  - Sequential imprint_seq green→blue ramp correctly implemented with perceptual sqrt
+    scaling, and quantile-derived legend bins that actually match the rendered color
+    distribution
+  - Fully theme-adaptive chrome (title, ticks, legend, muted no-activity anchor) with
+    data colors identical between light and dark renders
+  - Realistic, deterministic synthetic data (seeded LCG) showing believable weekday/weekend
+    commit patterns plus occasional hackathon bursts
+  - Custom legend generateLabels correctly sets legendItem.fontColor (not options.labels.color)
+    so the theme-adaptive text actually renders instead of falling back to a near-black
+    default
   weaknesses:
-  - 'CRITICAL dark-on-dark failure in the legend: pixel-sampling the dark render''s
-    legend text (''No activity'', ''1-4'', ''5-6'', ''7+'') shows a dominant near-black
-    fill (~rgb(0,0,0), 697 of the sampled non-background pixels) instead of the theme-adaptive
-    t.inkSoft (#B8B7B0 / rgb(184,183,176)) that the title and axis tick labels correctly
-    use elsewhere in the same render. The same near-black text also appears in the
-    light render, so `legend.labels.color: t.inkSoft` is not being honored for the
-    legend text at all (it works for `plugins.title.color` and `scales.*.ticks.color`,
-    which sample correctly) -- something in the custom `generateLabels()` path or
-    a later plugin/default is overriding the legend''s text fillStyle. Result: the
-    legend is essentially unreadable in the dark render. Fix direction: confirm Chart.js
-    is actually applying `options.plugins.legend.labels.color` when a custom `generateLabels`
-    is supplied (in some Chart.js versions per-item label objects need their own color-adjacent
-    field, or a later `ctx.fillStyle` reset elsewhere is winning); a minimal repro
-    without the custom generateLabels would confirm whether the custom label objects
-    are the cause.'
-  - 'Canvas underutilization (VQ-05) is still present, just now symmetric instead
-    of bottom-heavy: pixel-measured content (title through legend) spans only rows
-    556-1229 of 1800 (37% of canvas height), with a 31% empty band above the title
-    and a 32% empty band below the legend. The `compactGrid` afterLayout fix successfully
-    closed the previous review''s ''legend isolated from grid'' gap (legend now sits
-    ~24px under the grid), but it re-centers the same total amount of dead space rather
-    than reducing it -- the actual 7-row grid itself still only occupies ~27% of the
-    canvas height (rows ~660-1140). Fix direction: grow the grid itself (larger cells
-    / more generous row height) to consume more of the reclaimed vertical space instead
-    of only recentering the compact block, or increase title/legend font sizes and
-    padding so the whole composition reads as intentionally spacious rather than a
-    small island of content in a mostly-empty canvas.'
-  - Because the legend text bug and the canvas dead-space both compound, the dark-theme
-    render currently reads as broken (illegible legend) rather than merely under-styled
-    -- this should be the top fix priority before any further layout polish.
+  - 'Row pitch vs. column pitch mismatch: weeks (columns) sit almost touching (~96%
+    fill) while weekdays (rows) have large gaps (~36% fill) from the compactGrid plugin''s
+    afterLayout stretch — the grid reads as loosely-spaced dashed rows rather than
+    a cohesive calendar mosaic, making it harder to compare the same weekday across
+    weeks. Bring the row pitch closer to the column pitch (e.g. cap the gridHeight
+    growth nearer 1.3–1.5x the bare square height instead of up to 2.6x) rather than
+    stretching gaps between otherwise fixed-size cells.'
+  - The legend/color scale never states the unit (e.g. "Commits") — a viewer of the
+    static PNG alone can't confirm what the 1–4 / 5–6 / 7+ bins are counting; only
+    the interactive tooltip (invisible in the PNG) mentions "commits".
+  - The compactGrid plugin reaches into Chart.js internal/private state to force a
+    relayout (calling scale.configure() to invalidate cached _startPixel/_length,
+    and mutating chart.chartArea / legend.top / legend.bottom directly) — this isn't
+    part of the public API contract and is fragile against future Chart.js version
+    bumps.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 (pixel-sampled corner: rgb(250,248,241)) -- not pure white, not dark.
-      Chrome: Title "heatmap-calendar · javascript · chartjs · anyplot.ai" in dark ink, centered, clearly readable. Month labels (Jan-Dec) run along the top in medium-gray secondary text, evenly spaced and readable. Weekday labels (Mon-Sun) run down the left side in the same secondary ink, readable.
-      Legend: Bottom-centered legend ("No activity" / "1-4" / "5-6" / "7+") with colored square swatches now sits close under the grid (previous review's "isolated legend" complaint is fixed). The legend text itself renders in near-black (pixel-sampled ~rgb(0,0,0)) rather than the expected t.inkSoft (#4A4A44); on the light background this still reads as legible dark text, so no visible defect here, but it confirms the color token isn't actually reaching the legend text (see dark render).
-      Data: A 53-week x 7-weekday grid of square cells. First non-zero series color reads as brand green (#009E73) at low values, blending through teal toward blue (#4467A3) at higher values (sequential imprint_seq), with zero-activity cells rendered in a neutral muted gray. Weekday pattern is visible (weekends show more gray/no-activity cells than weekdays), plus a few brighter blue-violet "7+" outlier cells scattered through the year. Legend swatches for "1-4" and "5-6" are now visually distinct (subtle page-bg stroke sharpens the step), fixing the previous review's "hard to distinguish" complaint.
-      Layout: Content (title through legend) occupies only rows 556-1229 of 1800px height (~37%), with a ~31% empty band above the title and ~32% empty band below the legend -- the 7-row grid itself is only ~27% of canvas height. Still a real layout defect, though the legend-to-grid gap specifically has been fixed.
-      Legibility verdict: PASS (all text reads fine against the light background; the token-application bug is masked here because black-on-cream still has contrast).
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "heatmap-calendar · javascript · chartjs · anyplot.ai" in dark ink, month labels (Jan-Dec) along the top in secondary gray, weekday labels (Mon-Sun) down the left in secondary gray, legend below the grid with 4 swatches ("No activity" / "1–4" / "5–6" / "7+"). All text is clearly readable against the light background — no light-on-light issues.
+      Data: 53 weekly columns x 7 weekday rows of square cells. Cells are gray ("no activity", concentrated on Sat/Sun), teal-green (low activity), teal-blue (mid activity), and a handful of blue/purple accent cells (bursts, e.g. one per ~47 days plus natural high-variance days). First bin above zero is teal-green, ramping toward blue for higher values — consistent with the imprint_seq sequential scale, not the categorical brand green.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 (pixel-sampled corner: rgb(26,26,23)) -- not pure black, not light.
-      Chrome: Title and axis labels are correctly theme-adaptive -- pixel-sampled title text is rgb(240,239,232), an exact match for t.ink (#F0EFE8); month-label text is rgb(184,183,176), an exact match for t.inkSoft (#B8B7B0). No dark-on-dark issue for these elements.
-      Legend: FAIL. Pixel-sampling the legend text region shows the dominant non-background, non-swatch color is near-black (~rgb(0,0,0), the single largest color cluster in the sampled area), not the expected t.inkSoft (#B8B7B0). Visually (zoomed native-resolution crop), "No activity", "1-4", "5-6", "7+" are barely distinguishable dark-gray-on-near-black -- a textbook dark-on-dark failure, and the single most common theme-adaptation bug this check exists to catch. The legend swatch colors and stroke are theme-correct; only the label text color is broken.
-      Data: Identical cell colors to the light render (pixel-verified: same cell samples rgb(30,134,136) in web light and dark) -- confirms data colors are theme-independent, only chrome flips as required (except for the broken legend text).
-      Layout: Same dead-space defect as the light render -- grid occupies a thin, now-centered band with large empty regions above and below.
-      Legibility verdict: FAIL -- legend text is a dark-on-dark failure (near-black text on #1A1A17 background); title, month, and weekday labels all PASS.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, month labels, and weekday labels now in light gray/off-white; legend swatches unchanged in hue, legend text light gray. All text is clearly readable against the dark background — no dark-on-dark failures.
+      Data: Cell colors are pixel-identical to the light render (gray no-activity cells, teal-green low values, teal-blue mid values, blue/purple burst cells) — only the chrome (background, ticks, title, legend text) flips theme, exactly as required.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 16
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 7
         max: 8
-        passed: false
-        comment: Legend text ('No activity', '1-4', '5-6', '7+') is near-black in
-          BOTH themes (pixel-verified), producing an unreadable dark-on-dark failure
-          in the dark render; title/month/weekday labels are correctly theme-adaptive
-          and legible, but the mandatory theme-readability check forces this to 0
-          per the dark-on-dark rule
+        passed: true
+        comment: Title, month labels, weekday labels, and legend text all readable
+          in both themes at appropriate sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Square cells are clearly visible and appropriately sized at full
-          3200x1800 resolution; slight ding since the thin vertical band (see VQ-05)
-          reduces their prominence
+        comment: Cells are individually legible, but uneven row/column pitch (columns
+          near-touching, rows widely spaced) hurts cross-week pattern reading
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green->blue scale plus a distinct muted gray for no-activity;
-          not relying on red/green alone
+        comment: Sequential green-blue ramp with muted gray anchor; no red-green as
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 2
         max: 4
         passed: false
-        comment: 'The previous review''s ''legend isolated from grid'' gap is fixed,
-          but total dead space is unchanged -- just recentered: content spans only
-          37% of canvas height (31% empty above title, 32% empty below legend), grid
-          itself only ~27% of height'
+        comment: Row pitch stretched far past column pitch, creating an uneven, dashed-row
+          look; nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: No explicit unit (e.g. 'Commits') visible anywhere in the static
+          render's legend or ticks
+      - id: VQ-07
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Weekday and month labels are the correct, descriptive categorical
-          labels the spec calls for; no generic x/y labels
-      - id: VQ-07
-        name: Palette Compliance
-        score: 0
-        max: 2
-        passed: false
-        comment: Data colors and backgrounds are theme-correct, but per the theme-readability
-          rule, dark-on-dark chrome (the legend text) forces this to 0 as well
+        comment: Correct imprint_seq (green→blue) for the continuous value, muted
+          anchor for zero, theme-correct backgrounds in both renders
     design_excellence:
-      score: 8
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Thoughtful color mapping and now-distinct legend swatches, but the
-          illegible dark-theme legend and the large dead-space bands make the overall
-          composition feel broken/unfinished
+        passed: true
+        comment: Custom perceptual color scaling (sqrt), quantile-derived legend,
+          and a bespoke layout plugin show real design intent, though the row-spacing
+          artifact undercuts the polish
       - id: DE-02
         name: Visual Refinement
-        score: 1
+        score: 3
         max: 6
-        passed: false
-        comment: Grid/spines are appropriately removed and the legend-to-grid gap
-          is now tight, but the large unintentional empty bands above/below the whole
-          block plus the illegible legend text read as unrefined
+        passed: true
+        comment: Grid/spines removed, generous overall whitespace, but the row/column
+          spacing mismatch reads as unrefined
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Weekday activity pattern (busier weekdays, quieter weekends) plus
-          occasional burst days gives some visual hierarchy/story beyond a flat data
-          dump
+        comment: Weekend low-activity pattern and burst days are visible, but the
+          loose row spacing makes week-over-week comparison harder than it should
+          be
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -176,54 +144,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct calendar-heatmap structure: days as cells, weeks as columns,
-          weekdays as rows'
+        comment: GitHub-style calendar heatmap, matching the spec's explicit application
+          example
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Weekday labels, month labels, sequential colormap, and a color-scale
-          legend are all present, but the legend is illegible in the dark render,
-          undercutting the spec's 'include a color scale legend for value interpretation'
-          requirement there
+        comment: Weekday labels on y-axis, month labels on top, sequential colormap,
+          legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Week -> x, weekday -> y, value -> color; full year of data shown
+        comment: week=x, weekday=y, value=color; full year of data mapped
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format and legend bins match the actual
-          data-driven color scale, but the legend text's dark-on-dark rendering in
-          the dark theme is a real Title & Legend defect
+        comment: Title matches required format exactly; legend bins are descriptive
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full year, weekday pattern, low/medium/high activity plus zero-activity
-          days and burst outliers
+        comment: Full year, weekday/weekend baseline differences, and periodic bursts
+          all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible daily commit counts, neutral domain (coding activity)
+        comment: Commit-count activity is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values roughly 0-20 commits/day, sensible for the domain
+        comment: 0-30ish daily commits is a sensible range for this domain
     code_quality:
       score: 9
       max: 10
@@ -233,63 +197,64 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions and a custom layout plugin exist beyond
-          flat imports->data->plot, but each is justified by the chart-type workaround
-          (color interpolation, square-cell layout)
+        comment: Necessary helper functions for a JS scatter-based calendar; the afterLayout
+          plugin adds real complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG
+        comment: Deterministic seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the Chart.js global
+        comment: No unused imports; globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the workaround; no fake/simulated functionality
+        comment: No fake interactivity; complexity is justified by the layout problem
+          it solves
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current Chart.js
-          4.x API
+        comment: 'Mounts canvas to #container, animation:false set, current Chart.js
+          4.x API'
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Scatter + square point markers is the correct, documented workaround
-          since Chart.js has no native heatmap/matrix type
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom afterLayout plugin, per-point pointRadius/pointBackgroundColor
-          callbacks, and a custom tooltip/tick callback all go beyond basic API usage
-  verdict: REJECTED
+        comment: Scatter-as-heatmap is the right workaround given chartjs has no matrix
+          chart type, but the plugin reaches into internal/private scale state (_startPixel/_length
+          via configure()) rather than staying on documented public API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterLayout plugin, per-point radius/color callbacks, and
+          custom legend generateLabels demonstrate deep Chart.js API knowledge
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - manual-ticks
-  - annotations
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
+  - time-series
   - binning
   styling:
   - custom-colormap
-  - publication-ready
+  - edge-highlighting
