@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-24
@@ -48,20 +48,20 @@ nodes = [
     {"id": 5, "label": "http-client", "short": "http", "group": 1},
     {"id": 6, "label": "auth-service", "short": "auth", "group": 1},
     {"id": 7, "label": "cache-layer", "short": "cache", "group": 1},
-    {"id": 8, "label": "rate-limiter", "short": "limits", "group": 1},
+    {"id": 8, "label": "rate-limiter", "short": "rate", "group": 1},
     {"id": 9, "label": "graphql-gateway", "short": "gql", "group": 1},
     {"id": 10, "label": "webhook-dispatcher", "short": "hooks", "group": 1},
     # UI Components (4 packages — frontend layer)
     {"id": 11, "label": "button-kit", "short": "button", "group": 2},
     {"id": 12, "label": "form-fields", "short": "forms", "group": 2},
     {"id": 13, "label": "chart-widgets", "short": "charts", "group": 2},
-    {"id": 14, "label": "layout-grid", "short": "layout", "group": 2},
+    {"id": 14, "label": "layout-grid", "short": "grid", "group": 2},
     # Tooling (5 packages — build/dev tooling)
     {"id": 15, "label": "build-cli", "short": "build", "group": 3},
     {"id": 16, "label": "lint-rules", "short": "lint", "group": 3},
     {"id": 17, "label": "test-runner", "short": "tests", "group": 3},
-    {"id": 18, "label": "bundler-plugin", "short": "bundle", "group": 3},
-    {"id": 19, "label": "release-bot", "short": "release", "group": 3},
+    {"id": 18, "label": "bundler-plugin", "short": "bndl", "group": 3},
+    {"id": 19, "label": "release-bot", "short": "rel", "group": 3},
 ]
 
 edges = [
@@ -172,7 +172,11 @@ positions[:, 0] *= PLOT_W_PX
 positions[:, 1] *= PLOT_H_PX
 px_positions = positions
 
-marker_r_px = np.array([30 + degrees[node["id"]] * 8 for node in nodes], dtype=float) / 2
+# Single source of truth for marker sizes — degree 1 gets a slightly larger
+# floor (was 30) so longer mnemonics on small-degree nodes ('rate', 'bndl')
+# have enough room inside the circle.
+marker_sizes = {node["id"]: 34 + degrees[node["id"]] * 8 for node in nodes}
+marker_r_px = np.array([marker_sizes[node["id"]] for node in nodes], dtype=float) / 2
 footprint_px = marker_r_px + 10  # small gap so circles never touch edge-to-edge
 
 for _ in range(600):
@@ -196,6 +200,15 @@ for _ in range(600):
     if not moved:
         break
 
+# Recenter the bounding box vertically within the plot area — the compass
+# layout clusters most nodes above center (only the small UI group reaches
+# the bottom extreme), which otherwise leaves the bottom quarter of the
+# square empty. Translating (not rescaling) preserves the exact spacing the
+# declutter pass just resolved, so no collisions are reintroduced.
+top_extent = (px_positions[:, 1] + marker_r_px).max()
+bottom_extent = (px_positions[:, 1] - marker_r_px).min()
+px_positions[:, 1] += (PLOT_H_PX - top_extent - bottom_extent) / 2
+
 positions = px_positions
 pos = {node["id"]: positions[i] for i, node in enumerate(nodes)}
 
@@ -217,21 +230,21 @@ edge_trace = go.Scatter(
 )
 
 
-def _marker_size(nid):
-    return 30 + degrees[nid] * 8
-
-
 # Halo trace — a soft glow behind the hub node draws the eye to the
-# single most-depended-upon package before any label is read
+# single most-depended-upon package before any label is read. Dark theme
+# needs a higher opacity than light theme: the same 25%-opacity brand-green
+# over near-black stays visually dark, while over the warm off-white it
+# already reads as a clear pale ring.
 hub_x, hub_y = pos[hub_id]
+halo_opacity = 0.25 if THEME == "light" else 0.55
 halo_trace = go.Scatter(
     x=[hub_x],
     y=[hub_y],
     mode="markers",
     marker={
-        "size": _marker_size(hub_id) + 16,
+        "size": marker_sizes[hub_id] + 16,
         "color": GROUP_COLORS[hub_node["group"]],
-        "opacity": 0.25,
+        "opacity": halo_opacity,
         "line": {"width": 0},
     },
     hoverinfo="none",
@@ -246,7 +259,7 @@ for group_id, (color, name) in enumerate(zip(GROUP_COLORS, GROUP_NAMES, strict=F
     group_nodes = [node for node in nodes if node["group"] == group_id]
     node_x = [pos[node["id"]][0] for node in group_nodes]
     node_y = [pos[node["id"]][1] for node in group_nodes]
-    node_sizes = [_marker_size(node["id"]) for node in group_nodes]
+    node_sizes = [marker_sizes[node["id"]] for node in group_nodes]
     node_short_labels = [node["short"] for node in group_nodes]
     node_line_widths = [4 if node["id"] == hub_id else 2 for node in group_nodes]
 
