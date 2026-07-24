@@ -1,7 +1,7 @@
 # anyplot.ai
 # heatmap-calendar: Basic Calendar Heatmap
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-07-24
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 87/100 | Created: 2026-07-24
 
 using CairoMakie
 using Colors
