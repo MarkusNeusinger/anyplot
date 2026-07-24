@@ -9,6 +9,8 @@ const t = window.ANYPLOT_TOKENS;
 // --- Data (in-memory, deterministic): average wind speed by compass direction
 const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const windSpeeds = [8.2, 6.5, 5.1, 7.8, 11.4, 14.2, 12.6, 9.3];
+const maxSpeed = Math.max(...windSpeeds);
+const prevailingIndex = windSpeeds.indexOf(maxSpeed);
 
 // --- Mount -----------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -23,8 +25,8 @@ new Chart(canvas, {
       {
         data: windSpeeds,
         backgroundColor: directions.map((_, i) => t.palette[i % t.palette.length]),
-        borderColor: t.pageBg,
-        borderWidth: 2,
+        borderColor: directions.map((_, i) => (i === prevailingIndex ? t.ink : t.pageBg)),
+        borderWidth: directions.map((_, i) => (i === prevailingIndex ? 3 : 2)),
       },
     ],
   },
@@ -37,14 +39,27 @@ new Chart(canvas, {
         display: true,
         text: "polar-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22, weight: "500" },
+        font: { size: 22, weight: "600" },
+      },
+      subtitle: {
+        display: true,
+        text: "Average Wind Speed (km/h) by Compass Direction — SW prevails",
+        color: t.inkSoft,
+        font: { size: 14, style: "italic" },
+        padding: { bottom: 12 },
       },
       legend: { display: false },
     },
     scales: {
       r: {
         beginAtZero: true,
-        ticks: { color: t.inkSoft, backdropColor: "transparent", font: { size: 14 } },
+        max: 15,
+        ticks: {
+          color: t.inkSoft,
+          backdropColor: "transparent",
+          font: { size: 14 },
+          stepSize: 5,
+        },
         grid: { color: t.grid },
         angleLines: { color: t.grid },
         pointLabels: { display: true, color: t.ink, font: { size: 16 } },
