@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-24
@@ -104,11 +104,31 @@ ax.fill(theta_closed, traffic_closed, color=BRAND, alpha=0.12, zorder=3)
 ax.set_xlabel("")  # remove "theta" label added by sns.lineplot
 ax.set_ylabel("")  # remove "traffic" label added by sns.lineplot — replaced by custom text below
 
+# Focal-point callout on the evening peak (highest-traffic point)
+peak_idx = int(np.argmax(traffic))
+peak_theta, peak_traffic = theta[peak_idx], traffic[peak_idx]
+ax.annotate(
+    f"Peak: {peak_traffic:.0f}/hr",
+    xy=(peak_theta, peak_traffic),
+    xytext=(peak_theta + 0.28, peak_traffic + 55),
+    fontsize=10,
+    color=INK,
+    fontweight="medium",
+    ha="center",
+    va="center",
+    arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.9},
+    zorder=6,
+)
+
 # Style — fig.suptitle (centered on the whole figure) rather than ax.set_title
 # (centered on the axes only): the colorbar shifts the polar axes off-centre,
 # and an axes-centered 60-char title would run off the left edge of the canvas.
 fig.suptitle(
-    "Website Traffic by Hour · polar-basic · seaborn · anyplot.ai", fontsize=13, fontweight="medium", color=INK, y=0.98
+    "Website Traffic by Hour · polar-basic · python · seaborn · anyplot.ai",
+    fontsize=11,
+    fontweight="medium",
+    color=INK,
+    y=0.98,
 )
 
 # Angular labels: every 2 hours (12 labels) to reduce perimeter crowding
