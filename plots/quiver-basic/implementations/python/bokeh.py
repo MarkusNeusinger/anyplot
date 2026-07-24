@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 quiver-basic: Basic Quiver Plot
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-24
@@ -57,8 +57,16 @@ v = x.copy()
 magnitude = np.sqrt(u**2 + v**2)
 
 grid_spacing = 4.0 / (grid_size - 1)
-max_mag = np.max(magnitude) if np.max(magnitude) > 0 else 1.0
-scale = grid_spacing * 0.65 / max_mag
+raw_max_mag = np.max(magnitude) if np.max(magnitude) > 0 else 1.0
+
+# Rescale the abstract rotation field into a realistic wind-speed range
+# (km/h) so the "Wind Speed" label/legend reads true — the raw u=-y, v=x
+# field only spans 0-2.8, which looks like still air for a field labeled wind.
+WIND_SPEED_MAX = 28.0  # km/h — brisk breeze, plausible peak for the label
+speed = magnitude * (WIND_SPEED_MAX / raw_max_mag)
+max_mag = WIND_SPEED_MAX
+
+scale = grid_spacing * 0.65 / raw_max_mag
 u_scaled = u * scale
 v_scaled = v * scale
 
@@ -87,9 +95,9 @@ arrow_y1 = arrow_base_y + head_wid * perp_y
 arrow_x2 = arrow_base_x - head_wid * perp_x
 arrow_y2 = arrow_base_y - head_wid * perp_y
 
-# Color by magnitude using the Imprint sequential colormap (green -> blue)
-mag_norm = magnitude / max_mag
-color_indices = (mag_norm * 255).astype(int).clip(0, 255)
+# Color by wind speed using the Imprint sequential colormap (green -> blue)
+speed_norm = speed / max_mag
+color_indices = (speed_norm * 255).astype(int).clip(0, 255)
 colors = [IMPRINT_SEQ256[i] for i in color_indices]
 
 # Canvas — 3200x1800 canonical landscape; toolbar disabled so the static PNG
@@ -98,7 +106,7 @@ W, H = 3200, 1800
 p = figure(
     width=W,
     height=H,
-    title="quiver-basic · bokeh · anyplot.ai",
+    title="quiver-basic · python · bokeh · anyplot.ai",
     x_axis_label="East–West Distance (km)",
     y_axis_label="North–South Distance (km)",
     x_range=(-2.5, 2.5),
