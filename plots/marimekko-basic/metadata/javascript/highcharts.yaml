@@ -1,0 +1,254 @@
+library: highcharts
+language: javascript
+specification_id: marimekko-basic
+created: '2026-07-24T14:42:53Z'
+updated: '2026-07-24T14:46:40Z'
+generated_by: claude-sonnet
+workflow_run: 30101469236
+issue: 1002
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correctly solves the core-Highcharts limitation (no variwide/mekko module) by
+    drawing segments as SVG rects positioned with axis.toPixels(), keeping the widths/heights
+    mathematically exact against real linear axes rather than approximating with a
+    native series type
+  - Luminance-based label-color function guarantees every value label is readable
+    against its own segment color in both themes, rather than a single hardcoded label
+    color
+  - Segment stroke color is bound to the page background token so dividers correctly
+    flip between the light and dark cutout look
+  - Axis-label formatter wraps each region name to that column's actual pixel width,
+    preventing the narrowest column (Middle East & Africa) from overlapping its neighbor
+  - Invisible scatter series at each segment centroid preserves real Highcharts legend/tooltip
+    interactivity in the exported HTML despite the custom-drawn rectangles
+  - 'Palette compliance is correct: first series is #009E73, colors identical between
+    light/dark renders, chrome (background/text/grid) is the only thing that flips'
+  - 'Spec compliance is thorough: bar width ∝ column total, segment height ∝ share
+    within column, value labels present on segments, axis titles explain the width/height
+    encoding'
+  weaknesses:
+  - No subtitle or annotation calling out the standout insight (e.g. Cloud Services'
+    dominant share in North America/Asia Pacific) — a one-line subtitle would sharpen
+    the data-storytelling focal point
+  - X-axis category labels rely on useHTML wrapping with no visual tick marks; at
+    very small (mobile ~400px) scale the two-line 'Middle East & Africa' label is
+    legible but tight
+  - Y-axis grid lines are present but the x-axis has none — an intentional design
+    choice for this chart type, but worth a inline comment noting why so future edits
+    don't 'fix' it by mistake
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
+      Chrome: Title "marimekko-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible; x-axis title "Region — column width ∝ total regional revenue" and y-axis title "Share of Regional Revenue (%)" in soft ink, both legible; tick labels (region names, percentage ticks) legible in soft ink; legend at bottom with 4 swatches (Cloud Services, Software Licenses, Hardware, Professional Services) all legible.
+      Data: Five variable-width columns (North America, Europe, Asia Pacific, Latin America, Middle East & Africa) each stacked with 4 colored segments (teal-green #009E73 = Cloud Services first series, violet = Software Licenses, blue = Hardware, amber = Professional Services). Segment area encodes both column width (regional total) and segment height (share within region). Every segment carries a "$XXXM" value label in white or near-black text depending on the segment's own luminance, always readable against its background. Thin light-colored strokes separate segments.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
+      Chrome: Title, axis titles, and tick labels rendered in light/soft-light ink, all clearly visible against the dark background; legend swatches and labels legible; no dark-on-dark text anywhere.
+      Data: Same column layout and identical segment colors as the light render (teal-green, violet, blue, amber) — only the chrome (background, text, divider stroke color, grid) flipped. Value labels remain readable (luminance-driven color choice holds in this theme too since it depends on segment color, not page theme). Thin dark strokes separate segments, correctly matching the dark page background token.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes and at 400px mobile scale; explicit
+          font sizes throughout (14-22px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; narrow-column label wrapping prevents overlap for
+          Middle East & Africa
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All segments and value labels clearly visible, appropriately sized
+          for the data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four distinct hues (green/violet/blue/amber), no red-green as sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing clipped, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis titles explicitly explain the width/height encoding
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, colors identical across themes, correct chrome
+          backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Luminance-adaptive label color and theme-bound divider strokes show
+          real design intent beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axis clutter (tickLength 0 on x-axis), subtle y-axis grid only,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Area encoding gives an immediate focal point (North America Cloud
+          Services largest rectangle); no subtitle calling out the insight explicitly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Marimekko/mekko chart with variable width and height
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Width ∝ column total, height ∝ share, legend, value labels, centered
+          category names all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct, all data represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches exactly; legend labels match product names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 regions x 4 products, within spec's suggested ranges, shows both
+          width and height aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral revenue-by-region-and-product data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic $M revenue figures for a global tech company
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear script; one small justified helper (labelColorFor)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Highcharts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is justified by the core-bundle constraint; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, no savefig-style
+          calls
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Renderer + axis.toPixels() is the established Highcharts community
+          pattern for chart types missing from the core bundle
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom SVG rects, dynamic pixel-width label formatter, invisible
+          scatter series driving real tooltip/legend hover
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
+  - edge-highlighting
