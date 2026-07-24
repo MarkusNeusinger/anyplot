@@ -47,10 +47,25 @@ const chart = Highcharts.chart("container", {
   xAxis: { visible: false, gridLineWidth: 0, lineWidth: 0, tickLength: 0 },
   yAxis: { visible: false, gridLineWidth: 0, lineWidth: 0, tickLength: 0 },
   legend: { enabled: false },
-  tooltip: { enabled: false },
+  tooltip: {
+    enabled: true,
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    style: { color: t.ink },
+    formatter() {
+      return `<b>${this.series.name}</b><br/>${this.point.name}: ${this.point.custom.actualValue}`;
+    },
+  },
   plotOptions: { series: { animation: false } },
   series: [],
 });
+
+// Fix the (visible: false) axes to a known pixel-space extent so a real
+// scatter series can be data-bound at the same polar-projected coordinates
+// the renderer overlay uses below — this keeps the PNG output identical
+// while giving the interactive HTML genuine Highcharts series/tooltip usage.
+chart.xAxis[0].setExtremes(0, chart.plotWidth, false);
+chart.yAxis[0].setExtremes(0, chart.plotHeight, false);
 
 // --- Geometry ----------------------------------------------------------------
 const cx = chart.plotLeft + chart.plotWidth / 2;
@@ -134,7 +149,35 @@ series.forEach((s) => {
       .attr({ fill: s.color, stroke: t.pageBg, "stroke-width": 1.5, zIndex: 4 })
       .add();
   });
+
+  // Real Highcharts scatter series at the same vertex pixels (mapped through
+  // the fixed-extent axes above) — markers stay hidden so the PNG is
+  // untouched, but each point is genuinely data-bound and hoverable in the
+  // interactive HTML, with the tooltip reporting the actual category/value.
+  chart.addSeries(
+    {
+      type: "scatter",
+      name: s.name,
+      color: s.color,
+      enableMouseTracking: true,
+      stickyTracking: false,
+      animation: false,
+      marker: {
+        enabled: false,
+        radius: 7,
+        states: { hover: { enabled: true, radius: 7, lineWidth: 1.5, lineColor: t.pageBg } },
+      },
+      data: vertices.map(([x, y], i) => ({
+        x: x - chart.plotLeft,
+        y: chart.plotTop + chart.plotHeight - y,
+        name: categories[i],
+        custom: { actualValue: s.values[i] },
+      })),
+    },
+    false
+  );
 });
+chart.redraw();
 
 // --- Legend ---------------------------------------------------------------
 const chipSize = 14;
