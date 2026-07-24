@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-basic: Basic Radar Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-24
@@ -20,6 +20,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+INK_FAINT = "rgba(107, 106, 99, 0.35)" if THEME == "light" else "rgba(168, 167, 159, 0.35)"
 
 IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
@@ -46,6 +47,9 @@ title = "radar-basic · python · pygal · anyplot.ai"
 # Style — native-pixel font sizes targeting ~67 source-px title height at the
 # canonical 2400x2400 square canvas (see default-style-guide.md "Proportional
 # Sizing"); title is well under the 67-char baseline so no length scaling needed.
+# Radial gridlines get a two-tier treatment (faint dotted minor rings, slightly
+# firmer dashed major rings every 2nd label) instead of pygal's flat default —
+# a subtler ring rhythm beyond the mandated style-guide baseline.
 custom_style = Style(
     font_family='"Liberation Sans", "DejaVu Sans", Arial, sans-serif',
     background=PAGE_BG,
@@ -62,6 +66,10 @@ custom_style = Style(
     opacity=0.22,
     opacity_hover=0.55,
     stroke_opacity=0.9,
+    guide_stroke_color=INK_FAINT,
+    guide_stroke_dasharray="2,6",
+    major_guide_stroke_color=INK_MUTED,
+    major_guide_stroke_dasharray="9,4",
 )
 
 # Plot
@@ -74,8 +82,8 @@ chart = pygal.Radar(
     legend_at_bottom=True,
     legend_at_bottom_columns=1,
     fill=True,
-    dots_size=6,
-    stroke_style={"width": 3.5, "linecap": "round", "linejoin": "round"},
+    dots_size=5,
+    stroke_style={"width": 3, "linecap": "round", "linejoin": "round", "dasharray": "14,6"},
     show_y_guides=True,
     y_labels_major_every=2,
     range=(0, 100),
@@ -86,11 +94,16 @@ chart = pygal.Radar(
 chart.x_labels = categories
 for label, values in series:
     is_hero = label == hero_label
+    # Hero series reads as a bold, solid focal line; supporting series recede
+    # behind a thinner dashed stroke and smaller dots — a wider gap than a flat
+    # stroke-width bump alone so the top performer reads at a glance.
     chart.add(
         label,
         values,
-        dots_size=9 if is_hero else 6,
-        stroke_style={"width": 5.5 if is_hero else 3.5, "linecap": "round", "linejoin": "round"},
+        dots_size=11 if is_hero else 5,
+        stroke_style={"width": 7.5, "linecap": "round", "linejoin": "round"}
+        if is_hero
+        else {"width": 3, "linecap": "round", "linejoin": "round", "dasharray": "14,6"},
     )
 
 # Save
