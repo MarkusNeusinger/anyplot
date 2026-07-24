@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qq-basic: Basic Q-Q Plot
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-24
@@ -65,8 +65,8 @@ fig.add_trace(
         fillcolor=BAND_COLOR,
         opacity=0.15,
         line={"width": 0},
-        hoverinfo="skip",
         name="95% Confidence Band",
+        hovertemplate="Theoretical: %{x:.3f}<br>Band Edge: %{y:.3f}<extra></extra>",
         legendrank=3,
     )
 )
@@ -93,6 +93,22 @@ fig.add_trace(
         hovertemplate="Theoretical: %{x:.3f}<br>Sample: %{y:.3f}<extra></extra>",
         legendrank=1,
     )
+)
+
+# Annotate the largest tail deviation from the reference line (|theoretical| > 1.5)
+tail_mask = np.abs(theoretical_quantiles) > 1.5
+deviation = np.abs(sample_standardized - theoretical_quantiles)
+tail_idx = np.where(tail_mask)[0][np.argmax(deviation[tail_mask])]
+fig.add_annotation(
+    x=theoretical_quantiles[tail_idx],
+    y=sample_standardized[tail_idx],
+    text="Right-tail deviation",
+    showarrow=True,
+    arrowhead=2,
+    arrowcolor=INK_SOFT,
+    ax=-50,
+    ay=-30,
+    font={"size": 10, "color": INK_SOFT},
 )
 
 # Style
