@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: polar-basic
 created: '2025-12-23T19:44:19Z'
-updated: '2026-07-24T23:39:33Z'
+updated: '2026-07-24T23:49:15Z'
 generated_by: claude-sonnet
 workflow_run: 30133834940
 issue: 800
@@ -12,54 +12,22 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
-  strengths:
-  - Excellent manual Cartesian-to-polar workaround for bokeh's lack of native polar
-    projection, following the library's documented recommended pattern (theta/radius
-    converted to x/y, closed polygon for the data loop)
-  - Fully theme-adaptive chrome — title, hour labels, radial tick labels, background,
-    and grid all correctly flip between light and dark and remain legible in both
-    renders
-  - 'Correct Imprint palette usage: single series renders as #009E73, identical across
-    both themes'
-  - Clean KISS top-down structure, reproducible via np.random.seed(42), and genuine
-    (non-faked) HoverTool interactivity showing hour + temperature on hover
-  - Radial scale is deliberately shifted (radius = temp - min_temp + 2) so the minimum
-    value doesn't collapse to the center, per the spec's explicit note about not compressing
-    data near the center
-  weaknesses:
-  - 'Data-generation comment/formula mismatch: the comment claims ''peak ~14:00, trough
-    ~04:00'' but the actual formula (15 + 8*sin(theta - pi/2)) produces a peak at
-    hour=12 (noon) and a trough at hour=0 (midnight) — either fix the comment or shift
-    the phase so the curve actually peaks in mid-afternoon and troughs near dawn,
-    which is more realistic for outdoor diurnal temperature and matches DQ-03 factual-correctness
-    expectations'
-  - The additive Gaussian noise (np.random.normal(0, 1.2)) creates a visibly sharp
-    'notch' dip around the 00:00-03:00 region in both renders — one point drops well
-    below its neighbors and springs back, reading at a glance like a rendering glitch
-    rather than natural variability; reduce the noise amplitude slightly or smooth
-    it so the shape still looks like weather data
-  - Radial temperature tick labels (9°C/14°C/19°C/25°C) are all stacked along a single
-    diagonal spoke close to the data-fill boundary in both themes — a cleaner DE-02
-    refinement would place them along a spoke that reliably stays outside the filled
-    area regardless of that hour's value (e.g. the lowest-value direction)
-  - LM-02 usage is fairly basic (single-field HoverTool only) — leveraging more of
-    Bokeh's distinctive interactivity (e.g. TapTool to highlight a selected hour,
-    or a linked secondary view) would better demonstrate library mastery beyond what's
-    trivially portable to other libraries
+  strengths: []
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "polar-basic · python · bokeh · anyplot.ai" centered at top, clearly readable against the light background. Angular hour labels (00:00, 03:00, 06:00, ... 21:00) in medium-gray sit just outside the data ring at 3-hour intervals, all legible. Radial temperature labels (9°C, 14°C, 19°C, 25°C) are stacked along the upper-right diagonal in a slightly softer gray, also legible and not overlapping the hour labels. Concentric radial gridlines and spoke lines are very faint (low alpha), visible but unobtrusive.
-      Data: Single series filled polygon in Imprint brand green (#009E73) with a matching green outline line and green circular markers (cream-colored edge stroke) at each of the 24 hourly points, forming an irregular "heart-like" daily temperature silhouette that bulges toward the 12:00 (bottom) direction and dips near 00:00 (top). One point near 00:00-03:00 shows a sharp notch dip from injected Gaussian noise.
-      Legibility verdict: PASS — all text (title, hour labels, radial tick labels) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "polar-basic · python · bokeh · anyplot.ai" centered at top. Angular hour labels (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00) sit outside the data ring at 3-hour intervals. Radial temperature labels (10°C, 15°C, 20°C, 25°C) are stacked along the lowest-value spoke (near the 03:00-06:00 direction), clear of the filled area. All text renders in dark ink and is clearly readable against the light background.
+      Data: Single-series filled polygon in Imprint green (#009E73) with a matching outline (line_width=5) and 24 circular markers (size 22, light-bg stroke) tracing a smooth 24-hour outdoor temperature cycle — trough near 04:00, peak near 16:00-17:00.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title renders in white/light bold text, clearly readable. Hour labels and radial tick labels render in light gray, both legible against the dark background. Gridlines remain faint but visible.
-      Data: Same brand green (#009E73) fill and outline as the light render — the fill reads slightly more saturated/opaque (alpha bumped to 0.42 vs 0.30 in light) for contrast against the dark background, and marker edge strokes are dark (page-background colored) rather than cream, correctly swapping with the theme. Data shape and colors are otherwise identical to the light render.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/label/tick text is clearly visible against the dark background, and the green data series remains highly visible on both surfaces.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and both label sets render in light ink (white title, light-gray hour/temperature labels) — fully legible, no dark-on-dark failures. Concentric gridlines and spokes remain subtle (10% alpha) in both themes.
+      Data: Identical Imprint green (#009E73) fill, outline, and markers as the light render — only the fill alpha is bumped (0.42 vs 0.30) and marker strokes swap to the dark page color for contrast, exactly as the theme-adaptive chrome rules intend.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -233,7 +201,7 @@ review:
         max: 5
         comment: HoverTool tooltips are a genuine Bokeh-distinctive feature, but usage
           is basic (single two-field tooltip) rather than showcasing deeper interactivity.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
