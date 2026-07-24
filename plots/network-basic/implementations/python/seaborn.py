@@ -1,8 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: seaborn 0.13.2 | Python 3.14.4
-Quality: 72/100 | Updated: 2026-04-27
+Quality: pending | Updated: 2026-07-24
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,13 +12,32 @@ import pandas as pd
 import seaborn as sns
 
 
-# Set seaborn style
-sns.set_theme(style="white", context="talk", font_scale=1.2)
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint categorical palette — first 4 positions for the 4 communities
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+
+sns.set_theme(
+    style="white",
+    context="talk",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "text.color": INK,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Seed for reproducibility
 np.random.seed(42)
 
-# Data: A small social network with 20 people in 4 communities
+# Data: a small social network with 20 people in 4 communities
 nodes = [
     {"id": 0, "label": "Alice", "group": "Team A"},
     {"id": 1, "label": "Bob", "group": "Team A"},
@@ -40,7 +61,7 @@ nodes = [
     {"id": 19, "label": "Tom", "group": "Team D"},
 ]
 
-# Edges: Friendship connections (within and between groups)
+# Edges: friendship connections (within and between groups)
 edges = [
     # Team A internal connections
     (0, 1),
@@ -70,7 +91,7 @@ edges = [
     (17, 18),
     (17, 19),
     (18, 19),
-    # Cross-group connections (bridges between communities)
+    # Cross-group bridges between communities
     (0, 5),
     (4, 10),
     (9, 15),
@@ -80,118 +101,127 @@ edges = [
     (13, 16),
 ]
 
-# Calculate node degrees
+# Node degree (connection count)
 n = len(nodes)
 degrees = {node["id"]: 0 for node in nodes}
 for src, tgt in edges:
     degrees[src] += 1
     degrees[tgt] += 1
 
-# Spring layout (force-directed algorithm)
+# Force-directed (Fruchterman-Reingold) spring layout, vectorized with numpy
+k = 0.4  # optimal inter-node distance
+edge_src = np.array([e[0] for e in edges])
+edge_tgt = np.array([e[1] for e in edges])
 positions = np.random.rand(n, 2) * 2 - 1
-k = 0.4  # Optimal distance parameter
 
-for iteration in range(150):
-    displacement = np.zeros((n, 2))
+iterations = 600
+for iteration in range(iterations):
+    delta = positions[:, np.newaxis, :] - positions[np.newaxis, :, :]
+    dist = np.linalg.norm(delta, axis=-1)
+    np.fill_diagonal(dist, np.inf)  # ignore self-repulsion
+    dist = np.maximum(dist, 0.01)
+    displacement = ((k * k / dist**2)[..., np.newaxis] * delta).sum(axis=1)
 
-    # Repulsive forces between all node pairs
-    for i in range(n):
-        for j in range(i + 1, n):
-            diff = positions[i] - positions[j]
-            dist = max(np.linalg.norm(diff), 0.01)
-            force = (k * k / dist) * (diff / dist)
-            displacement[i] += force
-            displacement[j] -= force
+    edge_delta = positions[edge_src] - positions[edge_tgt]
+    edge_dist = np.maximum(np.linalg.norm(edge_delta, axis=-1), 0.01)
+    attraction = (edge_dist / k)[:, np.newaxis] * edge_delta
+    np.add.at(displacement, edge_src, -attraction)
+    np.add.at(displacement, edge_tgt, attraction)
 
-    # Attractive forces for edges
-    for src, tgt in edges:
-        diff = positions[src] - positions[tgt]
-        dist = max(np.linalg.norm(diff), 0.01)
-        force = (dist * dist / k) * (diff / dist)
-        displacement[src] -= force
-        displacement[tgt] += force
+    cooling = 1 - iteration / iterations
+    disp_norm = np.linalg.norm(displacement, axis=1, keepdims=True)
+    unit = np.divide(displacement, disp_norm, out=np.zeros_like(displacement), where=disp_norm > 0)
+    positions += unit * np.minimum(disp_norm, 0.1 * cooling)
 
-    # Apply displacement with cooling
-    cooling = 1 - iteration / 150
-    for i in range(n):
-        disp_norm = np.linalg.norm(displacement[i])
-        if disp_norm > 0:
-            positions[i] += (displacement[i] / disp_norm) * min(disp_norm, 0.1 * cooling)
+# Center on the bounding box (not the mean) and scale uniformly (not per-axis)
+# so inter-node distances stay undistorted once drawn on the square canvas below
+bbox_min, bbox_max = positions.min(axis=0), positions.max(axis=0)
+positions -= (bbox_min + bbox_max) / 2
+positions /= (bbox_max - bbox_min).max() / 1.7
 
-# Normalize positions to [0.1, 0.9] range
-pos_min = positions.min(axis=0)
-pos_max = positions.max(axis=0)
-positions = (positions - pos_min) / (pos_max - pos_min + 1e-6) * 0.8 + 0.1
+df_nodes = pd.DataFrame(
+    {
+        "x": positions[:, 0],
+        "y": positions[:, 1],
+        "label": [node["label"] for node in nodes],
+        "group": [node["group"] for node in nodes],
+        "degree": [degrees[node["id"]] for node in nodes],
+    }
+)
 
-# Create DataFrame for seaborn
-node_data = []
-for i, node in enumerate(nodes):
-    node_data.append(
-        {
-            "x": positions[i, 0],
-            "y": positions[i, 1],
-            "label": node["label"],
-            "group": node["group"],
-            "size": 500 + degrees[node["id"]] * 150,  # Size by connections
-        }
-    )
-df_nodes = pd.DataFrame(node_data)
+# Square canvas: a force-directed layout has no preferred horizontal axis
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400)
+ax.set_aspect("equal", adjustable="box")
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Draw edges first using matplotlib (edges are structural, not data)
+# Draw edges beneath the nodes
 for src, tgt in edges:
-    x_vals = [positions[src, 0], positions[tgt, 0]]
-    y_vals = [positions[src, 1], positions[tgt, 1]]
-    ax.plot(x_vals, y_vals, color="#888888", linewidth=2, alpha=0.4, zorder=1)
+    ax.plot(
+        [positions[src, 0], positions[tgt, 0]],
+        [positions[src, 1], positions[tgt, 1]],
+        color=INK_SOFT,
+        linewidth=1.5,
+        alpha=0.35,
+        zorder=1,
+    )
 
-# Draw nodes using seaborn scatterplot with hue for groups
-palette = {"Team A": "#306998", "Team B": "#FFD43B", "Team C": "#4CAF50", "Team D": "#FF7043"}
+# Draw nodes with seaborn — hue for community, size for degree
 sns.scatterplot(
     data=df_nodes,
     x="x",
     y="y",
     hue="group",
-    size="size",
-    sizes=(400, 1200),
-    palette=palette,
-    edgecolor="#333333",
+    hue_order=["Team A", "Team B", "Team C", "Team D"],
+    size="degree",
+    sizes=(190, 400),
+    palette=IMPRINT_PALETTE,
+    edgecolor=PAGE_BG,
     linewidth=2,
-    alpha=0.9,
+    alpha=0.95,
     legend="brief",
     ax=ax,
     zorder=2,
 )
 
-# Draw labels on nodes
+# Labels sit just below each node, so text color never clashes with the node fill
 for _, row in df_nodes.iterrows():
     ax.text(
         row["x"],
-        row["y"],
+        row["y"] - 0.09,
         row["label"],
-        fontsize=11,
+        fontsize=10,
         fontweight="bold",
         ha="center",
-        va="center",
-        color="#222222",
+        va="top",
+        color=INK,
         zorder=3,
     )
 
-# Style the plot
-ax.set_title("Social Network · network-basic · seaborn · pyplots.ai", fontsize=24, fontweight="bold")
-ax.set_xlim(-0.05, 1.05)
-ax.set_ylim(-0.05, 1.05)
+title = "network-basic · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+# Fit the view tightly around the network (plus margin for nodes/labels) so the
+# square canvas isn't mostly empty around an off-center force-directed layout
+margin = 0.2
+ax.set_xlim(positions[:, 0].min() - margin, positions[:, 0].max() + margin)
+# Extra headroom on top keeps the community legend clear of the topmost node
+ax.set_ylim(positions[:, 1].min() - margin - 0.09, positions[:, 1].max() + margin + 0.35)
 ax.axis("off")
 
-# Customize legend (remove size legend, keep only group legend)
+# Keep only the community legend entries — drop the automatic size legend
 handles, labels = ax.get_legend_handles_labels()
-# Filter out size legend entries
-group_handles = [h for h, lbl in zip(handles, labels, strict=False) if lbl in palette]
-group_labels = [lbl for lbl in labels if lbl in palette]
-ax.legend(
-    group_handles, group_labels, loc="upper left", fontsize=14, framealpha=0.9, title="Community", title_fontsize=16
+community_names = set(df_nodes["group"])
+community_handles = [h for h, lbl in zip(handles, labels, strict=False) if lbl in community_names]
+community_labels = [lbl for lbl in labels if lbl in community_names]
+legend = ax.legend(
+    community_handles,
+    community_labels,
+    loc="upper left",
+    fontsize=8,
+    framealpha=0.95,
+    title="Community",
+    title_fontsize=10,
 )
+legend.get_frame().set_facecolor(ELEVATED_BG)
+legend.get_frame().set_edgecolor(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
