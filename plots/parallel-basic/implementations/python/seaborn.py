@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-24
@@ -111,7 +111,14 @@ for optimizer, cfg in configs.items():
 df = pd.DataFrame(rows)
 df["run"] = range(len(df))
 
-numeric_cols = ["learning_rate", "batch_size", "dropout", "weight_decay", "val_accuracy"]
+# Order predictor axes by correlation strength with the outcome (Val. Accuracy)
+# so adjacent axes are more likely to reveal a relationship, per the spec's
+# "consider axis ordering to reveal correlations between adjacent variables".
+predictor_cols = ["learning_rate", "batch_size", "dropout", "weight_decay"]
+corr_to_accuracy = df[predictor_cols + ["val_accuracy"]].corr()["val_accuracy"].drop("val_accuracy")
+predictor_cols = corr_to_accuracy.abs().sort_values(ascending=False).index.tolist()
+numeric_cols = predictor_cols + ["val_accuracy"]
+
 df_norm = df.copy()
 for col in numeric_cols:
     col_min = df[col].min()
@@ -129,8 +136,8 @@ palette = {opt: IMPRINT[i] for i, opt in enumerate(optimizer_order)}
 # Adam reaches the highest validation accuracy on average — foreground it with
 # higher opacity/linewidth while the other optimizers recede into context.
 emphasis = "Adam"
-alpha_map = {"Adam": 0.65, "RMSprop": 0.25, "SGD": 0.25}
-linewidth_map = {"Adam": 2.0, "RMSprop": 1.2, "SGD": 1.2}
+alpha_map = {"Adam": 0.65, "RMSprop": 0.16, "SGD": 0.16}
+linewidth_map = {"Adam": 2.0, "RMSprop": 1.0, "SGD": 1.0}
 draw_order = [opt for opt in optimizer_order if opt != emphasis] + [emphasis]
 
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
@@ -151,21 +158,19 @@ for optimizer in draw_order:
         legend=False,
     )
 
-# Vertical axis lines at each dimension, with a light tick ruler at the
-# quartiles so readers can gauge normalized position without a y-grid alone.
+# Vertical axis lines at each dimension
 for i in range(len(numeric_cols)):
     ax.axvline(x=i, color=INK_SOFT, linewidth=1.0, alpha=0.4, zorder=0)
-    for tick_y in (0.0, 0.25, 0.5, 0.75, 1.0):
-        ax.plot([i - 0.035, i + 0.035], [tick_y, tick_y], color=INK_SOFT, linewidth=1.0, alpha=0.55, zorder=1)
 
 # Style
-labels = [
-    f"Learning Rate\n({df['learning_rate'].min():.1e} – {df['learning_rate'].max():.1e})",
-    f"Batch Size\n({df['batch_size'].min():.0f} – {df['batch_size'].max():.0f})",
-    f"Dropout\n({df['dropout'].min():.2f} – {df['dropout'].max():.2f})",
-    f"Weight Decay\n({df['weight_decay'].min():.1e} – {df['weight_decay'].max():.1e})",
-    f"Val. Accuracy\n({df['val_accuracy'].min() * 100:.0f}% – {df['val_accuracy'].max() * 100:.0f}%)",
-]
+label_by_col = {
+    "learning_rate": f"Learning Rate\n({df['learning_rate'].min():.1e} – {df['learning_rate'].max():.1e})",
+    "batch_size": f"Batch Size\n({df['batch_size'].min():.0f} – {df['batch_size'].max():.0f})",
+    "dropout": f"Dropout\n({df['dropout'].min():.2f} – {df['dropout'].max():.2f})",
+    "weight_decay": f"Weight Decay\n({df['weight_decay'].min():.1e} – {df['weight_decay'].max():.1e})",
+    "val_accuracy": f"Val. Accuracy\n({df['val_accuracy'].min() * 100:.0f}% – {df['val_accuracy'].max() * 100:.0f}%)",
+}
+labels = [label_by_col[col] for col in numeric_cols]
 ax.set_xticks(range(len(numeric_cols)))
 ax.set_xticklabels(labels, fontsize=8, color=INK_SOFT)
 ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
