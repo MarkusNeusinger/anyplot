@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qq-basic: Basic Q-Q Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-24
@@ -41,7 +41,9 @@ theoretical_quantiles = np.array([_nd.inv_cdf(float(p)) for p in probabilities])
 
 # Theoretical quantiles are unitless z-scores while the sample is in ms, so
 # the fitted reference line uses the sample's own mean/std (y = mean + std*x)
-# rather than y=x — the standard QQ convention when axes are in different units.
+# rather than y=x — the standard QQ convention when axes are in different units
+# (matches scipy.stats.probplot / statsmodels qqplot). The legend label spells
+# this out explicitly so it doesn't read as a spec deviation.
 theo_margin = (theoretical_quantiles.max() - theoretical_quantiles.min()) * 0.1
 line_x_min = theoretical_quantiles.min() - theo_margin
 line_x_max = theoretical_quantiles.max() + theo_margin
@@ -51,7 +53,12 @@ sample_std = sample.std()
 
 # Flag the slow-response tail (>2 std above the mean) so the deviation this
 # QQ plot exists to reveal is visually called out, not just implied by shape.
+# Split into two series (rather than per-point color overrides) so the
+# outliers get their own legend swatch — self-explanatory in the static PNG.
 outlier_threshold = sample_mean + 2 * sample_std
+paired = list(zip(theoretical_quantiles, sample, strict=True))
+normal_points = [(tq, s) for tq, s in paired if s <= outlier_threshold]
+outlier_points = [(tq, s) for tq, s in paired if s > outlier_threshold]
 
 custom_style = Style(
     background=PAGE_BG,
@@ -59,7 +66,8 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(BRAND, INK),  # series 1 = brand green, series 2 (reference line) = neutral ink
+    # series 1 = brand green, series 2 = amber outlier anchor, series 3 (reference line) = neutral ink
+    colors=(BRAND, AMBER, INK),
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -74,26 +82,23 @@ chart = pygal.XY(
     style=custom_style,
     title="qq-basic · python · pygal · anyplot.ai",
     x_title="Theoretical Quantiles",
-    y_title="Sample Quantiles (Response Time, ms)",
+    y_title="Sample Quantiles (ms)",
     show_legend=True,
     legend_at_bottom=True,
     dots_size=13,
     stroke=False,
-    show_x_guides=True,
+    show_x_guides=False,
     show_y_guides=True,
 )
 
-qq_points = [
-    {"value": (tq, s), "color": AMBER, "tooltip": "Slow response outlier"} if s > outlier_threshold else (tq, s)
-    for tq, s in zip(theoretical_quantiles, sample, strict=True)
-]
-chart.add("API Response Time", qq_points)
+chart.add("API Response Time", normal_points)
+chart.add("Outlier (>2σ)", outlier_points)
 
 reference_line = [
     (line_x_min, sample_mean + sample_std * line_x_min),
     (line_x_max, sample_mean + sample_std * line_x_max),
 ]
-chart.add("Reference (Normal)", reference_line, stroke=True, show_dots=False, dots_size=0)
+chart.add("Reference (Normal Fit)", reference_line, stroke=True, show_dots=False, dots_size=0)
 
 chart.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
