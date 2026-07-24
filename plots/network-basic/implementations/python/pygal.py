@@ -1,14 +1,20 @@
 """ anyplot.ai
 network-basic: Basic Network Graph
-Library: pygal 3.1.0 | Python 3.14.4
-Quality: 78/100 | Updated: 2026-04-27
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 94/100 | Updated: 2026-07-24
 """
 
 import os
+import sys
 
-import numpy as np
-import pygal
-from pygal.style import Style
+
+# Script filename shadows the installed `pygal` package when run as `python pygal.py`;
+# dropping the script directory from sys.path lets the real package resolve.
+sys.path.pop(0)
+
+import numpy as np  # noqa: E402
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -124,45 +130,56 @@ for iteration in range(200):
         if disp_norm > 0:
             positions[i] += (displacement[i] / disp_norm) * min(disp_norm, 0.08 * cooling)
 
-# Normalize positions to centered range for pygal (better canvas utilization)
+# Normalize positions to [0, 1], then stretch anisotropically to fill the
+# 16:9 landscape canvas (equal x/y ranges left the left/right thirds empty)
 pos_min = positions.min(axis=0)
 pos_max = positions.max(axis=0)
-positions = (positions - pos_min) / (pos_max - pos_min + 1e-6)  # Normalize to [0, 1]
-positions[:, 0] = positions[:, 0] * 6 + 3  # X: [3, 9] - centered horizontally
-positions[:, 1] = positions[:, 1] * 6 + 3  # Y: [3, 9] - centered vertically
+positions = (positions - pos_min) / (pos_max - pos_min + 1e-6)
+positions[:, 0] = positions[:, 0] * 12 + 2  # X: [2, 14] of a (0, 16) xrange
+positions[:, 1] = positions[:, 1] * 8.4 + 0.3  # Y: [0.3, 8.7] of a (0, 9) range
 pos = {node["id"]: positions[i] for i, node in enumerate(nodes)}
 
-# Calculate node degrees for sizing
+# Calculate node degrees to encode connection count as dot radius
 degrees = {node["id"]: 0 for node in nodes}
 for src, tgt in edges:
     degrees[src] += 1
     degrees[tgt] += 1
+NODE_BASE_R = 12
+NODE_R_PER_DEGREE = 5
 
-# Custom style: theme-adaptive chrome, Okabe-Ito data colors
-# Edge series comes first so its color is the neutral gray slot
+# Custom style: theme-adaptive chrome, Imprint data colors
+# Edge series come first (intra-community, then cross-community bridges) so
+# their colors land in the neutral gray slots ahead of the 4 community colors
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=("#888888",) + IMPRINT,
-    title_font_size=72,
-    label_font_size=40,
-    major_label_font_size=36,
-    legend_font_size=40,
-    value_font_size=32,
-    stroke_width=2,
-    opacity=0.9,
-    opacity_hover=1.0,
+    colors=("#888888", "#BBBBBB") + IMPRINT,
+    # pygal auto-picks black/white per-series for value/label text based on
+    # series color brightness, which puts near-black text on the near-black
+    # dark background. Force it to the theme-adaptive ink color instead.
+    value_colors=(INK,) * 6,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    # Also sets the label's pixel offset from its node (see label placement
+    # below) - kept large enough to clear the biggest (degree-scaled) nodes.
+    value_font_size=40,
+    value_label_font_size=32,
+    stroke_width=2.5,
+    opacity=1,
+    opacity_hover=1,
 )
 
 # Create XY chart with centered layout
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="network-basic · pygal · anyplot.ai",
+    title="network-basic · python · pygal · anyplot.ai",
     show_legend=True,
     x_title="",
     y_title="",
@@ -171,38 +188,56 @@ chart = pygal.XY(
     show_x_labels=False,
     show_y_labels=False,
     stroke=True,
-    dots_size=30,
-    stroke_style={"width": 2, "linecap": "round"},
+    dots_size=NODE_BASE_R,
+    stroke_style={"width": 2, "linecap": "butt"},
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
-    range=(0, 12),
-    xrange=(0, 12),
-    print_labels=False,
+    range=(0, 9),
+    xrange=(0, 16),
+    print_labels=True,
     print_values=False,
 )
 
-# Add edges as a single series with lines connecting pairs
+# Split edges into intra-community links and cross-community "bridges", and
+# render each as its own series (solid vs. dashed/thinner) so the bridging
+# structure reads visually instead of as a uniform mesh of gray lines.
 # Each edge is represented as two points connected, with None to break between edges
-edge_points = []
-for src, tgt in edges:
-    x1, y1 = pos[src]
-    x2, y2 = pos[tgt]
-    edge_points.append((x1, y1))
-    edge_points.append((x2, y2))
-    edge_points.append(None)  # Break the line for next edge
+intra_edges = [(s, t) for s, t in edges if nodes[s]["group"] == nodes[t]["group"]]
+bridge_edges = [(s, t) for s, t in edges if nodes[s]["group"] != nodes[t]["group"]]
+
+intra_points = []
+for src, tgt in intra_edges:
+    intra_points.append(tuple(pos[src]))
+    intra_points.append(tuple(pos[tgt]))
+    intra_points.append(None)  # Break the line for next edge
+
+bridge_points = []
+for src, tgt in bridge_edges:
+    bridge_points.append(tuple(pos[src]))
+    bridge_points.append(tuple(pos[tgt]))
+    bridge_points.append(None)  # Break the line for next edge
 
 # Add edges (using None title to exclude from legend)
-chart.add(None, edge_points, stroke=True, show_dots=False, fill=False)
+chart.add(None, intra_points, stroke=True, show_dots=False, fill=False, stroke_style={"width": 2.5, "linecap": "round"})
+chart.add(
+    None,
+    bridge_points,
+    stroke=True,
+    show_dots=False,
+    fill=False,
+    stroke_style={"width": 1.6, "linecap": "round", "dasharray": "10, 8"},
+)
 
-# Group nodes by community
-group_names = ["Community A", "Community B", "Community C", "Community D"]
+# Group nodes by community; dot radius scales with degree (connection count)
+group_names = ["Close Friends", "Coworkers", "Neighbors", "College Friends"]
 for group_idx in range(4):
     group_nodes = [node for node in nodes if node["group"] == group_idx]
     node_points = []
     for node in group_nodes:
         x, y = pos[node["id"]]
         degree = degrees[node["id"]]
-        node_points.append({"value": (x, y), "label": f"{node['label']} ({degree} connections)"})
+        radius = NODE_BASE_R + degree * NODE_R_PER_DEGREE
+        node_points.append({"value": (x, y), "label": node["label"], "node": {"r": radius}})
     chart.add(group_names[group_idx], node_points, stroke=False)
 
 # Save themed outputs

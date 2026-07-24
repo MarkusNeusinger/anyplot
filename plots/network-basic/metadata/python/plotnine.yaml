@@ -2,123 +2,143 @@ library: plotnine
 language: python
 specification_id: network-basic
 created: '2026-04-27T01:15:06Z'
-updated: '2026-04-27T01:44:10Z'
+updated: '2026-07-24T04:22:42Z'
 generated_by: claude-sonnet
-workflow_run: 24971650692
+workflow_run: 30065624641
 issue: 989
-python_version: 3.14.4
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Fully correct theme-adaptive chrome in both light and dark renders — all INK/INK_SOFT
-    tokens flow to every non-data element
-  - Fruchterman-Reingold layout implemented natively in numpy, enabling plotnine to
-    render a network graph without matplotlib fallback
-  - Hub-halo + size encoding + hub annotation creates genuine visual storytelling
-    about network centrality
-  - Perfect spec and data quality scores — covers all features, realistic neutral
-    data, correct scale
+  - 'Correct Imprint palette with canonical order across all four communities (#009E73,
+    #C475FD, #4467A3, #BD8233), identical data colors in both light and dark renders'
+  - 'Theme-adaptive chrome is fully correct: warm off-white/near-black backgrounds,
+    all text legible in both themes, no dark-on-dark or light-on-light failures'
+  - Vectorized Fruchterman-Reingold spring layout with quadrant-seeded initialization
+    produces a clean, well-separated 4-cluster arrangement with clearly visible cross-community
+    bridge edges
+  - scale_size_area correctly encodes node degree as area (not radius), with an explicit
+    zero-anchored limits=(0, max) so the lowest-degree node stays visible
+  - 'Legend is thoughtfully constructed: Community categorical legend plus a separate
+    Degree size legend with guide_legend override_aes so swatches don''t inherit the
+    data alpha'
+  - 'Realistic, neutral data: a 20-person office network across 4 departments with
+    plausible internal cliques and cross-department bridges — sensible scale for a
+    10-50 node spec'
+  - Clean KISS structure, no functions/classes, seeded RNG, only used imports, correct
+    plot.save(f'plot-{THEME}.png', ...) output
   weaknesses:
-  - Node label text size (14pt via geom_text) is slightly below the 16pt minimum for
-    secondary text at 4800x2700 resolution — increase to 16pt
-  - Some label crowding around dense cluster areas (Carol/Eve/Bob, Leo/Mia/Noah) —
-    consider larger nudge_y or layout fine-tuning to reduce proximity
-  - Canvas utilization has unused space in the lower-left — a larger nudge to fill
-    the 16:9 frame more evenly would improve VQ-05
+  - 'Hub-halo logic bug: hub_threshold = node_df[''degree''].quantile(0.8) evaluates
+    to 3 because 16 of 20 nodes share degree=3 (only David sits at degree=2, and Carol/Ivy/Noah
+    at degree=4). The filter node_df[''degree''] >= hub_threshold therefore selects
+    19 of 20 nodes instead of the intended top ~20% (the three degree-4 nodes), so
+    the halo appears on almost every node in both renders and no longer creates a
+    visual hub emphasis. Fix by selecting on rank (e.g. node_df.nlargest(max(1, int(n*0.2)),
+    ''degree'')) or using degree == degree.max() instead of a quantile that collapses
+    onto the modal value.'
+  - Because the halo is applied almost everywhere, the intended two-tier visual hierarchy
+    (ordinary node vs. hub) collapses into a single style, slightly diluting the degree-size
+    signal and weakening the data-storytelling payoff of the 'hub' annotation, which
+    otherwise correctly marks the single highest-degree node (Carol).
+  - Canvas whitespace is not perfectly balanced — noticeable empty space bottom-right
+    and top-right beyond the legend column in both renders; the graph plus legend
+    could be recentered or the plot area padding tightened for a fuller 50-80% canvas
+    utilization.
+  - Degree range in the sample data is narrow (2-4, with 16/20 nodes tied at exactly
+    3), so the degree-size encoding and the (buggy) hub selection have little real
+    variation to work with — widening the degree spread (e.g. one or two clearer super-connectors)
+    would make both the size scale and the intended hub emphasis more legible.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "network-basic · plotnine · anyplot.ai" in dark ink at top — readable. Node labels in dark INK token (#1A1A17). Legend text in INK_SOFT (#4A4A44). Hub annotation in INK_SOFT italic. All text readable against light background.
-      Data: 20 nodes colored by community — Team A (#009E73 teal), Team B (#D55E00 orange), Team C (#0072B2 blue), Team D (#CC79A7 pink). Edges as thin semi-transparent gray lines. Node size encodes degree. Hub halos (gray circles behind high-degree nodes). Force-directed layout clusters communities spatially.
-      Legibility verdict: PASS — all text readable, node labels slightly small (14pt) but legible
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "network-basic · plotnine · anyplot.ai" centered at top in dark ink, fully visible, not clipped. No axes, ticks, or grid (correctly hidden — layout coordinates are arbitrary for a network diagram). Legend on the right with a "Community" categorical key (Engineering/Design/Sales/Support) and a "Degree" size key, both on a slightly elevated cream panel with dark text.
+      Data: 20 labeled nodes (Alice, Bob, Carol, ... Tom) arranged in 4 visually separated clusters by community, connected by thin gray edges including cross-cluster bridges. First series (Engineering) renders in #009E73 green; Design in #C475FD purple; Sales in #4467A3 blue; Support in #BD8233 ochre — matches the canonical Imprint order. Node size varies subtly with degree. Nearly every node also shows a soft gray halo ring (intended only for top-degree "hub" nodes, but the threshold bug makes it appear almost everywhere — see weaknesses). An italic "hub" annotation marks Carol, the highest-degree node.
+      Legibility verdict: PASS — all labels, title, and legend text are clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, node labels, and legend text flip to light values via INK=#F0EFE8 / INK_SOFT=#B8B7B0 tokens. Legend background switches to #242420 (elevated). All text clearly readable against dark background. No dark-on-dark failures observed.
-      Data: Data colors identical to light render — Team A #009E73, Team B #D55E00, Team C #0072B2, Team D #CC79A7. Node sizes identical. Hub halos visible as darker-gray circles.
-      Legibility verdict: PASS — all text readable, theme adaptation complete and correct
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, now in light ink, fully legible against the dark background. Legend panel uses a slightly lighter elevated dark tone with light text, ticks/axes still correctly hidden.
+      Data: Same cluster layout and edge structure as the light render. Node colors are pixel-identical to the light render (#009E73/#C475FD/#4467A3/#BD8233) — only the chrome (background, text, legend panel, halo/edge gray) shifted for the dark theme. Same halo over-application bug is present here too.
+      Legibility verdict: PASS — no dark-on-dark failures; all node labels, title, and legend text read clearly against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt, legend 16-18pt explicitly set. Node labels at 14pt via
-          geom_text slightly below 16pt minimum.
+        comment: Explicit font sizes throughout; readable in both themes; title ~50%
+          width, no overflow
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Mostly clear layout. Some crowding around Carol/Eve/Bob and Leo/Mia/Noah
-          clusters.
+        comment: No text or label collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes sized by degree via scale_size_area. Hub halos add distinction.
-          Edges visible as semi-transparent lines.
+        comment: Nodes/edges clearly visible for a sparse 20-node/31-edge graph, but
+          the near-universal halo slightly muddies the degree-size signal
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe. No red-green-only encoding.
+        comment: Imprint categorical palette, distinguishable hues, adequate alpha
+          on overlapping halos
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Network fills ~70% of canvas. Some unused space in lower-left corner.
-          Legend well-placed.
+        comment: Good overall use of canvas but some unbalanced whitespace bottom-right/top-right
+          beyond the legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format. Axes intentionally blank for network layout.
+        comment: Axes intentionally hidden — correct choice for a node-link layout
+          with no meaningful coordinate axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Okabe-Ito order. Backgrounds #FAF8F1/#1A1A17.
-          Chrome theme-adaptive in both renders.'
+        comment: 'First series #009E73, canonical Imprint order for all 4 communities,
+          theme-correct chrome in both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: true
-        comment: 'Above defaults: hub halos, size encoding, stripped chrome, subtle
-          hub annotation. Not publication-grade but clearly above defaults.'
+        comment: Custom palette, halo/size/annotation layering shows clear design
+          intent beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: All axes/spines/ticks/grid removed. Theme-adaptive tokens throughout.
-          Hub halos add polish.
+        comment: Spines/grid/axes removed, generous whitespace, styled legend panel
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Size encoding, hub halos, and hub annotation create visual hierarchy
-          emphasizing centrality. Four-community structure immediately visible.
+        comment: Hub annotation and degree-size create some hierarchy, but the halo
+          bug dilutes the intended hub emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -127,107 +147,92 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Network graph with force-directed (Fruchterman-Reingold) layout.
+        comment: Correct node-link network diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Spring layout, node labels, degree-encoded size, sparse visible connections
-          all present.
+        comment: Force-directed layout, degree-encoded size, group/label attributes,
+          sparse legible edges — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: All 20 nodes and 31 edges visible.
+        comment: Node coordinates and edge endpoints correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title exactly 'network-basic · plotnine · anyplot.ai'. Community
-          and degree legends present.
+        comment: Title matches mandated format; legend labels match community/degree
+          data
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Clusters, inter-community bridges, hub nodes, and peripheral nodes
-          all demonstrated.
+        comment: Shows clustering, cross-community bridges, and a hub node, but degree
+          variation is narrow (mostly 3)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Real first names in workplace team social network. Neutral and plausible.
+        comment: Plausible, neutral office social network across 4 departments
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: 20 nodes, 31 edges within spec's 10-50 range. Degree 2-4 realistic
-          for sparse social network.
+        comment: 20 nodes / 31 edges is a sensible size and density for a static network
+          diagram
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: 'Linear: imports → data → layout → plot → save. No functions or classes.'
+        comment: No functions/classes, linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: All imported symbols used.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Vectorized FR layout is appropriate complexity. No fake UI. Try/except
-          import explained.
+        comment: Hub-threshold quantile logic does not match its own stated intent
+          (selects ~95% of nodes instead of top ~20%)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves as plot-{THEME}.png. Current plotnine API.
+        comment: Correct plot-{THEME}.png output via current plot.save API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 5
         max: 5
-        passed: true
-        comment: 'Expert ggplot grammar: aes() mappings, per-layer data=, scale_size_area(),
-          coord_cartesian(), guide_legend(override_aes=).'
+        comment: Expert layered grammar-of-graphics composition (geom_segment + geom_point
+          + geom_text + annotate + scale_size_area + guide_legend override_aes)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: scale_size_area() (area-not-radius), guide_legend(override_aes=)
-          pattern, multi-source geom layering are ggplot2-distinctive. Spring layout
-          is numpy, limiting ceiling.
-  verdict: REJECTED
+        comment: scale_size_area's proportional-area encoding and override_aes legend
+          customization are used well, though the manual force-layout is not plotnine-specific
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -237,9 +242,8 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - normalization
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
