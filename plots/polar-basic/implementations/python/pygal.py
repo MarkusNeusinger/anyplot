@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-04-30
+Quality: 84/100 | Updated: 2026-07-24
 """
 
 import importlib
@@ -25,45 +25,52 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette — first series always brand green
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# Data — Hourly temperature readings over a 24-hour cycle
+# Data — hourly temperature readings over a 24-hour cycle
 np.random.seed(42)
 hours = np.arange(24)
-base_temp = 15 + 8 * np.sin((hours - 6) * np.pi / 12)  # Peak at noon
+base_temp = 15 + 8 * np.sin((hours - 6) * np.pi / 12)  # peak at noon
 temperature = base_temp + np.random.randn(24) * 1.5
 
-# Style
+# Angular labels at standard cardinal intervals only (00:00, 06:00, 12:00, 18:00)
+# — dense per-hour labels crowd a circular axis; the spec calls for cardinal
+# intervals for time-based data, so the other 20 points stay unlabeled.
+cardinal_hours = {0, 6, 12, 18}
+hour_labels = [f"{h:02d}:00" if h in cardinal_hours else "" for h in hours]
+
+# Style — canonical pygal sizing for the 2400x2400 canvas (native-pixel family)
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
+    colors=IMPRINT_PALETTE,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
     stroke_width=4,
 )
 
-# Plot — Radar chart for polar/cyclic data
+# Plot — radar chart for cyclical polar data
 chart = pygal.Radar(
     style=custom_style,
-    width=3600,
-    height=3600,
-    title="Hourly Temperature (°C) · polar-basic · pygal · anyplot.ai",
+    width=2400,
+    height=2400,
+    title="Hourly Temperature (°C) · polar-basic · python · pygal · anyplot.ai",
     show_legend=False,
     fill=True,
-    dots_size=8,
-    stroke_style={"width": 5},
+    dots_size=6,
     show_y_guides=True,
     inner_radius=0.1,
+    margin_top=140,
 )
 
-chart.x_labels = [f"{h:02d}:00" for h in hours]
+chart.x_labels = hour_labels
 chart.add("Temperature (°C)", [float(t) for t in temperature])
 
 # Save
