@@ -1,7 +1,7 @@
 // anyplot.ai
 // network-basic: Basic Network Graph
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 87/100 | Created: 2026-07-24
+// Quality: pending | Created: 2026-07-24
 //# anyplot-orientation: square
 
 // Only the core Highcharts bundle is loaded (no `networkgraph` module), so node
@@ -34,20 +34,23 @@ const NODES = [
   { id: "Jack", group: "Family" },
 ];
 
+// Third element is tie strength (1-5) — bridge edges between communities are
+// weak acquaintance ties, within-community edges skew toward closer bonds.
 const EDGES = [
-  ["Ava", "Liam"], ["Ava", "Mia"], ["Ava", "Noah"], ["Liam", "Mia"], ["Liam", "Ivy"],
-  ["Mia", "Noah"], ["Noah", "Ethan"], ["Ivy", "Zoe"], ["Ethan", "Zoe"], ["Ava", "Ethan"],
-  ["Leo", "Nora"], ["Leo", "Kai"], ["Nora", "Luna"], ["Kai", "Luna"], ["Kai", "Finn"],
-  ["Luna", "Maya"], ["Finn", "Owen"], ["Maya", "Owen"], ["Leo", "Maya"],
-  ["Ruby", "Theo"], ["Ruby", "Sara"], ["Theo", "Milo"], ["Sara", "Ella"], ["Milo", "Jack"],
-  ["Ella", "Jack"], ["Ruby", "Jack"],
-  ["Ava", "Leo"], ["Mia", "Ruby"], ["Kai", "Theo"],
+  ["Ava", "Liam", 4], ["Ava", "Mia", 5], ["Ava", "Noah", 3], ["Liam", "Mia", 4], ["Liam", "Ivy", 2],
+  ["Mia", "Noah", 3], ["Noah", "Ethan", 3], ["Ivy", "Zoe", 4], ["Ethan", "Zoe", 2], ["Ava", "Ethan", 3],
+  ["Leo", "Nora", 3], ["Leo", "Kai", 5], ["Nora", "Luna", 2], ["Kai", "Luna", 4], ["Kai", "Finn", 3],
+  ["Luna", "Maya", 3], ["Finn", "Owen", 2], ["Maya", "Owen", 4], ["Leo", "Maya", 3],
+  ["Ruby", "Theo", 5], ["Ruby", "Sara", 4], ["Theo", "Milo", 3], ["Sara", "Ella", 4], ["Milo", "Jack", 3],
+  ["Ella", "Jack", 5], ["Ruby", "Jack", 4],
+  ["Ava", "Leo", 1], ["Mia", "Ruby", 2], ["Kai", "Theo", 1],
 ];
 
 // Degree (connection count) drives node size.
 const degree = {};
 NODES.forEach((node) => { degree[node.id] = 0; });
 EDGES.forEach(([a, b]) => { degree[a] += 1; degree[b] += 1; });
+const maxDegree = Math.max(...Object.values(degree));
 
 // --- Force-directed layout (Fruchterman-Reingold, fixed-seed LCG) ----------
 let seed = 42;
@@ -133,32 +136,76 @@ NODES.forEach((node) => {
 // --- Chart -------------------------------------------------------------------
 const GROUPS = ["Work", "College", "Family"];
 const GROUP_COLOR = { Work: t.palette[0], College: t.palette[1], Family: t.palette[2] };
-const EDGE_COLOR = t.grid.replace(/[\d.]+\)$/, "0.35)");
+// Deliberate per-group marker shapes (not left to Highcharts' default symbol
+// cycling) — a second, colorblind-safe channel redundant with community color.
+const GROUP_SYMBOL = { Work: "diamond", College: "square", Family: "triangle" };
+// Hub threshold: nodes in the top degree band get bolder, larger labels — a
+// per-point dataLabels override, a distinctly Highcharts (not library-agnostic)
+// way to spotlight structurally important nodes without a second series.
+const HUB_DEGREE = maxDegree - 1;
 
-const edgeData = [];
-EDGES.forEach(([a, b]) => {
-  edgeData.push([pos[a].x, pos[a].y]);
-  edgeData.push([pos[b].x, pos[b].y]);
-  edgeData.push(null);
+// Node radius uses a squared term on degree so hub nodes create a clear focal
+// point instead of blending into the leaf nodes.
+function nodeRadius(id) {
+  return 6 + degree[id] ** 2;
+}
+
+// Tie-strength tiers (weak/medium/strong) become three separate edge series so
+// lineWidth + opacity can vary by weight — a plain single "line" series can't
+// vary per-segment, so splitting by tier is the idiomatic Highcharts route.
+const EDGE_TIERS = [
+  { key: "weak", test: (w) => w <= 2, lineWidth: 1, alpha: 0.18 },
+  { key: "medium", test: (w) => w === 3, lineWidth: 1.75, alpha: 0.32 },
+  { key: "strong", test: (w) => w >= 4, lineWidth: 2.75, alpha: 0.5 },
+];
+
+const edgeSeries = EDGE_TIERS.map((tier) => {
+  const data = [];
+  EDGES.filter(([, , w]) => tier.test(w)).forEach(([a, b]) => {
+    data.push([pos[a].x, pos[a].y]);
+    data.push([pos[b].x, pos[b].y]);
+    data.push(null);
+  });
+  return {
+    type: "line",
+    name: `Connections (${tier.key})`,
+    data,
+    color: t.grid.replace(/[\d.]+\)$/, `${tier.alpha})`),
+    lineWidth: tier.lineWidth,
+    marker: { enabled: false },
+    enableMouseTracking: false,
+    showInLegend: false,
+    zIndex: 0,
+  };
 });
 
 const nodeSeries = GROUPS.map((group) => ({
   type: "scatter",
   name: group,
   color: GROUP_COLOR[group],
-  data: NODES.filter((node) => node.group === group).map((node) => ({
-    x: pos[node.id].x,
-    y: pos[node.id].y,
-    name: node.id,
-    marker: { radius: 6 + degree[node.id] * 1.8 },
-  })),
-  marker: { lineColor: t.pageBg, lineWidth: 1 },
+  marker: { symbol: GROUP_SYMBOL[group], lineColor: t.pageBg, lineWidth: 1 },
+  data: NODES.filter((node) => node.group === group).map((node) => {
+    const radius = nodeRadius(node.id);
+    const isHub = degree[node.id] >= HUB_DEGREE;
+    return {
+      x: pos[node.id].x,
+      y: pos[node.id].y,
+      name: node.id,
+      marker: { radius },
+      dataLabels: {
+        y: -(radius + 6),
+        style: {
+          fontSize: isHub ? "15px" : "13px",
+          fontWeight: isHub ? "700" : "normal",
+        },
+      },
+    };
+  }),
   dataLabels: {
     enabled: true,
     format: "{point.name}",
     allowOverlap: false,
-    y: -14,
-    style: { color: t.ink, fontSize: "12px", fontWeight: "normal", textOutline: "none" },
+    style: { color: t.ink, fontWeight: "normal", textOutline: "none" },
   },
 }));
 
@@ -189,18 +236,5 @@ Highcharts.chart("container", {
     series: { animation: false },
     scatter: { states: { hover: { enabled: false } } },
   },
-  series: [
-    {
-      type: "line",
-      name: "Connections",
-      data: edgeData,
-      color: EDGE_COLOR,
-      lineWidth: 1.5,
-      marker: { enabled: false },
-      enableMouseTracking: false,
-      showInLegend: false,
-      zIndex: 0,
-    },
-    ...nodeSeries,
-  ],
+  series: [...edgeSeries, ...nodeSeries],
 });
