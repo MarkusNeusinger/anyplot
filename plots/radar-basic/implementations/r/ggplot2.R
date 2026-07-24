@@ -13,10 +13,18 @@ set.seed(42)
 coord_radar <- function(theta = "x", start = 0, direction = 1) {
   theta <- match.arg(theta, c("x", "y"))
   r <- if (theta == "x") "y" else "x"
+  # clip = "off": CoordPolar defaults to clip = "on", which hard-clips
+  # panel content to the circular/hexagonal boundary. The category-label
+  # layer sits close to that boundary (label_radius near the y-scale max),
+  # and its text bounding box — laid out horizontally, not radially — pokes
+  # past the boundary on off-axis vertices, silently shaving off whichever
+  # glyph sits at the extreme edge (e.g. the leading "P" of a left-side
+  # label). Disabling clip removes that failure mode entirely.
   ggproto("CoordRadar", CoordPolar,
     theta = theta, r = r, start = start,
     direction = sign(direction),
-    is_linear = function(coord) TRUE
+    is_linear = function(coord) TRUE,
+    clip = "off"
   )
 }
 
@@ -61,7 +69,7 @@ label_df <- tibble::tibble(
   axis_pos   = seq_len(n_axes),
   competency = competencies
 )
-label_radius <- 106
+label_radius <- 108
 
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(radar_df, aes(x = axis_pos, y = score, group = employee)) +
@@ -75,12 +83,12 @@ p <- ggplot(radar_df, aes(x = axis_pos, y = score, group = employee)) +
   coord_radar(theta = "x", start = 0) +
   scale_x_continuous(breaks = seq_len(n_axes), labels = competencies,
                       limits = c(1, n_axes + 1), expand = c(0, 0)) +
-  scale_y_continuous(limits = c(0, 112), breaks = seq(0, 100, 20),
+  scale_y_continuous(limits = c(0, 120), breaks = seq(0, 100, 20),
                       expand = c(0, 0)) +
   scale_fill_manual(values = IMPRINT_PALETTE[1:2], name = NULL) +
   scale_color_manual(values = IMPRINT_PALETTE[1:2], name = NULL) +
   labs(title = "radar-basic · r · ggplot2 · anyplot.ai",
-       caption = "Score (0-100 scale)") +
+       subtitle = "Score (0-100 scale)") +
   theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
@@ -92,8 +100,8 @@ p <- ggplot(radar_df, aes(x = axis_pos, y = score, group = employee)) +
     axis.text.y       = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),
     plot.title        = element_text(color = INK, size = 12, hjust = 0.5),
-    plot.caption      = element_text(color = INK_SOFT, size = 7, hjust = 0.5,
-                                      margin = margin(t = 6)),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 7.5, hjust = 0.5,
+                                      margin = margin(t = 4, b = 4)),
     legend.position    = "bottom",
     legend.background = element_rect(fill = ELEVATED_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT, size = 9),
