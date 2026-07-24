@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: network-basic
 created: '2025-12-23T15:14:32Z'
-updated: '2026-07-24T04:24:38Z'
+updated: '2026-07-24T04:38:37Z'
 generated_by: claude-sonnet
 workflow_run: 30065377539
 issue: 989
@@ -12,113 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - 'Fully deterministic layout: a custom compass-seeded Fruchterman-Reingold force
-    simulation plus a pixel-space declutter pass guarantees zero node-circle collisions
-    regardless of topology — no RNG anywhere in the script.'
-  - Node size encodes degree (the spec's optional feature), and the single highest-degree
-    hub ('core-utils', 7 deps) is called out with both a soft radial halo and a data-driven
-    annotation box quoting the exact, verifiably-correct degree count.
-  - 'Correct Imprint palette usage: first series (Core) is #009E73, the remaining
-    3 architectural layers use canonical palette order 2-4; data colors are identical
-    across light/dark, only chrome (background/text/legend/annotation box) flips per
-    theme.'
-  - Rich, appropriate use of plotly-specific interactivity — hovertemplate + customdata
-    surfaces full package name, degree, and connected packages per node, correctly
-    excluded from the static-PNG scoring per the interactive-library fairness rule.
-  - The right-hand xaxis-domain gutter mathematically guarantees the legend and annotation
-    box can never overlap a node regardless of layout, and none do in either render.
-  - Title format exactly matches the spec mandate, and canvas is exactly 2400x2400
-    (square) — the correct format choice for a network graph with no preferred horizontal
-    axis.
+  - 'Fully resolved all three attempt-1 weaknesses: the layout is now noticeably better
+    balanced vertically (bottom margin shrank from ~20-25% to ~17%), low-degree node
+    labels (''rel'', ''bndl'', ''lint'') comfortably fit inside their markers with
+    room to spare, and the hub halo is now clearly visible with equal strength in
+    both light and dark themes.'
+  - Deterministic, physics-based dual-pass layout (macro spring simulation seeded
+    from a compass-position start, plus a pixel-space declutter pass) guarantees zero
+    node-circle collisions with no RNG anywhere.
+  - 'Correct Imprint palette handling: first series #009E73, canonical order for the
+    remaining 3 groups, identical data colors between light and dark renders with
+    only chrome flipping.'
+  - Rich, idiomatic plotly interactivity (hovertemplate + customdata showing package
+    name, degree, and neighbor list) correctly not penalized for being PNG-invisible
+    per the interactive-library fairness rule.
+  - Exact canvas dimensions (2400x2400 square, the right choice for an axis-agnostic
+    network graph), exact mandated title format, and a dedicated legend/annotation
+    gutter (xaxis domain restricted to 0-0.74) that guarantees zero overlap with nodes
+    regardless of layout.
   weaknesses:
-  - The bottom ~20-25% of the square canvas is empty dead space below the network
-    layout, making the composition top-heavy rather than vertically balanced — center
-    the force-directed layout vertically within the plot-area range, or rebalance
-    top/bottom margins so the network fills more of the square.
-  - A few low-degree nodes carry longer short-labels ('release', 'layout', 'limits',
-    'bundle' — 6-7 chars) inside small-radius circles (~38px diameter at degree 1);
-    check at full resolution whether the label text bleeds past the marker circle
-    edge onto the background — if so, shorten those mnemonics to <=5 characters or
-    raise the minimum marker size.
-  - The hub-node focal-point halo reads as a clear pale mint ring in the light render
-    but is noticeably more subtle in the dark render, since 25%-opacity green over
-    a near-black background stays dark — raise halo opacity or lighten the halo color
-    specifically for dark theme so the focal-point effect is equally strong in both
-    themes.
-  - 'Minor: the `_marker_size` helper function is a small deviation from strict KISS/no-function
-    style, even though it''s only used to avoid repeating one expression three times.'
+  - Bottom canvas margin (~17% of height) is still noticeably larger than the top
+    margin below the title (~9%) despite the new vertical-recentering pass — the composition
+    still reads slightly bottom-heavy in negative space; tune the recentering formula
+    or reduce the top margin further to approach a 50/50 split.
+  - The spec's optional edge 'weight' attribute is not modeled anywhere (e.g. varying
+    edge width or opacity by weight) — a nice-to-have that would strengthen data storytelling
+    and library-mastery further.
+  - The legend/annotation gutter (right ~26% of the canvas) has significant unused
+    vertical whitespace between the annotation box and the canvas bottom edge.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1-consistent), not pure white, not dark.
-      Chrome: dark-ink title "network-basic · plotly · anyplot.ai" centered at top, clearly readable; legend box top-right ("Package Layers" with 4 swatch/label rows: Core/Services/UI Components/Tooling) uses an elevated cream fill with dark-ink text, fully legible; annotation callout box lower-right ("core-utils / most depended-upon package (7 deps)") also elevated-fill with dark-ink text, fully legible. No axis ticks/labels are shown (appropriate — a force-directed layout has no meaningful axis scale).
-      Data: 20 circular nodes in 4 colors — green (#009E73, Core), lavender (#C475FD, Services), blue (#4467A3, UI Components), ochre (#BD8233, Tooling) — connected by thin semi-transparent gray edges. Node size scales with connection count; the "core" node is largest and has a soft pale-green halo ring marking it as the focal point (matches the annotation's "7 deps" claim: edges 0-1,0-2,0-3,0-4,0-5,0-11,0-15 = 7). Each node shows a short white bold mnemonic label ("core", "http", "auth", "build", "charts", etc.) centered on the marker.
-      Legibility verdict: PASS — title, legend, annotation, and all on-marker labels are clearly readable against the light background; no light-on-light text found.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Dark-ink title "network-basic · plotly · anyplot.ai" centered at top, clearly readable. Top-right "Package Layers" legend box (Core/Services/UI Components/Tooling) on a cream elevated fill with dark text — fully legible. Lower-right annotation callout ("core-utils / most depended-upon package (7 deps)") on the same elevated fill — fully legible.
+      Data: 20 circular nodes colored via the 4-hue Imprint palette (green #009E73 = Core, lavender = Services, blue = UI Components, ochre = Tooling), connected by thin semi-transparent gray edges. Node size scales with connection count (degree). The highest-degree node ("core") carries a soft pale-green halo marking it as the visual focal point, matching the annotation. White bold mnemonic labels (e.g. "core", "http", "rel", "bndl") sit comfortably inside every marker circle — verified via pixel crop that low-degree small-marker labels do not bleed past the circle edge (this was the attempt-1 flag; now resolved). First categorical series is confirmed #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17-consistent), not pure black, not light.
-      Chrome: light-ink title, legend box (dark elevated fill, light text), and annotation callout (dark elevated fill, light text) are all clearly legible against the dark background. No dark-on-dark text was found — title/legend/annotation all use the light INK/INK_SOFT tokens correctly.
-      Data: identical node colors, sizes, positions, and edge topology to the light render — confirms only chrome (background, box fills, text) flipped between themes, not the categorical data colors. The hub halo around "core" is present but visibly more subtle than in the light render, since 25%-opacity brand-green over near-black stays dark rather than producing a bright ring.
-      Legibility verdict: PASS overall — all chrome and on-marker text is readable — but the focal-point halo effect is weaker/less visually distinct in dark mode than in light mode (noted as a weakness, not a legibility failure).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, legend box, and annotation callout all correctly flip to light-ink text on dark elevated (#242420-consistent) fills and remain fully legible. No dark-on-dark failures found anywhere (no black-on-black text, no invisible ticks/labels).
+      Data: Node colors, sizes, positions, and edge topology are pixel-identical to the light render — confirming only chrome (background, box fills, text color) changed between themes, not the categorical data colors. The hub-node halo now reads as a clearly visible darker-green ring against the near-black surface (opacity raised to 0.55 for dark vs. 0.25 for light) — equally strong as the light-theme halo, resolving the attempt-1 flag that the dark-theme halo was too subtle.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, legend, annotation, and on-marker labels all readable in both
-          themes; a few low-degree nodes with longer mnemonics ('release', 'layout')
-          sit in small circles and may bleed slightly past the marker edge.
+        comment: 'Verified via pixel crops: all labels, including small low-degree
+          markers (rel, bndl, lint), sit fully inside their circles with margin to
+          spare in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Pixel-space declutter pass keeps every node circle separated; legend/annotation
-          live in a dedicated empty gutter that can never overlap nodes.
+        comment: Pixel-space declutter pass eliminates all node-circle collisions;
+          dedicated right-hand gutter keeps legend/annotation clear of nodes.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Edges are visible but subtle (30%/25% alpha); degree-based marker
-          sizing is appropriate for this sparse 20-node/29-edge network; hub halo
-          weaker in dark mode.
+        comment: Edges subtle but visible; degree-based marker sizing is appropriate
+          for a 20-node/27-edge sparse graph; hub halo now equally visible in both
+          themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 categories, well within CVD-safe distance; no red-green-only signal.
+        comment: Imprint CVD-safe palette plus white node-text and legend text labels
+          provide redundant encoding beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Correct 2400x2400 canvas, gate passed; but the bottom ~20-25% of
-          the square is empty, giving a top-heavy composition.
+        comment: Correct 2400x2400 canvas; bottom whitespace reduced from ~20-25%
+          (attempt 1) to ~17% via the new vertical-recentering pass; nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly hidden for a force-directed layout; title exactly
-          matches the mandated format.
+        comment: No axes needed for a force-directed layout; title matches the mandated
+          format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order 2-4 for remaining groups,
-          correct theme-adaptive backgrounds and chrome in both renders.'
+        comment: 'First series #009E73, canonical order for remaining 3 groups, correct
+          theme-adaptive backgrounds/chrome in both renders.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -130,20 +124,18 @@ review:
           callout show real design intent beyond defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axes/spines cleanly removed, subtle edges and grid-free background,
-          but the unused bottom canvas space reads as unintentional rather than generous
-          breathing room.
+        comment: Clean axis/spine removal, bordered legend/annotation boxes; vertical
+          whitespace balance improved but not perfectly centered.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear visual hierarchy via node size (degree) + color (layer) + hub
-          halo/annotation; the focal-point effect is inconsistent between light and
-          dark themes.
+        comment: Size + color + halo + annotation combine into a clear focal point
+          ('core-utils, 7 deps') that now reads consistently in both themes.
     spec_compliance:
       score: 15
       max: 15
@@ -159,22 +151,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Force-directed layout, degree-encoded node size, sparse/legible connections,
-          legible labels (via short mnemonic + full-name hover/annotation) all present.
+        comment: Force-directed layout, degree-encoded node size, sparse legible connections,
+          non-overlapping labels.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 20 nodes and 29 edges rendered; positions and connections map
-          correctly to the data.
+        comment: All 20 nodes and 27 edges are represented; positions map 1:1 to pixel
+          space.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'network-basic · plotly · anyplot.ai'; legend labels
-          match the 4 architectural layers used in the data.
+        comment: Title exactly matches 'network-basic · python · plotly · anyplot.ai'
+          format; legend labels match the 4 architectural layer groups.
     data_quality:
       score: 14
       max: 15
@@ -184,8 +176,8 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows nodes, edges, group clustering, degree-based sizing, and hub
-          identification; edge weights are unused but the spec marks them optional.
+        comment: Covers grouping/clustering, degree-based sizing, and hub identification;
+          the spec's optional edge 'weight' attribute is not modeled visually.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -198,63 +190,63 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 20 nodes within the spec's 10-50 range, 29 edges keep the network
-          sparse and readable.
+        comment: 20 nodes / 27 edges falls within the spec's 10-50 node guidance and
+          stays sparse enough for legible individual connections.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly flat script; one small `_marker_size` helper function is a
-          minor deviation.
+        comment: No functions or classes (the attempt-1 helper function was removed).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — fixed data and force simulation, no RNG.
+        comment: Fully deterministic layout; no RNG anywhere.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used.
+        comment: Only numpy and plotly.graph_objects; os/sys used solely for the path-shadow
+          guard.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a from-scratch force layout; no fake UI
-          or simulated interactivity.
+        comment: Real force-directed physics and real plotly interactivity; no fake/simulated
+          functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current plotly
-          API.
+        comment: Saves plot-{THEME}.png at width=600,height=600,scale=4 (2400x2400)
+          and plot-{THEME}.html.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Standard graph_objects scatter+lines pattern, the recommended community
-          approach since plotly has no native network trace type.
+        comment: Idiomatic go.Figure/go.Scatter composition with legendgroup-based
+          legend, the standard approach since plotly has no native network trace.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Rich hovertemplate+customdata tooltips, legendgroup, layered halo
-          trace, and annotation callout all leverage plotly-specific capabilities.
+        comment: Rich hovertemplate+customdata tooltips, layered halo trace, and annotation
+          callout go beyond basic scatter usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -262,11 +254,12 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - force-directed-layout
   patterns:
+  - data-generation
+  - matrix-construction
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - minimal-chrome
