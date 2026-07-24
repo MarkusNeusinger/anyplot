@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:12:33Z'
-updated: '2026-07-24T10:49:59Z'
+updated: '2026-07-24T11:01:25Z'
 generated_by: claude-sonnet
 workflow_run: 30086895241
 issue: 820
@@ -12,49 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - Correct, idiomatic bokeh parallel-coordinates implementation via multi_line +
-    ColumnDataSource, with a real HoverTool (not faked) showing the species per line
-  - Imprint palette applied in canonical order (Setosa=#009E73, Versicolor=#C475FD,
-    Virginica=#4467A3) and identical across both themes; backgrounds and chrome are
-    theme-correct in both renders
+  - 'All three attempt-1 weaknesses were directly and effectively addressed: legend
+    border dropped, bolder per-dimension Span anchor lines added, and line_alpha eased
+    from 0.5 to 0.4 in the densest crossover region'
+  - New click_policy="mute" + muted_alpha=0.05 on the legend is a genuine bokeh-distinctive
+    interactive feature (isolate a species by clicking its legend entry) layered on
+    top of the existing real HoverTool
+  - Imprint palette applied in canonical order and identical across both themes; backgrounds
+    and chrome are theme-correct in both renders
   - Custom x-axis tick labels embed the real-world min/max cm range per dimension,
     adding context beyond bare 0-1 normalized ticks
-  - Explicit, well-proportioned font sizes throughout; both renders are fully readable
-    with no dark-on-dark/light-on-light issues and no edge clipping
   - Realistic Iris dataset with factually correct measurement ranges and a clear species-separation
-    story (Setosa isolates sharply on petal dimensions)
-  - Clean KISS-structured, reproducible code (np.random.seed(42)), no unused imports
+    story
   weaknesses:
-  - Legend keeps a visible border box (border_line_color=INK_SOFT) — the style guide's
-    decoration-removal checklist calls for dropping box frames around legends for
-    a more refined look
-  - Each dimension axis is marked only by the faint 0.15-alpha xgrid line shared with
-    the rest of the grid, not a distinct vertical axis line — a slightly bolder per-dimension
-    axis line (matching the y-axis line weight/color) would anchor each dimension
-    more clearly, especially at mobile scale
-  - Typography relies on bokeh's default font family with no custom font choice, keeping
-    the overall look at 'well-configured default' rather than publication-grade polish
-  - With 150 overlapping polylines at line_alpha=0.5, the busiest crossover region
-    (Sepal Width) is visually dense — a touch more transparency (~0.35-0.4) would
-    ease parsing without losing the crossing pattern that is the point of the chart
+  - DE-03 remains at the "good" tier rather than "excellent" - there's no explicit
+    visual callout drawing the eye to the Setosa/petal separation as the plot's single
+    clearest insight, though this is optional polish rather than a spec requirement
+  - xgrid (shared 0.15-alpha grid) and the new per-dimension Span lines both draw
+    at the same four x positions, which is slightly redundant now that the Span lines
+    carry the visual anchor role
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "parallel-basic · python · bokeh · anyplot.ai" in bold dark ink top-left; x-axis "Dimension" and y-axis "Normalized Value" labels in italic dark ink; four dimension tick labels (Sepal Length, Sepal Width, Petal Length, Petal Width) each with their real cm range printed below in a softer gray; y-axis 0-1 tick labels in the same soft gray; legend box top-right titled "Species" listing Setosa/Versicolor/Virginica with a light elevated-cream fill and thin border. All chrome text is clearly legible against the light background.
-      Data: 150 polylines (one per iris observation), each a species-colored path across the four normalized dimension axes. Setosa lines are brand green (#009E73) and separate sharply toward the bottom on Petal Length/Petal Width. Versicolor lines are lavender (#C475FD) and Virginica lines are blue (#4467A3), overlapping each other in the middle but staying visually distinguishable via color and a subtle vertical grid line at each dimension position.
-      Legibility verdict: PASS — all text is dark-on-light and fully readable; no clipping at any canvas edge.
+      Background: Warm off-white (#FAF8F1), matches spec target.
+      Chrome: Bold dark title top-left, italic "Dimension"/"Normalized Value" axis labels, four dimension tick labels each annotated with real cm ranges, frameless "Species" legend top-right (border box from attempt 1 removed). All clearly readable, nothing clipped.
+      Data: 150 species-colored polylines, line_alpha=0.4 (eased from 0.5). Setosa=#009E73 (green), Versicolor=#C475FD (lavender), Virginica=#4467A3 (blue) - canonical Imprint order. New bolder per-dimension Span anchor lines (alpha 0.6) distinct from the shared faint grid.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title/axis-label/tick-label layout, now rendered in light ink (#F0EFE8 primary, #B8B7B0 secondary) against the dark surface; legend box uses the dark elevated fill (#242420) with a soft border, text light-colored throughout.
-      Data: Same three data colors as the light render (#009E73 / #C475FD / #4467A3) — confirmed identical, only the chrome (background, text, grid, legend fill) flips with the theme.
-      Legibility verdict: PASS — no dark-on-dark failures observed; every title/label/tick is clearly visible against the dark background, and the brand green remains vivid.
+      Background: Warm near-black (#1A1A17), matches spec target.
+      Chrome: Same layout, chrome flipped to light ink (#F0EFE8 primary / #B8B7B0 secondary), frameless legend with dark elevated fill. All title/axis/tick text clearly legible, no dark-on-dark failures.
+      Data: Colors identical to light render (#009E73 / #C475FD / #4467A3) - confirmed only chrome flipped. Brand green stays vivid.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,29 +56,26 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes at full size
-          with no overflow
+        comment: Explicit sizes throughout, readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between text elements or between the legend box and data
-          lines (legend sits in the reserved margin outside x_range)
+        comment: Frameless legend sits in reserved margin outside x_range, no collision
+          with data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: line_alpha=0.5 / line_width=2.5 for 150 lines is reasonable but the
-          densest crossover region (Sepal Width) is visually busy
+        comment: line_alpha lowered to 0.4 noticeably eases the Sepal Width crossover
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; alpha blending aids distinguishing overlapping
-          lines
+        comment: Imprint palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -96,39 +87,37 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Dimension tick labels include real units (cm) via the embedded ranges
+        comment: Dimension labels embed real cm ranges
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order, theme-correct chrome in both
-          renders'
+        comment: Canonical Imprint order, theme-correct chrome in both renders
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured default: correct palette and theme tokens but no
-          custom typography or extra polish beyond the required style guide'
+        passed: true
+        comment: Bolder per-dimension Span anchor lines, explicit helvetica typography,
+          frameless legend
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid and generous whitespace, but legend keeps a border box
-          the decoration checklist recommends dropping
+        passed: true
+        comment: Legend border removed, subtle grid plus deliberate anchor lines,
+          click-to-mute interaction
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color contrast clearly reveals the Setosa/Versicolor/Virginica separation,
-          especially on petal dimensions
+        comment: Color contrast reveals species separation; no explicit focal callout
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel coordinates plot via multi_line
+        comment: Correct parallel coordinates via multi_line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normalization, category color-coding, alpha transparency, and sensible
-          axis ordering all present
+        comment: Normalization, category coloring, alpha transparency, sensible axis
+          ordering
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dimension index on X, normalized value on Y, all 4 dimensions and
-          all 150 observations shown
+        comment: Dimension index on X, normalized value on Y, all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match species
-          names
+        comment: Title matches mandated format; legend labels match species
     data_quality:
       score: 15
       max: 15
@@ -169,21 +156,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clear separation (Setosa) and overlap (Versicolor/Virginica)
-          patterns, matching real Iris structure
+        comment: Shows both clear separation (Setosa) and overlap (Versicolor/Virginica)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral Iris dataset scenario
+        comment: Real, neutral Iris dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Measurement ranges (sepal 4.3-7.9cm, petal width 0.1-2.6cm) match
-          known real-world Iris data
+        comment: Measurement ranges match known real-world Iris data
     code_quality:
       score: 10
       max: 10
@@ -193,7 +178,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,21 +190,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used, including selenium for the screenshot step
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI elements
+        comment: Clean, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png and plot-{theme}.html via current bokeh API
+        comment: plot-{theme}.png + .html via current bokeh API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -228,23 +213,23 @@ review:
         max: 5
         passed: true
         comment: ColumnDataSource + multi_line + HoverTool is the canonical bokeh
-          pattern for this chart type
+          pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: HoverTool gives genuine per-line interactivity, but it's a fairly
-          standard bokeh feature rather than something highly distinctive to this
-          library
-  verdict: REJECTED
+        passed: true
+        comment: muted_alpha + click_policy=mute lets a legend click isolate a single
+          species' lines
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
-  - manual-ticks
   - html-export
+  - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
@@ -252,4 +237,4 @@ impl_tags:
   - normalization
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
