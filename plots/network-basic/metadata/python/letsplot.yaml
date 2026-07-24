@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: network-basic
 created: '2025-12-23T15:18:08Z'
-updated: '2026-07-24T04:20:33Z'
+updated: '2026-07-24T04:38:25Z'
 generated_by: claude-sonnet
 workflow_run: 30065900968
 issue: 989
@@ -15,45 +15,67 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-b
 quality_score: 87
 review:
   strengths:
-  - Imprint palette applied in correct canonical order (green, lavender, blue, ochre)
-    for the four departments, identical across light and dark renders
-  - Node size explicitly encodes degree, creating a clear visual hierarchy that surfaces
-    hub employees (e.g. Jack, Olivia) as focal points
-  - Custom force-directed layout anchors each department to a quadrant while still
-    surfacing cross-department bridge edges clearly
-  - Theme chrome fully adapted (background, title, tick/legend text, edge color) with
-    grid/axis lines removed entirely, appropriate for an unitless network layout
-  - Rich HTML tooltips (name, department, connection count) via layer_tooltips add
-    real interactive value without faking anything in the static PNG
+  - Hand-rolled force-directed layout (spring physics with intra-group repulsion/attraction
+    plus a centroid anchor) produces four visually distinct, well-separated community
+    clusters instead of relying on a canned layout function — a genuine display of
+    algorithmic craft for a static network diagram.
+  - Node size is mapped to degree (size = 6 + degree * 1.8), so hub individuals (e.g.
+    Carol, Noah, Paul) read as clear visual focal points, giving the chart real data
+    storytelling.
+  - geom_curve edges with alpha=0.6 read cleanly against both surfaces and make the
+    cross-department bridge edges easy to trace without visual clutter.
+  - layer_tooltips() is configured with label, department, and connection-count lines
+    for the HTML output — a well-configured interactive feature that adds real value
+    beyond the static PNG.
+  - Imprint categorical palette is applied in canonical order (Research=#009E73 first,
+    then Marketing/Engineering/Design) and verified pixel-for-pixel correct against
+    each node's actual department in both themes.
+  - 'Theme-adaptive chrome (background, ink, legend box) is threaded through correctly
+    — both renders are legible with no dark-on-dark or light-on-light failures, and
+    the correct #FAF8F1 / #1A1A17 backgrounds are used.'
+  - Canvas is exactly 3200x1800 (ggsize(800,450) + scale=4), and no title/legend/label
+    content is clipped at the canvas edge in either render.
   weaknesses:
-  - Noticeable unused whitespace to the right of and below the legend box — the legend
-    reads as slightly isolated from the network rather than tucked close to the plot
-    content; tighten the right margin or shrink the empty band beneath the legend
-  - No coord_fixed / aspect correction means each department's circular sub-layout
-    renders as a squashed ellipse on the 16:9 canvas — consider a mild aspect compensation
-    in the spring-layout math so clusters read as more organic/circular
-  - Edges are quite faint (alpha=0.40, size=1.2) — bump opacity or width slightly,
-    especially for intra-cluster edges, so the community structure reads with more
-    confidence at a glance
-  - layer_tooltips is a nice touch but isn't distinctive to letsplot specifically
-    (most interactive libraries support hover tooltips) — consider a more letsplot-specific
-    technique (e.g. geom_point shape mapping, facet-based sub-communities) to raise
-    Library Mastery
+  - 'Confirmed label/node misattribution at the Marketing↔Design cluster boundary:
+    Quinn''s node sits at data position (x=0.823, y=0.431), but its text label renders
+    at the fixed offset label_y = y + 0.095 = 0.526 — almost exactly on top of Jack''s
+    Marketing node at y=0.561 (only 0.035 apart in data space, ~30px in the rendered
+    PNG). In both plot-light.png and plot-dark.png the ''Quinn'' text sits directly
+    beside/overlapping the purple Jack node one department up, while Quinn''s own
+    ochre node sits below, unlabeled-looking. A viewer naturally reads ''Quinn'' as
+    belonging to the purple node, misrepresenting which department Quinn is in. Root
+    cause: label_y uses a constant +0.095 offset regardless of local node density,
+    so it doesn''t account for a neighboring node from an adjacent cluster sitting
+    just above. Fix: either shrink/adapt the offset based on distance-to-nearest-other-node
+    (skip placing the label above when another node occupies that space, e.g. place
+    below or to the side instead), or increase the vertical gap between the Marketing
+    and Design group anchors (group_corners) so the two clusters don''t sit only ~0.13
+    data-units apart on the y-axis.'
+  - The tight vertical gap between the Marketing (top-right) and Design (bottom-right)
+    quadrant anchors (0.77 vs 0.23, only partially offset by the two clusters' own
+    radii) leaves just ~0.13 data-units of clearance between the closest nodes of
+    each cluster — noticeably tighter than the equivalent Research/Engineering gap
+    on the left side. This is what causes the Quinn/Jack label collision above; widening
+    this specific gap would fix it without disturbing the rest of the layout.
+  - 'Design Excellence is solid but not exceptional: the curved-edge community-graph
+    look is now a fairly common network-chart convention, so aesthetic sophistication
+    and visual refinement land in the ''good, professional'' band rather than the
+    top tier.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: bold dark title "Office Social Network · network-basic · letsplot · anyplot.ai" at top-left, clearly readable; dark bold node labels (Alice, Bob, Carol, ...) readable above/beside each node; legend box "Department" (Research/Marketing/Engineering/Design) top-right with dark text on an off-white elevated panel, readable; no axes/grid shown (appropriate for a networked layout with no semantic x/y units).
-      Data: four clearly separated department clusters (top-left green "Research", top-right lavender "Marketing", bottom-left blue "Engineering", bottom-right ochre "Design"), first series is #009E73 green as required, gray edges (alpha ~0.4) connect intra-cluster and cross-cluster (bridge) nodes, node size scales with connection count so hub nodes (e.g. Jack, Olivia) stand out.
-      Legibility verdict: PASS — all title, node label, and legend text is clearly readable against the light background.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold near-black title "Office Social Network · network-basic · letsplot · anyplot.ai" at top-left, clearly visible. No axis lines, ticks, or grid (correctly blanked for a network diagram). Legend box on the right ("Department": Research/Marketing/Engineering/Design) has a slightly lighter elevated-background fill with a thin ink border and dark-gray swatch labels — fully readable, not clipped at the right canvas edge.
+      Data: 20 circular nodes arranged into four clearly separated community clusters (top-left green "Research", top-right purple "Marketing", bottom-left blue "Engineering", bottom-right ochre "Design"), connected by gray curved edges (alpha ~0.6) including several visible cross-department bridge edges. Node size scales with degree, so higher-connectivity nodes (e.g. Carol, Noah, Paul) render visibly larger, creating a clear focal hierarchy. Bold dark-gray name labels sit above each node. First-drawn categorical series (Research) is #009E73 as required, and the remaining three groups follow the Imprint palette in canonical order.
+      Legibility verdict: PASS overall, with one confirmed exception — Quinn's label (Design/ochre node) renders almost on top of the neighboring Jack node (Marketing/purple) because the fixed +0.095 label offset isn't large enough to clear the tight gap between the Marketing and Design quadrants. This makes Quinn's label look like it belongs to the purple node instead of its own ochre node.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: title renders in light/off-white bold text, clearly readable; node labels render in a lighter gray, readable against the dark background; legend box uses a dark elevated panel (#242420-ish) with light text, readable; no dark-on-dark failures observed anywhere.
-      Data: identical four-cluster layout and node/edge structure as the light render; data colors (green/lavender/blue/ochre) are pixel-identical to the light render — only the background, text, and edge-line gray shifted to their dark-theme tokens.
-      Legibility verdict: PASS — all title, node label, and legend text is clearly readable against the dark background; no dark-on-dark text found.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title renders in off-white/light ink, clearly legible. Legend box fill switches to the darker elevated background (#242420) with a light-gray border, text switches to light gray — fully readable against the dark surface, no dark-on-dark failures anywhere.
+      Data: Identical layout and identical node/edge colors to the light render (Imprint categorical hues are unchanged across themes, as required) — only the chrome (background, legend box, text) flips tone. Edge color also flips to the light-gray theme-adaptive token and remains clearly visible against the near-black background.
+      Legibility verdict: PASS overall, with the same Quinn/Jack label-proximity issue reproduced identically (confirmed via pixel-level position calculation — the defect is layout-driven, not theme-driven, so it appears the same way in both renders).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -61,49 +83,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit (theme + geom_text), readable in both themes,
-          title width ~68% is comfortably within range
+        comment: All text readable at full size in both themes; no dark-on-dark/light-on-light.
+          Slight readability drag from the Quinn/Jack proximity issue below.
       - id: VQ-02
         name: No Overlap
+        score: 2
+        max: 6
+        passed: false
+        comment: 'Confirmed: Quinn''s label (label_y = 0.526) renders almost on top
+          of the neighboring Jack node (y=0.561) at the tight Marketing/Design cluster
+          boundary, misattributing the label to the wrong-colored node in both renders.'
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No label/label or label/data collisions found in either render
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Degree-scaled node sizes work well; edges are a bit faint at alpha=0.40
+        comment: Node size scales with degree; sparse network (20 nodes, 31 edges)
+          keeps markers and curved edges prominent and legible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 well-separated Imprint hues, CVD-safe, good contrast on both backgrounds
+        comment: Imprint categorical palette, CVD-safe distances between the 4 used
+          hues, no red-green-only signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall use of canvas but legend reads slightly isolated with
-          wasted space to its right/below
+        comment: 3200x1800 canvas confirmed, no clipped title/legend/labels, generous
+          margins, legend fully inside canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly omitted (no semantic x/y units for a layout); title
-          fully descriptive
+        comment: Axes correctly blanked for a network diagram; descriptive mandated
+          title present.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order (green/lavender/blue/ochre), identical across
-          themes, theme-correct backgrounds
+        comment: 'Verified pixel-by-pixel: Research=#009E73 (first series), Marketing/Engineering/Design
+          follow canonical Imprint order; backgrounds are #FAF8F1/#1A1A17; identical
+          data colors across themes.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -111,22 +138,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design above defaults: custom palette, degree-based hierarchy,
-          clean chrome; not quite publication-tier due to ellipse-distorted clusters'
+        comment: Hand-rolled spring/force-directed layout with community anchoring
+          and curved edges shows real algorithmic polish beyond defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid/axis/spines fully removed and legend polished, but whitespace
-          imbalance around the legend undercuts refinement
+        comment: All chrome minimized (no axes/grid/spines), subtle edge alpha, styled
+          legend box; deducted for the uneven inter-cluster spacing that causes the
+          label overlap.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size + color + spatial clustering create real visual hierarchy (hub
-          nodes, department separation, bridge edges)
+        comment: Degree-based node sizing creates clear hub focal points; color-coded
+          community clusters plus visible cross-department bridge edges tell a clear
+          structural story.
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +165,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct node-link network diagram via geom_segment + geom_point
+        comment: Correct node-link network diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes, edges, labels, degree-based sizing, force-directed positioning
-          all present
+        comment: Nodes with labels/groups, edges, force-directed/spring layout, and
+          degree-based node sizing all present per spec.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y positions correctly used for every node and edge endpoint
+        comment: x/y encode the computed layout positions appropriately for a network
+          graph; all nodes and edges are shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          match department names
+        comment: Title matches the mandated '{Descriptive} · spec-id · lang · lib
+          · anyplot.ai' format; legend labels match the department names used in the
+          data.
     data_quality:
       score: 15
       max: 15
@@ -166,21 +197,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows community clusters, hub/degree variation, and cross-community
-          bridges — comprehensive for the plot type
+        comment: Nodes, edges, groups, degree-based sizing, labels, and curved connections
+          all demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic office social network across 4 departments
+        comment: Plausible, neutral 'office social network' scenario with named individuals
+          across 4 departments.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 nodes / 31 edges matches the spec's recommended size and stays
-          sparse enough to read individual connections
+        comment: 20 nodes / 31 edges — squarely within the spec's 10-50 node guidance
+          and sparse enough for individual edges to remain traceable.
     code_quality:
       score: 10
       max: 10
@@ -190,35 +222,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports->data->plot->save script, no functions/classes
+        comment: No functions/classes; flat top-level script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) plus a fully deterministic layout algorithm.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy/pandas/lets_plot imports, all used
+        comment: Every imported name (aes, geoms, scales, theme elements, ggsave)
+          is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Custom force-directed layout is justified since letsplot has no built-in
-          layout engine; no fake functionality
+        comment: Appropriately complex for a real spring-layout implementation; no
+          fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html via ggsave with scale=4; current
-          API
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html via ggsave.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,25 +258,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot-style layering (geom_segment + geom_point + geom_text
-          + scale_*), though the layout itself is hand-rolled rather than using a
-          library helper
+        comment: Idiomatic lets-plot layering (geom_curve + geom_point + geom_text),
+          scale_size_identity, and theme() chrome control.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: layer_tooltips is a nice touch but hover tooltips are common across
-          interactive libraries, not distinctive to letsplot specifically
-  verdict: REJECTED
+        passed: true
+        comment: layer_tooltips() with custom multi-line tooltip content and geom_curve
+          for bezier-style edges are genuine lets-plot-specific touches (tooltip value
+          only visible in HTML, not penalized per interactive-library fairness rule).
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - force-directed-layout
+  - bezier-curves
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
-  - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep: []
