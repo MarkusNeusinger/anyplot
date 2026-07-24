@@ -2,54 +2,80 @@ library: plotnine
 language: python
 specification_id: marimekko-basic
 created: '2025-12-23T15:14:07Z'
-updated: '2026-04-29T11:22:05Z'
+updated: '2026-07-24T14:45:56Z'
 generated_by: claude-sonnet
-workflow_run: 24974896581
+workflow_run: 30101176032
 issue: 1002
-python_version: 3.14.4
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 89
 review:
   strengths:
-  - Correct and idiomatic Marimekko construction using geom_rect() with aesthetic
-    mappings for x/y bounds
-  - Threshold-based value labeling (>10% segments only) prevents cluttered small-segment
-    labels
-  - Realistic market-share data with meaningful regional variation in both widths
-    and proportional composition
-  - Clean KISS code structure with all transformations (groupby, cumsum for x/y positions)
-    clearly laid out
+  - 'Correct Imprint palette assignment retained: brand green #009E73 on Electronics,
+    canonical positions 2-4 for Software/Services/Hardware, identical across both
+    themes'
+  - 'Mathematically correct marimekko geometry: bar widths proportional to per-region
+    totals, segment heights proportional to within-region share, matching the spec
+    definition exactly'
+  - The Asia Pacific/Electronics segment called out in the subtitle is now visually
+    differentiated with a bold ink-colored 1.8pt outline on all four edges vs. the
+    thin theme-background gaps elsewhere — confirmed by pixel inspection in both light
+    and dark renders, this directly fixes the attempt-1 weakness that the highlight
+    was text-only
+  - 'Theme-adaptive chrome correctly threaded through in both renders: background,
+    title/subtitle/axis/tick/legend text, and grid all flip correctly with no dark-on-dark
+    or light-on-light failures'
+  - geom_label used for value annotations with plotnine-specific rounded-box parameters
+    (label_size, label_r, label_padding) instead of plain geom_text, a small but genuine
+    plotnine-idiomatic touch over the generic geom_rect approach
+  - Descriptive subtitle callout adds real narrative context, and the underlying numbers
+    are internally consistent (200/380 = 53%, matching the rendered subtitle)
+  - Clean KISS script structure with deterministic hardcoded data, only used imports,
+    and correct plot-{theme}.png output naming
   weaknesses:
-  - 'Non-Okabe-Ito palette: #306998 (Python Blue) and custom hexes. Replace with Okabe-Ito:
-    Electronics=#009E73, Software=#D55E00, Services=#0072B2, Hardware=#CC79A7'
-  - 'No theme adaptation: Code must read os.getenv(''ANYPLOT_THEME'', ''light'') and
-    apply PAGE_BG, ELEVATED_BG, INK, INK_SOFT tokens to plot_background, panel_background,
-    axis_text, axis_title, plot_title, legend_background, legend_text, legend_title'
-  - 'Wrong output filename: plot.save(''plot.png'') must become plot.save(f''plot-{THEME}.png'',
-    dpi=300, width=16, height=9)'
-  - 'Wrong URL in title: ''pyplots.ai'' must be ''anyplot.ai'''
-  - 'Hardcoded label color: geom_text(..., color=''black'') is unreadable on dark
-    backgrounds; use INK token'
-  - legend_text=14pt should be 16pt per the style guide
+  - 'The attempt-1 fix for the legend box frame did NOT work: legend_background=element_rect(fill=ELEVATED_BG,
+    color=None) still renders a clearly visible gray/dark border around the entire
+    legend box in both light and dark renders (verified by pixel crop — a solid rectangular
+    frame surrounds ''Product Line'' + all four entries). In plotnine''s matplotlib
+    backend, passing color=None to the legend''s element_rect does not suppress the
+    frame edge the way it does for other element_rect fills — it falls back to matplotlib''s
+    default legend frame edge color. Fix by setting color to match the fill exactly
+    (e.g. legend_background=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG)) or
+    by disabling the frame via the legend''s linewidth/edge property so no border
+    pixels render at all.'
+  - The alpha=0.6 intended to dim the 15 non-highlighted segments relative to the
+    highlighted one does not visibly render — pixel sampling shows the 'dimmed' segments
+    (e.g. Europe Electronics) are the exact same RGB (0,158,115) as the fully-opaque
+    highlighted segment, with no blending toward the page background visible. The
+    differentiation currently works only through the border-width/color change, not
+    the alpha as coded; either remove the now-redundant alpha param or investigate
+    why plotnine/matplotlib isn't compositing it (e.g. z-order/rasterization) so the
+    intended dimming actually shows.
+  - 'LM-02 remains only lightly distinctive: geom_label''s rounded-box params are
+    a small plotnine-specific touch, but the core marimekko construction (geom_rect
+    + manual cumulative-position math) is still the same generic ggplot2-family technique
+    flagged in the prior review — consider a more plotnine-specific mastery signal
+    (e.g. leveraging position adjustments or coord_cartesian tuning) to move beyond
+    generic usage.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Near-white, approximately #FAF8F1 or close (hard to distinguish from pure white visually)
-      Chrome: Title 'Market Share by Region · marimekko-basic · plotnine · anyplot.ai' bold and large — READABLE. Subtitle 'Asia Pacific leads in Electronics revenue ($200M — 53% of its regional market)' visible in muted smaller text — READABLE. Axis labels 'Market Segment (width = total market size)' and 'Product Share (%)' clearly visible. Tick labels (region names and percentage values) all readable. Legend 'Product Line' with colored boxes readable.
-      Data: Four variable-width Marimekko bars for Asia Pacific, Europe, Latin America, North America. Segments colored: Electronics=teal/blue, Software=medium blue, Services=orange, Hardware=pink. White borders separate segments. Value labels ($200M, $180M, etc.) inside larger segments.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1-consistent), not pure white — correct.
+      Chrome: Bold black title "Market Share by Region · marimekko-basic · python · plotnine · anyplot.ai" (~79% of canvas width, within the expected 70-85% band for the mandated long title), dark-gray subtitle below calling out the Asia Pacific/Electronics insight. Axis titles ("Market Segment (width = total market size)" and "Product Share (%)") in dark ink, tick labels (region names, 0%/25%/50%/75%/100%) in soft dark-gray. Legend "Product Line" at right with four swatches (Electronics, Hardware, Services, Software) — legend still has a visible gray box-frame border around it (see weaknesses).
+      Data: Four variable-width columns (Asia Pacific, Europe, Latin America, North America) each stacked with four colored segments (Electronics green #009E73, Software lavender #C475FD, Services blue #4467A3, Hardware ochre #BD8233) separated by thin off-white gaps. The Asia Pacific/Electronics segment ($200M) — the one called out in the subtitle — has a distinctly thicker, dark ink-colored outline on all four edges, clearly setting it apart from the thin off-white seams on every other segment. Dollar-value labels in dark text sit inside each segment ≥10% height.
+      Legibility verdict: PASS — all title, subtitle, axis, tick, and legend text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Dark near-black, approximately #1A1A17 or close
-      Chrome: Title text is light/white — READABLE. Subtitle text is light — READABLE. Axis labels are light-colored — READABLE. Tick labels appear light against dark background — READABLE. Legend text is light — READABLE. No dark-on-dark failures observed in the rendered image. NOTE: the theme adaptation visible in the images does NOT appear to be implemented in the current code (no ANYPLOT_THEME env-var read); images appear to be from a previous code revision with theme support. Current code saves to 'plot.png' using theme_minimal() without theme tokens — if re-run from current code, dark mode would produce dark text on dark background (failure).
-      Data: Segment colors appear identical to light render (same teal, blue, orange, pink hues) — Okabe-Ito data colors should be theme-invariant but these are custom hexes anyway.
-      Legibility verdict: PASS (images only — code would FAIL if re-run)
+      Background: Warm near-black (#1A1A17-consistent), not pure black — correct.
+      Chrome: Same title/subtitle rendered in light/off-white text, axis titles in light ink, tick labels in light soft-gray. Legend box now has a light-gray border (same unresolved box-frame issue as the light render), swatches unchanged. Gridlines subtle, barely visible against the dark background.
+      Data: Identical four-color segment palette (green/lavender/blue/ochre) in the same regions and stacking order as the light render — data colors did not shift between themes, only chrome (background, text, grid, legend border) flipped as expected. The Asia Pacific/Electronics highlighted segment again shows a clearly thicker, near-black outline distinguishing it from the thin gaps around the other 15 segments. Value labels render in light off-white text, clearly visible against every segment color.
+      Legibility verdict: PASS — all chrome text is light-colored and reads clearly against the near-black background; no dark-on-dark failures found. Brand green segment remains clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,76 +83,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, axis=20, ticks=16); legend_text=14pt
-          below 16pt minimum
+        comment: All font sizes explicitly set via theme(); title fontsize scaled
+          to the mandated-title length formula. Readable in both themes at full res;
+          small data-value labels (geom_label size=3.2) are still legible.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good overall; Latin America column has tight segments but threshold
-          logic avoids crowding
+        comment: No text or segment collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All segments clearly visible; white separator lines provide good
-          definition
+        comment: 16 segments across 4 columns, all clearly visible with gap separation
+          and value labels.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Colors are distinct but custom palette is not CVD-safe; teal/blue
-          confusion risk
+        comment: Distinct hues plus off-white gaps between segments give redundant
+          boundary cues beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 utilization; chart fills canvas with balanced margins
+        comment: Plot area uses a large, balanced share of the canvas; legend sits
+          near the plot, not isolated.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with context
+        comment: Both axis titles are descriptive with units/context (%, 'width =
+          total market size').
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'FAIL: #306998 (Python Blue) explicitly listed as non-compliant.
-          All product colors are arbitrary custom hexes, not Okabe-Ito. Code lacks
-          ANYPLOT_THEME handling; background not #FAF8F1/#1A1A17 via code.'
+        passed: true
+        comment: 'First series Electronics = #009E73, remaining series use canonical
+          Imprint positions 2-4, identical across themes; backgrounds are theme-correct
+          in both renders.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: true
-        comment: Well-configured library default; custom Python palette is creative
-          but violates style guide
+        passed: false
+        comment: Correct palette and mekko styling with an added highlight accent
+          read as thoughtful, but the unresolved legend frame and non-functioning
+          alpha dimming undercut the polish.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: theme_minimal() removes spines, white border lines on segments add
-          polish. Above defaults.
+        passed: false
+        comment: Subtle grid and generous whitespace, but the legend still shows a
+          visible box frame in both renders despite the attempted fix (color=None)
+          — the decoration-removal guideline is still violated.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Subtitle visible in images adds story; variable widths naturally
-          tell the market-size story. Subtitle absent from current code.
+        comment: The Asia Pacific/Electronics segment named in the subtitle now carries
+          a bold ink-colored outline distinguishing it from all 15 other segments,
+          reinforcing the caption visually instead of relying on text alone.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,55 +165,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Marimekko: variable-width bars proportional to column totals,
-          stacked proportions'
+        comment: Correct marimekko/mekko chart with variable-width, variable-height
+          stacked segments.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Proportional widths, stacked proportions, color legend, value labels
-          on larger segments, centered x-axis labels
+        comment: Bar widths proportional to region totals, segment heights proportional
+          to within-region share, legend, and value labels on larger segments all
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Regions on x-axis with proportional widths; product share % on y-axis
+        comment: x = region (width-encoded), y = product share % — correctly mapped,
+          all data visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Code title has 'pyplots.ai' instead of 'anyplot.ai'; legend labels
-          correct
+        comment: Title matches the mandated format with a descriptive prefix; legend
+          labels match the product categories.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows both Marimekko dimensions (variable width + stacked proportion)
-          with good variation across 4 regions and 4 products
+        comment: Regions show varied distributions — Asia Pacific Electronics-dominant
+          (53%), Latin America comparatively balanced across all four product lines.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Market share data with real business context; neutral topic; plausible
-          values
+        comment: Plausible, neutral business scenario (regional market share by product
+          line).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values $30M-$200M per segment, $150M-$450M totals per region — realistic
-          market sizes
+        comment: Region and segment totals match the inline comments and the rendered
+          subtitle percentage exactly (200/380 = 53%).
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -190,52 +223,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat procedural: data → compute widths → compute y-positions → plot
-          → save'
+        comment: Linear imports -> data -> transform -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static hardcoded data; fully deterministic
+        comment: Fully deterministic hardcoded data, no randomness to seed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used
+        comment: Every imported plotnine symbol is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation; loop for cumulative y-positions is appropriate
-          for Marimekko
+        comment: Appropriate complexity for the manual mekko rect computation plus
+          highlight split; no fake functionality.
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'FAIL: Saves to ''plot.png'' instead of ''plot-{THEME}.png''; no
-          ANYPLOT_THEME env-var read; no theme-adaptive chrome'
+        passed: true
+        comment: Saves plot-{THEME}.png via plot.save() with current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good grammar of graphics usage: ggplot + geom_rect + scale_fill_manual
-          + theme. Missing theme-adaptive element_rect/element_text tokens.'
+        comment: geom_rect + scale_fill_manual is the recommended grammar-of-graphics
+          approach for a marimekko chart, since plotnine has no native geom for it.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: geom_rect() with aes(xmin/xmax/ymin/ymax) for Marimekko construction
-          is the plotnine-idiomatic approach
+        passed: false
+        comment: geom_label's rounded-box params (label_size, label_r, label_padding)
+          are a small plotnine-specific touch added since the last review, but the
+          core rect-construction technique is still generic to the ggplot2 family.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -243,9 +275,11 @@ impl_tags:
   - manual-ticks
   - annotations
   patterns:
+  - groupby-aggregation
   - iteration-over-groups
   dataprep:
-  - groupby-aggregation
   - cumulative-sum
   styling:
+  - publication-ready
   - edge-highlighting
+  - alpha-blending
