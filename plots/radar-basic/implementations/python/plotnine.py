@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-basic: Basic Radar Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-07-24
@@ -91,7 +91,7 @@ spoke_df = pd.DataFrame(spoke_rows)
 label_rows = []
 for cat, angle in zip(categories, angles, strict=True):
     label_rows.append(
-        {"label": cat, "x": 122 * math.cos(angle - math.pi / 2), "y": 122 * math.sin(angle - math.pi / 2)}
+        {"label": cat, "x": 115 * math.cos(angle - math.pi / 2), "y": 115 * math.sin(angle - math.pi / 2)}
     )
 label_df = pd.DataFrame(label_rows)
 
@@ -106,10 +106,10 @@ plot = (
     + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=8, color=INK)
     + scale_fill_manual(values=IMPRINT)
     + scale_color_manual(values=IMPRINT)
-    + scale_x_continuous(limits=(-150, 150))
-    + scale_y_continuous(limits=(-150, 150))
+    + scale_x_continuous(limits=(-138, 138))
+    + scale_y_continuous(limits=(-138, 138))
     + coord_fixed(ratio=1)
-    + labs(title="radar-basic · plotnine · anyplot.ai", fill="Employee", color="Employee")
+    + labs(title="radar-basic · python · plotnine · anyplot.ai", fill="Employee", color="Employee")
     + theme(
         figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -118,6 +118,7 @@ plot = (
         legend_title=element_text(size=9, color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_margin=8,
         legend_key_width=24,
         axis_title=element_blank(),
         axis_text=element_blank(),
