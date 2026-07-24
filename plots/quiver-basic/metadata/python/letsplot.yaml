@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:17:36Z'
-updated: '2026-07-24T18:22:33Z'
+updated: '2026-07-24T18:30:55Z'
 generated_by: claude-sonnet
 workflow_run: 30116120627
 issue: 1014
@@ -12,51 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/letsplot/plot-dark.html
-quality_score: 81
+quality_score: 88
 review:
   strengths:
-  - 'Correct Imprint sequential colormap (#009E73 → #4467A3) mapped to vector magnitude
-    via scale_color_gradient — matches imprint_seq for single-polarity continuous
-    data'
+  - 'Arrow-overlap fix verified: scale_factor=0.08 keeps the longest scaled arrow
+    (~0.34 units at the outer ring, magnitude ~4.24) under the ~0.43-unit grid spacing,
+    so shafts/heads stay visually separated as the spec requires — the prior review''s
+    VQ-02/SC-02 weakness is resolved'
+  - 'Correct Imprint sequential colormap (#009E73 -> #4467A3) mapped to vector magnitude
+    via scale_color_gradient, matching imprint_seq for single-polarity continuous
+    data, identical across both themes'
   - Theme-adaptive chrome fully threaded through (background, ink, ink_soft, legend
-    box) — both renders pass the legibility check, no dark-on-dark or light-on-light
+    box) - both renders pass the legibility check, no dark-on-dark or light-on-light
     failures
-  - 'Proper L-shaped spines confirmed by pixel inspection: only left/bottom axis lines
-    drawn, top/right corners are clean with no stray border'
-  - Arrow length is correctly proportional to vector magnitude and direction correctly
-    represents the u=-y, v=x rotation field
-  - Canvas is exactly 3200×1800 (landscape gate), and both plot-{theme}.png and plot-{theme}.html
-    are saved as required for an interactive library
+  - 'Code cleanup verified: dead np.random.seed(42) removed and the redundant normalize-then-rescale
+    formula simplified to a direct U*scale_factor / V*scale_factor multiply, with
+    an explanatory comment on the spacing math'
+  - New layer_tooltips() with custom .line() content (Position, u/v components, magnitude)
+    is a genuine lets-plot-specific interactive feature addressing the prior review's
+    Library Mastery weakness
+  - Arrow length correctly proportional to vector magnitude and direction correctly
+    represents the u=-y, v=x rotation field; canvas is exactly 3200x1800 with both
+    plot-{theme}.png and plot-{theme}.html saved
   weaknesses:
-  - Arrows overlap noticeably in the outer/high-magnitude ring — scaled arrow length
-    (~1.06 units at max magnitude) exceeds the grid spacing (~0.43 units), so arrowheads
-    and shafts touch/merge along the spiral. Reduce scale_factor or widen grid spacing
-    so vectors stay visually separated, per the spec's 'sufficient to prevent overlap'
-    note.
-  - U_scaled/V_scaled normalizes by (magnitude + 0.01) and then re-multiplies by magnitude,
-    which is algebraically ~equivalent to U * scale_factor for all but the near-zero
-    points — unnecessary complexity; simplify to a direct scale_factor multiply.
-  - np.random.seed(42) is set but never used — the data is fully deterministic via
-    meshgrid with no random calls anywhere in the script; remove the dead seed line.
-  - 'Library mastery is generic: geom_segment + arrow() is the standard lets-plot
-    workaround for vector fields (no native quiver geom), which is idiomatic but not
-    distinctive — consider leaning into lets-plot-specific interactive tooltip content
-    in the HTML export to differentiate from the static PNG.'
+  - Arrows near the origin (magnitude close to 0) remain very small, close to single
+    points, which slightly hurts element visibility there — this is an inherent property
+    of the rotation field rather than a styling bug, but a slightly larger minimum
+    arrow length or a subtle size floor could improve legibility at the center.
+  - 'Design Excellence is unchanged from the prior attempt: composition is still a
+    standard quiver layout elevated mainly by the magnitude color gradient. A stronger
+    focal point (e.g. annotating the calm center vs. fast outer ring, or a title subtitle
+    framing the story) would raise DE-01/DE-03 further.'
+  - 'Library Mastery: geom_segment + arrow() remains the standard lets-plot workaround
+    since there''s no native quiver geom (idiomatic but not distinctive on its own);
+    the new tooltip content helps, but further leaning into interactivity (e.g. distinct
+    tooltip formatting per magnitude tier) could push LM-02 higher.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "quiver-basic · python · letsplot · anyplot.ai" in dark ink top-left, fully visible and not clipped. Axis titles "X Position (m)" / "Y Position (m)" in dark ink. Tick labels (-4..4 on both axes) in a softer gray-brown. Subtle horizontal/vertical gridlines. Legend "Magnitude" at right with a boxed, lightly-bordered elevated-background swatch and tick labels 0-4, all readable.
-      Data: 15x15 grid of arrows over x,y in [-3,3] forming a counterclockwise circular/rotational flow pattern (u=-y, v=x). Arrows are colored on a continuous sequential scale from brand green (#009E73, near-zero magnitude at the center) to blue (#4467A3, highest magnitude at the outer ring) — first/only color anchor is the mandated brand green.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "quiver-basic · python · letsplot · anyplot.ai" in dark ink top-left, fully visible and not clipped at any edge. Axis titles "X Position (m)" / "Y Position (m)" in dark ink, appropriately sized. Tick labels (-4..4 on both axes) in a softer gray-brown, balanced between X and Y axes. Subtle horizontal/vertical gridlines, not dominant. Legend "Magnitude" at right with a boxed, lightly-bordered elevated-background swatch, gradient bar with tick labels 0-4, fully readable and positioned near the plot (not isolated).
+      Data: 15x15 grid of arrows over x,y in [-3,3] forming a counterclockwise circular/rotational flow pattern (u=-y, v=x). Arrows are colored on a continuous sequential scale from brand green (#009E73, near-zero magnitude at the center) to blue (#4467A3, highest magnitude at the outer ring). Outer-ring arrows are now visibly separated (shaft/head no longer merge into neighbors) after the scale_factor reduction to 0.08; near-center arrows are tiny, correctly reflecting near-zero magnitude there.
+      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis titles, tick labels, and legend now rendered in light ink / off-white and soft gray tones, all clearly legible against the dark background. No dark-on-dark failures observed — text does not blend into the background anywhere.
-      Data: Arrow colors are identical to the light render (same green-to-blue sequential gradient) — confirms only chrome flipped between themes, not data colors. Grid lines remain subtle but visible.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark issues.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, axis titles, tick labels, and legend now rendered in light ink / off-white and soft gray tones, all clearly legible against the dark background. No dark-on-dark failures observed anywhere - text does not blend into the background.
+      Data: Arrow colors are identical to the light render (same green-to-blue sequential gradient) - confirms only chrome flipped between themes, not data colors. Grid lines remain subtle but visible. Outer-ring arrow separation matches the light render.
+      Legibility verdict: PASS - all text is clearly readable against the dark background, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -64,22 +69,24 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, all text readable in both themes and at reduced
-          scale
+        comment: Explicit font sizes throughout theme(); all text readable in both
+          themes and at reduced scale; title fits without overflow
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: No text overlap, but arrows in the outer high-magnitude ring visibly
-          touch/merge with neighbors
+        comment: scale_factor reduced to 0.08 keeps the longest scaled arrow (~0.34)
+          under the grid spacing (~0.43) - outer-ring shafts/heads no longer merge,
+          resolving the prior review's overlap weakness
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Arrows and color-coding distinguishable; near-origin arrows are very
-          small (correctly reflects near-zero magnitude there)
+        comment: Arrows and color-coding clearly distinguishable; near-origin arrows
+          are very small, correctly reflecting near-zero magnitude there but slightly
+          hurting visibility at the center
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -92,8 +99,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, proper L-shaped spines confirmed by pixel
-          inspection, no clipping/overflow
+        comment: Canvas exactly 3200x1800, balanced margins, no clipping/overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -106,7 +112,7 @@ review:
         max: 2
         passed: true
         comment: 'imprint_seq (#009E73 -> #4467A3) used correctly for single-polarity
-          magnitude; theme-correct backgrounds in both renders'
+          magnitude; theme-correct backgrounds and chrome in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -117,14 +123,13 @@ review:
         max: 8
         passed: true
         comment: Continuous magnitude-color mapping adds polish beyond a flat single-color
-          quiver; still fairly standard composition
+          quiver; composition otherwise standard
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines correctly L-shaped (confirmed via corner pixel check), subtle
-          theme-adaptive grid, generous whitespace
+        comment: L-shaped axis lines, subtle theme-adaptive grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -133,7 +138,7 @@ review:
         comment: Color gradient creates a clear focal contrast between calm center
           and fast outer ring, guiding the eye through the flow field
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,11 +149,11 @@ review:
         comment: Correct quiver/vector-field representation via geom_segment + arrow()
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Direction, magnitude-scaled length, and magnitude color all present;
-          arrow spacing/overlap note from spec not fully honored
+        comment: Direction, magnitude-scaled length, magnitude color, and now sufficient
+          arrow spacing to prevent overlap - all spec notes honored
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -162,7 +167,7 @@ review:
         max: 3
         passed: true
         comment: Title matches mandated format exactly; legend labeled 'Magnitude'
-          with correct units-free numeric scale
+          with correct numeric scale
     data_quality:
       score: 15
       max: 15
@@ -173,7 +178,7 @@ review:
         max: 6
         passed: true
         comment: Shows direction, magnitude-proportional length, and magnitude via
-          color — full feature set from the spec
+          color - full feature set from the spec
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -189,16 +194,16 @@ review:
         comment: Coordinate range and magnitude values are sensible for a generic
           flow-field example
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: No functions/classes, but the normalize-then-rescale formula for
-          U_scaled/V_scaled is more convoluted than needed
+        comment: No functions/classes; U_scaled/V_scaled simplified to a direct scale_factor
+          multiply, removing the prior convoluted normalize-then-rescale formula
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,11 +218,10 @@ review:
         comment: All imports are used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Dead np.random.seed(42) call (no random usage anywhere) and the redundant
-          normalize/rescale math
+        passed: true
+        comment: Dead np.random.seed(42) call removed; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
@@ -225,7 +229,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -237,16 +241,18 @@ review:
           fields since there is no native quiver geom
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic usage; no lets-plot-specific interactivity or feature beyond
-          the continuous gradient legend
+        passed: true
+        comment: New layer_tooltips() with custom .line() content (Position, u/v,
+          Magnitude) is a genuine lets-plot-specific interactive feature, addressing
+          the prior review's generic-usage weakness
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
