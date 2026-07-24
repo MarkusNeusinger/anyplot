@@ -1,0 +1,235 @@
+library: chartjs
+language: javascript
+specification_id: qq-basic
+created: '2026-07-24T07:13:48Z'
+updated: '2026-07-24T07:28:07Z'
+generated_by: claude-sonnet
+workflow_run: 30074373978
+issue: 977
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses fully resolved: the reference line''s padding now matches
+    the axes'' explicit min/max, so the dashed line reaches the plot corners in both
+    renders; a new tailCalloutPlugin (native Chart.js afterDatasetsDraw hook) draws
+    a leader-line annotation calling out the largest tail deviation'
+  - 'Correct, fully deterministic Q-Q construction: seeded Park-Miller LCG + Box-Muller
+    sampler + Acklam''s inverse-normal rational approximation, no external dependencies'
+  - Theme-adaptive chrome verified in both renders — title/axis labels/ticks/grid/legend/reference-line
+    all flip correctly; data green identical across themes
+  - 'Marker density improved: radius reduced from 6 to 5 with alpha lowered to ~70%,
+    reducing clumping in the dense mid-region (theoretical quantiles -1 to 1)'
+  - Realistic, neutral data narrative (precision gauge calibration residuals) whose
+    S-shaped deviation at both tails visibly demonstrates the diagnostic value of
+    a Q-Q plot
+  weaknesses:
+  - Tick label font (13px) is a touch small relative to the axis title font (16px)
+    — could be nudged up 1-2px for stronger visual balance, though currently readable
+    in both themes
+  - Design Excellence, while improved, still relies primarily on token-driven default
+    styling plus one annotation; a secondary visual device (e.g., a subtle shaded
+    confidence band around the reference line) would push storytelling further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Calibration Residuals · qq-basic · javascript · chartjs · anyplot.ai" in dark ink at top; legend below with green swatch ("Sample vs. Theoretical") and dashed-line swatch ("Reference Line (y = x)"); axis titles "Theoretical Quantiles" / "Sample Quantiles" in dark ink; tick labels in softer gray; subtle grid. All readable.
+      Data: ~100 green (#009E73) markers with thin page-bg edge halo, forming an S-curve around a black dashed 45-degree reference line that now spans corner-to-corner. A leader-line annotation ("Largest tail deviation") points at the bottom-left outlier point (~-2.6, -4.0).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/legend text in near-white ink; axis titles/tick labels/grid flipped to light tones; reference line flips from black to white/light dashes, still reaching both corners. No dark-on-dark issues.
+      Data: Same ~100 green markers, identical positions and hue as the light render — confirms data colors unchanged across themes. Callout annotation present and legible in soft-ink tone.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; tick labels (13px) slightly small
+          relative to axis titles (16px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; callout leader line avoids other elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radius reduced to 5 with ~70% alpha, resolving dense mid-region
+          clumping from attempt 1
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800 exact); nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with clear units/meaning
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct in both themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Alpha-blended markers with edge halo, dashed reference line, custom
+          callout annotation elevate beyond bare combo chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, reference line now spans full visible
+          diagonal
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New leader-line callout explicitly surfaces the largest tail deviation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Q-Q scatter + 45-degree reference line
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reference line clearly visible, correct axis labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Theoretical quantiles on x, sample quantiles on y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels clear
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Callout now explicitly surfaces the outlier/heavy-tail diagnostic
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Precision gauge calibration residuals; plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: z-score range appropriate for n=100 standard-normal draws
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed (browser globals only)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Mixed line+scatter datasets, scale min/max instead of manual ticks
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Native afterDatasetsDraw plugin for the callout is a genuinely distinctive
+          technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
