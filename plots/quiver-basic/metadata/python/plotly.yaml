@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:12:55Z'
-updated: '2026-07-24T18:28:02Z'
+updated: '2026-07-24T18:38:20Z'
 generated_by: claude-sonnet
 workflow_run: 30115323638
 issue: 1014
@@ -12,71 +12,61 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotly/plot-dark.html
-quality_score: 76
+quality_score: 85
 review:
   strengths:
-  - 'Correct plot type: ff.create_quiver renders a true quiver field with direction
-    correctly derived from u=-y, v=x (counterclockwise rotation), matching the described
-    cyclonic vortex.'
-  - 'Theme handling is fully correct in both provided renders: PAGE_BG, INK, INK_SOFT,
-    and GRID all branch on ANYPLOT_THEME and match the required #FAF8F1/#1A1A17 hex
-    values with no dark-on-dark or light-on-light failures.'
-  - 'Imprint palette compliance: arrows use brand green #009E73, and the magnitude
-    overlay correctly uses the sequential imprint_seq colormap (green to blue) since
-    wind speed is single-polarity data, not the diverging scale.'
-  - 'Reading the current source directly (plots/quiver-basic/implementations/python/plotly.py
-    at HEAD) confirms the attempt-1 weaknesses were genuinely addressed in code: arrow
-    length now scales with relative magnitude via length_frac, and WIND_SPEED_SCALE=10.0
-    pushes peak wind speed into a plausible cyclone range (~28 m/s). This is good,
-    correct engineering work by the repair step.'
-  - 'Clean, KISS-structured code: single top-to-bottom script, no functions/classes,
-    deterministic data generation (np.random.seed(42)), only necessary imports.'
+  - 'Both previously-flagged blockers are now genuinely fixed and visible in the fresh
+    renders: arrow length grows radially from the calm vortex centre outward (length_frac
+    formula), and peak wind speed now reaches ~28.3 m/s (WIND_SPEED_SCALE=10.0), a
+    plausible severe-storm range instead of a light breeze.'
+  - Direction correctly derived from u=-y, v=x, producing a clean counterclockwise
+    cyclonic rotation that matches the spec's example field.
+  - 'Smart redundant encoding: a go.Scatter layer colored by true wind-speed magnitude
+    (imprint_seq colorscale + colorbar) sits on top of ff.create_quiver, giving a
+    second, more precise magnitude read that plain create_quiver can''t provide on
+    its own.'
+  - 'Theme handling is fully correct in both renders: PAGE_BG/INK/INK_SOFT/GRID all
+    branch on ANYPLOT_THEME and match the required #FAF8F1/#1A1A17 hex values with
+    no dark-on-dark or light-on-light failures.'
+  - 'Imprint palette compliance: arrows use brand green #009E73, and the single-polarity
+    magnitude field correctly uses imprint_seq rather than a diverging or forbidden
+    colormap.'
+  - All font sizes explicitly set (title, axis titles, tick labels, colorbar title/ticks),
+    with the title fontsize dynamically scaled by a documented length ratio so the
+    long mandated title never clips.
+  - Clean, KISS-structured, deterministic script with only the imports actually used.
   weaknesses:
-  - 'CRITICAL - PIPELINE FAILURE, not a code defect: the plot-light.png / plot-dark.png
-    supplied for this review do not reflect the current commit (e3d18ee5b). Evidence:
-    (1) the colorbar in the provided renders tops out at ~2.8 m/s, but directly executing
-    the current plots/quiver-basic/implementations/python/plotly.py locally (ANYPLOT_THEME=light)
-    produces a colorbar spanning 0-28.3 m/s, matching WIND_SPEED_SCALE=10.0 in the
-    current source. (2) the provided renders show every arrow at a visually uniform
-    length, but executing the current source produces arrows whose length clearly
-    grows from the vortex centre outward, matching the length_frac formula in the
-    current source. (3) rendering the PRE-repair commit (dd432f135) locally reproduces
-    the provided plot-light.png pixel-for-pixel (same 0-2.8 m/s colorbar, same uniform
-    arrow lengths, same marker size/opacity). This proves the images attached to this
-    PR for review are the stale attempt-1 (pre-repair) render, not the output of the
-    fix that was actually committed. Do NOT make further code edits to fix arrow-length-proportionality
-    or wind-speed-realism -- both are already correctly implemented in the current
-    source. Instead the workflow must re-render plot-light.png/plot-dark.png from
-    the current HEAD commit before the next AI review, or this repair loop will keep
-    scoring against a stale artifact and can never converge.'
-  - 'As shown in the (stale) provided renders: every arrow is the same length regardless
-    of position, so the spec''s ''length proportional to magnitude'' requirement is
-    not visible in what was reviewed -- though this is understood to already be fixed
-    in the underlying source per the note above.'
-  - 'As shown in the (stale) provided renders: wind speed only reaches ~2.8 m/s (light-air
-    range), too gentle for a ''cyclonic'' vortex -- though this is understood to already
-    be fixed in the underlying source (peak ~28 m/s) per the note above.'
-  - Cannot fully evaluate Design Excellence / Library Mastery improvements for this
-    attempt since the visual artifact under review is unchanged from attempt 1 --
-    re-review once fresh renders are available.
+  - np.random.seed(42) is set but never used - all data (grid, u, v) is generated
+    deterministically via np.linspace/meshgrid with no calls into np.random. This
+    is harmless dead code but misleadingly implies a stochastic data-generation step
+    that doesn't exist; remove the seed line or use it if randomness is ever added.
+  - 'Design Excellence is solid but not exceptional: the 169-arrow grid plus overlaid
+    scatter dots is still fairly close to a well-composed default rather than a distinctively
+    art-directed chart. Consider a slightly more restrained marker opacity/size or
+    thinner arrow lines near the dense outer rings to let the vortex structure read
+    even more cleanly as a focal point.'
+  - The colorbar's reserved right-hand margin makes the square plot area sit marginally
+    left-of-center; tightening the colorbar thickness/length slightly further would
+    perfect the whitespace balance (currently good, not perfect).
+  - Outer-ring arrowheads sit close to their neighbors given the grid spacing versus
+    max arrow length (~0.32 vs ~0.33 spacing) - not true overlap, but there is little
+    breathing room; a slightly lower scale_factor would give more visual air without
+    losing the magnitude signal.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1. Correct, not pure white.
-      Chrome: Title "Cyclonic Wind Vortex · quiver-basic · python · plotly · anyplot.ai", axis titles "X Position (km)" / "Y Position (km)", tick labels, and the "Wind Speed (m/s)" colorbar title/ticks are all dark ink and clearly readable against the light background.
-      Data: A 13x13 grid of brand-green (#009E73) arrows forms a counterclockwise rotational flow pattern (consistent with u=-y, v=x). All arrows appear visually uniform in length -- length does not vary with vector magnitude in this render. Underlying scatter markers at each arrow base use the green-to-blue sequential imprint_seq gradient keyed to wind speed; the colorbar spans only 0 to ~2.8 m/s.
-      Legibility verdict: PASS (all text readable, no light-on-light issues).
-      IMPORTANT: directly executing the current committed source (plots/quiver-basic/implementations/python/plotly.py at HEAD, commit e3d18ee5b) produces a materially different render -- arrow length clearly increasing from the vortex centre outward, and a colorbar spanning 0-28.3 m/s. Re-rendering the PRE-repair commit (dd432f135) instead reproduces this plot-light.png pixel-for-pixel. This proves the supplied render is stale (attempt-1, pre-repair), not the output of the current source.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "Cyclonic Wind Vortex · quiver-basic · python · plotly · anyplot.ai" in dark ink, clearly readable and centered. Axis titles "X Position (km)" / "Y Position (km)" and tick labels are dark/soft-dark ink, all legible. Grid lines are a subtle light gray, visible but not dominant. Colorbar title "Wind Speed (m/s)" and its tick labels (0-25+) are dark ink, fully readable.
+      Data: A 13x13 grid of brand-green (#009E73) arrows forms a counterclockwise rotational flow pattern (u=-y, v=x). Arrow length clearly grows from short near the calm vortex centre to long at the outer edge, proportional to true wind-speed magnitude. Scatter markers at each arrow base use the green-to-blue imprint_seq sequential gradient keyed to the same magnitude (0 to ~28.3 m/s), growing bluer toward the edges - first-series green confirmed.
+      Legibility verdict: PASS - all text is readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17. Correct, not pure black.
-      Chrome: Title, axis titles, tick labels, and colorbar text switch to light ink / soft light-gray tokens and remain clearly legible.
-      Data: Arrow color (#009E73) and the scatter-marker green-to-blue gradient are pixel-identical to the light render -- only chrome flipped, as required. Same uniform arrow-length and 0-2.8 m/s colorbar issue as the light render (i.e. also a stale, pre-repair artifact).
-      Legibility verdict: PASS (all text readable, no dark-on-dark failures).
-
-    Both renders are internally theme-correct, but both are confirmed stale relative to the current commit -- see the pipeline-failure note in the review weaknesses.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, axis titles, tick labels, and colorbar title/ticks all switch to light ink / soft light-gray tokens and remain clearly legible. Grid lines flip to a subtle light-on-dark tone, still subtle but visible.
+      Data: Arrow color (#009E73) and the green-to-blue scatter gradient are pixel-identical to the light render - only chrome flipped, as required. Same radially-growing arrow length and same 0-28.3 m/s colorbar range as the light render.
+      Legibility verdict: PASS - all text is readable against the dark background; no dark-on-dark failures (no black-on-near-black text anywhere).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -84,52 +74,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title scales with length, axis/tick/colorbar
-          sizes fixed); readable in both themes
+        comment: All font sizes explicitly set (title dynamically scaled to length);
+          readable in both themes with no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between text, arrows, markers, or colorbar
+        comment: No text overlaps other text, data, or the colorbar
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: As rendered, all arrows are the same length so the magnitude encoding
-          channel is invisible in the arrow field itself (only the color overlay conveys
-          magnitude); source already fixes this but the fix is not reflected in the
-          provided render
+        passed: true
+        comment: Arrow length now correctly scales with relative magnitude (previously
+          flagged, now fixed); outer-ring arrowheads sit fairly close together
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient is CVD-safe, good contrast against
-          both surfaces
+        comment: Green arrows and blue-green sequential gradient are distinguishable
+          from the warm backgrounds in both themes; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 2400x2400 canvas confirmed (gate passed), balanced margins, minor
-          left-of-center bias from colorbar reservation
+        comment: Plot fills a healthy majority of the square canvas with balanced
+          margins; colorbar reserve makes the plot area sit marginally left-of-center
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X/Y Position (km) with units, colorbar labeled with units
+        comment: '"X Position (km)" / "Y Position (km)" - descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, continuous data uses imprint_seq, theme-correct
-          chrome in both renders'
+        comment: 'First (only) series is #009E73; continuous magnitude correctly uses
+          imprint_seq (single-polarity); theme-correct chrome in both renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -137,25 +125,24 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Above default via colorbar overlay composition, but dense uniform
-          grid in the provided render limits polish
+        comment: Above a bare default via the layered quiver+colorbar composition,
+          but still short of publication-level polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Subtle grid, reasonable spines/margins; colorbar sizing tightened
-          since attempt 1
+        comment: Subtle grid, tightened colorbar sizing since attempt 1, reasonable
+          margins
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Color gradient from calm centre to faster edge creates a focal point,
-          but no visible advancement over attempt 1's storytelling in the render under
-          review
+        comment: Length AND color both now grow from the calm centre outward, reinforcing
+          a clear visual hierarchy/focal point
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -163,56 +150,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct quiver/vector-field plot via ff.create_quiver
+        comment: True quiver field via ff.create_quiver
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Spec requires arrow length proportional to magnitude; not visible
-          in the provided render (all arrows uniform length) for the second consecutive
-          review cycle -- though already fixed in the current source per weaknesses
-          note
+        passed: true
+        comment: Arrow length now proportional to magnitude (previously the key gap),
+          uniform grid spacing, optional magnitude-by-color present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, full grid visible
+        comment: x/y correctly assigned; full grid range visible on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, colorbar label matches data
+        comment: Title matches "{Descriptive Title} · quiver-basic · python · plotly
+          · anyplot.ai"; no legend needed (single series)
     data_quality:
-      score: 10
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Magnitude only encoded via color in the provided render, not via
-          arrow length -- the primary quiver-plot channel -- for the second consecutive
-          review cycle
+        passed: true
+        comment: Shows direction, magnitude-by-length, and magnitude-by-color, including
+          the near-zero calm-centre edge case
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Coastal wind vortex is a realistic, neutral scenario
+        comment: Cyclonic wind vortex over a coastal grid - real, neutral meteorology
+          scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Wind speeds in the provided render (0-2.83 m/s) remain too gentle
-          for a 'cyclonic' vortex -- though already fixed in the current source (peak
-          ~28 m/s) per weaknesses note
+        passed: true
+        comment: Peak wind speed ~28.3 m/s is a plausible severe-storm range, fixing
+          the previous light-breeze issue
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -220,33 +205,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single top-to-bottom script, no functions/classes
+        comment: Flat top-to-bottom script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Fully deterministic grid/vector generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, plotly.figure_factory, plotly.graph_objects used
+        comment: Only numpy, plotly.figure_factory, plotly.graph_objects, os, sys
+          - all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, appropriately complex, no fake functionality
+        passed: false
+        comment: np.random.seed(42) is set but never used (no np.random calls exist)
+          - harmless but misleading dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: write_image(f'plot-{THEME}.png', width=600, height=600, scale=4)
+          + write_html - correct API, correct canvas
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -254,20 +242,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ff.create_quiver plus layered go.Scatter is idiomatic plotly usage
+        comment: ff.create_quiver is plotly's dedicated high-level quiver API, correctly
+          parameterized
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: create_quiver + colorbar-driven scatter overlay is plotly-specific
-          but no new distinctive feature added since attempt 1
-  verdict: REJECTED
+        comment: create_quiver + a layered go.Scatter colorbar overlay is a plotly-specific
+          composition that isn't trivially replicated in other libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - html-export
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
