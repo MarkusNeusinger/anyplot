@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-basic: Basic Radar Chart
 Library: plotnine 0.15.3 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-04-29
+Quality: pending | Updated: 2026-07-24
 """
 
 import math
@@ -16,10 +16,11 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    coord_fixed,
     element_blank,
     element_rect,
     element_text,
-    geom_line,
+    geom_path,
     geom_point,
     geom_polygon,
     geom_text,
@@ -39,7 +40,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID_COLOR = "#C8C8C0" if THEME == "light" else "#3A3A35"
+GRID_COLOR = "#C8C8C0" if THEME == "light" else "#4A4A44"
 
 IMPRINT = ["#009E73", "#C475FD"]
 
@@ -97,25 +98,27 @@ label_df = pd.DataFrame(label_rows)
 # Plot
 plot = (
     ggplot()
-    + geom_line(aes(x="x", y="y", group="radius"), data=grid_df, color=GRID_COLOR, size=0.5, linetype="dashed")
-    + geom_line(aes(x="x", y="y", group="angle_group"), data=spoke_df, color=GRID_COLOR, size=0.5)
+    + geom_path(aes(x="x", y="y", group="radius"), data=grid_df, color=GRID_COLOR, size=0.25, linetype="dashed")
+    + geom_path(aes(x="x", y="y", group="angle_group"), data=spoke_df, color=GRID_COLOR, size=0.25)
     + geom_polygon(aes(x="x", y="y", fill="series", group="series"), data=df, alpha=0.25)
-    + geom_line(aes(x="x", y="y", color="series", group="series"), data=df, size=1.5)
-    + geom_point(aes(x="x", y="y", color="series"), data=df[df["order"] < n], size=5)
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=16, color=INK)
+    + geom_path(aes(x="x", y="y", color="series", group="series"), data=df, size=0.75)
+    + geom_point(aes(x="x", y="y", color="series"), data=df[df["order"] < n], size=2.5)
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=8, color=INK)
     + scale_fill_manual(values=IMPRINT)
     + scale_color_manual(values=IMPRINT)
     + scale_x_continuous(limits=(-150, 150))
     + scale_y_continuous(limits=(-150, 150))
+    + coord_fixed(ratio=1)
     + labs(title="radar-basic · plotnine · anyplot.ai", fill="Employee", color="Employee")
     + theme(
-        figure_size=(12, 12),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, color=INK),
-        legend_title=element_text(size=16, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=12, weight="bold", color=INK),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_key_width=24,
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -126,4 +129,4 @@ plot = (
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
