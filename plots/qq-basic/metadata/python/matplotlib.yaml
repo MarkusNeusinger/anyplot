@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:12:33Z'
-updated: '2026-07-24T06:57:51Z'
+updated: '2026-07-24T07:05:00Z'
 generated_by: claude-sonnet
 workflow_run: 30073406255
 issue: 977
@@ -12,49 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Idiomatic scipy.stats.probplot usage for computing quantiles, plus a properly-derived
-    95% pointwise confidence band (order-statistic standard error formula) — a genuinely
-    distinctive, statistically rigorous touch beyond a bare scatter+line Q-Q plot.
-  - Exact spec-compliant title and axis labels ("Theoretical Quantiles" / "Sample
-    Quantiles"), correct Imprint palette usage (brand green scatter, position-2 purple
-    reference line), and fully correct theme-adaptive chrome in both renders.
-  - 'Realistic, well-motivated data: bimodal systolic blood pressure mixture (normotensive
-    + hypertensive cohorts) that produces a visually interesting, diagnostically meaningful
-    S-shaped deviation from the reference line — directly demonstrating the "deviations
-    reveal distribution characteristics" note from the spec.'
-  - 'Clean, reproducible, single-purpose script: seeded RNG, no unused imports, no
-    functions/classes, canvas exactly 3200x1800.'
+  - Correct Q-Q construction via scipy.stats.probplot with a properly derived 95%
+    pointwise confidence band (not just eyeballed)
+  - Bimodal blood-pressure data (normotensive + hypertensive cohorts) creates a genuine,
+    visible upper-tail deviation from normality — the plot demonstrates exactly the
+    distribution characteristics the spec calls out (S-curve/tail effects)
+  - Annotation calls out the hypertensive-cohort deviation, giving the chart a clear
+    focal point and story instead of a raw point cloud
+  - 'Clean theme-adaptive chrome: spines removed, subtle asymmetric grid (y=0.15,
+    x=0.06 alpha), legend styled with elevated background — both light and dark renders
+    are fully readable with identical data colors'
+  - Title format, axis labels ('Theoretical Quantiles' / 'Sample Quantiles'), and
+    legend labels match the specification exactly
   weaknesses:
-  - Dense clustering of roughly 40 overlapping points in the central quantile range
-    (theoretical quantile approx -0.5 to 0.7) makes individual points hard to distinguish
-    even with edge highlighting and alpha=0.75 — consider slightly reducing marker
-    size (e.g. s=70) in that region's visual weight or increasing edge contrast to
-    better separate the densest cluster.
-  - Design relies mostly on the CI band as its single distinguishing technique; DE-01/DE-02
-    could be pushed further with, e.g., a light annotation calling out the tail deviation
-    or the bimodal jump around quantile 0.5-0.7 to reinforce the diagnostic use case
-    named in the spec notes.
-  - Both x- and y-axis grids are drawn at identical alpha/color — functional but not
-    exceptional; a slightly more restrained grid (e.g. lighter x-grid since the diagonal
-    reference line already anchors horizontal reading) could refine the layout further.
+  - Scatter marker size (s=70) sits below the style guide's recommended 100-200 range
+    for a ~100-point dataset — points are visible but slightly smaller than optimal
+  - Annotation text (fontsize=7.5) is noticeably smaller than the rest of the chrome
+    and becomes borderline small when the PNG is scaled to a ~400px mobile thumbnail
+    — consider fontsize=9-10
+  - Distinctive matplotlib-specific features (e.g. fill_between for the CI band, annotate
+    with arrowprops) are used well but are easily replicated in other libraries —
+    nothing uniquely leverages matplotlib beyond common patterns
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with the #FAF8F1 light-theme target — not pure white, not dark.
-      Chrome: Title "qq-basic · python · matplotlib · anyplot.ai" in dark ink, centered at top, clearly readable. Axis labels "Theoretical Quantiles" (bottom) and "Sample Quantiles" (left, rotated) in dark ink, fully legible. Tick labels in soft dark gray, all readable. Subtle light-gray gridlines on both axes. Legend in the bottom-right on a lightly elevated panel with a visible border, listing "95% CI band" (green swatch) and "Reference line (y = x)" (dashed purple/magenta line swatch), text legible.
-      Data: Green (#009E73) scattered circles with background-colored edge rings tracing an S-shaped curve from roughly (-2.5, -1.9) through a dense cluster near the origin up to roughly (2.5, 2.7). A light, semi-transparent green confidence band envelopes the points, widening toward the tails. A dashed purple 45-degree reference line (y = x) runs through the band, clearly visible.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "qq-basic · python · matplotlib · anyplot.ai" in dark ink, clearly visible; "Theoretical Quantiles" / "Sample Quantiles" axis labels and tick labels in dark/soft-ink colors, all legible; subtle grid lines visible but unobtrusive; legend box (bottom right) with light elevated background, dark text, clearly readable.
+      Data: Green (#009E73) scatter points for sample quantiles with an alpha-blended green 95% CI band; a dashed purple/violet (#C475FD) 45-degree reference line; an annotation "Hypertensive cohort deviates from normal" with an arrow pointing to the upper-tail deviation caused by the hypertensive cohort. First series is correctly #009E73.
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with the #1A1A17 dark-theme target — not pure black, not light.
-      Chrome: Title and axis labels in light off-white ink, clearly readable against the dark background. Tick labels in light gray, all legible. Gridlines are subtle but visible, not dominant. Legend sits on a slightly elevated dark panel with a light-gray border and light-gray text, fully readable — no dark-on-dark failures anywhere.
-      Data: Identical green scatter points and dashed purple reference line as the light render — same hex values confirmed; only the CI band fill reads a bit more saturated against the black background while remaining recognizably the same green hue.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels rendered in light/soft off-white tones, clearly visible against the dark background; grid lines subtle but visible; legend box uses a dark elevated background with light text and border, readable.
+      Data: Same green (#009E73) scatter and CI band, same dashed purple (#C475FD) reference line — colors identical to the light render, confirming only chrome flipped. Annotation text renders in a light gray tone, clearly visible on dark, with a light-colored arrow — no dark-on-dark failure.
+      Legibility verdict: PASS — all text and data elements are readable against the dark background; no dark-on-dark text found.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,52 +58,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit, style-guide-matching font sizes (title 12pt, labels 10pt,
-          ticks/legend 8pt); readable against both theme backgrounds via INK/INK_SOFT
-          tokens.
+        comment: Explicit font sizes throughout; readable in both themes; annotation
+          at 7.5pt is a bit small at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text collisions; dense central point cluster overlaps somewhat
-          but is data-driven order-statistic clustering, not a text/label issue.
+        comment: Annotation, legend, and data cleanly separated, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: s=100 markers with alpha=0.75 and background-colored edge rings;
-          central cluster (n~100) is somewhat dense despite mitigation.
+        comment: Markers visible but s=70 is below the 100-200 guideline for ~100
+          points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. purple, not a red-green pairing; adequate contrast on both
-          surfaces.
+        comment: Green/purple contrast is CVD-safe, good alpha on overlapping CI band
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800px; title ~57% of width; no clipping or overflow.
+        comment: Balanced margins, plot fills a healthy majority of the canvas, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Theoretical Quantiles" / "Sample Quantiles" match the spec notes
-          exactly.'
+        comment: Descriptive 'Theoretical Quantiles' / 'Sample Quantiles' labels,
+          units not applicable to standardized quantiles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Scatter uses Imprint position 1 (#009E73), reference line uses position
-          2 (#C475FD); both theme backgrounds correct and consistent between renders.
+        comment: 'First series #009E73, reference line uses Imprint position 2, theme-correct
+          backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -115,23 +109,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 95% CI band with a properly derived order-statistic standard error,
-          zorder-layered composition, and edge-highlighted markers go beyond generic
-          scatter+line defaults.
+        comment: Thoughtful CI-band shading and annotation lift this clearly above
+          library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle dual-axis grid, theme-elevated legend
-          panel with border; solid but not exceptional refinement.
+        comment: Spines removed, asymmetric subtle grid, styled legend frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: CI band creates a clear pass/fail visual narrative for normality;
-          the bimodal cohort mixture produces a visible, meaningful S-curve deviation.
+        comment: Annotation explicitly calls out the hypertensive-cohort deviation
+          as the focal insight
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Q-Q plot construction via scipy.stats.probplot.
+        comment: Correct Q-Q plot with reference line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 45-degree reference line clearly visible, normal reference distribution
-          with params estimated from the standardized sample, plus a bonus CI band.
+        comment: 45-degree reference line present and clearly visible, all spec notes
+          satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theoretical quantiles on x, sample quantiles on y; full data range
-          shown.
+        comment: Theoretical quantiles on X, sample quantiles on Y, all points shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly "qq-basic · python · matplotlib · anyplot.ai"; legend
-          labels accurately describe both series.
+        comment: Title format exact match, legend labels match data ('95% CI band',
+          'Reference line (y = x)')
     data_quality:
       score: 15
       max: 15
@@ -172,21 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Scatter, reference line, and diagnostic confidence band all present.
+        comment: Bimodal mixture creates a visible upper-tail deviation, demonstrating
+          the distribution-characteristic use case from the spec
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Systolic blood pressure mixture (normotensive + hypertensive) is
-          plausible, neutral, and clinically motivated.
+        comment: Clinical blood-pressure scenario, neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: n=100 within the spec's recommended 30-500 range; realistic mmHg
-          values and spread.
+        comment: Normotensive/hypertensive means and SDs are physiologically plausible
     code_quality:
       score: 10
       max: 10
@@ -196,55 +186,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Linear imports/data/plot/save, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) fixes all randomness.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, scipy.stats — all used.
+        comment: os, matplotlib, numpy, scipy.stats all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the statistical content; no fake UI or
-          simulated interactivity.
+        comment: Clean, appropriately complex CI-band derivation, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with matching facecolor; no bbox_inches='tight'.
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight', current Axes API
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Axes-based API throughout; scipy.stats.probplot is the idiomatic
-          ecosystem approach for Q-Q quantile computation.
+        comment: Idiomatic Axes-based API (ax.scatter/plot/fill_between/annotate)
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Manually derived 95% pointwise CI band and background-colored marker
-          edges for overlap mitigation are distinctive touches beyond a bare Q-Q scatter.
+        comment: fill_between CI band + annotate with arrowprops are used well but
+          are common patterns, not uniquely matplotlib
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   - explicit-figure
