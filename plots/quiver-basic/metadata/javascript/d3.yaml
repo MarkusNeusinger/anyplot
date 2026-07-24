@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: quiver-basic
 created: '2026-07-24T18:27:10Z'
-updated: '2026-07-24T18:31:39Z'
+updated: '2026-07-24T18:44:03Z'
 generated_by: claude-sonnet
 workflow_run: 30116648727
 issue: 1014
@@ -12,78 +12,84 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
   - Physically motivated rotating-eddy vortex (u = -y·decay, v = x·decay with Gaussian
-    decay from the core) produces a visually compelling, oceanographically plausible
-    flow field
-  - Arrow color correctly encodes current magnitude using the Imprint sequential palette
-    (imprint_seq), with identical data colors between light and dark renders
+    decay from the core) reads clearly as counterclockwise rotation with speed peaking
+    mid-radius and decaying toward both the core and the far field
+  - 'Attempt-1 weaknesses fully addressed: near-core arrows now get a minimum shaft
+    length (minShaftLen) so low-magnitude vectors stay legible, a dashed radial guide
+    circle marks the eddy core''s decay radius for storytelling, and axis domain lines
+    were lightened (stroke-width 0.75, opacity 0.5) for visual refinement'
+  - Arrow color correctly encodes current magnitude with the Imprint sequential palette
+    (imprint_seq, green→blue), identical between light and dark renders; legend gradient
+    stops exactly match the interpolateRgbBasis scale used on the data
   - Square orientation correctly forced via equal x/y pixel scale (side = min(availW,
     availH)) so vector angles render undistorted
-  - Arrow length auto-scaled to ~85% of grid cell size, keeping arrows clearly visible
-    without overlap across the 15x15 grid
-  - Clean gridlines, unit-bearing axis labels, and a labeled magnitude legend (0 cm/s
-    to max cm/s) with matching gradient stops
+  - 225-arrow 15x15 grid with no overlap or crowding at any density level, confirmed
+    on close inspection of the eddy core, canvas edges, and corners
+  - Clean, deterministic, KISS-structured code with no fake interactivity, correct
+    mount-node contract, and no animation
   weaknesses:
-  - Near-core arrows (lowest magnitude, around the eddy center) are very short and
-    pale green, making their direction hard to read at a glance — consider a small
-    minimum arrow length so low-magnitude vectors stay legible
-  - Aesthetic treatment is competent but fairly standard for a D3 vector field (default
-    axis chrome, straightforward gradient legend) — a bit more visual hierarchy (e.g.
-    subtler axis domain lines, thinner grid) would push Design Excellence further
-  - Data storytelling relies entirely on color + arrow density to reveal the rotation;
-    a light annotation or radial guide at the eddy core could make the pattern even
-    more immediately legible
+  - Magnitude is non-monotonic with radius (peaks around r≈1.73km, decays both toward
+    the core and toward the domain edge), so the outer ring reads as 'weak' the same
+    way the core does — a subtle nuance a casual viewer could misread without extra
+    context; not a required fix but a nice-to-have for a future pass
+  - Title occupies roughly 40-45% of the square canvas width — legible and unclipped,
+    but there is headroom to grow it slightly for a stronger visual anchor if revisited
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), consistent across the full canvas, not pure white.
-      Chrome: Title "quiver-basic · javascript · d3 · anyplot.ai" in bold dark ink, centered top. Axis labels "Distance east of eddy core (km)" (x) and "Distance north of eddy core (km)" (y, rotated) in dark ink. Tick labels (-3..3 on both axes) dark and legible. Gridlines light gray, subtle but visible. Legend top-right: "Current speed" title, horizontal gradient swatch, "0 cm/s" / "1.1 cm/s" endpoint labels, all dark-on-light and readable.
-      Data: 225 arrows (15x15 grid) forming a clear circular rotation pattern (vortex) around the origin, with arrow length growing from the core outward then arrows shrinking again per the Gaussian decay. Color ranges from Imprint green (#009E73-ish, low magnitude near core and far edges) to blue (higher magnitude at mid-radius) via imprint_seq. Arrows are solid lines with filled triangular heads, clearly distinguishable from the background and from each other.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark-ink title "quiver-basic · javascript · d3 · anyplot.ai" centered at top. Dark axis labels "Distance east of eddy core (km)" / "Distance north of eddy core (km)" with legible tick labels -3..3 on both axes. Subtle light-gray reference grid at each integer tick. A dashed light-gray circle marks the eddy core's characteristic decay radius. All chrome text confirmed fully readable against the light background, no clipping at any edge (verified via close crops of top, bottom, left, and center regions).
+      Data: 15x15 grid (225 points) of arrows forming a clear counterclockwise vortex pattern around the origin. Arrows are colored from Imprint brand green (#009E73, low magnitude, near core and far field) to Imprint blue (#4467A3, higher magnitude, mid-radius) via the imprint_seq sequential scale. A gradient legend "Current speed" (0 cm/s – 1.1 cm/s) sits top-right with matching gradient stops. The exact stagnation point at the eddy core is marked with a small green dot; near-zero vectors elsewhere get a minimum shaft length so direction stays readable.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), consistent across the canvas, not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light/off-white ink, clearly legible against the dark background. Gridlines remain subtle (light gray-green, low opacity) but visible. Legend text and gradient swatch are legible with light labels on dark background — no dark-on-dark issues found anywhere (title, axis labels, tick labels, legend text all confirmed light-colored).
-      Data: Arrow colors are identical to the light render (green-to-blue imprint_seq gradient by magnitude) — only chrome (background, text, grid) flipped as expected. The vortex pattern reads with the same clarity as the light render.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink — clearly legible, no dark-on-dark issues anywhere (title, axis labels, tick labels, and legend text all confirmed light-colored on the dark surface). Gridlines and the dashed core-radius guide remain subtly visible without competing with the data.
+      Data: Arrow colors, positions, lengths, and the gradient legend are pixel-identical to the light render — only chrome (background, text, grid) flips between themes, confirming correct theme-adaptive implementation. The stagnation dot at the core is still the same brand green.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes
+        comment: All font sizes explicitly set (26px title, 18px axis labels, 14px
+          ticks, 13px legend); readable at full size in both themes; title fits without
+          clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, and arrows
+        comment: No overlap confirmed via close crops of core, edges, and corners
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Arrows well-sized for 15x15 density, but lowest-magnitude arrows
-          near the core are faint and hard to read
+        comment: Minimum shaft length fix resolved the prior attempt's faint near-core
+          arrows; 225 arrows well spaced with no crowding
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue scale, no red-green as sole signal
+        comment: Green-to-blue sequential scale, not red-green, good contrast against
+          both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 2400x2400 square canvas, nothing cut off, good proportions
+        comment: Plot area fills a well-balanced majority of the square canvas with
+          even margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -95,33 +101,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Uses imprint_seq for continuous magnitude encoding; theme-correct
-          backgrounds in both renders
+        comment: 'imprint_seq correctly used for single-polarity magnitude data, first
+          stop is #009E73, identical data colors across themes, theme-correct backgrounds'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Physically motivated data and magnitude-based color show real thought,
-          but overall treatment is fairly standard
+        passed: false
+        comment: Physically motivated color-coded vortex shows real thought, but overall
+          chrome/legend treatment remains fairly standard
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid and generous margins; axis domain lines and grid could
-          be lighter for more polish
+        comment: Axis domain lines lightened per prior feedback (stroke-width 0.75,
+          opacity 0.5), subtle grid, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Vortex rotation is clearly visible via arrow direction and color;
-          no additional guide to emphasize the core
+        comment: New dashed radial guide circle at the core decay radius plus magnitude
+          coloring gives a clear, immediate read of the vortex structure
     spec_compliance:
       score: 15
       max: 15
@@ -131,49 +137,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct quiver plot: arrows at grid points with direction and length'
+        comment: Correct quiver plot with arrows at grid points
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Uniform grid, no overlap, scaled arrows, optional magnitude coloring
-          all present
+        comment: x, y, u, v grid; uniform spacing; scaled arrow length; magnitude
+          color encoding all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y grid positions and u/v vector components correctly mapped
+        comment: X/Y correctly mapped, full domain shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend clearly labeled 'Current speed'
+        comment: Title matches mandated format exactly; legend labels correct
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows direction, magnitude, and spatial variation across the full
-          grid
+        comment: Shows full magnitude range including the near-zero stagnation point
+          and the peak mid-radius band
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ocean-current eddy is plausible and neutral
+        comment: Neutral oceanographic eddy/current-survey scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Domain (3 km) and speed (0-1.1 cm/s) are sensible for a coastal eddy
+        comment: Plausible values and proportions for a coastal current survey
     code_quality:
       score: 10
       max: 10
@@ -183,31 +189,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, no functions/classes
+        comment: 'Clean top-to-bottom flow: data, layout, scales, draw'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic math, no randomness
+        comment: Fully deterministic formula, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global used
+        comment: Only the d3 global used, no unused code
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for arrowhead geometry; no fake interactivity
+        comment: No fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract, no animation, sized from ANYPLOT_SIZE
+        comment: Correct mount-node contract, no animation, single svg appended
     library_mastery:
       score: 7
       max: 10
@@ -217,23 +223,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper d3 join/scale/axis patterns
+        comment: Correct use of d3 scales, axis generators, and data joins; per-arrow
+          compound marks via .each is a common but not the most vectorized D3 pattern
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom arrowhead trigonometry and density-aware length scaling go
-          beyond a generic template
+        comment: Manual arrowhead trigonometry and cell-density-aware length scaling
+          are D3-specific low-level SVG techniques not easily replicated in higher-level
+          chart libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
+  - alpha-blending
   - gradient-fill
