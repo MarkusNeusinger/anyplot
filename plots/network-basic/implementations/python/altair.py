@@ -1,13 +1,27 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
-Library: altair 6.1.0 | Python 3.14.4
-Quality: 65/100 | Updated: 2026-04-27
+Library: altair 6.2.2 | Python 3.13.12
+Quality: 65/100 | Updated: 2026-07-24
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme-adaptive chrome tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette (first 4 slots, canonical order — groups are abstract)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Set seed for reproducibility
 np.random.seed(42)
@@ -120,7 +134,9 @@ for src, tgt in edges:
     degrees[src] += 1
     degrees[tgt] += 1
 
-# Create nodes dataframe
+# Create nodes dataframe. label_y alternates the label's vertical offset by
+# node id parity so labels of adjacent, densely-packed nodes (e.g. the
+# Group D chain) don't collide with each other.
 nodes_df = pd.DataFrame(
     [
         {
@@ -129,6 +145,7 @@ nodes_df = pd.DataFrame(
             "group": node["group"],
             "x": pos[node["id"]][0],
             "y": pos[node["id"]][1],
+            "label_y": pos[node["id"]][1] - (0.048 if node["id"] % 2 == 0 else 0.085),
             "degree": degrees[node["id"]],
         }
         for node in nodes
@@ -141,13 +158,10 @@ edges_df = pd.DataFrame(
     + [{"edge_id": i, "x": pos[tgt][0], "y": pos[tgt][1], "order": 1} for i, (_, tgt) in enumerate(edges)]
 )
 
-# Define group colors (Python Blue, Python Yellow, and colorblind-safe complementary)
-group_colors = ["#306998", "#FFD43B", "#4CAF50", "#FF7043"]
-
-# Draw edges as lines
+# Draw edges as lines (muted, theme-adaptive — structural, not data-categorical)
 edges_chart = (
     alt.Chart(edges_df)
-    .mark_line(strokeWidth=2.5, opacity=0.4, color="#888888")
+    .mark_line(strokeWidth=1.5, opacity=0.45, color=INK_MUTED)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-0.05, 1.05]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.05, 1.05]), axis=None),
@@ -156,39 +170,68 @@ edges_chart = (
     )
 )
 
-# Draw nodes as points (size based on degree)
+# Draw nodes as points (size based on degree; PAGE_BG stroke halos each node
+# against overlapping edges/labels and stays correct in both themes)
 nodes_chart = (
     alt.Chart(nodes_df)
-    .mark_circle(stroke="#333333", strokeWidth=2, opacity=0.9)
+    .mark_circle(stroke=PAGE_BG, strokeWidth=3, opacity=0.95)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-0.05, 1.05]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.05, 1.05]), axis=None),
-        size=alt.Size("degree:Q", scale=alt.Scale(domain=[2, 6], range=[600, 1800]), legend=None),
+        size=alt.Size("degree:Q", scale=alt.Scale(domain=[2, 6], range=[150, 450]), legend=None),
         color=alt.Color(
             "group:N",
-            scale=alt.Scale(domain=["Group A", "Group B", "Group C", "Group D"], range=group_colors),
-            legend=alt.Legend(title="Communities", titleFontSize=18, labelFontSize=16, symbolSize=400),
+            scale=alt.Scale(domain=["Group A", "Group B", "Group C", "Group D"], range=IMPRINT_PALETTE[:4]),
+            legend=alt.Legend(title="Communities", symbolSize=300),
         ),
         tooltip=["label:N", "group:N", "degree:Q"],
     )
 )
 
-# Draw node labels
+# Draw node labels (label_y already carries the anti-collision offset)
 labels_chart = (
     alt.Chart(nodes_df)
-    .mark_text(fontSize=12, fontWeight="bold", color="#222222")
-    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="label:N")
+    .mark_text(fontSize=16, fontWeight="bold", color=INK)
+    .encode(x=alt.X("x:Q"), y=alt.Y("label_y:Q"), text="label:N")
 )
 
-# Combine layers
+# Combine layers with theme-adaptive chrome
 chart = (
     (edges_chart + nodes_chart + labels_chart)
     .properties(
-        width=1600, height=900, title=alt.Title("Social Network · network-basic · altair · pyplots.ai", fontSize=28)
+        width=620,  # inner-view — see prompts/library/altair.md "Canvas — hard rule"
+        height=320,
+        background=PAGE_BG,
+        title=alt.Title("network-basic · python · altair · anyplot.ai", fontSize=16),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, continuousWidth=620, continuousHeight=320)
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+    )
 )
 
 # Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+# Pad the saved PNG up to the exact canonical target (3200x1800). Never crop —
+# cropping would clip title/legend text at the edges. See "Canvas" in
+# prompts/library/altair.md.
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
