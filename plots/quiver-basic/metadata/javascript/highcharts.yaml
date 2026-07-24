@@ -1,0 +1,254 @@
+library: highcharts
+language: javascript
+specification_id: quiver-basic
+created: '2026-07-24T18:18:24Z'
+updated: '2026-07-24T18:35:12Z'
+generated_by: claude-sonnet
+workflow_run: 30115986434
+issue: 1014
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Registers a custom Highcharts SVGRenderer symbol (`quiverArrowhead`) and rotates
+    it per-vector via `rotation`/`rotationOriginX/Y` — a genuinely idiomatic, library-distinctive
+    technique for oriented markers, not a generic hand-drawn path
+  - Magnitude-to-color continuous encoding correctly uses `imprint_seq` (brand green
+    -> blue via `t.seq[0]`/`t.seq[1]`), interpolated per-vector and identical across
+    light/dark renders
+  - Arrow length is auto-scaled so the longest vector spans ~90% of grid spacing (`ARROW_SCALE`),
+    guaranteeing no overlap between neighboring arrows regardless of field strength
+  - 'Deterministic vortex/eddy formula (u = -y + 0.2x, v = x + 0.2y) gives full feature
+    coverage: circular rotation plus outward drift, near-zero magnitude at the core
+    rising to a clear maximum at the edges'
+  - Hand-drawn magnitude colorbar (segmented rect gradient + min/max labels + '‖v‖'
+    title) is cleanly integrated into the reserved right margin with theme-adaptive
+    ink colors
+  weaknesses:
+  - X-axis has no vertical gridlines while the Y-axis shows horizontal ones (gridLineColor
+    set on both axes but only yAxis gridlines are visible in the render) — add matching
+    xAxis grid rendering for a balanced, symmetric grid on this scatter-like plot
+  - Axis titles 'Grid X' / 'Grid Y' are fairly generic — consider a slightly more
+    descriptive label (e.g. referencing spatial position) even though the idealized
+    field has no physical units to attach
+  - The magnitude colorbar only labels the two endpoints (0 and 8.7) — one or two
+    intermediate tick values would make the color-to-magnitude mapping easier to read
+    at a glance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "quiver-basic · javascript · highcharts · anyplot.ai" at top, gray subtitle below it describing the vortex/eddy field and magnitude encoding. "Grid X" / "Grid Y" axis titles and -7..7 tick labels in muted dark gray, all crisp against the light background. Subtle horizontal gridlines from the Y-axis. Magnitude colorbar on the right labeled "‖v‖" with "8.7" (max) and "0" (min) in soft dark gray text.
+      Data: 144 arrows (12x12 grid) forming a clear circular vortex with outward drift — arrows point counter-clockwise, near-invisible at the core (magnitude ~0) and largest/fastest at the outer ring. Color runs from teal-green (#009E73-ish, low magnitude) to blue (#4467A3-ish, high magnitude), matching imprint_seq. Custom triangular arrowheads are rotated to match each vector's angle. No arrow overlaps any neighbor.
+      Legibility verdict: PASS — all text (title, subtitle, axis labels, tick labels, colorbar labels) is clearly readable against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/subtitle now rendered in near-white and light-gray respectively, fully legible. Axis titles and tick labels rendered in a light gray that reads clearly against the dark surface. Gridlines remain subtle and visible. Colorbar labels ("‖v‖", "8.7", "0") are light-colored and legible.
+      Data: Identical vortex/eddy pattern and identical arrow colors (teal-green to blue) as the light render — only the chrome (background, text, grid) flipped, confirming data-color consistency across themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/colorbar text is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, subtitle 14px, axis titles
+          16px, tick/colorbar labels 14px/12px); fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 144 arrows scaled to 90% of grid spacing prevent any overlap; no
+          text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Arrows with custom rotated arrowheads clearly visible; sizing adapts
+          to a 12x12 (144-point) grid
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue imprint_seq gradient has good contrast against both
+          surfaces; no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas well utilized; colorbar cleanly reserved in right margin;
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: '''Grid X''/''Grid Y'' are descriptive but lack units (no physical
+          units apply to the idealized field, but labels remain generic)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous magnitude correctly uses imprint_seq (t.seq[0]->t.seq[1]);
+          identical data colors across themes; backgrounds theme-correct
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Fully custom-drawn vector field with rotated arrowhead symbol and
+          continuous magnitude coloring — clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No chart junk, subtle single-axis gridlines, generous whitespace,
+          clean colorbar integration
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color+magnitude encoding highlights the intensifying flow away from
+          the vortex core, guiding the viewer to the field's structure
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct quiver plot: arrows at grid points with direction + magnitude'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Uniform arrow spacing, scaled arrow length, mathematical vortex function,
+          optional magnitude-color encoding — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y grid and u/v vector components correctly mapped; full range shown
+          on both axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches exact mandated format; colorbar substitutes for a legend
+          and is clearly labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows rotation, outward drift, near-zero core, and max-magnitude
+          edge all in one field
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible atmospheric/ocean eddy scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and proportions consistent with the described idealized flow
+          field
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear imports->data->chart, but a few small helper arrow
+          functions (hexToRgb, colorForMagnitude) are used
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic formula-based data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for drawing a vector field the core bundle
+          has no series type for; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract; animation disabled on chart and
+          series
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses renderer.symbol registry, toPixels(), and the chart render event
+          idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom SVGRenderer symbol registration + rotation transform is a
+          Highcharts-specific mechanism not easily replicated elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
