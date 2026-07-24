@@ -61,25 +61,37 @@ const radiusScale = d3
 for (const d of nodes) d.radius = radiusScale(degree.get(d.id));
 
 // --- Layout: force simulation, ticked to convergence (no animation) --------
-// The four social circles are bridged in a ring (0-1, 1-2, 2-3, 3-0), so
-// anchoring each group toward its own canvas corner lets that ring fill the
-// full square instead of collapsing into a single elongated chain.
+// The four social circles are bridged in a ring (0-1, 1-2, 2-3, 3-0). Anchoring
+// each group near its own canvas corner (with a strong pull) and stretching the
+// bridge links (longer distance, weaker strength than intra-group links) lets
+// that ring stretch out to the full square instead of collapsing into a tight
+// diagonal band through the center.
 const groupAnchor = [
-  { x: iw * 0.25, y: ih * 0.22 },
-  { x: iw * 0.75, y: ih * 0.22 },
-  { x: iw * 0.75, y: ih * 0.72 },
-  { x: iw * 0.25, y: ih * 0.72 },
+  { x: iw * 0.12, y: ih * 0.14 },
+  { x: iw * 0.88, y: ih * 0.14 },
+  { x: iw * 0.88, y: ih * 0.86 },
+  { x: iw * 0.12, y: ih * 0.86 },
 ];
+const groupById = new Map(nodes.map((d) => [d.id, d.group]));
+const sameGroup = (d) => {
+  const s = typeof d.source === "object" ? d.source.group : groupById.get(d.source);
+  const target = typeof d.target === "object" ? d.target.group : groupById.get(d.target);
+  return s === target;
+};
 const simulation = d3
   .forceSimulation(nodes)
   .force(
     "link",
-    d3.forceLink(links).id((d) => d.id).distance(95).strength(0.6),
+    d3
+      .forceLink(links)
+      .id((d) => d.id)
+      .distance((d) => (sameGroup(d) ? 90 : 280))
+      .strength((d) => (sameGroup(d) ? 0.6 : 0.22)),
   )
-  .force("charge", d3.forceManyBody().strength(-260))
-  .force("x", d3.forceX((d) => groupAnchor[d.group].x).strength(0.15))
-  .force("y", d3.forceY((d) => groupAnchor[d.group].y).strength(0.15))
-  .force("collide", d3.forceCollide((d) => d.radius + 20))
+  .force("charge", d3.forceManyBody().strength(-280))
+  .force("x", d3.forceX((d) => groupAnchor[d.group].x).strength(0.25))
+  .force("y", d3.forceY((d) => groupAnchor[d.group].y).strength(0.25))
+  .force("collide", d3.forceCollide((d) => d.radius + 12))
   .stop();
 for (let i = 0; i < 400; i++) simulation.tick();
 
@@ -130,7 +142,7 @@ g.selectAll("text.node-label")
   .attr("y", (d) => d.y + d.radius + 16)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "15px")
   .text((d) => d.id);
 
 // --- Legend (social circles) -----------------------------------------------
