@@ -2,12 +2,17 @@ name: "Auto-update PR branches"
 run-name: "Auto-update PR branches after push to ${{ github.ref_name }}"
 
 # When `main` advances, update every open PR that has auto-merge enabled
-# and is BEHIND. Without this, the strict required-status-checks policy
-# (`strict_required_status_checks_policy: true` on the `main` ruleset)
-# blocks the auto-merge button forever — auto-merge fires only when checks
-# are green AND the head is up-to-date with the base, but it does not
-# update the branch on its own. This workflow closes that gap so polish /
-# impl PRs squash-merge themselves end-to-end.
+# and is BEHIND, so polish / impl PRs squash-merge themselves end-to-end
+# without manual "Update branch" clicks.
+#
+# NOTE (verified 2026-07-24): the `main` ruleset currently sets
+# `strict_required_status_checks_policy: false`, so an up-to-date head is
+# NOT actually required to merge. This file used to claim the opposite.
+# That means every update-branch call is optional work which also
+# invalidates the green checks on the previous head and forces a full CI
+# re-run. Retiring this workflow is worth evaluating — see #9675; it is
+# kept for now because the ruleset could be tightened again, and because
+# behaviour changes here affect every auto-merge PR in the repo.
 #
 # Why we don't use GitHub's native merge queue: this repository is
 # user-owned and merge_queue rules are not available on the account's
@@ -62,9 +67,41 @@ jobs:
             --limit 200 \
             --json number,title,headRefName,autoMergeRequest)
 
+          # Skip Dependabot branches. Updating them here is actively
+          # harmful: the update-branch merge commit is authored by
+          # github-actions[bot], and GitHub gates every workflow run
+          # triggered by that push behind manual approval
+          # ("action_required"). Because `main` advances every few minutes
+          # while the impl pipeline merges, the branch is re-updated long
+          # before anyone can approve — so CI never completes and
+          # auto-merge can never fire. PR #9674 accumulated 174 runs in
+          # 22 h that way: 162 action_required (github-actions[bot]) vs.
+          # only 4 green (dependabot[bot], from the original push).
+          #
+          # Leaving them alone is safe because the `main` ruleset is NOT
+          # strict (see the header) — a Dependabot PR merges while behind,
+          # so it never needs this update at all. It is explicitly NOT safe
+          # to assume Dependabot re-syncs them for us: Dependabot rebases on
+          # conflict / schedule / reopen, not on "merely behind", and it
+          # stops rebasing a PR entirely once a foreign commit is pushed to
+          # the branch. A branch already poisoned by such a commit stays
+          # stuck until someone comments `@dependabot recreate`.
           CANDIDATES=$(echo "$PRS" | jq -c '
-            [ .[] | select(.autoMergeRequest != null) ]
+            [ .[]
+              | select(.autoMergeRequest != null)
+              | select(.headRefName | startswith("dependabot/") | not)
+            ]
           ')
+
+          SKIPPED=$(echo "$PRS" | jq '
+            [ .[]
+              | select(.autoMergeRequest != null)
+              | select(.headRefName | startswith("dependabot/"))
+            ] | length
+          ')
+          if [[ "$SKIPPED" -gt 0 ]]; then
+            echo "::notice::Skipping $SKIPPED Dependabot PR(s) — Dependabot rebases those itself (see comment above)"
+          fi
 
           COUNT=$(echo "$CANDIDATES" | jq 'length')
           echo "::notice::Found $COUNT open PR(s) with auto-merge enabled"

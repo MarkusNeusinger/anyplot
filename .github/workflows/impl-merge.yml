@@ -47,7 +47,26 @@ jobs:
         run: |
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             PR_NUM="$INPUT_PR_NUMBER"
-            PR_DATA=$(gh pr view "$PR_NUM" --repo "$GH_REPO" --json headRefName,labels)
+            # Retry gh pr view — an unretried call here stranded an already
+            # ai-approved PR (#9742) when the GitHub GraphQL API returned
+            # HTTP 504 during the 2026-07-24 API brown-out. `bash -e` turned
+            # the blip into a permanently unmerged PR. Same 3x/linear-backoff
+            # shape as impl-review.yml's "Extract PR info".
+            PR_DATA=""
+            for attempt in 1 2 3; do
+              if gh pr view "$PR_NUM" --repo "$GH_REPO" --json headRefName,labels > /tmp/pr.json 2> /tmp/pr.err; then
+                PR_DATA=$(cat /tmp/pr.json)
+                break
+              fi
+              echo "::warning::gh pr view failed (attempt ${attempt}/3): $(cat /tmp/pr.err)"
+              if [ "$attempt" -lt 3 ]; then
+                sleep $((attempt * 5))
+              fi
+            done
+            if [ -z "$PR_DATA" ]; then
+              echo "::error::gh pr view failed after 3 attempts for PR #${PR_NUM}"
+              exit 1
+            fi
             BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName')
             HAS_APPROVED=$(echo "$PR_DATA" | jq -r '[.labels[].name] | any(. == "ai-approved")')
           else
@@ -223,6 +242,21 @@ jobs:
 
           for attempt in $(seq 1 $MAX_ATTEMPTS); do
             echo "::notice::Merge attempt $attempt/$MAX_ATTEMPTS"
+
+            # Re-read state first so a lost response is a no-op rather than a
+            # half-finished merge: `gh pr merge` can succeed server-side and
+            # still return 5xx, after which every later attempt fails with
+            # "already merged" and the step exits 1. Because all post-merge
+            # steps are gated on `should_run == 'true'` (implicit success()),
+            # that skipped GCS promotion, the impl:{lib}:done label, closing
+            # the issue and the Postgres sync — a merged PR with none of the
+            # bookkeeping, exactly the silent partial completion CLAUDE.md
+            # warns about for manually merged PRs.
+            STATE=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" --json state -q .state 2>/dev/null || echo "")
+            if [ "$STATE" = "MERGED" ]; then
+              echo "::notice::PR #${PR_NUM} is already merged — continuing to post-merge steps"
+              exit 0
+            fi
 
             # Update branch before merge attempt
             gh pr update-branch "$PR_NUM" --repo "$REPOSITORY" 2>/dev/null || true

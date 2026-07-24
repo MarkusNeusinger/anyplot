@@ -129,6 +129,46 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **A GitHub API brown-out could strand implementation PRs permanently — the hand-off calls
+  are now retried** — on 2026-07-24 (~16:05–16:26 UTC) GitHub returned HTTP 502 on the
+  workflow-dispatch endpoint and HTTP 504 on GraphQL, and four `radar-basic` PRs fell out of
+  the pipeline: #9742 was already `ai-approved` but `impl-merge`'s condition check died on a
+  `gh pr view` (so it never merged), and #9744/#9749/#9751 were `ai-rejected` but their
+  `impl-repair` dispatch never landed. `impl-review`'s verdict step is the pipeline's only
+  hand-off point — every downstream workflow starts from a call made there — so an unretried
+  blip did not merely fail a step, it left a PR with a verdict label and nothing listening.
+  All API calls in that step and in `impl-merge`'s condition check now retry 3× with linear
+  backoff, and the repair dispatch is issued *before* the attempt label so a label problem can
+  never suppress it. If the dispatch still exhausts its retries, the step now drops the
+  `ai-rejected` label on the way out: `ai-rejected` + `ai-attempt-N` matches no watchdog case,
+  whereas the label-less state is exactly Case 2, which re-dispatches the repair at the right
+  attempt number (#9675).
+- **The 4th repair attempt was silently dead — `ai-attempt-4` never existed as a label** — the
+  attempt label is what encodes the cascading review threshold (90 → 80 → 70 → 60 → 50), but
+  the repo only ever had `ai-attempt-1..3`, so on the 4th repair the add failed every time and
+  was swallowed by `|| true` (PRs #7268/#7039 reached "Repair Attempt 4/4" carrying only
+  `ai-attempt-1..3`). Every 4th review therefore re-applied the ≥ 90 attempt-0 bar, and the
+  "all attempts exhausted" branch — which closes the PR and removes the stale implementation —
+  could never be reached. The label is now created on demand (#9675).
+- **A merged implementation PR could end up with none of its bookkeeping** — `impl-merge`'s
+  5× merge retry re-invoked `gh pr merge` without re-reading state, so a merge that succeeded
+  server-side but lost its HTTP response failed four more times with "already merged" and then
+  exited 1. All post-merge steps are gated on `should_run == 'true'` (implicit `success()`), so
+  GCS promotion, the `impl:{lib}:done` label, closing the issue and the Postgres sync were all
+  skipped on an already-merged PR — the silent partial completion CLAUDE.md warns about. The
+  loop now checks for `MERGED` first and continues to the post-merge steps (#9675).
+- **Dependabot PRs could never merge while the plot pipeline was running** —
+  `auto-update-pr-branches.yml` called `update-branch` on Dependabot PRs too, but that push is
+  authored by `github-actions[bot]` and GitHub gates every workflow run it triggers behind
+  manual approval (`action_required`). Because `main` advances every few minutes while impl PRs
+  merge, each branch was re-updated long before anyone could approve, so CI never completed and
+  auto-merge never fired: PR #9674 accumulated 174 runs in 22 h — 162 `action_required` against
+  only 4 green (the original `dependabot[bot]` push). Dependabot branches are now skipped.
+  They merge fine while behind (the `main` ruleset is not strict — the file's header claimed
+  otherwise and has been corrected), and branches already poisoned by such a commit need a
+  one-time `@dependabot recreate`, since Dependabot stops rebasing a branch once a foreign
+  commit lands on it. `/dependabot`'s playbook told operators to run that same harmful
+  `update-branch` by hand and now says the opposite (#9675).
 - **anyplot.ai white-screen outage (2026-07-23, ~22:15–23:00 UTC): vite pinned back to
   8.0.16** — the npm-minor Dependabot group (#9657) bumped vite 8.0.16 → 8.1.5, whose rolldown
   1.1.5 bundler emits a broken `mui`/`@emotion` chunk under our `manualChunks` split; the
