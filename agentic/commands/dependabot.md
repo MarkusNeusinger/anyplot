@@ -20,11 +20,21 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
 2. Per PR, in order:
    - Checks green → `gh pr merge <num> --auto --squash`.
    - Checks pending on an up-to-date branch → enable auto-merge anyway; it fires when green.
-   - **BEHIND branch**: update it via `gh api -X PUT repos/{owner}/{repo}/pulls/<num>/update-branch`
-     (the installed `gh` has no `pr update-branch` subcommand). **Gotcha:** branch updates pushed
-     with `GITHUB_TOKEN` (incl. `auto-update-pr-branches.yml`) do NOT trigger required checks —
-     if checks stay `expected`/missing after the update, disable auto-merge, then
-     `gh pr close <num> && gh pr reopen <num>` to re-trigger them.
+   - **BEHIND branch**: leave it alone. BEHIND does not block the merge — the `main` ruleset is
+     not strict (`strict_required_status_checks_policy: false`), so auto-merge fires on a behind
+     branch. **Never** run `gh api -X PUT .../pulls/<num>/update-branch` on a Dependabot PR: the
+     resulting merge commit is authored by `github-actions[bot]`, GitHub then gates that head's
+     workflow runs behind manual approval (`action_required`, so the checks never report), and
+     Dependabot permanently stops rebasing a branch once a foreign commit lands on it. PR #9674
+     burned 174 runs in 22 h this way. `auto-update-pr-branches.yml` skips Dependabot branches
+     for the same reason (#9772).
+   - **Already poisoned** (head commit authored by `github-actions[bot]`, checks stuck at
+     `action_required`): approve the gated runs once —
+     `gh api -X POST repos/{owner}/{repo}/actions/runs/<id>/approve`. Approved runs do report
+     the required contexts on a bot-authored head (verified on #9674), and since
+     `auto-update-pr-branches.yml` no longer touches these branches the head now stays put, so
+     one approval is enough. `@dependabot recreate` also works and additionally restores a
+     clean `dependabot[bot]` head, but it re-resolves the versions.
    - `mergeStateStatus` is computed async — after any update, poll it a few seconds until it
      stabilizes before deciding (UNKNOWN → BEHIND/CLEAN/BLOCKED).
 3. A dep bump breaking tests/config (e.g. a major with changed exports): consult **Context7**
