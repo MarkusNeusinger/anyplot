@@ -1,0 +1,266 @@
+library: muix
+language: javascript
+specification_id: qq-basic
+created: '2026-07-24T07:19:55Z'
+updated: '2026-07-24T07:26:47Z'
+generated_by: claude-sonnet
+workflow_run: 30074710564
+issue: 977
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/muix/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Statistically rigorous Q-Q construction: Blom plotting positions ((i-0.375)/(n+0.25)),
+    an accurate inverse-normal CDF (Acklam''s rational approximation), and z-score
+    standardization ensure a perfectly Normal sample would land exactly on y = x.'
+  - Deliberately right-skewed lognormal sample data clearly demonstrates the spec's
+    core teaching point — the upper-tail points visibly bow away from the diagonal,
+    a textbook skew signature.
+  - 'Idiomatic MUI X composition: builds the chart from ChartContainer + ScatterPlot
+    + ChartsGrid + axis components instead of the monolithic ScatterChart, and uses
+    useXScale/useYScale hooks to inject a scale-synced y = x reference line — a genuinely
+    library-distinctive technique that would need real replumbing in another library.'
+  - 'Clean theme handling: title, subtitle, axis labels, tick labels, grid, and reference
+    line all read theme tokens (t.ink, t.inkSoft, t.pageBg) so both light and dark
+    renders are fully legible with no dark-on-dark / light-on-light failures.'
+  - Thoughtful typographic hierarchy plus a descriptive subtitle that narrates the
+    statistical finding ('upper-tail curvature reveals right skew'), giving the plot
+    a clear focal point without needing per-point annotations.
+  - Clean L-frame spine masking (background-colored overlay lines) removes the top/right
+    spines without leaving artifacts, and margins/whitespace are balanced with no
+    clipped or crowded elements.
+  weaknesses:
+  - In the dense central cluster (roughly theoretical quantiles -1.0 to +0.5) the
+    markerSize=9 scatter points touch and merge into solid blobs with no way to tell
+    individual points apart — reduce marker size slightly or add opacity (alpha ~0.7-0.85)
+    / a subtle white stroke (edgecolors) so overlapping points stay distinguishable,
+    per the style guide's overlapping-marker guidance.
+  - The mandated title renders comfortably small (~35-40% of plot width) at fontsize=22
+    — well under the ~70-85% typically expected for the full 67-character mandated
+    string; a slightly larger title fontsize would better anchor the page hierarchy
+    (minor, not a legibility failure).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), consistent with the required light-theme surface — not pure white.
+      Chrome: Bold dark title "qq-basic · javascript · muix · anyplot.ai" centered at top, with a smaller gray-brown subtitle underneath ("Order fulfillment time (n = 60, standardized) vs. Normal — upper-tail curvature reveals right skew"). Axis titles "Theoretical Quantiles" (x) and "Sample Quantiles" (y) and all tick labels render in dark/soft-dark ink, fully legible. Subtle warm-gray grid lines run both horizontally and vertically. Top and right spines are cleanly masked (no visible border), leaving an implicit L-frame. A dashed gray diagonal (y = x) reference line runs corner to corner with a caption "– – – y = x (perfect Normal fit)" in the upper right, positioned with clear space above the nearest data point (no overlap).
+      Data: 60 solid brand-green (#009E73) circular markers trace the sample quantiles against theoretical quantiles. The markers sit almost exactly on the diagonal through the middle of the range and curve visibly above the line in the upper-right tail, correctly visualizing right skew. In the dense central cluster (theoretical quantiles roughly -1.0 to +0.5) many markers touch/overlap and merge into a continuous blob since no alpha or edge-stroke was applied to separate them.
+      Legibility verdict: PASS — all text (title, subtitle, axis titles, tick labels, reference-line caption) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), consistent with the required dark-theme surface — not pure black.
+      Chrome: Same title/subtitle/axis-title/tick-label layout as the light render, now rendered in light ink (white/near-white title, light-gray subtitle and tick labels) — fully legible against the dark background, no dark-on-dark failures anywhere. Grid lines are a subtle light-gray at low opacity, visible but not competing with the data. The dashed y = x reference line and its caption remain clearly visible in light gray, same position, same clear spacing from the nearest marker.
+      Data: The same 60 markers are rendered in the identical brand green (#009E73) as the light render — confirmed unchanged between themes, only the chrome (background, text, grid) flipped. The same central-cluster overlap issue is present here as well (inherent to the data/marker size, not theme-dependent).
+      Legibility verdict: PASS — every chrome element (title, subtitle, axis titles, tick labels, reference-line caption) is clearly readable against the dark background; no dark-on-dark issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, subtitle/caption 14, axis
+          labels 16, ticks 14); fully readable in both themes with no overflow. Title
+          renders notably smaller than the typical 70-85% width for the mandated string
+          — not a legibility failure, just conservative sizing.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-to-text or text-to-data collisions; reference-line caption
+          sits with clear margin above the nearest marker.
+      - id: VQ-03
+        name: Element Visibility
+        score: 3
+        max: 6
+        passed: true
+        comment: Overall trend and curvature are clearly visible, but markers in the
+          dense central cluster touch and merge into blobs, obscuring individual points.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: Single brand-green series has good contrast on both surfaces, but
+          no alpha/edge-stroke was applied to separate overlapping same-color markers
+          in the dense cluster.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins; nothing clipped
+          or cut off; top/right spines cleanly masked.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis labels exactly match spec wording ('Theoretical Quantiles' /
+          'Sample Quantiles'); standardized quantiles correctly carry no units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73 in both renders; backgrounds are
+          #FAF8F1 light / #1A1A17 dark; chrome fully theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate typographic hierarchy, custom subtitle narrating the finding,
+          and hand-masked L-frame spines are clearly above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, grid subtle, whitespace generous — but the unstroked
+          overlapping markers in the center are an unpolished detail.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Deliberate right-skewed data choice plus the reference line make
+          the insight immediately visible, reinforced by a subtitle that names the
+          exact finding.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Q-Q plot with visible diagonal reference line.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reference line, quantile matching, and skew-revealing deviation all
+          present per spec notes.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Theoretical quantiles on x, sample quantiles on y, matching conventional
+          Q-Q orientation and spec's axis-label note.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the exact mandated format; single-series legend correctly
+          omitted per style-guide guidance, with the diagonal captioned directly instead.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Sample is deliberately non-normal, producing a clear, textbook right-skew
+          deviation exactly as the spec's 'Notes' section describes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Order-fulfillment-time QC scenario is realistic, neutral, and directly
+          matches one of the spec's listed applications.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standardized quantile range (~-2.6 to 3.0) is exactly what's expected
+          for n=60 draws from a standard Normal comparison.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom structure; helper functions (lcg, randn, invNorm)
+          are necessary given no seeded RNG/inverse-normal in the browser, not over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed (42) LCG makes the sample fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import (ChartContainer, ScatterPlot, ChartsXAxis/YAxis, ChartsGrid,
+          useXScale/useYScale) is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for the statistics involved; no fake UI or
+          simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exports the Chart component per the muix harness contract;
+          skipAnimation set on ScatterPlot.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the modular ChartContainer composition (ScatterPlot + ChartsGrid
+          + axis components) rather than the monolithic ScatterChart, MUI X's recommended
+          pattern for custom overlays.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: useXScale/useYScale hooks inject a custom scale-synced SVG reference
+          line — a technique unique to MUI X's component model, not trivially portable
+          to another library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
