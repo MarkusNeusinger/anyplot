@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
-Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 85/100 | Created: 2026-04-27
+Library: plotnine 0.15.7 | Python 3.13.12
+Quality: pending | Updated: 2026-07-24
 """
 
 import os
@@ -139,7 +139,7 @@ for i, node in enumerate(nodes):
     positions[i] = quadrant_centers[node["group"]] + np.random.randn(2) * 0.12
 
 # Vectorized Fruchterman-Reingold spring layout
-k = 0.45
+k = 0.52
 for iteration in range(200):
     diff = positions[:, None, :] - positions[None, :, :]  # (n, n, 2)
     dist = np.linalg.norm(diff, axis=2, keepdims=True).clip(0.01)
@@ -192,12 +192,12 @@ top_hub = node_df.loc[node_df["degree"].idxmax()]
 plot = (
     ggplot()
     + geom_segment(
-        data=edge_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, size=0.7, alpha=0.45
+        data=edge_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, size=0.4, alpha=0.45
     )
     # Halo layer highlights hub nodes — uses scale_size_area's proportional area encoding
-    + geom_point(data=hub_df, mapping=aes(x="x", y="y"), size=26, color=INK_SOFT, alpha=0.18, show_legend=False)
+    + geom_point(data=hub_df, mapping=aes(x="x", y="y"), size=13, color=INK_SOFT, alpha=0.18, show_legend=False)
     + geom_point(data=node_df, mapping=aes(x="x", y="y", color="group", size="degree"), alpha=0.92)
-    + geom_text(data=node_df, mapping=aes(x="x", y="y", label="label"), color=INK, size=14, nudge_y=0.05, va="bottom")
+    + geom_text(data=node_df, mapping=aes(x="x", y="y", label="label"), color=INK, size=9, nudge_y=0.045, va="bottom")
     # Annotate top hub node to draw reader's eye
     + annotate(
         "text",
@@ -205,17 +205,23 @@ plot = (
         y=float(top_hub["y"]) - 0.10,
         label="hub",
         color=INK_SOFT,
-        size=12,
+        size=7,
         ha="center",
         fontstyle="italic",
     )
     + scale_color_manual(values=group_colors, name="Community")
-    # scale_size_area ensures area (not radius) is proportional to degree value
-    + scale_size_area(max_size=20, guide=guide_legend(title="Degree", override_aes={"color": INK_SOFT, "alpha": 0.85}))
-    + coord_cartesian(xlim=(-0.05, 1.05), ylim=(-0.12, 1.05))
+    # scale_size_area ensures area (not radius) is proportional to degree value.
+    # limits=(0, max) anchors the domain at a literal zero degree — without it, plotnine
+    # maps the *observed minimum* degree to size 0, making the lowest-degree node invisible.
+    + scale_size_area(
+        max_size=10,
+        limits=(0, node_df["degree"].max()),
+        guide=guide_legend(title="Degree", override_aes={"color": INK_SOFT, "alpha": 0.85}),
+    )
+    + coord_cartesian(xlim=(-0.03, 1.03), ylim=(-0.10, 1.03))
     + labs(title="network-basic · plotnine · anyplot.ai")
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
@@ -225,12 +231,12 @@ plot = (
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
-        plot_title=element_text(color=INK, size=24, ha="center"),
+        plot_title=element_text(color=INK, size=12, ha="center"),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(color=INK_SOFT, size=16),
-        legend_title=element_text(color=INK, size=18),
+        legend_text=element_text(color=INK_SOFT, size=8),
+        legend_title=element_text(color=INK, size=9),
         legend_key=element_rect(fill=ELEVATED_BG),
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
