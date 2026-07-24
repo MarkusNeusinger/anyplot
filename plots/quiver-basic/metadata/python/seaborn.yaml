@@ -2,126 +2,137 @@ library: seaborn
 language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:40:44Z'
-updated: '2026-04-29T22:43:56Z'
+updated: '2026-07-24T18:23:26Z'
 generated_by: claude-sonnet
-workflow_run: 25136866288
+workflow_run: 30115180124
 issue: 1014
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - Full theme-adaptive chrome applied correctly in both renders — no dark-on-dark
-    or light-on-light failures
-  - Viridis magnitude encoding with styled colorbar adds a meaningful second data
-    dimension
-  - Circular rotation field creates a visually striking radial pattern that immediately
-    communicates structure
-  - All font sizes explicitly set at correct scale (24/20/16pt)
-  - Near-zero magnitude arrows at center correctly filtered out
+  - Peak current speed reduced to ~2.1 m/s (from ~4.2 m/s), now a plausible mesoscale-ocean-eddy
+    magnitude that matches the colorbar range.
+  - Dead `np.random.seed(42)` line removed; the deterministic u=-0.05y, v=0.05x field
+    no longer carries misleading randomness setup.
+  - 'Clever, coherent workaround for seaborn''s lack of a native quiver primitive:
+    shafts via `sns.lineplot` (continuous hue = magnitude, `units=segment`, `estimator=None`)
+    with matching triangular-arrowhead `Polygon` patches colored from the same normalization.'
+  - Correct continuous-data palette (`imprint_seq`, single-polarity) with data colors
+    identical between light and dark renders — only chrome flips.
+  - Right canvas choice (square 2400x2400) for this aspect-equal symmetric vector
+    field; canvas gate passed.
+  - Realistic, neutral domain (idealized ocean eddy) with properly labeled/unit'd
+    axes and colorbar; arrow length remains genuinely magnitude-proportional.
   weaknesses:
-  - Arrow lengths are all normalized to the same value — the spec requires length
-    proportional to magnitude; this feature is absent (only color shows magnitude)
-  - Open V-shaped arrowheads are less elegant than filled triangular arrowheads; reduces
-    visual polish
-  - Abstract 'X Position / Y Position' framing misses an opportunity to ground the
-    plot in a real-world scenario (ocean vortex, atmospheric swirl)
+  - 'The attempt-1 fix for arrowhead legibility (min_head_length = 0.35 * head_ratio
+    * max_seg_length) is numerically too small to read as a triangle: at 400 dpi with
+    linewidth=1.6, the clamped head width is roughly the same size as the shaft''s
+    own round line-cap, so low-magnitude arrows near the vortex center still render
+    as plain rounded capsules with zero visible direction, and even mid-radius arrows
+    (~15 km out) show only a faint fishtail notch instead of a clean triangle. Fix:
+    increase the min_head_length coefficient substantially (e.g. 3-4x current value,
+    or express it as a fixed multiple of linewidth such as 6-8x linewidth-in-data-units)
+    so the head is unambiguously wider than the shaft''s cap at every magnitude, or
+    switch to `FancyArrowPatch`/`mutation_scale` which decouples head size from shaft
+    length entirely.'
+  - Direction is still not conveyed for the innermost 1-2 rings of the vortex despite
+    those vectors having a well-defined (non-zero) direction in the data — this is
+    a rendering shortfall, not a data limitation.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correctly set, not pure white
-      Chrome: Title "quiver-basic · seaborn · anyplot.ai" in dark INK (#1A1A17), axis labels "X Position" / "Y Position" in dark INK, tick labels in INK_SOFT gray — all clearly readable against light background
-      Data: 15x15 grid of open-headed chevron arrows colored by viridis colormap; dark purple near center (low magnitude ~0) transitioning to yellow-green at corners (high magnitude ~4.2); colorbar on right labeled "Vector Magnitude"
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "quiver-basic · python · seaborn · anyplot.ai" in dark ink, centered, not clipped. Axis labels "Distance East (km)" / "Distance North (km)" and tick labels (-30 to 30) in dark/soft-dark ink, all legible. Subtle gray gridlines at low alpha. Colorbar labeled "Current Speed (m/s)" with readable tick labels (0.00-2.00+).
+      Data: 20x20 grid (400 candidate arrows, low-magnitude ones near center thinned) forming a clear rotational eddy pattern, colored from Imprint green (#009E73, low magnitude) to Imprint blue (#4467A3, high magnitude ~2.1 m/s) via the labeled colorbar. Perimeter and mid-radius arrows show length proportional to magnitude; however, zoomed inspection confirms arrows near the vortex center (magnitude near zero) render as plain rounded-cap line segments with no visible triangular arrowhead, and even one grid-ring further out the arrowhead is only a faint notch rather than a clean triangle.
+      Legibility verdict: PASS (all text/chrome readable; the arrowhead-visibility issue is a data-encoding/element-visibility concern, not a text-legibility one).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correctly set, not pure black
-      Chrome: Title and axis labels in light #F0EFE8, tick labels in #B8B7B0 — all clearly readable against dark background; no dark-on-dark failures; colorbar text and outline correctly set to light tones
-      Data: Viridis colors are identical to light render — dark purple center, yellow-green corners; data color identity preserved across themes
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and axis/tick text now in light ink, fully legible against the dark background — no dark-on-dark failures observed. Grid subtle but visible. Colorbar tick labels light-colored and legible.
+      Data: Colors are visually identical to the light render (only chrome flipped, as required) — same green-to-blue magnitude mapping, same eddy pattern, same center arrowhead-visibility weakness reproduced here.
+      Legibility verdict: PASS (all text/chrome readable in both themes; the recurring weakness is loss of directional legibility for near-zero-magnitude arrows at the vortex center, not a theme/contrast problem).
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
-          16pt, colorbar label 20pt; readable in both themes'
+        comment: Title, axis labels, ticks, and colorbar label all readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Uniform grid spacing prevents arrow overlap; no text collisions
+        comment: No collisions between text, data, or colorbar
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Chevron arrows well-sized for 15x15 grid; near-zero center arrows
-          filtered out
+        comment: Low-magnitude arrows near the vortex center still lack a visible
+          triangular arrowhead despite the attempt-1 min_head_length clamp; the clamp
+          is too small relative to linewidth to read as a triangle
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is CVD-safe; sufficient contrast on both backgrounds
+        comment: Green-to-blue sequential cmap, adequate contrast, not red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square-aspect plot plus colorbar fills 16:9 canvas well (~65%); balanced
-          margins
+        comment: Square 2400x2400 canvas gate passed; good proportions, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X Position / Y Position appropriately descriptive for dimensionless
-          mathematical field
+        comment: Descriptive axis labels with units (km, m/s)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'viridis for continuous magnitude; #FAF8F1/#1A1A17 backgrounds confirmed;
-          full theme-adaptive chrome'
+        comment: imprint_seq continuous cmap for magnitude, correct theme-adaptive
+          backgrounds in both renders
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intentional viridis magnitude encoding creates striking radial gradient;
-          above defaults. Open V-shaped arrowheads slightly less polished than filled
-          triangles.
+        comment: Custom-built quiver via lineplot + matched arrowhead patches shows
+          real design intent
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid alpha=0.10, spines removed top/right, colorbar styled
-          with INK_SOFT tokens; good refinement above defaults
+        comment: Spines removed (top/right), subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Circular rotation pattern creates immediate focal point at center;
-          radial magnitude gradient guides eye outward
+        comment: Dual length+color magnitude encoding, though center-arrowhead ambiguity
+          undercuts the story slightly
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,56 +140,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Vector field visualization with directional arrows at grid points
+        comment: Correct quiver/vector-field visualization
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Direction encoding, color-encoded magnitude, uniform grid, circular
-          rotation field all present. Arrow lengths normalized rather than proportional
-          to magnitude (spec requirement).
+        comment: x, y, u, v all present; 20x20 grid matches spec's suggested size
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes show positions correctly; circular pattern fully visible
+        comment: x/y correctly mapped; full grid extent shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title quiver-basic · seaborn · anyplot.ai matches required format;
-          colorbar replaces legend appropriately
+        comment: Title matches mandated format exactly; colorbar serves as the legend
+          for magnitude
     data_quality:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Direction, magnitude variation, uniform grid, near-zero center handling,
-          outer high-magnitude region all shown. Normalized arrow lengths hide spatial
-          magnitude variation.
+        comment: Direction still not visually conveyed near the vortex center despite
+          well-defined non-zero vectors there
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Circular rotation field is mathematically valid and commonly used;
-          X Position / Y Position framing is abstract — could be improved with a concrete
-          scenario
+        comment: Idealized ocean eddy is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Grid [-3,3] with magnitude range [0, ~4.24] is sensible and self-consistent
+        comment: Peak ~2.1 m/s is now a plausible mesoscale-eddy speed (fixed from
+          ~4.2 m/s in attempt 1)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -186,60 +193,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → segment loop → plot → save'
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Deterministic function of x, y; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous packages
+        comment: All imports used; unused np.random.seed(42) from attempt 1 removed
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Arrow-segment loop (~40 lines) is verbose but unavoidable given seaborn's
-          lack of native quiver function
+        comment: No fake UI/interactivity; appropriate complexity for a custom quiver
+          workaround
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no deprecated API calls
+        comment: Saves plot-{THEME}.png with correct facecolor and no bbox_inches='tight'
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.lineplot's continuous hue_norm + units/estimator=None
+          pattern
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.lineplot with units=segment, estimator=None, sort=False, continuous
-          hue+palette is correct seaborn idiom for raw multi-segment data
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: units + continuous hue combination is seaborn-specific; overall approach
-          is a matplotlib workaround wrapped in seaborn styling
+        comment: Matching seaborn hue-mapped shafts with matplotlib arrowhead patches
+          is a distinctive workaround for seaborn's lack of a native quiver, though
+          the arrowhead execution is still imperfect
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - patches
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - normalization
+  - matrix-construction
+  - explicit-figure
+  dataprep: []
   styling:
   - custom-colormap
   - grid-styling
