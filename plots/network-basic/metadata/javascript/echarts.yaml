@@ -1,0 +1,257 @@
+library: echarts
+language: javascript
+specification_id: network-basic
+created: '2026-07-24T04:24:53Z'
+updated: '2026-07-24T04:45:20Z'
+generated_by: claude-sonnet
+workflow_run: 30066356221
+issue: 989
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Custom deterministic Fruchterman-Reingold force-directed layout (fixed-seed LCG)
+    keeps both theme renders pixel-identical instead of relying on echarts' live,
+    non-reproducible physics simulation.
+  - Two-pass label-collision-avoidance system (canvas-edge side flip plus pairwise
+    re-check) keeps all 18 node labels legible even in the dense APIGateway hub area.
+  - Degree-based node sizing (26-78px) gives immediate visual hierarchy, making the
+    API gateway hub instantly recognizable as the most-connected node.
+  - Label background chips matched to the page background render 'invisible' except
+    where an edge crosses behind the text, keeping labels legible without a heavy
+    box style.
+  - Correct canonical Imprint palette order across all 4 groups (Frontend/Backend/Data/Infra),
+    with theme-correct chrome in both light and dark renders.
+  weaknesses:
+  - Canvas whitespace is slightly uneven -- the layout is denser toward the lower-left/central
+    hub and sparser near the top and far right; rebalancing the rescale-to-fit step
+    would even out margins for a small VQ-05 gain.
+  - Visual hierarchy relies purely on size/color encodings with no explicit callout
+    of the central-hub insight -- not required by the spec, but would push DE-03 from
+    'good' to 'excellent'.
+  - Opts out of echarts' native layout:'force' in favor of a hand-rolled layout --
+    well-justified for determinism/reproducibility, but means the library's built-in
+    force simulation isn't demonstrated (LM-01).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "Microservice Dependency Graph · network-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, comfortably sized and not clipped. Horizontal legend below the title (Frontend / Backend / Data / Infra) with colored circle swatches, clearly readable. Node labels are dark gray text on small background chips that blend into the page background except where an edge crosses behind them.
+      Data: 18 nodes colored by group -- Frontend (#009E73 brand green: WebApp, MobileApp, AdminUI), Backend (#C475FD lavender: APIGateway, AuthService, OrderService, PaymentService, SearchService, UserService), Data (#4467A3 blue: PrimaryDB, CacheStore, SearchIndex, MessageQueue, DataWarehouse), Infra (#BD8233 ochre: LoadBalancer, CDN, ConfigServer, MetricsCollector). Node size scales with degree -- APIGateway (largest) and PrimaryDB read as the central hubs. 30 thin, low-opacity gray edges connect the nodes with no crossings that obscure labels.
+      Legibility verdict: PASS -- all title, legend, and node-label text is clearly readable against the light background; no overlap detected anywhere, including the dense APIGateway/AuthService/UserService cluster.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title and legend layout, rendered in light ink/text (title and legend text are light gray/white). Node-label chips now blend into the dark background, remaining legible.
+      Data: Node and edge colors are pixel-identical to the light render (same green/lavender/blue/ochre group colors, same degree-based sizing, same layout positions) -- only the chrome (background, text, label-chip fill) flips to the dark theme.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; all text (title, legend, node labels) is clearly readable against the near-black background, and brand green remains vivid on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 22px scaled by a length formula
+          for the descriptive-prefixed title, legend 16px, node labels 14px); all
+          text readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Custom two-pass label-collision algorithm (side flip + pairwise re-check)
+          keeps all 18 node labels clear of each other, even in the dense hub area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node size 26-78px encodes degree; thin (1.6px), low-opacity (0.35)
+          edges stay legible with 30 edges converging on the hub.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint categorical palette gives strong CVD-safe contrast between
+          the 4 groups; group identity is reinforced by labels, not color alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Layout fills most of the canvas with balanced overall margins; whitespace
+          is slightly uneven (denser lower-left, sparser upper-left/lower-right) but
+          nothing is cut off or isolated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes on a graph plot; title is descriptive and correctly formatted.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First group (Frontend) = #009E73; Backend/Data/Infra follow canonical
+          Imprint order; theme-correct chrome and identical data colors in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom deterministic force-directed layout, degree-based sizing,
+          and edge-aware label chips are clearly above a configured default, though
+          short of full publication polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, minimal chrome, generous whitespace, subtle low-opacity
+          edges, rounded label chips -- very refined for a graph plot.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Degree-based sizing and color-by-group create clear visual hierarchy
+          (the API gateway hub reads immediately), though there's no explicit annotation
+          calling out the insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct node-link graph with force-directed (Fruchterman-Reingold)
+          layout as the spec requests.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes carry group/label attributes, edges are source/target pairs,
+          node size encodes degree, labels avoid overlap -- all spec notes satisfied.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Node positions and edges render correctly and consistently.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labels (Frontend/Backend/Data/Infra)
+          match node groups.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 18 nodes / 30 edges show varied degree (1-11), 4 distinct groups,
+          and a realistic hub-and-spoke + mesh topology within the spec's 10-50 node
+          guidance.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral microservice-architecture scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Connectivity pattern (API gateway as central hub, DB/cache/queue
+          as backend leaves) matches real-world microservice architecture conventions.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: No classes, but 5 small helper functions (lcg, sizeForDegree, screenX/Y,
+          labelSpan) justified by the deterministic layout + collision-avoidance algorithm.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed 42) makes the layout fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided echarts/tokens globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a from-scratch force-directed layout;
+          no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, chart.setOption with
+          series.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic graph-series usage (categories, edgeSymbol, itemStyle,
+          emphasis.disabled); opts out of built-in layout:'force' for a well-reasoned
+          determinism tradeoff.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Leverages graph-series-specific features extensively: categories
+          tied to legend, per-node label positioning, edge styling, per-node symbolSize.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending

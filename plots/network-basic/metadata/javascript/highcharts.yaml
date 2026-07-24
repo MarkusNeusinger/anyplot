@@ -1,0 +1,264 @@
+library: highcharts
+language: javascript
+specification_id: network-basic
+created: '2026-07-24T04:11:37Z'
+updated: '2026-07-24T04:29:28Z'
+generated_by: claude-sonnet
+workflow_run: 30065809775
+issue: 989
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Custom Fruchterman-Reingold force-directed layout implemented from scratch with
+    a fixed-seed LCG, producing a clean, non-overlapping node arrangement — a faithful
+    substitute for the unavailable networkgraph module.
+  - 'Redundant encoding: community color (Imprint palette positions 1-3, Work/College/Family)
+    plus marker shape (diamond/square/triangle) keeps groups distinguishable even
+    under color-vision deficiency.'
+  - Node radius scales with degree-squared and hub nodes get bold, enlarged data labels
+    — creates immediate visual hierarchy that points straight at the structurally
+    important nodes (Ava, Leo, Kai, Mia, Ruby).
+  - Edges are split into three tiers by tie-strength with varying line width and opacity,
+    visually encoding relationship strength without any extra legend clutter.
+  - 'Both light and dark renders are fully theme-correct: identical data colors across
+    themes, correctly flipped chrome, and no dark-on-dark/light-on-light failures
+    anywhere in either render.'
+  weaknesses:
+  - 'Whitespace is unbalanced across the square canvas: the top-left quadrant is essentially
+    empty while the Work/College/Family clusters concentrate along a diagonal band
+    from top-right to bottom-right — consider rotating/re-seeding the initial layout
+    angles so the network fills the canvas more evenly.'
+  - The manual force-directed layout (nested O(n^2) repulsion loop, edge-attraction
+    loop, 300-iteration cooling schedule, plus rand()/nodeRadius() helpers) is a large
+    departure from the simple Imports -> Data -> Plot -> Save KISS structure — necessary
+    given the missing networkgraph module, but still a meaningful complexity cost
+    worth a short explanatory comment block if not already present.
+  - Node labels are set at 13px/15px (below the library's own 14px tick-label baseline)
+    — legible at full resolution but on the small side once the PNG is scaled to a
+    ~400px mobile thumbnail, given 20 labeled nodes packed into a 2400x2400 canvas.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: bold dark title "network-basic · javascript · highcharts · anyplot.ai" top-left, grey subtitle explaining the node-size encoding below it, dark node labels above each marker (bold+larger for hub nodes: Ava, Leo, Kai, Mia, Ruby), legend at bottom-center (Work/College/Family with matching swatches) in dark grey text. All chrome elements are clearly readable against the light background.
+      Data: 20 nodes across three communities — green diamonds (Work), lavender/purple squares (College), blue triangles (Family) — first series (Work) correctly uses #009E73 brand green. Nodes are connected by grey edge lines whose width/opacity vary with tie strength (thin+faint for weak ties, thick+dark for strong ties). Node marker size scales with degree, creating a handful of visibly larger hub nodes.
+      Legibility verdict: PASS — no overlapping text, no clipped elements, all labels and legend text fully legible.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: title and subtitle render in light/off-white text, node labels in light grey/white, legend text light-colored. Layout, node positions, and edge routing are pixel-identical to the light render (only chrome flipped).
+      Data: node fill colors are identical to the light render (green/lavender/blue), confirming the categorical palette does not shift between themes. Edge lines render as a lighter grey suited to the dark backdrop, still legible against the near-black surface.
+      Legibility verdict: PASS — no dark-on-dark failures detected; every title, subtitle, node label, and legend entry is clearly legible against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; 13-15px node
+          labels on a 20-node network are slightly small for a 400px mobile thumbnail
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap anywhere across all three community clusters, verified
+          at close crop
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node markers well-sized for a sparse ~20-node network; hub nodes
+          appropriately prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Color + marker-shape redundant encoding is fully CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good overall canvas fill, but whitespace concentrates in the top-left
+          quadrant rather than balancing evenly
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed for a network layout; title/legend fully
+          descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for Work/College/Family,
+          theme-correct chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom marker-shape-per-group system, degree-squared sizing, and
+          tiered edge styling clearly above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean, chromeless network (no axes/grid/frames) but whitespace distribution
+          keeps it from feeling fully polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Hub emphasis (size + bold labels) and tie-strength edge weighting
+          let the viewer immediately spot central nodes and strong bonds
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct node-link network graph, built as the idiomatic core-bundle
+          substitute for the missing networkgraph module
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes with group attributes, weighted edges, force-directed layout,
+          degree-based sizing, non-overlapping labels — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Computed layout coordinates map correctly to the hidden x/y axes;
+          all nodes and edges visible within bounds
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match the
+          three community groups
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows hub vs. leaf nodes, intra-community clustering, and weak cross-community
+          bridge ties — full feature range for a network graph
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Friendship network across work/college/family is a real, neutral,
+          comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 20 nodes / 28 edges with tie strengths 1-5 and degree distribution
+          are all plausible for a small social network
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Necessary force-directed layout algorithm (nested loops, helper functions)
+          is a meaningful departure from the plain Imports->Data->Plot->Save shape,
+          though justified by the missing networkgraph module
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) makes the layout fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global, as required by the mount-node
+          contract
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; complexity is proportionate to implementing
+          a layout algorithm the core bundle doesn't provide
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract usage, animation disabled on both chart
+          and series level
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of core-bundle scatter/line series, plotOptions, and
+          dataLabels as the best available substitute for the unavailable networkgraph
+          module
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-point dataLabels style overrides for hub nodes and per-series
+          marker symbols are distinctly Highcharts patterns, not trivially portable
+          to another library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - force-directed-layout
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome

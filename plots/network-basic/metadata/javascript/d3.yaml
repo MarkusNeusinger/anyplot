@@ -1,0 +1,265 @@
+library: d3
+language: javascript
+specification_id: network-basic
+created: '2026-07-24T04:25:33Z'
+updated: '2026-07-24T04:42:06Z'
+generated_by: claude-sonnet
+workflow_run: 30066265152
+issue: 989
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Fully resolves the attempt-1 canvas-underutilization finding: corner-anchored
+    group forces plus differentiated intra-group vs. bridge link distance/strength
+    (90px @0.6 vs 280px @0.22) now spread the network symmetrically across the full
+    2400x2400 square instead of collapsing into the previous diagonal band'
+  - 'Correct canonical Imprint palette order across the four social-circle groups
+    (#009E73, #C475FD, #4467A3, #BD8233), data colors identical between light and
+    dark renders, correct #FAF8F1/#1A1A17 theme backgrounds in both'
+  - 'Idiomatic, distinctive d3-force usage: forceLink with a per-edge distance/strength
+    function (same-group vs bridge), forceManyBody, per-group forceX/forceY anchors,
+    and forceCollide sized to node radius — a genuinely d3-specific technique, not
+    a generic tutorial force graph'
+  - Node radius encodes degree, immediately surfacing the most-connected member of
+    each social circle (Ava, Mia, Emma, Ella) as real data storytelling rather than
+    a flat node set
+  - 'Clean, deterministic, KISS-structured script: only the global d3 is used, no
+    functions/classes, fixed 400-iteration tick loop with no randomness for reproducibility'
+  weaknesses:
+  - Node labels (15px on the 2400px canvas) are still noticeably blurry/near-illegible
+    once scaled to the ~400px mobile thumbnail (verified against plot-light_400.png)
+    — full-size legibility is fine, but consider bumping to ~18px or trimming label
+    count in the densest cluster for mobile readability
+  - The four-corner anchor layout, while now correctly using the full canvas, leaves
+    a large empty cross-shaped void through the center — the graph reads as four separate
+    satellite clusters loosely tied by thin bridge lines rather than one cohesive
+    network; slightly shorter bridge-link distances or a light central gravity force
+    could pull the ring inward a bit without reintroducing the prior diagonal-collapse
+    problem
+  - The four bridge edges (Kai-Mia, Owen-Emma, Ella-Lily, Ava-Iris) are long, low-opacity
+    lines crossing mostly empty space, which can read as stray connective lines rather
+    than intentional inter-community bridges at a glance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "network-basic · javascript · d3 · anyplot.ai" centered at top (~55% width), fully legible. A four-item legend (College Friends / Coworkers / Neighbors / Running Club) with color swatches sits below the title, evenly spaced and readable. Node labels are dark, 15px, readable at full resolution directly beneath each node; no overlap with other text or with nodes/edges observed.
+      Data: Four community clusters (green #009E73, lavender #C475FD, blue #4467A3, ochre #BD8233) anchored near each of the four canvas corners, connected internally by dense short edges and to each other by four long, thin, low-opacity (~0.35) bridge edges forming a loose ring. Node size scales with degree — Ava, Mia, Emma, and Ella (the most-connected member of each circle) render visibly larger than their peers. First series (College Friends) is #009E73 as required. A large empty region remains in the canvas center by design (the corner-anchored layout).
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable at full size. Node labels become blurry at the ~400px mobile thumbnail (noted as a weakness), but this does not affect full-size legibility.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and legend text render in light ink, clearly visible against the dark background. Node labels also flip to light ink and remain legible. No dark-on-dark failures observed in title, legend, or node labels.
+      Data: Identical node positions, sizes, and the four categorical hues as the light render — only chrome (background, text ink, node stroke matching page background) flipped. Node stroke rings (matched to page background) still cleanly separate overlapping/adjacent nodes on the dark surface.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; text remains legible in both themes, and data colors are confirmed identical between renders.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title 26px, legend/labels 15px), fully readable
+          in both themes at full resolution; node labels are still blurry once scaled
+          to the ~400px mobile thumbnail
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps other text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse graph (22 nodes, 32 edges) with prominent degree-scaled node
+          markers (16-32px radius) and clearly visible edges
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four well-spaced Imprint hues, no red-green-only encoding, node stroke
+          separates overlapping circles
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Attempt-1 canvas-underutilization issue resolved: network now spans
+          all four corners of the 2400x2400 canvas symmetrically, nothing cut off
+          or overflowing; a large center void remains as a compositional trade-off
+          of the corner-anchor approach'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a network graph; title format is correct and descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order (#009E73, #C475FD, #4467A3, #BD8233), identical
+          across themes, correct theme backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Degree-based node sizing and per-group differentiated force anchors
+          clearly exceed a default force-graph tutorial; the earlier canvas-underutilization
+          drag on execution is now resolved
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle low-opacity edges, page-bg-matched node stroke for separation,
+          clean unboxed legend; full canvas now used, minor deduction for the large
+          central void
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Node-size-by-degree and color-by-community create clear visual hierarchy
+          and hub identification, but four equally-weighted corner clusters dilute
+          a single overall focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct force-directed node-link diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Force-directed layout, degree-encoded node size, legible non-overlapping
+          labels, sparse readable network — all spec notes satisfied
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 22 nodes and 32 edges rendered from the force simulation; no
+          axis mapping needed for this plot type
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches the mandated pattern; legend labels
+          match the four social-circle groups
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows intra-group clustering, inter-group bridge edges, and degree-driven
+          node importance
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible friendship-network scenario across four real-world
+          social circles
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 22 nodes / 32 edges is a sensible size for a small, readable social
+          network per the spec's guidance
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic node/edge data, fixed-iteration simulation
+          tick loop
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a force-directed graph, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly, animation disabled via
+          .stop() plus fixed tick loop
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct d3-force API usage: forceLink, forceManyBody, forceX/forceY,
+          forceCollide, plus proper selection.data().join() pattern'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-edge distance/strength function distinguishing intra- vs inter-group
+          links, combined with per-group anchor forces, is a genuinely d3-distinctive
+          technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - force-directed-layout
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
