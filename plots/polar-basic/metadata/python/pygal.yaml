@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: polar-basic
 created: '2025-12-23T19:43:04Z'
-updated: '2026-07-24T23:42:19Z'
+updated: '2026-07-24T23:53:38Z'
 generated_by: claude-sonnet
 workflow_run: 30134105695
 issue: 800
@@ -12,50 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - 'Correct chart type: pygal.Radar maps theta (hour-of-day) to angle and radius
-    to temperature, exactly matching the polar-basic spec.'
-  - Angular labels restricted to cardinal hours (00:00/06:00/12:00/18:00) per the
-    spec note, avoiding a cluttered 24-label ring while still drawing all 24 spokes/vertices.
-  - inner_radius=0.1 avoids compressing data near the center, directly satisfying
-    the spec's 'appropriate radial scale' requirement.
-  - Font sizes (title_font_size=66, label_font_size=56, major_label_font_size=44,
-    legend_font_size=44, value_font_size=36) match the pygal library doc's canonical
-    Native-pixel values exactly.
-  - Theme tokens (PAGE_BG/INK/INK_MUTED) are correctly threaded through the Style
-    object; data color (#009E73) is identical between light and dark renders, only
-    chrome flips.
-  - Deterministic data generation via np.random.seed(42).
-  - Correct 2400x2400 square canvas, an appropriate choice for a symmetric radial
-    chart.
-  - Output files follow the plot-{THEME}.png / plot-{THEME}.html convention with no
-    bare plot.png.
+  - 'Repair directly addressed both prior weaknesses: dots_size raised 6→9 (now clearly
+    visible at all 24 vertices) and a "(peak)" callout added to the 12:00 label, giving
+    the shape an explicit focal point'
+  - 'Correct chart type: pygal.Radar maps theta (hour) to angle and radius to temperature,
+    matching the polar-basic spec'
+  - Angular labels restricted to cardinal hours + peak, avoiding label clutter while
+    still drawing all 24 spokes
+  - inner_radius=0.1 avoids compressing data near the center, satisfying the spec's
+    radial-scale requirement
+  - Theme tokens correctly threaded through Style; data color identical across light/dark,
+    only chrome flips
+  - Correct 2400x2400 canvas, deterministic data, correct output file naming
   weaknesses:
-  - dots_size=6 is on the small side for a sparse 24-point series on a 2400px canvas
-    — bump to ~8-10 for more prominent markers per the data-density heuristic.
-  - Side axis labels (06:00, 18:00) are rendered rotated 90 degrees, requiring a head-tilt
-    to read; still fully legible but a minor ergonomics ding.
-  - Design is a fairly standard filled radar with no additional visual emphasis (e.g.
-    no callout/annotation on the noon peak or midnight trough) to strengthen the data-storytelling.
-  - Only leverages one distinctive pygal Radar feature (inner_radius); other library-specific
-    radar options (e.g. range/box shaping, per-point value labels) are unused.
+  - Side axis labels (06:00, 18:00) still render rotated 90 degrees, requiring a head-tilt;
+    minor ergonomics ding, unchanged from attempt 1
+  - Design remains a competent-but-standard filled radar; visual refinement (DE-02)
+    hasn't moved - consider a slightly refined grid/legend treatment or subtler fill
+    alpha to add more polish
+  - Only two distinctive pygal Radar features are used (inner_radius, value-label
+    callout); other radar-specific customization remains untouched
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Hourly Temperature (°C) · polar-basic · python · pygal · anyplot.ai" wraps to two lines in dark ink, clearly readable. Angular labels 00:00/06:00/18:00 in dark ink (06:00 and 18:00 rendered rotated 90°), radial tick labels 0/4/8/12/16/20 in a slightly muted green-ink tone near the center axis, all legible. Radial gridlines are thin dashed circles, subtle but visible; angular spokes are thin solid gray lines for all 24 hours (only cardinal hours carry text labels).
-      Data: Single filled radar series in solid Imprint brand green (#009E73) with matching-color vertex dots and outline — clearly distinguishable from the cream background. Shape is smallest near 00:00 (top) and largest near 12:00 (bottom), consistent with a diurnal temperature cycle peaking at noon.
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Two-line title in dark ink, fully readable. Angular labels 00:00/06:00/12:00 (peak)/18:00 in dark ink (06:00/18:00 rotated 90deg but legible). Radial tick labels 0/4/8/12/16/20 legible near vertical spoke. Dashed radial gridlines subtle but visible; all 24 spokes drawn, only cardinal+peak hours labeled.
+      Data: Single filled radar series in solid Imprint brand green (#009E73); marker dots now sized 9px (up from 6px in attempt 1), clearly visible at all 24 vertices, well distinguished from cream fill/background. Shape smallest near 00:00, largest at 12:00 (labeled peak).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title text now in light ink, fully readable against the dark background. Angular and radial tick labels rendered in light/muted-light tones, all legible with no dark-on-dark occurrences. Grid spokes switch to a lighter thin gray, still subtle.
-      Data: Same brand green (#009E73) fill and outline as the light render — colors are identical between themes, confirming only chrome adapted. Shape and proportions match the light render exactly.
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Same title in light ink, fully readable. Angular and radial tick labels in light/muted-light tones - no dark-on-dark anywhere. Grid spokes and dashed circles switch to lighter thin gray, still subtle.
+      Data: Fill and enlarged 9px marker dots use identical brand green (#009E73) as light render - only chrome adapted between themes, data color fixed. Shape and proportions match light render exactly.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,73 +57,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; side-axis hour labels (06:00, 18:00)
-          rotated 90° requiring a head-tilt but still fully legible
+        comment: All text legible in both themes; side labels rotated 90 degrees but
+          readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text or data elements; non-cardinal hour labels
-          intentionally left blank to avoid clutter
+        comment: No collisions; peak label suffix doesn't collide with grid or data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: dots_size=6 is somewhat small for a sparse 24-point series at 2400px
-          canvas; could be more prominent
+        comment: dots_size=9 now well-sized for the sparse 24-point series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green has strong contrast against both surfaces
+        comment: Strong contrast, single series
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Correct 2400x2400 canvas, nothing clipped; two-line title consumes
-          noticeable vertical space, within expected range for the long mandated title
+        comment: Correct 2400x2400 canvas, nothing clipped; two-line title uses noticeable
+          vertical space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes units (°C) and full mandated suffix
+        comment: Units included in title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; both
-          renders theme-correct'
+        comment: '#009E73 first series, correct theme backgrounds in both renders'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: true
-        comment: Custom Style with theme tokens and inner_radius avoiding center compression,
-          but otherwise a standard radar fill
+        passed: false
+        comment: Custom Style, inner_radius donut trick, and peak-hour callout combine
+          into a considered radar
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Subtle dashed radial grid, thin spokes, generous whitespace; still
-          a fairly default radar look
+        passed: false
+        comment: Still a fairly standard filled-radar look overall
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: true
-        comment: Cyclical low-at-midnight/high-at-noon shape reads clearly but no
-          annotation emphasizes the peak/trough
+        passed: false
+        comment: The peak label gives the shape a clear, explicitly-called-out focal
+          point
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +129,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: pygal.Radar correctly used for theta/radius polar data
+        comment: Correct polar/radar mapping of theta to angle, radius to temperature
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Radial gridlines visible, cardinal angular labels, radial scale not
-          compressed near center
+        comment: Radial gridlines, cardinal angular labels, uncompressed radial scale
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: theta=hour, radius=temperature; all 24 points present
+        comment: theta=hour, radius=temperature, all 24 points present
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend correctly omitted for single series
+        comment: Correct title format; legend correctly omitted for single series
     data_quality:
       score: 14
       max: 15
@@ -168,20 +157,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: theta+radius fully covered; optional category grouping unused (acceptable,
-          marked optional in spec)
+        comment: theta+radius covered; optional category grouping unused
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hourly temperature cycle is realistic and neutral
+        comment: Realistic, neutral diurnal temperature data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range (~4-25°C) is sensible for a diurnal cycle
+        comment: Sensible ~4-25C range
     code_quality:
       score: 10
       max: 10
@@ -191,7 +179,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat top-level script
+        comment: No unneeded functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -203,21 +191,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (numpy, stdlib, pygal)
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/functionality, appropriate complexity
+        comment: Small _hour_label helper stays simple and readable
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Correct plot-{THEME}.png/.html outputs
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -225,21 +213,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic pygal.Radar + Style usage matching the library doc's canonical
-          sizing exactly
+        comment: Font sizes match pygal.md canonical Native-pixel values
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: true
-        comment: inner_radius is a nice distinctive touch, but otherwise fairly standard
-          Radar usage
+        passed: false
+        comment: inner_radius plus peak-value callout used, but other Radar-specific
+          options untouched
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
+  - annotations
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
