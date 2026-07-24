@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 polar-basic: Basic Polar Chart
-Library: plotly 6.9.0 | Python 3.13.12
-Quality: pending | Updated: 2026-07-24
+Library: plotly 6.9.0 | Python 3.13.14
+Quality: 84/100 | Updated: 2026-07-24
 """
 
 import os
