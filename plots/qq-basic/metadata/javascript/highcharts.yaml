@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: qq-basic
 created: '2026-07-24T07:05:02Z'
-updated: '2026-07-24T07:09:07Z'
+updated: '2026-07-24T07:20:33Z'
 generated_by: claude-sonnet
 workflow_run: 30073905836
 issue: 977
@@ -12,49 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 92
 review:
   strengths:
-  - Deterministic seeded data generation with a self-contained inverse-normal-CDF
-    (Acklam's approximation), giving a statistically correct sample-vs-theoretical
-    quantile mapping.
-  - 'The y = x reference line is its own non-interactive dashed series (enableMouseTracking:
-    false) so it never fights the Sample series for tooltip/legend focus — a thoughtful
-    Highcharts-specific touch.'
-  - Axis min/max are computed from the full point range with symmetric padding on
-    both axes, keeping the diagonal reference line fully visible and the aspect visually
-    square.
-  - Right-skewed page-load-time dataset is a realistic, neutral domain choice that
-    produces a textbook S-curve/heavy-tail deviation — a good illustration of the
-    plot's diagnostic purpose.
-  - 'Full theme-token compliance: identical brand-green data color between light/dark
-    renders, with ink/inkSoft/grid correctly threaded through title, subtitle, axes,
-    and legend in both themes.'
+  - 'Directly addresses attempt 1''s feedback: the deviating-tail plot bands with
+    ''Deviating tail'' labels and the size/opacity split between tail markers (radius
+    5.5, opaque) and mid-cluster markers (radius 3.5, alpha 0.55) turn a generic scatter
+    into a plot that visually explains the skew.'
+  - Deterministic seeded data generation via a tiny fixed-seed LCG plus a self-contained
+    inverse-normal-CDF (Acklam's approximation) — statistically correct sample-vs-theoretical
+    quantile mapping with no external dependency.
+  - 'The y = x reference line is a separate non-interactive dashed series (`enableMouseTracking:
+    false`, `marker: { enabled: false }`) styled with the theme-adaptive `neutral`
+    role (t.ink) rather than spending a categorical palette slot on it — correct semantic
+    use per the style guide.'
+  - Right-skewed page-load-time dataset (lognormal, seed 42) is a realistic, neutral
+    domain choice that produces a clean, textbook S-curve deviation immediately visible
+    in both renders.
+  - 'Full theme-token compliance: identical brand-green (#009E73) data color between
+    light/dark renders, with ink/inkSoft/grid correctly threaded through title, subtitle,
+    axes, legend, and the reference line (which correctly flips black→white for dark-mode
+    visibility).'
   weaknesses:
-  - Sample markers cluster tightly in the theoretical-quantile range roughly -1..1,
-    causing minor overlap in the mid-section; a slightly smaller marker radius (~3.5)
-    or lower opacity there would improve mid-cluster clarity.
-  - Library Mastery is generic — beyond dashStyle and enableMouseTracking:false, nothing
-    showcases a Highcharts-distinctive feature (e.g. an annotation calling out the
-    deviating tail, or a labeled band highlighting the heavy-tail region).
-  - Design Excellence is functional but plain — visual hierarchy relies on color alone;
-    emphasizing the deviating tail points (size/opacity contrast vs. the well-fit
-    middle) would strengthen the data storytelling (DE-03).
+  - The 'Deviating tail' plotBand labels are set at 11px CSS — legible at full resolution
+    but will shrink below ~2px when the PNG is scaled to the ~400px mobile preview;
+    bump to ~13-14px to stay readable at that width.
+  - X-axis title 'Theoretical Quantiles' and Y-axis title 'Sample Quantiles (z-score)'
+    are asymmetric in unit annotation — both are z-scores under a standard normal
+    reference, so appending '(z-score)' to the X-axis title too would make the pair
+    fully consistent.
+  - 'Library Mastery is good but not maximal: the plotBand + per-point marker override
+    combo is a genuine Highcharts-specific technique, but nothing pushes further into
+    truly unique territory (e.g. a `Highcharts.SVGRenderer` custom annotation or a
+    responsive rule).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-range), not pure white, not dark — matches the light-theme token.
-      Chrome: Title "qq-basic · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Page load times vs. normal distribution" in soft grey, both clearly readable. X-axis title "Theoretical Quantiles" and Y-axis title "Sample Quantiles (z-score)" in soft grey, readable. Tick labels dark grey, readable. Gridlines light grey, subtle but visible. Legend at bottom ("Reference (y = x)", "Sample") in soft grey, readable.
-      Data: First (and only) categorical series "Sample" is the brand green #009E73 diamond markers; the reference line is a black dashed line (chrome color, not a data series) running diagonally corner to corner. Points trace a mild S-curve that bows above the reference line on the left tail and above it on the right tail, revealing a right-skew/heavy-tail deviation from normality.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark-ink title "qq-basic · javascript · highcharts · anyplot.ai" and soft-grey subtitle "Page load times vs. normal distribution" both clearly readable. Axis titles "Theoretical Quantiles" / "Sample Quantiles (z-score)" and tick labels render in soft grey, gridlines are light and subtle. Two pale-green shaded plotBands sit at the left and right edges (beyond |theoretical quantile| > 1.15) with small italic "Deviating tail" labels in the top corners.
+      Data: Brand-green (#009E73) diamond "Sample" markers — larger and fully opaque in the tail bands, smaller and translucent (alpha 0.55) in the dense mid-cluster — trace a clear upward-bowing curve away from the black dashed y=x reference line, consistent with a right-skewed distribution.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-range), not pure black, not light — matches the dark-theme token.
-      Chrome: Title and subtitle now in light/white and soft grey respectively, both clearly readable. Axis titles and tick labels in light grey, readable. Gridlines dark-but-visible grey. Legend text in light grey, readable. The reference line correctly flips from black to white dashed so it stays visible on the dark surface.
-      Data: The "Sample" series markers are the identical brand green #009E73 diamonds as in the light render — confirming data colors do not change between themes, only chrome flips.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed (title, axis labels, tick labels, and legend all have sufficient contrast).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, subtitle, axis titles, tick labels, and legend all flip to light/soft-grey and remain clearly readable; no dark-on-dark failures. The reference line correctly switches from black to white dashed to stay visible against the dark surface. The plotBand shading and "Deviating tail" labels are preserved and legible.
+      Data: Sample markers are the identical brand green as the light render (#009E73, same tail/mid-cluster size and opacity split) — data colors are unchanged between themes, only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,71 +67,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at set font sizes (title 22px, axis
-          titles 16px, ticks/legend 14px)
+        comment: All core chrome (title/subtitle/axis titles/ticks/legend) explicitly
+          sized and readable in both themes; the small 11px 'Deviating tail' annotation
+          labels are the one element that may not survive mobile downscale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions with other text or data
+        comment: No collisions between text, legend, and data in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Diamond markers at radius 4.5 with opacity 0.85 are appropriate for
-          n=150, though the mid-cluster (theoretical quantile -1..1) shows minor overlap
+        comment: Marker radius/opacity split (5.5 opaque tail vs 3.5 @ 0.55 mid) fixes
+          the attempt-1 mid-cluster overlap and keeps every point distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High contrast green data vs. neutral reference line, no red-green
-          dependence
+        comment: Green diamonds against cream/near-black background give strong contrast;
+          no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (square 2400x2400); title ~50% width, balanced
-          axis labels, no overflow/clipping
+        comment: Plot area fills the majority of the square canvas with balanced margins;
+          nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive axis titles: Theoretical Quantiles / Sample Quantiles
-          (z-score)'
+        comment: Descriptive axis titles; Y-axis notes the z-score unit.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73, backgrounds match Imprint light/dark tokens,
-          both renders theme-correct'
+        comment: 'Sample series is #009E73 (palette[0]); reference line correctly
+          uses the theme-adaptive neutral/ink role instead of a palette slot; both
+          backgrounds theme-correct.'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Clean, purposeful styling (dashed reference, subtitle) but not highly
-          distinctive
+        passed: true
+        comment: Tail-vs-mid marker treatment and labeled deviation bands are a thoughtful,
+          above-default design choice.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Subtle grid, generous whitespace, thin axis lines; standard Highcharts
-          chrome otherwise
+        passed: true
+        comment: Subtle 15% gridlines, generous whitespace, consistent theme-token
+          chrome throughout.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
-        comment: Reference line gives a clear comparison focal point and the skew
-          is visible, but no explicit emphasis on the deviating tail
+        passed: true
+        comment: Explicit 'Deviating tail' bands + size/opacity contrast create a
+          clear focal point — the viewer immediately sees where and how the sample
+          deviates from normal.
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Q-Q scatter + diagonal reference line
+        comment: Correct Q-Q scatter + diagonal reference line.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sample vs. theoretical quantiles, clearly visible 45° reference line,
-          axis labels present
+        comment: Reference line, theoretical/sample quantile axes, and clear deviation
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = theoretical quantiles, Y = standardized sample quantiles; axis
-          range covers full data with padding
+        comment: X = theoretical quantiles, Y = sample quantiles — standard Q-Q convention,
+          full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels (Reference (y
-          = x), Sample) are clear
+        comment: Title matches the mandated format exactly; legend labels ('Reference
+          (y = x)', 'Sample') are clear and correct.
     data_quality:
       score: 14
       max: 15
@@ -166,22 +176,22 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Shows sample points, theoretical reference, and standardized quantiles;
-          no explicit annotation of skew/tail behavior
+        passed: true
+        comment: Clean single-direction (right-skew) deviation is well demonstrated;
+          a heavier-tail or bimodal variant could show more Q-Q archetypes but isn't
+          required for a 'basic' spec.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Page load times is a plausible, neutral, real-world domain for normality
-          testing
+        comment: Page load times is a real, neutral, comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: n=150 within recommended 30-500 range, lognormal parameters produce
-          sensible right-skew
+        comment: Lognormal parameters produce plausible sub-3-second load times.
     code_quality:
       score: 9
       max: 10
@@ -190,52 +200,59 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Three small helper functions (lcg, randNormal, invNorm) are justified
-          by the math needed for a correct Q-Q plot, not gratuitous abstraction
+        passed: true
+        comment: Linear flow, but needs 4 small helper functions (LCG, randNormal,
+          invNorm, withAlpha) — necessary complexity for a Q-Q plot in a browser with
+          no seeded RNG or erf/invNorm builtin.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fixed-seed LCG (seed 42) — fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only window globals
+        comment: No unused imports; uses only the global Highcharts.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Appropriate complexity for the statistics involved, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses Highcharts.chart("container", ...) contract, animation disabled
-          on chart and series
+        comment: Correct mount-node contract, animation disabled at both chart and
+          series level.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Idiomatic scatter+line combination series, marker/dashStyle configuration
+        passed: true
+        comment: Idiomatic use of series-level and per-point marker overrides, plotBands,
+          and dashStyle.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        comment: enableMouseTracking:false on the reference series is a nice touch
-          but overall usage is fairly generic
+        passed: true
+        comment: plotBands with inline labels plus per-point marker overrides (data-driven
+          size/opacity) are genuinely Highcharts-specific and directly resolve attempt
+          1's 'generic usage' note.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []

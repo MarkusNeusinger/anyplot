@@ -1,7 +1,7 @@
 // anyplot.ai
 // qq-basic: Basic Q-Q Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 85/100 | Created: 2026-07-24
+// Quality: 92/100 | Created: 2026-07-24
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
