@@ -175,6 +175,83 @@ function sizeForDegree(d) {
 // label to the left so the text stays inside the canvas instead of running
 // off the right edge.
 const LABEL_FLIP_X = LAYOUT_W * 0.74;
+const labelSide = {};
+NODES.forEach((n) => {
+  labelSide[n.name] = positions[n.name].x > LABEL_FLIP_X ? "left" : "right";
+});
+
+// Second pass: two same-side labels on vertically close nodes can land close
+// enough horizontally that their background chips touch with no gap (reads
+// as one run-on phrase). echarts' graph "view" coordinate system stretches
+// our layout-space x/y independently (non-uniform, no aspect preservation)
+// to fill the series' left/right/top/bottom box, so the collision check
+// below re-derives real screen-pixel positions the same way before
+// estimating label chip spans — checking in raw layout units would miss
+// collisions the horizontal stretch factor closes up.
+const GRID_LEFT = 70;
+const GRID_RIGHT = 110;
+const GRID_TOP = 150;
+const GRID_BOTTOM = 60;
+const DATA_W = LAYOUT_W - 2 * EDGE_PAD;
+const DATA_H = LAYOUT_H - 2 * EDGE_PAD;
+const drawW = window.ANYPLOT_SIZE.width - GRID_LEFT - GRID_RIGHT;
+const drawH = window.ANYPLOT_SIZE.height - GRID_TOP - GRID_BOTTOM;
+const SCALE_X = drawW / DATA_W;
+const SCALE_Y = drawH / DATA_H;
+function screenX(x) {
+  return GRID_LEFT + (x - EDGE_PAD) * SCALE_X;
+}
+function screenY(y) {
+  return GRID_TOP + (y - EDGE_PAD) * SCALE_Y;
+}
+
+const LABEL_DISTANCE = 6;
+const LABEL_CHAR_W = 7.2;
+const LABEL_PAD_X = 10;
+const LABEL_ROW_GAP = 18;
+// Require a real visible gap between two chips, not just non-overlap — a
+// few px of clearance still reads as "touching" once anti-aliasing and the
+// chip's rounded corners are rendered.
+const LABEL_MIN_GAP = 18;
+function labelSpan(n, side) {
+  const sx = screenX(positions[n.name].x);
+  const half = sizeForDegree(degree[n.name]) / 2;
+  const width = n.name.length * LABEL_CHAR_W + LABEL_PAD_X;
+  if (side === "right") {
+    const start = sx + half + LABEL_DISTANCE;
+    return { start, end: start + width };
+  }
+  const end = sx - half - LABEL_DISTANCE;
+  return { start: end - width, end };
+}
+for (let i = 0; i < NODES.length; i++) {
+  for (let j = i + 1; j < NODES.length; j++) {
+    const a = NODES[i];
+    const b = NODES[j];
+    if (
+      Math.abs(screenY(positions[a.name].y) - screenY(positions[b.name].y)) >
+      LABEL_ROW_GAP
+    )
+      continue;
+    const spanA = labelSpan(a, labelSide[a.name]);
+    const spanB = labelSpan(b, labelSide[b.name]);
+    if (
+      spanA.start >= spanB.end + LABEL_MIN_GAP ||
+      spanB.start >= spanA.end + LABEL_MIN_GAP
+    )
+      continue;
+    // A collision here is most often two nearby nodes whose labels point
+    // *toward* each other into the same gap (e.g. the left node flipped
+    // "right" by the canvas-edge rule while the right node is naturally
+    // "left"). Point both labels away from each other instead — the
+    // leftward node's label goes left, the rightward node's label goes
+    // right — which is also the direction that opens the most free space.
+    const [leftNode, rightNode] =
+      positions[a.name].x <= positions[b.name].x ? [a, b] : [b, a];
+    labelSide[leftNode.name] = "left";
+    labelSide[rightNode.name] = "right";
+  }
+}
 
 const graphNodes = NODES.map((n) => ({
   name: n.name,
@@ -184,7 +261,7 @@ const graphNodes = NODES.map((n) => ({
   symbolSize: sizeForDegree(degree[n.name]),
   value: degree[n.name],
   label: {
-    position: positions[n.name].x > LABEL_FLIP_X ? "left" : "right",
+    position: labelSide[n.name],
   },
 }));
 
@@ -198,8 +275,10 @@ chart.on("finished", () => {
 });
 
 // --- Option --------------------------------------------------------------------
-const title = "Microservice Dependency Graph · network-basic · javascript · echarts · anyplot.ai";
-const titleFontSize = title.length > 67 ? Math.round(22 * (67 / title.length)) : 22;
+const title =
+  "Microservice Dependency Graph · network-basic · javascript · echarts · anyplot.ai";
+const titleFontSize =
+  title.length > 67 ? Math.round(22 * (67 / title.length)) : 22;
 
 chart.setOption({
   animation: false,
@@ -232,17 +311,17 @@ chart.setOption({
     {
       type: "graph",
       layout: "none",
-      left: 70,
-      right: 110,
-      top: 150,
-      bottom: 60,
+      left: GRID_LEFT,
+      right: GRID_RIGHT,
+      top: GRID_TOP,
+      bottom: GRID_BOTTOM,
       roam: false,
       draggable: false,
       symbol: "circle",
       categories,
       label: {
         show: true,
-        distance: 6,
+        distance: LABEL_DISTANCE,
         color: t.inkSoft,
         fontSize: 14,
         // Solid page-bg chip keeps labels legible where an edge crosses
