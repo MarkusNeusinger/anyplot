@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 quiver-basic: Basic Quiver Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 77/100 | Updated: 2026-04-29
@@ -7,6 +7,7 @@ Quality: 77/100 | Updated: 2026-04-29
 import importlib
 import os
 import sys
+from itertools import chain
 
 import numpy as np
 
@@ -43,8 +44,7 @@ max_mag = magnitude.max()
 norm_mag = magnitude / max_mag
 
 arrow_scale = 0.22
-U_scaled = U * arrow_scale
-V_scaled = V * arrow_scale
+min_arrow_len = 0.30  # floor so near-centre (low-magnitude) arrows stay visible
 
 head_ratio = 0.40
 head_angle = 0.55
@@ -59,10 +59,11 @@ for i in range(len(x_flat)):
     if magnitude[i] < 0.01:
         continue
     x1, y1 = x_flat[i], y_flat[i]
-    x2, y2 = x1 + U_scaled[i], y1 + V_scaled[i]
-    arrow_len = np.sqrt(U_scaled[i] ** 2 + V_scaled[i] ** 2)
+    arrow_len = max(magnitude[i] * arrow_scale, min_arrow_len)
+    angle = np.arctan2(V[i], U[i])
+    x2 = x1 + arrow_len * np.cos(angle)
+    y2 = y1 + arrow_len * np.sin(angle)
     head_size = arrow_len * head_ratio
-    angle = np.arctan2(V_scaled[i], U_scaled[i])
     xl = x2 - head_size * np.cos(angle - head_angle)
     yl = y2 - head_size * np.sin(angle - head_angle)
     xr = x2 - head_size * np.cos(angle + head_angle)
@@ -78,12 +79,10 @@ arrow_series = []
 for i in range(num_bins):
     arrows = arrow_bins[i][:]
     rng.shuffle(arrows)
-    flat = []
-    for arrow in arrows:
-        flat.extend(arrow)
-    arrow_series.append(flat)
+    arrow_series.append(list(chain.from_iterable(arrows)))
 
-# Style
+# Style — sizes are the pygal canonical values for a 3200×1800 canvas
+# (prompts/library/pygal.md "Sizing + Theme")
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -91,24 +90,24 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=bin_colors,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
 )
 
-# Plot — thinner strokes (10 vs 20) + dot markers at each segment endpoint
-# clearly distinguish 64 discrete arrow positions rather than sweeping bands
+# Plot — thin strokes + dot markers at each segment endpoint clearly
+# distinguish 64 discrete arrow positions rather than sweeping bands
 chart = pygal.XY(
     style=custom_style,
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     stroke=True,
-    stroke_style={"width": 10},
+    stroke_style={"width": 7},
     show_dots=True,
-    dot_size=4,
+    dot_size=3,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
@@ -117,8 +116,8 @@ chart = pygal.XY(
     y_title="Latitude (degrees)",
     show_x_guides=True,
     show_y_guides=True,
-    range=(-3.8, 3.8),
-    xrange=(-3.8, 3.8),
+    range=(-3.6, 3.6),
+    xrange=(-3.6, 3.6),
 )
 
 for i in range(num_bins):
