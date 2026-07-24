@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: radar-basic
 created: '2025-12-23T18:12:48Z'
-updated: '2026-07-24T16:16:11Z'
+updated: '2026-07-24T16:27:10Z'
 generated_by: claude-sonnet
 workflow_run: 30107613609
 issue: 744
@@ -12,65 +12,67 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Correct engineering choice: builds the radar chart via manual polar-to-cartesian
-    projection rather than plotnine''s coord_polar, which would bend the straight
-    polygon edges into arcs and break the radar shape - shows real understanding of
-    the library''s limitations.'
+  - Title now correctly reads 'radar-basic · python · plotnine · anyplot.ai' with
+    the required language segment, fixing the prior attempt's weakness.
+  - Legend now has clear breathing room — 'Employee' title sits comfortably below
+    the box's top border in both renders, resolving the previous 'tight against padding'
+    issue (legend_margin=8 addition).
+  - 'Correct engineering choice: builds the radar via manual polar-to-cartesian projection
+    instead of plotnine''s coord_polar, which avoids the arc-bending distortion coord_polar
+    would introduce to straight polygon edges — shows real understanding of the library''s
+    limitations.'
   - 'All spec-mandated features present: filled polygons with alpha=0.25, concentric
     gridlines at 20/40/60/80/100, spokes per axis, category labels at the outer edge,
     closed polygons, and a legend distinguishing the two series.'
-  - 'Palette compliance is clean: first series is #009E73, second is #C475FD, identical
-    between light and dark renders; theme-adaptive chrome (background, grid, spokes,
-    text, legend) is correctly threaded through via the THEME env var.'
+  - 'Palette compliance is clean: first series #009E73, second #C475FD, identical
+    hues/alpha/markers between light and dark renders; theme-adaptive chrome (background,
+    grid, spokes, text, legend) correctly threaded through the THEME env var.'
   - Deterministic, minimal, KISS-structured code with no fake interactivity and only
     the imports it actually uses.
   weaknesses:
-  - 'Title is ''radar-basic · plotnine · anyplot.ai'' but the required format is ''{spec-id}
-    · {language} · {library} · anyplot.ai'' - missing the ''python'' language segment.
-    Fix: labs(title="radar-basic · python · plotnine · anyplot.ai", ...).'
-  - Legend title 'Employee' nearly fills the legend box width and sits close to the
-    box's top border in both renders (tight but not clipped) - increase legend box
-    padding or reduce legend_title fontsize slightly for breathing room.
-  - Noticeable unused whitespace above and below the radar hexagon relative to the
-    square canvas - the chart could be scaled up slightly (e.g. tighten scale_x_continuous/scale_y_continuous
-    limits or increase figure_size fill) to use the available canvas space more fully.
-  - Data storytelling relies solely on the overlapping filled polygons for comparison
-    - no additional emphasis (e.g. highlighting the leading employee per axis, or
+  - Noticeable unused whitespace above the title and below the hexagon relative to
+    the square canvas persists — the axis-limit tightening (150→138) only marginally
+    improved this; consider increasing figure_size fill or repositioning the title/legend
+    to use more of the vertical canvas.
+  - Data storytelling relies solely on the two overlapping filled polygons for comparison
+    — no additional emphasis (e.g. highlighting the leading employee per axis, or
     a brief subtitle) to sharpen the takeaway.
+  - Concentric gridlines are unlabeled — viewers can see rings at 20/40/60/80/100
+    but cannot read the actual scale value of any ring without a radial axis label;
+    consider adding faint numeric labels along one spoke.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), matches the required light-theme surface. Not pure white, not dark.
-      Chrome: Bold dark title "radar-basic · plotnine · anyplot.ai" at the top in dark ink. Six category labels (Creativity, Leadership, Communication, Technical, Problem Solving, Teamwork) sit just outside the hexagonal grid in dark ink, all clearly legible. Dashed concentric gridlines and straight spokes in a soft warm-gray are subtle but visible. A bordered legend box top-right reads "Employee" with swatches for "Alice" (green line+dot) and "Bob" (purple line+dot); legend text is dark and readable, though the "Employee" title text is tight against the box's top/right padding.
-      Data: Two overlapping filled hexagonal polygons - green (#009E73, Alice) and light purple (#C475FD, Bob) - each with alpha ~0.25 fill, solid outline, and circular markers at each of the 6 vertices. Both series are clearly distinguishable from each other and from the background.
-      Legibility verdict: PASS - all text (title, axis/category labels, legend) is clearly readable against the light background; no light-on-light issues.
+      Chrome: Bold dark title "radar-basic · python · plotnine · anyplot.ai" at the top in dark ink (language segment now present, fixing the prior attempt). Six category labels (Creativity, Leadership, Communication, Technical, Problem Solving, Teamwork) sit just outside the hexagonal grid in dark ink, all clearly legible. Dashed concentric gridlines and straight spokes in a soft warm-gray are subtle but visible. A bordered legend box on the right reads "Employee" with swatches for "Alice" (green line+dot) and "Bob" (purple line+dot); legend text is dark and readable, and the "Employee" title now has comfortable padding from the box's top border (legend_margin fix confirmed).
+      Data: Two overlapping filled hexagonal polygons — green (#009E73, Alice) and light purple (#C475FD, Bob) — each with alpha ~0.25 fill, solid outline, and circular markers at each of the 6 vertices. Both series are clearly distinguishable from each other and from the background.
+      Legibility verdict: PASS — all text (title, category labels, legend) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), matches the required dark-theme surface. Not pure black, not light.
-      Chrome: Same title, now in light off-white ink, clearly visible against the dark background. Category labels are in light ink, all legible. Gridlines/spokes rendered in a muted warm-gray, visible but subtle against the dark surface. Legend box border and background use the dark elevated surface with light text for "Employee", "Alice", "Bob".
-      Data: The same two series - green #009E73 (Alice) and purple #C475FD (Bob) - with identical hues, alpha, and marker style to the light render; only the chrome (background, grid, text, legend surface) has flipped for the dark theme, confirming Imprint palette data-color identity across themes.
-      Legibility verdict: PASS - all text is light-on-dark and clearly readable; no dark-on-dark failures observed. Brand green remains vivid and distinguishable on the dark surface.
+      Chrome: Same corrected title, now in light off-white ink, clearly visible against the dark background. Category labels are in light ink, all legible. Gridlines/spokes rendered in a muted warm-gray, visible but subtle against the dark surface. Legend box uses the dark elevated surface with light text for "Employee", "Alice", "Bob", with the same comfortable top-border padding confirmed as in the light render.
+      Data: The same two series — green #009E73 (Alice) and purple #C475FD (Bob) — with identical hues, alpha, and marker style to the light render; only the chrome (background, grid, text, legend surface) has flipped for the dark theme, confirming Imprint palette data-color identity across themes.
+      Legibility verdict: PASS — all text is light-on-dark and clearly readable; no dark-on-dark failures observed. Brand green remains vivid and distinguishable on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; legend title text is tight against
-          box padding but not clipped
+        comment: All text readable in both themes; legend title now has comfortable
+          padding (legend_margin fix)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No data/text collisions; legend title text sits close to the box's
-          inner border
+        comment: No data/text collisions; legend title no longer tight against border
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -89,15 +91,15 @@ review:
         score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed; noticeable unused whitespace above/below the
-          hexagon
+        comment: Canvas gate passed; axis-limit tightening helped slightly but noticeable
+          unused whitespace above/below the hexagon remains
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: Category labels serve as axis labels, clear and descriptive; title
-          present
+          format now fully correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -121,17 +123,17 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Spines/ticks removed, custom subtle grid; whitespace generous to
-          the point of being slightly excessive
+        comment: Spines/ticks removed, custom subtle grid; whitespace still slightly
+          excessive top/bottom
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Overlap comparison reads clearly but no additional emphasis beyond
-          the base polygons
+        comment: Overlapping filled polygons show comparison but no additional emphasis
+          technique
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,43 +147,43 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Filled alpha polygons, gridlines at 20/40/60/80/100, outer labels,
-          legend, closed polygons all present
+        comment: Filled alpha polygons, gridlines at 20/40/60/80/100, outer-edge labels,
+          distinct colors + legend, closed polygons
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Polar-to-cartesian mapping correct, all 6 axes and both series visible
+        comment: Polar-to-cartesian mapping correct, all data represented
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Legend correct; title missing the 'python' language segment
+        comment: Title format now exactly matches '{spec-id} · {language} · {library}
+          · anyplot.ai'; legend labels match series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all radar-chart aspects: multi-axis, multi-series, filled
-          overlap, gridlines'
+        comment: 6 axes, 2-series comparison within spec's recommended range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral employee performance review scenario
+        comment: Plausible, neutral employee competency scores
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 scale with realistic 60-90 range values
+        comment: 0-100 scale sensible for performance review scores
     code_quality:
       score: 10
       max: 10
@@ -191,34 +193,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes, straightforward script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hardcoded data
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a manual radar projection, no fake UI
+        comment: Appropriate complexity for manual radar construction, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at correct 6x6in/400dpi for the square canvas
-          target
+        comment: Saves as plot-{THEME}.png correctly
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -226,26 +227,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Deliberately avoids coord_polar (which arcs straight polygon edges)
-          in favor of a correct manual projection
+        comment: Sound grammar-of-graphics layering (geom_path/geom_polygon/geom_point/geom_text),
+          correctly avoids coord_polar pitfalls
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Thoughtful multi-layer composition (path/polygon/point/text) and
-          coord_fixed for correct aspect ratio
+        passed: false
+        comment: Manual polar math is a workaround rather than a distinctive plotnine-native
+          feature
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
   - grid-styling
-  - minimal-chrome
