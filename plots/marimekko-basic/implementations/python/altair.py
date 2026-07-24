@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 marimekko-basic: Basic Marimekko Chart
 Library: altair 6.2.2 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-07-24
+Quality: 95/100 | Updated: 2026-07-24
 """
 
 import os
