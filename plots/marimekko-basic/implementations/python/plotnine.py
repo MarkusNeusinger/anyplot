@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 marimekko-basic: Basic Marimekko Chart
-Library: plotnine 0.15.7 | Python 3.14.4
-Quality: 78/100 | Updated: 2026-07-24
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-07-24
 """
 
 import os
