@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 quiver-basic: Basic Quiver Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-07-24
@@ -33,8 +33,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data: 15x15 grid rotation flow field (u = -y, v = x)
-grid_size = 15
+# Data: 13x13 grid rotation flow field (u = -y, v = x) — a slightly coarser
+# grid than 15x15 gives corner arrowheads more breathing room.
+grid_size = 13
 x_vals = np.linspace(-3, 3, grid_size)
 y_vals = np.linspace(-3, 3, grid_size)
 X, Y = np.meshgrid(x_vals, y_vals)
@@ -51,7 +52,7 @@ magnitude = np.sqrt(u**2 + v**2)
 # Scale arrows for visibility without overlap. A fixed minimum length keeps
 # near-origin arrows (magnitude ~ 0) directionally readable instead of
 # collapsing to invisible stubs, while length still grows with magnitude.
-arrow_scale = 0.16
+arrow_scale = 0.14
 min_len = 0.08
 direction_norm = magnitude + 1e-6
 display_len = min_len + arrow_scale * magnitude
@@ -76,6 +77,11 @@ anyplot_theme = theme(
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=8),
     legend_title=element_text(color=INK, size=8),
+    # Dock the colorbar to the plot instead of floating in the right margin.
+    legend_box_margin=0,
+    legend_margin=2,
+    legend_box_spacing=0.05,
+    plot_margin=0.01,
 )
 
 plot = (
@@ -84,7 +90,7 @@ plot = (
     # Imprint sequential colormap (imprint_seq): brand green -> blue, for
     # single-polarity magnitude data (no meaningful zero-crossing midpoint).
     + scale_color_gradient(low="#009E73", high="#4467A3", name="Magnitude")
-    + labs(x="East (km)", y="North (km)", title="quiver-basic · plotnine · anyplot.ai")
+    + labs(x="East (km)", y="North (km)", title="quiver-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + anyplot_theme
     + coord_equal()
