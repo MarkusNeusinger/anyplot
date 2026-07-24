@@ -1,7 +1,7 @@
 # anyplot.ai
 # parallel-basic: Basic Parallel Coordinates Plot
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-07-24
+# Created: 2026-07-24
 
 using CairoMakie
 using Colors
@@ -27,8 +27,12 @@ const IMPRINT_PALETTE = [
     colorant"#99B314",  # 8 — lime
 ]
 
-# Data — smartphone specs across three price tiers, six comparison dimensions
-dimension_names = ["Price (\$)", "Rating (1-5)", "Battery (hrs)", "Weight (g)", "Storage (GB)", "Camera (MP)"]
+# Data — smartphone specs across three price tiers, six comparison dimensions.
+# Axis order groups the four dimensions that move together with price
+# (Price, Rating, Storage, Camera) so adjacent axes stay low-crossing, and
+# places the two dimensions that buck that trend (Weight, Battery) together
+# at the end instead of interleaved among the correlated block.
+dimension_names = ["Price (\$)", "Rating (1-5)", "Storage (GB)", "Camera (MP)", "Weight (g)", "Battery (hrs)"]
 n_dims = length(dimension_names)
 tiers = ["Budget", "Mid-range", "Premium"]
 n_per_tier = 20
@@ -57,7 +61,7 @@ for (t, (p_mu, p_sd, r_mu, r_sd, b_mu, b_sd, w_mu, w_sd, s_mu, s_sd, c_mu, c_sd)
     append!(tier, fill(t, n_per_tier))
 end
 
-data = hcat(price, rating, battery, weight, storage, camera)
+data = hcat(price, rating, storage, camera, weight, battery)
 n_obs = size(data, 1)
 
 # Min-max normalize each dimension to a shared [0, 1] vertical scale
@@ -106,16 +110,16 @@ vlines!(ax, 1:n_dims; color = INK_SOFT, linewidth = 1.2)
 for t in tiers
     idx = findall(==(t), tier)
     for i in idx
-        lines!(ax, 1:n_dims, data_norm[i, :]; color = (tier_color[t], 0.45), linewidth = 1.8)
+        lines!(ax, 1:n_dims, data_norm[i, :]; color = (tier_color[t], 0.38), linewidth = 1.5)
     end
 end
 
 # Original min/max labels at each axis end — the normalized scale alone hides units
 for j in 1:n_dims
     text!(ax, j, 1.06; text = string(round(data_max[j]; digits = 1)),
-          align = (:center, :bottom), fontsize = 11, color = INK_MUTED)
+          align = (:center, :bottom), fontsize = 12, color = INK_MUTED)
     text!(ax, j, -0.06; text = string(round(data_min[j]; digits = 1)),
-          align = (:center, :top), fontsize = 11, color = INK_MUTED)
+          align = (:center, :top), fontsize = 12, color = INK_MUTED)
 end
 
 # Legend
