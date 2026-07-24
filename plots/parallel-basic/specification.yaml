@@ -6,7 +6,7 @@ title: Basic Parallel Coordinates Plot
 
 # Specification tracking
 created: 2025-12-14T18:23:20Z
-updated: 2025-12-14T18:23:20Z
+updated: 2026-07-24T10:30:48Z
 issue: 820
 suggested: MarkusNeusinger
 
@@ -14,10 +14,10 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - parallel
-    - multivariate
   data_type:
     - numeric
     - continuous
+    - multivariate
   domain:
     - statistics
     - general
