@@ -1,7 +1,7 @@
 // anyplot.ai
 // marimekko-basic: Basic Marimekko Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.1
-// Quality: 87/100 | Created: 2026-07-24
+// Quality: 89/100 | Created: 2026-07-24
 
 const t = window.ANYPLOT_TOKENS;
 
