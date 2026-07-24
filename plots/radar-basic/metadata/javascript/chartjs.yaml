@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: radar-basic
 created: '2026-07-24T16:17:43Z'
-updated: '2026-07-24T16:24:54Z'
+updated: '2026-07-24T16:39:11Z'
 generated_by: claude-sonnet
 workflow_run: 30108279418
 issue: 744
@@ -12,56 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'Spec-accurate alpha: fill uses hex alpha `40` (~25%), matching the spec''s explicit
-    ''alpha ~0.25'' guidance rather than a generic default.'
-  - Radial ticks at 20/40/60/80/100 with a 0-100 domain exactly match the spec's recommended
-    gridline intervals.
-  - 'Imprint palette used in canonical order: `t.palette[0]` (#009E73 brand green)
-    then `t.palette[1]` (#C475FD lavender) — data colors are pixel-identical between
-    light and dark renders, only chrome flips.'
-  - 'Nice non-default touch: `pointBorderColor: t.pageBg` creates a theme-adaptive
-    halo around markers, and `backdropColor: ''transparent''` on radial ticks removes
-    Chart.js''s default grey box-behind-number, both cleaner than the out-of-the-box
-    look.'
-  - 'Realistic, neutral data: two named forwards with plausible, differentiated stat
-    profiles (speed/agility specialist vs. strength/vision specialist) makes the comparison
-    read clearly at a glance.'
-  - 'Clean mount-node contract compliance: single canvas, `animation: false`, `responsive`/`maintainAspectRatio`
-    set correctly, square orientation directive present and matches the 2400x2400
-    canvas gate.'
-  - Both renders are fully legible — no dark-on-dark or light-on-light failures, no
-    clipped text at any edge.
+  - 'Directly resolves both attempt-1 weaknesses: series are now distinguished by
+    marker shape (circle vs. triangle) in addition to color, and a new subtitle +
+    bold axis label give the chart an explicit, resolved focal point'
+  - The pointLabels.font callback conditionally bolding "Agility" is a per-axis styling
+    technique that goes beyond static config
+  - Spec-accurate alpha fill (~25%), radial ticks at 20/40/60/80/100 on a 0-100 domain,
+    Imprint palette in canonical order, theme-adaptive halos and transparent tick
+    backdrop all carried over cleanly
+  - Realistic, neutral two-player comparison with plausible, differentiated stat profiles
+  - Clean mount-node contract compliance, square canvas gate passes, both renders
+    fully legible with no edge clipping or dark-on-dark/light-on-light failures
   weaknesses:
-  - 'Design excellence is solid but not exceptional: the two filled polygons rely
-    on flat alpha overlap alone to tell the story — consider a subtle gradient fill,
-    or an annotation/label calling out the biggest stat delta (e.g. Agility or Strength)
-    to give the chart a clearer focal point (DE-01/DE-03).'
-  - Series are distinguished by color only; add a redundant visual encoding (e.g.
-    different `pointStyle` per dataset, such as circle vs. triangle) so the two players
-    remain distinguishable even without color, and it doubles as a distinctive Chart.js
-    radar feature (VQ-04/LM-02).
-  - 'Library mastery is competent but generic: the config mirrors the library skeleton
-    fairly closely. Consider a Chart.js-radar-distinctive touch such as `elements.line.tension`
-    for smoothed curves, or per-axis `pointLabels` callback styling, to demonstrate
-    deeper API command (LM-02).'
-  - Legend and radial tick labels are all mid-sized defaults; a touch more hierarchy
-    (e.g. slightly bolder legend title or a subtitle summarizing the comparison) would
-    strengthen the visual storytelling without hurting legibility (DE-03).
+  - Design excellence is strong but the two filled polygons still rely primarily on
+    flat alpha overlap for the visual comparison — a subtle radial gradient or a direct
+    leader-line/value annotation at the biggest gap point would push this further
+  - Legend and tick typography remain uniform; a slightly bolder legend title or accented
+    tick at the "100" ring could add one more layer of hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "radar-basic · javascript · chartjs · anyplot.ai" in bold dark ink at top, fully visible and not clipped. Six category labels (Speed, Strength, Accuracy, Stamina, Agility, Vision) sit clearly outside the radar polygon at each vertex. Radial tick labels (20/40/60/80/100) run up the vertical Speed axis in a lighter ink tone. Legend ("Kova (Forward)", "Renn (Forward)") sits centered below the chart with color-matched point-style swatches. Grid lines (hexagonal rings + spokes) are subtle light grey, visible but not dominant.
-      Data: First series (Kova) is brand green (#009E73) with a ~25%-alpha green fill; second series (Renn) is lavender/purple (#C475FD) with a matching translucent fill. Where the two polygons overlap, the fills blend into a darker blue-grey region, visually foregrounding agreement vs. divergence between the two players. Markers are 6px circles with a light halo border matching the page background, clearly visible against both fill colors and the grid.
-      Legibility verdict: PASS — all text (title, axis labels, tick labels, legend) reads clearly against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "radar-basic · javascript · chartjs · anyplot.ai" bold dark ink, fully visible. New italic subtitle "Kova's biggest edge is Agility (+31); Renn's is Strength (+22)" in softer ink below it. Six category labels (Speed, Strength, Accuracy, Stamina, Agility, Vision) at each vertex; "Agility" rendered bold to tie into the subtitle. Radial ticks (20/40/60/80/100) with transparent backdrop. Legend at bottom with point-style swatches (circle for Kova, triangle for Renn) matching the on-chart markers. All chrome clearly readable against the light background.
+      Data: Kova is brand green (#009E73) with ~25%-alpha fill; Renn is lavender (#C475FD) with matching translucent fill; overlap blends into a darker blue-grey region. First series correctly uses palette[0] green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, category labels, radial ticks, and legend as the light render, all re-colored to light ink tones (white/light grey) and clearly legible against the dark background. Grid lines are a dim grey, still visible but appropriately subtle.
-      Data: Data colors are pixel-identical to the light render — brand green (#009E73) and lavender (#C475FD) — confirming only chrome (background, text, grid) flipped between themes. Marker halos (pointBorderColor = t.pageBg) now render dark, correctly adapting to the dark theme instead of leaving stale light-colored halos.
-      Legibility verdict: PASS — no dark-on-dark failures; every title/label/tick is clearly legible against the near-black background, and the brand green and lavender both remain vivid on the dark surface.
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same title, subtitle, category labels (Agility still bold), radial ticks, and legend, all re-colored to light ink and clearly legible. Grid lines dim but visible. No dark-on-dark failures anywhere.
+      Data: Colors pixel-identical to light render (#009E73 green, #C475FD lavender) — only chrome flipped. Point-style differentiation (circle vs. triangle) carries over identically. Marker halos (pointBorderColor: t.pageBg) correctly re-render dark.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -72,70 +54,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at good sizes; title/legend sizing
-          follows library convention
+        comment: All text readable in both themes, explicit font sizes throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, markers, or legend
+        comment: No collisions between labels, ticks, legend, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 6px markers well-sized for sparse 6-point series, 3px borders make
-          polygons distinct
+        comment: Prominent markers (pointRadius 6, borderWidth 3) appropriate for
+          sparse 2-series/6-axis data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender is CVD-safe; no red-green sole signal
+        comment: Good contrast, CVD-safe palette, plus redundant marker-shape encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correctly used, radar well-centered, no overflow/clipping
+        comment: Square 2400x2400 canvas ideal for radar, no clipping, generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive category labels, mandated title format
+        comment: Descriptive category labels, correct mandated title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: palette[0]/palette[1] in canonical order, identical data colors across
-          themes, correct backgrounds
+        comment: 'palette[0]/palette[1] canonical order, backgrounds match #FAF8F1/#1A1A17
+          exactly, both themes correct'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Halo point borders and transparent tick backdrop beyond default,
-          but no stronger focal-point device
+        comment: Halo markers, transparent tick backdrop, distinct point shapes, per-axis
+          bold font callback
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, generous legend padding, clean tick styling
+        comment: Subtle grid, generous padding, clean tick styling; still relies mainly
+          on flat alpha overlap
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Overlap region highlights comparison, but no explicit callout of
-          the key differentiator
+        comment: New subtitle explicitly names each player's biggest stat gap, reinforced
+          by bold Agility label
     spec_compliance:
       score: 15
       max: 15
@@ -145,26 +127,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Chart.js radar type
+        comment: Correct radar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled polygons at ~0.25 alpha, gridlines at 20-step intervals, outer-edge
-          axis labels, legend, closed polygon
+        comment: Alpha fill ~0.25, gridlines at 20-interval steps, axis labels at
+          outer edge, legend, closed polygons
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 6 axes and both series map correctly to values
+        comment: 6 axes (within 4-8), 2 series (within 1-3), 0-100 scale
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels identify both players
+        comment: Title matches mandated format exactly, legend labels match dataset
+          labels
     data_quality:
       score: 15
       max: 15
@@ -174,19 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multi-series, filled polygons, gridlines, legend all present
+        comment: Full radar feature coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral sports-player stat comparison
+        comment: Plausible, neutral sports player comparison
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 rating scale is sensible for the domain
+        comment: Sensible 0-100 attribute-rating values
     code_quality:
       score: 10
       max: 10
@@ -196,19 +179,19 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: No classes, flat config object
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data
+        comment: Hardcoded deterministic data arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses global Chart
+        comment: No unused imports, uses global Chart
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -220,9 +203,9 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled
+        comment: Correct mount/canvas contract, animation:false set
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -230,23 +213,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct r-scale config, plugins usage, point styles
+        comment: Proper scales.r config, radar-idiomatic API usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
         passed: true
-        comment: Halo markers and transparent tick backdrop are nice touches but config
-          otherwise mirrors the library skeleton
-  verdict: REJECTED
+        comment: Per-dataset pointStyle (circle/triangle) plus pointLabels.font callback
+          conditionally bolding the standout axis
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
-  - grid-styling
+  - publication-ready
