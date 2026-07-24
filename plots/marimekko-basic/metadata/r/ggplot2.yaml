@@ -1,0 +1,241 @@
+library: ggplot2
+language: r
+specification_id: marimekko-basic
+created: '2026-07-24T14:41:55Z'
+updated: '2026-07-24T14:57:29Z'
+generated_by: claude-sonnet
+workflow_run: 30101759315
+issue: 1002
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Fixed both prior-attempt weaknesses precisely as suggested: added an annotate("curve"/"text")
+    callout on the Asia Pacific hardware/software crossover, and loosened plot.margin
+    for more breathing room'
+  - 'True marimekko construction: bar width encodes each region''s total revenue AND
+    segment height encodes the within-region product share simultaneously'
+  - Regions sorted by descending total revenue, creating immediate visual hierarchy
+    on top of the explicit annotation
+  - Dollar-value labels gated by segment area (>5% of total), keeping tiny slices
+    clutter-free
+  - Correct Imprint palette in canonical order; fully theme-adaptive chrome with no
+    edge clipping in either render
+  - Title fontsize scales dynamically with title length via the style-guide formula
+  weaknesses:
+  - Library Mastery is still fairly generic - the geom_rect + dplyr mekko technique
+    plus a curved annotate() arrow don't leverage a feature that's uniquely ggplot2
+    (e.g. stat_*, coord_*, facets)
+  - Legend swatches are still a little close together at the 400px mobile thumbnail
+    - readable but not maximally spaced
+  - The annotation text (size=2.5) is the smallest text on the chart; still legible
+    in both themes but has the least margin for further downscaling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "Global Software Revenue Mix · marimekko-basic · r · ggplot2 · anyplot.ai" in dark ink top-left, fully legible. "Product line" legend with 4 swatches (green/lavender/blue/ochre) labeled Software/Hardware/Services/Support in medium-grey text. Italic annotation "Only region where Hardware outsells Software" with a thin curved arrow pointing to the Hardware/Services boundary in the Asia Pacific column. Rotated ~25 degree region tick labels, percent-formatted y-axis labels, all in readable dark/medium-grey ink.
+      Data: Five variable-width stacked columns (North America, Asia Pacific, Europe, Latin America, Middle East), sorted by descending total revenue. Segment colors: Software=#009E73 (green), Hardware=#C475FD (lavender), Services=#4467A3 (blue), Support=#BD8233 (ochre) - canonical Imprint order, first series green as required. Bold white $XXXM labels on larger segments only (area-gated).
+      Legibility verdict: PASS - all text, including the small annotation, reads clearly against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Same title, legend, and annotation layout, rendered in off-white ink (title/axis titles) and light-grey ink (tick labels, legend text, annotation, arrow). Thin near-black (PAGE_BG-colored) segment borders still read as crisp separation.
+      Data: Segment colors identical to light render (#009E73, #C475FD, #4467A3, #BD8233) - confirms palette does not shift between themes, only chrome flips.
+      Legibility verdict: PASS - no dark-on-dark failures; annotation and arrow are clearly visible light-grey against the near-black surface; brand green stays vivid.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout, readable at desktop and mobile scale;
+          small annotation text is smallest element but still legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; annotation and arrow sit cleanly in headroom above
+          the 100% line
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Segments well-bounded with white separators; labels area-thresholded
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe, good contrast, bold white labels readable on every fill
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins (t=16, r=30, b=16, l=16), nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive, explains width and share encodings
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, theme-correct chrome, identical data colors
+          across themes
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color/typography, sorted-column hierarchy, clearly above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/grid removed, margins loosened per prior feedback; legend
+          spacing still slightly tight on mobile
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: New callout annotation explicitly names and points at the Asia Pacific
+          crossover insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine marimekko: width and height both data-encoded'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportional widths/heights, area-encoded segments, legend, labels,
+          centered axis
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=region width, Y=share height, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide spread of totals and product mixes, including the crossover
+          case
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral global tech revenue-mix scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic magnitudes and regional ordering
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> transform -> plot -> save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used packages
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{theme}.png via ragg::agg_png, current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct tidyverse/ggplot2 composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: annotate(curve) arrow is a nice touch but geom_rect mekko construction
+          remains portable to other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
+  - edge-highlighting
