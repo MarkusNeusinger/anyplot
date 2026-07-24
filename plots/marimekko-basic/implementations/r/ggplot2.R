@@ -78,6 +78,10 @@ marimekko <- revenue %>%
 
 area_threshold <- sum(col_totals$total) * 0.05
 
+# --- Callout: Asia Pacific is the only region where Hardware outsells Software
+apac_col  <- col_totals %>% filter(region == "Asia Pacific")
+apac_hw   <- marimekko  %>% filter(region == "Asia Pacific", product == "Hardware")
+
 # --- Title (fontsize scales with length; see default-style-guide.md) --------
 plot_title <- "Global Software Revenue Mix · marimekko-basic · r · ggplot2 · anyplot.ai"
 title_fontsize <- max(8, round(12 * min(1, 67 / nchar(plot_title))))
@@ -96,9 +100,22 @@ p <- ggplot(marimekko) +
     expand = expansion(mult = c(0, 0.015))
   ) +
   scale_y_continuous(
-    labels = scales::percent_format(accuracy = 1), expand = c(0, 0)
+    breaks = seq(0, 1, 0.25), labels = scales::percent_format(accuracy = 1),
+    expand = expansion(mult = c(0, 0.16))
   ) +
   scale_fill_manual(values = IMPRINT_PALETTE[seq_along(product_levels)], name = "Product line") +
+  annotate(
+    "curve", x = apac_col$xmid, xend = apac_col$xmid,
+    y = 1.13, yend = apac_hw$ymax + 0.02,
+    curvature = 0, linewidth = 0.4, color = INK_SOFT,
+    arrow = arrow(length = unit(0.1, "cm"), type = "closed")
+  ) +
+  annotate(
+    "text", x = apac_col$xmid, y = 1.15,
+    label = "Only region where Hardware\noutsells Software",
+    color = INK_SOFT, size = 2.5, fontface = "italic",
+    lineheight = 0.9, vjust = 0
+  ) +
   labs(
     title = plot_title,
     x = "Region (bar width ∝ total revenue)",
@@ -115,7 +132,7 @@ p <- ggplot(marimekko) +
     axis.ticks        = element_blank(),
     axis.line         = element_blank(),
     plot.title        = element_text(color = INK, size = title_fontsize),
-    plot.margin       = margin(t = 8, r = 20, b = 8, l = 8),
+    plot.margin       = margin(t = 16, r = 30, b = 16, l = 16),
     legend.background = element_rect(fill = PAGE_BG, color = NA),
     legend.key        = element_rect(fill = PAGE_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT, size = 8),
