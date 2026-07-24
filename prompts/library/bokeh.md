@@ -103,6 +103,10 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# IMPORTANT: headless Chrome's --window-size sets the OUTER window, which still
+# reserves a phantom ~143px title-bar height even headless — innerHeight (and
+# thus the screenshot) comes out short of H. Pin the viewport exactly via CDP.
+driver.execute_cdp_cmd("Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False})
 time.sleep(3)  # let bokeh's JS render the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
