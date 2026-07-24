@@ -1,0 +1,241 @@
+library: makie
+language: julia
+specification_id: heatmap-calendar
+created: '2026-07-24T20:30:42Z'
+updated: '2026-07-24T20:45:26Z'
+generated_by: claude-opus
+workflow_run: 30123739675
+issue: 1010
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Faithful GitHub-style calendar heatmap: weeks as columns, Mon–Sun rows, month
+    labels across the top, and a horizontal sequential colorbar — every required spec
+    feature is present.'
+  - 'Correct Imprint theming: imprint_seq (brand green → blue) for the single-polarity
+    commit counts, #FAF8F1 / #1A1A17 backgrounds, and theme-adaptive INK / INK_SOFT
+    chrome threaded through title, ticks, and colorbar in both renders.'
+  - Missing/out-of-range days are handled gracefully as faint neutral cells (6% ink
+    alpha) instead of being dropped, exactly as the spec asks.
+  - 'Idiomatic CairoMakie: poly! over precomputed Rect2f cells, a GridLayout with
+    transparent spacer Boxes to vertically center the block on the 16:9 canvas, and
+    Relative colorbar width — clean, flat, seed-reproducible script.'
+  - Realistic, neutral synthetic data with weekday/weekend contrast, a yearly growth
+    trend, and a seasonal sine term, giving the grid genuine temporal texture.
+  weaknesses:
+  - Design is polished but reads as an even grid with no deliberate focal point —
+    a subtle emphasis (e.g. slightly stronger stroke on peak weeks or a callout) would
+    lift data storytelling.
+  - The green→blue sequential ramp shifts hue as well as lightness, which is legible
+    but can read as two categories at a glance rather than pure intensity; acceptable
+    since imprint_seq is the mandated continuous ramp.
+  - Vertical centering leaves a visible whitespace gap between the calendar block
+    and the colorbar; intentional, but the legend feels slightly detached from the
+    grid it explains.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), correct.
+      Chrome: dark title "heatmap-calendar · julia · makie · anyplot.ai" centered above the grid; month labels Jan–Dec along the top in soft ink; Mon–Sun weekday labels down the left in soft ink; colorbar labeled "Daily commits" (0–~23) below. All text clearly readable against the light surface.
+      Data: 7×53 calendar grid of padded cells colored on the imprint_seq green→blue ramp; low counts read brand green (#009E73), high counts blue (#4467A3). Leading/trailing out-of-range days render as faint light-gray cells. First/low end of the ramp is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), correct.
+      Chrome: light title, month labels, weekday labels, and colorbar text — all clearly readable against the dark surface; no dark-on-dark failures. Empty cells render as faint near-black tiles.
+      Data: identical calendar geometry and identical green→blue cell colors to the light render — only the surrounding chrome flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 26, ticks 19, colorbar 15–18); all
+          text readable in both themes and mobile-scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Padded cells, no text or element collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cell colors clearly distinguishable; empty cells subtle but visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green→blue ramp, CVD-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200×1800 exact, centered block, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Weekday + month labels; colorbar carries units (Daily commits)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq continuous ramp; correct theme backgrounds both renders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Polished GitHub-style calendar with intentional cell padding and
+          centered layout
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines and grid hidden, generous whitespace, clean chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Seasonal/weekday texture visible but no deliberate focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct calendar heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Weekday y-labels, month top-labels, sequential cmap, neutral empty
+          cells, colorbar legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dates→week/weekday grid, value→color, full year shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches mandated format; colorbar labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows daily/weekday/seasonal/trend patterns across full year
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral GitHub commit counts
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0–~23 commits/day, sensible domain range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Dates, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png"; px_per_unit=2), current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: poly! over Rect2f, GridLayout spacers, Colorbar, cgrad — idiomatic
+          Makie
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Transparent spacer Boxes + Fixed rowsizes + Relative colorbar width
+          to center the block
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - time-series
+  styling:
+  - minimal-chrome
+  - custom-colormap
