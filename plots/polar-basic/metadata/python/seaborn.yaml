@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: polar-basic
 created: '2025-12-23T19:43:22Z'
-updated: '2026-07-24T23:35:14Z'
+updated: '2026-07-24T23:47:15Z'
 generated_by: claude-sonnet
 workflow_run: 30133652523
 issue: 800
@@ -15,43 +15,52 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Polar geometry correctly follows the spec notes: theta offset to top (12 o''clock)
-    with clockwise direction, matching the recommended time-based convention'
-  - Continuous traffic magnitude is encoded with the Imprint sequential colormap (imprint_seq,
-    green->blue) on the scatter hue, while the connecting line and area fill use the
-    brand green consistently across light and dark renders
-  - Angular and radial tick labels are deliberately decluttered (every-2-hours ticks,
-    radial label parked in the low-traffic 14:00-16:00 wedge) to avoid collisions
-    - the in-code comment shows this was iterated on to fix a prior overlap
-  - Theme-adaptive chrome is correctly threaded through (backgrounds, ink tokens,
-    grid, colorbar face/edge colors) and the canvas gate passes at the exact 2400x2400
-    square target
-  - Realistic, neutral synthetic dataset (24-hour website traffic with plausible morning/evening
-    peaks) with a fixed random seed for reproducibility
+  - Correct polar mapping (theta = hour-of-day, radius = traffic) with 12-o'clock
+    start and clockwise direction, exactly matching the spec's guidance for time-based
+    cyclical data
+  - 'Effective dual color-encoding: solid brand-green line/fill traces the 24-hour
+    silhouette while the scatter markers use the Imprint `imprint_seq` sequential
+    colormap (green -> blue) to encode traffic magnitude per hour, reinforcing the
+    story without adding a redundant series'
+  - Theme-adaptive chrome is threaded through every non-data element (background,
+    ticks, grid, spines, colorbar, annotation text) and the Imprint data colors are
+    pixel-identical between light and dark renders
+  - Reproducible synthetic data (np.random.seed(42)) with a plausible bimodal daily
+    pattern (morning + evening peaks) that genuinely demonstrates the periodicity
+    the spec calls for
+  - 'Peak-value callout ("Peak: 215/hr") on the evening maximum gives the otherwise
+    purely descriptive plot a clear focal point'
   weaknesses:
-  - 'Title is missing the mandated language segment: fig.suptitle reads ''Website
-    Traffic by Hour · polar-basic · seaborn · anyplot.ai'' but the required format
-    is ''{Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai'' -
-    ''python'' must appear between ''polar-basic'' and ''seaborn''.'
-  - Design storytelling is solid but stops short of a strong focal point - consider
-    annotating the evening-peak value directly (e.g. a small text callout on the brightest/highest
-    point) to sharpen DE-03.
-  - Library usage is idiomatic but not especially distinctive - the continuous-hue
-    scatterplot + colorbar workaround is a reasonable seaborn pattern but doesn't
-    showcase a seaborn-specific feature beyond scatterplot/lineplot on a matplotlib
-    polar axes.
+  - 'PIPELINE ISSUE (flagging for the workflow, not the implementation): the plot_images/plot-light.png
+    and plot-dark.png supplied for this review attempt do not match the current commit
+    -- they are missing "python" from the mandated title and completely lack the "Peak:
+    XXX/hr" annotation + leader line that commit a6a69bf04 (the attempt-1 fix) added
+    to the source. This review was scored against a freshly-rendered copy of the actual
+    committed seaborn.py to avoid judging stale output; recommend checking why the
+    image-generation step didn''t re-run after the latest commit before the next attempt.'
+  - 'The "Peak: 215/hr" callout leader line is quite long and crosses the outer polar
+    spine into the figure margin before reaching the label -- shrinking the xytext
+    radial offset (currently peak_traffic + 55, i.e. ~270 against an rmax of ~247)
+    to something like peak_traffic + 15-20 would keep the label closer to the point
+    and read as a tighter, more integrated callout.'
+  - 'Library Mastery is only moderate: aside from seaborn''s continuous hue/palette
+    mapping on the scatter call, the polar-specific work (theta offset/direction,
+    rlabel position, manual colorbar via ScalarMappable) is all plain matplotlib --
+    seaborn isn''t leveraged much beyond scatterplot/lineplot wrappers.'
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "Website Traffic by Hour · polar-basic · seaborn · anyplot.ai" in dark ink at the top, spanning ~82% of canvas width, fully visible with margin above (not clipped). Angular tick labels (00:00 through 22:00, every 2 hours, clockwise from top) are dark-gray and clearly legible. Radial tick labels (50/100/150/200) sit in the lower-left wedge in dark-gray, with the "Visitors/hr" radial-axis label placed just outside the plot circle along the same wedge, not colliding with any angular tick. Colorbar on the right ("Traffic Volume", ticks 100-200+) uses dark-gray tick text on the light background.
-      Data: 24 scatter points connected by a closed line and filled polygon. The line/fill use the brand green (#009E73); the scatter markers are colored by a continuous green-to-blue gradient (imprint_seq) keyed to traffic volume, with light-background-colored marker edges for separation. Morning and evening traffic peaks (around 08:00-10:00 and 18:00-20:00) are visibly the largest-radius, bluest points.
-      Legibility verdict: PASS - all title, tick, and colorbar text is clearly readable against the light background; no light-on-light issues.
+    NOTE: plot_images/plot-light.png and plot_images/plot-dark.png as supplied by the workflow are STALE -- they do not reflect the current commit (missing "python" from the title, and completely missing the "Peak: XXX/hr" annotation that commit a6a69bf04 added). The descriptions below are from a freshly-rendered copy of the actual current plots/polar-basic/implementations/python/seaborn.py, produced independently to score the real implementation rather than outdated output.
 
-    Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Same title text now rendered in light ink, fully legible and identically positioned/sized. Angular and radial tick labels switch to light-gray and remain clearly legible against the dark background. The "Visitors/hr" label and colorbar tick labels are also light-colored and readable. No dark-on-dark text was found anywhere in the render.
-      Data: Same 24-point scatter/line/fill combination with identical green-to-blue gradient and brand-green line/fill as the light render - only the chrome (background, grid, text, spine, colorbar face) flips; the data colors are pixel-identical to the light render.
-      Legibility verdict: PASS - all chrome elements are clearly visible against the dark background; no dark-on-dark failures observed.
+    Light render (plot-light.png, re-rendered from current source):
+      Background: warm off-white, consistent with #FAF8F1.
+      Chrome: title "Website Traffic by Hour · polar-basic · python · seaborn · anyplot.ai" fully visible and centered, dark ink text; 12 angular hour labels (00:00-22:00) around the rim; 4 radial value ticks (50/100/150/200) in soft gray in the lower-left wedge; "Visitors/hr" and colorbar label "Traffic Volume" both clearly readable; "Peak: 215/hr" annotation floats in the top-left margin outside the circular frame with a thin leader line down to the evening-peak marker.
+      Data: closed 24-point polygon, brand-green (#009E73) line and translucent fill; scatter markers colored via the Imprint imprint_seq colormap (green -> blue) by traffic magnitude, white/cream edge strokes for contrast.
+      Legibility verdict: PASS -- all text readable against the light background, no dark-on-light or light-on-light failures.
+
+    Dark render (plot-dark.png, re-rendered from current source):
+      Background: warm near-black, consistent with #1A1A17.
+      Chrome: same title, tick labels, "Visitors/hr", "Traffic Volume", and "Peak: 215/hr" callout, all rendered in light ink/soft-gray tokens -- fully legible against the dark surface, no dark-on-dark failures observed.
+      Data: identical brand-green line/fill and imprint_seq scatter gradient as the light render -- confirmed pixel-identical data colors, only chrome (background, text, grid, colorbar box) flipped.
+      Legibility verdict: PASS -- all text readable against the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,74 +71,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/tick/colorbar text readable in both themes; explicit font
-          sizes throughout
+        comment: 'All font sizes explicitly set, title fits without clipping, readable
+          in both themes; minor: relies on visual inspection at full size only'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Deliberately decluttered radial/angular ticks avoid collisions
+        comment: No text-on-text or text-on-data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (s=160) and line clearly visible for 24-point sparse data
+        comment: s=160 markers and 2.5pt line well-suited to 24 sparse points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient is CVD-safe, no red-green sole
-          signal
+        comment: imprint_seq gradient + white edge strokes give good contrast, not
+          red-green dependent
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed at 2400x2400; nothing clipped; title within expected
-          width
+        comment: Square 2400x2400 canvas well-utilized, colorbar and callout balanced,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Hour labels, 'Visitors/hr' radial label, 'Traffic Volume' colorbar
-          label all descriptive
+        comment: '"Visitors/hr" and "Traffic Volume" descriptive; hour ticks as HH:MM'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq for continuous hue, brand green for line/fill, theme-correct
-          backgrounds both renders
+        comment: 'First/only categorical series #009E73; continuous data correctly
+          uses imprint_seq; theme-correct chrome in both renders'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom gradient scatter + colorbar + brand line/fill combo shows
-          real polish
+        comment: Thoughtful dual color-encoding (solid brand line + continuous magnitude
+          gradient) clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle grid, softened spine, decluttered ticks, generous whitespace
+        comment: Subtle grid, styled spine/colorbar, generous whitespace; leader line
+          on the Peak callout is a bit long
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color+radius jointly highlight peaks, but no explicit focal-point
-          annotation
+        comment: Color-encoded magnitude plus explicit peak callout create a clear
+          focal point
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,51 +146,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar projection with theta/radius mapping
+        comment: True polar projection, theta=hour / radius=traffic
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible-but-subtle radial gridlines, standard-interval angular labels,
-          top-start clockwise convention, uncompressed radial scale
+        comment: Subtle radial gridlines, standard-interval angular labels, top-start
+          clockwise direction per spec note, non-compressed radial scale
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: theta=hour-of-day, radius=traffic, full 24-hour cycle shown, closed
-          loop
+        comment: All 24 hours mapped and visible, closed polygon
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title omits the mandated ''python'' language segment: reads ''...
-          polar-basic · seaborn · anyplot.ai'' instead of ''... polar-basic · python
-          · seaborn · anyplot.ai'''
+        passed: true
+        comment: Title matches {Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai format; colorbar substitutes appropriately for a single continuous
+          series (no legend needed)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full cyclical dataset with realistic peak/trough structure
+        comment: Full 24h cycle with morning + evening peaks and overnight trough
+          demonstrates periodicity well
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Plausible, neutral website-traffic-by-hour scenario
+        comment: Plausible, neutral website-traffic scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Visitors/hr values (~20-220) are sensible for the domain
+        comment: 20-215 visitors/hr is a sensible range for a small-to-medium site
     code_quality:
       score: 10
       max: 10
@@ -191,7 +200,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -203,21 +212,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex, no fake UI
+        comment: No fake functionality; appropriate complexity for a polar chart with
+          colorbar + annotation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via current API
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight', current matplotlib/seaborn
+          API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -225,26 +236,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.scatterplot/lineplot on a matplotlib polar axes with continuous
-          hue via palette= colormap
+        comment: sns.scatterplot + sns.lineplot correctly combined with a matplotlib
+          polar Axes and seaborn's continuous hue/palette mapping
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Reasonable but fairly generic combination; no seaborn-specific standout
-          feature
-  verdict: REJECTED
+        passed: true
+        comment: Continuous hue-on-scatter via palette= is a real seaborn feature,
+          but the rest of the polar-specific work is plain matplotlib
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
   - colorbar
   - annotations
   - manual-ticks
+  - polar-projection
   patterns:
   - data-generation
-  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
