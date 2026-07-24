@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 marimekko-basic: Basic Marimekko Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-24
@@ -16,6 +16,7 @@ from lets_plot import (
     element_text,
     geom_label,
     geom_rect,
+    geom_segment,
     geom_text,
     ggplot,
     ggsave,
@@ -120,12 +121,17 @@ plot = (
     + geom_text(
         data=totals_df, mapping=aes(x="x_center", label="label"), y=105, size=3.2, color=INK_SOFT, fontface="italic"
     )
-    # Callout on the largest market by total value — adds a focal point / hierarchy to the chart
+    # Leader line connecting the callout down to the top of its bar, so the association is explicit
+    + geom_segment(
+        data=callout_df, mapping=aes(x="x_center", xend="x_center"), y=113, yend=101, color=INK_SOFT, size=0.5
+    )
+    # Callout on the largest market by total value — sized up from the region-total annotations for a
+    # clear two-tier hierarchy (primary value labels > callout > region totals > tick labels)
     + geom_label(
         data=callout_df,
         mapping=aes(x="x_center", label="label"),
         y=117,
-        size=3.4,
+        size=4.2,
         color=INK,
         fill=ELEVATED_BG,
         fontface="bold",
