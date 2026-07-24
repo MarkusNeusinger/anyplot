@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-07-24
@@ -25,7 +25,7 @@ BRAND = "#009E73"
 np.random.seed(42)
 hours = np.arange(24)
 
-base_temp = 15 + 10 * np.sin((hours - 6) * np.pi / 12)
+base_temp = 15 + 10 * np.sin((hours - 9) * np.pi / 12)
 temperatures = base_temp + np.random.randn(24) * 1.5
 
 theta = (90 - hours * 15) * np.pi / 180
@@ -164,7 +164,7 @@ chart = (
         background=PAGE_BG,
         width=VIEW_W,
         height=VIEW_H,
-        title=alt.Title(text="polar-basic · altair · anyplot.ai", fontSize=20, anchor="middle"),
+        title=alt.Title(text="polar-basic · python · altair · anyplot.ai", fontSize=18, anchor="middle"),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_title(color=INK)
@@ -174,7 +174,10 @@ chart = (
         labelColor=INK_SOFT,
         titleColor=INK,
         labelFontSize=11,
-        titleFontSize=12,
+        titleFontSize=10,
+        titleLimit=200,
+        gradientThickness=20,
+        padding=6,
     )
 )
 
