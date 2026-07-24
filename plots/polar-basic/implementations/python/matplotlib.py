@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 77/100 | Updated: 2026-07-24
@@ -48,6 +48,9 @@ ax.plot(theta_closed, radius_closed, color=BRAND, linewidth=2.5, alpha=0.9, zord
 # Scatter points for individual hourly readings
 ax.scatter(theta, radius, s=90, color=BRAND, alpha=0.95, zorder=3, edgecolors=PAGE_BG, linewidth=1.0)
 
+# Emphasize the peak reading with a larger, outlined marker for extra visual hierarchy
+ax.scatter(theta[peak_idx], radius[peak_idx], s=170, color=BRAND, alpha=1.0, zorder=4, edgecolors=INK, linewidth=1.5)
+
 # Dashed reference ring at the daily average - a second radial layer for context
 ring_theta = np.linspace(0, 2 * np.pi, 200)
 ax.plot(
@@ -90,7 +93,11 @@ for label in ax.get_yticklabels():
 
 # Theme-adaptive styling
 title = "Hourly Temperature Pattern · polar-basic · python · matplotlib · anyplot.ai"
-ax.set_title(title, fontsize=12, pad=16, fontweight="medium", color=INK)
+# Title fontsize scales with title length (baseline: 12pt fits 67 chars on a 3200px-wide
+# canvas) and further scales down for this narrower 2400px square canvas so the full
+# mandated "anyplot.ai" suffix renders without being clipped.
+title_fontsize = max(8, round(12 * 67 / len(title) * (2400 / 3200)))
+ax.set_title(title, fontsize=title_fontsize, pad=16, fontweight="medium", color=INK)
 ax.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.spines["polar"].set_color(INK_SOFT)
 ax.tick_params(colors=INK_SOFT, labelcolor=INK_SOFT)
