@@ -21,6 +21,12 @@ const regions = [
   { name: "Middle East & Africa", values: [60, 40, 50, 15] },
 ];
 const products = ["Software", "Hardware", "Services", "Consulting"];
+// Segment label text color: white reads well on the brand green and blue
+// slots, but the lighter lavender and ochre slots fall below the WCAG AA
+// large-text 3:1 minimum against white — those two get a fixed dark ink
+// label instead (the fill colors are identical across themes, so the fix
+// stays fixed rather than following t.ink).
+const labelTextColor = ["#FFFFFF", "#1A1A17", "#FFFFFF", "#1A1A17"];
 
 const regionTotals = regions.map((r) => r.values.reduce((a, b) => a + b, 0));
 const grandTotal = regionTotals.reduce((a, b) => a + b, 0);
@@ -56,7 +62,20 @@ regions.forEach((region, ri) => {
     const segHeight = share * plotHeight;
     const rectY = yCursor - segHeight;
     rects.push({
-      value: [xCursor, rectY, innerWidth, segHeight, `$${value}M`, segHeight > 58 ? 1 : 0],
+      // [x, y, w, h, labelText, showLabel, labelColor, regionName, productName, value, share]
+      value: [
+        xCursor,
+        rectY,
+        innerWidth,
+        segHeight,
+        `$${value}M`,
+        segHeight > 58 ? 1 : 0,
+        labelTextColor[pi],
+        region.name,
+        products[pi],
+        value,
+        share,
+      ],
       itemStyle: { color: t.palette[pi] },
     });
     yCursor = rectY;
@@ -170,6 +189,16 @@ chart.setOption({
     textStyle: { color: t.ink, fontSize: 22, fontWeight: "medium" },
   },
   graphic: graphicElements,
+  tooltip: {
+    trigger: "item",
+    backgroundColor: t.elevatedBg,
+    borderColor: t.inkSoft,
+    textStyle: { color: t.ink },
+    formatter: (params) => {
+      const [, , , , , , , regionName, productName, value, share] = params.value;
+      return `<b>${regionName} · ${productName}</b><br/>$${value}M &middot; ${(share * 100).toFixed(1)}% of column`;
+    },
+  },
   series: [
     {
       type: "custom",
@@ -182,6 +211,7 @@ chart.setOption({
         const h = api.value(3);
         const labelText = api.value(4);
         const showLabel = api.value(5) === 1;
+        const labelColor = api.value(6);
         const children = [
           {
             type: "rect",
@@ -196,7 +226,7 @@ chart.setOption({
               text: labelText,
               x: x + w / 2,
               y: y + h / 2,
-              fill: "#FFFFFF",
+              fill: labelColor,
               fontSize: 16,
               fontWeight: "bold",
               align: "center",
