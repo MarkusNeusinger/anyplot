@@ -1,7 +1,7 @@
 // anyplot.ai
 // network-basic: Basic Network Graph
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-07-24
+// Quality: 90/100 | Created: 2026-07-24
 //# anyplot-orientation: square
 
 // Only the core Highcharts bundle is loaded (no `networkgraph` module), so node
