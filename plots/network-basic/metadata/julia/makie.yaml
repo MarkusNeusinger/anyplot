@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: network-basic
 created: '2026-07-24T04:23:50Z'
-updated: '2026-07-24T04:30:11Z'
+updated: '2026-07-24T04:48:28Z'
 generated_by: claude-sonnet
 workflow_run: 30066078521
 issue: 989
@@ -12,62 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 95
 review:
   strengths:
-  - 'First categorical series (Core) renders as exact Imprint brand green #009E73,
-    with Data/API/UI following canonical positions 2-4 — verified pixel-identical
-    between light and dark renders'
-  - 'Theme chrome is pixel-exact: light bg sampled at #FAF8F1, dark bg at #1A1A17,
-    with title/labels/legend correctly using theme-adaptive INK/INK_SOFT tokens in
-    both renders'
-  - Node size correctly encodes degree (hub modules like Auth and Gateway render visibly
-    larger than single-edge leaves), giving an immediate visual hierarchy
-  - 'Realistic, plausible software-architecture dataset: 22 modules across a genuine
-    layered dependency structure (Core -> Data -> API -> UI) that a reader instantly
-    recognizes'
-  - Zero label/edge overlap across all 22 node labels, verified via close crops around
-    the densest hub (Auth) and the tightest cluster (UserRepo/OrderRepo/PaymentRepo)
-  - Canvas is exactly 3200x1800 in both renders; the graph body occupies ~79% width
-    / ~78% height with balanced margins on all sides (measured via bounding-box analysis)
-  - Clean KISS script structure with Random.seed!(42); correctly hand-rolls a Fruchterman-Reingold
-    layout instead of using the unavailable NetworkLayout.jl, per the library's constraints
-  - 'Title format and legend labels are exactly correct: ''Software Module Dependencies
-    · network-basic · julia · makie · anyplot.ai'' with a ''Layer'' legend matching
-    the four module categories'
+  - 'All three attempt-1 weaknesses are fixed: edges now carry directed arrowheads
+    (pulled back from the target node rim), the top hub module (Auth) gets a secondary
+    outer-ring emphasis beyond size alone, and edge width/opacity are keyed to per-edge
+    coupling-strength weight — a genuinely Makie-distinctive per-segment encoding
+    via linesegments!'
+  - 'First categorical series (Core) is exact Imprint brand green #009E73, with Data/API/UI
+    following canonical positions 2-4 — pixel-identical between light and dark renders'
+  - 'Theme chrome is pixel-exact: light bg #FAF8F1, dark bg #1A1A17, all text/legend
+    using theme-adaptive INK/INK_SOFT tokens'
+  - Node size correctly encodes degree, and the new hub ring sharpens the 'architectural
+    bottleneck' focal point (DE-03) without crowding the layout
+  - Realistic, plausible layered software-architecture dataset (Core -> Data -> API
+    -> UI) with a footnote explaining the width/opacity and arrow encodings
+  - Zero label/edge/node overlap across all 22 node labels in both renders; canvas
+    is exactly 3200x1800
+  - Clean KISS structure, reproducible seed, hand-rolled Fruchterman-Reingold layout
+    correctly working around the unavailable NetworkLayout.jl package
+  - Title format and legend labels exactly match spec conventions
   weaknesses:
-  - Edges are undrawn as directional even though the data and title both frame this
-    as a dependency graph ('A depends on B' is not symmetric) — adding subtle arrowheads
-    or tapered line direction would let DQ-01 fully cover the dependency semantics
-    rather than just adjacency
-  - 'Design Excellence is solid but not yet exceptional: the hub node (Auth) is only
-    distinguished by size — a secondary emphasis technique (e.g. a subtle outer ring,
-    or slightly higher stroke width on the top 1-2 hub nodes) would sharpen the data-storytelling
-    focal point (DE-03)'
-  - 'Library Mastery is generic-competent: scatter! + linesegments! + text! is correct
-    idiomatic CairoMakie, but doesn''t yet showcase a technique unique to Makie (e.g.
-    per-edge width/alpha keyed to a computed ''weight'', or curved/bezier edges) that
-    would be harder to replicate in another plotting library'
-  - Node label fontsize (11) is on the small side for 22 simultaneously-visible labels
-    — verify it stays legible when the PNG is scaled to the ~400px mobile width the
-    site uses; consider bumping 1-2pt if it reads too faint at that scale
+  - Node label fontsize (12) is still on the smaller side for 22 simultaneous labels
+    — comfortably readable at full 3200x1800 resolution but worth a final check at
+    ~400px mobile scaling
+  - The arrowhead + weight-keyed edge technique is a solid Makie-specific touch, but
+    the overall composition (scatter + linesegments + text) remains a fairly conventional
+    force-directed layout rather than something that showcases a truly unique library
+    capability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, sampled pixel value #FAF8F1 — matches the required light-theme surface exactly, not pure white.
-      Chrome: Title "Software Module Dependencies · network-basic · julia · makie · anyplot.ai" is bold dark ink, fully visible, not clipped, roughly centered. The top-left "Layer" legend box (Core/Data/API/UI swatches) uses a light elevated background with a thin dark border and dark/soft-ink text — clearly readable. All 22 node labels render in dark ink beneath their nodes; verified via close crops around the densest hub (Auth, degree 7) and the tightest data-layer cluster (UserRepo/OrderRepo/PaymentRepo) that no label overlaps another label, an edge line, or a node. Gray edge lines (linesegments, alpha ~0.45) are subtle but clearly traceable between nodes.
-      Data: Nodes are colored by module layer — Core=#009E73 (brand green), Data=lavender #C475FD, API=blue #4467A3, UI=ochre #BD8233 — exactly the canonical Imprint palette order 1-4. Node size scales with node degree, giving hub modules (Auth, Gateway) a clearly larger radius than single-edge leaves (Migrations, Profile). White-matching node strokes give each marker clean edge definition against overlapping edge lines.
-      Legibility verdict: PASS — no text is light-on-light; all chrome and data-layer text reads clearly against the warm cream background.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Bold dark title "Software Module Dependencies · network-basic · julia · makie · anyplot.ai" fully visible, not clipped. Top-left "Layer" legend (Core/Data/API/UI swatches) on a light elevated box, dark text, clearly readable. Bottom-center footnote "Edge width/opacity ∝ coupling strength · arrows point toward the depended-upon module" is legible in soft ink. All 22 node labels are dark ink beneath their nodes, no overlap with other labels, edges, or nodes.
+      Data: 22 module nodes colored by layer (Core=#009E73 green, Data=lavender, API=blue, UI=ochre), sized by degree so hub modules (Auth, Gateway, PaymentAPI) read visibly larger. Auth (top-degree node) additionally carries a dark outer ring for focal emphasis. Gray edges vary in width/opacity by coupling-strength weight, each terminating in a small triangular arrowhead pointing at the depended-upon module, correctly encoding the directed "depends on" relationship.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, sampled pixel value #1A1A17 — matches the required dark-theme surface exactly, not pure black.
-      Chrome: Title renders in light ink, fully visible and not clipped. The legend box flips to a dark elevated fill with light border and light/soft text, fully legible. All 22 node labels render in light ink beneath their nodes — checked the same hub and cluster regions as the light render, confirming no dark-on-dark text and no overlap. Edge lines remain visible as a lighter gray against the near-black background.
-      Data: Node colors are pixel-identical to the light render — Core green, Data lavender, API blue, UI ochre — confirming only chrome (background, text, legend fill) flips between themes while the four categorical data colors stay fixed.
-      Legibility verdict: PASS — no dark-on-dark failures found; title, axis-free chrome, legend, and all node labels are clearly readable against the near-black surface.
-
-    Both renders were opened and visually inspected in full, plus targeted crops (hub node, dense cluster, title bar, legend box, right/bottom canvas edges) to check for clipping and overlap.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Title, legend, and all 22 node labels flip to light ink (#F0EFE8 / #B8B7B0) and remain fully readable — no dark-on-dark failures. Footnote text is legible in the lighter secondary ink. Legend box uses the dark elevated surface with a subtle border.
+      Data: Node colors are pixel-identical to the light render (Core green, Data lavender, API blue, UI ochre), confirming only chrome flips between themes while the four categorical data colors stay fixed. Arrowheads, hub ring, and weight-keyed edge styling are all preserved identically in structure.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -75,81 +63,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=18, node label fontsize=11);
-          readable in both themes; title fits without overflow. Node label size is
-          on the smaller side for 22 simultaneous labels -- worth a mobile-scale check.
+        comment: Explicit sizes, readable in both themes; 12pt node labels are on
+          the smaller side for 22 simultaneous labels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'Verified via close crops around the Auth hub and the UserRepo/OrderRepo/PaymentRepo
-          cluster: zero label/label, label/edge, or label/node overlap.'
+        comment: No label/edge/node collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Degree-encoded node sizing (26 + degree*5) gives visible hub/leaf
-          differentiation; edge alpha (0.45) keeps 28 edges legible without clutter.
-          Differentiation could be slightly more dramatic for very high-degree nodes.
+        comment: Degree-based sizing plus the new hub ring gives clear, dramatic hub/leaf
+          differentiation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four well-separated Imprint hues (green/lavender/blue/ochre) plus
-          consistent node stroke give good contrast; no red-green-only signal.
+        comment: Well-separated Imprint hues, consistent node strokes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Measured bounding box: graph body occupies ~79% width / ~78% height
-          with balanced margins on all sides; legend sits near the plot, not isolated;
-          nothing cut off.'
+        comment: Balanced margins, canvas exactly 3200x1800, no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title; network layout correctly omits x/y axes (hidedecorations!/hidespines!)
-          since positions carry no literal axis meaning.
+        comment: Descriptive title; axes correctly omitted for a network layout
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Core) is exact #009E73; Data/API/UI follow canonical
-          positions 2-4; backgrounds are exact #FAF8F1/#1A1A17; data colors identical
-          across themes.'
+        comment: 'First series exact #009E73, canonical positions 2-4, exact theme
+          backgrounds, identical data colors across themes'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful semantic layer-coloring, degree-based sizing, and a clean
-          legend go clearly beyond a configured default, but composition is still
-          a fairly conventional force-directed look.
+        comment: Semantic layer coloring, degree sizing, weight-keyed edges, and hub-ring
+          emphasis together read as clearly above configured defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: All axes/spines hidden, subtle alpha-blended edges, background-matching
-          node strokes, generous balanced whitespace (measured ~79%/78% fill).
+        comment: Axes/spines fully hidden, alpha-blended edges, background-matching
+          node strokes, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size + color create real visual hierarchy (hub modules and layer
-          clusters are immediately legible), but no single emphasized focal point
-          beyond the size encoding itself.
+        comment: New outer ring on the hub node creates a clear focal point beyond
+          size encoding alone
     spec_compliance:
       score: 15
       max: 15
@@ -159,57 +137,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct node-link network graph with force-directed layout, matching
-          the spec exactly.
+        comment: Correct node-link network graph with force-directed layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes with labels/groups, edges as (source,target) pairs, 22 nodes
-          (within the spec's 10-50 range), force-directed layout, degree-encoded node
-          size, legible non-overlapping labels -- all present.
+        comment: Labeled/grouped nodes, directed source/target edges, 22 nodes within
+          spec's 10-50 range, degree-encoded size
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 22 nodes and 28 edges are rendered and visible within the plot
-          bounds.
+        comment: All 22 nodes and 28 edges rendered within plot bounds
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'Software Module Dependencies · network-basic · julia ·
-          makie · anyplot.ai' -- correct mandated format with descriptive prefix;
-          legend labels (Core/Data/API/UI) match the module-layer categories exactly.
+        comment: Mandated title format with descriptive prefix; legend matches module-layer
+          categories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows hub-vs-leaf connectivity variation, layer clustering, and sparse-but-connected
-          structure well; missing an explicit directional cue (arrowheads) even though
-          the data models directed 'depends on' relationships.
+        comment: Hub/leaf variation, layer clustering, and now explicit directional
+          arrows fully cover the directed-dependency semantics
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, comprehensible, neutral software-architecture scenario (Auth/Config/Logger/Cache/EventBus
-          -> repos -> APIs -> UI).
+        comment: Real, neutral, comprehensible software-architecture scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Layered dependency direction (UI -> API -> Data -> Core) matches
-          how real software architectures are structured; no implausible relationships.
+        comment: Layered dependency direction (UI->API->Data->Core) matches real software
+          architecture conventions
     code_quality:
       score: 10
       max: 10
@@ -219,65 +191,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat top-level script: theme tokens -> data -> layout -> plot ->
-          save, no functions/classes.'
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set before all randomized layout jitter.
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random -- all actually used, nothing extraneous.
+        comment: Only CairoMakie, Colors, Random
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Hand-rolled Fruchterman-Reingold is appropriately scoped given NetworkLayout.jl
-          is unavailable in CI; no fake UI or over-engineering.
+        comment: Hand-rolled Fruchterman-Reingold correctly works around unavailable
+          NetworkLayout.jl
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves via save("plot-$(THEME).png", fig; px_per_unit=2) -- correct
-          current API and naming.
+        comment: Saves plot-$(THEME).png with px_per_unit=2
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
         comment: 'Correct idiomatic CairoMakie: Axis, scatter!, linesegments!, text!
-          with offset, axislegend with proxy handles, hidedecorations!/hidespines!.'
+          with offsets, rotation-based markers, axislegend with proxy handles, hidedecorations!/hidespines!'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Batched linesegments! for edges and offset-based text! label placement
-          are reasonably Makie-specific, but the overall composition (scatter+linesegments+text)
-          could largely be replicated in other libraries; no feature that is uniquely
-          hard to reproduce elsewhere.
-  verdict: REJECTED
+        comment: Per-segment weight-keyed linesegments! width/alpha and rotation-driven
+          arrowhead markers are genuinely Makie-specific touches
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - edge-highlighting
+  - minimal-chrome
