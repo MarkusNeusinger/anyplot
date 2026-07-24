@@ -39,6 +39,7 @@ new Chart(canvas, {
         pointBorderColor: t.pageBg,
         pointBorderWidth: 2,
         pointRadius: 6,
+        pointStyle: "circle",
       },
       {
         label: "Renn (Forward)",
@@ -50,6 +51,7 @@ new Chart(canvas, {
         pointBorderColor: t.pageBg,
         pointBorderWidth: 2,
         pointRadius: 6,
+        pointStyle: "triangle",
       },
     ],
   },
@@ -63,7 +65,14 @@ new Chart(canvas, {
         text: "radar-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
         font: { size: 22 },
-        padding: { bottom: 24 },
+        padding: { bottom: 4 },
+      },
+      subtitle: {
+        display: true,
+        text: "Kova's biggest edge is Agility (+31); Renn's is Strength (+22)",
+        color: t.inkSoft,
+        font: { size: 16, style: "italic" },
+        padding: { bottom: 20 },
       },
       legend: {
         position: "bottom",
@@ -87,7 +96,13 @@ new Chart(canvas, {
         },
         grid: { color: t.grid },
         angleLines: { color: t.grid },
-        pointLabels: { color: t.ink, font: { size: 15 } },
+        pointLabels: {
+          color: t.ink,
+          font: (ctx) => ({
+            size: 15,
+            weight: attributes[ctx.index] === "Agility" ? "bold" : "normal",
+          }),
+        },
       },
     },
   },
