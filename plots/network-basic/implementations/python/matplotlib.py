@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 81/100 | Updated: 2026-07-24
@@ -168,17 +168,18 @@ for src, tgt in edges:
     )
     ax.add_patch(patch)
 
-# Draw nodes (size encodes degree)
+# Draw nodes (size encodes degree; large enough to fully contain the label below)
 for node in nodes:
     x, y = pos[node["id"]]
-    size = 700 + degrees[node["id"]] * 160
+    size = 1000 + degrees[node["id"]] * 200
     color = GROUP_COLORS[node["group"]]
     ax.scatter(x, y, s=size, c=color, edgecolors=PAGE_BG, linewidths=2.5, alpha=0.93, zorder=2)
 
-# Draw labels inside nodes
+# Draw labels inside nodes — fontsize kept small enough that even the
+# longest name ("Olivia") stays within the smallest-degree node's circle
 for node in nodes:
     x, y = pos[node["id"]]
-    ax.text(x, y, node["label"], fontsize=13, fontweight="bold", ha="center", va="center", color=INK, zorder=3)
+    ax.text(x, y, node["label"], fontsize=9, fontweight="bold", ha="center", va="center", color=INK, zorder=3)
 
 # Style
 title = "Social Network · network-basic · python · matplotlib · anyplot.ai"
