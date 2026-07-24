@@ -2,129 +2,158 @@ library: matplotlib
 language: python
 specification_id: network-basic
 created: '2025-12-23T15:13:20Z'
-updated: '2026-04-27T01:41:48Z'
+updated: '2026-07-24T04:14:41Z'
 generated_by: claude-sonnet
-workflow_run: 24971431014
+workflow_run: 30065204730
 issue: 989
-python_version: 3.14.4
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - Amber cross-department edge highlighting creates elegant storytelling — inter-team
-    bridges are immediately visible
-  - FancyArrowPatch with connectionstyle=arc3 produces professional curved edges —
-    distinctively matplotlib
-  - Custom force-directed spring layout from scratch (no networkx) demonstrates strong
-    numpy/matplotlib mastery
-  - Full theme-adaptive chrome with all tokens correctly applied in both light and
-    dark renders
-  - Degree-encoded node sizes effectively communicate hub nodes at a glance
+  - 'The attempt-1 label/edge overlap defect is fully resolved: label fontsize was
+    reduced to 9pt and tuned so even the longest name (''Olivia'') stays inside the
+    smallest-degree node''s circle. Verified via pixel-level crops of Alice, Mia,
+    Kate, Bob, Paul, Ryan, and Henry in both themes -- edges now terminate at the
+    node boundary (opaque marker, zorder above edges) and no longer cross through
+    any label text.'
+  - Genuinely creative from-scratch force-directed layout (Fruchterman-Reingold-style,
+    run independently per department, no networkx) produces four spatially distinct
+    clusters with curved FancyArrowPatch edges.
+  - 'Correct Imprint palette usage: first series is brand green #009E73, the 4 departments
+    use canonical positions 1-4 in order, and cross-department bridge edges use position-5
+    matte red with redundant width+alpha encoding on top of color (not color-only).'
+  - 'Theme-adaptive chrome is fully correct and consistent between renders: both backgrounds
+    match spec (#FAF8F1 / #1A1A17), legend frame, node-label ink, and edge colors
+    all flip correctly with no dark-on-dark or light-on-light failures; data colors
+    are identical across themes.'
+  - Node size correctly encodes degree (connection count) as the spec's optional-feature
+    note suggests, and the Design cluster (Quinn/Paul/Sara/Ryan/Tom) shows the layout
+    can produce cleanly separated markers.
+  - Clean, reproducible, single-file KISS script (fixed np.random.seed(42), no functions/classes,
+    only used imports, no fake interactivity).
+  - Correct mandated title format with a sensible descriptive prefix; canvas dimension
+    gate passed and no edge-clipping (AR-09) observed at any of the four canvas borders
+    in either render.
   weaknesses:
-  - Node labels at fontsize=14 are below the 16pt minimum guideline for the 4800x2700
-    canvas
-  - Spring layout initialization by quadrant does not produce well-separated clusters
-    — nodes end up in a diagonal band rather than 4 distinct spatial communities
-  - Internal department edges are very faint (alpha=0.30) — barely visible in dark
-    mode
-  - Legend placed in upper-left overlaps with Engineering cluster area
+  - 'Node-to-node marker overlap in 3 of 4 department clusters: the custom force-directed
+    simulation positions nodes as dimensionless points and never accounts for the
+    rendered marker radius (which varies ~1000-1800+ pts^2 by degree), so circles
+    collide once drawn at full size. Most visible: Henry/Ivy in the Research cluster
+    (Ivy''s larger marker overlaps roughly a third of Henry''s circle) and Eve/Carol/Alice/Bob
+    in the Engineering cluster, reproduced identically in both themes. The Design
+    cluster (Quinn/Paul/Sara/Ryan/Tom) proves the algorithm CAN produce clean separation,
+    so this is a tuning gap rather than a fundamental limitation.'
+  - 'Fix direction for repair: after computing local_pos, add a short circle-packing/overlap-resolution
+    pass that uses each node''s actual marker radius (derived from its ''size'' value,
+    converted from points^2 to data-space units via the axes transform) instead of
+    treating nodes as points -- push apart any pair whose center distance is less
+    than the sum of their radii. Alternatively, increase K_LOCAL and/or the iteration
+    count enough that the minimum pairwise spacing safely exceeds the largest marker''s
+    diameter in every cluster, not just Design.'
+  - 'The same root cause softens Layout & Canvas and Visual Refinement: the algorithm''s
+    polish (curved edges, halo-stroked nodes, clean bridge highlighting) is undercut
+    in 3 of 4 clusters by markers visually merging into each other, which is inconsistent
+    with the otherwise sophisticated execution.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "Social Network · network-basic · matplotlib · anyplot.ai" at fontsize=24 in dark ink — clearly readable. Legend box with ELEVATED_BG frame labels 4 departments at fontsize=16/18 — readable. Node labels in bold dark INK at fontsize=14 — readable but slightly small for canvas size.
-      Data: 20 nodes color-coded by department: Engineering (#009E73 green), Research (#D55E00 orange), Marketing (#0072B2 blue), Design (#CC79A7 pink). Node sizes vary by degree. Cross-department edges in amber #E69F00 at alpha=0.80, internal edges in INK_SOFT gray at alpha=0.30. Nodes arranged in a loosely diagonal band across the canvas with 4 implied quadrant clusters.
-      Legibility verdict: PASS — all text readable; node labels slightly small (fontsize=14 vs 16pt guideline) but still legible at full canvas size.
+      Background: Warm off-white, matches #FAF8F1 as required -- not pure white.
+      Chrome: Title "Social Network · network-basic · python · matplotlib · anyplot.ai" in dark ink, fully visible, no clipping at any canvas edge, comfortably within margins. "Departments" legend box (top center) with 4 color swatches (Engineering/Research/Marketing/Design) in a bordered elevated-surface box, dark gray text, clearly readable, no overlap with the network below it or the title above it.
+      Data: 20 people-nodes in 4 spatially distinct department clusters (upper-left green Engineering, upper-right purple Research, lower-right blue Marketing, lower-left ochre Design), sized by degree, connected by curved gray (intra-department) and red (cross-department bridge) edges. First series (Engineering) is Imprint brand green #009E73; the other 3 departments use canonical Imprint positions 2-4 (lavender, blue, ochre); bridge edges use Imprint position 5 (matte red) with extra linewidth/alpha as a redundant, non-color-only encoding. Pixel-level crops of Alice, Mia, Kate, Bob, Paul, Ryan, and Henry confirm every label is now fully contained within its own node circle with clean margin -- the attempt-1 defect where edge lines cut through label letters is gone. Remaining issue: node circles themselves overlap each other in 3 of 4 clusters (most visibly Henry/Ivy in Research, and Eve/Carol/Alice/Bob in Engineering), though each label stays independently legible even where markers collide.
+      Legibility verdict: PASS (all text is readable and no longer crossed by edge lines; node-marker overlap is a layout/polish issue, not a text-legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in near-white #F0EFE8 — clearly readable against dark background. Legend text in #B8B7B0 — readable. Node labels in #F0EFE8 (near-white) inside colored nodes — acceptable contrast. No dark-on-dark failures detected.
-      Data: Identical node colors to light render — Engineering green, Research orange, Marketing blue, Design pink unchanged. Amber cross-department edges clearly visible. Internal edges barely visible (alpha=0.30 on dark background is very faint, nearly invisible).
-      Legibility verdict: PASS — all text readable; internal edges are slightly too faint in dark mode but data colors and all key elements are distinguishable.
+      Background: Warm near-black, matches #1A1A17 as required -- not pure black.
+      Chrome: Same title, now in light ink (#F0EFE8), fully readable against the dark background, no clipping. Legend box uses the dark elevated surface (#242420) with light gray swatches and legend text, clearly readable, no dark-on-dark failures.
+      Data: Identical layout and identical Imprint data colors to the light render (green/lavender/blue/ochre nodes, matte-red bridge edges) -- only the chrome (background, legend frame, text ink) flipped, as required. Bold near-white node labels are readable against every node color and the near-black background, confirming no dark-on-dark text. The same node-to-node marker overlap (Henry/Ivy, Eve/Carol/Alice/Bob) reproduces identically here since it is a geometry problem, not a theme-color problem.
+      Legibility verdict: PASS (text itself is fully legible in both themes with no dark-on-dark or light-on-light failures; only the node-marker overlap noted above remains as a layout deduction).
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title (24pt) and legend (16/18pt) explicitly set; node labels at
-          fontsize=14 below 16pt guideline
+        comment: Fontsize=9pt bold labels are now fully readable in both themes and
+          no longer crossed by edge lines (fixed from attempt 1)
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Some crowding in dense cluster areas; labels touch but remain readable
+        passed: false
+        comment: Label/edge overlap is fixed, but node-to-node marker overlap is visible
+          in 3 of 4 clusters (Henry/Ivy, Eve/Carol/Alice/Bob) in both renders -- the
+          layout treats nodes as points and ignores their rendered radius
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes well-sized (900-2500s); amber cross-dept edges vivid; internal
-          edges very faint at alpha=0.30 in dark mode
+        comment: Node/edge sizing and alpha are density-appropriate; cross-department
+          edges are visually distinct via width+alpha+color
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Full Okabe-Ito CVD-safe palette; no red-green sole-signal issue
+        comment: CVD-safe Imprint palette; bridge edges use redundant width/alpha
+          encoding, not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 2
         max: 4
-        passed: true
-        comment: Network in diagonal band; 4 community clusters not spatially distinct;
-          legend overlaps Engineering cluster area
+        passed: false
+        comment: No clipping or canvas drift and title/legend proportions are good,
+          but node markers overlapping each other in most clusters is a real layout
+          defect
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title present; axis labels N/A (axis off for network
-          graph)
+        comment: Descriptive mandated title; axis correctly hidden for a network diagram
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds #FAF8F1/#1A1A17;
-          chrome theme-correct in both renders'
+        comment: First series brand green, canonical positions 1-4, correct theme-adaptive
+          backgrounds in both renders
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: curved edges via FancyArrowPatch, amber cross-dept
-          accent, degree-encoded sizes, theme-adaptive chrome; layout result not as
-          elegant as design intent'
+        comment: Custom per-cluster force-directed layout, degree sizing, halo-stroked
+          nodes, bridge highlighting are genuinely sophisticated, undercut somewhat
+          by node-marker overlap
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Axis fully off (no spines/ticks/grid); styled legend frame with ELEVATED_BG;
-          node outline color matches PAGE_BG; curved arc edges
+        passed: false
+        comment: Clean minimal chrome and generous canvas margins, but overlapping
+          node circles in most clusters reads as unrefined
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Amber cross-dept bridges create clear visual hierarchy showing inter-team
-          connections; node size encoding reveals hubs; diagonal layout reduces community
-          legibility
+        comment: Clear clustering plus highlighted cross-department bridges create
+          an obvious focal narrative
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -132,27 +161,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct node-link network diagram with force-directed spring layout
+        comment: Correct node-link network graph
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Spring layout, node size encoding degree, node labels, sparse enough
-          to see connections
+        passed: false
+        comment: Nodes/edges/groups/degree-size and non-overlapping labels are all
+          present now, but the spec's 'legible without overlapping other elements'
+          note is still partially undercut by node-marker overlap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 20 nodes, 31 edges, 4 groups, correct mapping throughout
+        comment: All nodes and edges represented; spatial layout appropriately encodes
+          clustering/relationships
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains network-basic · matplotlib · anyplot.ai; legend labels
-          match 4 department groups
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match department names
     data_quality:
       score: 15
       max: 15
@@ -162,22 +193,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows nodes, edges, group color coding, degree variation, cross-department
-          bridging
+        comment: Shows nodes, edges, clustering/community structure, degree-based
+          sizing, and cross-community bridges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Named employees across 4 real company departments; cross-department
-          connections plausible; neutral business context
+        comment: Plausible, neutral company social network across 4 departments
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 nodes and 31 edges within 10-50 node guideline; density allows
-          individual connections to remain visible
+        comment: 20 nodes / 31 edges, within spec's 10-50 node guidance and sparse
+          enough to stay readable
     code_quality:
       score: 10
       max: 10
@@ -187,36 +217,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data → layout → plot → save. No functions
-          or classes.'
+        comment: No functions/classes, flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, FancyArrowPatch — all imported and
-          used
+        comment: os, numpy, pyplot, FancyArrowPatch all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; spring layout verbose but necessary without networkx;
-          no fake UI
+        comment: Custom force-directed simulation is appropriately complex for the
+          technique, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi and facecolor
+        comment: Saves plot-{THEME}.png with dpi=400 and no bbox_inches='tight'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -224,27 +252,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ax.scatter, ax.text, ax.add_patch (Axes methods), plt.tight_layout(),
-          plt.savefig() — good idiomatic patterns
+        comment: Correct Axes-method usage and FancyArrowPatch for curved edges; layout
+          doesn't account for marker footprint when spacing nodes
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: FancyArrowPatch with connectionstyle=arc3 for curved edges is distinctively
-          matplotlib; custom spring layout via numpy without networkx also shows library
-          mastery
+        comment: From-scratch force-directed layout algorithm without networkx is
+          a genuinely distinctive technique for a matplotlib-only network graph
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - force-directed-layout
   - custom-legend
-  - annotations
   - patches
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
