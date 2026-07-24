@@ -23,7 +23,10 @@ names <- c(
   "Lily", "Mason", "Grace", "Owen", "Ella", "Lucas",
   "Nora", "Jack", "Ruby", "Leo", "Ivy", "Felix", "Maya", "Theo"
 )
-nodes <- tibble::tibble(id = seq_along(names), name = names)
+# Each id belongs to one of three friend circles; a handful of cross-circle
+# edges below bridge them, matching the spec's "identify communities" use case.
+group <- c(rep("Circle A", 6), rep("Circle B", 6), rep("Circle C", 8))
+nodes <- tibble::tibble(id = seq_along(names), name = names, group = group)
 
 edges <- tibble::tibble(
   from = c(1, 1, 2, 2, 3, 4, 4, 1,
@@ -33,7 +36,13 @@ edges <- tibble::tibble(
   to   = c(2, 3, 3, 4, 5, 5, 6, 6,
            8, 9, 9, 10, 11, 11, 12, 12,
            14, 15, 15, 16, 17, 17, 18, 19, 19, 20, 20, 20,
-           8, 13, 16)
+           8, 13, 16),
+  # Friendship strength: within-circle ties run stronger than the sparse
+  # cross-circle bridges (last 3 edges), giving edges a second data dimension.
+  weight = c(4, 3, 4, 3, 5, 3, 4, 3,
+             3, 4, 5, 3, 4, 3, 4, 3,
+             4, 3, 5, 3, 4, 3, 4, 3, 4, 3, 5, 3,
+             1, 1, 1)
 )
 
 n_nodes <- nrow(nodes)
@@ -101,36 +110,48 @@ edges_pos <- edges %>%
 # --- Plot -----------------------------------------------------------------
 anyplot_theme <- theme_minimal(base_size = 8) +
   theme(
-    plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
-    panel.background = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid       = element_blank(),
-    axis.title       = element_blank(),
-    axis.text        = element_blank(),
-    axis.ticks       = element_blank(),
-    legend.position  = "none",
-    plot.title       = element_text(color = INK, size = 12, hjust = 0.5),
-    plot.margin      = margin(14, 14, 10, 14, "pt")
+    plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
+    panel.background  = element_rect(fill = PAGE_BG, color = NA),
+    panel.grid        = element_blank(),
+    axis.title        = element_blank(),
+    axis.text         = element_blank(),
+    axis.ticks        = element_blank(),
+    legend.position   = "bottom",
+    legend.title      = element_text(color = INK, size = 8),
+    legend.text       = element_text(color = INK_SOFT, size = 8),
+    legend.key        = element_rect(fill = PAGE_BG, color = NA),
+    legend.background = element_rect(fill = PAGE_BG, color = NA),
+    legend.margin     = margin(t = -4),
+    plot.title        = element_text(color = INK, size = 12, hjust = 0.5),
+    plot.caption      = element_text(color = INK_SOFT, size = 7, hjust = 0.5, margin = margin(t = 6)),
+    plot.margin       = margin(14, 14, 10, 14, "pt")
   )
 
 p <- ggplot() +
   geom_segment(
     data = edges_pos,
-    aes(x = x_from, y = y_from, xend = x_to, yend = y_to),
-    color = INK_SOFT, linewidth = 0.4, alpha = 0.45, lineend = "round"
+    aes(x = x_from, y = y_from, xend = x_to, yend = y_to, linewidth = weight),
+    color = INK_SOFT, alpha = 0.45, lineend = "round"
   ) +
   geom_point(
     data = nodes,
-    aes(x = x, y = y, size = degree),
-    color = IMPRINT_PALETTE[1], alpha = 0.9
+    aes(x = x, y = y, size = degree, fill = group),
+    shape = 21, color = INK_SOFT, stroke = 0.4, alpha = 0.95
   ) +
   geom_text(
     data = nodes,
     aes(x = x, y = y, label = name),
-    color = INK, size = 2.6, nudge_y = -0.42
+    color = INK, size = 3.1, nudge_y = -0.42
   ) +
-  scale_size(range = c(3, 7)) +
+  scale_size(range = c(3.5, 7), guide = "none") +
+  scale_linewidth(range = c(0.3, 1.0), guide = "none") +
+  scale_fill_manual(values = IMPRINT_PALETTE[1:3], name = "Friend group") +
   coord_equal(clip = "off") +
-  labs(title = "network-basic · r · ggplot2 · anyplot.ai") +
+  labs(
+    title   = "network-basic · r · ggplot2 · anyplot.ai",
+    caption = "Node size = number of friendships  ·  edge thickness = friendship strength"
+  ) +
+  guides(fill = guide_legend(override.aes = list(size = 4))) +
   anyplot_theme
 
 # --- Save -------------------------------------------------------------------
