@@ -1,7 +1,7 @@
 """ anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
-Library: letsplot 4.9.0 | Python 3.14.4
-Quality: 86/100 | Updated: 2026-04-27
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-07-24
 """
 
 import os
@@ -21,7 +21,9 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    scale_alpha_identity,
     scale_color_manual,
+    scale_size_identity,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -36,6 +38,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Imprint palette positions 1-3 — first series always #009E73
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Iris dataset with 4 dimensions
@@ -195,12 +198,31 @@ for idx, row in df_normalized.iterrows():
 
 line_df = pd.DataFrame(line_data)
 
+# Fix the Imprint color order explicitly (Setosa always gets brand green,
+# regardless of row/draw order) — see default-style-guide.md "First series
+# is ALWAYS #009E73"
+species_order = ["Setosa", "Versicolor", "Virginica"]
+line_df["species"] = pd.Categorical(line_df["species"], categories=species_order, ordered=True)
+
+# Setosa shows the sharpest separation on petal dimensions — rendered heavier
+# and more opaque than the other species, and drawn last (on top), so it
+# reads as the visual focal point.
+focus_species = "Setosa"
+line_df["line_size"] = (line_df["species"] == focus_species).map({True: 1.3, False: 0.65})
+line_df["line_alpha"] = (line_df["species"] == focus_species).map({True: 0.9, False: 0.5})
+line_df = pd.concat([line_df[line_df["species"] != focus_species], line_df[line_df["species"] == focus_species]])
+
 # Create axis lines data (vertical lines at each x position)
 axis_data = []
 for i in range(len(dimensions)):
     axis_data.append({"x": i, "y": 0, "xend": i, "yend": 1})
 
 axis_df = pd.DataFrame(axis_data)
+
+# Horizontal rules tying the axis tops and bottoms together into one frame
+frame_df = pd.DataFrame(
+    {"x": [-0.3, -0.3], "y": [0, 1], "xend": [len(dimensions) - 0.7, len(dimensions) - 0.7], "yend": [0, 1]}
+)
 
 # Create label data for dimension names at the bottom
 label_data = []
@@ -222,40 +244,50 @@ tick_df = pd.DataFrame(tick_data)
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK_SOFT, size=0.2),
+    # Only horizontal gridlines — vertical gridlines would create a
+    # phantom-column look that competes with the 4 manually-drawn axis bars.
+    panel_grid_major_x=element_blank(),
+    panel_grid_major_y=element_line(color=INK_SOFT, size=0.2),
     panel_grid_minor=element_blank(),
     axis_title=element_blank(),
     axis_text=element_blank(),
     axis_ticks=element_blank(),
     axis_line=element_blank(),
-    panel_grid=element_blank(),
-    plot_title=element_text(color=INK, size=28),
+    plot_title=element_text(color=INK, size=17),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=18),
-    legend_title=element_text(color=INK, size=20),
+    legend_text=element_text(color=INK_SOFT, size=9),
+    legend_title=element_text(color=INK, size=10),
 )
 
 # Plot
 plot = (
     ggplot()
     # Vertical axis lines (theme-adaptive color)
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=axis_df, color=INK_SOFT, size=2)
-    # Data lines connecting observations across dimensions
-    + geom_line(aes(x="x", y="y", group="observation", color="species"), data=line_df, size=1.5, alpha=0.7)
-    # Okabe-Ito palette — first series is brand green
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=axis_df, color=INK_SOFT, size=1)
+    # Subtle top/bottom rule tying all axes into one frame
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=frame_df, color=INK_SOFT, size=0.5, alpha=0.3)
+    # Data lines connecting observations across dimensions — Setosa rendered
+    # heavier/more opaque (line_size, line_alpha) as the storytelling focal point
+    + geom_line(
+        aes(x="x", y="y", group="observation", color="species", size="line_size", alpha="line_alpha"), data=line_df
+    )
+    # Imprint palette — first series is brand green; size/alpha are literal
+    # values already computed above, not separate legend-worthy aesthetics
     + scale_color_manual(values=IMPRINT)
-    # Dimension labels at the bottom (theme-adaptive color, size >=20pt)
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=20, color=INK)
-    # Tick value labels on the left side of axes (theme-adaptive color, size >=16pt)
-    + geom_text(aes(x="x", y="y", label="label"), data=tick_df, size=16, color=INK_SOFT, hjust=1)
+    + scale_size_identity()
+    + scale_alpha_identity()
+    # Dimension labels at the bottom (theme-adaptive color, size matched to base ggsize(800,450))
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=10, color=INK)
+    # Tick value labels on the left side of axes (theme-adaptive color)
+    + geom_text(aes(x="x", y="y", label="label"), data=tick_df, size=8, color=INK_SOFT, hjust=1)
     # Styling
-    + scale_x_continuous(limits=(-0.5, len(dimensions) - 0.5))
+    + scale_x_continuous(limits=(-0.4, len(dimensions) - 0.6))
     + scale_y_continuous(limits=(-0.32, 1.1))
-    + labs(title="parallel-basic · letsplot · anyplot.ai", color="Species")
-    + ggsize(1600, 900)
+    + labs(title="parallel-basic · python · letsplot · anyplot.ai", color="Species")
+    + ggsize(800, 450)
     + anyplot_theme
 )
 
 # Save with theme-named output files
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")

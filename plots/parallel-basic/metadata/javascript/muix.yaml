@@ -1,0 +1,250 @@
+library: muix
+language: javascript
+specification_id: parallel-basic
+created: '2026-07-24T11:11:24Z'
+updated: '2026-07-24T11:15:38Z'
+generated_by: claude-sonnet
+workflow_run: 30088163488
+issue: 820
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Hand-built a genuine parallel-coordinates chart on top of MUI X's low-level primitives
+    (useXScale, useDrawingArea) since the community package has no native parallel-coordinates
+    component — exactly the documented escape hatch, and executed cleanly.
+  - Each dimension keeps its own independent min/max scale with correctly labeled
+    tick values (min/mid/max) per axis, which is the whole point of the chart type
+    and easy to get wrong.
+  - Imprint palette applied in canonical order (CNN=#009E73 brand green, RNN=lavender,
+    Transformer=blue) and is pixel-identical between light and dark renders; only
+    chrome flips.
+  - Alpha-blended lines (0.55) appropriately handle 30 overlapping observations per
+    the spec's transparency guidance, and the three architecture clusters are visually
+    distinguishable.
+  - Deterministic in-memory data generation via a tiny fixed-seed LCG, per-architecture
+    fractional centers plus jitter — realistic ML hyperparameter/performance data
+    across 5 natively-scaled dimensions (batch size, layers, dropout %, accuracy %,
+    train time).
+  - 'Clean React component: default-exported, skipAnimation set, no manual mount/ReactDOM
+    code, only imports what''s used.'
+  weaknesses:
+  - With 30 lines crossing 5 axes, the middle sections (Hidden Layers -> Dropout ->
+    Val Accuracy) get visually busy where all three clusters converge near the axis
+    crossing points; consider slightly lower alpha (e.g. 0.4-0.45) or thinner strokeWidth
+    for the RNN/CNN overlap band to ease the crowding.
+  - No explicit visual callout (annotation, highlighted line, or reference band) draws
+    attention to a specific standout pattern (e.g. the Transformer cluster's higher
+    accuracy/higher cost trade-off) — the chart relies entirely on the viewer to infer
+    the story from color clustering alone.
+  - Legend swatches and axis-label text share the same ~15px size band with no size
+    differentiation to signal hierarchy (e.g. title vs. axis label vs. legend) beyond
+    weight/color.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), no pure white.
+      Chrome: Title "parallel-basic · javascript · muix · anyplot.ai" top-left in bold dark ink; legend (CNN/RNN/Transformer swatches + labels) top-right; five vertical dimension axes (Batch Size, Hidden Layers, Dropout (%), Val Accuracy (%), Train Time (min)) each with min/mid/max tick labels in soft grey-ink, axis titles bold dark ink above each axis. All text is clearly legible against the light background — no light-on-light issues.
+      Data: 30 polylines colored by architecture — CNN green (#009E73, first series, correct), RNN lavender/purple, Transformer blue — alpha-blended (~0.55) so overlapping lines remain distinguishable. Clear cluster separation is visible: Transformer runs sit high on Hidden Layers/Val Accuracy/Train Time, RNN runs sit lower on Batch Size with mid-range Dropout, CNN runs cluster centrally.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), no pure black.
+      Chrome: Same title/legend/axis layout, now rendered in light ink (near-white) against the dark background. Tick labels and axis titles are all clearly visible with no dark-on-dark occurrences.
+      Data: Same three architecture colors at the same alpha, pixel-identical to the light render — only the chrome (text, axis lines) flipped to light-on-dark. Cluster patterns read identically to the light version.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; explicit font sizes throughout
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha-blended lines appropriate for 30 observations, though middle-axis
+          crossings get busy
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint hues, not red-green reliant
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (%, min)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, brand green first, correct theme backgrounds
+          both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Bespoke parallel-coordinates built on x-charts primitives; professional
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No chrome clutter, generous whitespace, clean typography
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color clustering shows patterns but no explicit annotation/highlight
+          of the standout trade-off
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine parallel-coordinates plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Multiple axes, connecting lines, category color coding all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Each dimension independently scaled and correctly positioned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title format; legend matches architecture categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 dimensions, 30 observations, 3 categories — within spec's recommended
+          ranges
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral ML hyperparameter/performance scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible native ranges per dimension (batch size, layers, dropout
+          %, accuracy %, minutes)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small focused components, no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer/useXScale/useDrawingArea imported and used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity for a chart type the library lacks
+          natively
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export contract, skipAnimation set, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the documented low-level building blocks (useXScale/useDrawingArea)
+          exactly as recommended for chart types outside the native surface
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Genuine x-charts scale/drawing-area hooks driving hand-drawn marks
+          — distinctive but not exhaustive of what the hooks could offer
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending

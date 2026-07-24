@@ -1,0 +1,259 @@
+library: ggplot2
+language: r
+specification_id: parallel-basic
+created: '2026-07-24T10:57:38Z'
+updated: '2026-07-24T11:03:14Z'
+generated_by: claude-sonnet
+workflow_run: 30087597411
+issue: 820
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Idiomatic ggplot2 parallel-coordinates construction: pivot_longer to long format,
+    geom_line grouped by id, geom_point overlay — the correct grammar-of-graphics
+    approach since ggplot2 has no dedicated parcoord geom.'
+  - 'Distinctive touch: real-scale min/max value labels (with unit-aware sprintf formatting
+    — $, ×, ★, %) placed at each axis endpoint via geom_text + coord_cartesian(clip
+    = "off"), giving readers the original scale even though the lines are min-max
+    normalized.'
+  - 'Correct canvas (3200×1800, landscape via ggsave width=8/height=4.5 @ dpi=400),
+    correct Imprint palette (first series #009E73, canonical order for the 3 segments),
+    and fully theme-adaptive chrome — no clipping, dark-on-dark, or light-on-light
+    issues in either render.'
+  - 'Clean, minimal theme: hidden y-axis ticks/text (redundant given the endpoint
+    labels), no panel grid, subtle geom_vline axis guides, generous margins — avoids
+    chartjunk.'
+  - Realistic, well-scaled synthetic data (90 observations × 6 dimensions across 3
+    market segments) with deterministic set.seed(42), reproducible KISS-structured
+    script.
+  weaknesses:
+  - No explicit storytelling focal point beyond the color-by-segment encoding — e.g.
+    an annotation calling out the Budget/Premium separation gap on Customer Satisfaction
+    or Market Share would push Data Storytelling further.
+  - On the Sales Volume and Inventory Turnover axes the 90 crossing lines create moderate
+    visual clutter where Budget (green) and Mid-range (lavender) bands overlap heavily;
+    a touch more transparency (alpha ~0.35 instead of 0.45) or slightly thinner lines
+    would ease mid-density readability without hurting sparser regions.
+  - Points sharing the same normalized value on an axis stack exactly on top of each
+    other (no jitter), so the true observation density at crowded axis positions (e.g.
+    the Budget cluster on Sales Volume) is a bit harder to gauge from the point layer
+    alone.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 target, not pure white.
+      Chrome: Title "parallel-basic · r · ggplot2 · anyplot.ai" in dark ink, fully visible with clean margin above/below, not clipped. Six vertical axes labeled "Price", "Rating", "Sales Volume", "Inventory Turnover", "Customer Satisfaction", "Market Share" in dark secondary-ink text below the plot; real-scale min/max value labels (e.g. "$10"/"$516", "2.6★"/"5.0★", "60%"/"100%") in soft ink above and below each axis. Legend box (top-right) titled "Segment" with three swatches (Budget/Mid-range/Premium) has a visible ink-colored border and readable text.
+      Data: 90 lines/points across 3 segments, colored green (#009E73, Budget), lavender (#C475FD, Mid-range), blue (#4467A3, Premium) — first series is the mandated brand green. Lines clearly readable against the light background with alpha blending to manage overlap.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 target, not pure black.
+      Chrome: Same title, axis labels, and endpoint value labels now rendered in light ink (#F0EFE8 for title, #B8B7B0 for secondary text) — all clearly legible against the dark background, no dark-on-dark failures observed. Legend box border and text flipped to light tones correctly.
+      Data: Same three segment colors (green/lavender/blue) as the light render — confirmed identical data-color hex values, only chrome (background, text, legend frame) flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; title/axis/tick/endpoint labels all
+          readable in both themes at full resolution.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions; line crossings are inherent
+          to the parallel-coordinates form, not a text-overlap issue.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: alpha=0.45 lines / 0.6 points, size 1.5, linewidth 0.5 for n=90 (medium
+          density) — reasonably tuned; slightly more transparency would help the densest
+          crossings.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 3-category Imprint palette (green/lavender/blue), CVD-safe, no red-green-only
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 confirmed, no canvas gate failure, no clipping at any edge
+          (verified via crops), generous margins, legend well placed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Dimension names plus unit-aware real-scale min/max endpoint labels
+          ($, ★, ×, %).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order for remaining 2 segments;
+          backgrounds correct in both themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom real-scale endpoint labels and minimal chrome go beyond generic
+          defaults; raised from the DE-01=4 baseline with evidence.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/grid removed, subtle geom_vline guides, generous whitespace;
+          solid but not exceptional refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-by-segment reveals a clear Budget/Premium separation pattern
+          across most axes, but no explicit annotation calls out the insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parallel coordinates plot.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Vertical axes per dimension, connecting lines per observation, category
+          color coding, normalization, alpha for overlap — all spec notes addressed.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 6 dimensions mapped to x, normalized value to y, all data represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match segment
+          categories.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 dimensions (within 4-10 recommended), 90 observations (within 20-200),
+          category grouping used.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Product feature comparison across market segments — plausible and
+          neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible per-segment ranges (price, rating, sales volume, etc.) with
+          realistic spread.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tidyr, ragg all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png, correct plot-{theme}.png naming.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: pivot_longer + geom_line/group=id is the correct native-grammar approach
+          given ggplot2 has no dedicated parcoord geom.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Unit-aware real-scale endpoint labels via geom_text + coord_cartesian(clip='off')
+          is a genuinely distinctive touch.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - minimal-chrome
