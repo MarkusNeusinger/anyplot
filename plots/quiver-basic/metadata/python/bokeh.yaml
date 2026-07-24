@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:12:43Z'
-updated: '2026-07-24T18:13:45Z'
+updated: '2026-07-24T18:21:39Z'
 generated_by: claude-sonnet
 workflow_run: 30115457206
 issue: 1014
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
   - Hand-built arrow geometry (shaft + triangular head) correctly compensates for
@@ -25,19 +25,20 @@ review:
     in either render
   - Canvas measured at exactly 3200x1800 with toolbar_location=None and generous min_border_*
     reservations — no clipping anywhere
+  - 'Both attempt-1 weaknesses cleanly resolved: title now includes the python language
+    token, and the max wind speed is rescaled to a realistic 28.0 km/h peak'
   weaknesses:
-  - Title is missing the required {language} segment — should read 'quiver-basic ·
-    python · bokeh · anyplot.ai' per the SC-04 title format
   - Composition is competent but fairly literal (uniform grid + colorbar); consider
-    a stronger focal point or emphasis technique to lift Design Excellence
-  - '''2.8 km/h'' as the max wind speed reads as unrealistically calm for a field
-    explicitly labeled ''Wind Speed'' — either scale the magnitude to a more typical
-    wind range or reframe the label/units'
+    a stronger focal point or emphasis technique (e.g. bolder treatment of the vortex
+    centre, varied grid density) to lift Design Excellence
+  - No bokeh-distinctive interactive tooling (e.g. HoverTool for per-arrow speed/direction
+    inspection) beyond the static ColorBar/annotations — would raise Library Mastery
+    in a future revision
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white, matches #FAF8F1 target
-      Chrome: title "quiver-basic · bokeh · anyplot.ai" and subtitle in dark ink top-left, axis titles and tick labels in dark/soft-dark ink, colorbar title/ticks readable — all confirmed readable
-      Data: 225 arrows on a 15x15 grid colored on the imprint_seq green (#009E73) -> blue (#4467A3) ramp keyed to magnitude; vortex-centre marker and max-speed annotation both clear of arrow overlap
+      Chrome: title "quiver-basic · python · bokeh · anyplot.ai" and subtitle "Counterclockwise vortex wind field — colour encodes wind speed" in dark ink top-left, axis titles and tick labels in dark/soft-dark ink, colorbar title "Wind Speed" and ticks readable, vortex-centre label and max-speed annotation readable and clear of arrow overlap — all confirmed readable via pixel crops
+      Data: 225 arrows on a 15x15 grid colored on the imprint_seq green (#009E73) -> blue (#4467A3) ramp keyed to wind speed; vortex-centre marker and "max 28.0 km/h at corners" annotation both clear of arrow overlap
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
@@ -118,7 +119,7 @@ review:
         comment: Vortex-centre marker and max-speed annotation add some narrative,
           no dominant focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,12 +142,13 @@ review:
         comment: x/y correct, full range shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing required {language} segment
+        passed: true
+        comment: 'Title now includes the required language segment: quiver-basic ·
+          python · bokeh · anyplot.ai'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -164,10 +166,10 @@ review:
         comment: Plausible neutral meteorological framing
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Max wind speed value reads as unrealistically low
+        passed: true
+        comment: Max wind speed rescaled to a realistic 28.0 km/h brisk-breeze peak
     code_quality:
       score: 10
       max: 10
@@ -217,7 +219,8 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Good colorbar/annotation usage, nothing further beyond that
+        comment: Good colorbar/annotation usage, no HoverTool or other bokeh-distinctive
+          interactivity
   verdict: APPROVED
 impl_tags:
   dependencies:
