@@ -1,7 +1,7 @@
 // anyplot.ai
 // qq-basic: Basic Q-Q Plot
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-07-24
+// Library: d3 7.9.0 | JavaScript 22.23.1
+// Quality: 86/100 | Created: 2026-07-24
 //# anyplot-orientation: square
 
 // --- Theme + mount ------------------------------------------------------
