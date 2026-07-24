@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-24
@@ -17,7 +17,7 @@ from pathlib import Path  # noqa: E402
 
 import numpy as np  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource, HoverTool  # noqa: E402
+from bokeh.models import ColumnDataSource, HoverTool, TapTool  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from selenium import webdriver  # noqa: E402
 from selenium.webdriver.chrome.options import Options  # noqa: E402
@@ -38,8 +38,8 @@ IMPL_DIR = os.path.dirname(os.path.abspath(__file__))
 np.random.seed(42)
 hours = np.arange(24)
 theta = hours * (2 * np.pi / 24)
-base_temp = 15 + 8 * np.sin(theta - np.pi / 2)  # peak ~14:00, trough ~04:00
-temperature = base_temp + np.random.normal(0, 1.2, 24)
+base_temp = 15 + 8 * np.sin(theta - 5 * np.pi / 6)  # peak ~16:00, trough ~04:00
+temperature = base_temp + np.random.normal(0, 0.7, 24)
 min_temp = temperature.min()
 radius = temperature - min_temp + 2  # shift to strictly positive values
 
@@ -69,16 +69,20 @@ p = figure(
     min_border=60,
 )
 
-# Concentric radial gridlines with temperature scale labels
+# Concentric radial gridlines with temperature scale labels — placed along the
+# lowest-value spoke so the label column stays clear of the filled area no
+# matter where the curve's minimum happens to fall.
+label_angle = angle[np.argmin(radius)]
+label_align = "left" if np.cos(label_angle) >= 0 else "right"
 grid_radii = np.linspace(0, max_radius, 5)[1:]
 circle_theta = np.linspace(0, 2 * np.pi, 120)
 for r in grid_radii:
     p.line(r * np.cos(circle_theta), r * np.sin(circle_theta), line_color=INK, line_width=2, line_alpha=0.10)
     p.text(
-        x=[r * np.cos(np.pi / 6)],
-        y=[r * np.sin(np.pi / 6)],
+        x=[r * np.cos(label_angle)],
+        y=[r * np.sin(label_angle)],
         text=[f"{r + min_temp - 2:.0f}°C"],
-        text_align="left",
+        text_align=label_align,
         text_baseline="middle",
         text_font_size="34pt",
         text_color=INK_MUTED,
@@ -101,11 +105,25 @@ for h in range(0, 24, 3):
 # Filled area under the temperature curve — stronger fill on dark bg for contrast
 p.patch(x_closed, y_closed, fill_color=BRAND, fill_alpha=0.30 if THEME == "light" else 0.42, line_color=None)
 
-# Closed data line + points (points carry the ColumnDataSource for the hover tool)
+# Closed data line + points (points carry the ColumnDataSource for hover + tap)
 p.line(x_closed, y_closed, line_color=BRAND, line_width=5, line_alpha=0.9)
-points = p.scatter(x="x", y="y", source=source, size=22, color=BRAND, line_color=PAGE_BG, line_width=2)
+points = p.scatter(
+    x="x",
+    y="y",
+    source=source,
+    size=22,
+    color=BRAND,
+    line_color=PAGE_BG,
+    line_width=2,
+    # TapTool selection styling — clicking an hour makes it pop, dims the rest
+    selection_fill_color=IMPRINT_PALETTE[3],
+    selection_line_color=INK,
+    nonselection_fill_alpha=0.55,
+    nonselection_line_alpha=0.55,
+)
 
 p.add_tools(HoverTool(renderers=[points], tooltips=[("Hour", "@hour"), ("Temperature", "@temp °C")]))
+p.add_tools(TapTool(renderers=[points]))
 
 # Style
 p.title.text_font_size = "50pt"
