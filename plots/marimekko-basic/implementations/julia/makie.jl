@@ -5,9 +5,6 @@
 
 using CairoMakie
 using Colors
-using Random
-
-Random.seed!(42)
 
 # --- Theme tokens -----------------------------------------------------------
 const THEME    = get(ENV, "ANYPLOT_THEME", "light")
@@ -37,6 +34,10 @@ n_y = length(y_categories)
 col_totals = vec(sum(values; dims = 1))
 grand_total = sum(col_totals)
 
+# Largest single channel/objective segment — called out with a bolder stroke
+# below to give the eye one clear focal point among otherwise-equal columns.
+max_j, max_i = Tuple(argmax(values))
+
 # Bar widths proportional to column totals, with a thin gap between bars.
 gap = 0.015
 usable_width = 1.0 - gap * (n_x - 1)
@@ -61,7 +62,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = "marimekko-basic · julia · makie · anyplot.ai",
-    titlesize          = 20,
+    titlesize          = 29,
     titlecolor         = INK,
     xlabel             = "Channel  (bar width ∝ total ad spend)",
     ylabel             = "Share of Channel Spend",
@@ -100,21 +101,23 @@ for i in 1:n_x
     for j in 1:n_y
         value = values[j, i]
         frac = value / col_totals[i]
+        is_focal = i == max_i && j == max_j
         poly!(
             ax,
             Rect2f(x_starts[i], y0, widths[i], frac);
             color = SEGMENT_COLORS[j],
-            strokecolor = PAGE_BG,
-            strokewidth = 3,
+            strokecolor = is_focal ? INK : PAGE_BG,
+            strokewidth = is_focal ? 5 : 3,
         )
         if value >= label_threshold
             text!(
                 ax,
                 x_starts[i] + widths[i] / 2,
                 y0 + frac / 2;
-                text = "\$$(value)K",
+                text = is_focal ? "★ \$$(value)K" : "\$$(value)K",
                 color = TEXT_ON_FILL[j],
                 fontsize = 15,
+                font = is_focal ? :bold : :regular,
                 align = (:center, :center),
             )
         end
