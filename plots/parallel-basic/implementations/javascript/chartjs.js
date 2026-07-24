@@ -54,6 +54,16 @@ function hexToRgba(hex, alpha) {
 
 const speciesColors = speciesStats.map((_, i) => t.palette[i % t.palette.length]);
 
+// Per-species mean profile (one point per dimension), drawn as a bolder line
+// on top of the faint individual traces so each species has a clear focal
+// line to anchor the eye, especially where Versicolor/Virginica overlap.
+const meanProfiles = speciesStats.map((_, speciesIndex) => {
+  const speciesObs = observations.filter((o) => o.speciesIndex === speciesIndex);
+  return dimensions.map(
+    (_, d) => speciesObs.reduce((sum, o) => sum + o.normalized[d], 0) / speciesObs.length
+  );
+});
+
 // --- Mount -------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -61,20 +71,33 @@ document.getElementById("container").appendChild(canvas);
 // --- Chart ---------------------------------------------------------------
 // One line dataset per observation (Chart.js has no native parallel-coords
 // type); category x-axis ticks stand in for the per-dimension axes, and a
-// shared normalized y-axis keeps every dimension comparable.
+// shared normalized y-axis keeps every dimension comparable. A bold mean
+// line per species is appended last so it draws on top of the faint
+// individual traces (Chart.js draws line datasets in array order).
+const individualDatasets = observations.map((o) => ({
+  data: o.normalized,
+  borderColor: hexToRgba(speciesColors[o.speciesIndex], 0.35),
+  borderWidth: 1.25,
+  pointRadius: 0,
+  pointHoverRadius: 0,
+  tension: 0,
+  fill: false,
+}));
+const meanDatasets = meanProfiles.map((profile, speciesIndex) => ({
+  data: profile,
+  borderColor: speciesColors[speciesIndex],
+  borderWidth: 4,
+  pointRadius: 0,
+  pointHoverRadius: 0,
+  tension: 0,
+  fill: false,
+}));
+
 new Chart(canvas, {
   type: "line",
   data: {
     labels: dimensions,
-    datasets: observations.map((o) => ({
-      data: o.normalized,
-      borderColor: hexToRgba(speciesColors[o.speciesIndex], 0.5),
-      borderWidth: 1.75,
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      tension: 0,
-      fill: false,
-    })),
+    datasets: [...individualDatasets, ...meanDatasets],
   },
   options: {
     responsive: true,
@@ -98,7 +121,7 @@ new Chart(canvas, {
               fillStyle: speciesColors[i],
               strokeStyle: speciesColors[i],
               lineWidth: 2,
-              datasetIndex: i * OBS_PER_SPECIES,
+              datasetIndex: individualDatasets.length + i,
             })),
         },
         onClick: () => {},
