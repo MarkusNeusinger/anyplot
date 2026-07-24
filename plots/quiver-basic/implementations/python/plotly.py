@@ -1,14 +1,20 @@
-""" anyplot.ai
+"""anyplot.ai
 quiver-basic: Basic Quiver Plot
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-07-24
 """
 
 import os
+import sys
 
-import numpy as np
-import plotly.figure_factory as ff
-import plotly.graph_objects as go
+
+# Prevent this file from shadowing the installed plotly package
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _this_dir]
+
+import numpy as np  # noqa: E402
+import plotly.figure_factory as ff  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -24,26 +30,32 @@ imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
 
 # Data - cyclonic wind vortex over a 4x4 km coastal grid (u = -y, v = x, m/s)
 np.random.seed(42)
-x_grid = np.linspace(-2, 2, 15)
-y_grid = np.linspace(-2, 2, 15)
+x_grid = np.linspace(-2, 2, 13)
+y_grid = np.linspace(-2, 2, 13)
 X, Y = np.meshgrid(x_grid, y_grid)
 
 x = X.flatten()
 y = Y.flatten()
-u = -Y.flatten()
-v = X.flatten()
+# Cyclone-strength wind speeds (Beaufort ~5-30 m/s range) via a physical multiplier
+WIND_SPEED_SCALE = 10.0
+u = -Y.flatten() * WIND_SPEED_SCALE
+v = X.flatten() * WIND_SPEED_SCALE
 
 # True wind speed magnitude (0 at the eddy's calm centre, growing outward)
 magnitude = np.sqrt(u**2 + v**2)
+max_magnitude = magnitude.max()
 safe_magnitude = np.where(magnitude == 0, 1e-6, magnitude)
 
-# Normalize vectors for consistent arrow length display
-scale_factor = 0.2
-u_norm = u / safe_magnitude * scale_factor
-v_norm = v / safe_magnitude * scale_factor
+# Arrow length scales with relative magnitude (proportional encoding), with a
+# small floor so the calm-centre arrows stay visible instead of vanishing
+scale_factor = 0.32
+min_length_frac = 0.18
+length_frac = min_length_frac + (1 - min_length_frac) * (magnitude / max_magnitude)
+u_norm = (u / safe_magnitude) * length_frac * scale_factor
+v_norm = (v / safe_magnitude) * length_frac * scale_factor
 
 # Create quiver plot using figure_factory
-fig = ff.create_quiver(x, y, u_norm, v_norm, scale=1, arrow_scale=0.3, line={"width": 2.5, "color": BRAND})
+fig = ff.create_quiver(x, y, u_norm, v_norm, scale=1, arrow_scale=0.3, line={"width": 2, "color": BRAND})
 
 # Add scatter points at arrow bases for wind-speed coloring
 fig.add_trace(
@@ -52,14 +64,16 @@ fig.add_trace(
         y=y,
         mode="markers",
         marker={
-            "size": 10,
+            "size": 6,
+            "opacity": 0.65,
             "color": magnitude,
             "colorscale": imprint_seq,
             "colorbar": {
                 "title": {"text": "Wind Speed (m/s)", "font": {"size": 12, "color": INK}},
                 "tickfont": {"size": 10, "color": INK_SOFT},
-                "thickness": 25,
+                "thickness": 16,
                 "outlinewidth": 0,
+                "len": 0.8,
             },
             "showscale": True,
         },
@@ -107,7 +121,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     showlegend=False,
-    margin={"l": 80, "r": 100, "t": 80, "b": 60},
+    margin={"l": 80, "r": 70, "t": 80, "b": 60},
 )
 
 # Save as PNG (2400x2400 px)
