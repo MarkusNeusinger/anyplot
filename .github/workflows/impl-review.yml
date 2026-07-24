@@ -944,7 +944,11 @@ jobs:
                 # already have an attempt label), so dropping the verdict puts
                 # it squarely in Case 2, which re-dispatches impl-repair at the
                 # attempt number the label still encodes.
-                gh pr edit "$PR_NUM" --remove-label "ai-rejected" 2>/dev/null || true
+                # Retried too: this removal IS the hand-off to the watchdog, so
+                # letting the same brown-out swallow it would leave the PR in
+                # exactly the stranded state it is meant to escape.
+                gh_retry "ai-rejected removal" gh pr edit "$PR_NUM" --remove-label "ai-rejected" \
+                  || echo "::error::could not drop ai-rejected — PR #${PR_NUM} is stranded (ai-rejected + ai-attempt-N matches no watchdog case) and needs manual attention"
                 echo "::error::impl-repair dispatch failed after 3 attempts — verdict label dropped so watchdog Case 2 picks PR #${PR_NUM} up"
                 exit 1
               fi

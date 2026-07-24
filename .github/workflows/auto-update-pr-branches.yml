@@ -101,7 +101,7 @@ jobs:
             ] | length
           ')
           if [[ "$SKIPPED" -gt 0 ]]; then
-            echo "::notice::Skipping $SKIPPED Dependabot PR(s) — Dependabot rebases those itself (see comment above)"
+            echo "::notice::Skipping $SKIPPED Dependabot PR(s) — updating them gates their CI behind manual approval, and the non-strict ruleset means being behind does not block the merge (see comment above)"
           fi
 
           COUNT=$(echo "$CANDIDATES" | jq 'length')

@@ -58,7 +58,10 @@ jobs:
                 PR_DATA=$(cat /tmp/pr.json)
                 break
               fi
-              echo "::warning::gh pr view failed (attempt ${attempt}/3): $(cat /tmp/pr.err)"
+              # Flattened: `::warning::` is line-oriented, and gh's HTTP errors
+              # are routinely multi-line — the tail would spill into the raw log.
+              PERR=$(tr '\n' ' ' < /tmp/pr.err | head -c 500)
+              echo "::warning::gh pr view failed (attempt ${attempt}/3): ${PERR}"
               if [ "$attempt" -lt 3 ]; then
                 sleep $((attempt * 5))
               fi
@@ -252,7 +255,25 @@ jobs:
             # the issue and the Postgres sync — a merged PR with none of the
             # bookkeeping, exactly the silent partial completion CLAUDE.md
             # warns about for manually merged PRs.
-            STATE=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" --json state -q .state 2>/dev/null || echo "")
+            # The state read is itself retried: a blip here would fall through
+            # to another `gh pr merge` on an already-merged PR and re-create the
+            # very failure mode this check exists to prevent — under exactly the
+            # brown-out conditions that motivate it.
+            STATE=""
+            for probe in 1 2 3; do
+              if STATE=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" --json state -q .state 2> /tmp/state.err); then
+                break
+              fi
+              SERR=$(tr '\n' ' ' < /tmp/state.err | head -c 500)
+              echo "::warning::gh pr view (state) failed (probe ${probe}/3): ${SERR}"
+              STATE=""
+              if [ "$probe" -lt 3 ]; then
+                sleep $((probe * 5))
+              fi
+            done
+            if [ -z "$STATE" ]; then
+              echo "::warning::Could not read state for PR #${PR_NUM} — proceeding to merge attempt $attempt"
+            fi
             if [ "$STATE" = "MERGED" ]; then
               echo "::notice::PR #${PR_NUM} is already merged — continuing to post-merge steps"
               exit 0
