@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: network-basic
 created: '2026-07-24T04:20:55Z'
-updated: '2026-07-24T04:25:15Z'
+updated: '2026-07-24T04:34:11Z'
 generated_by: claude-sonnet
 workflow_run: 30066171571
 issue: 989
@@ -12,131 +12,135 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Genuine force-directed (Fruchterman-Reingold) layout implemented from scratch
-    with a deterministic seeded LCG, producing natural community clustering by department
-    without any external graph library
+  - Hub labels (Ivy, Theo, Grace, Mia) added for the highest-degree node per department,
+    giving the static PNG individual identity on top of department color — directly
+    addresses the prior attempt's SC-02 weakness
+  - 'Edge weight is now visually encoded: intra-department ties scale line width/alpha
+    with tie-strength while cross-department bridges render thin and faint, making
+    the community structure legible at a glance'
+  - Genuine from-scratch Fruchterman-Reingold force-directed layout with a deterministic
+    seeded LCG produces natural, non-overlapping clustering by department
   - 'Correct Imprint palette usage — Engineering (first series) is brand green #009E73,
-    remaining three departments follow canonical order (lavender, blue, ochre), identical
-    hues across light and dark renders'
-  - Theme-adaptive chrome correctly threaded through ANYPLOT_TOKENS — background,
-    title, legend text, and edge stroke color all swap appropriately between light
-    and dark
-  - Node radius encodes degree (connection count), giving hub nodes visual prominence
-    and a clear size hierarchy
-  - Tooltip surfaces node name and degree count, a legitimate use of Chart.js interactivity
-    that adds value in the HTML detail view without being required in the static PNG
-  - Edges rendered via a lightweight custom plugin (beforeDatasetsDraw) at low alpha
-    (0.35), keeping connections visible without competing with node markers
-  - 'animation: false set correctly and canvas renders at the correct square 2400x2400
-    dimensions per the //# anyplot-orientation directive'
+    remaining three departments follow canonical palette order, and data hues are
+    pixel-identical across light/dark renders'
+  - Theme-adaptive chrome threaded correctly through ANYPLOT_TOKENS — background,
+    title, legend, edge stroke, and the hub-label callout background all flip appropriately
+    between themes
+  - Node radius encodes degree, giving hub nodes clear visual hierarchy; tooltip callback
+    surfaces node name + connection count as a bonus interactive layer
+  - Clean Chart.js plugin usage (beforeDatasetsDraw for edges, afterDatasetsDraw for
+    labels) is a distinctive, idiomatic way to build a network graph on top of the
+    core scatter type without reaching for an external library
+  - 'animation: false set correctly and the canvas renders at the correct square 2400×2400
+    dimensions'
   weaknesses:
-  - No static node labels are drawn on the canvas — with 20 named individuals, the
-    PNG alone (without hovering) can only convey department membership via color,
-    not individual identity. Consider labeling at least the highest-degree hub per
-    cluster directly on the canvas.
-  - The spec's optional edge 'weight' attribute is unused — all edges render at the
-    same width/alpha, so intra-department ties and the 6 cross-department bridge edges
-    look visually identical. Varying line width or opacity for bridge edges vs intra-cluster
-    edges would reinforce the community structure.
-  - Data storytelling is entirely implicit (clusters emerge only from the force layout)
-    — no annotation or callout highlights the most-connected node or a notable cross-team
-    bridge, which would strengthen the visual hierarchy further.
+  - Only 4 of 20 nodes are labeled (one hub per department) — a reasonable clutter-avoidance
+    tradeoff, but the other 16 individuals are still only identifiable by department
+    color, not by name, in the static PNG
+  - Data storytelling still relies mostly on the viewer parsing layout and edge weight
+    themselves; no annotation or emphasis explicitly calls out the most-connected
+    node or a notable cross-team bridge
+  - Hub-label font (15px CSS in the 1200px square mount) is legible but on the smaller
+    side relative to the node markers it sits above — could be nudged up slightly
+    for extra polish at mobile widths
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "network-basic · javascript · chartjs · anyplot.ai" is dark ink, centered top, clearly legible. Legend at bottom lists four department swatches (Engineering=green, Design=lavender, Product=blue, Marketing=ochre) with dark text, all readable. No axis lines/ticks are shown, which is correct for a node-link diagram (scales are intentionally hidden).
-      Data: 20 circular nodes colored by department (Engineering=brand green #009E73, Design=lavender, Product=blue, Marketing=ochre), sized by connection degree — larger circles are hubs. Nodes have a subtle pageBg-colored stroke that separates overlapping markers. 34 thin, low-alpha gray edges connect nodes, forming four visually distinct clusters (one per department) joined by a handful of sparser cross-department bridge edges. Connections remain individually traceable — the network is not overplotted.
-      Legibility verdict: PASS — all title, legend, and structural elements are clearly readable against the light background; no light-on-light issues.
+      Chrome: Title "network-basic · javascript · chartjs · anyplot.ai" renders in dark ink, centered top. Legend at the bottom lists four department swatches (Engineering=green, Design=lavender, Product=blue, Marketing=ochre) in dark, readable text. Four hub-node name labels (Ivy, Theo, Grace, Mia) sit above their nodes on a semi-transparent page-bg pill so they stay legible over edges/nodes.
+      Data: 20 circular nodes colored by department (first series = brand green #009E73 for Engineering) and sized by connection degree (larger = more connected hub). 34 edges join them into four visually distinct clusters; intra-department edges are heavier/darker (scaled by tie-strength weight), cross-department bridge edges are thin and faint, making the community structure legible. No axis lines/ticks are shown, which is correct for a node-link diagram.
+      Legibility verdict: PASS — all text (title, legend, hub labels) is clearly readable against the light background, including at the 400px mobile-scale thumbnail.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and legend text render in light ink (near-white), clearly visible against the dark background. Edge lines use a lighter soft-ink tone at the same 0.35 alpha, remaining visible without overpowering the dark surface.
-      Data: Node colors are pixel-identical to the light render (green, lavender, blue, ochre) — only the chrome (background, text, edges) flipped, confirming palette consistency across themes. Same four-cluster layout, same node sizing by degree.
-      Legibility verdict: PASS — no dark-on-dark failures; all title, legend, and tick-free chrome is clearly legible, and data markers stay distinguishable from the near-black background.
+      Chrome: Title and legend text flip to light ink and remain clearly legible; hub-label pills flip to the dark page background with light ink text; edges use the same soft-ink tone at the same alpha values as light mode.
+      Data: Node colors are pixel-identical to the light render (green/lavender/blue/ochre) — confirms only chrome flipped between themes. Same cluster layout, degree-based sizing, and weighted edge treatment.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, legend, hub labels) stays legible against the near-black surface, including at the 400px mobile-scale thumbnail.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title and legend text clearly readable in both themes at appropriate
-          sizes; no dedicated node labels to assess beyond legend/title
+        comment: Title/legend/hub-label font sizes explicitly set and readable in
+          both themes, incl. 400px mobile thumbnail; hub labels are legible but on
+          the smaller side
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text or data; edge crossings are inherent
-          to force-directed layouts, not a legibility fault
+        comment: Hub-label background pills prevent collisions with edges/nodes; no
+          text overlap anywhere
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Node sizes scale with degree, edges at appropriate low alpha for
-          a moderately dense 34-edge graph
+        comment: Sparse 20-node network with prominent, degree-scaled markers; weighted
+          edges keep intra- vs cross-cluster ties distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 categorical colors, well within the palette's CVD-safe range for
-          n<=4
+        comment: CVD-safe Imprint hues, page-bg marker borders for separation, no
+          red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correctly sized, good margins, title/legend
-          well placed, nothing clipped
+        comment: Network fills a large, balanced portion of the square canvas with
+          generous, even margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches mandated format; axes correctly hidden for a node-link
-          diagram
+        comment: Axes correctly hidden for a node-link diagram; title follows the
+          mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73, remaining departments follow
-          canonical Imprint order, identical across themes, correct theme backgrounds'
+        comment: 'First series is brand green #009E73, remaining 3 departments follow
+          canonical Imprint order, theme-correct backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom force-directed layout and degree-based sizing show real effort,
-          but no extra polish like curved edges or a highlighted focal node
+        comment: Custom force-directed layout, degree-based sizing, and weight-scaled
+          edges show real design effort beyond a library default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minimal chrome, no grid, no spines, generous whitespace; markers
-          use a pageBg stroke for separation
+        comment: No grid/spines, generous whitespace, page-bg marker borders and label
+          pills for separation — good but not maximal polish
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Community clusters and hub emphasis emerge from layout/sizing, but
-          there's no explicit annotation calling out the story
+        comment: Weight-scaled edges now make the bridge-vs-intra-cluster story explicit
+          and hub labels call out key individuals, though no direct annotation highlights
+          a single takeaway
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,49 +148,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct node-link network diagram
+        comment: Correct node-link network graph
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Force-directed layout and degree-based node sizing present; no static
-          node labels reduce identifiability of the PNG alone
+        comment: Force-directed layout, degree-based node sizing, and static hub labels
+          now present — resolves the prior attempt's identifiability gap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y from force layout, hidden scales appropriate for network graphs
+        comment: Nodes/edges correctly mapped to force-layout coordinates; all data
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match department names
+        comment: Title format correct; legend labels match the four department groups
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes, edges, groups, and degree-based sizing covered; edge weight
-          attribute from spec unused
+        comment: Nodes, edges, groups, degree-sizing, and now edge weight (tie-strength)
+          are all used and visually encoded
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral workplace collaboration network
+        comment: Neutral, plausible company collaboration network scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 nodes / 34 edges, within the spec's 10-50 node guidance
+        comment: 20 nodes / 34 edges sits well within the spec's 10-50 node guidance
+          for a clear static visualization
     code_quality:
       score: 10
       max: 10
@@ -196,31 +202,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script structure, only a small LCG helper function
+        comment: Linear data -> layout -> plugins -> chart flow; small helper functions
+          (lcg, nodeRadius) are appropriate, not over-structured
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG drives both node placement and the force simulation
+        comment: Deterministic fixed-seed LCG (seed=42) drives both the initial layout
+          and any pseudo-randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports, all in-memory
+        comment: No unused imports; only the global Chart is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity
+        comment: Clean, appropriately complex for a from-scratch network layout; no
+          fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract, animation disabled
+        comment: 'Correct mount-node contract, animation: false, current Chart.js
+          API'
     library_mastery:
       score: 8
       max: 10
@@ -230,24 +240,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Scatter type with showLine:false repurposed cleanly for node-link
-          rendering
+        comment: Scatter type with showLine:false cleanly repurposed for node-link
+          rendering, using the standard plugin lifecycle hooks
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom beforeDatasetsDraw plugin for edges, per-point radius arrays,
-          tooltip callbacks — good use of Chart.js's extensibility
+        comment: Custom beforeDatasetsDraw/afterDatasetsDraw plugins for weighted
+          edges and hub labels, per-point radius arrays, and tooltip callbacks are
+          genuinely Chart.js-specific techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - force-directed-layout
+  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - minimal-chrome
+  - edge-highlighting
