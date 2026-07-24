@@ -1,7 +1,7 @@
 // anyplot.ai
 // parallel-basic: Basic Parallel Coordinates Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.1
-// Quality: 83/100 | Created: 2026-07-24
+// Quality: 90/100 | Created: 2026-07-24
 
 const t = window.ANYPLOT_TOKENS;
 
