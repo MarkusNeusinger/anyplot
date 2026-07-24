@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qq-basic: Basic Q-Q Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-24
@@ -67,7 +67,7 @@ plot = (
         alpha=0.10,
     )
     + stat_qq_line(color=INK_SOFT, size=1.2, linetype="dashed")
-    + stat_qq(color=BRAND, alpha=0.75, size=3)
+    + stat_qq(color=BRAND, alpha=0.55, size=2.2)
     + annotate(
         "segment",
         x=callout_x - 0.65,
@@ -89,7 +89,7 @@ plot = (
     + labs(
         x="Theoretical Quantiles (Standard Normal)",
         y="Sample Quantiles (Cycle Time, seconds)",
-        title="qq-basic · plotnine · anyplot.ai",
+        title="qq-basic · python · plotnine · anyplot.ai",
     )
     + theme_minimal()
     + theme(
