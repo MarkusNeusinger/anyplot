@@ -53,7 +53,7 @@ const yAxis = g.append("g").call(d3.axisLeft(yScale).ticks(7).tickFormat((d) => 
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
   ax.selectAll("line").attr("stroke", t.grid);
-  ax.select(".domain").attr("stroke", t.inkSoft);
+  ax.select(".domain").attr("stroke", t.inkSoft).attr("stroke-width", 0.75).attr("stroke-opacity", 0.5);
 }
 
 // faint reference grid so arrow positions read against the coordinate frame
@@ -78,20 +78,41 @@ g.selectAll("line.gridy")
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
+// subtle radial guide marking the eddy core's characteristic decay radius
+const coreRadiusPx = xScale(Math.sqrt(6)) - xScale(0);
+g.append("circle")
+  .attr("cx", xScale(0))
+  .attr("cy", yScale(0))
+  .attr("r", coreRadiusPx)
+  .attr("fill", "none")
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", "4,4")
+  .attr("stroke-opacity", 0.35);
+
 // --- Arrows (line + solid triangular head, colored by current speed) --------
 const headAngle = Math.PI / 7;
 const headLen = Math.max(7, cellSize * 0.2);
+const minShaftLen = Math.max(headLen * 1.5, cellSize * 0.3); // keep near-zero vectors legible
 
 const arrows = g.selectAll("g.arrow").data(points).join("g").attr("class", "arrow");
 arrows.each(function (d) {
   const x0 = xScale(d.x);
   const y0 = yScale(d.y);
-  const dxPx = d.u * pxPerUnit;
-  const dyPx = -d.v * pxPerUnit; // screen y grows downward, data y grows upward
+  const fill = color(d.mag);
+
+  if (d.mag < 1e-9) {
+    // exact stagnation point at the eddy core: direction undefined, mark with a dot
+    d3.select(this).append("circle").attr("cx", x0).attr("cy", y0).attr("r", 3).attr("fill", fill);
+    return;
+  }
+
+  const lenPx = Math.max(d.mag * pxPerUnit, minShaftLen);
+  const dxPx = (d.u / d.mag) * lenPx;
+  const dyPx = (-d.v / d.mag) * lenPx; // screen y grows downward, data y grows upward
   const x1 = x0 + dxPx;
   const y1 = y0 + dyPx;
   const angle = Math.atan2(dyPx, dxPx);
-  const fill = color(d.mag);
 
   const hx1 = x1 - headLen * Math.cos(angle - headAngle);
   const hy1 = y1 - headLen * Math.sin(angle - headAngle);
