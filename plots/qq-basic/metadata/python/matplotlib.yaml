@@ -2,131 +2,128 @@ library: matplotlib
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:12:33Z'
-updated: '2026-04-27T05:37:27Z'
+updated: '2026-07-24T07:05:00Z'
 generated_by: claude-sonnet
-workflow_run: 24977577660
+workflow_run: 30073406255
 issue: 977
-python_version: 3.14.4
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'All spec features perfectly implemented: correct Q-Q mechanics, proper axis labels,
-    exact title format, reference line labeled in legend'
-  - 'Excellent data quality: specific blood pressure scenario (normotensive/hypertensive
-    cohort) with realistic clinical values, directly motivated by the deviation being
-    visualized'
-  - Correct scipy.stats.probplot() usage as the idiomatic ecosystem approach for Q-Q
-    quantile computation — significant improvement over attempt 1
-  - 'Perfect code quality: KISS structure, seed, clean imports, clean CI band computation'
-  - Theme-adaptive chrome applied correctly throughout both renders — no dark-on-dark
-    failures
+  - Correct Q-Q construction via scipy.stats.probplot with a properly derived 95%
+    pointwise confidence band (not just eyeballed)
+  - Bimodal blood-pressure data (normotensive + hypertensive cohorts) creates a genuine,
+    visible upper-tail deviation from normality — the plot demonstrates exactly the
+    distribution characteristics the spec calls out (S-curve/tail effects)
+  - Annotation calls out the hypertensive-cohort deviation, giving the chart a clear
+    focal point and story instead of a raw point cloud
+  - 'Clean theme-adaptive chrome: spines removed, subtle asymmetric grid (y=0.15,
+    x=0.06 alpha), legend styled with elevated background — both light and dark renders
+    are fully readable with identical data colors'
+  - Title format, axis labels ('Theoretical Quantiles' / 'Sample Quantiles'), and
+    legend labels match the specification exactly
   weaknesses:
-  - CI band alpha=0.12 is too faint — nearly invisible in both renders, reducing the
-    visual benefit of including it
-  - Annotation box fill (ELEVATED_BG) on page background (PAGE_BG) has almost no contrast
-    in the light theme — the storytelling element barely reads visually
-  - LM-02 could be pushed further with more distinctive matplotlib features such as
-    custom tick formatting or scipy.stats.probplot with plot=ax for direct rendering
+  - Scatter marker size (s=70) sits below the style guide's recommended 100-200 range
+    for a ~100-point dataset — points are visible but slightly smaller than optimal
+  - Annotation text (fontsize=7.5) is noticeably smaller than the rest of the chrome
+    and becomes borderline small when the PNG is scaled to a ~400px mobile thumbnail
+    — consider fontsize=9-10
+  - Distinctive matplotlib-specific features (e.g. fill_between for the CI band, annotate
+    with arrowprops) are used well but are easily replicated in other libraries —
+    nothing uniquely leverages matplotlib beyond common patterns
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "qq-basic · matplotlib · anyplot.ai" in dark ink (INK=#1A1A17), clearly readable. X-axis "Theoretical Quantiles" and Y-axis "Sample Quantiles" in dark ink, fully legible. Tick labels in dark gray (INK_SOFT=#4A4A44), fully readable. Legend at lower-right shows "Reference line (y = x)" and "95% CI band" entries in elevated off-white frame.
-      Data: 100 teal-green (#009E73) scatter markers (s=200, alpha=0.7) with subtle off-white halos (edgecolors=PAGE_BG). Orange-vermillion (#D55E00) dashed reference line (linewidth=3). CI band (alpha=0.12, color=#009E73) nearly invisible against off-white background. Annotation box pointing to upper-tail deviation is present but very low contrast (ELEVATED_BG=#FFFDF6 on PAGE_BG=#FAF8F1).
-      Legibility verdict: PASS — all text readable against light background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "qq-basic · python · matplotlib · anyplot.ai" in dark ink, clearly visible; "Theoretical Quantiles" / "Sample Quantiles" axis labels and tick labels in dark/soft-ink colors, all legible; subtle grid lines visible but unobtrusive; legend box (bottom right) with light elevated background, dark text, clearly readable.
+      Data: Green (#009E73) scatter points for sample quantiles with an alpha-blended green 95% CI band; a dashed purple/violet (#C475FD) 45-degree reference line; an annotation "Hypertensive cohort deviates from normal" with an arrow pointing to the upper-tail deviation caused by the hypertensive cohort. First series is correctly #009E73.
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title, axis labels, and tick labels in light cream/gray (INK=#F0EFE8, INK_SOFT=#B8B7B0) — clearly readable against dark surface. No dark-on-dark failures. Legend frame uses elevated dark background (#242420) with light text.
-      Data: Scatter markers are identical teal-green (#009E73) — matches light render exactly as required. Orange dashed reference line is identical. CI band at alpha=0.12 remains near-invisible. Annotation box (fill #242420, edge #B8B7B0) slightly more visible due to light-gray border but still subtle.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels rendered in light/soft off-white tones, clearly visible against the dark background; grid lines subtle but visible; legend box uses a dark elevated background with light text and border, readable.
+      Data: Same green (#009E73) scatter and CI band, same dashed purple (#C475FD) reference line — colors identical to the light render, confirming only chrome flipped. Annotation text renders in a light gray tone, clearly visible on dark, with a light-colored arrow — no dark-on-dark failure.
+      Legibility verdict: PASS — all text and data elements are readable against the dark background; no dark-on-dark text found.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt,
-          legend 16pt). Fully readable in both themes.
+        comment: Explicit font sizes throughout; readable in both themes; annotation
+          at 7.5pt is a bit small at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions. Annotation placed in open space.
+        comment: Annotation, legend, and data cleanly separated, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
-        passed: false
-        comment: Scatter points (s=200, alpha=0.7) and reference line (linewidth=3)
-          are optimal. CI band at alpha=0.12 is nearly invisible in both renders —
-          present but does not meaningfully read.
+        passed: true
+        comment: Markers visible but s=70 is below the 100-200 guideline for ~100
+          points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 and #D55E00 are CVD-safe with good luminance contrast.'
+        comment: Green/purple contrast is CVD-safe, good alpha on overlapping CI band
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced margins, nothing cut off, legend well-placed.
+        comment: Balanced margins, plot fills a healthy majority of the canvas, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Theoretical Quantiles / Sample Quantiles are standard descriptive
-          labels for this plot type; no units needed for standardized values.
+        comment: Descriptive 'Theoretical Quantiles' / 'Sample Quantiles' labels,
+          units not applicable to standardized quantiles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct. Reference line #D55E00 (Okabe-Ito
-          position 2). Backgrounds #FAF8F1 light / #1A1A17 dark. All chrome theme-adaptive.
-          Data colors identical across themes.'
+        comment: 'First series #009E73, reference line uses Imprint position 2, theme-correct
+          backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: 'Above well-configured defaults: clinically motivated bimodal data,
-          CI band computation, annotation with arrowprops, Okabe-Ito palette applied
-          thoughtfully. Annotation near-invisibility in light mode and faint CI band
-          reduce visual impact.'
+        passed: true
+        comment: Thoughtful CI-band shading and annotation lift this clearly above
+          library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Top/right spines removed, subtle dual-axis grid (alpha=0.12 appropriate
-          for scatter), themed spine colors, legend frame styled with ELEVATED_BG
-          and INK_SOFT. Good refinement.
+        passed: true
+        comment: Spines removed, asymmetric subtle grid, styled legend frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: 'Clear narrative: bimodal blood pressure cohort tests normality,
-          CI band defines normal region, annotation flags upper-tail departure. Story
-          is well-conceived but annotation near-invisible in light mode and CI band
-          barely reads, weakening visual guidance.'
+        passed: true
+        comment: Annotation explicitly calls out the hypertensive-cohort deviation
+          as the focal insight
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Q-Q plot: sample quantiles vs theoretical quantiles scatter.'
+        comment: Correct Q-Q plot with reference line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Scatter points, diagonal reference line (y=x), correct axis labels,
-          CI band bonus. All spec features present.
+        comment: 45-degree reference line present and clearly visible, all spec notes
+          satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theoretical quantiles on X, sample quantiles on Y. 100 observations
-          in the 30-500 spec range.
+        comment: Theoretical quantiles on X, sample quantiles on Y, all points shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'qq-basic · matplotlib · anyplot.ai' matches exact required
-          format. Legend entries accurate.
+        comment: Title format exact match, legend labels match data ('95% CI band',
+          'Reference line (y = x)')
     data_quality:
       score: 15
       max: 15
@@ -167,24 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both normality (central data follows reference line) and deviation
-          (upper tail departs — hypertensive subpopulation). Captures the full diagnostic
-          picture.
+        comment: Bimodal mixture creates a visible upper-tail deviation, demonstrating
+          the distribution-characteristic use case from the spec
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Blood pressure readings from normotensive (N=75, mu=120) and hypertensive
-          (N=25, mu=155) patient cohort. Real-world medical scenario, specific clinical
-          context, neutral topic.
+        comment: Clinical blood-pressure scenario, neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: BP values 120-155 mmHg are medically realistic; z-score range (~-2.5
-          to 2.5) appropriate for standardized N(0,1) comparison.
+        comment: Normotensive/hypertensive means and SDs are physiologically plausible
     code_quality:
       score: 10
       max: 10
@@ -194,56 +186,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: theme tokens -> data -> compute -> plot -> save. No
-          functions or classes.'
+        comment: Linear imports/data/plot/save, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, scipy.stats — all used.
+        comment: os, matplotlib, numpy, scipy.stats all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: scipy.stats.probplot() replaces the previous manual Abramowitz &
-          Stegun approximation. CI band computation (6 lines) is the correct statistical
-          approach. Code is clean and Pythonic.
+        comment: Clean, appropriately complex CI-band derivation, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No deprecated API usage.
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight', current Axes API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: scipy.stats.probplot() is the idiomatic Python/matplotlib ecosystem
-          approach for Q-Q plots. Correct Axes methods, fill_between for CI band,
-          annotate with arrowprops and bbox, legend styled via frame setters and setp.
-          Strong idiomatic usage above default.
+        passed: true
+        comment: Idiomatic Axes-based API (ax.scatter/plot/fill_between/annotate)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: fill_between for CI band, ax.annotate with arrowprops/bbox styling,
-          edgecolors=PAGE_BG for marker halos — genuine matplotlib-specific features
-          combined meaningfully. Usage is good but not extraordinary.
-  verdict: REJECTED
+        passed: true
+        comment: fill_between CI band + annotate with arrowprops are used well but
+          are common patterns, not uniquely matplotlib
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -251,8 +236,10 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - normalization
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
