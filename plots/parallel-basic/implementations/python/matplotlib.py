@@ -1,13 +1,26 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
-Library: matplotlib 3.10.9 | Python 3.14.4
-Quality: 72/100 | Updated: 2026-04-27
+Library: matplotlib 3.11.1 | Python 3.13.12
+Quality: 72/100 | Updated: 2026-07-24
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — 8 hues, theme-independent, hybrid-v3 sort. First 3 positions
+# used in canonical order for the 3 species (no semantic color cue applies here).
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Iris dataset for multivariate demonstration (embedded for reproducibility)
 np.random.seed(42)
@@ -60,11 +73,11 @@ for col in numeric_cols:
     max_val = df[col].max()
     df_norm[col] = (df[col] - min_val) / (max_val - min_val)
 
-# Create figure (4800x2700 px at 300 dpi)
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot — see default-style-guide.md "Visual Sizing Defaults" for canvas + sizing values
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Define colors for species - Python Blue and Yellow first, then accessible green
-colors = {"setosa": "#306998", "versicolor": "#FFD43B", "virginica": "#4CAF50"}
+colors = {"setosa": IMPRINT_PALETTE[0], "versicolor": IMPRINT_PALETTE[1], "virginica": IMPRINT_PALETTE[2]}
 
 # Plot parallel coordinates - each line connects values across axes
 x = range(len(numeric_cols))
@@ -80,10 +93,10 @@ labels = [
     f"Petal Length\n({df['petal_length'].min():.1f}-{df['petal_length'].max():.1f} cm)",
     f"Petal Width\n({df['petal_width'].min():.1f}-{df['petal_width'].max():.1f} cm)",
 ]
-ax.set_xticklabels(labels, fontsize=18)
-ax.set_ylabel("Normalized Value", fontsize=20)
-ax.set_title("parallel-basic · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="y", labelsize=16)
+ax.set_xticklabels(labels, fontsize=8, color=INK_SOFT)
+ax.set_ylabel("Normalized Value", fontsize=10, color=INK)
+ax.set_title("parallel-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
 
 # Add legend for species
 legend_handles = [
@@ -91,11 +104,18 @@ legend_handles = [
     plt.Line2D([0], [0], color=colors["versicolor"], linewidth=3, label="Versicolor"),
     plt.Line2D([0], [0], color=colors["virginica"], linewidth=3, label="Virginica"),
 ]
-ax.legend(handles=legend_handles, fontsize=16, loc="upper right")
+leg = ax.legend(handles=legend_handles, fontsize=8, loc="upper right")
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
 # Styling
 ax.set_ylim(-0.05, 1.05)
-ax.grid(True, alpha=0.3, linestyle="--", axis="y")
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)  # no bbox_inches='tight'
