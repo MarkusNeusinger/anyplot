@@ -1,0 +1,270 @@
+library: d3
+language: javascript
+specification_id: marimekko-basic
+created: '2026-07-24T14:48:29Z'
+updated: '2026-07-24T15:07:27Z'
+generated_by: claude-sonnet
+workflow_run: 30102186532
+issue: 1002
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Genuine d3-hierarchy-based marimekko/mosaic tiling (d3.hierarchy + a custom dice-then-slice
+    tile function built on d3.treemapDice/d3.treemapSlice) — the canonical, distinctive
+    D3 technique for this chart type, directly addressing attempt 1's 'generic D3
+    primitives' critique.
+  - 'Design flourish: a dashed-outline callout box plus a ''LARGEST SEGMENT'' badge
+    highlighting the single biggest segment across the whole dataset, giving the chart
+    a clear focal point beyond a plain default marimekko.'
+  - Reference quartile gridlines (25/50/75%) are now drawn above the bars at low opacity
+    so they are actually visible — fixes attempt 1's issue where they were fully hidden
+    underneath the opaque column rects.
+  - 'Correct Marimekko encoding: bar widths proportional to each region''s total revenue,
+    segment heights proportional to product-line share within the region, matching
+    the spec''s core requirement exactly.'
+  - 'Correct Imprint palette in canonical order (Software = #009E73 first, then lavender/blue/ochre),
+    identical between light and dark renders — only chrome flips; theme-adaptive title/axis/tick/legend
+    text threaded through t.ink/t.inkSoft throughout.'
+  - Value labels adaptively suppressed on segments too small to hold them legibly
+    (width > 140 && height > 90), avoiding clutter on the narrow Latin America column.
+  - '''$XXXM total'' sub-labels bumped to 14px, fixing attempt 1''s borderline-13px
+    mobile legibility note.'
+  weaknesses:
+  - All four regions share identical category rank-ordering (Software > Hardware >
+    Services > Support) — reduces data realism/variety, carried over from attempt
+    1's DQ-01 note. Vary at least one region's product mix (e.g. a region where Services
+    or Hardware outranks Software) so the chart reads as more differentiated.
+  - Two custom helper functions (regionTotal, marimekkoTile) are defined — justified
+    and idiomatic for the d3.treemap().tile() API contract, but technically departs
+    from the strict 'linear script, no functions' KISS guidance; minor deduction only.
+  - Segment value-label and callout text use t.pageBg as fill, which flips to near-black
+    in the dark theme; still legible on the saturated segment fills but has visibly
+    lower contrast than the crisp white labels in the light render — consider a dedicated
+    on-segment text token instead of reusing pageBg.
+  - No explicit x-axis title (e.g. 'Region') — acceptable since category + total sub-labels
+    serve that role per the spec, but leaves the axis pairing slightly asymmetric
+    versus the explicitly labeled y-axis.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "marimekko-basic · javascript · d3 · anyplot.ai" centered at top; dark-ink x-axis category labels (North America, Europe, Asia Pacific, Latin America) in bold, with lighter-gray "$XXXM total" sub-labels beneath each; rotated y-axis title "Share of Regional Revenue" in soft ink; y-axis percentage ticks (0%-100%) in soft ink; legend (Software/Hardware/Services/Support swatches + labels) at far right in dark ink. All chrome is clearly readable against the light background.
+      Data: Four variable-width stacked columns (Marimekko), widths proportional to each region's total ($840M/$600M/$500M/$180M), segment heights proportional to each product line's share. First series (Software) renders in Imprint brand green #009E73, followed by lavender (Hardware), blue (Services), and ochre (Support) — canonical Imprint order. Value labels ("$420M", "$150M", etc.) appear as white text inside the larger segments, clearly legible against the saturated fills. A dashed black outline plus "LARGEST SEGMENT" badge calls out the North America Software segment ($420M). Dashed quartile reference gridlines (25/50/75%) are visible crossing all four columns.
+      Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the light surface; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, tick labels, and legend text now rendered in light ink tones (white/light-gray), clearly legible against the dark surface. Rotated y-axis title and legend text also flip to light coloring correctly.
+      Data: Data colors are identical to the light render (Software green #009E73, Hardware lavender, Services blue, Support ochre) — only chrome flipped, as required. Value labels and the "LARGEST SEGMENT" badge inside segments use a dark-ink fill (derived from the page-background token) which still reads clearly against the mid-to-high-saturation segment fills — legible, though noticeably lower contrast than the white labels in the light render. This is not a dark-on-dark failure since the labels sit on colored data fills, not on the page background itself. The dashed callout outline renders in a light color, clearly visible against the green segment.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures found; all chrome and data-embedded text remain legible in the dark theme.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicit (14-22px), readable in both themes; on-segment
+          labels use pageBg fill which is lower-contrast (dark-on-color) in the dark
+          render than the crisp white labels in the light render, though still legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, segments, callout badge, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Segment labels adaptively suppressed on segments too small to hold
+          them; quartile gridlines now visible above bars (fixed from attempt 1)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast; stroke separators keep segment boundaries clear regardless
+          of hue similarity
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); balanced margins, legend fits without
+          overflow, title well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis descriptively labeled with percentage units; x-axis uses category
+          + total labels per spec
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, remaining series follow canonical Imprint
+          order, identical across themes, backgrounds theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dashed callout + 'LARGEST SEGMENT' badge and pre-sorted columns give
+          real design intent beyond a stock marimekko, addressing attempt 1's flatness
+          critique
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle segment strokes, no chart-junk spines, generous margins; quartile
+          gridlines kept intentionally subtle (opacity 0.3)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Columns pre-sorted largest-to-smallest revenue plus an explicit largest-segment
+          callout create a clear visual hierarchy and focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Marimekko / variable-width stacked bar chart via d3-hierarchy
+          treemap tiling
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportional widths, proportional segment heights, legend, conditional
+          value labels, centered category labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Region on x (width-encoded), product-line share on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match data categories
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 4
+        max: 6
+        passed: true
+        comment: Four regions and four product lines with varied totals and shares,
+          but every region shares the identical Software>Hardware>Services>Support
+          rank order (carried over from attempt 1)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible business scenario (regional tech company revenue
+          by product line)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue magnitudes and regional/product proportions are plausible
+          for a global tech company
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small helper functions (regionTotal, marimekkoTile) required
+          by the d3.treemap().tile() API contract — justified but not a strictly linear
+          script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports; only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for a marimekko layout, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, sizes SVG from ANYPLOT_SIZE, no animation
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic scale/axis/data-join usage plus a correctly-implemented
+          custom tile function following the treemap.tile() API contract
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Now leverages d3-hierarchy (d3.hierarchy, d3.treemap, d3.treemapDice,
+          d3.treemapSlice) for a genuine dice-then-slice marimekko tiling — addresses
+          attempt 1's 'generic D3 primitives' critique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - treemap-tiling
+  - custom-legend
+  - annotations
+  - callout
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - edge-highlighting
