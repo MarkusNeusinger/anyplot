@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-24
@@ -244,14 +244,16 @@ tick_df = pd.DataFrame(tick_data)
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK_SOFT, size=0.2),
+    # Only horizontal gridlines — vertical gridlines would create a
+    # phantom-column look that competes with the 4 manually-drawn axis bars.
+    panel_grid_major_x=element_blank(),
+    panel_grid_major_y=element_line(color=INK_SOFT, size=0.2),
     panel_grid_minor=element_blank(),
     axis_title=element_blank(),
     axis_text=element_blank(),
     axis_ticks=element_blank(),
     axis_line=element_blank(),
-    panel_grid=element_blank(),
-    plot_title=element_text(color=INK, size=14),
+    plot_title=element_text(color=INK, size=17),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=9),
     legend_title=element_text(color=INK, size=10),
@@ -279,7 +281,7 @@ plot = (
     # Tick value labels on the left side of axes (theme-adaptive color)
     + geom_text(aes(x="x", y="y", label="label"), data=tick_df, size=8, color=INK_SOFT, hjust=1)
     # Styling
-    + scale_x_continuous(limits=(-0.5, len(dimensions) - 0.5))
+    + scale_x_continuous(limits=(-0.4, len(dimensions) - 0.6))
     + scale_y_continuous(limits=(-0.32, 1.1))
     + labs(title="parallel-basic · python · letsplot · anyplot.ai", color="Species")
     + ggsize(800, 450)
