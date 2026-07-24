@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-basic: Basic Radar Chart
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-24
@@ -59,9 +59,26 @@ fig.add_trace(
         fill="toself",
         fillcolor=FILL_JUNIOR,
         line={"color": IMPRINT[1], "width": 2.5},
-        marker={"size": 11, "color": IMPRINT[1]},
+        marker={"size": 11, "color": IMPRINT[1], "line": {"width": 1, "color": INK}},
         name="Junior Developer",
         hovertemplate="<b>Junior Developer</b><br>%{theta}: %{r}<extra></extra>",
+    )
+)
+
+# Distinctive plotly-native callout: a starred point + inline text label, placed
+# directly in polar coordinates (no paper-space annotation math needed) to draw
+# the eye to the one axis where Junior overtakes Senior.
+fig.add_trace(
+    go.Scatterpolar(
+        r=[junior_values[2]],
+        theta=[categories[2]],
+        mode="markers+text",
+        marker={"size": 20, "symbol": "star", "color": IMPRINT[1], "line": {"width": 1.5, "color": INK}},
+        text=["Junior leads"],
+        textposition="middle left",
+        textfont={"size": 13, "color": INK},
+        showlegend=False,
+        hoverinfo="skip",
     )
 )
 
