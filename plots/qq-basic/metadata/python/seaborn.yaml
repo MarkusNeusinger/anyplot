@@ -2,47 +2,58 @@ library: seaborn
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:12:43Z'
-updated: '2026-04-27T05:21:34Z'
+updated: '2026-07-24T07:14:20Z'
 generated_by: claude-sonnet
-workflow_run: 24977632424
+workflow_run: 30073267766
 issue: 977
-python_version: 3.14.4
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Perfect spec compliance: correct plot type, all required features, proper axis
-    labels, correct title format'
-  - 'Data storytelling: bimodal mixture data produces characteristic QQ deviations
-    that clearly demonstrate the diagnostic value of the chart'
-  - 'Full theme adaptation: all chrome elements use adaptive tokens; both renders
-    pass legibility checks'
-  - 'Zero external dependencies: Abramowitz and Stegun quantile approximation keeps
-    the implementation self-contained'
+  - 'Genuinely creative reference guide: a 300-replicate 95% simulation envelope built
+    with sns.lineplot(estimator=''mean'', errorbar=(''pi'', 95)) instead of a bare
+    y=x line, giving the Q-Q plot real statistical depth and leaning on seaborn''s
+    own estimation machinery.'
+  - 'Correct Imprint palette usage: sample quantiles use brand green #009E73, and
+    the reference band/line uses the theme-adaptive muted/neutral token in its confidence-band
+    role rather than spending a categorical color on it.'
+  - Theme-adaptive chrome is threaded consistently through sns.set_theme rc params
+    — both light and dark renders are fully legible with no dark-on-dark or light-on-light
+    failures.
+  - 'Both fixes from the Attempt 1 review are correctly applied and now reflected
+    in the render: title reads ''qq-basic · python · seaborn · anyplot.ai'' and marker
+    size was reduced to s=90, sitting comfortably in the density-appropriate range
+    for ~200 points.'
+  - Clean, idiomatic KISS structure, reproducible via a seeded np.random.default_rng(42),
+    spines removed, subtle grid, realistic mixture-distribution sample (normal core
+    + right-tail bump) that visibly demonstrates the Q-Q deviation the spec asks for.
   weaknesses:
-  - 'DE-01 moderate: No confidence band or annotations to add statistical depth and
-    visual richness'
-  - 'LM-02 low: Seaborn distinctive features (statistical layers, CI bands, FacetGrid)
-    are not used — implementation is essentially a styled matplotlib scatter with
-    seaborn theme setup'
-  - 'VQ-02 minor: Overlap in dense central band could be reduced with slightly larger
-    edge linewidth or smaller marker size'
+  - Only the upper/right tail visibly strays from the reference envelope; the sample
+    could show a touch more variety in deviation (e.g. mild left-tail behavior) for
+    fuller Q-Q feature coverage — minor polish item, not a correctness issue.
+  - In the dense mid-section (theoretical quantiles roughly -1 to 1), overlapping
+    markers merge into a near-continuous ribbon; a hair more transparency or slightly
+    smaller markers there would keep individual points distinguishable, though this
+    does not rise to an Element Visibility failure.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "qq-basic · seaborn · anyplot.ai" in dark ink — readable. Axis labels "Theoretical Quantiles" / "Sample Quantiles" in dark ink — readable. Tick labels in INK_SOFT dark grey — readable. Legend in upper-left with dashed line icon — readable.
-      Data: Brand green (#009E73) scatter markers at s=200 with alpha=0.7 and PAGE_BG edge color. Dashed reference line (y=x) in INK_SOFT grey. Bimodal mixture produces visible S-curve deviation and lower-left outliers.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "qq-basic · python · seaborn · anyplot.ai" in dark ink is clearly legible (language segment present, confirming the Attempt 1 fix is now reflected in the render). "Theoretical Quantiles" / "Sample Quantiles" axis labels and softer dark-gray tick labels all readable. Upper-left legend box (cream fill, dark border) reads "Normal reference (95% envelope)" and "Sample quantiles", both fully readable, no overlap with plot data.
+      Data: Green (#009E73) circular markers (s=90) trace standardized sample quantiles against theoretical quantiles from about -3 to 3, closely tracking a dashed gray identity/reference line inside a light-gray 95% simulation-envelope band; markers curve visibly above the envelope for theoretical quantile > ~1.2, showing the intended right-tail deviation from normality.
+      Legibility verdict: PASS — no light-on-light issues anywhere.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and all labels rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark text failure. Reference line appears as white/light-grey dashed line.
-      Data: Colors identical to light render — same green (#009E73) markers; only chrome (text, line color) flips to light values. Brand green remains fully visible on dark surface.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title and axis labels render in light ink (near-white), fully legible; tick labels in a lighter gray, also legible; legend box (dark-elevated fill, light border) has light text with no dark-on-dark issues anywhere.
+      Data: Same #009E73 green markers (color parity with light render confirmed — only chrome flipped), same dashed reference line (now light gray) and simulation envelope (dark-gray shading), same upper-tail deviation pattern.
+      Legibility verdict: PASS — no dark-on-dark failures found.
+
+    Both renders are theme-correct, mutually consistent (identical data colors, only chrome flipped), and correctly reflect the current source — resolving the Attempt 2 staleness issue (title now includes "python", markers are s=90 not the stale s=120).
   criteria_checklist:
     visual_quality:
       score: 29
@@ -50,74 +61,72 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          all text readable in both themes
+        comment: All font sizes explicitly set, readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor clustering in dense central region; alpha=0.7 helps; edge linewidth=0.5
-          is minimal
+        comment: No collisions between text, legend, and data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers at s=200 clearly visible; reference line distinct
+        comment: s=90 now sits in the density-appropriate 50-100 range for ~200 points,
+          fixing the prior s=120 issue
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 on both backgrounds is CVD-safe; no red-green sole signal'
+        comment: Green vs. gray, CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions; tight_layout prevents clipping
+        comment: Balanced, nothing cut off, canvas gate passed (3200x1800, no gate
+          file present)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with standard QQ terminology
+        comment: 'Descriptive per spec: Theoretical Quantiles / Sample Quantiles'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series uses BRAND (#009E73); backgrounds #FAF8F1/#1A1A17;
-          both renders theme-correct'
+        comment: '#009E73 first series; backgrounds correct #FAF8F1/#1A1A17; correct
+          theme-adaptive chrome'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: PAGE_BG edge color creates floating-dot effect; deliberate alpha
-          blending; consistent theme token usage
+        comment: Simulation envelope + correct semantic-anchor usage, clearly above
+          defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed; grid at alpha=0.10 is subtle; whitespace
-          adequate
+        comment: Spines removed, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bimodal mixture data produces characteristic S-curve deviation and
-          outliers; reference line creates strong visual hierarchy
+        comment: Color contrast and envelope create a focal point on the tail deviation
     spec_compliance:
       score: 15
       max: 15
@@ -127,51 +136,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Q-Q plot: sample quantiles vs. theoretical quantiles'
+        comment: Correct Q-Q plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line present; deviations from line clearly visible;
-          axes labeled correctly
+        comment: Reference guide (diagonal envelope) and both axis labels present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Theoretical Quantiles, Y = Sample Quantiles; full range shown
+        comment: X=theoretical quantiles, Y=standardized sample quantiles, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'qq-basic · seaborn · anyplot.ai'; legend labels reference
-          line
+        comment: Title now reads 'qq-basic · python · seaborn · anyplot.ai', exact
+          required format; legend labels match data
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows central quantiles near diagonal, left-tail outliers, right-tail
-          compression; S-curve deviation pattern visible
+        comment: Clear right-tail deviation from mixture distribution; left tail stays
+          close to envelope
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bimodal normal mixture is plausible and domain-neutral
+        comment: Neutral, plausible mixture distribution (measurement-like data)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 observations within spec-recommended 30-500 range; standardized
-          quantile axes at [-3,3] are appropriate
+        comment: n=200 within the 30-500 recommended range, sensible standardized
+          values
     code_quality:
       score: 10
       max: 10
@@ -181,49 +189,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: No functions/classes, linear top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seeded np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy, seaborn imported
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy, pandas, seaborn'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code; Abramowitz and Stegun approximation avoids scipy dependency
+        comment: Appropriate complexity, no fake UI; self-contained normal-quantile
+          approximation avoids adding a scipy dependency
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct facecolor
+        comment: Saves as plot-{THEME}.png, no bbox_inches='tight', current API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of sns.lineplot's estimator/errorbar machinery to build
+          the reference envelope
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme with rc dict, sns.scatterplot with ax; appropriate
-          since seaborn has no native QQ plot function
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Seaborn statistical/aesthetic features not leveraged; QQ computation
-          is pure numpy; reference line is matplotlib ax.plot
+        comment: errorbar=('pi', 95) percentile-interval estimation is a genuinely
+          seaborn-specific statistical feature
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -231,7 +240,9 @@ impl_tags:
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
