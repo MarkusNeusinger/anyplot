@@ -55,6 +55,12 @@ const data = [
 
 const categories = ["General Purpose", "Compute Optimized", "Memory Optimized", "GPU Accelerated"];
 
+// GPU Accelerated is the natural focal outlier (it dominates every axis), so it
+// gets a bolder, more opaque stroke; the other three families overlap heavily in
+// the low-value band and are dimmed/thinned to stay traceable without a hairball.
+const FOCAL_CATEGORY = "GPU Accelerated";
+const TITLE_FONT = "Georgia, 'Times New Roman', serif";
+
 // SVG mount
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
@@ -78,8 +84,8 @@ g.selectAll(".instance-line")
   .attr("d", (row) => lineGen(dimensions.map((d) => [xScale(d.key), yScales[d.key](row[d.key])])))
   .attr("fill", "none")
   .attr("stroke", (row) => colorScale(row.category))
-  .attr("stroke-width", 2.25)
-  .attr("stroke-opacity", 0.62);
+  .attr("stroke-width", (row) => (row.category === FOCAL_CATEGORY ? 3.25 : 2))
+  .attr("stroke-opacity", (row) => (row.category === FOCAL_CATEGORY ? 0.85 : 0.48));
 
 // Axes — one vertical d3.axisLeft per dimension, plus the dimension label above it
 dimensions.forEach((dim) => {
@@ -110,6 +116,7 @@ categories.forEach((cat, i) => {
   row.append("text")
     .attr("x", 24).attr("y", 13)
     .attr("fill", t.ink).style("font-size", "14px")
+    .style("font-weight", cat === FOCAL_CATEGORY ? "700" : "400")
     .text(cat);
 });
 
@@ -120,6 +127,7 @@ svg.append("text")
   .attr("x", width / 2).attr("y", 56)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
+  .style("font-family", TITLE_FONT)
   .style("font-size", `${titleFontSize}px`)
   .style("font-weight", "600")
   .text(title);
