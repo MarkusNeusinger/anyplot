@@ -30,11 +30,11 @@ all_dates  = start_date:Day(1):end_date
 
 commits_by_date = Dict{Date,Int}()
 for d in all_dates
-    weekday_base = dayofweek(d) <= 5 ? 5.0 : 1.5              # busier on weekdays
-    yearly_trend = 8.0 * (dayofyear(d) / 365)                # activity grows over the year
-    seasonal     = 3.0 * sin(2π * (dayofyear(d) - 80) / 365) # spring/autumn peaks
-    count        = round(Int, max(0.0, weekday_base + yearly_trend + seasonal + randn() * 2.0))
-    rand() < 0.08 && (count = 0)                              # occasional rest day
+    weekday_base = dayofweek(d) <= 5 ? 6.0 : 0.5             # weekdays busy, weekends quiet
+    yearly_trend = 10.0 * (dayofyear(d) / 365)               # activity grows over the year
+    seasonal     = 5.0 * sin(2π * (dayofyear(d) - 80) / 365) # spring/autumn peaks
+    count        = round(Int, max(0.0, weekday_base + yearly_trend + seasonal + randn() * 2.5))
+    rand() < 0.08 && (count = 0)                             # occasional rest day
     commits_by_date[d] = count
 end
 vmax = maximum(values(commits_by_date))
@@ -67,26 +67,29 @@ end
 
 # --- Plot -------------------------------------------------------------------
 fig = Figure(
-    resolution      = (1600, 900),
-    fontsize        = 14,
+    size            = (1600, 900),
+    fontsize        = 16,
     backgroundcolor = PAGE_BG,
-    figure_padding  = (40, 40, 24, 24),
+    figure_padding  = (44, 44, 30, 30),
 )
 
+# Flexible spacer rows above (row 1) and below (row 4) the fixed calendar (row 2)
+# and legend (row 3) center the whole block, filling the 16:9 canvas evenly.
+Box(fig[1, 1]; color = :transparent, strokewidth = 0, tellheight = false)
+
 ax = Axis(
-    fig[1, 1];
+    fig[2, 1];
     title              = "heatmap-calendar · julia · makie · anyplot.ai",
-    titlesize          = 24,
+    titlesize          = 26,
     titlecolor         = INK,
-    titlegap           = 18,
+    titlegap           = 16,
     backgroundcolor    = PAGE_BG,
-    aspect             = n_weeks / (7 * 1.8),   # slightly tall cells fill the band
     yreversed          = true,                  # Monday at the top row
     xaxisposition      = :top,
     xticks             = (month_positions, month_labels),
     yticks             = (1:7, ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]),
-    xticklabelsize     = 15,
-    yticklabelsize     = 15,
+    xticklabelsize     = 19,
+    yticklabelsize     = 19,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xticksvisible      = false,
@@ -103,22 +106,28 @@ ylims!(ax, 7.7, 0.3)
 
 # Sequential legend for value interpretation.
 Colorbar(
-    fig[2, 1];
+    fig[3, 1];
     colormap       = IMPRINT_SEQ,
     limits         = (0, vmax),
     vertical       = false,
     flipaxis       = false,
     label          = "Daily commits",
     labelcolor     = INK,
-    labelsize      = 15,
+    labelsize      = 18,
     ticklabelcolor = INK_SOFT,
-    ticklabelsize  = 13,
+    ticklabelsize  = 15,
     tickcolor      = INK_SOFT,
-    width          = Relative(0.36),
-    height         = 16,
+    width          = Relative(0.4),
+    height         = 18,
 )
 
-rowgap!(fig.layout, 12)
+Box(fig[4, 1]; color = :transparent, strokewidth = 0, tellheight = false)
+
+# Fixed content-row heights (stretched, taller-than-wide cells) keep the calendar
+# and legend adjacent; the flexible spacers absorb the rest, so no empty mid-band.
+rowsize!(fig.layout, 2, Fixed(560))
+rowsize!(fig.layout, 3, Fixed(40))
+rowgap!(fig.layout, 16)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
