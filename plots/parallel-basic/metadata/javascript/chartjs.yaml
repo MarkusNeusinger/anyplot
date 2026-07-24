@@ -1,0 +1,263 @@
+library: chartjs
+language: javascript
+specification_id: parallel-basic
+created: '2026-07-24T11:02:24Z'
+updated: '2026-07-24T11:16:47Z'
+generated_by: claude-sonnet
+workflow_run: 30087829513
+issue: 820
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Repair directly addresses the prior review''s DE weaknesses: a bold (borderWidth
+    4) mean-profile line per species is now layered on top of the faint (alpha 0.35,
+    borderWidth 1.25) individual traces, giving all three species a clear focal line
+    instead of only Setosa standing out.'
+  - Individual-trace alpha was reduced from 0.5 to 0.35, measurably de-cluttering
+    the Sepal Length -> Sepal Width -> Petal Length crossing region while keeping
+    Setosa's separation crisp.
+  - Chart.js has no native parallel-coordinates type; the category-axis + per-observation
+    line-dataset workaround remains a clean, idiomatic core-API solution rather than
+    reaching for a plugin.
+  - Custom legend via generateLabels still correctly collapses the 63 total datasets
+    (60 individual + 3 mean) into 3 species entries with matching colors, and onClick
+    is disabled so a legend click can't silently toggle a single representative dataset.
+  - Min-max normalization is applied per-dimension and explicitly documented in both
+    code comments and the y-axis title, directly following the spec's normalization
+    guidance.
+  - Data is realistic and iris-inspired (per-species mean/sd matches real iris proportions)
+    and fully reproducible via a fixed-seed LCG + Box-Muller normal generator, since
+    the browser has no seeded RNG.
+  - 'Theme-adaptive chrome remains correctly wired: title/legend/axis text use t.ink/t.inkSoft,
+    the parallel-axis vertical grid lines use t.ink (flips light/dark correctly),
+    and y-axis gridlines stay disabled to avoid clutter.'
+  weaknesses:
+  - The Sepal Length -> Sepal Width crossing region is still visually dense for Versicolor
+    vs Virginica individual traces (their faint lines overlap heavily there); the
+    new bold mean lines mitigate this but the raw trace tangle itself is unchanged
+    in that segment.
+  - Because each axis is independently min-max normalized, the original units/values
+    (e.g. actual cm for sepal/petal measurements) are still not visible anywhere on
+    the chart, only the 0-1 normalized scale — small min/max value annotations near
+    each axis endpoint (or a tooltip surfacing raw values) would restore that context.
+  - Typography and color are otherwise standard Chart.js defaults applied via explicit
+    sizes; beyond the new mean-line emphasis there is limited additional aesthetic
+    customization (e.g. no subtle background banding or per-axis value ticks) that
+    would push this toward a publication-ready look.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec — not pure white.
+      Chrome: Title "parallel-basic · javascript · chartjs · anyplot.ai" in bold dark ink at top, fully visible, not clipped (verified via edge crop). Legend row below title shows three swatches: Setosa (green), Versicolor (violet/lavender), Virginica (blue-gray) — all readable. Y-axis ticks (0, 0.3, 0.5, 0.8, 1.0) and rotated y-axis title "Normalized Value (min-max scaled per dimension)" are dark and legible, fully within the left canvas margin. Four x-axis category labels (Sepal Length, Sepal Width, Petal Length, Petal Width) are dark, legible, and sit fully within the canvas at both edges (verified via edge crop — "Petal Width" is not truncated on the right).
+      Data: First series (Setosa) is Imprint brand green #009E73; Versicolor uses lavender/purple #C475FD; Virginica uses blue #4467A3 — matches canonical Imprint palette order. 60 faint (alpha ~0.35) individual-observation lines connect each species across the four axes, with one bold mean-profile line per species drawn on top. Setosa's mean line and cluster clearly separate into a distinct low band on Petal Length/Petal Width; Versicolor and Virginica's mean lines are now clearly distinguishable from each other even though their faint individual traces still overlap in the Sepal Length/Sepal Width region.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-dark or light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec — not pure black.
+      Chrome: Title, legend text, y-axis ticks/title, and x-axis category labels are all rendered in light/off-white ink, clearly legible against the dark background (verified via edge crop, no clipping at top/left/right). The four vertical parallel-axis lines are now light/white (chrome token flipped correctly from dark ink in the light render), consistent with theme-adaptive grid coloring.
+      Data: Data colors are pixel-identical to the light render — same green/lavender/blue hues for Setosa/Versicolor/Virginica, same bold mean lines over faint individual traces — confirming only chrome (background, text, grid) flipped between themes, not the data palette.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title, legend, tick, and axis-title text is clearly visible against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, legend 16, ticks 14, axis
+          title 16); readable in both themes, no dark-on-dark or light-on-light issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions; legend and title cleanly
+          separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha reduced to 0.35 for 60 individual lines plus bold (width 4)
+          mean lines per species handles overplotting well; Versicolor/Virginica individual
+          traces still tangle somewhat in mid dimensions
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue are distinguishable, not reliant on red-green
+          alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, no overflow or clipping (verified via edge
+          crops), title proportion expected for mandated long title
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis title describes normalization method; x-axis category labels
+          are self-descriptive dimension names
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, canonical Imprint order for 3 categories,
+          correct FAF8F1/1A1A17 backgrounds in both themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: New bold mean-line-over-faint-trace layering is a genuine, intentional
+          hierarchy technique, clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-gridlines disabled, generous whitespace, dual-dataset layering
+          shows attention to detail; still fairly minimal beyond that
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Mean lines now give all three species (not just Setosa) a clear focal
+          line, creating strong visual hierarchy despite some remaining trace overlap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parallel coordinates plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Multiple dimensions, category color-coding, connecting lines, normalization
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dimensions on x, normalized value on y, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match species names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows multivariate data, category grouping, and normalization end-to-end
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Iris-inspired per-species stats are realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 60 observations across 4 dimensions, within spec's 20-200 obs / 4-10
+          dim range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small helper functions (LCG RNG, hexToRgba) are justified by browser
+          constraints, not over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG makes output fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Chart.js
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; mean-line layering is a legitimate
+          charting technique
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, current Chart.js API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Category-axis + per-observation line-dataset trick remains the recognized
+          idiomatic way to fake parallel coordinates in core Chart.js
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Custom generateLabels legend collapse plus dual-layer (individual
+          + mean) dataset compositing are Chart.js-specific touches, but the overall
+          technique remains a common community pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending

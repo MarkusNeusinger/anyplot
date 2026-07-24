@@ -1,0 +1,238 @@
+library: d3
+language: javascript
+specification_id: parallel-basic
+created: '2026-07-24T11:04:55Z'
+updated: '2026-07-24T11:17:52Z'
+generated_by: claude-sonnet
+workflow_run: 30087940393
+issue: 820
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Directly addressed both attempt-1 weaknesses: non-focal families dropped to stroke-opacity
+    0.48 (within the requested 0.45-0.5 range) noticeably reducing hairball clutter,
+    while GPU Accelerated got a bolder/more opaque stroke (3.25 / 0.85) and a bold
+    legend label to sharpen the focal point'
+  - Added a serif (Georgia) title font, a small but real typographic differentiator
+    from the sans-serif default
+  - Correct Imprint palette in canonical order, theme-correct chrome in both renders,
+    data colors pixel-identical across themes
+  - 'Idiomatic D3 parallel-coordinates construction: d3.scalePoint for axis positions,
+    one independent d3.scaleLinear().nice() per dimension, proper .data().join() pattern'
+  - Realistic, neutral cloud-instance dataset with clear per-family separation and
+    cross-axis rank changes
+  weaknesses:
+  - The three non-focal families still cross and overlap heavily in the low-value
+    band of most axes (vCPU 0-30, Storage 0-500, Price $0-2) - improved but not eliminated
+  - Within each instance family the tiers still scale almost perfectly linearly across
+    all 5 dimensions, giving little natural real-world texture
+  - Design customization is still confined to typography + emphasis touches rather
+    than a more structural distinctive treatment
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Serif (Georgia) title centered at top, fully visible, not clipped. Bold dark dimension labels above each of the 5 axes (vCPUs, Memory (GB), Storage (GB), Price ($/hr), Network (Gbps)). Soft-gray tick labels with units readable down each axis. Right-side "Instance Family" legend with 4 swatches, GPU Accelerated label in bold. All chrome text clearly readable against the light background.
+      Data: First categorical series (General Purpose) is #009E73 green, matching Imprint order; Compute Optimized (lavender), Memory Optimized (blue), GPU Accelerated (ochre, focal). GPU Accelerated lines are thicker (stroke-width 3.25) and more opaque (0.85) than the other three families (stroke-width 2, opacity 0.48), making it read as the clear focal outlier across every axis. The other 3 families still cluster/cross in the low-value band but are noticeably easier to trace than before the opacity rebalance.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Same serif title, dimension labels, tick labels, and legend, all recolored to light ink / soft-gray tones. No dark-on-dark text anywhere; axis domain strokes flip to a subtle light stroke.
+      Data: All 4 family colors are pixel-identical to the light render (only chrome flipped). GPU Accelerated emphasis (thicker/bolder stroke + bold legend label) carries over correctly. Brand green still clearly visible on the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; serif title
+          fits without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap with other text, data, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Opacity rebalance (0.48 non-focal / 0.85 focal) noticeably reduced
+          hairball clutter versus attempt 1, but low-value band still has heavy crossing
+          among 3 non-focal families
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (GB, $/hr, Gbps)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, theme-correct backgrounds
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Serif title font and deliberate focal-family emphasis push past a
+          plain default, but color harmony still limited to the required palette
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, tidy legend spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: GPU Accelerated deliberately reinforced as focal point via stroke
+          weight/opacity and bold legend label
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parallel coordinates plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Category color coding, multiple dimensions, transparency for overlap
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Each dimension independently scaled; all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match categories
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 5 dimensions (within 4-10 recommended), 24 observations (within 20-200
+          recommended)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral cloud-instance dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible values across all 5 dimensions for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-level code
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used, no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation, static render
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.scalePoint, per-axis d3.scaleLinear().nice(), d3.axisLeft, proper
+          data().join() pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Follows the well-known reference parallel-coordinates pattern; focal
+          emphasis is a nice touch but not structurally novel
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

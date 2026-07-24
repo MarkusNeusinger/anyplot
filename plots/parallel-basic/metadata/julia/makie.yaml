@@ -1,0 +1,272 @@
+library: makie
+language: julia
+specification_id: parallel-basic
+created: '2026-07-24T11:04:56Z'
+updated: '2026-07-24T11:18:58Z'
+generated_by: claude-sonnet
+workflow_run: 30087713039
+issue: 820
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Deliberate axis ordering documented in code comments — the four price-correlated
+    dimensions (Price, Rating, Storage, Camera) are grouped adjacently to minimize
+    crossings, while the two dimensions that buck the trend (Weight, Battery) are
+    isolated at the end, revealing a genuine data pattern rather than an arbitrary
+    column order
+  - Per-axis original min/max value labels overlaid above and below the normalized
+    [0,1] scale — communicates real units (e.g. '$194.3', '24.8 hrs') despite the
+    shared normalized vertical scale, a thoughtful touch many parallel-coordinates
+    implementations skip
+  - 'Correct Imprint palette assignment: Budget tier renders in brand green #009E73
+    as the first series, Mid-range and Premium follow canonical palette order 2/3,
+    and all data colors are pixel-identical between light and dark renders'
+  - Theme-adaptive chrome is fully correct in both renders — warm off-white/near-black
+    backgrounds, all text and vertical reference axes readable, no dark-on-dark or
+    light-on-light failures
+  - 'Clean minimalist styling: all four spines removed, no background grid, only the
+    vertical per-dimension reference lines remain, explicit font sizes set throughout
+    (titlesize, xticklabelsize, legend labelsize)'
+  weaknesses:
+  - Heavy line crossing/overplotting in the Premium (blue-gray) cluster, especially
+    between the Price/Rating/Storage/Camera axes, reduces individual-line traceability
+    — consider lowering alpha further (e.g. 0.25-0.30) or thinning linewidth slightly
+    to ease clutter in the densest regions
+  - 'Library Mastery is generic: the implementation is built entirely from basic Axis
+    + lines!/vlines!/text! primitives, which could be closely replicated in matplotlib
+    with minor syntax changes — no Makie-distinctive capability is leveraged beyond
+    the standard plotting API (acceptable since Makie has no native parallel-coordinates
+    recipe, but there is room to differentiate, e.g. via GridLayout-driven per-axis
+    mini panels or Makie-specific interactivity in an HTML/GLMakie variant if ever
+    in scope)'
+  - The intentional axis-ordering insight (Weight/Battery diverging from the price-correlated
+    block) is only discoverable by studying the crossing pattern — no visual callout
+    (e.g. a subtle annotation or highlighted band) guides the viewer directly to that
+    finding
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "parallel-basic · julia · makie · anyplot.ai" centered at top, clearly readable. Six vertical reference axes labeled "Price ($)", "Rating (1-5)", "Storage (GB)", "Camera (MP)", "Weight (g)", "Battery (hrs)" in dark ink along the bottom. Muted-gray min/max value labels sit just above and below each axis's data range (e.g. "1444.2" at top, "194.3" at bottom of the Price axis). Legend "Tier" with Budget/Mid-range/Premium swatches sits to the right of the plot, frameless, readable. All spines removed, no background grid — only the thin vertical per-dimension reference lines remain.
+      Data: 60 lines (20 per tier) connect each observation across the six axes. Budget = brand green #009E73, Mid-range = lavender #C475FD, Premium = blue-gray #4467A3 — matching Imprint canonical order with green correctly first. Lines use ~0.38 alpha to manage overlap; tiers separate cleanly on Price/Rating/Storage/Camera and cross more freely on Weight/Battery as intended by the deliberate axis ordering.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, and value labels now rendered in light ink (white title, light-gray tick/min-max labels), fully legible against the dark surface. Legend box and text also flipped to light-on-dark and remain readable. Vertical reference axes are a lighter muted tone, clearly visible against the near-black background.
+      Data: Same three tier colors (#009E73 green, #C475FD lavender, #4467A3 blue-gray) — pixel-identical to the light render; only the chrome (background, text, axis-line tint) flipped. No dark-on-dark text anywhere; the brand green reads clearly on the dark surface.
+      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, xticklabelsize=13, legend
+          labelsize=12, min/max value labels at 12); readable in both themes with
+          no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or the plot area in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Alpha=0.38 and linewidth=1.5 keep lines visible, but heavy crossing
+          in the Premium cluster reduces individual-line traceability in the densest
+          axis intervals
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three CVD-safe Imprint hues, no red-green-only encoding, sufficient
+          alpha for overlap
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills a large majority of the canvas with balanced margins;
+          legend sits close to the plot, nothing is cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All six axis labels are descriptive and include units, e.g. 'Price
+          ($)', 'Battery (hrs)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Budget tier is brand green #009E73 first, Mid-range/Premium follow
+          canonical Imprint order, backgrounds and chrome are theme-correct in both
+          renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Documented, deliberate axis ordering by correlation plus original-value
+          labels overlaid on the normalized scale are clearly above default effort
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, no grid, frameless legend, generous whitespace
+          — dense line crossings slightly undercut the otherwise polished feel
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded tiers create visual hierarchy and the axis ordering surfaces
+          a genuine pattern (Weight/Battery diverging from price correlation), though
+          no direct annotation calls it out
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parallel coordinates plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalization, deliberate axis ordering, alpha for overlap, and category
+          color-coding are all present per the spec notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Each dimension maps to its own vertical axis, all six dimensions
+          and all 60 observations are shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'parallel-basic · julia · makie · anyplot.ai';
+          legend labels (Budget, Mid-range, Premium) match the tier data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three tiers each show internal variation across all six dimensions,
+          not flat/identical groups
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Smartphone specs across budget/mid-range/premium tiers — real, neutral,
+          comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price, rating, storage, and camera values align with real-world smartphone
+          tiers; battery/weight intentionally diverge from a naive price correlation,
+          which is a documented and defensible real-world nuance rather than a factual
+          error
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports -> data -> plot -> save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a from-scratch parallel-coordinates build,
+          no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png via save(...) with px_per_unit=2
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, idiomatic use of Axis/lines!/vlines!/text!/Legend/GridLayout
+          — the appropriate approach given Makie has no native parallel-coordinates
+          recipe
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage — built from primitives that would translate closely
+          to matplotlib with minor syntax changes; no Makie-unique capability leveraged
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - minimal-chrome
