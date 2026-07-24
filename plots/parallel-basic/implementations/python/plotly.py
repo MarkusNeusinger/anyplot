@@ -1,7 +1,7 @@
 """ anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
-Library: plotly 6.7.0 | Python 3.14.4
-Quality: 83/100 | Updated: 2026-04-27
+Library: plotly 6.9.0 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-07-24
 """
 
 import os
@@ -18,8 +18,11 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito discrete colorscale: Setosa=#009E73, Versicolor=#C475FD, Virginica=#4467A3
-OI_COLORSCALE = [
+
+# Imprint palette discrete colorscale: Setosa=#009E73, Versicolor=#C475FD, Virginica=#4467A3
+# Kept fully opaque (no alpha blending) so hues stay pixel-identical between themes —
+# translucency would composite against PAGE_BG, which differs between light and dark.
+IMPRINT_COLORSCALE = [
     [0.0, "#009E73"],
     [0.33, "#009E73"],
     [0.33, "#C475FD"],
@@ -71,15 +74,15 @@ fig = go.Figure(
     data=go.Parcoords(
         line={
             "color": df["species_code"],
-            "colorscale": OI_COLORSCALE,
+            "colorscale": IMPRINT_COLORSCALE,
             "showscale": True,
             "cmin": 0,
             "cmax": 2,
             "colorbar": {
-                "title": {"text": "Species", "font": {"size": 20, "color": INK}},
+                "title": {"text": "Species", "font": {"size": 12, "color": INK}},
                 "tickvals": [0, 1, 2],
                 "ticktext": ["Setosa", "Versicolor", "Virginica"],
-                "tickfont": {"size": 18, "color": INK_SOFT},
+                "tickfont": {"size": 10, "color": INK_SOFT},
                 "len": 0.6,
                 "y": 0.5,
                 "bgcolor": ELEVATED_BG,
@@ -93,26 +96,34 @@ fig = go.Figure(
             {"label": "Petal Length (cm)", "values": df["petal_length"], "range": [0.5, 7]},
             {"label": "Petal Width (cm)", "values": df["petal_width"], "range": [0, 2.8]},
         ],
-        labelfont={"size": 22, "color": INK},
-        tickfont={"size": 16, "color": INK_SOFT},
-        rangefont={"size": 14, "color": INK_SOFT},
+        labelfont={"size": 12, "color": INK},
+        tickfont={"size": 10, "color": INK_SOFT},
+        rangefont={"size": 10, "color": INK_SOFT},
     )
 )
 
 fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
     title={
-        "text": "Iris Flower Measurements · parallel-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "parallel-basic · python · plotly · anyplot.ai",
+        "subtitle": {
+            "text": "Setosa (green) clusters tightly at low petal dimensions"
+            " — clearly separated from Versicolor and Virginica",
+            "font": {"size": 12, "color": INK_SOFT},
+        },
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.95,
+        "y": 0.97,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    margin={"l": 80, "r": 180, "t": 120, "b": 80},
+    margin={"l": 80, "r": 110, "t": 110, "b": 60},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
