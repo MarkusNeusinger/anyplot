@@ -1,0 +1,256 @@
+library: d3
+language: javascript
+specification_id: qq-basic
+created: '2026-07-24T07:15:09Z'
+updated: '2026-07-24T07:29:07Z'
+generated_by: claude-sonnet
+workflow_run: 30074487536
+issue: 977
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Both weaknesses from Review 1 were fixed correctly: axis labels now read "Theoretical
+    Quantiles (ms)" / "Sample Quantiles (ms)" (units added), and an explicit "2 slow-trial
+    outliers" annotation now calls out the two outlier points directly.'
+  - Deterministic, seeded data generation (mulberry32 + Acklam probit approximation)
+    produces a realistic right-skewed reaction-time sample with two explicit outliers,
+    giving the Q-Q plot a genuine S-curve/heavy-tail story instead of a boring on-line
+    scatter.
+  - Reference line uses a normal fit to the sample (mean/stddev estimated with d3.mean/d3.deviation)
+    rather than a naive raw y=x, and is clearly labeled "Normal fit (y = x)".
+  - Equal left+right and top+bottom margin sums keep the plot area square so the diagonal
+    renders at a true visual 45 degrees - a subtle but important correctness detail
+    for Q-Q plots.
+  - 'First categorical series correctly uses Imprint #009E73, background/chrome are
+    exactly theme-correct in both renders (#FAF8F1 light / #1A1A17 dark, pixel-verified),
+    and all font sizes are explicitly set.'
+  - 'Clean idiomatic D3: data-join with .join(), tickSize(-ih)/tickSize(-iw) gridline
+    trick with domain removed, standard margin convention.'
+  weaknesses:
+  - Dense mid-region of the sample (roughly the 250-350 quantile range) still shows
+    moderately touching/overlapping markers from natural data clustering near the
+    distribution's center - a touch more fill-opacity reduction or a slightly smaller
+    radius in that band would improve separation, though this is a minor, largely
+    data-driven effect.
+  - 'Design Excellence and Library Mastery are improved but still short of top-tier:
+    the new outlier annotation helps storytelling, but nothing in the implementation
+    uses a feature meaningfully distinctive to D3 specifically (e.g. a custom path
+    generator, brush/zoom documented as HTML-only enhancement) - current usage (scales/axes/joins/gridline
+    trick) is idiomatic but replicable in other charting libraries with minor syntax
+    changes.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-sampled at RGB(250,248,241) = #FAF8F1 exactly - matches spec, not pure white.
+      Chrome: Bold dark title "Reaction Times vs Normal · qq-basic · javascript · d3 · anyplot.ai" centered at top (~55% width, fully visible, no clipping). Axis titles "Theoretical Quantiles (ms)" (bottom) and "Sample Quantiles (ms)" (left, rotated) are descriptive with units and clearly legible, as are tick labels on both axes. Subtle beige gridlines on both axes, no top/right spines. A dashed gray diagonal reference line runs at a true 45°, labeled "Normal fit (y = x)" in italic gray text top-right, and a new "2 slow-trial outliers" annotation sits directly above the two outlier points without overlapping data or other text.
+      Data: Points render in Imprint green (#009E73) with a thin page-background stroke ring; the cloud tracks the diagonal through the mid-range then bows visibly above the line in the upper tail, ending in a clearly separated, now explicitly-labeled outlier pair - a textbook right-skew/heavy-tail Q-Q signature.
+      Legibility verdict: PASS - all text readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-sampled at RGB(26,26,23) = #1A1A17 exactly - matches spec, not pure black.
+      Chrome: Title, both axis titles (with units), tick labels, and both annotations (reference-line label and outlier callout) all render in light ink and are clearly legible against the dark background - no dark-on-dark failures anywhere.
+      Data: Marker fill color (#009E73), size, and opacity are visually identical to the light render, confirming only chrome flips, not data color; same distribution shape and outlier cluster visible.
+      Legibility verdict: PASS - all text readable against the dark background, no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14px ticks, 17px axis labels, computed
+          title size); title ~55% width, no clipping; readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text elements; new outlier annotation and reference-line
+          label both sit clear of data and each other.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker size/opacity reduced from attempt 1 (r=6, opacity=0.72) but
+          the dense 250-350 quantile cluster still shows moderate touching, largely
+          data-driven.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe single-series green vs. neutral grey reference
+          line.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square plot area fills a large, balanced portion of the 2400x2400
+          canvas (pixel-verified exact size); nothing cut off; canvas gate passed
+          (no gate file present).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed from attempt 1: axis labels now include units - "Theoretical
+          Quantiles (ms)" / "Sample Quantiles (ms)".'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series exactly #009E73; background pixel-verified #FAF8F1
+          (light) / #1A1A17 (dark); chrome theme-correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Improved from attempt 1 (4) via the new outlier callout, but still
+          mostly a well-configured default beyond required tokens.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle gridlines, no boxed frame/spines, generous margins - unchanged
+          from attempt 1.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Improved from attempt 1 (4): skewed sample plus labeled reference
+          line AND explicit outlier callout now make the insight immediate.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Q-Q plot with theoretical vs sample quantiles and reference
+          line.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 45-degree reference line clearly visible and labeled; all spec notes
+          satisfied.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Theoretical on x, sample on y, all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; no legend needed for
+          single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows skew (S-curve) AND explicit, now-labeled outliers.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral cognitive-experiment reaction-time scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reaction times (~170-540ms) are realistic for human RT data.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear Imports->Data->Plot; two small math helpers (mulberry32,
+          probit) are a reasonable necessity for browser JS without a stats library.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed seed 20260724.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; d3 is the global.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current .join() API, animation-free.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Data-join with .join(), d3.scaleLinear/axisBottom/axisLeft, d3.mean/d3.deviation/d3.extent
+          used idiomatically.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Gridline-via-tickSize idiom is a nice D3 touch but nothing here is
+          meaningfully unreplicable in another charting library; not addressed since
+          attempt 1.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
