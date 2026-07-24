@@ -2,12 +2,12 @@ library: plotnine
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:11:45Z'
-updated: '2026-04-27T05:48:33Z'
+updated: '2026-07-24T10:56:31Z'
 generated_by: claude-sonnet
-workflow_run: 24978320300
+workflow_run: 30087127625
 issue: 820
-python_version: 3.14.4
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/plotnine/plot-dark.png
 preview_html_light: null
@@ -15,33 +15,40 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance with all parallel coordinates features: normalization,
-    color coding, multi-dimensional axes, transparency for density'
-  - 'Excellent data quality: realistic iris dataset with appropriate scales and full
-    feature coverage'
-  - 'Complete code quality: clean KISS structure, reproducible, correct output naming'
-  - Correct Okabe-Ito palette with fully theme-adaptive chrome — both renders pass
-    legibility check
+  - 'Correct Imprint palette order — Setosa #009E73, Versicolor #C475FD, Virginica
+    #4467A3 — identical across both light and dark renders'
+  - theme_minimal() with panel border removed and a subtle ~10%-alpha grid keeps chrome
+    quiet without hiding structure
+  - Line alpha=0.35 + point alpha=0.55 sensibly combat overplotting with 150 crossing
+    lines across 4 axes
+  - Data-storytelling annotation ("Setosa separates cleanly on petal dimensions")
+    gives the viewer a clear entry point, positioned clear of dense line clusters
+  - Min-max normalization is correctly applied and made legible via the 'Normalized
+    Value (0-1)' axis title
+  - Canvas is exactly 3200x1800 landscape, matching the mandated table; both renders
+    are theme-correct with consistent data colors and no clipped elements
   weaknesses:
-  - X-axis tick labels set to 14pt via axis_text_x=element_text(size=14), below the
-    16pt minimum — remove this override or set to 16pt
-  - 'Design could be more refined: panel border not removed; no explicit spine removal
-    adds visual clutter'
-  - 'No active data storytelling: the Setosa cluster separation in petal dimensions
-    is not visually emphasized — consider increasing line alpha or width, or adding
-    a subtle annotation'
+  - Only 4 dimensions used — the minimum of the spec's 4-10 recommended range; a 5th
+    derived dimension (e.g. petal area) would make the technique's multivariate strength
+    more evident
+  - Library-mastery footprint is generic ggplot grammar (geom_vline + geom_line +
+    geom_point + scale_x_continuous) rather than exploiting anything plotnine-distinctive
+    beyond the standard parcoords workaround
+  - With 150 overlapping lines, individual observation traces in the Versicolor/Virginica
+    overlap band (petal axes, y≈0.4-0.7) are still hard to isolate despite the alpha
+    blending
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "parallel-basic · plotnine · anyplot.ai" in dark ink (#1A1A17) at 24pt — clearly readable. Y-axis label "Normalized Value (0–1)" in dark ink at 20pt — readable. X-axis label "Dimension" in dark ink — readable. Tick labels in secondary ink (#4A4A44) at 14pt (x-axis) and 16pt (y-axis) — readable. Legend "Iris Species" with labels in secondary ink — readable.
-      Data: Three Iris species with Okabe-Ito colors — Setosa #009E73 (teal), Versicolor #D55E00 (orange), Virginica #0072B2 (blue). Lines at alpha=0.35, size=0.8; points at alpha=0.55, size=2.5. First series correctly #009E73.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "parallel-basic · plotnine · anyplot.ai" in dark ink, centered top, fully visible, no clipping. Axis titles "Dimension" (X) and "Normalized Value (0-1)" (Y) in dark ink. Four two-line tick labels ("Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)") in softer grey, all fully readable, each anchored by a thin vertical guide line. Legend "Iris Species" boxed on the right with Setosa/Versicolor/Virginica entries, readable dark text on a slightly elevated cream panel, well clear of the canvas edge.
+      Data: Three color-coded line families — green Setosa (#009E73), magenta Versicolor (#C475FD), blue-grey Virginica (#4467A3) — connecting each observation's four normalized values via alpha-blended lines/points. Italic green annotation "Setosa separates cleanly on petal dimensions" sits in open space between the Petal Length and Petal Width axes, matching the Setosa line color.
+      Legibility verdict: PASS — all text is clearly readable, first series is #009E73, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels in light ink — readable. Tick labels in secondary light ink (#B8B7B0) — readable. Legend text in secondary light ink — readable. No dark-on-dark failures observed; no black text on black background.
-      Data: Colors identical to light render — Setosa #009E73, Versicolor #D55E00, Virginica #0072B2. Brand green #009E73 clearly visible against dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink/off-white, fully legible against the dark background. Legend panel uses a slightly elevated dark background with light text and a visible border. Gridlines and vertical guide lines remain subtle but visible against the dark surface.
+      Data: Same three data colors (green #009E73, magenta #C475FD, blue-grey #4467A3) as the light render — confirmed identical, only chrome (background/text/grid/legend) flipped. Annotation text remains the same green, clearly visible against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, axis labels, tick labels, legend, annotation) is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -52,70 +59,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Sizes explicitly set: title 24pt, axis titles 20pt, legend 16pt.
-          axis_text_x overridden to 14pt (below 16pt minimum)'
+        comment: Explicit font sizes throughout (title 12pt, axis_title 10pt, axis_text/legend_text
+          8pt); all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Multi-line axis labels well-spaced, no label collisions
+        comment: No text/element collisions; annotation sits in open space, dense
+          line crossings are inherent to the plot type
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines and points visible and density-appropriate for 150 observations
+        comment: alpha=0.35 lines / 0.55 points appropriately combat overplotting
+          of 150 lines; some overlap remains in the densest crossing band
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe, no red-green only distinction
+        comment: Green/magenta/blue-grey trio is CVD-distinguishable, not red-green
+          reliant
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, minor wasted space at edges
+        comment: Canvas gate passed (3200x1800); title, axis labels, legend all proportional
+          with no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with unit context, tick labels include (cm)
+        comment: Descriptive axis titles with units (cm) on tick labels, normalization
+          stated on Y title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Okabe-Ito order, correct theme backgrounds, chrome adapts
-          in both renders
+        comment: 'First series #009E73, canonical Imprint order, correct light/dark
+          backgrounds, identical data colors across themes'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library default, no exceptional aesthetic choices,
-          no explicit spine removal
+        passed: true
+        comment: Custom Imprint palette, deliberate alpha layering, intentional annotation
+          — above generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Minor grid removed, major grid at alpha=0.10, theme_minimal base.
-          Panel border still present
+        passed: true
+        comment: Panel border removed, grid alpha reduced to 0.10, generous whitespace
+          via theme_minimal
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Iris dataset is smart choice with natural group separation story,
-          but no active visual emphasis or annotation
+        passed: true
+        comment: Annotation creates a clear focal point and colors guide the eye to
+          the insight
     spec_compliance:
       score: 15
       max: 15
@@ -125,53 +137,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel coordinates using geom_line with group=id across
-          numeric axis positions
+        comment: Correct parallel coordinates construction (one axis per dimension,
+          lines connecting per-observation values)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple dimensions, categorical color coding, normalization, alpha
-          transparency all present
+        comment: Normalization applied and labeled, category color-coding, alpha transparency
+          for overlap handling
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct mapping: dimension to x, normalized value to y, species
-          to color, id to group'
+        comment: X = dimension index, Y = normalized value; all 4 dimensions represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend Iris Species with correct species labels
+        comment: Title matches mandated format exactly; legend labels (Setosa/Versicolor/Virginica)
+          match data
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All parallel coordinates aspects: multi-dimensional, inter-dimensional
-          correlations, crossing patterns, group clusters'
+        comment: Uses 4 dimensions (spec's minimum recommended) with 3 categorical
+          groups; a 5th dimension would demonstrate the technique more fully
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris botanical dataset, real-world neutral scientific context, synthetic
-          data matches published iris statistics
+        comment: Synthetic iris-like measurements with realistic per-species means/variances,
+          neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Raw measurements clipped to realistic ranges, normalized to 0-1 for
-          fair comparison
+        comment: Values clipped to realistic biological ranges before normalization
     code_quality:
       score: 10
       max: 10
@@ -181,57 +192,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> tokens -> data -> plot -> save, no functions
-          or classes'
+        comment: Flat top-level script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports used in the code
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, melt + geom_line(group=id) is correct elegant
-          approach
+        comment: Appropriate complexity for the technique, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct naming pattern
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
+          matches the canvas table
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert use of grammar of graphics: aes(group=id), scale_x_continuous
-          with breaks/labels, scale_color_manual, theme chaining'
+        comment: Proper ggplot grammar-of-graphics composition (aes/geoms/scales/theme
+          layers)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses plotnine grammar effectively but approach replicable in any
-          ggplot2-family library, no plotnine-unique features
-  verdict: REJECTED
+        comment: Standard manual-parcoords workaround (geom_vline + geom_line + geom_point);
+          doesn't reach for anything more plotnine-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - wide-to-long
