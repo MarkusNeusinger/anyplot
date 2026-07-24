@@ -60,14 +60,25 @@ const qqPoints = residuals.map((sampleQuantile, i) => ({
   y: sampleQuantile,
 }));
 
-// 45-degree reference line spanning the data range, with a little padding
+// The point with the largest departure from the reference line — the visual
+// signature of the heavy-tail/outlier behavior this plot is meant to surface.
+const maxDevPoint = qqPoints.reduce((worst, p) =>
+  Math.abs(p.y - p.x) > Math.abs(worst.y - worst.x) ? p : worst
+);
+
+// 45-degree reference line spanning the data range, with a little padding.
+// The axis min/max below are set explicitly to this same [lo - pad, hi + pad]
+// range, so the dashed line always reaches the plot corners instead of
+// stopping short of Chart.js's auto-scaled (and independently rounded) extent.
 const allCoords = qqPoints.flatMap((p) => [p.x, p.y]);
 const lo = Math.min(...allCoords);
 const hi = Math.max(...allCoords);
 const pad = (hi - lo) * 0.08;
+const axisMin = lo - pad;
+const axisMax = hi + pad;
 const referenceLine = [
-  { x: lo - pad, y: lo - pad },
-  { x: hi + pad, y: hi + pad },
+  { x: axisMin, y: axisMin },
+  { x: axisMax, y: axisMax },
 ];
 
 // --- Mount -------------------------------------------------------------------
@@ -77,6 +88,41 @@ document.getElementById('container').appendChild(canvas);
 // --- Title — scale font size for length (baseline: 22px at 67 chars) -------
 const titleText = 'Calibration Residuals · qq-basic · javascript · chartjs · anyplot.ai';
 const titleSize = Math.max(14, Math.round(22 * 67 / titleText.length));
+
+// --- Custom plugin: callout labeling the largest tail deviation ------------
+// A native Chart.js plugin (afterDatasetsDraw hook) rather than a bundled
+// datalabels plugin — draws a leader line + text pointing at the point that
+// diverges most from the reference line, reinforcing the outlier/heavy-tail
+// story the spec calls for.
+const tailCalloutPlugin = {
+  id: 'tailCallout',
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const px = scales.x.getPixelForValue(maxDevPoint.x);
+    const py = scales.y.getPixelForValue(maxDevPoint.y);
+    const cx = (chartArea.left + chartArea.right) / 2;
+    const cy = (chartArea.top + chartArea.bottom) / 2;
+    const dirX = px >= cx ? 1 : -1;
+    const dirY = py >= cy ? 1 : -1;
+    const labelX = px + dirX * 90;
+    const labelY = py + dirY * 30;
+
+    ctx.save();
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(labelX, labelY);
+    ctx.stroke();
+
+    ctx.fillStyle = t.inkSoft;
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = dirX > 0 ? 'left' : 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Largest tail deviation', labelX + dirX * 4, labelY);
+    ctx.restore();
+  },
+};
 
 // --- Chart -------------------------------------------------------------------
 new Chart(canvas, {
@@ -98,15 +144,16 @@ new Chart(canvas, {
         type: 'scatter',
         label: 'Sample vs. Theoretical',
         data: qqPoints,
-        backgroundColor: `${t.palette[0]}CC`,
+        backgroundColor: `${t.palette[0]}B3`,
         borderColor: t.pageBg,
         borderWidth: 1,
-        pointRadius: 6,
-        pointHoverRadius: 8,
+        pointRadius: 5,
+        pointHoverRadius: 7,
         order: 1,
       },
     ],
   },
+  plugins: [tailCalloutPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
@@ -125,12 +172,16 @@ new Chart(canvas, {
     },
     scales: {
       x: {
+        min: axisMin,
+        max: axisMax,
         title: { display: true, text: 'Theoretical Quantiles', color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 13 } },
         grid: { color: t.grid },
         border: { color: t.inkSoft },
       },
       y: {
+        min: axisMin,
+        max: axisMax,
         title: { display: true, text: 'Sample Quantiles', color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 13 } },
         grid: { color: t.grid },
