@@ -60,7 +60,7 @@ jobs:
               fi
               # Flattened: `::warning::` is line-oriented, and gh's HTTP errors
               # are routinely multi-line — the tail would spill into the raw log.
-              PERR=$(tr '\n' ' ' < /tmp/pr.err | head -c 500)
+              PERR=$(head -c 500 /tmp/pr.err | tr '\n' ' ')
               echo "::warning::gh pr view failed (attempt ${attempt}/3): ${PERR}"
               if [ "$attempt" -lt 3 ]; then
                 sleep $((attempt * 5))
@@ -264,7 +264,7 @@ jobs:
               if STATE=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" --json state -q .state 2> /tmp/state.err); then
                 break
               fi
-              SERR=$(tr '\n' ' ' < /tmp/state.err | head -c 500)
+              SERR=$(head -c 500 /tmp/state.err | tr '\n' ' ')
               echo "::warning::gh pr view (state) failed (probe ${probe}/3): ${SERR}"
               STATE=""
               if [ "$probe" -lt 3 ]; then

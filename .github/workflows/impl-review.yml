@@ -62,7 +62,8 @@ jobs:
               PR_DATA=$(cat /tmp/pr.json)
               break
             fi
-            echo "::warning::gh pr view failed (attempt ${attempt}/3): $(cat /tmp/pr.err)"
+            PERR=$(head -c 500 /tmp/pr.err | tr '\n' ' ')
+            echo "::warning::gh pr view failed (attempt ${attempt}/3): ${PERR}"
             if [ "$attempt" -lt 3 ]; then
               sleep $((attempt * 5))
             fi
@@ -866,7 +867,7 @@ jobs:
               if "$@" 2> /tmp/gh_retry.err; then
                 return 0
               fi
-              err=$(tr '\n' ' ' < /tmp/gh_retry.err | head -c 500)
+              err=$(head -c 500 /tmp/gh_retry.err | tr '\n' ' ')
               echo "::warning::${what} failed (attempt ${attempt}/3): ${err}"
               if [ "$attempt" -lt 3 ]; then
                 sleep $((attempt * 5))
@@ -888,7 +889,7 @@ jobs:
               READ_OK=1
               break
             fi
-            LERR=$(tr '\n' ' ' < /tmp/labels.err | head -c 500)
+            LERR=$(head -c 500 /tmp/labels.err | tr '\n' ' ')
             echo "::warning::gh pr view (labels) failed (attempt ${attempt}/3): ${LERR}"
             if [ "$attempt" -lt 3 ]; then
               sleep $((attempt * 5))
