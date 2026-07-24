@@ -2,50 +2,51 @@ library: plotly
 language: python
 specification_id: marimekko-basic
 created: '2025-12-23T15:14:03Z'
-updated: '2026-04-27T03:24:58Z'
+updated: '2026-07-24T14:56:27Z'
 generated_by: claude-sonnet
-workflow_run: 24974737884
+workflow_run: 30100741974
 issue: 1002
-python_version: 3.14.4
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - Correct marimekko implementation with proportional widths and stacked heights
-  - Full Okabe-Ito palette compliance with Enterprise=#009E73 as first series
-  - Value labels inside segments showing absolute dollar amounts
-  - Well-formatted hover tooltips using customdata for rich interactivity
-  - Explicitly set font sizes at all hierarchy levels (28/22/18px)
-  - Theme-adaptive chrome fully implemented for both light and dark renders
-  - Clean deterministic data with realistic business context (software market by region)
-  - HTML export alongside PNG for interactive use
+  - Per-segment WCAG-contrast-aware label ink (computed via relative luminance, not
+    hardcoded) guarantees every value label is legible against its own fill color
+    in both themes
+  - Explicit callout annotation names the actual insight (largest market + product
+    mix leader) instead of leaving the viewer to find it - genuine data storytelling
+  - Correct L-shaped spine treatment (bottom+left only) and y-axis-only subtle grid,
+    matching the style guide's grid/spine guidance exactly
+  - 'Full Imprint palette compliance: brand green #009E73 as the first series, canonical
+    order for the rest, correct theme-adaptive backgrounds/chrome identical data colors
+    across both renders'
+  - Bar widths and segment heights are mathematically correct proportional representations
+    of the underlying data (verified against source values)
   weaknesses:
-  - 'DE-03 LOW: No visual storytelling or hierarchy - the chart displays data without
-    directing the viewer to the key insight (Asia Pacific is largest market but Consumer-dominated).
-    No emphasis technique used (color contrast variation, callout annotation, focal
-    highlight).'
-  - 'DE-01 MODERATE: Design is clean and correct but not publication-quality. Missing
-    refinements: chart frame appears as a box (top/right spines not suppressed), bar
-    edge color PAGE_BG makes separators invisible in dark mode.'
-  - 'LM-02 MODERATE: Hover tooltips with customdata are plotly-distinctive but the
-    marimekko construction itself (go.Bar with base+width) is generic. Consider leveraging
-    plotly-specific layout features more creatively.'
+  - Two small helper functions (_linearize, relative_luminance) deviate from the strict
+    KISS 'no functions' ideal, though justified for computing accessible label contrast
+  - The hovertemplate/customdata tooltip technique is solid but not unique to plotly
+    among interactive libraries, limiting Library Mastery distinctiveness
+  - The callout annotation text sits at 10px, the smallest text element on the chart
+    - still legible but could be nudged up slightly given it carries the chart's key
+    insight
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "Market Share by Region · marimekko-basic · plotly · anyplot.ai" in dark ink (#1A1A17), clearly readable. X-axis label "Region (width = market size)" and Y-axis label "Product Mix (share within region)" both dark and legible. Tick labels in dark secondary ink (#4A4A44), fully readable. Horizontal legend at top center with "Product Line" header — all readable.
-      Data: 4 variable-width columns (North America, Europe, Asia Pacific, Latin America), each stacked with Enterprise (#009E73, bottom), SMB (#D55E00, middle), Consumer (#0072B2, top). White segment separators (2px). Dollar value labels inside each segment in white text — all readable. Asia Pacific widest column. Latin America narrowest.
-      Legibility verdict: PASS — all text fully readable against warm off-white background.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "Market Share by Region · marimekko-basic · python · plotly · anyplot.ai" in dark ink, clearly readable. X-axis title "Region (width = market size)" and y-axis title "Product Mix (share within region)" both dark ink, legible. Tick labels (region names, percentage ticks) in softer dark-gray ink, legible. Legend "Product Line" with Consumer/SMB/Enterprise entries in an elevated cream box with border, legible. Callout box above the plot area states the key insight in dark text on a cream box.
+      Data: Four variable-width columns (North America, Europe, Asia Pacific, Latin America) stacked with three segments each (Enterprise green #009E73 at bottom, SMB lavender in middle, Consumer blue at top). Column width is visibly proportional to each region's total (Asia Pacific widest, Europe narrowest). Value labels ($M) are printed inside every segment, with per-segment ink color chosen for contrast: white text on the blue segments, dark text on the green and lavender segments (verified by pixel sampling - both choices pass WCAG contrast against their respective fills).
+      Legibility verdict: PASS - all text confirmed readable against the light background, no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Near-black warm dark #1A1A17 — correct, not pure black.
-      Chrome: Title, axis labels, and tick labels render in light off-white/cream text — all clearly readable against the dark background. Legend box uses elevated dark background (#242420) with light border. No dark-on-dark text failures detected.
-      Data: Data colors are identical to light render — Enterprise (#009E73 teal), SMB (#D55E00 orange), Consumer (#0072B2 blue) — unchanged as expected. Note: bar edge color PAGE_BG=#1A1A17 matches the dark background, making within-stack separator lines invisible; segment colors still clearly distinguish the three products.
-      Legibility verdict: PASS — all text readable against dark background.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, axis titles, and callout text render in light ink (near-white), tick labels in a softer light-gray ink - all clearly legible against the dark background. Legend box uses the darker "elevated" surface color with a light border, text legible. No dark-on-dark text found anywhere.
+      Data: Identical column layout and identical segment colors (#009E73 green, lavender, blue) to the light render - confirms the data palette is theme-independent as required. Only the chrome (background, text ink, grid, box fills) flipped between themes.
+      Legibility verdict: PASS - all text confirmed readable against the dark background; the per-segment contrast-aware ink logic (dark ink on green/lavender, white ink on blue) holds correctly in the dark render as well since it is computed from the fixed data-color luminance, independent of theme.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,77 +57,80 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px, legend 18-20px, value labels 18px — all readable in both renders'
+        comment: All font sizes explicitly set; per-segment label ink dynamically
+          computed for WCAG contrast against each fill color; verified by pixel sampling.
+          Title fits the expected 70-85% width for the mandated long title. Readable
+          in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. X-axis category labels spaced correctly under
-          each variable-width bar.
+        comment: No overlap between title, callout box, legend, axis text, or segment
+          labels in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bar segments clearly visible with contrasting colors. Value labels
-          in white inside each segment.
+        comment: All 12 segments and their value labels clearly visible; sizing appropriate
+          for a 4x3 marimekko grid.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Three distinct colors (green, orange,
-          blue) are clearly distinguishable.
+        comment: CVD-safe Imprint palette plus a genuinely accessibility-driven per-segment
+          ink choice (luminance-based, not relying on hue alone).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills approximately 70% of canvas. Balanced margins (l:80,
-          r:40, t:120, b:80). Legend positioned at top without wasted space.
+        comment: Balanced margins, legend and callout occupy the reserved margin space
+          rather than floating isolated; nothing cut off; canvas dimension gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Region (width = market size)'' explains encoding. Y-axis:
-          ''Product Mix (share within region)'' is descriptive.'
+        comment: 'Axis titles are descriptive and explain the encoding: ''Region (width
+          = market size)'', ''Product Mix (share within region)''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Enterprise=#009E73, SMB=#D55E00, Consumer=#0072B2 —
-          correct Okabe-Ito order. Light bg #FAF8F1, dark bg #1A1A17. Theme-adaptive
-          chrome correct in both renders.'
+        comment: 'First series #009E73, canonical Imprint order for the rest, correct
+          theme-adaptive backgrounds/chrome in both renders, identical data colors
+          across themes.'
     design_excellence:
-      score: 11
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Between well-configured default (4) and strong design (6). White
-          segment separators, correct palette, clean layout. Missing: top/right spine
-          removal, more typography finesse.'
+        comment: Strong design clearly above library defaults - the contrast-aware
+          label ink and cream/near-black elevated surfaces show real design intent,
+          though short of FiveThirtyEight-level polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: X-axis grid hidden, Y-axis grid subtle (15% opacity), bargap=0.02
-          for tight marimekko appearance. No excessive decoration.
+        comment: L-shaped spines (bottom+left only), y-axis-only subtle grid, clean
+          white segment-divider edges, generous margins.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Data displayed correctly but no visual hierarchy guides the viewer.
-          Asia Pacific dominance and Consumer-heavy mix is notable but not emphasized.
+        passed: true
+        comment: 'Callout annotation states the insight directly (''Asia Pacific:
+          largest market... Consumer leads at 40% share'') - viewer sees the story
+          immediately without having to derive it.'
     spec_compliance:
       score: 15
       max: 15
@@ -136,30 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct marimekko chart: proportional bar widths (column totals)
-          and proportional heights (product share within column).'
+        comment: Correct Marimekko/mosaic construction via variable-width stacked
+          bars.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: proportional widths, proportional heights,
-          color coding, legend, value labels on segments, category names centered
-          under bars.'
+        comment: Widths proportional to column totals, heights proportional to within-column
+          share, value labels on every segment, legend, centered category ticks -
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X positions calculated as cumulative widths (centered). Y shows 0-100%
-          proportion. All regions and products displayed correctly.
+        comment: X = region (width-encoded), Y = product share (height-encoded); all
+          data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title ''Market Share by Region · marimekko-basic · plotly · anyplot.ai''
-          contains required format. Legend labels match data: Enterprise, SMB, Consumer.'
+        comment: Title matches '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai' format; legend labels match product names.
     data_quality:
       score: 15
       max: 15
@@ -169,59 +173,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows both dimensions: varying bar widths (different market sizes)
-          and varying product mix per region. Strong variation across all 4 regions.'
+        comment: All 4 regions x 3 products shown with varied totals and mixes - no
+          two columns look the same.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software market share by region (Enterprise/SMB/Consumer product
-          lines) — real-world business scenario, neutral topic.
+        comment: Neutral, plausible business scenario (regional market share by product
+          line).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values $30M-$180M per segment. Region totals ($120M-$450M) are plausible
-          for software product revenues by major world region.
+        comment: Values ($30M-$180M) and regional/product proportions are realistic
+          and internally consistent.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → theme tokens → data → marimekko calculation
-          → figure → layout → save. No functions or classes.'
+        comment: Mostly linear imports -> data -> plot -> save, but defines two small
+          helper functions (_linearize, relative_luminance) for contrast computation.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: all data hardcoded, no random generation needed.'
+        comment: Fully deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects imported, both used.
+        comment: Only os (stdlib) and plotly.graph_objects, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Marimekko calculation is appropriate complexity.
-          No over-engineering.
+        comment: Appropriate complexity for the accessibility-driven ink computation;
+          no fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current plotly API
-          used.
+        comment: Saves plot-{THEME}.png at the canonical 800x450 scale=4 landscape
+          size plus plot-{THEME}.html; current API.
     library_mastery:
       score: 8
       max: 10
@@ -231,27 +235,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of go.Bar with base parameter for stacking, custom widths,
-          hovertemplate with customdata, barmode=stack, HTML export — all idiomatic
-          plotly patterns.
+        comment: go.Bar with width/base is plotly's own recommended technique for
+          Marimekko charts (no native trace type exists) - expert-level usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotly-distinctive customdata+hovertemplate for rich interactive
-          tooltips with region name, dollar value, and share percentage. HTML export
-          adds interactivity. Could leverage more plotly-specific layout capabilities.
-  verdict: REJECTED
+        comment: customdata + hovertemplate for rich per-segment tooltips is a solid
+          plotly-specific technique, though not wholly unique among interactive libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
-  - html-export
+  - annotations
   - manual-ticks
   patterns:
+  - matrix-construction
   - iteration-over-groups
   dataprep:
-  - normalization
+  - cumulative-sum
   styling:
   - edge-highlighting
+  - publication-ready
