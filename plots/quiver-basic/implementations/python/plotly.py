@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 quiver-basic: Basic Quiver Plot
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 76/100 | Updated: 2026-07-24
