@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-24
@@ -34,7 +34,14 @@ np.random.seed(42)
 
 n_per_species = 50
 species_names = ["Setosa", "Versicolor", "Virginica"]
-dimensions = ["Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)"]
+dimensions = [
+    "Sepal Length (cm)",
+    "Sepal Width (cm)",
+    "Petal Length (cm)",
+    "Petal Width (cm)",
+    "Petal Area (cm2)",
+    "Sepal Aspect Ratio",
+]
 
 data = []
 for i, sp in enumerate(species_names):
@@ -42,6 +49,8 @@ for i, sp in enumerate(species_names):
     sepal_width = np.random.normal([3.4, 2.8, 3.0][i], 0.38, n_per_species)
     petal_length = np.random.normal([1.5, 4.3, 5.5][i], 0.17 + i * 0.25, n_per_species)
     petal_width = np.random.normal([0.2, 1.3, 2.0][i], 0.1 + i * 0.15, n_per_species)
+    petal_area = petal_length * petal_width
+    sepal_aspect_ratio = sepal_length / sepal_width
     for j in range(n_per_species):
         data.append(
             {
@@ -50,6 +59,8 @@ for i, sp in enumerate(species_names):
                 "Sepal Width (cm)": round(sepal_width[j], 2),
                 "Petal Length (cm)": round(petal_length[j], 2),
                 "Petal Width (cm)": round(petal_width[j], 2),
+                "Petal Area (cm2)": round(petal_area[j], 2),
+                "Sepal Aspect Ratio": round(sepal_aspect_ratio[j], 2),
                 "id": i * n_per_species + j,
             }
         )
@@ -82,7 +93,7 @@ spec = (
         x=alt.X(
             "Dimension:N",
             sort=dimensions,
-            axis=alt.Axis(labelAngle=0, labelFontSize=15, titleFontSize=17, title=None, labelPadding=10),
+            axis=alt.Axis(labelAngle=-20, labelFontSize=13, titleFontSize=17, title=None, labelPadding=10),
         ),
         y=alt.Y(
             "Normalized Value:Q",
@@ -94,24 +105,33 @@ spec = (
             "Species:N",
             scale=alt.Scale(domain=species_names, range=IMPRINT),
             legend=alt.Legend(
-                title="Species", titleFontSize=17, labelFontSize=15, symbolSize=170, symbolStrokeWidth=3, orient="right"
+                title="Species",
+                titleFontSize=17,
+                labelFontSize=15,
+                symbolSize=170,
+                symbolStrokeWidth=3,
+                orient="right",
+                padding=12,
+                labelLimit=200,
             ),
         ),
-        opacity=alt.condition(species_select, alt.value(0.60), alt.value(0.08)),
+        opacity=alt.condition(species_select, alt.value(0.40), alt.value(0.06)),
         tooltip=[
             alt.Tooltip("Species:N"),
             alt.Tooltip("Sepal Length (cm):Q", format=".2f"),
             alt.Tooltip("Sepal Width (cm):Q", format=".2f"),
             alt.Tooltip("Petal Length (cm):Q", format=".2f"),
             alt.Tooltip("Petal Width (cm):Q", format=".2f"),
+            alt.Tooltip("Petal Area (cm2):Q", format=".2f"),
+            alt.Tooltip("Sepal Aspect Ratio:Q", format=".2f"),
         ],
     )
     .properties(
-        width=620,
-        height=320,
+        width=580,
+        height=300,
         background=PAGE_BG,
         title=alt.Title(
-            "parallel-basic · altair · anyplot.ai",
+            "parallel-basic · python · altair · anyplot.ai",
             subtitle="Setosa separates cleanly on petal traits, while Versicolor and Virginica overlap on sepal traits",
             fontSize=24,
             subtitleFontSize=14,
@@ -128,7 +148,14 @@ chart = (
         domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
     )
     .configure_title(color=INK)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        strokeWidth=0.5,
+        cornerRadius=4,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
 )
 
 # Save
