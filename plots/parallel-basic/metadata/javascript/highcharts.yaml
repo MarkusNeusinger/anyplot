@@ -1,0 +1,244 @@
+library: highcharts
+language: javascript
+specification_id: parallel-basic
+created: '2026-07-24T10:52:55Z'
+updated: '2026-07-24T11:07:32Z'
+generated_by: claude-sonnet
+workflow_run: 30087366620
+issue: 820
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Directly addressed both attempt-1 weaknesses: dimension count raised from 4 to
+    6 (Return Rate, Discount added), and a distinctive hover-highlight + segment-wide
+    legend toggle now uses Highcharts'' event/graphics APIs instead of generic config.'
+  - Line opacity/width re-tuned (0.5→0.4, 1.5→1.3) to compensate for the added density
+    from two more axes, keeping the chart legible.
+  - Both themes remain fully legible with correctly flipped chrome and identical data
+    colors; canonical Imprint palette order preserved (green/lavender/blue).
+  - 'Deterministic fixed-seed data generation with a richer, still-coherent story:
+    budget items now visibly show higher return rates and deeper discounts than premium
+    items across all six axes.'
+  weaknesses:
+  - Design Excellence is still driven mostly by token defaults + the gridline-as-axis
+    trick; a bolder typographic or layout choice (e.g., a highlighted "focus" segment
+    drawn last/on top, or a subtitle callout naming the key insight) would push DE-01/DE-03
+    further.
+  - LM-02's hover/legend interactions, while genuinely Highcharts-API-driven, are
+    still patterns replicable with moderate effort in other event-driven charting
+    libraries — a Highcharts-unique feature (e.g. Highcharts.Pointer customization,
+    boost module patterns, or annotations API) would be a stronger differentiator.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "parallel-basic · javascript · highcharts · anyplot.ai" centered at top, gray subtitle beneath. Six vertical dimension axes (Price, Rating, Monthly Sales, Inventory, Return Rate, Discount) as bold vertical gridlines. Shared "Normalized Value" y-axis (0-1, ticks every 0.25) on the left. Three-entry deduplicated legend below the chart. All title/subtitle/axis/tick/legend text is dark and clearly readable against the light surface.
+      Data: ~60 semi-transparent lines colored by segment — brand green #009E73 (Budget), lavender (Mid-Range), blue (Premium) — matching canonical Imprint order.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout; title now white, subtitle/axis/tick/legend labels in light gray, all clearly legible against the dark surface. Bold vertical gridlines (pseudo axis lines) and subtle horizontal y-axis grid remain visible without dominating. No dark-on-dark failures observed.
+      Data: Line colors (green, lavender, blue) are pixel-identical to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All fonts explicitly sized (title 22px, subtitle/labels 14px, axis
+          titles 16px); readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; line crossings are inherent to a 6-dimension
+          parallel-coordinates plot
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: opacity 0.4 + lineWidth 1.3 re-tuned this attempt to ease density
+          from the added axes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue segments distinguishable; no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; well-proportioned across 6 axes
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis titled 'Normalized Value'; all 6 dimension names self-descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order; correct backgrounds
+          both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Deduplicated legend, per-dimension tooltip formatting, gridline-as-axis
+          trick; still reads close to well-configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: xAxis lineWidth 0 + bold gridlines as pseudo axis; subtle y-axis
+          grid; line density re-tuned
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: New Return Rate/Discount axes extend the segmentation narrative visibly
+          across the whole chart
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine parallel coordinates built on core line series + categorical
+          xAxis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Dimensions as axes, connecting lines, category color-coding, normalization,
+          transparency all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=dimensions, Y=normalized value; all 6 dimensions and 60 observations
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match segment names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 of the recommended 4-10 dimensions now used, up from 4
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral e-commerce scenario with realistic inverse relationships
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price, rating, sales/inventory, return rate, discount all sensible
+          for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; RNG and small interaction helpers are justified
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only provided globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Real Highcharts APIs for interaction, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false set on chart and plotOptions.series'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Core line series + categorical xAxis workaround for the forbidden
+          add-on module
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom hover-highlight via series.graph.attr and segment-wide legendItemClick
+          toggle; a step up from generic usage but still replicable elsewhere with
+          moderate effort
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending

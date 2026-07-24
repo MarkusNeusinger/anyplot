@@ -2,54 +2,53 @@ library: bokeh
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:12:33Z'
-updated: '2026-04-27T06:37:32Z'
+updated: '2026-07-24T11:01:25Z'
 generated_by: claude-sonnet
-workflow_run: 24978206561
+workflow_run: 30086895241
 issue: 820
-python_version: 3.14.4
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-dark.html
-quality_score: 77
+quality_score: 94
 review:
   strengths:
-  - Font sizes explicitly set at all levels (title 28pt, labels 22pt, ticks 18pt,
-    legend 18/20pt) ensuring legibility at 4800x2700 px
-  - Excellent iris-like data with realistic botanical measurements and clear species
-    separation across petal dimensions — ideal for demonstrating parallel coordinates
-    utility
-  - Custom x-tick labels include original scale ranges in cm, providing reader context
-    without cluttering the y-axis
-  - Clean KISS code structure with reproducibility seed; normalization loop is clean
-    and correct
+  - 'All three attempt-1 weaknesses were directly and effectively addressed: legend
+    border dropped, bolder per-dimension Span anchor lines added, and line_alpha eased
+    from 0.5 to 0.4 in the densest crossover region'
+  - New click_policy="mute" + muted_alpha=0.05 on the legend is a genuine bokeh-distinctive
+    interactive feature (isolate a species by clicking its legend entry) layered on
+    top of the existing real HoverTool
+  - Imprint palette applied in canonical order and identical across both themes; backgrounds
+    and chrome are theme-correct in both renders
+  - Custom x-axis tick labels embed the real-world min/max cm range per dimension,
+    adding context beyond bare 0-1 normalized ticks
+  - Realistic Iris dataset with factually correct measurement ranges and a clear species-separation
+    story
   weaknesses:
-  - 'Wrong palette: uses #306998 (Python Blue, explicitly non-compliant per VQ-07),
-    #FFD43B, #4CAF50 — must use Okabe-Ito (setosa #009E73, versicolor #D55E00, virginica
-    #0072B2)'
-  - 'No theme handling: code has no os.getenv(''ANYPLOT_THEME''), no adaptive background/chrome
-    colors, saves as bare plot.png instead of plot-{THEME}.png'
-  - 'Wrong title domain: pyplots.ai should be anyplot.ai'
-  - 'Grid too prominent: alpha=0.3 with dashes adds visual noise; should be <=0.10
-    with no dashes'
-  - 'No HoverTool: Bokeh''s primary strength is interactivity — missing hover on HTML
-    output loses the most distinctive Bokeh feature'
+  - DE-03 remains at the "good" tier rather than "excellent" - there's no explicit
+    visual callout drawing the eye to the Setosa/petal separation as the plot's single
+    clearest insight, though this is optional polish rather than a spec requirement
+  - xgrid (shared 0.15-alpha grid) and the new per-dimension Span lines both draw
+    at the same four x positions, which is slightly redundant now that the Span lines
+    carry the visual anchor role
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, approximately #FAF8F1 — not pure white, warm tint visible
-      Chrome: Title "parallel-basic · bokeh · pyplots.ai" readable in dark text; y-axis label "Normalized Value" readable; x-tick labels with dimension names and cm ranges visible; legend top-right with "Species" title and species names readable
-      Data: Three species in Python Blue (#306998) for Setosa, amber-yellow (#FFD43B) for Versicolor, medium green (#4CAF50) for Virginica — NOT Okabe-Ito palette; first series is NOT #009E73; 150 semi-transparent lines (alpha=0.5) clearly show species clustering especially in petal dimensions
-      Legibility verdict: PASS (all text readable against light background, no light-on-light failures)
+      Background: Warm off-white (#FAF8F1), matches spec target.
+      Chrome: Bold dark title top-left, italic "Dimension"/"Normalized Value" axis labels, four dimension tick labels each annotated with real cm ranges, frameless "Species" legend top-right (border box from attempt 1 removed). All clearly readable, nothing clipped.
+      Data: 150 species-colored polylines, line_alpha=0.4 (eased from 0.5). Setosa=#009E73 (green), Versicolor=#C475FD (lavender), Virginica=#4467A3 (blue) - canonical Imprint order. New bolder per-dimension Span anchor lines (alpha 0.6) distinct from the shared faint grid.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black dark background, approximately #1A1A17 — warm near-black (applied by pipeline externally; code has no ANYPLOT_THEME handling)
-      Chrome: Title readable in light-colored text; axis labels visible; tick labels legible; legend text appears readable against dark background — no dark-on-dark failures detected
-      Data: Colors identical to light render (same Python Blue, amber-yellow, medium green) — correct that only chrome flips; species separation patterns identical
-      Legibility verdict: PASS (text readable in dark mode — readability supplied by external pipeline since code has no ANYPLOT_THEME handling or explicit chrome color tokens)
+      Background: Warm near-black (#1A1A17), matches spec target.
+      Chrome: Same layout, chrome flipped to light ink (#F0EFE8 primary / #B8B7B0 secondary), frameless legend with dark elevated fill. All title/axis/tick text clearly legible, no dark-on-dark failures.
+      Data: Colors identical to light render (#009E73 / #C475FD / #4467A3) - confirmed only chrome flipped. Brand green stays vivid.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -57,78 +56,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, legend 18/20pt; readable at 4800x2700 px in both renders'
+        comment: Explicit sizes throughout, readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Four well-spaced dimension labels with custom tick overrides; no
-          text collisions
+        comment: Frameless legend sits in reserved margin outside x_range, no collision
+          with data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 150 lines at alpha=0.5 and line_width=2 appropriate for density;
-          slight crowding at petal axes but manageable
+        comment: line_alpha lowered to 0.4 noticeably eases the Sepal Width crossover
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Three colors distinguishable for most CVD types but not Okabe-Ito
-          certified
+        passed: true
+        comment: Imprint palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization; minor imbalance with legend floating in
-          top-right corner
+        comment: Good canvas utilization, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Custom x-tick labels include original scale ranges in cm; descriptive
-          y-axis label
+        comment: Dimension labels embed real cm ranges
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Uses #306998 (Python Blue, explicitly non-compliant), #FFD43B, #4CAF50
-          — none are Okabe-Ito; first series must be #009E73; code has no ANYPLOT_THEME
-          handling'
+        passed: true
+        comment: Canonical Imprint order, theme-correct chrome in both renders
     design_excellence:
-      score: 9
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: Well-configured library defaults with multiline tick labels including
-          measurement ranges; non-standard Python logo color scheme detracts
+        comment: Bolder per-dimension Span anchor lines, explicit helvetica typography,
+          frameless legend
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Grid alpha=0.3 with dashes more prominent than recommended <=0.10;
-          no spine removal; minimal refinement
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Iris data is excellent choice demonstrating species clustering; normalization
-          with range labels aids readability; no deliberate visual emphasis
+        comment: Legend border removed, subtle grid plus deliberate anchor lines,
+          click-to-mute interaction
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color contrast reveals species separation; no explicit focal callout
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,29 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel coordinates plot with normalized multi-dimensional
-          lines
+        comment: Correct parallel coordinates via multi_line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple dimensions, normalization, color coding by category, transparency
-          all present
+        comment: Normalization, category coloring, alpha transparency, sensible axis
+          ordering
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dimensions correctly on x-axis, normalized values on y-axis; all
-          150 observations visible
+        comment: Dimension index on X, normalized value on Y, all data shown
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title uses pyplots.ai instead of anyplot.ai; legend species labels
-          are correct
+        passed: true
+        comment: Title matches mandated format; legend labels match species
     data_quality:
       score: 15
       max: 15
@@ -168,23 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four dimensions, three species, 150 observations; demonstrates clustering,
-          species separation, and variation across all axes
+        comment: Shows both clear separation (Setosa) and overlap (Versicolor/Virginica)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris-like botanical measurements; classic neutral scientific domain
+        comment: Real, neutral Iris dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sepal/petal measurements in expected botanical ranges; normalization
-          handled correctly
+        comment: Measurement ranges match known real-world Iris data
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -192,64 +178,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat script: imports -> data -> plot -> save; no functions
-          or classes'
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extras
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; legend creation verbose but correct; no fake
-          UI
+        comment: Clean, appropriate complexity
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as bare plot.png / plot.html instead of plot-{THEME}.png /
-          plot-{THEME}.html; no ANYPLOT_THEME handling
+        passed: true
+        comment: plot-{theme}.png + .html via current bokeh API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Uses figure/line API correctly; iterates over rows individually rather
-          than using multi_line with ColumnDataSource; no HoverTool on HTML output
+        comment: ColumnDataSource + multi_line + HoverTool is the canonical bokeh
+          pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Custom Legend with LegendItem/add_layout and manual tick overrides
-          via major_label_overrides are Bokeh-specific; misses HoverTool which is
-          Bokeh's most distinctive feature
-  verdict: REJECTED
+        passed: true
+        comment: muted_alpha + click_policy=mute lets a legend click isolate a single
+          species' lines
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
+  - hover-tooltips
+  - html-export
   - manual-ticks
   - custom-legend
-  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
+  - columndatasource
   dataprep:
   - normalization
   styling:
   - alpha-blending
+  - publication-ready
