@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:13:50Z'
-updated: '2026-07-24T06:58:11Z'
+updated: '2026-07-24T07:05:10Z'
 generated_by: claude-sonnet
 workflow_run: 30073371930
 issue: 977
@@ -12,47 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
+  - 'Both weaknesses flagged in Attempt 1 were directly addressed: an explicit "Right-tail
+    deviation" annotation now calls out the tail bow, and the confidence-band trace
+    now carries its own hovertemplate instead of hoverinfo=''skip'''
   - 'Statistically rigorous: Blom''s plotting positions with Winitzki erfinv approximation
-    for theoretical quantiles, plus an asymptotic 95% confidence envelope around the
-    reference line — well beyond a bare scatter-plus-line Q-Q plot'
-  - Sample data mixes two normal components (main body + right-tail bump) so the plot
-    visibly demonstrates the S-curve/heavy-tail deviation the spec's Notes section
-    calls out, rather than a trivially-normal sample that would show a perfectly straight
-    line
-  - Theme tokens (PAGE_BG/INK/INK_SOFT/GRID) threaded consistently through paper,
-    chrome, axis lines, and legend; both renders pass the light/dark readability check
-    with no dark-on-dark or light-on-light text
-  - Canvas is exactly 3200x1800 via width=800/height=450/scale=4 with autosize=False
-    and pinned margins, per the plotly hard rule
-  - 'Data-driven marker/line styling: legendrank establishes a clear visual hierarchy
-    (markers > reference line > confidence band), alpha on markers (0.85) and band
-    fill (0.15) avoids overplotting at n=100'
+    plus an asymptotic 95% confidence envelope, well beyond a bare scatter+line Q-Q
+    plot'
+  - Sample data mixes two normal components so the plot visibly demonstrates the S-curve/heavy-tail
+    deviation called out in the spec's Notes section, and the new annotation makes
+    that deviation explicit
+  - Theme tokens threaded consistently through paper, chrome, axis lines, legend,
+    and the new annotation; both renders pass the light/dark readability check, including
+    at 400px mobile scale
+  - Canvas is exactly 3200x1800 (width=800/height=450/scale=4, autosize=False, pinned
+    margins) per the plotly hard rule, canvas gate passed
   weaknesses:
-  - Confidence band and reference line lean entirely on the neutral/muted Imprint
-    chrome tokens (INK, INK_MUTED) rather than any second brand-adjacent categorical
-    color, which is correct per the palette rules but leaves the plot feeling slightly
-    monochrome outside the green markers — a subtle DE-01 opportunity, not a defect
-  - No annotation or callout marking the visible tail deviation (points diverging
-    from the dashed line past |theoretical| > 1.5) that would turn the skew into an
-    explicit story beat for a first-time viewer
-  - hovertemplate is customized only for the marker trace; the confidence band and
-    reference line rely on hoverinfo='skip', which is reasonable but means the HTML
-    detail view offers no interactive read of the band bounds themselves
+  - Confidence band and reference line still lean entirely on neutral/muted chrome
+    tokens rather than any second brand-adjacent color, correct per palette rules
+    but leaves the plot feeling slightly monochrome outside the green markers (minor
+    DE-01 opportunity)
+  - Reference-line trace still uses hoverinfo="skip", so the HTML detail view offers
+    no interactive read of the y=x line itself (minor, band/marker traces already
+    cover the interactive story)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "qq-basic · python · plotly · anyplot.ai" top-left in dark ink, clearly legible. X-axis title "Theoretical Quantiles" and Y-axis title "Sample Quantiles" (rotated) both dark and readable. Tick labels on both axes are soft dark grey, legible against the cream background. Legend box (top-left, inside plot area) has an off-white/elevated fill, thin border, and three entries — "Sample Quantiles" (green dot), "Reference (y=x)" (black dashed line), "95% Confidence Band" (grey swatch) — all text dark and readable. Gridlines are faint warm-grey, visible but subtle.
-      Data: ~100 green (#009E73) markers tracing a diagonal path against a black dashed y=x reference line, with a light grey shaded 95% confidence envelope around the line. Points hug the line in the middle and show a mild S-curve/upward bow at both tails (from the injected right-tail bump), a legitimate demonstration of the spec's "S-curves/heavy tails" note.
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "qq-basic · python · plotly · anyplot.ai" top-left in dark ink; axis titles "Theoretical Quantiles" / "Sample Quantiles" and tick labels in dark/soft-dark ink; bordered legend box (top-left) with dark text listing Sample Quantiles, Reference (y=x), 95% Confidence Band. New "Right-tail deviation" annotation with arrow, dark-soft text, clearly visible. All readable.
+      Data: ~100 green (#009E73) markers along a diagonal path, black dashed y=x reference line, light-grey 95% confidence envelope. First/only categorical series correctly uses Imprint position 1 (#009E73).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis titles, and tick labels all render in light ink/off-white and are clearly legible against the dark background — no dark-on-dark failures observed. Legend box uses a dark elevated fill with a light border and light-grey text, fully readable. Gridlines are faint light-grey, visible but subtle, matching the light render's grid density.
-      Data: Marker color is identical #009E73 green to the light render — confirmed unchanged. Reference line correctly flips from black dashes (light theme) to white/off-white dashes (dark theme), and the confidence band renders as a darker grey shaded region appropriate to the dark surface. Only chrome flipped; data colors match exactly.
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title, axis titles, and tick labels flip to light ink/off-white, clearly legible, no dark-on-dark issues. Legend uses dark elevated fill with light border and light-grey text. "Right-tail deviation" annotation remains legible in light ink on dark background.
+      Data: Same #009E73 green markers (confirmed identical to light render). Reference line flips to white/off-white dashes; confidence band renders as a darker grey region appropriate to the dark surface.
       Legibility verdict: PASS
+
+    Also checked plot-light_400.png and plot-dark_400.png (mobile/thumbnail scale): text remains legible in both themes at 400px, though compact.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -63,51 +61,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (16/12/10) throughout; all text readable in both
-          themes via INK/INK_SOFT tokens
+        comment: All text readable in both themes, including at 400px mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend, axes, and data have no collisions in either render
+        comment: No collisions between text, data, legend, or annotation
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size 10 with opacity 0.85 well-suited to n=100 points; confidence
-          band alpha 0.15 avoids overpowering the data
+        comment: Markers sized appropriately (size=10, opacity=0.85) for n=100 sample
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green markers, neutral dashed line, grey band — good contrast, no
-          red-green reliance
+        comment: Good contrast, not reliant on red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas confirmed 3200x1800; title ~35% width well within bounds;
-          no overflow or clipping
+        comment: Canvas gate passed (3200x1800), no overflow, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels exactly match spec's required 'Theoretical Quantiles'
-          / 'Sample Quantiles'
+        comment: Descriptive axis labels match spec exactly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; neutral/muted chrome tokens correctly used
-          for reference line and band; backgrounds match FAF8F1/1A1A17 in both renders'
+        comment: 'First series #009E73, backgrounds theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -115,22 +107,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Confidence envelope, legendrank hierarchy, and custom erfinv-based
-          quantile math go beyond a default scatter+line Q-Q plot
+        comment: Confidence envelope, legendrank hierarchy, custom erfinv-based quantile
+          math
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines effectively absent, grid subtle (10% opacity), generous
-          margins
+        comment: Spines effectively absent, subtle theme-adaptive grid, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Injected right-tail skew makes the deviation from the reference line
-          a visible, legible story; no explicit annotation calling it out
+        comment: New Right-tail deviation annotation makes the skew an explicit story
+          beat
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +131,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Q-Q plot construction
+        comment: Correct Q-Q plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 45-degree reference line clearly visible; points along diagonal;
-          plus a bonus confidence band
+        comment: Reference line, distribution comparison, confidence band
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = theoretical quantiles, Y = standardized sample quantiles — correct
-          convention
+        comment: Theoretical quantiles on x, sample quantiles on y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{spec-id} · python · plotly · anyplot.ai'; legend
-          labels match trace names
+        comment: Title format matches exactly, legend labels clear
     data_quality:
       score: 13
       max: 15
@@ -171,21 +159,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows core Q-Q elements plus a genuine skew/tail deviation as called
-          out in spec Notes
+        comment: Mixture distribution demonstrates skewness/tail deviation from spec
+          Notes
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Generic, neutral sample data appropriate for a statistical diagnostic
-          plot
+        comment: Plausible, neutral generic sample
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standardized quantile range (~-3 to 3) is sensible for a Q-Q plot
+        comment: n=100, within 30-500 recommended range
     code_quality:
       score: 10
       max: 10
@@ -195,7 +182,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,23 +194,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used
+        comment: Only numpy, plotly.graph_objects, os
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI, well-organized math for erfinv approximation and
-          CI band
+        comment: Reasonable complexity for erfinv-based quantile calc
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image(plot-{THEME}.png, width/height/scale) and write_html
-          — current API
+        comment: write_image at correct dims plus write_html
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,24 +216,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Figure/go.Scatter used idiomatically, follows plotly.md canvas/margin/theme
-          rules exactly
+        comment: go.Figure/go.Scatter usage idiomatic for confidence-band composition
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: fill='toself' confidence band, legendrank ordering, and custom hovertemplate
-          are plotly-specific touches beyond generic usage
+        comment: fill=toself band, legendrank, per-trace hovertemplate now extended
+          to band trace
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
