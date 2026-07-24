@@ -2,129 +2,135 @@ library: seaborn
 language: python
 specification_id: network-basic
 created: '2025-12-23T15:36:16Z'
-updated: '2026-04-27T01:53:43Z'
+updated: '2026-07-24T04:20:20Z'
 generated_by: claude-sonnet
-workflow_run: 24971593758
+workflow_run: 30065289736
 issue: 989
-python_version: 3.14.4
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 72
+quality_score: 90
 review:
   strengths:
-  - Realistic social network data with 20 nodes across 4 communities at appropriate
-    scale
-  - Force-directed spring layout produces natural community clustering
-  - Node size encoding degree adds meaningful data dimension
-  - Clean minimal design with axis turned off — appropriate for network graphs
-  - Reproducible with np.random.seed(42)
+  - Custom vectorized Fruchterman-Reingold force-directed layout (no external networkx
+    dependency) cleanly separates the 4 communities into a legible node-link diagram
+  - 'Node size correctly encodes degree (connection count); community color legend
+    uses the canonical Imprint palette order (#009E73, #C475FD, #4467A3, #BD8233)'
+  - Automated label-collision-avoidance pass (post-layout bbox measurement + horizontal
+    nudge) resolved the label overlaps flagged in the prior review attempt
+  - Square 2400x2400 canvas is the correct choice for a layout with no preferred axis;
+    theme tokens correctly threaded through nodes, edges, labels, legend, and title
+    for both light and dark
+  - Reproducible (seeded), clean flat script with no functions/classes, correct output
+    naming
   weaknesses:
-  - 'Non-Okabe-Ito palette used (#306998, #FFD43B, #4CAF50, #FF7043) — first series
-    must be #009E73; replace with Okabe-Ito colors'
-  - No ANYPLOT_THEME environment variable reading — code uses hardcoded seaborn white
-    style, no theme-adaptive chrome at all
-  - 'Node label color hardcoded to #222222 — dark text on dark background in dark
-    mode for labels outside node circles'
-  - Output saved as plot.png instead of plot-{THEME}.png (e.g. plot-light.png / plot-dark.png)
-  - Title contains pyplots.ai instead of anyplot.ai
-  - Manual spring layout is over-engineered — networkx.spring_layout() would be idiomatic
-    and 10x shorter
-  - Node labels at fontsize=11 are below the recommended 16pt minimum for 4800x2700px
-    canvas
+  - '''Ryan'' and ''Sara'' node labels in the Team D cluster sit almost flush against
+    each other (near-zero gap) even after the collision-avoidance pass — increase
+    the push margin (e.g. from +0.01 to +0.02 data units) so adjacent labels keep
+    visible whitespace between them'
+  - Minor edge crossing between Quinn-Sara and Ryan-Tom in the Team D cluster creates
+    a slightly untidy X — a few more force-directed iterations or extra repulsion
+    in that pocket would reduce it (cosmetic, not blocking)
+  - Library mastery leans on custom numpy/matplotlib work (force-directed layout,
+    manual label collision resolution) rather than seaborn-specific features, since
+    seaborn has no native network-graph API; sns.scatterplot's dual hue/size encoding
+    is the main seaborn contribution
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (approximately #FAF8F1), consistent with the anyplot light theme surface.
-      Chrome: Title "Social Network · network-basic · seaborn · anyplot.ai" rendered in dark bold text at 24pt — clearly readable. Legend in upper-left shows "Community" header with Team A (teal), Team B (orange), Team C (blue), Team D (pink/gray) swatches — readable but relies on automatic seaborn theming rather than explicit INK tokens.
-      Data: 20 nodes colored by community in 4 groups (non-Okabe-Ito palette — Team A is NOT #009E73). Node sizes vary with degree. Gray edges with alpha transparency connect nodes. Force-directed layout creates diagonal cluster spread from top-left to bottom-right. Node labels (person names) in dark text at fontsize=11, positioned over or near node circles.
-      Legibility verdict: PASS — all text is readable, though node labels are below recommended 16pt minimum.
+      Background: warm off-white, matches #FAF8F1 target — not pure white, not dark.
+      Chrome: title "network-basic · python · seaborn · anyplot.ai" in dark ink, fully readable and comfortably within the canvas width; "Community" legend box top-left (dark border, off-white fill) lists Team A/B/C/D with color swatches, all readable; bold dark node-label text below each of the 20 nodes.
+      Data: 20 nodes colored by community — Team A #009E73 (green), Team B #C475FD (purple), Team C #4467A3 (blue), Team D #BD8233 (amber) — matching the canonical Imprint order, with off-white edge rings for contrast against the background; node size scales with degree (Carol, Ivy, Noah visibly larger as connection hubs); gray edges at low alpha connect within and across the four communities, including diagonal cross-community bridges. Only close call: "Ryan" and "Sara" labels in the bottom-right cluster sit almost flush against each other.
+      Legibility verdict: PASS (minor label-spacing nit on Ryan/Sara, not a legibility failure — letters do not overlap).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (approximately #1A1A17) — correct dark theme surface. NOTE: the current code does not read ANYPLOT_THEME and saves with facecolor="white"; the dark render images appear to have been generated by previous-attempt code that had partial theme adaptation.
-      Chrome: Title and legend text appear in light/white color on the dark background — readable. However, node labels (person names) also appear as light-colored text in the dark render — this is inconsistent with the current code which hardcodes color="#222222" for all node labels.
-      Data: Identical data colors to light render (same community color scheme). Network structure identical.
-      Legibility verdict: PASS for the images as shown (from prior attempt). However, the CURRENT code has color="#222222" for node labels — if run with ANYPLOT_THEME=dark, labels outside node circles (e.g. Frank, Grace, David, Kate) would be dark text on near-black background — a dark-on-dark FAILURE.
+      Background: warm near-black, matches #1A1A17 target — not pure black, not light.
+      Chrome: title now rendered in near-white ink, fully readable; legend box border/fill flip to the dark-theme tokens while remaining readable; node-label text is near-white/bold and clearly legible against the dark background — no dark-on-dark failures found anywhere (checked title, legend, and all 20 node labels, including the Ryan/Sara pair).
+      Data: node fill colors are pixel-identical to the light render (#009E73 / #C475FD / #4467A3 / #BD8233) — only the chrome (background, text, legend frame, edge-line color) flipped as required.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt set explicitly; node labels 11pt below 16pt minimum for
-          large canvas; legend 14pt adequate
+        comment: Title, legend, and all 20 node labels are clearly readable in both
+          themes; fonts explicitly sized
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: true
-        comment: Some crowding in center-right area with Jack, Leo, Mia, Noah, Paul,
-          Quinn in close proximity
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes clearly visible with size encoding, edges visible at alpha=0.4
-          with linewidth=2
+        comment: Collision-avoidance pass fixed most overlaps; 'Ryan'/'Sara' labels
+          still sit almost flush against each other
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse 20-node/34-edge network with prominent markers (190-400px)
+          and clearly visible edges
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Groups are distinguishable but palette is not Okabe-Ito optimized
-          for CVD safety
+        comment: Imprint palette is CVD-safe; community distinguished by color, not
+          red-green alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Network fills most of canvas in diagonal spread; some empty corners
+        comment: Correct square 2400x2400 canvas for a layout with no preferred axis;
+          title fits, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title is descriptive; axis labels N/A (axis off for network graph)
+        comment: No axes needed for a node-link diagram; title follows the mandated
+          format
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-Okabe-Ito palette (Team A=#306998 not #009E73); no ANYPLOT_THEME
-          reading; hardcoded colors for chrome'
+        passed: true
+        comment: 'First series #009E73, remaining series in canonical Imprint order;
+          backgrounds correct in both themes'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured default with node size encoding and edge transparency;
-          not exceptional design
+        comment: Custom force-directed layout, degree-based sizing, and automated
+          label de-collision show real design effort beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axis off is clean; edge alpha is subtle; node edge styling professional;
-          legend with frame alpha
+        comment: Axis hidden, subtle low-alpha edges beneath nodes, generous margins
+          around the network
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Node size encoding degree adds story; community clustering from force-directed
-          layout reveals structure; cross-group bridges visible
+        comment: Community clusters and cross-group bridges are visually clear; degree-based
+          sizing highlights hub nodes as a focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,28 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct node-link network diagram
+        comment: Node-link network diagram as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Force-directed spring layout, node size by degree, labeled nodes,
-          community colors, cross-group connections all present
+        comment: Force-directed layout, degree-encoded node size, legible non-overlapping
+          labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Nodes as circles, edges as lines, positions from spring layout —
-          all correct
+        comment: All 20 nodes and 34 edges rendered; positions correctly mapped from
+          the layout algorithm
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Code has 'pyplots.ai' instead of 'anyplot.ai' in title string; legend
-          correctly shows community groups
+        comment: Title matches mandated format; legend labels match the community
+          groups
     data_quality:
       score: 15
       max: 15
@@ -163,24 +169,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple communities, within-group connections,
-          cross-group bridges, degree variation, node labels'
+        comment: Nodes, edges, community grouping (color), and degree (size) are all
+          represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real social network scenario: 20 named people in 4 teams with friendship
-          connections — neutral and comprehensible'
+        comment: Plausible, neutral small social network with named individuals and
+          teams
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 nodes, 31 edges — ideal for static network visualization per spec
-          (10-50 nodes)
+        comment: 20 nodes / 34 edges is within the spec's 10-50 node guidance and
+          stays sparse enough to read clearly
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -188,55 +194,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean sequential structure: imports -> data -> spring layout ->
-          plot -> save; no functions or classes'
+        comment: Flat procedural script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) set before layout generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 4 imports (matplotlib, numpy, pandas, seaborn) are used
+        comment: Only os, matplotlib, numpy, pandas, seaborn — all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: ~30 lines of manual spring layout code is over-engineered; networkx.spring_layout()
-          would achieve the same in 2-3 lines
+        comment: No fake UI; vectorized numpy physics loop is appropriately complex
+          for a library with no native network layout
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot.png not plot-{THEME}.png (e.g. plot-light.png); no
-          ANYPLOT_THEME reading
+        passed: true
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight'
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.scatterplot with hue+size dual encoding and sns.set_theme rc
+          tokens used idiomatically
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.scatterplot for node rendering with hue and size — correct;
-          edges and labels use matplotlib which is appropriate; custom legend reconstruction
-          is valid
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Implementation is mostly matplotlib with seaborn limited to scatter
-          styling; no distinctive seaborn features leveraged (statistical transformations,
-          faceting, etc.)
-  verdict: REJECTED
+        comment: Dual hue/size encoding and legend cleanup are seaborn-specific touches,
+          but the layout/label logic is custom numpy/matplotlib rather than a seaborn
+          feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -244,7 +247,6 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
