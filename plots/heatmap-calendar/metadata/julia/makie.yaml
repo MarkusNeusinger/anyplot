@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: heatmap-calendar
 created: '2026-07-24T20:30:42Z'
-updated: '2026-07-24T20:34:17Z'
+updated: '2026-07-24T20:45:26Z'
 generated_by: claude-opus
 workflow_run: 30123739675
 issue: 1010
@@ -12,48 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Full spec compliance: weekday labels (Mon-Sun) on the y-axis, month labels along
-    the top, imprint_seq sequential colormap, graceful faint-neutral handling of out-of-range
-    calendar cells, and a horizontal Colorbar legend labelled Daily commits'
-  - 'Correct 3200x1800 canvas; both themes render correctly with identical data colors
-    and only chrome flipping (warm off-white #FAF8F1 vs warm near-black #1A1A17)'
-  - 'Idiomatic Makie: poly! with a vector of Rect2f cells and per-cell colors, yreversed
-    for Monday-at-top, xaxisposition=:top for month headers, and a Relative-width
-    horizontal Colorbar'
-  - 'Clean KISS script: no functions/classes, Random.seed!(42) for reproducibility,
-    only used imports, well-commented'
-  - Realistic and neutral GitHub-style daily commit data with weekday/seasonal/yearly-trend
-    structure and occasional rest days
+  - 'Faithful GitHub-style calendar heatmap: weeks as columns, Mon–Sun rows, month
+    labels across the top, and a horizontal sequential colorbar — every required spec
+    feature is present.'
+  - 'Correct Imprint theming: imprint_seq (brand green → blue) for the single-polarity
+    commit counts, #FAF8F1 / #1A1A17 backgrounds, and theme-adaptive INK / INK_SOFT
+    chrome threaded through title, ticks, and colorbar in both renders.'
+  - Missing/out-of-range days are handled gracefully as faint neutral cells (6% ink
+    alpha) instead of being dropped, exactly as the spec asks.
+  - 'Idiomatic CairoMakie: poly! over precomputed Rect2f cells, a GridLayout with
+    transparent spacer Boxes to vertically center the block on the 16:9 canvas, and
+    Relative colorbar width — clean, flat, seed-reproducible script.'
+  - Realistic, neutral synthetic data with weekday/weekend contrast, a yearly growth
+    trend, and a seasonal sine term, giving the grid genuine temporal texture.
   weaknesses:
-  - 'Vertical layout imbalance: the 7-row calendar band occupies only the upper ~40%
-    of the canvas and the Colorbar sits far below it, leaving a large empty mid-canvas
-    band. Tighten the composition (increase cell aspect/height or reduce the gap)
-    so it fills the canvas more evenly - deduct VQ-05.'
-  - 'Color differentiation is subtle: because commit values cluster in the mid-range,
-    most cells read as similar teal, making day-to-day pattern reading harder. This
-    is largely data-driven, but a slightly wider value spread would improve legibility
-    of the color signal.'
-  - Month and weekday tick labels are modest (~15pt on the 1600-unit figure); readable
-    at full size but on the small side when scaled to ~400px mobile width - a small
-    bump would help.
+  - Design is polished but reads as an even grid with no deliberate focal point —
+    a subtle emphasis (e.g. slightly stronger stroke on peak weeks or a callout) would
+    lift data storytelling.
+  - The green→blue sequential ramp shifts hue as well as lightness, which is legible
+    but can read as two categories at a glance rather than pure intensity; acceptable
+    since imprint_seq is the mandated continuous ramp.
+  - Vertical centering leaves a visible whitespace gap between the calendar block
+    and the colorbar; intentional, but the legend feels slightly detached from the
+    grid it explains.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), not pure white. Correct.
-      Chrome: title "heatmap-calendar · julia · makie · anyplot.ai" in dark ink, bold, clearly readable. Month labels (Jan..Dec) along the top and weekday labels (Mon..Sun) down the left in soft ink — all readable. Colorbar ticks 0/5/10/15 and label "Daily commits" readable.
-      Data: calendar grid of week-column x weekday-row cells colored with imprint_seq (brand green #009E73 -> blue #4467A3). Out-of-range corner cells rendered as faint neutral gray. First-series/low end is brand green.
+      Background: warm off-white (#FAF8F1), correct.
+      Chrome: dark title "heatmap-calendar · julia · makie · anyplot.ai" centered above the grid; month labels Jan–Dec along the top in soft ink; Mon–Sun weekday labels down the left in soft ink; colorbar labeled "Daily commits" (0–~23) below. All text clearly readable against the light surface.
+      Data: 7×53 calendar grid of padded cells colored on the imprint_seq green→blue ramp; low counts read brand green (#009E73), high counts blue (#4467A3). Leading/trailing out-of-range days render as faint light-gray cells. First/low end of the ramp is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17), not pure black. Correct.
-      Chrome: title light ink, readable. Month/weekday labels in soft light ink, readable. Colorbar label/ticks readable. No dark-on-dark failures.
-      Data: identical cell colors to light render (green->blue imprint_seq); only chrome flipped. Out-of-range cells are faint dark rectangles.
+      Background: warm near-black (#1A1A17), correct.
+      Chrome: light title, month labels, weekday labels, and colorbar text — all clearly readable against the dark surface; no dark-on-dark failures. Empty cells render as faint near-black tiles.
+      Data: identical calendar geometry and identical green→blue cell colors to the light render — only the surrounding chrome flipped, as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -61,72 +60,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, month and weekday labels, and colorbar text readable in both
-          themes; tick labels slightly small for mobile
+        comment: Font sizes explicitly set (title 26, ticks 19, colorbar 15–18); all
+          text readable in both themes and mobile-scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or cells; clean padded grid
+        comment: Padded cells, no text or element collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells and faint empty cells clearly distinguishable
+        comment: Cell colors clearly distinguishable; empty cells subtle but visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq green->blue is CVD-safe with adequate contrast
+        comment: Sequential green→blue ramp, CVD-safe, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800, but large empty vertical band between calendar
-          and colorbar
+        comment: 3200×1800 exact, centered block, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Month/weekday tick labels self-explanatory; colorbar labelled Daily
-          commits
+        comment: Weekday + month labels; colorbar carries units (Daily commits)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq continuous colormap; correct theme backgrounds; identical
-          data colors across themes
+        comment: imprint_seq continuous ramp; correct theme backgrounds both renders
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean minimal calendar with padded cells, hidden spines, top-axis
-          months; layout imbalance limits polish
+        comment: Polished GitHub-style calendar with intentional cell padding and
+          centered layout
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: Spines removed, no grid; whitespace generous but imbalanced to the
-          bottom
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Reveals weekday/seasonal patterns via color, though clustering makes
-          them subtle
+        comment: Spines and grid hidden, generous whitespace, clean chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Seasonal/weekday texture visible but no deliberate focal point
     spec_compliance:
       score: 15
       max: 15
@@ -136,26 +130,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calendar heatmap (weeks x weekdays)
+        comment: Correct calendar heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Weekday labels, month labels, sequential colormap, missing-date handling,
-          legend all present
+        comment: Weekday y-labels, month top-labels, sequential cmap, neutral empty
+          cells, colorbar legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates mapped correctly to week columns and weekday rows
+        comment: Dates→week/weekday grid, value→color, full year shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; colorbar legend present
+        comment: Title exactly matches mandated format; colorbar labeled
     data_quality:
       score: 15
       max: 15
@@ -165,19 +159,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full year with weekday, seasonal, trend structure and rest days
+        comment: Shows daily/weekday/seasonal/trend patterns across full year
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GitHub-style commit counts, plausible and neutral
+        comment: Plausible, neutral GitHub commit counts
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-17 commits/day is a sensible domain range
+        comment: 0–~23 commits/day, sensible domain range
     code_quality:
       score: 10
       max: 10
@@ -187,7 +181,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward loops
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -199,19 +193,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Dates, Random all used
+        comment: CairoMakie, Colors, Dates, Random — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear, well-commented, no fake UI
+        comment: Clean, well-commented, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via CairoMakie
+        comment: save("plot-$(THEME).png"; px_per_unit=2), current API
     library_mastery:
       score: 7
       max: 10
@@ -221,26 +215,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic Axis config, poly!, Colorbar
+        comment: poly! over Rect2f, GridLayout spacers, Colorbar, cgrad — idiomatic
+          Makie
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: poly! with Rect2f cells + per-cell colors, yreversed, xaxisposition=:top,
-          Relative-width colorbar
+        comment: Transparent spacer Boxes + Fixed rowsizes + Relative colorbar width
+          to center the block
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - manual-ticks
-  - patches
   patterns:
   - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep:
   - time-series
   styling:
-  - custom-colormap
   - minimal-chrome
+  - custom-colormap
