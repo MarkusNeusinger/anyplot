@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-basic: Basic Radar Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 81/100 | Updated: 2026-07-24
@@ -105,11 +105,14 @@ for cat, angle in zip(categories, angles, strict=True):
 
 label_df = pd.DataFrame(label_rows)
 
-# Create grid value labels (scale indicators on first spoke)
+# Create grid value labels - placed on the angular bisector between the first
+# two category spokes (a gap with no data) rather than on a data-bearing spoke,
+# so they never overlap a series' marker/line
+value_label_angle = (angles[0] + angles[1]) / 2 - math.pi / 2
 value_label_rows = []
 for val in grid_values:
-    x = val * math.cos(-math.pi / 2) + 8  # Offset right for readability
-    y = val * math.sin(-math.pi / 2)
+    x = val * math.cos(value_label_angle)
+    y = val * math.sin(value_label_angle)
     value_label_rows.append({"label": str(val), "x": x, "y": y})
 
 value_label_df = pd.DataFrame(value_label_rows)
@@ -117,7 +120,7 @@ value_label_df = pd.DataFrame(value_label_rows)
 # Descriptive prefix clarifies this instance is an employee comparison, giving
 # the reader an immediate frame for the two complementary skill profiles
 title = "Employee Skills Comparison · radar-basic · python · letsplot · anyplot.ai"
-title_fontsize = round(16 * (67 / len(title) if len(title) > 67 else 1.0))
+title_fontsize = round(16 * (60 / len(title) if len(title) > 60 else 1.0))
 title_fontsize = max(title_fontsize, 11)
 
 # Build the plot
@@ -130,10 +133,14 @@ plot = (
     + geom_path(aes(x="x", y="y", group="group"), data=spoke_df, color=INK_SOFT, size=0.6, alpha=0.3)
     # Filled polygons for each series
     + geom_polygon(aes(x="x", y="y", fill="series", group="series"), data=df, alpha=0.25)
+    # Ink-color outline behind each line, peeking out a touch on either side, so the
+    # lower-contrast lavender series still reads clearly against the page background
+    + geom_path(aes(x="x", y="y", group="series"), data=df, color=INK, size=2.8, alpha=0.5)
     # Lines connecting points, in category order (geom_path, not geom_line)
     + geom_path(aes(x="x", y="y", color="series", group="series"), data=df, size=2)
-    # Points at each vertex (exclude the closing point to avoid double dot)
-    + geom_point(aes(x="x", y="y", color="series"), data=df[df["order"] < n], size=6)
+    # Points at each vertex (exclude the closing point to avoid double dot) - shape 21
+    # gives a filled marker with an ink-color border stroke for the same contrast boost
+    + geom_point(aes(x="x", y="y", fill="series"), data=df[df["order"] < n], shape=21, color=INK, size=6, stroke=1.2)
     # Imprint palette - brand green first, lavender second
     + scale_fill_manual(values=IMPRINT_PALETTE)
     + scale_color_manual(values=IMPRINT_PALETTE)
@@ -146,7 +153,7 @@ plot = (
     + ggsize(600, 600)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_title=element_text(size=title_fontsize, color=INK),
         legend_title=element_text(size=12, color=INK),
         legend_text=element_text(size=10, color=INK_SOFT),
@@ -157,6 +164,7 @@ plot = (
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid=element_blank(),
+        panel_border=element_blank(),
     )
 )
 
