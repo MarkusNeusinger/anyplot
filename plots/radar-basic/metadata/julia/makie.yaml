@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: radar-basic
 created: '2026-07-24T16:17:13Z'
-updated: '2026-07-24T16:22:14Z'
+updated: '2026-07-24T20:34:14Z'
 generated_by: claude-sonnet
 workflow_run: 30108172451
 issue: 744
@@ -12,52 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - 'Correct Imprint palette: Player A uses #009E73 (brand green, first series), Player
-    B uses #C475FD (palette position 2); data colors are identical between light and
-    dark renders, only chrome tokens flip'
-  - Fully custom-built radar chart from Makie primitives — concentric gridline polygons
-    at 20/40/60/80/100, radial spokes, hidden default decorations/spines, and outer-edge
-    category labels are all cleanly implemented since Makie has no native radar recipe
-  - 'Realistic, neutral data: two soccer players with genuinely contrasting skill
-    profiles (Player A leads Speed/Shooting, Player B leads Passing/Defense/Stamina/Vision)
-    creates a real comparison rather than near-identical polygons'
-  - 'Spec requirements met precisely: filled polygons with alpha=0.25, closed back
-    to the first point, gridlines at the requested 20/40/60/80/100 intervals, distinct
-    colors with a legend'
-  - All font sizes explicitly set (titlesize=20, category labels=15, gridline labels=11,
-    legend labelsize=14) with a well-proportioned square canvas layout
+  - 'Correct Imprint palette compliance in both themes: Player A is brand green #009E73,
+    Player B is lavender #C475FD (position 2), and page backgrounds match #FAF8F1
+    (light) / #1A1A17 (dark) exactly with theme-correct text/grid chrome.'
+  - Clean, idiomatic Makie construction of a radar chart from primitives (poly!, scatter!,
+    lines!, text!) with DataAspect() for correct proportions and hidedecorations!/hidespines!
+    for a minimal, publication-style frame — Makie has no native radar recipe, so
+    this manual construction is the right approach.
+  - Realistic soccer-player dataset showing genuine trade-offs across all six axes
+    (Player A leads Speed/Shooting/Vision, Player B leads Passing/Defense/Stamina)
+    rather than one player dominating everywhere, satisfying DQ-01 feature coverage.
+  - Polygons are correctly closed back to the first point and filled with alpha=0.25
+    exactly as the spec's Notes section requests, keeping the overlap region between
+    the two players legible.
   weaknesses:
-  - Gridline value labels (20/40/60/80/100) are set at fontsize=11, the smallest text
-    on the chart — at a ~400px mobile thumbnail this will be the first thing to become
-    illegible; bump to ~13-14pt or add a subtle bold weight so the scale reference
-    survives downscaling.
-  - 'Design Excellence is solid but not yet publication-tier: consider adding a small
-    data-story cue (e.g. a subtle annotation or emphasis on the axis where the gap
-    between Player A and Player B is largest) to give the chart a clearer focal point
-    rather than two evenly-weighted polygons.'
-  - Library Mastery is generic — poly!/lines!/text! polar math could be replicated
-    in matplotlib with little change; lean into a Makie-distinctive touch (e.g. `band!`
-    for a shaded confidence ring, or `Legend` layout composition) to differentiate
-    the implementation.
-  - There is a noticeably large empty band between the bottom vertex of the hexagon
-    and the legend/canvas edge relative to the tighter margin at the top — tightening
-    that vertical whitespace (or nudging the axis up slightly) would improve canvas
-    balance.
+  - 'The bracket!() ''largest gap'' focal-point annotation on the Defense axis does
+    not render in either plot-light.png or plot-dark.png. Verified by cropping the
+    full canvas width around the Defense axis (where focus_idx=4 points, gap=23) at
+    high zoom: no curly bracket, no ''largest gap · 23 pts'' text, nothing beyond
+    the two data-point dots and connecting lines. The code computes focus_idx/focus_lo/focus_hi
+    correctly and calls bracket!(ax, ...) with a text label, but the call produces
+    no visible output — likely a CairoMakie bracket! keyword/orientation mismatch
+    for this Makie version. Debug the bracket! call directly (render a standalone
+    test figure to confirm it draws), or replace it with a manually drawn lines!()+text!()
+    annotation next to the Defense spoke, which is guaranteed to render.'
+  - Because the annotation silently fails, the implementation currently delivers no
+    real visual hierarchy or focal point (DE-03) despite the code's intent — the two
+    overlapping filled polygons alone don't guide the viewer to the most interesting
+    comparison (the 23-point Defense gap between the players).
+  - The mandated title is short (41 chars, no descriptive prefix) and occupies only
+    ~28% of canvas width, well under the typical 50-70% guidance for non-mandated-length
+    titles — consider adding an optional descriptive prefix (e.g. 'Player Comparison
+    · radar-basic · julia · makie · anyplot.ai') to better balance the generous canvas
+    whitespace at the top.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "radar-basic · julia · makie · anyplot.ai" is bold dark text, fully visible at top with no clipping. Six category labels (Speed, Passing, Shooting, Defense, Stamina, Vision) sit at the outer edge of the hexagonal grid in dark ink, clearly readable. Small gridline value labels (20, 40, 60, 80, 100) run up the top spoke in a soft gray. Concentric hexagonal gridlines and radial spokes are subtle light-gray lines, visible but not competing with the data.
-      Data: Two overlapping filled hexagonal polygons — Player A in brand green (#009E73) with a solid stroke and circular markers at each vertex, Player B in lavender/purple (#C475FD) similarly stroked and marked. The overlap region blends into a muted blue-gray, and both series remain individually distinguishable. Legend at bottom-left shows "Player A" (green swatch) and "Player B" (lavender swatch) in dark text, no frame.
-      Legibility verdict: PASS — all title, category labels, gridline numbers, and legend text are clearly readable against the light background.
+      Background: Warm off-white (#FAF8F1), matches spec — not pure white.
+      Chrome: Title "radar-basic · julia · makie · anyplot.ai" in bold dark ink, clearly readable, centered top. Six category labels (Speed, Passing, Shooting, Defense, Stamina, Vision) at the outer edge of the hexagonal grid, dark ink, all legible with correct halign per position. Gridline value labels (20/40/60/80/100) along the top (Speed) spoke in bold soft-ink, small but readable. Legend ("Player A" / "Player B") bottom-left, frameless, readable swatches.
+      Data: Player A polygon outlined/filled in brand green #009E73 (alpha 0.25 fill, strokewidth 3, markersize 14 dots); Player B in lavender #C475FD, same styling. Both polygons correctly closed back to their first vertex. Concentric gridline hexagons at 20/40/60/80/100 and radial spokes in subtle low-alpha ink-gray, clearly visible but not competing with data.
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light issues.
+      Note: the code's bracket!() "largest gap" annotation near the Defense axis does NOT appear anywhere in this render (confirmed via full-width pixel crop around the Defense spoke) — see weaknesses.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, category labels, and legend text have flipped to light/off-white ink, fully legible against the dark surface. Gridline value labels are a lighter soft gray, still readable. Gridlines and spokes remain subtle, low-alpha light lines against the dark background.
-      Data: Player A polygon is the same #009E73 green, Player B polygon is the same #C475FD lavender — confirmed identical to the light render; only the chrome (background, text, grid) has flipped. The overlap region reads as a muted violet-gray, still distinguishable from each pure series color.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data elements read clearly against the near-black background.
+      Background: Warm near-black (#1A1A17), matches spec — not pure black.
+      Chrome: Title and category labels rendered in light ink (#F0EFE8), clearly legible against the dark background — no dark-on-dark failures observed. Gridline value labels in soft light-gray ink, readable. Legend readable with light text.
+      Data: Player A green #009E73 and Player B lavender #C475FD — identical hex values to the light render, confirming data colors are theme-invariant; only chrome (background, text, grid) flips as required. Fill alpha and stroke widths match the light render.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures.
+      Note: same as light render, the bracket!() annotation is absent from this render too.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -68,78 +72,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=20, category labels=15, legend=14,
-          gridline numbers=11); well-proportioned in both themes. Gridline value labels
-          at 11pt are the smallest element and risk becoming illegible at ~400px mobile
-          thumbnail scale.
+        comment: 'All font sizes explicitly set (titlesize=20, fontsize=13-15); readable
+          in both themes at full size. Small deduction: gridline value labels and
+          category labels at 13-15pt native will read small once scaled to ~400px
+          mobile.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text, data, or the legend in either render.
+        comment: No overlap between text, data, legend, or grid in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (size=14) and stroke width (3) are well-adapted to the sparse
-          6-point, 2-series dataset.
+        comment: markersize=14 and linewidth=3 are well-suited for a sparse 6-axis
+          / 2-series radar; both polygons clearly visible and distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender is CVD-safe; overlap region remains visually distinguishable
-          via alpha blending, not reliant on hue alone.
+        comment: Green vs lavender is CVD-safe per the Imprint palette; only 2 series
+          so color alone is sufficient per style-guide guidance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Hexagon plus category labels span roughly 70-75% of canvas width
-          and height; no cut-off content. Minor imbalance: more empty space below
-          the chart than above.'
+        comment: Canvas is exactly 2400x2400 (square, matches DataAspect radar use
+          case); plot fills a well-balanced portion of the canvas; legend sits near
+          the plot, not isolated.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Category labels (Speed, Passing, Shooting, Defense, Stamina, Vision)
-          are descriptive axis identifiers.
+        comment: Six category axis labels are descriptive; the 20-100 gridline scale
+          is self-explanatory for a 0-100 rating radar per the spec.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, second series is Imprint palette position
-          2 (#C475FD). Backgrounds are theme-correct (#FAF8F1 / #1A1A17); chrome flips
-          correctly, data colors identical across themes.'
+        comment: 'First series #009E73, second #C475FD (Imprint position 2); backgrounds
+          #FAF8F1/#1A1A17 exactly; identical data colors across themes; chrome fully
+          theme-correct in both renders.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Above a well-configured default — fully custom-drawn radar geometry,
-          restrained grid, and correct brand palette — but not yet publication-tier
-          polish.
+        passed: true
+        comment: Thoughtful custom radar construction, clear typographic hierarchy
+          (bold title, bold value labels), Imprint palette — clearly above library
+          defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        comment: All default axis decorations/spines removed, custom subtle concentric
-          grid, frameless legend, generous whitespace overall; slight vertical imbalance
-          keeps this from a perfect score.
+        passed: true
+        comment: Spines and default decorations fully hidden, grid at low alpha, generous
+          whitespace around the hexagon, frameless legend.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        comment: Two contrasting player profiles with color-blended overlap create
-          some visual hierarchy, but there's no explicit focal point or annotation
-          calling out the key trade-off.
+        passed: false
+        comment: The code attempts a focal-point 'largest gap' bracket annotation
+          on the Defense axis, but it does not render in either theme (verified by
+          pixel inspection) — so no actual visual hierarchy is delivered; the viewer
+          must find the story themselves from the two overlapping polygons.
     spec_compliance:
       score: 15
       max: 15
@@ -148,25 +155,29 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct radar/spider chart with polygons, spokes, and concentric
-          gridlines.
+        passed: true
+        comment: Correct radar/spider chart with filled polygons on concentric axes.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Alpha-transparent fills (~0.25), gridlines at 20/40/60/80/100, outer-edge
-          labels, distinct colors + legend, closed polygons — all present.
+        passed: true
+        comment: Filled polygons with alpha~0.25, gridlines at 20/40/60/80/100, outer-edge
+          axis labels, distinct colors + legend, closed polygons — all present per
+          spec Notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Six categories correctly mapped to six evenly-spaced axes; values
-          correctly plotted on the 0-100 scale.
+        passed: true
+        comment: All 6 categories and both series correctly mapped to their respective
+          spokes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches 'radar-basic · julia · makie · anyplot.ai' exactly;
+        passed: true
+        comment: Title exactly matches 'radar-basic · julia · makie · anyplot.ai';
           legend labels 'Player A'/'Player B' match the data series.
     data_quality:
       score: 15
@@ -176,68 +187,85 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: Two series with genuinely contrasting strengths across all 6 axes
-          — no flat/identical polygons.
+        passed: true
+        comment: Both players trade leads across the six attributes (no single player
+          dominates every axis), showing genuine multivariate comparison.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Soccer player attribute comparison is a real-world, neutral scenario.
+        passed: true
+        comment: Soccer player performance comparison — real-world plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Values (65-90 range) are plausible skill ratings on a 0-100 scale
-          for professional athletes.
+        passed: true
+        comment: 0-100 rating scale with values in the 65-90 range is realistic for
+          professional-player attribute ratings.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
-        comment: Imports -> data -> plot -> save, no functions/classes.
+        passed: true
+        comment: Flat imports → data → plot → save structure, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Data is hardcoded/deterministic, no randomness to seed.
+        passed: true
+        comment: Data is hardcoded (deterministic), no randomness to seed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only CairoMakie and Colors, both used.
+        passed: true
+        comment: CairoMakie and Colors both actively used (colorant macro, plotting
+          primitives).
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        comment: Appropriate complexity for a from-scratch radar chart; no fake functionality.
+        passed: true
+        comment: Overall clean, but the bracket!() annotation block is dead weight
+          in the shipped output — it computes and calls but produces no visible effect,
+          so it isn't earning its place in the code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-$(THEME).png with px_per_unit=2, current CairoMakie API.
+        passed: true
+        comment: Saves 'plot-$(THEME).png' via save(..., px_per_unit=2) exactly per
+          convention.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correct use of Axis/DataAspect/poly!/scatter!/lines!/text!/axislegend
-          — the expected idiomatic approach given Makie has no native radar recipe.
+        passed: true
+        comment: Good use of poly!/scatter!/lines!/text!/axislegend for a chart type
+          Makie has no built-in recipe for; one point off for the non-functional bracket!
+          call.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        comment: Generic manual polar-to-cartesian construction; no Makie-distinctive
-          feature (e.g. band!, Legend composition) leveraged.
-  verdict: REJECTED
+        passed: false
+        comment: Attempted a distinctive Makie-specific feature (bracket! annotation)
+          that would have earned real credit, but it does not render — DataAspect()/hidespines!
+          usage alone is fairly generic.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - polar-projection
   - annotations
   patterns:
   - data-generation
@@ -246,4 +274,3 @@ impl_tags:
   styling:
   - minimal-chrome
   - alpha-blending
-  - grid-styling
