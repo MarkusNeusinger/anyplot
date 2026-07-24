@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 polar-basic: Basic Polar Chart
-Library: plotnine 0.15.7 | Python 3.13.13
-Quality: pending | Updated: 2026-07-24
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 82/100 | Updated: 2026-07-24
 """
 
 import math
