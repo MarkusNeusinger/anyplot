@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: marimekko-basic
 created: '2026-07-24T14:44:49Z'
-updated: '2026-07-24T14:49:19Z'
+updated: '2026-07-24T15:03:27Z'
 generated_by: claude-sonnet
 workflow_run: 30101901790
 issue: 1002
@@ -12,55 +12,65 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - 'Technically correct manual Marimekko built from poly! rectangles since Makie
-    has no native geom: bar widths proportional to column totals, segment heights
-    proportional to within-column share, matching the spec''s area-encoding requirement
-    exactly.'
-  - 'Strong information density: per-segment $ value labels plus column-total labels
-    above each bar reinforce both dimensions (share and total spend) simultaneously;
-    label_threshold intelligently suppresses labels on segments too small to hold
-    text, avoiding overlap/clutter (e.g. Audio column shows no cramped labels).'
-  - 'Theme-adaptive chrome is correctly implemented in both renders: FAF8F1/1A1A17
-    backgrounds, INK/INK_SOFT text tokens, identical data colors between light and
-    dark, and correct per-segment text contrast (white text on saturated green/blue
-    fills, dark text on the lighter lavender fill).'
-  - Clean Imprint palette usage in canonical order (green, lavender, blue) with a
-    clear, unobtrusive legend; thin PAGE_BG-colored strokes between segments give
-    the chart a polished, Highcharts-style separated-segment look.
-  - Realistic, neutral data (digital ad spend by channel/objective) at plausible dollar
-    scales with no missing-feature gaps versus the specification.
+  - 'Correct marimekko/mekko construction: bar widths proportional to column totals
+    and segment heights proportional to within-column share, with a small inter-bar
+    gap for separation'
+  - All font sizes explicitly set (title 29, axis labels 14, tick labels 12-13, data
+    labels 15/13) and legible at full resolution in both themes
+  - 'Smart label-density handling: a 4% grand-total threshold suppresses in-segment
+    value labels on segments too small to hold text (e.g. the whole Audio bar), avoiding
+    clutter/overlap without any manual per-case tuning'
+  - Descriptive axis labels that explain the mekko encoding directly ('Channel (bar
+    width ∝ total ad spend)', 'Share of Channel Spend') instead of generic X/Y
+  - Column-total annotations above each bar reinforce the 'width = total spend' story
+    and add a real, working layer of data storytelling
+  - 'Imprint palette correctly applied: first series is #009E73, positions 2-3 follow
+    canonical order, identical data colors across light/dark, theme-correct chrome
+    (background, spines, grid, legend) in both renders'
+  - 'Per-fill text contrast handled well: white text on the darker green/blue fills,
+    dark text on the lighter lavender fill'
+  - Clean KISS script structure with no functions/classes, correct save API (plot-$(THEME).png,
+    px_per_unit=2)
   weaknesses:
-  - Title occupies only ~30% of plot width at titlesize=20, well under the 50-70%
-    guideline for a title this length — increase titlesize to roughly 28-30 so it
-    reads clearly at both full size and mobile thumbnail scale.
-  - '`using Random` / `Random.seed!(42)` is imported but never exercised — the ad-spend
-    `values` matrix is a hardcoded literal, not generated via any `rand`/`randn` call,
-    so the seed is vestigial; either generate the data with actual randomness or drop
-    the unused import.'
-  - Data storytelling is competent but flat — every column gets identical treatment
-    with no single focal point or emphasis (e.g. highlighting the largest channel/objective
-    combination) to guide the viewer's eye.
-  - Library mastery is solid but conservative — the implementation covers the required
-    geometry via poly!/text!/Legend without showcasing any Makie-distinctive capability
-    beyond the basics needed to fake the missing native chart type.
+  - 'The ''focal segment'' emphasis (largest single cell, Search/Performance = $260K)
+    does not render at all: pixel inspection of both boundaries of that segment in
+    both plot-light.png and plot-dark.png shows the plain default stroke (PAGE_BG
+    color, ~3px width) rather than the intended bolder INK stroke (strokewidth=5)
+    — is_focal styling is dead in the final image, so the ''one clear focal point''
+    the code comments describe never reaches the viewer.'
+  - The '★ ' star prefix on the focal label is also missing from the render — the
+    segment shows plain '$260K' instead of '★ $260K' in both themes, suggesting CairoMakie's
+    default font drops the U+2605 glyph silently; avoid relying on that character
+    (try a plain '*', a triangle marker, or a separate annotation instead) and verify
+    a stroke-width difference actually shows up in the saved PNG before relying on
+    it for hierarchy.
+  - Because the focal treatment is invisible, the plot's visual hierarchy beyond the
+    inherent width/height encoding and the total-spend annotations is weaker than
+    intended — DE-03 storytelling credit is capped accordingly.
+  - Title sits noticeably smaller than the ~50-70% width guideline with a lot of unused
+    whitespace above/below the legend block; not a defect, but there is room to grow
+    the title or rebalance the legend's vertical position for a slightly more polished
+    composition.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "marimekko-basic · julia · makie · anyplot.ai" in bold dark ink, centered top; xlabel "Channel (bar width ∝ total ad spend)" and ylabel "Share of Channel Spend" in dark ink; tick labels (channel names, 0-100% y-ticks) in a softer dark gray. All chrome elements are clearly legible against the light background. Left/bottom spines visible in soft gray, top/right spines removed, subtle horizontal gridlines.
-      Data: Five variable-width bars (Social, Search, Video, Display, Audio) each stacked with three colored segments — green (#009E73, Brand Awareness), lavender (#C475FD, Performance), blue (#4467A3, Retention) — matching canonical Imprint palette order. White gaps separate segments. Per-segment $ labels use white text on green/blue fills and dark text on the lighter lavender fill, all clearly readable. Column-total $ labels sit above each bar in soft gray. Legend at right with color swatches and matching labels.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 (verified pixel value 250,248,241) — not pure white.
+      Chrome: Bold dark title "marimekko-basic · julia · makie · anyplot.ai" centered at top, fully visible with comfortable margin, no clipping. Y-axis label "Share of Channel Spend" (rotated) and X-axis label "Channel (bar width ∝ total ad spend)" both dark ink, clearly readable. Tick labels (0%-100% on Y, Social/Search/Video/Display/Audio on X) in a softer ink-gray, readable. Legend "Objective" with 3 swatches (Brand Awareness/Performance/Retention) sits to the right of the plot, unframed, fully inside the canvas with a balanced right margin.
+      Data: 5 variable-width stacked bars (widths ∝ column totals $450K/$360K/$310K/$140K/$50K). Segment colors bottom-to-top: brand green (#009E73, Brand Awareness), lavender (#C475FD, Performance), blue (#4467A3, Retention) — canonical Imprint order, first series is the brand green. In-segment dollar labels use white text on green/blue and dark text on lavender, both legible. Column-total labels sit above each bar. Segments below a size threshold (the entire Audio bar) correctly omit in-segment labels to avoid clutter.
+      Legibility verdict: PASS — all title/label/tick/legend/data text is readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink (near-white for title/labels, softer light gray for ticks) — clearly visible against the dark background. Spines flip to a lighter soft gray; gridlines remain subtle. No dark-on-dark text found anywhere.
-      Data: Identical green/lavender/blue segment colors and layout as the light render — only chrome (background, text, spines, gridlines, segment-gap stroke color) flips. Per-segment text contrast (white-on-fill / dark-on-fill) is preserved and still legible on the dark canvas; the dark-text label on the lavender segment reads clearly since the lavender fill itself doesn't change with theme.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 (verified pixel value 26,26,23) — not pure black.
+      Chrome: Title, axis labels, and legend flip to light ink (#F0EFE8-family) and remain fully readable; no dark-on-dark failures found in title, ticks, axis labels, or legend text. Grid, spines, and legend all read correctly on the dark surface.
+      Data: Same brand-green/lavender/blue sequence, pixel-identical to the light render (confirmed by direct pixel sampling) — only the chrome flipped as required. In-segment text contrast (white-on-fill / dark-on-fill) still works correctly against both fills.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures in either render.
+
+    Note: Pixel-level inspection of the Search/Performance segment (the intended "largest segment" focal point, $260K) shows its border stroke is identical in color and width to every other (non-focal) segment boundary in BOTH renders, and its label reads "$260K" rather than the code's intended "★ $260K" — the focal-emphasis code path does not visibly execute despite being logically correct in the source (is_focal correctly resolves to this cell). Flagged as a weakness, not a legibility failure, since it doesn't harm readability.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,69 +78,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All labels/ticks/legend readable in both themes; title is undersized
-          relative to canvas which risks mobile-scale legibility
+        comment: All font sizes explicitly set, readable in both themes; title comfortably
+          sized though below the 50-70% width band, no violation
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Label-suppression threshold prevents any text/segment collisions
+        comment: No text/label collisions; label-density threshold avoids clutter
+          on narrow bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Segments and labels sized appropriately for data magnitude, including
-          graceful suppression on tiny segments
+        comment: Segment sizing and labels well adapted to each bar's scale
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue combination has good contrast, no red-green as
-          sole signal
+        comment: Good contrast text-on-fill choices, CVD-safe Imprint palette
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: No clipping/overflow, but title occupies only ~30% of plot width
-          vs 50-70% guideline
+        comment: Good canvas utilization, balanced margins, legend adjacent to plot,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units ($, %) and explanatory subtext
+        comment: Descriptive axis labels that explain the width/height encoding
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, canonical Imprint order, correct theme-adaptive
-          backgrounds in both renders'
+        comment: 'First series #009E73, canonical order, theme-correct chrome in both
+          renders, identical data colors'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        comment: Polished separated-segment look via PAGE_BG strokes, professional
-          legend and typography
+        passed: true
+        comment: Thoughtful palette and per-fill text contrast, above default, but
+          intended focal-highlight technique fails to render
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        comment: Spines minimized, subtle grid, generous whitespace, frameless legend
+        passed: true
+        comment: Spines removed, subtle y-grid only, legend unframed, clean segment
+          separators
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        comment: Column totals reinforce the width=total concept but no single focal
-          point or emphasis is created
+        passed: false
+        comment: Column-total annotations add some narrative, but the deliberate focal-point
+          emphasis (bolder stroke + star) does not actually render in either theme,
+          so no extra visual hierarchy beyond the base encoding is delivered
     spec_compliance:
       score: 15
       max: 15
@@ -139,42 +153,50 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct Marimekko with both width and height area-encoding
+        passed: true
+        comment: Correct marimekko chart with both width and height encoding
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Proportional widths, proportional heights, legend, value labels all
-          present
+        passed: true
+        comment: Widths ∝ totals, heights ∝ share, legend, value labels on larger
+          segments, centered category ticks — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: 5 x-categories, 3 y-categories, all data represented
+        passed: true
+        comment: X=channel, Y=share, correctly mapped and visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches mandated pattern exactly; legend labels match y_categories
+        passed: true
+        comment: Title format exact match, legend labels match data categories
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        comment: All Marimekko-defining features present
+        passed: true
+        comment: Good variety of channel/objective mixes (performance-heavy Search
+          vs brand-heavy Video/Display/Audio)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Plausible, neutral digital ad-spend scenario
+        passed: true
+        comment: Neutral, realistic digital ad-spend scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Sensible $K budget figures across channels
+        passed: true
+        comment: Plausible ad-spend figures and channel/objective proportions
     code_quality:
       score: 9
       max: 10
@@ -183,57 +205,65 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: No functions/classes, flat top-level script
+        passed: true
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Deterministic hardcoded data; seed present
+        passed: true
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
-        score: 1
-        max: 2
-        comment: using Random is imported and seeded but never used since data is
-          a hardcoded literal matrix
-      - id: CQ-04
-        name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity for the chart type, no fake UI
+        passed: true
+        comment: Only CairoMakie and Colors, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Otherwise clean, but the is_focal branch is dead code visually —
+          doesn't render its intended effect
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-$(THEME).png via current CairoMakie API
+        passed: true
+        comment: Correct save call and file naming
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correct idiomatic approach to building a chart type Makie has no
-          native geom for (poly!, text!, Legend)
+        passed: true
+        comment: Manual poly!/text! composition is the correct idiomatic approach
+          since Makie has no native mekko recipe; good use of Axis kwargs and tuple-based
+          custom ticks
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        comment: Covers only what's needed to construct the chart; no distinctive
-          Makie-specific flourishes beyond that
+        passed: true
+        comment: GridPosition-based Legend placement and manual Rect2f/PolyElement
+          composition are reasonably Makie-specific
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - annotations
+  - manual-ticks
   - custom-legend
   patterns:
   - matrix-construction
   - iteration-over-groups
+  - data-generation
   dataprep:
   - cumulative-sum
   styling:
   - edge-highlighting
-  - grid-styling
   - publication-ready
