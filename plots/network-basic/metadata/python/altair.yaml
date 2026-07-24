@@ -2,134 +2,156 @@ library: altair
 language: python
 specification_id: network-basic
 created: '2025-12-23T15:35:51Z'
-updated: '2026-04-27T02:04:37Z'
+updated: '2026-07-24T04:20:59Z'
 generated_by: claude-sonnet
-workflow_run: 24971607523
+workflow_run: 30065545152
 issue: 989
-python_version: 3.14.4
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/altair/plot-dark.html
-quality_score: 65
+quality_score: 87
 review:
   strengths:
-  - Force-directed spring layout implemented from scratch in pure numpy — deterministic
-    and reproducible
-  - Altair detail='edge_id:N' pattern for drawing network edges is idiomatic and elegant
-  - Degree-based node sizing using alt.Size with explicit range adds meaningful visual
-    encoding
-  - Social network data with 4 named communities and cross-group bridges is realistic
-    and demonstrative
-  - Clean frameless layout (axis=None) is appropriate for network graphs
+  - 'Correctly resolves both weaknesses from Attempt 1 that were structural: the leftover
+    default view-stroke rectangle around the whole scene is gone (configure_view(stroke=None)),
+    and the diagonal-band layout is fixed by rotating positions onto the principal
+    axis, giving a much better fill of the wide landscape canvas'
+  - Custom force-directed (spring) layout implemented from scratch with repulsive/attractive
+    forces and cooling, producing natural, legible community clusters
+  - 'Imprint categorical palette applied correctly and in canonical order to the four
+    communities (#009E73, #C475FD, #4467A3, #BD8233), with identical data colors across
+    light and dark renders'
+  - Node size encodes degree, adding meaningful visual hierarchy (more-connected people
+    read as more central)
+  - Cross-group bridge edges are explicitly included, satisfying the spec's structural
+    intent of showing both intra- and inter-community connections
+  - New pixel-space label anti-collision pass successfully eliminates the label-vs-label
+    crowding flagged in Attempt 1 (Jack/Leo, Noah/Olivia, Quinn/Ryan/Sara all now
+    have clear separation from each other)
+  - Theme-adaptive PAGE_BG stroke halo around node markers keeps nodes legible where
+    edges/labels converge, correct in both themes
+  - Clean, reproducible, KISS-structured code (seeded RNG, no functions/classes) with
+    correct canvas padding and file-save logic
   weaknesses:
-  - No ANYPLOT_THEME reading — code does not import os or check os.getenv('ANYPLOT_THEME').
-    Both renders must adapt to the theme environment variable.
-  - Wrong output filenames — saves plot.png/plot.html instead of plot-light.png/plot-dark.png/plot-light.html/plot-dark.html.
-    Pipeline cannot collect output.
-  - 'Wrong palette — group_colors uses Python-branded colors (#306998, #FFD43B, #4CAF50,
-    #FF7043), not Okabe-Ito. Must use [''#009E73'', ''#D55E00'', ''#0072B2'', ''#CC79A7'']
-    for 4 groups.'
-  - Hardcoded dark label color — mark_text(color='#222222') is near-black and renders
-    dark-on-dark in dark theme. Must use INK_SOFT token.
-  - No theme-adaptive chrome — needs PAGE_BG, INK, INK_SOFT tokens applied via .properties(background=PAGE_BG),
-    configure_title(color=INK), configure_legend(), and adaptive node stroke/edge
-    color.
-  - Wrong title domain — 'pyplots.ai' should be 'anyplot.ai'; also has extra 'Social
-    Network ·' prefix.
-  - Label font size 12px — too small for 4800x2700 canvas; node labels should be at
-    least 16px.
+  - 'The label anti-collision pass only repels labels from OTHER labels, not from
+    node markers or edge lines, so it traded one overlap problem for a smaller one:
+    the ''Leo'' label''s ''o'' glyph visibly overlaps/intersects its own node circle
+    in both light and dark renders (confirmed by pixel crop) — increase base_px_offset
+    or add a repulsion term against nearby node centers, not just other labels.'
+  - The 'Jack' label has an edge line (the Jack-Paul cross-group edge) passing directly
+    through the letters in both renders — add a light halo/background behind mark_text
+    (e.g. a second white/PAGE_BG-colored text layer slightly offset, or increase local
+    label displacement) so structural edges never cross label glyphs.
+  - Spec explicitly requires 'Labels should be legible without overlapping other elements'
+    — the two overlaps above are a direct, if minor, violation of that requirement,
+    not just a cosmetic nit.
+  - Legend/frame styling remains fairly plain (default box border, default swatch
+    layout) — small refinements here (e.g. subtler border, tighter symbol/text spacing)
+    would lift Design Excellence further.
+  - Edge weight (mentioned as an optional data attribute in the spec) is not modeled
+    or encoded anywhere (e.g. as line width/opacity) — acceptable since it's optional,
+    but adding it would strengthen Data Storytelling.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct theme surface.
-      Chrome: Title "network-basic · altair · anyplot.ai" readable in dark text. No axis labels (appropriate for network graph). Legend "Communities" visible top-right with group labels in dark text.
-      Data: 20 nodes in diagonal layout. Group A = teal/green, Group B = orange, Group C = blue, Group D = pink/purple. Looks Okabe-Ito-like. Nodes sized by degree. Edges as thin gray lines at opacity ~0.4. Some label crowding in center (Leo, Jack, Mia, Noah cluster).
-      Legibility verdict: PASS (for rendered image) — BUT NOTE: images appear to be from a previous version of the code. Current code has #222222 hardcoded labels and Python-branded colors that would fail.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "network-basic · python · altair · anyplot.ai" centered at top, ~65% of plot width, clearly readable. No leftover view-stroke frame around the scene (fixed vs. Attempt 1). A "Communities" legend box sits at the top-right with four swatches (Group A-D) in dark text on a light elevated background, fully readable, border tight but not clipped. Node name labels (Alice, Bob, ... Tom) are bold, dark ink, large, and readable against the cream background throughout, now well-separated from each other (the Attempt-1 three-way crowding in Jack/Leo, Noah/Olivia, Quinn/Ryan/Sara is resolved).
+      Data: 20 circular nodes colored by community — Group A green (#009E73), Group B lavender (#C475FD), Group C blue (#4467A3), Group D ochre (#BD8233) — connected by muted gray-brown edge lines (opacity 0.45). Node size varies with degree. Cross-group bridge edges are visible linking the four clusters into one connected network, now spread fairly evenly across the wide canvas after the principal-axis rotation fix.
+      Legibility verdict: PASS, with two localized defects — pixel-level inspection (2x crop) shows the "Leo" label's "o" glyph visibly overlapping its own node marker, and the "Jack" label has the Jack-Paul edge line running directly through the letters. Every other label is cleanly separated from nodes, edges, and other labels; both defects remain individually readable, not obscured.
 
     Dark render (plot-dark.png):
-      Background: Dark near-black consistent with #1A1A17 — correct dark surface.
-      Chrome: Title readable in light text. Legend "Communities" visible with light-colored text. Node labels appear as light text against dark background.
-      Data: Colors identical to light render (correct — only chrome should flip). Network layout identical.
-      Legibility verdict: PASS (for rendered image) — BUT NOTE: Current code uses color="#222222" for node labels which would be dark-on-dark (#222222 on #1A1A17) if code were run. Images are from prior run, not current code.
-
-    PIPELINE DISCREPANCY: Current altair.py saves plot.png (not plot-light.png/plot-dark.png) and uses non-Okabe-Ito colors with wrong title domain. The images in plot_images/ were generated by a previous version of the code that had correct palette and theme handling.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, legend text, and node labels all render in light ink (near-white), clearly visible against the dark background — no dark-on-dark failures observed anywhere. No leftover frame border. Legend box uses a dark elevated fill with light text/border, fully readable.
+      Data: Data colors are identical to the light render — Group A green, Group B lavender, Group C blue, Group D ochre — confirming only chrome flips between themes, not data hue. Edge lines remain muted and legible against the dark background.
+      Legibility verdict: PASS, with the same two localized defects as the light render — "Leo" label overlaps its own node circle, and the Jack-Paul edge line cuts through the "Jack" label. Both are pixel-identical placements to the light render (as expected, since layout is computed once and only chrome tokens differ), and neither rises to a dark-on-dark or unreadable-text failure.
   criteria_checklist:
     visual_quality:
-      score: 13
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 7
         max: 8
-        passed: false
-        comment: Hardcoded color='#222222' for node labels = dark-on-dark in dark
-          theme. Font size 12px too small for 4800x2700 canvas.
+        passed: true
+        comment: Explicit font sizes (fontSize=16 labels/title, 10 legend); readable
+          in both themes; the 'Leo' label's overlap with its own node marker is the
+          only legibility ding
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: Some label crowding in center cluster (Leo, Jack, Mia, Noah area).
+        comment: Label-vs-label crowding from Attempt 1 is resolved, but 'Leo' overlaps
+          its node marker and 'Jack' has an edge line crossing through its glyphs
+          (confirmed via pixel crop, both themes)
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Degree-based node sizing works well; edges visible at opacity 0.4.
+        comment: Node markers sized 150-450 by degree with a theme-adaptive halo stroke
+          keep them visible over edges/labels; slightly small as the primary focal
+          element for a 20-node graph
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Non-Okabe-Ito palette not certified CVD-safe; #FFD43B yellow has
-          low contrast on light bg.'
+        comment: Four Imprint hues (green/purple/blue/ochre) are CVD-distinct; no
+          red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Network in diagonal band using ~50% of canvas; corners underutilized.
+        comment: Principal-axis rotation fixes the Attempt-1 diagonal-band whitespace
+          problem; network now fills the wide canvas evenly, nothing cut off, canvas
+          dimension gate passed
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Title present but wrong domain (pyplots.ai) and extra prefix. No
-          axes needed for network graph.
+        comment: Axis intentionally omitted (correct for a node-link diagram); title
+          and 'Communities' legend title are descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: '#306998 Python Blue and #FFD43B Python Yellow used instead of Okabe-Ito.
-          No ANYPLOT_THEME reading, no PAGE_BG/INK chrome tokens.'
+        passed: true
+        comment: 'Canonical Imprint order for the 4 communities, identical across
+          themes; backgrounds are #FAF8F1/#1A1A17; chrome is theme-correct in both
+          renders'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: Force-directed layout and degree sizing add depth. Intentional but
-          wrong palette.
+        comment: Correct Imprint palette, thoughtful node halo stroke, muted structural
+          edges, and a fixed frame-free scene go beyond a bare default
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: axis=None and edge opacity are clean choices. No theme-adaptive refinement.
+        comment: Attempt-1's leftover default view-stroke frame is removed (configure_view(stroke=None));
+          no grid, muted edges, generous whitespace read as intentional now
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Community structure and bridges visible. No explicit hub node emphasis.
+        comment: Degree-based node sizing and explicit cross-community bridge edges
+          create a visible hierarchy and a clear story of clustering and connectivity
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -137,54 +159,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct node-link network diagram with force-directed spring layout.
+        comment: Correct node-link network diagram
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Force-directed layout, degree sizing, community coloring, labels
-          all present. Label legibility partially compromised.
+        comment: Force-directed layout, degree sizing, and sparse legible connections
+          are all present, but the spec's explicit 'labels legible without overlapping
+          other elements' requirement is only partly met (Leo/Jack overlaps)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 20 nodes, 4 communities, 31 edges with cross-group bridges correctly
-          mapped.
+        comment: Spatial x/y layout positions are appropriate for a network graph;
+          all nodes and edges are shown
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title: ''Social Network · network-basic · altair · pyplots.ai''
-          — extra prefix and wrong domain. Legend Communities correct.'
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels ('Group
+          A'-'Group D') match the data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 4 communities with internal connections and cross-group bridges.
-          Degree variation. Could show more prominent hub node.
+        comment: Shows communities, intra-group density, inter-group bridges, and
+          degree variation — all key network-graph aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Named individuals in social friendship network. Realistic, neutral
-          scenario.
+        comment: A neutral, comprehensible friendship-network scenario with named
+          individuals
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 nodes and 31 edges appropriate for clear static network visualization.
+        comment: 20 nodes / 31 edges with degree 2-6 is a sensible, spec-aligned size
+          for a static network visualization
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -192,33 +216,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat code: data → layout → dataframes → chart → save.'
+        comment: Imports -> data/layout -> plot -> save, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported; all used.
+        comment: os, altair, numpy, pandas, PIL.Image all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Force-directed in plain numpy is clean. Altair layer composition
-          is elegant.
+        comment: Manual spring-layout and label anti-collision physics are justified
+          since Altair has no built-in graph layout; no fake functionality
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html.
-          No ANYPLOT_THEME reading.
+        passed: true
+        comment: Saves plot-{THEME}.png and .html correctly, current vl-convert API
     library_mastery:
       score: 7
       max: 10
@@ -228,25 +251,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of layer composition, detail encoding for edges, alt.Size
-          with range, encoding types throughout.
+        comment: Layered chart composition (edges + nodes + labels) with proper encoding
+          channels and Scale/Legend/Title config
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: detail='edge_id:N' for network edges is distinctively Altair. Layer
-          composition and tooltip encoding are library strengths.
-  verdict: REJECTED
+        comment: Uses detail+order encoding on a single mark_line to draw all edge
+          segments from one dataframe without a Python loop over edges — a distinctly
+          Altair, data-driven technique
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - hover-tooltips
-  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
+  - edge-highlighting
