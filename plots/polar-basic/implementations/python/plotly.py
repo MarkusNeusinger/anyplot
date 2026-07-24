@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-07-24
@@ -41,6 +41,13 @@ counts = np.zeros((16, 4))
 np.add.at(counts, (dir_idx, speed_bin_idx), 1)
 freq_pct = counts / n_obs * 100
 
+# Radial ticks: fold the "Frequency" axis label into the outermost tick text
+# instead of a separate rotated title, so it never overlaps the tick values.
+radial_max = int(np.ceil(freq_pct.sum(axis=1).max() / 5) * 5)
+radial_tickvals = list(range(0, radial_max + 5, 5))
+radial_ticktext = [f"{v}%" for v in radial_tickvals]
+radial_ticktext[-1] = f"Frequency {radial_ticktext[-1]}"
+
 # Plot
 fig = go.Figure()
 
@@ -68,14 +75,15 @@ fig.update_layout(
         "bgcolor": PAGE_BG,
         "radialaxis": {
             "visible": True,
-            "ticksuffix": "%",
+            "tickmode": "array",
+            "tickvals": radial_tickvals,
+            "ticktext": radial_ticktext,
             "tickfont": {"size": 10, "color": INK_SOFT},
-            "title": {"text": "Frequency", "font": {"size": 12, "color": INK}},
             "gridcolor": GRID,
-            "gridwidth": 1,
+            "gridwidth": 0.5,
             "linecolor": INK_SOFT,
             "linewidth": 1,
-            "angle": 90,
+            "angle": 56.25,
         },
         "angularaxis": {
             "categoryarray": compass_dirs,
@@ -84,9 +92,9 @@ fig.update_layout(
             "rotation": 90,
             "tickfont": {"size": 10, "color": INK_SOFT},
             "gridcolor": GRID,
-            "gridwidth": 1,
+            "gridwidth": 0.5,
             "linecolor": INK_SOFT,
-            "linewidth": 1,
+            "linewidth": 0.75,
         },
     },
     legend={
