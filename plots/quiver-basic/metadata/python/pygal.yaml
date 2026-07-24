@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:34:19Z'
-updated: '2026-07-24T18:19:01Z'
+updated: '2026-07-24T18:27:45Z'
 generated_by: claude-sonnet
 workflow_run: 30115855116
 issue: 1014
@@ -12,44 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
+  - 'Title now correctly includes the language segment: "quiver-basic · python · pygal
+    · anyplot.ai"'
+  - Grid density increased from 8×8 (64 arrows) to 10×10 (100 arrows), now within
+    the spec's suggested 100-400 range, with arrow_scale/min_arrow_len re-tuned so
+    no new overlap was introduced despite the tighter spacing
   - Clever use of allow_interruptions=True to construct real arrow glyphs (shaft +
-    open-V head) inside a chart type (pygal.XY) that has no native quiver/vector support
+    open-V head) inside pygal.XY, which has no native quiver/vector primitive
   - Magnitude-encoded 3-bin legend (Calm / Light, Moderate, Fresh / Strong) adds real
-    insight beyond a monochrome quiver, and reads correctly in both themes
-  - Theme tokens (background, ink, muted ink) and the canonical Imprint palette order
-    are threaded correctly through the Style object; both renders pass the theme-readability
-    checklist with zero dark-on-dark or light-on-light issues
-  - No edge clipping anywhere (checked all four margins on both renders) and no element
-    overlap
+    insight beyond a monochrome quiver and reads correctly in both themes
+  - Theme tokens and canonical Imprint palette order are threaded correctly through
+    the Style object; both renders pass the theme-readability checklist with zero
+    dark-on-dark or light-on-light issues
+  - No edge clipping anywhere (checked all four canvas margins on both renders at
+    native resolution) and no element overlap even in the densest outer-ring regions
   - Deterministic (np.random.seed(42) for both the coordinate grid and the arrow-shuffle
     order)
   weaknesses:
-  - Title is missing the {language} segment - should read "quiver-basic · python ·
-    pygal · anyplot.ai" per the mandated {spec-id} · {language} · {library} · anyplot.ai
-    format, not "quiver-basic · pygal · anyplot.ai"
-  - Grid is 8×8=64 arrows, below the spec's suggested "typically 10x10 to 20x20 (100-400
-    arrows)" density - a denser grid (e.g. 12×12) would better showcase the field
-    structure and give the Calm / Light bin near the center more visual presence
-  - Design excellence is functional but generic beyond the magnitude-color binning
-    - no additional visual hierarchy (e.g. a highlighted or annotated arrow calling
-    out the strongest gust) to elevate it further
+  - Design excellence is still functional but generic beyond the magnitude-color binning
+    — no additional visual hierarchy (e.g. a highlighted or annotated peak vector)
+    to elevate it further
+  - The shortest (floor-length, min_arrow_len=0.23) arrows near the field center remain
+    slightly harder to read at a glance than the longer outer-ring arrows, though
+    still legible
+  - pygal's open-V arrowhead style is simple compared to a filled triangular arrowhead;
+    distinctive-feature usage is otherwise creative but the visual payoff is modest
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 target - not pure white, not dark.
-      Chrome: Title "quiver-basic · pygal · anyplot.ai" centered at top in dark ink, x-axis title "Longitude (degrees)" and y-axis title "Latitude (degrees)" both legible, dotted gridlines subtle, three-column legend at bottom (Calm / Light, Moderate, Fresh / Strong). All readable.
-      Data: 64 arrows on an 8x8 grid forming a counterclockwise rotation field (u=-y, v=x). First/inner bin is #009E73 (green), second bin #C475FD (purple), third/outer bin #4467A3 (blue-gray) - confirms first series is #009E73 and canonical Imprint order.
+      Background: Warm off-white (#FAF8F1), matches spec, not pure white.
+      Chrome: Title "quiver-basic · python · pygal · anyplot.ai" centered at top in dark ink, fully visible with no clipping. X-axis title "Longitude (degrees)" and y-axis title "Latitude (degrees)" both legible with units. Dotted gridlines are subtle but visible. Three-column legend ("Calm / Light", "Moderate", "Fresh / Strong") sits at the bottom, fully readable.
+      Data: Circular counterclockwise wind-rotation field (u=-y, v=x) rendered as 100 discrete arrows on a 10×10 grid spanning -3..3 on both axes. Arrows are magnitude-binned into three colors — green #009E73 near the center, purple #C475FD at mid-radius, blue-gray #4467A3 at the outer ring — clearly showing the field strengthening outward. Zoomed crops of all four canvas corners plus the densest outer-ring and center regions confirm clean shaft + open-V arrowheads with no overlap and no missing pixels at any edge.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 target - not pure black, not light.
-      Chrome: Title, axis titles, tick labels, and legend all render in light ink against the dark surface, all clearly legible. No dark-on-dark failures found (checked tick labels and legend text specifically).
-      Data: Same three hues (green/purple/blue-gray) as light render, confirmed via visual comparison - only chrome (background/text/grid) flipped, data colors identical.
+      Background: Warm near-black (#1A1A17), matches spec, not pure black.
+      Chrome: Title, axis titles, tick labels, and legend text all render in light ink (#F0EFE8) and are clearly readable — no dark-on-dark failures observed in any zoomed crop (title area, legend area, tick labels near -3/2/3).
+      Data: Same 100-arrow circular field; the three data colors (green/purple/blue-gray) are pixel-identical in hue to the light render, confirming only chrome (background/text/grid) flipped, not data color. Grid lines remain subtle but visible against the dark background.
       Legibility verdict: PASS
 
-    Additional checks: zoomed crops of arrow tips (top-left, top-right, bottom margin, and center regions) confirm every arrow renders a clean shaft + open-V arrowhead with no missing pixels at any canvas edge (AR-09 not triggered). No text/element overlap found in any crop (VQ-02).
+    Both renders pass the theme-readability checklist. No AR-08 (no fake interactivity — pygal is a genuinely interactive library and the arrows are real chart-drawn geometry, not simulated). No AR-09 (checked all four canvas margins on both renders at native pixel crops — zero clipped text/legend elements).
   criteria_checklist:
     visual_quality:
       score: 28
@@ -60,20 +64,23 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at explicit font sizes
+        comment: All font sizes explicitly set via Style; readable in both themes;
+          minor deduction for stock sizing choices rather than bespoke tuning
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/arrow collisions found via zoomed inspection
+        comment: Verified via zoomed crops of all corners plus densest regions; no
+          text/arrow collisions despite the denser 10x10 grid
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Clear shaft+V-head arrows; shortest floor-length arrows near center
-          slightly less prominent
+        comment: Arrows render as clear shaft+V-head shapes at every magnitude bin;
+          floor-length arrows near center are slightly less prominent than outer-ring
+          arrows
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -85,20 +92,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, nothing clipped at any edge
+        comment: Correct 3200x1800 canvas (gate passed); title/axes well-proportioned;
+          nothing clipped at any edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude labels descriptive with units
+        comment: '"Longitude (degrees)" / "Latitude (degrees)" are descriptive with
+          units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First bin #009E73, canonical Imprint order, correct theme-adaptive
-          backgrounds'
+        comment: 'First bin uses #009E73, subsequent bins follow canonical Imprint
+          order; backgrounds correct in both themes'
     design_excellence:
       score: 11
       max: 20
@@ -108,24 +117,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Correct theme-token styling and magnitude-binned coloring, but overall
-          polish is fairly plain
+        comment: Theme-token styling correctly threaded; magnitude-binned coloring
+          is a nice touch but overall polish is still fairly plain
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle grid and generous whitespace, but little chrome available
-          to refine in pygal XY
+        comment: Grid subtle, whitespace generous, but pygal's XY chart offers little
+          chrome to refine beyond defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Center-to-edge color progression tells the story of the rotating
-          field's intensity gradient
+        comment: Center-to-edge color progression (calm -> strong) effectively tells
+          the story of the rotating field's intensity gradient
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,51 +142,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vector-field/quiver plot despite no native pygal quiver type
+        comment: Correctly implemented as a vector-field/quiver plot despite pygal
+          having no native quiver chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Direction, magnitude (length+color), uniform spacing, no overlap
+        comment: Direction via angle, magnitude via both arrow length and color, uniform
+          grid spacing, no overlap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y grid and u/v components correctly mapped
+        comment: x/y grid positions and u/v components correctly mapped to arrow base/direction/length
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing {language} segment - reads 'quiver-basic · pygal ·
-          anyplot.ai' instead of including 'python'
+        passed: true
+        comment: Title now reads "quiver-basic · python · pygal · anyplot.ai" matching
+          the mandated format; legend labels are clear and match the magnitude bins
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Direction, magnitude, spacing all shown; grid density (64 arrows)
-          at low end of suggested 100-400 range
+        comment: Shows direction, magnitude (length + color), and uniform spacing;
+          grid is now 10x10=100 arrows, within the spec's suggested 100-400 range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wind-rotation-around-low-pressure-centre framing matches spec's suggested
-          example exactly
+        comment: Wind-rotation-around-a-low-pressure-centre framing (u=-y, v=x) is
+          exactly the spec's suggested example, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: -3..3 degree range with sensible arrow scaling for synthetic meteorological
-          framing
+        comment: -3..3 degree lat/long range with sensible arrow scaling is appropriate
+          for the synthetic meteorological framing
     code_quality:
       score: 10
       max: 10
@@ -193,21 +204,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for both RNGs used
+        comment: np.random.seed(42) set for both the base RNG and the arrow-shuffle
+          RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy + stdlib, all used; importlib workaround is an established
-          pygal self-shadowing fix
+        comment: Only numpy + stdlib (os/sys/importlib/itertools.chain), all used;
+          importlib/sys.path dance is the established pygal-self-shadowing workaround
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual arrow segment construction is an elegant, non-fake solution
-          to a missing library primitive
+        comment: Manual per-arrow segment construction is an elegant, non-fake solution
+          to pygal's lack of a native quiver primitive
       - id: CQ-05
         name: Output & API
         score: 1
@@ -223,24 +235,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Style object, theme-adaptive tokens, XY chart for coordinate
+        comment: Proper use of Style, theme-adaptive tokens, pygal.XY for coordinate
           data
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: allow_interruptions=True to fake an unsupported quiver primitive
-          is genuinely pygal-specific, though resulting arrowhead is a simple open-V
+        passed: false
+        comment: Creative use of allow_interruptions=True to draw many independent
+          multi-segment shapes within a single series; resulting arrowhead style is
+          fairly simple (open V, not filled)
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - publication-ready
+  styling: []
