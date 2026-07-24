@@ -6,7 +6,20 @@
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: spiral flow field u = -y + 0.2x, v = x + 0.2y, on a 12x12 grid --
+// Distinctive Highcharts feature: register a reusable custom arrowhead shape
+// via the SVGRenderer symbol registry, then draw it with a rotation transform
+// per vector — this is Highcharts' idiomatic mechanism for custom markers,
+// not just a generic path drawn by hand.
+Highcharts.SVGRenderer.prototype.symbols.quiverArrowhead = (x, y, w, h) => [
+  "M", x, y,
+  "L", x + w, y + h / 2,
+  "L", x, y + h,
+  "Z",
+];
+
+// --- Data: idealized vortex/eddy flow field u = -y + 0.2x, v = x + 0.2y, ---
+// --- on a 12x12 grid (a rotating current with a slight outward drift, as ---
+// --- seen in atmospheric/ocean eddies) -------------------------------------
 const GRID = 12;
 const EXTENT = 6;
 const STEP = (2 * EXTENT) / (GRID - 1);
@@ -50,6 +63,7 @@ Highcharts.chart("container", {
   chart: {
     backgroundColor: "transparent",
     animation: false,
+    marginRight: 100,
     style: { fontFamily: "inherit" },
     events: {
       render() {
@@ -70,20 +84,65 @@ Highcharts.chart("container", {
             .attr({ stroke: color, "stroke-width": 2.2, opacity: 0.9 })
             .add(this.arrowGroup);
 
-          const angle = Math.atan2(y1 - y0, x1 - x0);
+          // Reusable arrowhead symbol, rotated to the vector's angle and
+          // pivoted around its tip — Highcharts' renderer.symbol() registry
+          // plus the rotation/rotationOriginX/Y transform is the idiomatic
+          // way to place oriented custom markers.
+          const angleDeg = (Math.atan2(y1 - y0, x1 - x0) * 180) / Math.PI;
           const shaftLength = Math.hypot(x1 - x0, y1 - y0);
           const headLength = Math.min(10, shaftLength * 0.45);
-          const headAngle = Math.PI / 7;
-          const hx1 = x1 - headLength * Math.cos(angle - headAngle);
-          const hy1 = y1 - headLength * Math.sin(angle - headAngle);
-          const hx2 = x1 - headLength * Math.cos(angle + headAngle);
-          const hy2 = y1 - headLength * Math.sin(angle + headAngle);
 
           this.renderer
-            .path(["M", x1, y1, "L", hx1, hy1, "L", hx2, hy2, "Z"])
-            .attr({ fill: color, opacity: 0.9 })
+            .symbol("quiverArrowhead", x1 - headLength, y1 - headLength / 2, headLength, headLength)
+            .attr({
+              fill: color,
+              opacity: 0.9,
+              rotation: angleDeg,
+              rotationOriginX: x1,
+              rotationOriginY: y1,
+            })
             .add(this.arrowGroup);
         });
+
+        // --- Magnitude color scale (reserved in the marginRight strip) ----
+        if (this.magnitudeScale) this.magnitudeScale.destroy();
+        this.magnitudeScale = this.renderer.g("magnitude-scale").add();
+
+        const barX = this.plotLeft + this.plotWidth + 30;
+        const barWidth = 14;
+        const barTop = this.plotTop + 10;
+        const barHeight = this.plotHeight - 20;
+        const segments = 32;
+
+        for (let s = 0; s < segments; s++) {
+          const value = (maxMagnitude * (s + 0.5)) / segments;
+          const segHeight = barHeight / segments;
+          const segY = barTop + barHeight - (s + 1) * segHeight;
+          this.renderer
+            .rect(barX, segY, barWidth, segHeight + 0.5)
+            .attr({ fill: colorForMagnitude(value), stroke: "none" })
+            .add(this.magnitudeScale);
+        }
+        this.renderer
+          .rect(barX, barTop, barWidth, barHeight)
+          .attr({ stroke: t.inkSoft, "stroke-width": 1, fill: "none" })
+          .add(this.magnitudeScale);
+
+        this.renderer
+          .text(maxMagnitude.toFixed(1), barX + barWidth + 6, barTop + 10)
+          .attr({ align: "left" })
+          .css({ color: t.inkSoft, fontSize: "12px" })
+          .add(this.magnitudeScale);
+        this.renderer
+          .text("0", barX + barWidth + 6, barTop + barHeight)
+          .attr({ align: "left" })
+          .css({ color: t.inkSoft, fontSize: "12px" })
+          .add(this.magnitudeScale);
+        this.renderer
+          .text("‖v‖", barX + barWidth / 2, barTop - 12)
+          .attr({ align: "center" })
+          .css({ color: t.inkSoft, fontSize: "12px" })
+          .add(this.magnitudeScale);
       },
     },
   },
@@ -94,13 +153,15 @@ Highcharts.chart("container", {
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
   subtitle: {
-    text: "Spiral flow field · arrow color encodes vector magnitude",
+    text: "Idealized vortex/eddy flow field · arrow color + scale encode vector magnitude",
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
     min: -EXTENT - STEP,
     max: EXTENT + STEP,
-    title: { text: "x", style: { color: t.inkSoft, fontSize: "16px" } },
+    startOnTick: false,
+    endOnTick: false,
+    title: { text: "Grid X", style: { color: t.inkSoft, fontSize: "16px" } },
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
@@ -109,7 +170,9 @@ Highcharts.chart("container", {
   yAxis: {
     min: -EXTENT - STEP,
     max: EXTENT + STEP,
-    title: { text: "y", style: { color: t.inkSoft, fontSize: "16px" } },
+    startOnTick: false,
+    endOnTick: false,
+    title: { text: "Grid Y", style: { color: t.inkSoft, fontSize: "16px" } },
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
