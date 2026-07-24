@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-07-24
@@ -19,23 +19,16 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 
-def rgba(hex_color, alpha):
-    """Imprint hex -> rgba string, used to give dense overlapping lines translucency."""
-    h = hex_color.lstrip("#")
-    r, g, b = (int(h[i : i + 2], 16) for i in (0, 2, 4))
-    return f"rgba({r},{g},{b},{alpha})"
-
-
 # Imprint palette discrete colorscale: Setosa=#009E73, Versicolor=#C475FD, Virginica=#4467A3
-# rgba alpha (0.75) gives the 150 overlapping polylines transparency where they cross.
-LINE_ALPHA = 0.75
+# Kept fully opaque (no alpha blending) so hues stay pixel-identical between themes —
+# translucency would composite against PAGE_BG, which differs between light and dark.
 IMPRINT_COLORSCALE = [
-    [0.0, rgba("#009E73", LINE_ALPHA)],
-    [0.33, rgba("#009E73", LINE_ALPHA)],
-    [0.33, rgba("#C475FD", LINE_ALPHA)],
-    [0.67, rgba("#C475FD", LINE_ALPHA)],
-    [0.67, rgba("#4467A3", LINE_ALPHA)],
-    [1.0, rgba("#4467A3", LINE_ALPHA)],
+    [0.0, "#009E73"],
+    [0.33, "#009E73"],
+    [0.33, "#C475FD"],
+    [0.67, "#C475FD"],
+    [0.67, "#4467A3"],
+    [1.0, "#4467A3"],
 ]
 
 # Data - Iris-like dataset for multivariate demonstration
