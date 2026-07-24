@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 marimekko-basic: Basic Marimekko Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-24
@@ -13,8 +13,8 @@ from plotnine import (
     element_line,
     element_rect,
     element_text,
+    geom_label,
     geom_rect,
-    geom_text,
     ggplot,
     labs,
     scale_fill_manual,
@@ -137,6 +137,13 @@ plot_df = pd.DataFrame(rects)
 
 # Add labels with value for larger segments
 plot_df["label"] = plot_df.apply(lambda r: f"${r['value']}M" if (r["ymax"] - r["ymin"]) > 10 else "", axis=1)
+label_df = plot_df[plot_df["label"] != ""].reset_index(drop=True)
+
+# Flag the segment the subtitle calls out so the visual reinforces the story,
+# not just the caption text
+plot_df["highlight"] = (plot_df["region"] == "Asia Pacific") & (plot_df["product"] == "Electronics")
+dimmed_df = plot_df[~plot_df["highlight"]].reset_index(drop=True)
+highlight_df = plot_df[plot_df["highlight"]].reset_index(drop=True)
 
 # Imprint palette — canonical categorical order (abstract product lines, no
 # semantic color cue), brand green always first
@@ -150,8 +157,31 @@ title_fontsize = round(12 * min(1.0, 67 / len(title)))
 # Create plot
 plot = (
     ggplot(plot_df)
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="product"), color=PAGE_BG, size=1.0)
-    + geom_text(aes(x="xcenter", y="ycenter", label="label"), size=3.2, color=INK, fontweight="bold")
+    + geom_rect(
+        data=dimmed_df,
+        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="product"),
+        color=PAGE_BG,
+        size=1.0,
+        alpha=0.6,
+    )
+    + geom_rect(
+        data=highlight_df,
+        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="product"),
+        color=INK,
+        size=1.8,
+        alpha=1.0,
+    )
+    + geom_label(
+        data=label_df,
+        mapping=aes(x="xcenter", y="ycenter", label="label"),
+        size=3.2,
+        color=INK,
+        fill=ELEVATED_BG,
+        label_size=0.15,
+        label_r=0.05,
+        label_padding=0.1,
+        fontweight="bold",
+    )
     + scale_fill_manual(values=product_colors)
     + scale_x_continuous(
         breaks=region_totals["xcenter"].tolist(), labels=region_totals["region"].tolist(), expand=(0.01, 0.01)
@@ -181,7 +211,7 @@ plot = (
         axis_text_y=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=10, color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=None),
         legend_position="right",
     )
 )
