@@ -131,11 +131,25 @@ g.selectAll("circle")
   .join("circle")
   .attr("cx", (d) => x(d.theoretical))
   .attr("cy", (d) => y(d.sample))
-  .attr("r", 7)
+  .attr("r", 6)
   .attr("fill", t.palette[0])
-  .attr("fill-opacity", 0.82)
+  .attr("fill-opacity", 0.72)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.2);
+
+// --- Outlier callout (the two explicit slow-trial outliers) ----------------
+const outlierValues = [455, 480];
+const outlierPts = points.filter((d) => outlierValues.includes(d.sample));
+const outlierCx = d3.mean(outlierPts, (d) => x(d.theoretical));
+const outlierTopY = d3.min(outlierPts, (d) => y(d.sample));
+g.append("text")
+  .attr("x", outlierCx)
+  .attr("y", outlierTopY - 20)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .style("font-style", "italic")
+  .text("2 slow-trial outliers");
 
 // --- Axes ----------------------------------------------------------------
 const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(7));
@@ -153,14 +167,14 @@ svg.append("text")
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "17px")
-  .text("Theoretical Quantiles");
+  .text("Theoretical Quantiles (ms)");
 
 svg.append("text")
   .attr("transform", `translate(${44},${margin.top + ih / 2}) rotate(-90)`)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "17px")
-  .text("Sample Quantiles");
+  .text("Sample Quantiles (ms)");
 
 // --- Title -------------------------------------------------------------
 const title = "Reaction Times vs Normal · qq-basic · javascript · d3 · anyplot.ai";
