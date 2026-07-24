@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:12:41Z'
-updated: '2026-07-24T10:45:41Z'
+updated: '2026-07-24T10:53:18Z'
 generated_by: claude-sonnet
 workflow_run: 30086660810
 issue: 820
@@ -12,53 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - 'Correct idiomatic workaround for parallel coordinates in seaborn (no native API):
-    per-group sns.lineplot with units=/estimator=None produces a genuine spaghetti-plot,
-    not a faked chart type.'
-  - 'Effective visual-hierarchy technique: Adam is drawn last with higher alpha (0.65
-    vs 0.25) and linewidth (2.0 vs 1.2) over the dimmed background series, correctly
-    foregrounding the real insight instead of overplotting everything equally.'
-  - Clean min-max normalization per dimension, with the original human-readable numeric
-    range embedded directly in each axis label so readers don't lose the real-world
-    scale.
-  - Correct Imprint palette application in canonical order (Adam=#009E73, RMSprop=#C475FD,
-    SGD=#4467A3), correct theme-adaptive chrome in both renders, exact 3200x1800 canvas,
-    and spec-compliant title.
-  - Non-faked annotation callout (ax.annotate with a real arrow) highlighting the
-    key finding (Adam configs cluster toward higher accuracy) without simulating interactivity.
+  - Axis order now sorted by correlation strength with Val. Accuracy, directly addressing
+    the spec's 'consider axis ordering to reveal correlations' note and the prior
+    review's DQ-01 feedback
+  - Background series (RMSprop, SGD) alpha dropped from 0.25 to 0.16 and linewidth
+    from 1.2 to 1.0, meaningfully reducing overplotting tangle while keeping Adam's
+    emphasis technique intact
+  - Removed the unexplained quartile tick-ruler marks flagged in the prior review,
+    yielding a visibly cleaner, less cluttered vertical-axis treatment
+  - Correct canonical Imprint palette order (Adam=#009E73, RMSprop=#C475FD, SGD=#4467A3),
+    identical data colors across both themes, correct theme-adaptive chrome
+  - Genuine, non-faked annotation callout highlighting the key insight; clean min-max
+    normalization with original numeric ranges embedded in axis labels
+  - Exact 3200x1800 canvas, no clipping or overflow, spec-compliant title, seeded
+    RNG for reproducibility
   weaknesses:
-  - 'Dense overplotting on the first three axes (Learning Rate, Batch Size, Dropout):
-    all 90 runs are drawn, and even at alpha=0.25 the RMSprop/SGD lines tangle heavily,
-    making it hard to trace individual runs or spot cross-axis patterns for those
-    two series.'
-  - Axis order follows raw column order rather than being arranged to reveal correlations
-    between adjacent dimensions (the spec Notes explicitly suggest this) — e.g. ordering
-    hyperparameters by their individual correlation to Val. Accuracy would strengthen
-    the story.
-  - The quartile tick-ruler marks drawn on each vertical axis are a nice touch but
-    are undocumented — no legend/caption clarifies their meaning, so a first-time
-    reader may mistake them for data points.
-  - The numeric range text embedded in each x-axis label (e.g. '5.7e-04 - 8.9e-02')
-    is legible at full resolution but becomes illegible at the 400px mobile thumbnail
-    preview.
+  - Batch Size and Learning Rate axes still show dense crossing among RMSprop/SGD
+    background lines even at alpha=0.16 — individual runs are hard to trace on those
+    two axes specifically
+  - Two-line axis sub-labels with numeric ranges (e.g. '5.7e-04 – 8.9e-02') are set
+    at fontsize=8 and will likely blur at the ~400px mobile thumbnail scale
+  - Library Mastery is still mostly plain matplotlib layered on seaborn's theme (per-group
+    sns.lineplot workaround) rather than a seaborn-distinctive feature
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec.
-      Chrome: Title "parallel-basic · python · seaborn · anyplot.ai" is dark, centered, fully visible, not clipped. Five x-axis category labels (Learning Rate, Batch Size, Dropout, Weight Decay, Val. Accuracy) each carry a two-line sub-label with the real-world numeric range, rendered in a soft dark-gray, all readable at full resolution. Y-axis label "Normalized Value" and "Min"/"Max" side annotations are dark/legible. Legend ("Optimizer": Adam, RMSprop, SGD) sits top-right with a light elevated-panel background and readable dark-gray text.
-      Data: Adam lines are brand green (#009E73) with alpha 0.65 and heavier linewidth, clearly foregrounded. RMSprop is lavender (#C475FD) and SGD is blue (#4467A3), both dimmed (alpha 0.25) to recede into context. First series correctly uses #009E73. Vertical axis rules with quartile tick marks are visible at each dimension.
-      Legibility verdict: PASS (all text readable; no light-on-light issues; the only caveat is the small axis-range sub-labels shrinking to illegibility at thumbnail/mobile scale, not a light/dark issue).
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Title "parallel-basic · python · seaborn · anyplot.ai" is dark and fully visible. Five x-axis dimension labels (Batch Size, Learning Rate, Dropout, Weight Decay, Val. Accuracy) each carry a readable two-line sub-label with the real-world numeric range, ordered by correlation strength with Val. Accuracy. "Min"/"Max" tick labels on the left, y-axis label "Normalized Value", legend titled "Optimizer" top-right on an elevated panel with dark readable text. All chrome elements render in dark ink against the light background.
+      Data: Adam lines render in brand green (#009E73) with higher alpha/linewidth, foregrounded over dimmed RMSprop (lavender #C475FD) and SGD (blue #4467A3) at low alpha (0.16). Adam configs visibly cluster toward low dropout/weight decay and high validation accuracy, matching the non-faked annotation callout "Adam configs cluster toward higher accuracy".
+      Legibility verdict: PASS — no light-on-light issues; all text clearly readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec.
-      Chrome: Title, axis labels, tick labels, and the annotation callout box all render in light ink (#F0EFE8 / soft light gray) and are clearly legible against the dark background — no dark-on-dark failures observed. Legend uses a dark elevated panel with light text, readable.
-      Data: Data colors are pixel-identical to the light render — Adam green #009E73, RMSprop lavender #C475FD, SGD blue #4467A3 — confirming only chrome flipped between themes, not data colors.
-      Legibility verdict: PASS (no dark-on-dark text; grid and axis rules subtle but visible; brand green remains vivid on the dark surface).
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Title, axis dimension labels, tick labels, "Min"/"Max" markers, y-axis label, legend text, and the annotation callout all render in light ink (INK/INK_SOFT tokens) and are clearly legible against the dark background. No dark-on-dark failures observed anywhere.
+      Data: Adam (green), RMSprop (lavender), SGD (blue) are pixel-identical in hue to the light render — confirming only chrome (background, text) flipped between themes, data colors held constant per the Imprint palette rule.
+      Legibility verdict: PASS — no dark-on-dark issues; all text clearly readable.
+
+    Both renders pass the mandatory theme-readability check (5c) and the proportional sizing check (5d): title occupies a reasonable width for the mandated string, axis labels are balanced, no text overlaps, and no element is clipped at the canvas edge (canvas-dimension gate also passed at exactly 3200x1800, confirmed via absence of /tmp/anyplot-canvas-gate.txt).
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -66,72 +61,74 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All text readable at full res in both themes; axis-range sub-labels
-          become illegible at 400px mobile thumbnail
+        comment: All font sizes explicit and readable at full res in both themes;
+          two-line numeric-range sub-labels at fontsize=8 will likely blur at ~400px
+          mobile thumbnail
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text, legend, annotation box, or data elements
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: No literal text/element collisions; annotation box sits clear of
-          legend and lines
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: true
-        comment: Alpha/linewidth emphasis on Adam is a good technique, but background
-          series (RMSprop/SGD) still tangle heavily on the first three axes
+        comment: Background-series alpha/linewidth reduced from the prior attempt
+          (0.25→0.16, 1.2→1.0), improving legibility; some crossing among RMSprop/SGD
+          remains on the Batch Size and Learning Rate axes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues, not red-green-only, adequate contrast on both backgrounds
+        comment: Good contrast, CVD-safe Imprint hues, adequate alpha differentiation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, no overflow/clipping, balanced proportions
+        comment: Exact 3200x1800, balanced margins, no cut-off content, canvas gate
+          passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with embedded units/ranges
+        comment: Descriptive labels with real-world units/ranges embedded
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order (green/lavender/blue), correct theme backgrounds
-          in both renders
+        comment: Canonical Imprint order, identical data colors across themes, correct
+          theme-adaptive chrome
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom emphasis technique and min/max annotations show intent, but
-          overall composition reads busy/cluttered
+        comment: Custom Imprint palette, intentional foreground/background emphasis
+          hierarchy, clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, generous margins; quartile tick-ruler
-          marks add unexplained visual complexity
+        comment: Spines removed, subtle grid, generous whitespace; removing the unexplained
+          quartile tick-ruler marks noticeably cleaned up the composition
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear focal point via Adam emphasis plus a genuine (non-faked) annotation
-          callout guiding the viewer to the insight
+        comment: Correlation-based axis ordering plus emphasis technique plus genuine
+          annotation callout together create a clear, guided insight
     spec_compliance:
       score: 15
       max: 15
@@ -141,54 +138,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine parallel coordinates plot via per-group lineplot with shared
-          vertical axes
+        comment: Correct parallel coordinates plot via per-group sns.lineplot workaround
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normalization, category color coding, and alpha transparency for
-          overlap all present per spec Notes
+        comment: Normalization, category coloring, alpha for overlap, and now correlation-based
+          axis ordering all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = dimension axis, Y = normalized value, all 5 dimensions and all
-          runs shown
+        comment: Dimensions on x, normalized values on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels (Adam/RMSprop/SGD) match
-          the data
+        comment: Title matches mandated format exactly; legend labels match optimizer
+          categories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers 5 dimensions and category grouping, but axis order doesn't
-          surface adjacent-dimension correlation as the spec Notes suggest
+        comment: Axis order by correlation with Val. Accuracy now surfaces the adjacent-dimension
+          relationship the spec's Notes call for
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible ML hyperparameter search (Adam/RMSprop/SGD with realistic
-          LR/batch/dropout/weight-decay/accuracy relationships), neutral subject
+        comment: Realistic, neutral ML hyperparameter-tuning scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: Learning rate, batch size, dropout, weight decay, and accuracy ranges
-          are all realistic for the domain
+          all plausible for the domain
     code_quality:
       score: 10
       max: 10
@@ -198,31 +192,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat top-to-bottom script
+        comment: Linear imports → data → plot → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.default_rng(42) seeded
+        comment: Seeded np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, sys, plt, np, pd, sns, Line2D) are used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Clean, no fake functionality, appropriate complexity for a non-native
+          chart type
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, bbox_inches left at default
+        comment: Saves plot-{THEME}.png, current API, no bbox_inches='tight'
     library_mastery:
       score: 7
       max: 10
@@ -232,30 +227,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct seaborn idiom for a per-run spaghetti plot (units=/estimator=None)
-          since seaborn has no native parallel-coordinates function
+        comment: Correct seaborn idiom (per-group lineplot with units=/estimator=None)
+          for a chart type seaborn has no native function for
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Quartile tick rulers and min/max annotations are custom touches,
-          but most of the distinctive work (axvline rulers, custom ticks) is plain
-          matplotlib layered on seaborn's theme rather than seaborn-specific features
+        comment: Mostly plain matplotlib layered on seaborn's theme rather than a
+          seaborn-specific feature
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - annotations
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
+  - wide-to-long
   - iteration-over-groups
   - explicit-figure
-  - wide-to-long
   dataprep:
   - normalization
+  - correlation-matrix
   styling:
   - alpha-blending
   - grid-styling
