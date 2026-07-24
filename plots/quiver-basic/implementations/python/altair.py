@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 quiver-basic: Basic Quiver Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-07-24
@@ -102,6 +102,11 @@ chart = (
             legend=alt.Legend(titleFontSize=10, labelFontSize=10),
         ),
         strokeWidth=alt.StrokeWidth("magnitude:Q", scale=alt.Scale(range=[1.4, 3.2]), legend=None),
+        tooltip=[
+            alt.Tooltip("x:Q", title="X", format=".2f"),
+            alt.Tooltip("y:Q", title="Y", format=".2f"),
+            alt.Tooltip("magnitude:Q", title="Magnitude", format=".2f"),
+        ],
     )
     .properties(
         width=VIEW_W,
@@ -109,7 +114,7 @@ chart = (
         background=PAGE_BG,
         title=alt.Title("quiver-basic · altair · anyplot.ai", fontSize=16, anchor="middle"),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         labelFontSize=10,
         titleFontSize=12,
