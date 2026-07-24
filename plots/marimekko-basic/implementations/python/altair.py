@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 marimekko-basic: Basic Marimekko Chart
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-24
@@ -80,9 +80,25 @@ df["RevenueLabel"] = "$" + df["Revenue"].astype(str) + "M"
 TEXT_ON_COLOR = {"Electronics": "#FFFFFF", "Clothing": "#1A1A17", "Food": "#FFFFFF", "Home": "#FFFFFF"}
 df["LabelColor"] = df["Product"].map(TEXT_ON_COLOR)
 
+# Legend-bound selection: clicking a legend swatch isolates that product line
+# across all regions (altair-native interactivity, visible in the HTML export).
+highlight = alt.selection_point(fields=["Product"], bind="legend")
+
+# Largest single segment gets a subtle dashed outline to draw the eye.
+top = df.loc[df["Revenue"].idxmax()]
+top_outline = (
+    alt.Chart(
+        pd.DataFrame(
+            [{"x_start": top["x_start"], "x_end": top["x_end"], "y_start": top["y_start"], "y_end": top["y_end"]}]
+        )
+    )
+    .mark_rect(fill=None, stroke=INK, strokeWidth=2.5, strokeDash=[5, 3])
+    .encode(x="x_start:Q", x2="x_end:Q", y="y_start:Q", y2="y_end:Q")
+)
+
 segments = (
     alt.Chart(df)
-    .mark_rect(stroke=PAGE_BG, strokeWidth=2)
+    .mark_rect(stroke=PAGE_BG, strokeWidth=2, cornerRadius=2)
     .encode(
         x=alt.X("x_start:Q", axis=None),
         x2="x_end:Q",
@@ -95,8 +111,17 @@ segments = (
         color=alt.Color(
             "Product:N",
             scale=alt.Scale(domain=product_order, range=IMPRINT_PALETTE),
-            legend=alt.Legend(title="Product Line", titleFontSize=13, labelFontSize=11, symbolSize=130),
+            legend=alt.Legend(
+                title="Product Line",
+                titleFontSize=13,
+                labelFontSize=11,
+                symbolSize=130,
+                symbolType="circle",
+                cornerRadius=6,
+                padding=8,
+            ),
         ),
+        opacity=alt.condition(highlight, alt.value(1.0), alt.value(0.3)),
         tooltip=[
             alt.Tooltip("Region:N", title="Region"),
             alt.Tooltip("Product:N", title="Product"),
@@ -104,6 +129,7 @@ segments = (
             alt.Tooltip("PctWithinRegion:Q", title="% of Region", format=".1f"),
         ],
     )
+    .add_params(highlight)
 )
 
 revenue_labels = (
@@ -114,6 +140,7 @@ revenue_labels = (
         y=alt.Y("y_mid:Q", scale=alt.Scale(domain=[0, 100])),
         text="RevenueLabel:N",
         color=alt.Color("LabelColor:N", scale=None, legend=None),
+        opacity=alt.condition(highlight, alt.value(1.0), alt.value(0.3)),
     )
 )
 
@@ -126,7 +153,7 @@ region_labels = (
 )
 
 chart = (
-    alt.layer(segments, revenue_labels, region_labels)
+    alt.layer(segments, top_outline, revenue_labels, region_labels)
     .properties(
         width=620,
         height=320,
