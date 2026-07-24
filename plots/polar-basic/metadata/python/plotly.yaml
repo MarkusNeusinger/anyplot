@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: polar-basic
 created: '2025-12-23T19:43:18Z'
-updated: '2026-07-24T23:34:12Z'
+updated: '2026-07-24T23:48:36Z'
 generated_by: claude-sonnet
 workflow_run: 30133743885
 issue: 800
@@ -12,73 +12,77 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Correct square 2400×2400 canvas choice for a radially-symmetric wind rose (passes
-    the canvas dimension gate)
-  - Theme-adaptive chrome threaded through title, axis fonts, grid, legend box, and
-    background — both light and dark renders are fully legible
+  - 'Correctly addressed attempt-1 review feedback: the ''Frequency'' radial axis
+    title is now folded into the outermost tick text (''Frequency 20%'') instead of
+    a separate rotated title, eliminating the tick-label collision flagged previously'
+  - Gridlines and boundary linewidths reduced (radial/angular gridwidth 0.5, angular
+    linewidth 0.75) for a more restrained, refined look in both themes
+  - Theme-adaptive chrome fully threaded through title, tick fonts, grid, legend box,
+    and background — both light and dark renders are fully legible with no dark-on-dark
+    or light-on-light failures
   - 'Imprint palette applied in canonical order with identical hues across both themes;
     first series is brand green #009E73'
-  - Realistic, well-scaled wind-rose dataset (2000 obs, von Mises-distributed direction
-    with a clear WSW prevailing direction, gamma-distributed speed) with a fixed seed
-    for reproducibility
+  - Realistic, well-scaled wind-rose dataset (2000 observations, von Mises-distributed
+    direction with a clear WSW prevailing direction, gamma-distributed speed binned
+    into 4 realistic km/h buckets) with a fixed seed for reproducibility
   - Idiomatic go.Barpolar stacked usage with custom hovertemplate, categoryarray for
     compass ordering, and explicit angular direction/rotation settings
-  - Title matches the mandated '{spec-id} · python · plotly · anyplot.ai' format exactly
+  - Title matches the mandated '{spec-id} · python · plotly · anyplot.ai' format exactly;
+    square 2400×2400 canvas is the correct choice for a radially-symmetric wind rose
+    and passes the canvas dimension gate
   weaknesses:
-  - Radial axis title 'Frequency' is rendered along the same N-direction (angle=90)
-    line as the radial tick labels, crowding/overlapping the '10%'/'15%' tick text
-    in both renders — move the radial axis to an angle that doesn't collide with the
-    title (e.g. offset polar.radialaxis.angle away from a tick-label-dense region,
-    or increase title standoff) so the title and tick values no longer compete for
-    the same space
-  - Visual refinement is close to library defaults beyond the palette and gap-based
-    wedge separation — consider a lighter outer polar boundary line or slightly more
-    restrained radial gridlines to raise the design polish further
-  - About half the compass sectors (roughly N through ESE/SE) collapse to near-invisible
-    slivers since wind is heavily WSW-prevailing; this is realistic data, not a bug,
-    but a data label or subtle callout on the dominant WSW/SW/SSW sectors would sharpen
-    the storytelling further
+  - The folded radial tick labels ('15%' and 'Frequency 20%') sit close together along
+    the diagonal radial axis line — still legible and non-overlapping, but a touch
+    dense; a small extra radial offset or slightly smaller font on the last tick would
+    separate them further
+  - The '0%' tick label sits very close to the tiny ENE-sector data wedge near the
+    plot center — minor crowding, not a hard overlap
+  - Aesthetic sophistication is still close to a well-configured default beyond the
+    palette and gridline-weight tuning — a data callout or subtle emphasis on the
+    dominant WSW/SW/SSW sectors would sharpen the storytelling further
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "polar-basic · python · plotly · anyplot.ai" in dark ink, centered, clearly readable. Compass direction labels (N, NNE, NE, ... NNW) around the perimeter are dark and legible. Radial percentage ticks (0%-20%) along the N axis are legible but the rotated "Frequency" axis title text runs along the same line and crowds/touches the "10%"/"15%" tick labels — a real but non-severe overlap. Legend at the bottom ("Wind speed": 0-10, 10-20, 20-30, 30+ km/h) sits in a bordered off-white box with dark text, clearly separated from the plot.
-      Data: Stacked polar bars per compass direction. First series (0-10 km/h) is brand green #009E73, followed by lavender #C475FD, blue #4467A3, and ochre #BD8233 — canonical Imprint order. The WSW/SW/SSW sectors dominate (clear prevailing-wind focal point); N-ESE sectors are near-invisible slivers, which matches the underlying von Mises-distributed data.
-      Legibility verdict: PASS (minor overlap noted above, not a hard failure — all text remains readable).
+      Chrome: Title "polar-basic · python · plotly · anyplot.ai" in dark ink, centered at top, clearly readable. Compass direction labels (N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW) around the perimeter are dark and legible. Radial percentage ticks run along a diagonal (NNE-ward) axis line: "0%", "5%", "10%", "15%", and the outermost tick reads "Frequency 20%" — the axis label is now folded into the last tick text instead of a separate rotated title, so it no longer collides with the "10%"/"15%" tick values (this was the main weakness flagged on attempt 1). The "0%" label sits close to a tiny data wedge near the center but remains fully readable. Legend at the bottom ("Wind speed": 0-10, 10-20, 20-30, 30+ km/h) sits in a bordered off-white box with dark text, clearly separated from the plot.
+      Data: Stacked polar bars per compass direction. First series (0-10 km/h) is brand green #009E73, followed by lavender #C475FD, blue #4467A3, and ochre #BD8233 — canonical Imprint order. The WSW/SW/SSW sectors dominate, forming a clear prevailing-wind focal point; N-through-ESE sectors are near-invisible slivers, consistent with the underlying von Mises-distributed direction data (not a rendering defect).
+      Legibility verdict: PASS — all text is readable, no clipping, only minor label crowding near the center and along the radial axis (noted as weaknesses, not failures).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, compass labels, and legend text render in light ink (INK/INK_SOFT tokens) and are clearly readable against the dark surface — no dark-on-dark failures observed. The same "Frequency" axis-title/tick-label crowding present in the light render recurs here (light-colored text on light-colored text, still legible but crowded).
-      Data: Colors are pixel-identical to the light render — green, lavender, blue, ochre in the same canonical order and same prevailing-WSW shape. Only the chrome (background, text, grid, legend frame) flipped, as required.
-      Legibility verdict: PASS (same minor overlap caveat as light render; no dark-on-dark or unreadable-text failures).
+      Chrome: Title, compass labels, tick labels, and legend text render in light ink (INK/INK_SOFT tokens) and are clearly readable against the dark surface — no dark-on-dark failures observed anywhere. The same folded "Frequency 20%" tick-label solution is present and legible.
+      Data: Colors are pixel-identical to the light render — green, lavender, blue, ochre in the same canonical order and the same prevailing-WSW shape. Only the chrome (background, text, grid, legend frame) flipped, as required; the Imprint categorical data colors did not change.
+      Legibility verdict: PASS — no dark-on-dark or unreadable-text failures; same minor crowding caveats as the light render.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Fonts explicitly sized (16/12/10) and readable in both themes; minor
-          crowding where the radial 'Frequency' title runs alongside tick labels
+        comment: Fonts explicitly sized (title 16, ticks/legend 10) and readable in
+          both themes; minor density where the folded '15%'/'Frequency 20%' tick labels
+          sit close together
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Radial axis title 'Frequency' crowds/overlaps the 10%/15% tick labels
-          along the N-direction axis line in both renders
+        passed: true
+        comment: The attempt-1 'Frequency' title/tick collision is fixed by folding
+          it into the last tick; only minor crowding remains between the '0%' label
+          and a tiny nearby data wedge
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
         comment: Stacked wedges well-sized and distinguishable; near-zero sectors
-          are a data artifact, not a sizing flaw
+          are a data artifact of the WSW-prevailing distribution, not a sizing flaw
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -99,16 +103,16 @@ review:
         max: 2
         passed: true
         comment: Radial axis labeled 'Frequency' with % suffix; angular axis uses
-          compass directions
+          standard compass directions
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order, identical across themes,
-          correct theme backgrounds'
+        comment: 'First series #009E73, canonical Imprint order, identical hues across
+          themes, correct theme backgrounds'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -120,11 +124,12 @@ review:
           close to a well-configured default
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Wedge-gap separation is a nice touch, but the radial axis title/tick
-          crowding and fairly heavy circular gridlines hold refinement back
+        passed: true
+        comment: Thinner gridlines/boundary (0.5/0.75 width) and the resolved tick-label
+          collision raise refinement over attempt 1, though still fairly close to
+          library defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -141,7 +146,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar/barpolar chart
+        comment: Correct polar/barpolar wind-rose chart
       - id: SC-02
         name: Required Features
         score: 4
@@ -172,8 +177,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full wind-rose feature set: direction, speed-binned stacking, frequency
-          scale'
+        comment: 'Full wind-rose feature set: direction distribution, speed-binned
+          stacking, frequency scale'
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -239,7 +244,8 @@ review:
         max: 5
         passed: true
         comment: Custom hovertemplate, categoryarray ordering, explicit angularaxis
-          rotation/direction — plotly-specific polar features used well
+          rotation/direction, and the folded-tick-label trick are plotly-specific
+          polar features used well
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -247,6 +253,7 @@ impl_tags:
   - polar-projection
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
