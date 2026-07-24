@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' radar-basic: Basic Radar Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 84/100 | Created: 2026-07-24
+#' Quality: 78/100 | Created: 2026-07-24
 library(ggplot2)
 library(dplyr)
 library(ragg)
