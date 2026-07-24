@@ -1,20 +1,40 @@
 """ anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
-Library: bokeh 3.9.0 | Python 3.14.4
-Quality: 77/100 | Updated: 2026-04-27
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 94/100 | Updated: 2026-07-24
 """
+
+import os
+import sys
+import time
+from pathlib import Path
+
+
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _script_dir]
 
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png, save
-from bokeh.models import Legend, LegendItem
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Span
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette (position 1 is always the first categorical series)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data - Iris-like dataset for multivariate demonstration
 np.random.seed(42)
 
-# Generate realistic iris-like measurements for three species
 n_per_species = 50
 
 # Setosa: small petals, moderate sepals
@@ -60,52 +80,71 @@ for col in numeric_cols:
     max_val = df[col].max()
     df_norm[col] = (df[col] - min_val) / (max_val - min_val)
 
-# Create figure (4800x2700 px)
+# Colors by species (Imprint palette, canonical order)
+species_order = ["setosa", "versicolor", "virginica"]
+colors = dict(zip(species_order, IMPRINT_PALETTE[:3], strict=True))
+
+# One multi-line source: each row of xs/ys is a single observation's polyline
+x_coords = list(range(len(numeric_cols)))
+source = ColumnDataSource(
+    data={
+        "xs": [x_coords] * len(df_norm),
+        "ys": df_norm[numeric_cols].values.tolist(),
+        "species": df_norm["species"].str.capitalize(),
+        "color": [colors[s] for s in df_norm["species"]],
+    }
+)
+
+# Create figure (3200x1800 px landscape canvas)
+title = "parallel-basic · python · bokeh · anyplot.ai"
 p = figure(
-    width=4800,
-    height=2700,
-    title="parallel-basic · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title=title,
     x_axis_label="Dimension",
     y_axis_label="Normalized Value",
     x_range=(-0.3, 3.3),
     y_range=(-0.05, 1.10),
+    toolbar_location=None,  # bokeh's default toolbar adds ~30-50px above the plot
+    min_border_bottom=160,  # room for 34pt x-tick labels + 42pt x-axis label
+    min_border_left=180,  # room for 34pt y-tick labels + 42pt y-axis label
+    min_border_top=110,  # room for 50pt title
+    min_border_right=50,
 )
 
-# Styling for 4800x2700 px canvas
-p.title.text_font_size = "28pt"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+# Plot parallel coordinates - one polyline per observation, colored by species.
+# line_alpha=0.4 (down from 0.5) eases the densest crossover region (Sepal Width)
+# while still preserving the crossing pattern. muted_alpha lets a legend click
+# isolate a single species - a bokeh-distinctive touch beyond the plain HoverTool.
+renderer = p.multi_line(
+    xs="xs",
+    ys="ys",
+    source=source,
+    line_color="color",
+    line_alpha=0.4,
+    line_width=2.5,
+    legend_field="species",
+    muted_alpha=0.05,
+)
 
-# Define colors for species (Python Blue, Yellow, and a complementary green)
-colors = {"setosa": "#306998", "versicolor": "#FFD43B", "virginica": "#4CAF50"}
+# Hover shows which species a given line belongs to - bokeh's signature interactive feature
+hover = HoverTool(renderers=[renderer], tooltips=[("Species", "@species")], line_policy="nearest")
+p.add_tools(hover)
 
-# X positions for each dimension
-x_coords = list(range(len(numeric_cols)))
+# Vertical axis line per dimension - bolder than the shared 0.15-alpha grid so
+# each of the four parallel-coordinate axes reads as a distinct anchor line.
+for x in x_coords:
+    p.add_layout(Span(location=x, dimension="height", line_color=INK_SOFT, line_width=2, line_alpha=0.6))
 
-# Track renderers for legend
-renderers_by_species = {}
-
-# Plot parallel coordinates - each line connects values across axes
-for _, row in df_norm.iterrows():
-    species = row["species"]
-    y_coords = [row[col] for col in numeric_cols]
-    renderer = p.line(x_coords, y_coords, line_color=colors[species], line_alpha=0.5, line_width=2)
-    # Keep one renderer per species for legend
-    if species not in renderers_by_species:
-        renderers_by_species[species] = renderer
-
-# Create legend
-legend_items = []
-for species_name in ["setosa", "versicolor", "virginica"]:
-    legend_items.append(LegendItem(label=species_name.capitalize(), renderers=[renderers_by_species[species_name]]))
-
-legend = Legend(items=legend_items, location="top_right")
-legend.label_text_font_size = "18pt"
-legend.title = "Species"
-legend.title_text_font_size = "20pt"
-p.add_layout(legend)
+p.legend.click_policy = "mute"
+p.legend.title = "Species"
+p.legend.location = "top_right"
+p.legend.label_text_font_size = "30pt"
+p.legend.title_text_font_size = "32pt"
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = None
+p.legend.label_text_color = INK_SOFT
+p.legend.title_text_color = INK
 
 # Custom x-axis labels with original scale ranges
 axis_labels = [
@@ -117,10 +156,67 @@ axis_labels = [
 p.xaxis.ticker = x_coords
 p.xaxis.major_label_overrides = dict(enumerate(axis_labels))
 
-# Grid styling - subtle
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = [6, 4]
+# Text sizes and typography for 3200x1800 px canvas - helvetica throughout for
+# a deliberate, publication-grade look rather than bokeh's default font stack
+p.title.text_font = "helvetica"
+p.title.text_font_size = "50pt"
+p.xaxis.axis_label_text_font = "helvetica"
+p.yaxis.axis_label_text_font = "helvetica"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font = "helvetica"
+p.yaxis.major_label_text_font = "helvetica"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.legend.label_text_font = "helvetica"
+p.legend.title_text_font = "helvetica"
 
-# Save outputs
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="parallel-basic · bokeh · pyplots.ai")
+# Theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+p.title.text_color = INK
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+
+# Grid styling - subtle
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.15
+
+# Save outputs - write HTML then screenshot with headless Chrome (bokeh's export_png
+# is unreliable in this environment; see prompts/library/bokeh.md)
+output_file(f"plot-{THEME}.html", title=title)
+save(p)
+
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Headless Chrome's --window-size sets the OUTER window (a phantom ~143px
+# title bar eats into it even headless), so innerHeight ends up short of H.
+# Override the viewport directly via CDP for an exact WxH capture.
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+time.sleep(3)  # let bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
