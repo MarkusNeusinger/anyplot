@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-24
@@ -80,7 +80,7 @@ ax.set_ylim(0, 30)
 ax.set_yticks([5, 10, 15, 20, 25])
 ax.yaxis.set_major_formatter(FuncFormatter(lambda v, pos: f"{v:.0f}°C"))
 ax.tick_params(axis="y", labelsize=8)
-ax.set_rlabel_position(67.5)
+ax.set_rlabel_position(247.5)
 # Radial labels must draw above the filled data area: the y-Axis container's own
 # zorder (2.5 by default) governs the whole tick group's draw order, not each
 # Text's zorder, so it needs raising above the scatter (zorder=3) too.
@@ -89,7 +89,7 @@ for label in ax.get_yticklabels():
     label.set_bbox({"facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.9, "pad": 2.5})
 
 # Theme-adaptive styling
-title = "Hourly Temperature Pattern · polar-basic · matplotlib · anyplot.ai"
+title = "Hourly Temperature Pattern · polar-basic · python · matplotlib · anyplot.ai"
 ax.set_title(title, fontsize=12, pad=16, fontweight="medium", color=INK)
 ax.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.spines["polar"].set_color(INK_SOFT)
