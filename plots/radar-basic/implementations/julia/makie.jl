@@ -27,6 +27,12 @@ n = length(categories)
 angles = [pi / 2 - 2 * pi * (i - 1) / n for i in 1:n]
 grid_levels = [20, 40, 60, 80, 100]
 
+# Largest gap between the two players — used to anchor a focal-point annotation
+gaps = abs.(player_a .- player_b)
+focus_idx = argmax(gaps)
+focus_angle = angles[focus_idx]
+focus_lo, focus_hi = extrema((player_a[focus_idx], player_b[focus_idx]))
+
 # --- Plot -----------------------------------------------------------------
 fig = Figure(
     size            = (1200, 1200),
@@ -44,7 +50,7 @@ ax = Axis(
 )
 hidedecorations!(ax)
 hidespines!(ax)
-limits!(ax, -145, 145, -145, 145)
+limits!(ax, -145, 145, -134, 148)
 
 # Concentric gridline polygons at 20/40/60/80/100
 for level in grid_levels
@@ -60,8 +66,8 @@ end
 
 # Gridline value labels along the top spoke
 for level in grid_levels
-    text!(ax, 6, Float64(level); text = string(level), fontsize = 11,
-          color = INK_SOFT, align = (:left, :center))
+    text!(ax, 6, Float64(level); text = string(level), fontsize = 13,
+          color = INK_SOFT, align = (:left, :center), font = :bold)
 end
 
 # Category labels at the outer edge
@@ -84,6 +90,20 @@ for (values, color, name) in (
           color = (color, 0.25), strokecolor = color, strokewidth = 3, label = name)
     scatter!(ax, xs, ys; color = color, markersize = 14, strokewidth = 0)
 end
+
+# Focal-point annotation: bracket the widest gap between the two players
+bracket!(
+    ax,
+    focus_lo * cos(focus_angle), focus_lo * sin(focus_angle),
+    focus_hi * cos(focus_angle), focus_hi * sin(focus_angle);
+    text = "largest gap · $(round(Int, gaps[focus_idx])) pts",
+    fontsize = 13,
+    color = INK_SOFT,
+    textcolor = INK,
+    offset = 14,
+    orientation = :down,
+    style = :curly,
+)
 
 axislegend(ax, position = :lb, labelsize = 14, labelcolor = INK,
            framevisible = false, backgroundcolor = (PAGE_BG, 0.0))
