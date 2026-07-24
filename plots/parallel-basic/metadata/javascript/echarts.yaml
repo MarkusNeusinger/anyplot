@@ -1,0 +1,249 @@
+library: echarts
+language: javascript
+specification_id: parallel-basic
+created: '2026-07-24T11:08:00Z'
+updated: '2026-07-24T11:21:53Z'
+generated_by: claude-sonnet
+workflow_run: 30088046685
+issue: 820
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses are fixed: RUNS_PER_OPTIMIZER cut to 16 (48 total lines
+    vs. previous 90), and Hidden Units axis now has an explicit max:500 so the crowded
+    512/500 boundary tick is gone'
+  - Deliberate back-to-front draw order (SGD, RMSprop, Adam) with Adam pinned to higher
+    opacity (0.6 vs 0.32) and width (2.2 vs 1.5) so its validation-accuracy edge reads
+    clearly on top of the crossing mesh
+  - 'Correct plot type: idiomatic ECharts parallel-coordinate system built from a
+    dim-mapped parallelAxis array with a matching parallel series'
+  - Learning Rate axis uses a log scale with a custom exponential tick formatter,
+    appropriate for a 1e-4..1e-1 range
+  - Deterministic, seeded data generation (fixed-seed LCG(42)) with no external RNG
+    dependency
+  - 'Correct Imprint palette order and identity: Adam=#009E73 (brand green, always-first),
+    RMSprop=lavender, SGD=blue, identical across both themes'
+  - Theme-adaptive chrome correctly threaded through window.ANYPLOT_TOKENS for title,
+    legend, axis names, tick labels, axis lines, and tooltip
+  - Realistic, neutral ML hyperparameter-search dataset matching the spec's own suggested
+    application
+  - Title format exactly matches the mandated pattern
+  weaknesses:
+  - Middle axes (Batch Size -> Dropout Rate -> Hidden Units) still show a dense crossing
+    mesh from the RMSprop/SGD lines even at reduced opacity (0.32); a further nudge
+    to ~0.22-0.28 for the non-Adam series would help
+  - 'Design Excellence is still close to a well-configured default: the highlight
+    trick helps storytelling but lacks an additional bespoke touch (per-axis banding,
+    a subtitle naming the insight, or axis reordering by correlation)'
+  - Library Mastery usage is solid but not highly distinctive; consider surfacing
+    more ECharts-specific parallel-coordinate features (e.g. inactiveOpacity, brushing
+    config in the HTML view)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title centered in dark ink, fully readable. Legend (Adam/RMSprop/SGD) below title with dark text and colored swatches. All five axis names (Learning Rate, Batch Size, Dropout Rate, Hidden Units, Val Accuracy (%)) dark ink and legible. Tick labels lighter soft-ink gray, legible on every axis. Hidden Units axis top tick now reads a clean "500" with even spacing to 0 (previous crowded 512/500 pair resolved).
+      Data: Green (#009E73, Adam) drawn last/on top at higher opacity (0.6) and width (2.2); lavender (RMSprop) and blue (SGD) drawn underneath at lower opacity (0.32)/width (1.5). Adam's brighter, thicker lines are traceable through the crossing mesh and cluster toward the top of Val Accuracy, making the "Adam wins" story readable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title, legend, and axis names in light ink, clearly readable. Tick labels in lighter secondary gray, legible. No dark-on-dark failures anywhere.
+      Data: Colors identical to light render (green/lavender/blue), confirming only chrome flipped. Adam's highlighted lines stand out from the RMSprop/SGD mesh with the same accuracy advantage visible on the rightmost axis.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at explicit font sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Previous 512/500 tick crowding on Hidden Units axis fixed via explicit
+          max:500
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Overplotting reduced (48 lines vs 90) and Adam highlighted on top;
+          middle axes still a dense mesh from RMSprop/SGD
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis names with units (%, log scale)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, correct theme-adaptive backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Correct theming plus deliberate draw-order/opacity-contrast trick;
+          still short of bespoke composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Split lines hidden, subtle axis-line coloring, styled legend, generous
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Adam drawn last with higher opacity/width, making its accuracy advantage
+          the clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parallel-coordinates chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 5 dimensions, category color-coding, transparency for overlap all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Each dim mapped to correct axis with appropriate scale (log for learning
+          rate)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated pattern exactly; legend labels match optimizer
+          names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 5 of recommended 4-10 dimensions covered
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral ML hyperparameter-search data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible ranges for learning rate, batch size, dropout, hidden units,
+          accuracy
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes, small helper functions only
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond global echarts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false, correct mount-node contract, current ECharts API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic parallelAxis/parallel series construction
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Log-scale axis, custom formatter, per-series emphasis, and draw ordering
+          are moderately distinctive but not highly showcased
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
