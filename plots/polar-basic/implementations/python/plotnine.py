@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
-Library: plotnine 0.15.3 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-04-30
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: pending | Updated: 2026-07-24
 """
 
 import math
@@ -33,7 +33,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"  # Okabe-Ito position 1
+BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
 
 # Data - Hourly activity levels throughout the day (cyclical pattern)
 np.random.seed(42)
@@ -53,6 +53,9 @@ df = pd.DataFrame({"hour": hours, "activity": activity, "theta": theta, "x": x, 
 
 # Close the loop by adding first point at end
 df_closed = pd.concat([df, df.iloc[[0]]], ignore_index=True)
+
+# Peak point, highlighted below with a larger marker (visual emphasis, no text callout)
+peak_df = df.iloc[[int(np.argmax(activity))]]
 
 # Circular gridlines (at 25, 50, 75, 100 radius)
 grid_rows = []
@@ -84,7 +87,8 @@ label_df = pd.DataFrame(label_rows)
 radius_labels = [{"label": str(r), "x": r + 4, "y": 6} for r in [25, 50, 75, 100]]
 radius_label_df = pd.DataFrame(radius_labels)
 
-# Plot
+# Plot — plotnine has no coord_polar (unlike ggplot2), so the circle is built
+# from Cartesian geoms: geom_path/geom_segment for the grid, geom_point/geom_text for data and labels.
 plot = (
     ggplot()
     # Circular gridlines
@@ -95,17 +99,19 @@ plot = (
     + geom_path(aes(x="x", y="y"), data=df_closed, color=BRAND, size=1.5, alpha=0.9)
     # Data points
     + geom_point(aes(x="x", y="y"), data=df, color=PAGE_BG, fill=BRAND, size=4, stroke=1.5)
+    # Peak activity hour, emphasized with a larger marker
+    + geom_point(aes(x="x", y="y"), data=peak_df, color=PAGE_BG, fill=BRAND, size=7, stroke=1.8)
     # Hour labels
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=14, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=11, color=INK_SOFT)
     # Radius value labels
-    + geom_text(aes(x="x", y="y", label="label"), data=radius_label_df, size=10, color=INK_MUTED, ha="left")
+    + geom_text(aes(x="x", y="y", label="label"), data=radius_label_df, size=9, color=INK_MUTED, ha="left")
     + coord_fixed(ratio=1)
     + scale_x_continuous(limits=(-145, 145))
     + scale_y_continuous(limits=(-145, 145))
     + labs(title="Hourly Activity Levels · polar-basic · plotnine · anyplot.ai")
     + theme(
-        figure_size=(12, 12),
-        plot_title=element_text(size=24, ha="center", color=INK),
+        figure_size=(6, 6),
+        plot_title=element_text(size=12, ha="center", color=INK),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -118,4 +124,4 @@ plot = (
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
