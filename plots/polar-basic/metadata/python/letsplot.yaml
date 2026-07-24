@@ -2,125 +2,125 @@ library: letsplot
 language: python
 specification_id: polar-basic
 created: '2025-12-23T19:43:06Z'
-updated: '2026-04-30T01:00:16Z'
+updated: '2026-07-24T23:58:52Z'
 generated_by: claude-sonnet
-workflow_run: 25141266407
+workflow_run: 30134283390
 issue: 800
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/letsplot/plot-dark.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - Correct coord_polar(theta="x") implementation producing a genuine polar chart
-  - Elegant loop closure by duplicating the first point at hour=24 for a seamless
-    circular path
-  - Full theme-adaptive styling with all chrome tokens correctly applied to both renders
-  - Square canvas format (3600x3600) is the right choice for a symmetric polar chart
-  - 'Perfect spec compliance: correct title format, radial gridlines, angular labels
-    at standard intervals'
-  - Clean KISS code structure with np.random.seed(42) for reproducibility
-  - Realistic 24-hour temperature diurnal cycle data
+  - Donut-hole radial scale (radius_limits=[-8, 29]) fully resolves the attempt-1
+    center-compression issue - low-hour points are now clearly spread apart instead
+    of piling up at the polar origin where gridlines converge.
+  - '"2°C low" and "25°C peak" annotations are now cleanly separated from data markers
+    and the gridline convergence point, readable and non-overlapping in both themes.'
+  - Custom layer_tooltips() with .format()/.line() formatted hour/temperature strings
+    is a genuine lets-plot-distinctive touch, directly answering attempt 1's Library
+    Mastery feedback.
+  - 'Correct Imprint palette and theme-adaptive chrome - brand green #009E73 identical
+    in both renders, backgrounds match #FAF8F1/#1A1A17, all text theme-correct.'
+  - Clean KISS structure, seeded reproducibility, correct plot-{THEME}.png/.html output
+    naming.
   weaknesses:
-  - axis_text size is 14pt, below the 16pt minimum recommendation; should be set to
-    16
-  - 'Design Excellence is mid-range: no focal point or emphasis on insight (e.g. no
-    color band or annotation highlighting the peak temperature hour or the nighttime
-    minimum)'
-  - The filled area does not use explicit alpha — a slight transparency on the fill
-    would improve layering clarity between fill and gridlines in the light theme
+  - Title format is missing the language segment (python) - should read "polar-basic
+    · python · letsplot · anyplot.ai" per the mandated {spec-id} · {language} · {library}
+    · anyplot.ai template.
+  - Library Mastery idiomatic usage (LM-01) still slightly held back by nudging annotation
+    positions in pre-transform (Cartesian) data space rather than a polar-aware placement
+    helper.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "polar-basic · letsplot · anyplot.ai" in dark ink (top-left), readable. Y-axis label "Temperature (°C)" vertical on the left, readable. Angular hour labels (00:00–21:00) around the perimeter in dark ink, readable. Radial values (0, 5, 10, 15, 20, 25) on y-axis, readable.
-      Data: Brand green #009E73 closed path with filled area and data points; fill is a lighter teal; radial gridlines as subtle arcs
+      Background: warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: title "polar-basic · letsplot · anyplot.ai" (dark ink, top-left), "Temperature (°C)" rotated axis label, radial ticks (5,10,15,20,25) and angular hour labels (00:00...21:00) all dark ink - all readable against the light background.
+      Data: single brand-green (#009E73) closed path with light fill, small point markers, two larger highlighted markers with "25°C peak" / "2°C low" annotations. Donut-hole radial scale (limits [-8, 29]) keeps the coldest hours clearly separated from the origin - the attempt-1 center-cluster clutter is resolved.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and all labels rendered in light off-white/gray text against the dark surface — no dark-on-dark issues. Angular labels and radial values clearly readable.
-      Data: Same #009E73 brand green line and points (data colors identical to light render); filled area appears as dark teal on the near-black background; gridlines visible as subtle lighter arcs
+      Background: warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: title, axis label, radial ticks, and angular hour labels all render in light/cream ink, clearly legible against the dark surface. Gridlines are subdued light gray, subtle but visible. No dark-on-dark failures.
+      Data: colors identical to light render - same brand-green line/fill/points, same annotation labels, both legible in open space away from the center.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt and axis_title 20pt correct; axis_text 14pt is below the
-          16pt minimum
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Angular hour labels spaced cleanly; no collisions
+        comment: Annotations and markers cleanly separated after donut-hole fix
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Path size=1.5 and points size=5 clearly visible at 3600x3600
+        comment: Markers appropriately sized; inner-zone points still moderately close
+          together
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green series with high contrast on both surfaces; CVD-safe
+        comment: Single-hue green, good contrast on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square format appropriate; chart fills ~65% of canvas; slight imbalance
-          from left y-axis label
+        comment: Exact 2400x2400 canvas, balanced proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) with units; correct title format
+        comment: Descriptive radial axis label with units, standard-interval angular
+          labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; theme-adaptive
-          chrome correct in both renders'
+        comment: Brand green consistent both renders, correct theme backgrounds
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: Clean and correctly themed; well-configured default tier without
-          additional hierarchy or emphasis
+        comment: Donut-hole scale + filled polygon + peak/trough highlights is a deliberate
+          design choice
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axis lines and tick marks removed; minor grid removed; major grid
-          subtle; good whitespace
+        comment: Ticks/axis lines removed, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Circular format communicates cyclical nature; no focal point or emphasis
-          on peak/minimum
+        comment: Peak/trough call-outs plus donut hole reinforce a clear cyclical
+          focal point
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,29 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: coord_polar with theta=x produces correct polar chart
+        comment: Correct polar chart via coord_polar
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Radial gridlines, angular labels at 3-hour intervals, closed loop
-          path, data points
+        comment: Theta/radius, standard-interval angular labels, and radial scale
+          that avoids center compression per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hour to angle, temperature to radius; all 24 points shown
+        comment: Hour to theta, temperature to radius, full range shown
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: polar-basic · letsplot · anyplot.ai correct; no legend appropriate
-          for single series
+        comment: Title missing language segment (python)
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -158,21 +157,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Full 24-hour cycle; amplitude variation; single-series only (category
-          is optional per spec)
+        comment: Shows theta, radius, peak/trough highlights, hour labels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hourly temperature readings with realistic sine-wave diurnal cycle;
-          neutral domain
+        comment: Hourly diurnal temperature cycle, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Base 15°C ± 10°C with ±2°C noise; plausible spring/autumn day range
+        comment: ~23°C diurnal swing is on the high side but not implausible
     code_quality:
       score: 10
       max: 10
@@ -182,7 +179,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, tokens, data, theme, plot, save'
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -194,21 +191,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; elegant loop-closure pattern with hour=24 duplicate
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API
+        comment: Correct plot-{THEME}.png/.html naming
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -216,21 +213,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: coord_polar + grammar-of-graphics composition idiomatic; scale_x_continuous
-          with breaks/labels correct
+        comment: Correct high-level API; nudging in pre-transform data space is a
+          slightly unusual choice
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: coord_polar is lets_plot Python port of ggplot2 polar; HTML export
-          distinctive; loop-closure trick shows library knowledge
+        comment: Custom layer_tooltips() with formatted hour/temperature strings is
+          lets-plot-distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - html-export
+  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
