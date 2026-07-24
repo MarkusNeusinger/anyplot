@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-24
@@ -13,6 +13,22 @@ sys.path.pop(0)
 
 import pygal
 from pygal.style import Style
+
+
+class ParallelCoordsLine(pygal.Line):
+    """pygal reserves legend-at-bottom margin for ceil(sqrt(N)) legend rows, where
+    N counts ALL added series — including the 45 untitled per-observation lines
+    below. Only the 3 titled mean lines ever render a legend row, so the default
+    reservation left ~25% of the canvas as dead space beneath the legend. Recompute
+    the bottom margin for the single row that's actually drawn, and let pygal grow
+    the plot view into the reclaimed space.
+    """
+
+    def _compute_margin(self):
+        super()._compute_margin()
+        base = self.margin_bottom or self.margin
+        row_height = max(self.legend_box_size, self.style.legend_font_size)
+        self.margin_box.bottom = base + self._x_title_height + self._x_labels_height + self.spacing + row_height
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -113,7 +129,7 @@ custom_style = Style(
 )
 
 # Plot
-chart = pygal.Line(
+chart = ParallelCoordsLine(
     width=3200,
     height=1800,
     style=custom_style,
@@ -123,7 +139,8 @@ chart = pygal.Line(
     show_dots=False,
     show_y_guides=True,
     show_x_guides=True,  # faint vertical lines at each dimension — the "parallel axes" identity
-    x_label_rotation=0,
+    x_label_rotation=20,  # start-anchors each label at its tick instead of centering it on top,
+    # so the leftmost label no longer collides with the y-axis "0" tick label
     legend_at_bottom=True,
     legend_box_size=40,
     truncate_legend=-1,
