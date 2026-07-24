@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:13:19Z'
-updated: '2026-07-24T07:00:05Z'
+updated: '2026-07-24T07:09:03Z'
 generated_by: claude-sonnet
 workflow_run: 30073582002
 issue: 977
@@ -12,46 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'Correct Q-Q construction: Blom-type plotting positions p=(i-0.5)/n and theoretical
-    quantiles scaled by the sample''s own mean/std, producing a mathematically sound
-    comparison.'
-  - Realistic bimodal bolt-torque QC dataset produces a genuine S-curve deviation
-    from the reference line, directly illustrating the spec's callout that S-curves
-    reveal skewness.
-  - 'Theme-adaptive chrome is fully correct in both renders — backgrounds match #FAF8F1/#1A1A17
-    exactly, text stays legible, and the diagonal reference line uses the theme-adaptive
-    INK_SOFT token so it reads on both surfaces.'
-  - 'Imprint palette used correctly: brand green (#009E73) for data points, neutral
-    dashed line for the reference — no stray colors.'
-  - Canvas gate passes cleanly (3200×1800), code is clean single-pass KISS style with
-    a seeded RNG for reproducibility.
+  - 'Correct Q-Q plot statistics: plotting positions (i-0.5)/n, theoretical quantiles
+    scaled by the sample mean/std, matches standard convention.'
+  - 'Distinctive Altair interactivity: a functional pointer-hover selection (alt.selection_point)
+    that enlarges the nearest marker via alt.condition, alongside static tooltips
+    — genuine, not fake.'
+  - 'Thoughtful realistic dataset: bimodal bolt-torque QC mixture (well-calibrated
+    station + drifting station) that visibly departs from the y=x line, directly demonstrating
+    the skewness/heavy-tail scenario called out in the spec notes rather than a boring
+    perfect-normal sample.'
+  - Theme-adaptive chrome correctly threaded through INK/INK_SOFT/PAGE_BG tokens —
+    both renders pass legibility checks, and the Imprint palette (#009E73 markers)
+    and backgrounds (#FAF8F1/#1A1A17) are correct.
+  - 'Canvas discipline: correctly sized landscape inner view (620x320) padded to the
+    exact 3200x1800 target with no clipping.'
+  - Semi-transparent markers with a background-colored stroke give overlapping mid-quantile
+    points a subtle separation effect.
   weaknesses:
-  - Points in the mid-quantile range (~42-51 on both axes) overlap into a dense blob
-    — consider slightly smaller markers or lower opacity there to keep individual
-    points distinguishable.
-  - Title is the plain mandated string with no descriptive prefix, so it only fills
-    ~30-35% of the plot width instead of the comfortable 50-70% band — a short prefix
-    like 'Bolt Torque QC · ' would improve title-bar balance and reinforce the data
-    story.
-  - No annotation on the reference line (e.g. a small 'y = x' label) or on the deviation
-    region — a light annotation would push data storytelling beyond a bare scatter+line.
-  - Relies on generic layer composition (points + line) without any distinctive Altair-only
-    features (e.g. interactive selections, transform_ API, faceting) that would demonstrate
-    deeper library mastery.
+  - 'Marker overlap in the densest mid-quantile clusters (~theoretical 42-52): points
+    visually merge into a solid blob despite opacity=0.65; slightly smaller markers
+    (size~35) or lower opacity would improve individual-point distinguishability at
+    n=100.'
+  - Tick label font (10pt) is small relative to the axis titles (12pt) and chart title
+    (16pt) — bumping to ~11pt would sharpen the size hierarchy and mobile legibility
+    without crowding.
+  - The 'y = x' reference-line label is quite subtle (fontSize=11, italic, INK_SOFT)
+    — a slightly bolder/larger label would strengthen the data-storytelling read for
+    a viewer scanning quickly.
+  - No unit annotation (e.g. 'N·m') on the axes despite the torque-based dataset —
+    would reinforce the realistic context without conflicting with the spec's mandated
+    axis-label text.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec, not pure white.
-      Chrome: Title "qq-basic · python · altair · anyplot.ai" in bold dark ink, centered near top. Axis titles "Theoretical Quantiles" (x) and "Sample Quantiles" (y, rotated) in dark ink. Tick labels in a softer dark gray. Subtle dashed gridlines. All text is clearly readable against the light background.
-      Data: Filled green (#009E73) circular markers with slight transparency, plus a dark dashed diagonal reference line (y=x). Points trace a monotonic S-curve that departs visibly from the reference line at both tails, correctly signalling the underlying bimodal (two-station) mixture.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold black title "Bolt Torque QC · qq-basic · python · altair · anyplot.ai" is clearly legible; bold dark axis titles "Theoretical Quantiles" (x) and "Sample Quantiles" (y) are clearly legible; grey tick labels on both axes are readable; subtle dashed grey gridlines are visible without dominating; a dark dashed diagonal reference line runs corner to corner with a small italic "y = x" label near its top end.
+      Data: Teal-green (#009E73) semi-transparent filled circles with a thin background-colored stroke trace an S-shaped path that hugs the reference line through the mid-range and steps away from it at both tails (bimodal QC mixture), which is exactly the "S-curve indicates skewness / heavy tails" behavior the spec calls out. First (and only) series correctly uses the Imprint palette position-1 color.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec, not pure black.
-      Chrome: Same title and axis titles now in light off-white ink, tick labels in a lighter soft gray, gridlines subtle but visible. All text is clearly readable against the dark background — no dark-on-dark failures observed. The reference line switches to a light gray dashed stroke so it remains visible on the dark surface.
-      Data: Same green (#009E73) markers as the light render, identical positions and shapes — confirms data colors are unchanged between themes, only chrome flipped.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: White/light bold title and axis titles are clearly legible; light-grey tick labels are readable; subtle dashed light-grey gridlines are visible; the reference line is now a light-grey dashed diagonal with the same small italic "y = x" label, legible against the dark background. No dark-on-dark text anywhere.
+      Data: Same teal-green (#009E73) markers in the identical positions/shape as the light render — only the chrome (background, gridlines, line color, text color) flipped, exactly as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -63,72 +67,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes; tick labels (10pt)
-          are on the smaller side for 400px mobile thumbnails but consistent with
-          library conventions
+        comment: All text readable in both themes; tick label font (10pt) slightly
+          small relative to the rest of the hierarchy.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/legend collisions
+        comment: No text/data label collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers appropriately sized with opacity for a ~100-point sample,
-          though the dense mid-quantile cluster still blobs together
+        comment: Semi-transparent markers with background stroke help, but dense mid-quantile
+          clusters still merge into a near-solid blob.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green points + neutral dashed line, redundant shape/dash encoding,
-          no red-green reliance
+        comment: Single-hue data vs. dark/light reference line; no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed at 3200x1800, no clipping, good margins
+        comment: Landscape canvas exact target, no clipping, balanced proportions;
+          canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Theoretical Quantiles' / 'Sample Quantiles' matching
-          spec notes
+        comment: Axis titles match the spec's mandated 'Theoretical Quantiles' / 'Sample
+          Quantiles' text.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; theme-adaptive chrome correct in both renders'
+        comment: 'Marker uses Imprint #009E73; backgrounds correct #FAF8F1/#1A1A17;
+          both renders theme-correct.'
     design_excellence:
       score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Consistent Imprint theming and a deliberate bimodal data story raise
-          it above generic defaults, but no custom typography or annotation work
+        comment: Custom Imprint palette, background-matched marker stroke for separation,
+          dashed reference line with inline label — clear intentional polish beyond
+          defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped frame, subtle dashed gridlines, generous whitespace
+        comment: Minimal chrome, subtle dashed grid at low opacity, generous whitespace;
+          no spines beyond the axis domain lines.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: The S-curve deviation is a genuine, legible story, but nothing (annotation,
-          callout) calls it out explicitly
+        comment: Bimodal dataset creates a clear deviation story against the y=x guide,
+          but the label/annotation is subtle and there's no explicit callout of the
+          two QC populations.
     spec_compliance:
       score: 15
       max: 15
@@ -138,50 +145,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Q-Q plot with reference line
+        comment: 'Correct Q-Q plot: sample quantiles vs. theoretical normal quantiles
+          with reference line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 45-degree reference line clearly visible, correct axis labels
+        comment: 45-degree y=x reference line present and clearly visible, as required.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theoretical on X, Sample on Y per convention
+        comment: X = theoretical quantiles, Y = sample quantiles; full data range
+          shown on both axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed for single
-          series
+        comment: Title follows '{Descriptive Title} · qq-basic · python · altair ·
+          anyplot.ai' format; no legend needed for single series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bimodal mixture clearly demonstrates S-curve/skewness deviation from
-          normality
+        comment: Bimodal mixture produces a visible S-curve/step deviation demonstrating
+          skew and tail behavior, not just a trivial straight-line fit.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bolt torque QC readings from two assembly stations — plausible, neutral,
-          well-documented
+        comment: Bolt torque QC across two assembly stations — plausible, neutral,
+          industrial context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Torque values (37-63 N·m) are sensible for the domain
+        comment: n=100 falls within the spec's recommended 30-500 range; torque values
+          in N·m are sensible.
     code_quality:
       score: 10
       max: 10
@@ -191,59 +201,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear script
+        comment: No functions/classes, flat top-to-bottom script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) fixes the mixture sample.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, sys, altair, numpy, pandas, PIL.Image, scipy.stats.norm all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: No fake UI; hover interactivity is real and functional.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png/.html, current vl-convert API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current Altair API.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic layer composition (points + line + text) via the + operator,
+          configure_* chaining.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper layer composition (reference_line + points), alt.Chart/alt.X/alt.Y
-          idioms
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: true
-        comment: Uses layering but no Altair-distinctive interactivity, transforms,
-          or faceting
+        comment: alt.selection_point(pointerover, nearest) + alt.condition for hover-driven
+          marker enlargement is a genuine Altair-specific feature beyond generic usage.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
   - layer-composition
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
