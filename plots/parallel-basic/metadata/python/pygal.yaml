@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:13:47Z'
-updated: '2026-07-24T11:21:33Z'
+updated: '2026-07-24T11:36:34Z'
 generated_by: claude-sonnet
 workflow_run: 30087245503
 issue: 820
@@ -12,147 +12,134 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 82
 review:
   strengths:
-  - 'Correct palette compliance: first series (Setosa) is brand green #009E73, and
-    Versicolor/Virginica follow the canonical Imprint order (#C475FD, #4467A3) — identical
-    across light/dark renders'
-  - 'Thoughtful visual hierarchy: thick mean-value lines per species (stroke width
-    7) layered over thin individual observation lines (stroke width 3, opacity 0.5)
-    makes species separation and within-group spread both readable at once'
-  - 'Idiomatic, distinctive pygal usage on the data side: per-point tooltip dicts
-    with the actual (non-normalized) measurement and opacity_hover for genuine interactive
-    hover feedback in the HTML export — not faked'
-  - Canonical Iris dataset (45 observations, 4 dimensions) matches the spec's own
-    recommended example and sits comfortably within the 20-200 obs / 4-10 dim guidance
-  - 'The y-tick/x-label proximity flagged last review is measurably tighter: pixel
-    inspection shows a small but real gap now (no literal ink overlap), via x_label_rotation=20'
-  - Explicit min-max normalization to a shared 0-1 scale makes the four differently-scaled
-    measurements (cm) fairly comparable across axes, exactly as the spec's Notes section
-    asks
+  - Correct Imprint palette applied in canonical order (Setosa=#009E73, Versicolor=#C475FD,
+    Virginica=#4467A3), identical data colors across both themes with fully theme-correct
+    chrome (backgrounds, text, grid) in both renders
+  - 'Clever series-collapsing technique: 15 observations per species merged into one
+    allow_interruptions XY series instead of 45 separate series, avoiding a legend-margin
+    blowup while still rendering every individual observation'
+  - Thick mean-lines (stroke_width=7) layered over thin, semi-transparent (alpha=0.5)
+    individual-observation lines create real visual hierarchy — the species-level
+    trend is instantly visible above the raw spread
+  - Real, correctly-scaled Iris dataset (the spec's own suggested example) with per-dimension
+    min/max normalization, giving an honest and factually accurate parallel-coordinates
+    view
+  - Per-point tooltips carry the actual (non-normalized) measurement text, a nice
+    use of pygal's interactive SVG/HTML output that adds value beyond the static PNG
   weaknesses:
-  - 'VQ-05/DE-02 bottom whitespace is UNRESOLVED despite a dedicated fix attempt:
-    pixel analysis shows rendered content (light AND dark) ends at row 1338 of 1800
-    in both this attempt and the prior rejected attempt — identical to the pixel.
-    The new ParallelCoordsLine._compute_margin() override (meant to reclaim the ~25.7%
-    dead space below the legend by recomputing margin_box.bottom for the single legend
-    row that actually renders) had zero measurable effect on the output. This means
-    the override either isn''t being invoked at the point that determines the plot
-    view''s vertical extent, or something else (e.g. the base Line class computing
-    the view box before/independently of this override) still reserves the old ceil(sqrt(N))-row
-    legend margin. Recommend either: (a) debugging why the override doesn''t change
-    rendered geometry (confirm it actually runs, and that margin_box.bottom is read
-    AFTER this hook by whatever computes the plot view height), or (b) abandoning
-    the private-API hook entirely and instead directly reducing `height` to match
-    the actually-drawn content, or shrinking `margin`/`spacing`/`margin_bottom` via
-    the public constructor kwargs so the reserved region matches the one visible row
-    of legend swatches.'
-  - 'CQ-01/LM-01: subclassing pygal.Line and overriding the leading-underscore private
-    method `_compute_margin` violates both the ''no functions/classes'' KISS expectation
-    for pygal implementations and idiomatic library usage (reaching into an internal,
-    non-public API). Given the override also does not achieve its intended effect
-    (see above), this is added complexity with no payoff — prefer a flat script using
-    only pygal''s public Style/constructor options.'
-  - 'VQ-02 origin-label proximity is improved but still very tight: the y-axis ''0''
-    tick label and the ''L'' of ''Sepal Length (cm)'' now have only a ~3px gap out
-    of a 1800px-tall canvas (no shared ink, but visually will still read as touching/crowded
-    at typical display sizes). A little more clearance — nudge the y-axis 0-tick label
-    left, or push the x-axis label row down slightly further — would fully resolve
-    this.'
+  - The y-axis '0' tick label visually collides with the 'L' of the first x-axis category
+    label ('Sepal Length (cm)') in BOTH themes — the tick glyph sits directly on top
+    of the ascender, momentarily reading like a merged character. Increase the left
+    margin slightly (e.g. margin=100 -> ~130) or nudge x_label_rotation further so
+    the first rotated label's start point clears the y-axis '0' label, similar to
+    the fix already applied for the general leftmost-label clearance.
+  - 'Vertical whitespace is unbalanced: content (title through legend) ends at ~y=1338
+    of 1800px, leaving ~460px (26%) of pure blank canvas at the very bottom with almost
+    no top margin (~50px) — all the slack sits on one side. Reduce the overall canvas
+    height/margin so the legend sits closer to the bottom edge, or add a small top
+    margin so the whitespace is distributed rather than stacked entirely below the
+    legend.'
+  - 'Design Excellence is still close to a well-configured default: beyond the mean/individual
+    line-weight contrast there is limited additional polish (no subtle background
+    banding per dimension, no axis-order-driven correlation story) — consider giving
+    the plot a stronger single point of emphasis (e.g., highlighting one crossing/separation
+    region) to push Data Storytelling further.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white — matches spec.
-      Chrome: Title "parallel-basic · python · pygal · anyplot.ai" fully visible, ~55% of canvas width, not clipped (measured: title spans x=724-2474 of 3200px). Axis titles "Dimensions" (x) and "Normalized Value (0-1)" (y) readable. Y-axis ticks (0-1 in 0.1 steps) and x-axis category labels (Sepal Length (cm), Sepal Width (cm), Petal Length (cm), Petal Width (cm)) are dark ink on light background and legible. Pixel-level check at the origin shows the "0" y-tick label and the "L" of "Sepal Length (cm)" now have a small (~3px of 1800) gap — no longer touching ink, but still visually crowded at normal viewing scale. Below the legend row, a large block of empty background remains: measured content ends at row 1338 of 1800 (~25.7% of canvas height is dead whitespace), unchanged from the prior rejected attempt despite a code change intended to fix exactly this.
-      Data: 45 iris lines colored by species — Setosa = brand green #009E73, Versicolor = lavender #C475FD, Virginica = slate blue #4467A3 (canonical Imprint order, first series is brand green as required). Thick mean lines per species sit above a fan of thinner, semi-transparent individual observation lines. Legend at bottom shows all three species with matching color swatches.
-      Legibility verdict: PASS (no text is unreadable), but layout/whitespace issue persists — see weaknesses.
+      Background: Warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: Title "parallel-basic · python · pygal · anyplot.ai" in dark ink, centered, ~55% of canvas width. X-axis title "Dimensions" and Y-axis title "Normalized Value (0-1)" both dark, descriptive, similarly sized. Y-axis ticks (0, 0.1, ..., 1) and x-axis category labels ("Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)", rotated ~30°) are dark and legible, EXCEPT the y-axis "0" tick label visually overlaps the "L" of "Length" in the first rotated x-axis category label — a clear, localized text collision. Legend at bottom ("Setosa", "Versicolor", "Virginica") with colored swatches, well spaced, clearly readable. Subtle dashed horizontal + vertical guide lines.
+      Data: Three species, each with a thick mean-line and a bundle of thinner, semi-transparent individual-observation lines. Setosa = brand green #009E73 (correct first-series color), Versicolor = lavender #C475FD, Virginica = blue-gray #4467A3 — matches canonical Imprint order. Lines converge/cross heavily around Sepal Length/Width (expected overlap for Iris) and separate cleanly by Petal Length/Width, correctly showing species clustering.
+      Legibility verdict: PASS overall, with one flagged FAIL-adjacent detail (the "0"/"Length" overlap) — everything else reads clearly against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black — matches spec.
-      Chrome: Same title/axis-title/tick-label content, rendered in light ink (near-white/off-white) against the dark background — fully legible, no dark-on-dark failures observed. Grid lines are subtle, theme-appropriate muted tone. Same bottom-whitespace measurement as the light render: content ends at row 1338 of 1800.
-      Data: Colors are pixel-identical to the light render (#009E73 / #C475FD / #4467A3) — only chrome (background, text, grid) flips between themes, as required.
-      Legibility verdict: PASS — no dark-on-dark issues; same unresolved whitespace/layout weakness as the light render.
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Same title, axis titles, tick labels, legend layout as the light render, all re-colored to light ink (white/off-white) and clearly legible against the dark background. No dark-on-dark text found. Same "0" tick / "Length" label overlap reproduces identically here (it is a geometry issue, not a color issue, so it persists in both themes as expected).
+      Data: Data colors are identical hex values to the light render (#009E73 / #C475FD / #4467A3) — only the chrome (background, text, grid) flipped, exactly per spec. The lines read with good contrast against the dark surface.
+      Legibility verdict: PASS overall, with the same localized "0"/"Length" collision as the light render — no dark-on-dark or unreadable elements otherwise.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All text readable in both themes at full size; font sizes explicitly
-          set via Style tokens
+        comment: All font sizes explicitly set (title_font_size, label_font_size,
+          major_label_font_size, legend_font_size, value_font_size) and readable in
+          both themes; deduction for the '0' tick label colliding with the first x-axis
+          category label
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: false
-        comment: y-axis '0' tick label and 'L' of 'Sepal Length (cm)' no longer share
-          ink (~3px gap of 1800), improved from last attempt's true overlap, but still
-          visually crowded
+        passed: true
+        comment: Localized overlap between y-axis '0' tick label and the 'L' of 'Sepal
+          Length (cm)' in both renders; everything else is clean
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: '45 lines handled well: thick mean lines + thin alpha=0.5 individual
-          lines avoid overplotting'
+        comment: Thick mean lines + thinner alpha=0.5 individual lines adapt well
+          to the 45-line density; central dimensions are inherently busy but readable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue categorical set, CVD-safe, no red-green sole
-          signal
+        comment: Imprint palette hues are well separated, alpha blending keeps overlaps
+          readable, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 2
         max: 4
-        passed: false
-        comment: ~25.7% of canvas height (below row 1338/1800) is dead whitespace
-          beneath the legend — pixel-identical to the prior rejected attempt despite
-          a dedicated code fix attempt that had no effect
+        passed: true
+        comment: 'Content fills ~72% of canvas height but whitespace is unbalanced:
+          ~460px (26%) of blank canvas sits below the legend versus ~50px above the
+          title'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (cm, Normalized Value 0-1)
+        comment: Both axis titles descriptive with units (cm, 0-1 normalized)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, correct theme-adaptive
-          backgrounds'
+        comment: 'First series #009E73, canonical order, identical data colors across
+          themes, theme-correct backgrounds/chrome'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Custom palette + intentional mean-vs-individual line hierarchy, but
-          overall a fairly standard line-chart treatment
+        passed: false
+        comment: Well-configured, above-default styling but not yet publication-level
+          polish
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Unbalanced bottom whitespace still reads as leftover margin rather
-          than deliberate refinement, unchanged from prior attempt despite an attempted
-          fix
+        comment: Subtle theme-adaptive grid, alpha blending, clean legend — some refinement
+          visible but not maximal
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Thick mean lines create a clear focal point above the individual-observation
-          fan; alpha reveals density/overlap patterns between species
+        passed: false
+        comment: Thick mean lines over thin individual lines create a real visual
+          hierarchy that guides the eye to species-level trends
     spec_compliance:
       score: 15
       max: 15
@@ -162,28 +149,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel coordinates construction via pygal.Line with dimension
-          categories on x
+        comment: Genuine parallel coordinates plot via normalized XY axes per dimension
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple vertical axes, category color coding, alpha transparency
-          for overlap all present
+        comment: Normalization, category color-coding, and alpha transparency for
+          overlap all present per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=dimensions, y=normalized value, all 4 dimensions represented
+        comment: X = dimension index/labels, Y = normalized value, all 4 dimensions
+          and all observations shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels match species
-          names and colors
+        comment: Title exactly 'parallel-basic · python · pygal · anyplot.ai'; legend
+          labels match species names
     data_quality:
       score: 15
       max: 15
@@ -193,83 +180,80 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All species, all 4 dimensions, plus derived mean-per-species lines
+        comment: Shows overlapping ranges for sepal measures and clean separation
+          for petal measures — classic Iris multivariate structure fully represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Canonical, neutral, real-world Iris dataset — matches spec's own
+        comment: Real, neutral, well-known Iris botanical dataset, exactly the spec's
           suggested example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 45 observations x 4 dimensions, within recommended 20-200 obs / 4-10
-          dims
+        comment: Real Iris measurements in cm, factually correct proportions between
+          species
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Introduces a ParallelCoordsLine(pygal.Line) subclass with a method
-          override — departs from the flat no-functions/classes script pattern expected
-          for pygal
+        passed: true
+        comment: 'Flat script: imports, data, style, chart, save — no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data, no randomness
+        comment: Fully deterministic hard-coded dataset, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, pygal, Style — all used
+        comment: Only pygal, os, sys (sys used deliberately to avoid local-file shadowing)
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: The private-method override is a fragile, non-obvious hack that also
-          fails to achieve its stated purpose (whitespace is unchanged)
+        passed: true
+        comment: Clean, well-commented, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{theme}.png and plot-{theme}.html correctly
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
-        max: 5
-        passed: false
-        comment: Reaches into pygal's private underscore-prefixed _compute_margin()
-          internal instead of public Style/constructor options — non-idiomatic, and
-          ineffective
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Genuine per-point tooltips + opacity_hover interactivity, dual stroke-width
-          layering unique to pygal's add() flexibility
-  verdict: REJECTED
+        comment: Uses pygal.XY with Style tokens, x_labels dict, allow_interruptions
+          — solid idiomatic usage beyond basics
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point tooltips with real measurement text and interrupted multi-segment
+          series are pygal-distinctive SVG/interactive features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
-  - html-export
+  - manual-ticks
   patterns:
   - iteration-over-groups
   dataprep:
