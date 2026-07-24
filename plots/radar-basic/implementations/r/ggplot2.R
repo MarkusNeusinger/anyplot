@@ -53,19 +53,34 @@ closing_points <- reviews %>%
 
 radar_df <- bind_rows(reviews, closing_points)
 
+# Category labels are drawn as a manual geom_text() layer, not axis.text.x:
+# ggplot2's CoordPolar computes a per-angle hjust for axis text, and at
+# certain angles that computation clips/mis-renders the leading glyph.
+# A fixed hjust/vjust text layer sidesteps that rendering path entirely.
+label_df <- tibble::tibble(
+  axis_pos   = seq_len(n_axes),
+  competency = competencies
+)
+label_radius <- 106
+
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(radar_df, aes(x = axis_pos, y = score, group = employee)) +
   geom_polygon(aes(fill = employee), color = NA, alpha = 0.25) +
   geom_line(aes(color = employee), linewidth = 1.1) +
   geom_point(aes(color = employee), size = 2.8) +
+  geom_text(data = label_df,
+            aes(x = axis_pos, y = label_radius, label = competency),
+            inherit.aes = FALSE, color = INK, size = 3.9,
+            hjust = 0.5, vjust = 0.5) +
   coord_radar(theta = "x", start = 0) +
   scale_x_continuous(breaks = seq_len(n_axes), labels = competencies,
                       limits = c(1, n_axes + 1), expand = c(0, 0)) +
-  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20),
+  scale_y_continuous(limits = c(0, 112), breaks = seq(0, 100, 20),
                       expand = c(0, 0)) +
   scale_fill_manual(values = IMPRINT_PALETTE[1:2], name = NULL) +
   scale_color_manual(values = IMPRINT_PALETTE[1:2], name = NULL) +
-  labs(title = "radar-basic · r · ggplot2 · anyplot.ai") +
+  labs(title = "radar-basic · r · ggplot2 · anyplot.ai",
+       caption = "Score (0-100 scale)") +
   theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
@@ -73,10 +88,12 @@ p <- ggplot(radar_df, aes(x = axis_pos, y = score, group = employee)) +
     panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.4),
     panel.grid.minor  = element_blank(),
     axis.title        = element_blank(),
-    axis.text.x       = element_text(color = INK, size = 11),
+    axis.text.x       = element_blank(),
     axis.text.y       = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),
     plot.title        = element_text(color = INK, size = 12, hjust = 0.5),
+    plot.caption      = element_text(color = INK_SOFT, size = 7, hjust = 0.5,
+                                      margin = margin(t = 6)),
     legend.position    = "bottom",
     legend.background = element_rect(fill = ELEVATED_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT, size = 9),
