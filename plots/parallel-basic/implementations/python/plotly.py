@@ -1,6 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
-Library: plotly 6.7.0 | Python 3.14.4
+Library: plotly 6.9.0 | Python 3.14.4
 Quality: 83/100 | Updated: 2026-04-27
 """
 
@@ -18,14 +18,24 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito discrete colorscale: Setosa=#009E73, Versicolor=#C475FD, Virginica=#4467A3
-OI_COLORSCALE = [
-    [0.0, "#009E73"],
-    [0.33, "#009E73"],
-    [0.33, "#C475FD"],
-    [0.67, "#C475FD"],
-    [0.67, "#4467A3"],
-    [1.0, "#4467A3"],
+
+def rgba(hex_color, alpha):
+    """Imprint hex -> rgba string, used to give dense overlapping lines translucency."""
+    h = hex_color.lstrip("#")
+    r, g, b = (int(h[i : i + 2], 16) for i in (0, 2, 4))
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+# Imprint palette discrete colorscale: Setosa=#009E73, Versicolor=#C475FD, Virginica=#4467A3
+# rgba alpha (0.75) gives the 150 overlapping polylines transparency where they cross.
+LINE_ALPHA = 0.75
+IMPRINT_COLORSCALE = [
+    [0.0, rgba("#009E73", LINE_ALPHA)],
+    [0.33, rgba("#009E73", LINE_ALPHA)],
+    [0.33, rgba("#C475FD", LINE_ALPHA)],
+    [0.67, rgba("#C475FD", LINE_ALPHA)],
+    [0.67, rgba("#4467A3", LINE_ALPHA)],
+    [1.0, rgba("#4467A3", LINE_ALPHA)],
 ]
 
 # Data - Iris-like dataset for multivariate demonstration
@@ -71,15 +81,15 @@ fig = go.Figure(
     data=go.Parcoords(
         line={
             "color": df["species_code"],
-            "colorscale": OI_COLORSCALE,
+            "colorscale": IMPRINT_COLORSCALE,
             "showscale": True,
             "cmin": 0,
             "cmax": 2,
             "colorbar": {
-                "title": {"text": "Species", "font": {"size": 20, "color": INK}},
+                "title": {"text": "Species", "font": {"size": 12, "color": INK}},
                 "tickvals": [0, 1, 2],
                 "ticktext": ["Setosa", "Versicolor", "Virginica"],
-                "tickfont": {"size": 18, "color": INK_SOFT},
+                "tickfont": {"size": 10, "color": INK_SOFT},
                 "len": 0.6,
                 "y": 0.5,
                 "bgcolor": ELEVATED_BG,
@@ -93,26 +103,34 @@ fig = go.Figure(
             {"label": "Petal Length (cm)", "values": df["petal_length"], "range": [0.5, 7]},
             {"label": "Petal Width (cm)", "values": df["petal_width"], "range": [0, 2.8]},
         ],
-        labelfont={"size": 22, "color": INK},
-        tickfont={"size": 16, "color": INK_SOFT},
-        rangefont={"size": 14, "color": INK_SOFT},
+        labelfont={"size": 12, "color": INK},
+        tickfont={"size": 10, "color": INK_SOFT},
+        rangefont={"size": 10, "color": INK_SOFT},
     )
 )
 
 fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
     title={
-        "text": "Iris Flower Measurements · parallel-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "parallel-basic · python · plotly · anyplot.ai",
+        "subtitle": {
+            "text": "Setosa (green) clusters tightly at low petal dimensions"
+            " — clearly separated from Versicolor and Virginica",
+            "font": {"size": 12, "color": INK_SOFT},
+        },
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.95,
+        "y": 0.97,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    margin={"l": 80, "r": 180, "t": 120, "b": 80},
+    margin={"l": 80, "r": 110, "t": 110, "b": 60},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
