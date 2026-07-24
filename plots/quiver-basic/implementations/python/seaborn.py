@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 quiver-basic: Basic Quiver Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-24
@@ -41,8 +41,7 @@ sns.set_theme(
 # Imprint sequential colormap — magnitude is single-polarity (always >= 0)
 imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
-# Data - idealized ocean eddy current field (u = -0.1y, v = 0.1x), 20x20 grid
-np.random.seed(42)
+# Data - idealized ocean eddy current field (u = -0.05y, v = 0.05x), 20x20 grid
 grid_size = 20
 east_km = np.linspace(-30, 30, grid_size)
 north_km = np.linspace(-30, 30, grid_size)
@@ -50,8 +49,8 @@ East, North = np.meshgrid(east_km, north_km)
 x = East.flatten()
 y = North.flatten()
 
-u = -0.1 * y
-v = 0.1 * x
+u = -0.05 * y
+v = 0.05 * x
 magnitude = np.sqrt(u**2 + v**2)
 
 # Scale displacement by a constant factor so arrow length stays proportional
@@ -61,12 +60,17 @@ arrow_scale = (0.85 * spacing) / magnitude.max()
 x_end = x + arrow_scale * u
 y_end = y + arrow_scale * v
 
-norm = plt.Normalize(magnitude.min(), magnitude.max())
+norm = plt.Normalize(0, magnitude.max())
 
 # Build shaft segments for a seaborn continuous-hue lineplot, and filled
-# triangular arrowheads (matplotlib patches) colored to match each shaft
+# triangular arrowheads (matplotlib patches) colored to match each shaft.
+# head_length is clamped to a minimum absolute size (independent of seg_length)
+# so low-magnitude arrows near the vortex center still read as directional
+# arrows instead of collapsing to arrowhead-less stubs/dots.
 head_ratio = 0.32
 head_half_angle = 0.45
+max_seg_length = 0.85 * spacing
+min_head_length = 0.35 * head_ratio * max_seg_length
 
 line_data = []
 head_patches = []
@@ -77,7 +81,7 @@ for i in range(len(x)):
 
     angle = np.arctan2(y_end[i] - y[i], x_end[i] - x[i])
     seg_length = mag * arrow_scale
-    head_length = head_ratio * seg_length
+    head_length = max(head_ratio * seg_length, min_head_length)
 
     line_data.append({"x": x[i], "y": y[i], "segment": i, "order": 0, "magnitude": mag})
     line_data.append({"x": x_end[i], "y": y_end[i], "segment": i, "order": 1, "magnitude": mag})
@@ -100,7 +104,7 @@ sns.lineplot(
     x="x",
     y="y",
     hue="magnitude",
-    hue_norm=(magnitude.min(), magnitude.max()),
+    hue_norm=(0, magnitude.max()),
     units="segment",
     estimator=None,
     sort=False,
