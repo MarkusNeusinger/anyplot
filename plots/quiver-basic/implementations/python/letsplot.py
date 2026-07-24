@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 quiver-basic: Basic Quiver Plot
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-04-29
+Quality: 82/100 | Updated: 2026-07-24
 """
 
 import os
@@ -64,26 +64,26 @@ anyplot_theme = theme(
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major=element_line(color=INK_SOFT, size=0.15),
     panel_grid_minor=element_blank(),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_title=element_text(color=INK, size=12),
+    axis_text=element_text(color=INK_SOFT, size=10),
     axis_line=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=24),
+    plot_title=element_text(color=INK, size=16),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=14),
-    legend_title=element_text(color=INK, size=18),
+    legend_text=element_text(color=INK_SOFT, size=10),
+    legend_title=element_text(color=INK, size=12),
 )
 
-# Plot
+# Plot — magnitude is single-polarity (>= 0), so the Imprint sequential gradient applies
 plot = (
     ggplot(df, aes(x="x", y="y", xend="xend", yend="yend", color="magnitude"))
     + geom_segment(arrow=arrow(angle=20, length=8, type="closed"), size=1.2)
-    + scale_color_gradient(low="#306998", high="#FFD43B", name="Magnitude")
-    + labs(x="X Position (m)", y="Y Position (m)", title="Rotation Vector Field · quiver-basic · letsplot · anyplot.ai")
-    + ggsize(1600, 900)
+    + scale_color_gradient(low="#009E73", high="#4467A3", name="Magnitude")
+    + labs(x="X Position (m)", y="Y Position (m)", title="quiver-basic · python · letsplot · anyplot.ai")
+    + ggsize(800, 450)
     + theme_minimal()
     + anyplot_theme
 )
 
-# Save PNG (scale 3x to get 4800 x 2700 px) and HTML
-ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=3)
+# Save PNG (scale 4x to get 3200 x 1800 px) and HTML
+ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, filename=f"plot-{THEME}.html", path=".")
