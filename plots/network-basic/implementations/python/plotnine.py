@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-24
@@ -64,26 +64,26 @@ IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 np.random.seed(42)
 
 nodes = [
-    {"id": 0, "label": "Alice", "group": "Team A"},
-    {"id": 1, "label": "Bob", "group": "Team A"},
-    {"id": 2, "label": "Carol", "group": "Team A"},
-    {"id": 3, "label": "David", "group": "Team A"},
-    {"id": 4, "label": "Eve", "group": "Team A"},
-    {"id": 5, "label": "Frank", "group": "Team B"},
-    {"id": 6, "label": "Grace", "group": "Team B"},
-    {"id": 7, "label": "Henry", "group": "Team B"},
-    {"id": 8, "label": "Ivy", "group": "Team B"},
-    {"id": 9, "label": "Jack", "group": "Team B"},
-    {"id": 10, "label": "Kate", "group": "Team C"},
-    {"id": 11, "label": "Leo", "group": "Team C"},
-    {"id": 12, "label": "Mia", "group": "Team C"},
-    {"id": 13, "label": "Noah", "group": "Team C"},
-    {"id": 14, "label": "Olivia", "group": "Team C"},
-    {"id": 15, "label": "Paul", "group": "Team D"},
-    {"id": 16, "label": "Quinn", "group": "Team D"},
-    {"id": 17, "label": "Ryan", "group": "Team D"},
-    {"id": 18, "label": "Sara", "group": "Team D"},
-    {"id": 19, "label": "Tom", "group": "Team D"},
+    {"id": 0, "label": "Alice", "group": "Engineering"},
+    {"id": 1, "label": "Bob", "group": "Engineering"},
+    {"id": 2, "label": "Carol", "group": "Engineering"},
+    {"id": 3, "label": "David", "group": "Engineering"},
+    {"id": 4, "label": "Eve", "group": "Engineering"},
+    {"id": 5, "label": "Frank", "group": "Design"},
+    {"id": 6, "label": "Grace", "group": "Design"},
+    {"id": 7, "label": "Henry", "group": "Design"},
+    {"id": 8, "label": "Ivy", "group": "Design"},
+    {"id": 9, "label": "Jack", "group": "Design"},
+    {"id": 10, "label": "Kate", "group": "Sales"},
+    {"id": 11, "label": "Leo", "group": "Sales"},
+    {"id": 12, "label": "Mia", "group": "Sales"},
+    {"id": 13, "label": "Noah", "group": "Sales"},
+    {"id": 14, "label": "Olivia", "group": "Sales"},
+    {"id": 15, "label": "Paul", "group": "Support"},
+    {"id": 16, "label": "Quinn", "group": "Support"},
+    {"id": 17, "label": "Ryan", "group": "Support"},
+    {"id": 18, "label": "Sara", "group": "Support"},
+    {"id": 19, "label": "Tom", "group": "Support"},
 ]
 
 edges = [
@@ -129,10 +129,10 @@ for src, tgt in edges:
 
 # Quadrant-based initialization for balanced 4-cluster arrangement
 quadrant_centers = {
-    "Team A": np.array([-0.6, 0.6]),
-    "Team B": np.array([0.6, 0.6]),
-    "Team C": np.array([-0.6, -0.6]),
-    "Team D": np.array([0.6, -0.6]),
+    "Engineering": np.array([-0.6, 0.6]),
+    "Design": np.array([0.6, 0.6]),
+    "Sales": np.array([-0.6, -0.6]),
+    "Support": np.array([0.6, -0.6]),
 }
 positions = np.zeros((n, 2))
 for i, node in enumerate(nodes):
@@ -161,15 +161,16 @@ for iteration in range(200):
 
 pos_min = positions.min(axis=0)
 pos_max = positions.max(axis=0)
-positions = (positions - pos_min) / (pos_max - pos_min + 1e-6) * 0.8 + 0.1
+positions = (positions - pos_min) / (pos_max - pos_min + 1e-6) * 0.9 + 0.05
 
 # Build DataFrames
+group_order = ["Engineering", "Design", "Sales", "Support"]
 node_df = pd.DataFrame(
     {
         "x": [positions[i, 0] for i in range(n)],
         "y": [positions[i, 1] for i in range(n)],
         "label": [node["label"] for node in nodes],
-        "group": [node["group"] for node in nodes],
+        "group": pd.Categorical([node["group"] for node in nodes], categories=group_order, ordered=True),
         "degree": [float(degrees[node["id"]]) for node in nodes],
     }
 )
@@ -181,7 +182,7 @@ edge_df = pd.DataFrame(
     ]
 )
 
-group_colors = {"Team A": IMPRINT[0], "Team B": IMPRINT[1], "Team C": IMPRINT[2], "Team D": IMPRINT[3]}
+group_colors = {"Engineering": IMPRINT[0], "Design": IMPRINT[1], "Sales": IMPRINT[2], "Support": IMPRINT[3]}
 
 # Hub nodes for emphasis — top 20% by degree
 hub_threshold = node_df["degree"].quantile(0.8)
@@ -232,10 +233,12 @@ plot = (
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         plot_title=element_text(color=INK, size=12, ha="center"),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=None),
         legend_text=element_text(color=INK_SOFT, size=8),
         legend_title=element_text(color=INK, size=9),
         legend_key=element_rect(fill=ELEVATED_BG),
+        legend_box_spacing=0.01,
+        plot_margin=0.005,
     )
 )
 
