@@ -2,128 +2,144 @@ library: letsplot
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:13:04Z'
-updated: '2026-04-27T06:24:00Z'
+updated: '2026-07-24T11:11:58Z'
 generated_by: claude-sonnet
-workflow_run: 24978492191
+workflow_run: 30087482515
 issue: 820
-python_version: 3.14.4
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Full theme adaptability: correct #FAF8F1/#1A1A17 backgrounds, all chrome elements
-    (text, axis segments, legend) use adaptive tokens — no dark-on-dark or light-on-light
-    failures'
-  - Creative and correct parallel coordinates assembly using letsplot's ggplot grammar;
-    geom_segment + geom_line + geom_text layering is the right approach
-  - 'Okabe-Ito palette in canonical order with first series = #009E73; alpha=0.7 handles
-    line density well'
-  - Axis tick labels show original-scale min/max values alongside the normalized 0-1
-    axis — good user experience
-  - All font sizes explicitly set and meet minimums (title 28pt, dim labels 20pt,
-    tick labels 16pt)
-  - Classic, neutral Iris dataset with clear inter-species patterns; code is clean
-    and deterministic
+  - Elegant grammar-of-graphics workaround for parallel coordinates (lets-plot has
+    no native geom for it) — manually constructed axis frame from geom_segment + geom_line
+    + geom_text, cleanly composed
+  - 'Clear data storytelling: Setosa drawn heavier, more opaque, and on top as the
+    visual focal point, revealing that Setosa cleanly separates from Versicolor/Virginica
+    on the petal dimensions'
+  - Correct Imprint palette in canonical order with brand green first, and fully theme-correct
+    chrome in both light and dark renders — no dark-on-dark or light-on-light failures
+  - Min/max tick reference labels placed at each normalized axis restore interpretability
+    of the 0-1 scale back to real units (cm)
+  - Deterministic, realistic Iris dataset (30 obs, 3 species, 4 dimensions) with properly
+    unit-labeled axes
   weaknesses:
-  - 'DE-03 is at default: no visual emphasis highlights the most striking insight
-    (Setosa''s sharp petal separation); a subtle background band or thicker lines
-    for one group would elevate storytelling'
-  - 'DE-01 could reach 6 with small additions: e.g., a subtle horizontal zero-line
-    at y=0 and y=1 in RULE color, or slightly bolder lines for Setosa to create focal
-    point'
+  - Phantom vertical gridline still renders between the real axis bars despite this
+    attempt adding panel_grid_major_x=element_blank() to the theme — pixel inspection
+    confirms a thin gray vertical line exactly midway between 'Sepal Length' and 'Sepal
+    Width' (and at similar ~320px intervals across the full panel width, in both light
+    and dark renders), so the requested fix from the prior review did not take effect.
+    Try explicitly blanking panel_grid_major=element_blank() for both axes and then
+    re-adding only panel_grid_major_y, or pass explicit breaks=[0,1,2,3] to scale_x_continuous
+    so no intermediate break position remains for a grid line to attach to.
+  - Dead space between the last axis ('Petal Width') and the legend box is still present
+    (~14% of canvas width) even though scale_x_continuous limits were tightened to
+    (-0.4, len(dimensions)-0.6) exactly as previously suggested — the real cause appears
+    to be the legend's reserved margin/width rather than the scale range. Reduce the
+    legend's left margin or bring it closer to the last axis.
+  - Title still fills only ~37.5% of canvas width despite raising plot_title size
+    from 14 to 17 — for this shorter (~46-char) title, a slightly larger fontsize
+    (~20-22pt) would give it more visual prominence as the first-seen element without
+    overflowing.
+  - 'Library Mastery remains generic: the manual geom_segment/geom_line/geom_text
+    axis construction is unchanged from the previous attempt and is equally replicable
+    in plotnine/ggplot2 — no lets-plot-specific distinctive feature (e.g. richer HTML
+    tooltip interactivity) has been added to differentiate it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "parallel-basic · letsplot · anyplot.ai" in dark INK (#1A1A17), clearly readable. Legend "Species" title in INK, label text in INK_SOFT (#4A4A44). Dimension labels at bottom in INK (20pt). Tick values in INK_SOFT (16pt) to the left of each axis. Vertical axis segments in INK_SOFT.
-      Data: Four vertical axis segments; 30 colored lines (10 per species) connecting observations. Colors: Setosa=green #009E73, Versicolor=orange #D55E00, Virginica=blue #0072B2 — Okabe-Ito positions 1-3 in order. Alpha=0.7 blending.
-      Legibility verdict: PASS — all title, axis, tick, and legend text clearly readable against off-white background
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "parallel-basic · python · letsplot · anyplot.ai" in dark ink top-left, clearly readable (spans ~37.5% of canvas width). Four bold dark-grey vertical axis bars labeled "Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)" at the bottom, with min/max value labels (4.4/7.6, 2.3/3.9, 1.3/6.6, 0.1/2.5) at the top and bottom of each axis. A faint extra vertical gridline is visible between the real axis bars (e.g. midway between "Sepal Length" and "Sepal Width") — a phantom-column artifact despite panel_grid_major_x being blanked in the theme. "Species" legend at the right with three swatches, separated from the last axis by a visible dead-space band. All chrome text reads dark-on-light and is fully legible.
+      Data: 30 lines connect the four axes, one per iris observation. Setosa lines are brand green (#009E73), thicker and more opaque, drawn on top; Versicolor lines are lavender-purple, thinner/more transparent; Virginica lines are steel blue, also thinner/more transparent. First series is confirmed #009E73.
+      Legibility verdict: PASS — no light-on-light text anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in light INK (#F0EFE8), clearly readable. Legend text in INK_SOFT (#B8B7B0). Dimension labels in INK (#F0EFE8). Tick values in INK_SOFT (#B8B7B0). Vertical axis segments in INK_SOFT (#B8B7B0) — visible against dark background. No dark-on-dark failures detected.
-      Data: Data line colors are identical to light render — Setosa=green #009E73, Versicolor=orange #D55E00, Virginica=blue #0072B2. Only chrome (background, text, axis segments) flipped. Brand green #009E73 clearly visible on dark surface.
-      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, tick values, and legend now rendered in light ink (#F0EFE8 primary / #B8B7B0 secondary) against the dark background — all clearly legible, no dark-on-dark failures. Legend box background switches to the elevated dark tone. The same phantom vertical gridline and legend dead-space artifacts present in the light render reproduce identically here (structural, not color-related).
+      Data: Colors are identical to the light render — Setosa green #009E73, Versicolor lavender, Virginica blue — confirming the data palette does not shift between themes; only chrome flips.
+      Legibility verdict: PASS — no dark-on-dark text anywhere.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: Title 28pt, dim labels 20pt, tick labels 16pt, legend 18pt — all
-          explicitly set, all meet minimums, readable in both themes
+        comment: All sizes explicit and readable in both themes, but title still only
+          fills ~37.5% of canvas width — raising plot_title from 14 to 17 did not
+          meaningfully change the proportion
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Dimension labels and tick values well-spaced; data-line crossing
-          inherent to parallel coordinates
+        comment: No text overlaps with other text or data in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines at size=1.5 with alpha=0.7 visible; some traceability loss
-          where lines converge at sepal width axis
+        comment: Line size/alpha adapted to focal vs. non-focal species; non-focal
+          lines are visible but blend together in the mid-value bands
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe; three distinct hue+luminance combinations
+        comment: Three well-separated hues (green/purple/blue), CVD-safe per Imprint
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 16:9 landscape fills canvas well; y-limits leave adequate space for
-          labels
+        comment: A phantom vertical gridline still appears between real axis bars
+          (panel_grid_major_x blank did not take effect in the render), and dead space
+          between the last axis and the legend persists despite tightened scale_x_continuous
+          limits
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; dimension labels include units (cm)
+        comment: Dimension labels include units (cm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73; Okabe-Ito order 1-3; backgrounds #FAF8F1/#1A1A17;
-          all chrome theme-adaptive'
+        comment: Canonical Imprint order (#009E73 first), correct theme-adaptive backgrounds
+          and chrome in both renders
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above configured defaults: custom theme removes all axes and replaces
-          with manual segments and text; creative assembly shows design intent'
+        comment: 'Above-default: focal-species emphasis technique, minimal axis chrome,
+          deliberate palette use'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All default axis elements blanked; panel grid removed; custom geom_segment
-          axis lines; alpha-blended data lines
+        comment: Spines/ticks removed and whitespace is mostly generous, but the unresolved
+          phantom gridline and legend dead-space band undercut the polish
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Setosa separation visible via color coding but no specific visual
-          emphasis or focal point highlights the key insight
+        passed: true
+        comment: 'Clear focal point: Setosa drawn heavier/opaque and on top, immediately
+          showing its separation on petal dimensions'
     spec_compliance:
       score: 15
       max: 15
@@ -133,51 +149,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct parallel coordinates: vertical axes, lines connecting each
-          observation across dimensions'
+        comment: Correct parallel coordinates plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normalization, color coding, 4 dimensions, alpha transparency all
-          present
+        comment: Normalization, category color coding, and alpha for overlap all present
+          per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each line = one iris specimen; x = dimension index; y = normalized
-          value with original-scale tick labels
+        comment: Each axis correctly maps a dimension; min/max tick labels restore
+          real-world scale
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend titled Species with correct labels
+        comment: Title format correct; legend labels match species names in the data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three groups with distinct trajectory patterns; 4 dimensions spans
-          spec minimum; 30 observations adequate
+        comment: Shows clear cluster separation (Setosa) and overlap (Versicolor/Virginica)
+          — the key parallel-coordinates use case
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Iris dataset: real botanical measurements, neutral scientific context'
+        comment: Classic, neutral Iris dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Measurement values realistic for iris flowers
+        comment: Values match real iris measurement ranges
     code_quality:
       score: 10
       max: 10
@@ -187,35 +202,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → normalize → reshape → build
-          plot → save'
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded Iris data, fully deterministic
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 15 imported letsplot names used in the code
+        comment: Only used lets_plot symbols and pandas imported
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for manual parallel-coords construction; no
-          over-engineering
+        comment: Appropriate complexity given lets-plot has no native parallel-coordinates
+          geom; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -223,23 +237,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correctly builds parallel coordinates via ggplot grammar layering;
-          uses scale_color_manual, scale_x_continuous, scale_y_continuous idiomatically
+        comment: Correct layered ggplot grammar, scale_size_identity/scale_alpha_identity
+          used appropriately for literal aesthetics
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses letsplot-specific ggsize(), LetsPlot.setup_html(), ggsave(scale=3),
-          and HTML+PNG dual output
+        passed: false
+        comment: Still the same general grammar-of-graphics construction as the previous
+          attempt — not distinctive to lets-plot specifically
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - manual-ticks
+  - annotations
+  - layer-composition
   patterns:
-  - data-generation
   - wide-to-long
   - iteration-over-groups
   dataprep:
