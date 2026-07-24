@@ -1,7 +1,7 @@
 """ anyplot.ai
 radar-basic: Basic Radar Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-04-29
+Library: plotly 6.9.0 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-07-24
 """
 
 import os
@@ -17,7 +17,14 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
 
+# Imprint categorical palette — first series always brand green
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+
+# Derive translucent fill colors from the Imprint hexes (no hardcoded rgba)
+r0, g0, b0 = bytes.fromhex(IMPRINT[0][1:])
+r1, g1, b1 = bytes.fromhex(IMPRINT[1][1:])
+FILL_SENIOR = f"rgba({r0}, {g0}, {b0}, 0.25)"
+FILL_JUNIOR = f"rgba({r1}, {g1}, {b1}, 0.25)"
 
 # Data - Employee performance comparison across competencies
 categories = ["Communication", "Technical Skills", "Teamwork", "Problem Solving", "Leadership", "Creativity"]
@@ -37,9 +44,9 @@ fig.add_trace(
         r=senior_closed,
         theta=categories_closed,
         fill="toself",
-        fillcolor="rgba(0, 158, 115, 0.25)",
-        line={"color": IMPRINT[0], "width": 3},
-        marker={"size": 12, "color": IMPRINT[0]},
+        fillcolor=FILL_SENIOR,
+        line={"color": IMPRINT[0], "width": 3.5},
+        marker={"size": 11, "color": IMPRINT[0]},
         name="Senior Developer",
         hovertemplate="<b>Senior Developer</b><br>%{theta}: %{r}<extra></extra>",
     )
@@ -50,49 +57,80 @@ fig.add_trace(
         r=junior_closed,
         theta=categories_closed,
         fill="toself",
-        fillcolor="rgba(196, 117, 253, 0.25)",
-        line={"color": IMPRINT[1], "width": 3},
-        marker={"size": 12, "color": IMPRINT[1]},
+        fillcolor=FILL_JUNIOR,
+        line={"color": IMPRINT[1], "width": 2.5},
+        marker={"size": 11, "color": IMPRINT[1], "line": {"width": 1, "color": INK}},
         name="Junior Developer",
         hovertemplate="<b>Junior Developer</b><br>%{theta}: %{r}<extra></extra>",
     )
 )
 
+# Distinctive plotly-native callout: a starred point + inline text label, placed
+# directly in polar coordinates (no paper-space annotation math needed) to draw
+# the eye to the one axis where Junior overtakes Senior.
+fig.add_trace(
+    go.Scatterpolar(
+        r=[junior_values[2]],
+        theta=[categories[2]],
+        mode="markers+text",
+        marker={"size": 20, "symbol": "star", "color": IMPRINT[1], "line": {"width": 1.5, "color": INK}},
+        text=["Junior leads"],
+        textposition="middle left",
+        textfont={"size": 13, "color": INK},
+        showlegend=False,
+        hoverinfo="skip",
+    )
+)
+
 fig.update_layout(
+    autosize=False,
+    width=600,
+    height=600,
     title={
-        "text": "radar-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "radar-basic · python · plotly · anyplot.ai",
+        "font": {"size": 20, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     polar={
         "bgcolor": PAGE_BG,
-        "domain": {"x": [0.08, 0.92], "y": [0.08, 0.92]},
+        "domain": {"x": [0.08, 0.92], "y": [0.12, 0.88]},
         "radialaxis": {
             "visible": True,
             "range": [0, 100],
             "tickvals": [20, 40, 60, 80, 100],
-            "tickfont": {"size": 16, "color": INK_SOFT},
+            "tickfont": {"size": 13, "color": INK_SOFT},
+            "gridcolor": GRID,
+            "linecolor": INK_SOFT,
+            # Offset into the gap between the "Technical Skills" and "Teamwork"
+            # spokes so the tick values don't collide with any axis label.
+            "angle": 0,
+        },
+        "angularaxis": {
+            "rotation": 90,
+            "direction": "clockwise",
+            "tickfont": {"size": 16, "color": INK},
             "gridcolor": GRID,
             "linecolor": INK_SOFT,
         },
-        "angularaxis": {"tickfont": {"size": 20, "color": INK}, "gridcolor": GRID, "linecolor": INK_SOFT},
     },
     paper_bgcolor=PAGE_BG,
     font={"color": INK},
     showlegend=True,
     legend={
-        "font": {"size": 18, "color": INK_SOFT},
+        "orientation": "h",
+        "font": {"size": 13, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "x": 0.95,
-        "y": 0.95,
-        "xanchor": "right",
+        "x": 0.5,
+        "y": 0.02,
+        "xanchor": "center",
+        "yanchor": "top",
     },
-    margin={"l": 160, "r": 160, "t": 120, "b": 120},
+    margin={"l": 70, "r": 70, "t": 90, "b": 70},
 )
 
-# Square format — ideal for symmetric polar charts (3600×3600 px)
-fig.write_image(f"plot-{THEME}.png", width=1200, height=1200, scale=3)
+# Square format — ideal for symmetric polar charts. Canonical 2400×2400 px.
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

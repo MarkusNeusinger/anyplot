@@ -1,0 +1,248 @@
+library: ggplot2
+language: r
+specification_id: radar-basic
+created: '2026-07-24T16:14:34Z'
+updated: '2026-07-24T19:34:17Z'
+generated_by: claude-sonnet
+workflow_run: 30108063126
+issue: 744
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 78
+review:
+  strengths:
+  - Custom coord_radar() ggproto correctly produces straight-edge polygon spokes instead
+    of ggplot2's default curved polar arcs
+  - 'Palette and theme chrome fully compliant: first series #009E73, second #C475FD
+    in canonical Imprint order, both renders theme-correct with identical data colors'
+  - Data tells a clear compare/contrast story between two employees through color
+    and fill overlap without needing annotations
+  - 'All mandated spec features present: alpha-filled polygons (0.25), regular gridlines
+    at 20-unit intervals, distinct series colors with legend, polygon closed correctly'
+  - This attempt's label_radius/y-limit adjustments kept every category label fully
+    inside the canvas with generous margin - no new clipping introduced
+  weaknesses:
+  - 'CARRIED OVER FROM ATTEMPTS 1-2, STILL UNRESOLVED: The ''Problem Solving'' axis
+    label''s leading ''P'' renders as a broken/incomplete glyph (missing vertical
+    stem/bowl) in BOTH light and dark renders, pixel-identical across all three attempts.
+    Two different fixes have now failed (manual geom_text layer in Attempt 2; clip=''off''
+    on the coord + larger label_radius/y-limits in this attempt), ruling out CoordPolar/CoordRadar
+    clipping or transform logic as the cause. Investigate a ragg/font-glyph rendering
+    issue (explicit family= on the text layer), or whether the corruption follows
+    the letter ''P'' vs. the axis position (reorder competencies to test), or render
+    a minimal standalone repro without the radar coord.'
+  - 'CARRIED OVER FROM ATTEMPT 2, STILL UNRESOLVED: The radial-scale indicator, now
+    labs(subtitle = ''Score (0-100 scale)'') styled via plot.subtitle, still does
+    not render anywhere in either PNG. Switching from caption to subtitle ruled out
+    that plot.caption specifically was the problem. Inspect the built gtable (ggplot_build()/ggplotGrob())
+    for a zero-height subtitle grob, check plot.margin, or test the subtitle on a
+    minimal plot without coord_radar/bottom legend to isolate the cause.'
+  - The 'Leadership' axis spoke gridline still crosses directly through the 'Solving'
+    portion of the 'Problem Solving' label - minor but reduces polish; consider shortening
+    the gridline's radius or nudging the label position slightly outward.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "radar-basic · r · ggplot2 · anyplot.ai" in dark ink, centered, fully legible. Five of six category axis labels crisp and legible ("Communication", "Technical Skills", "Teamwork", "Leadership", "Adaptability"); radial tick labels (0/20/40/60/80/100) legible in soft grey; legend below in an elevated cream box with both entries readable.
+      Data: Two overlapping alpha-0.25 filled polygons - Alice Chen in brand green (#009E73), Marcus Webb in lavender (#C475FD) - confirmed first series is #009E73.
+      Defects: "Problem Solving" label's leading "P" is a broken/incomplete glyph (missing vertical stem/bowl), reading as "?roblem Solving" - confirmed via pixel-level zoom NOT canvas-edge clipping (≈225px of clear margin to the left). Identical defect to Attempts 1-2; this attempt's clip="off" fix on CoordRadar did not resolve it. The intended radial-scale subtitle ("Score (0-100 scale)") does not render anywhere - verified via full pixel scan of the region between title and chart.
+      Legibility verdict: FAIL for the "Problem Solving" label and the missing subtitle; all other text PASSES.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Title, axis category labels, and legend text all correctly flip to light ink and remain legible - no dark-on-dark failures.
+      Data: Colors identical to light render (#009E73 / #C475FD) - only chrome flipped, as required.
+      Defects: The "Problem Solving" broken-"P" glyph reproduces pixel-identically to the light render, and the subtitle is likewise absent - confirms both are deterministic, theme-independent rendering bugs.
+      Legibility verdict: FAIL for the "Problem Solving" label and the missing subtitle; all other text PASSES.
+  criteria_checklist:
+    visual_quality:
+      score: 20
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 0
+        max: 8
+        passed: false
+        comment: '''Problem Solving'' label''s leading ''P'' is a broken/incomplete
+          glyph in both themes, unresolved across 3 attempts'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Leadership spoke gridline crosses through 'Solving' text; minor,
+          still readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers, lines, and polygons clearly visible and well-sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe, alpha-blended overlap readable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No clipping at any canvas edge; good proportions and margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Radial-scale subtitle 'Score (0-100 scale)' does not render in either
+          PNG
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD, theme-correct chrome in both
+          renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Thoughtful palette/alpha use, but unresolved rendering defects undercut
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Customized theme_minimal, subtle grid, refined legend box
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Color contrast and overlap create a clear compare/contrast story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct radar/spider chart with straight-edge polygon spokes
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Alpha-filled polygons, gridlines at 20-unit intervals, distinct colors,
+          legend, closed polygon
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Axes correctly map competencies to scores for both employees
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows contrasting strength/weakness profiles across all six competencies
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral employee-review scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores plausible on a 0-100 scale
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper function (coord_radar) needed to extend ggplot2, justified
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present, though data is deterministic anyway
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{theme}.png output via ragg::agg_png
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, idiomatic ggplot2 usage throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom ggproto CoordRadar extending CoordPolar for straight-edged
+          polygon spokes
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

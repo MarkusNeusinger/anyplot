@@ -2,50 +2,60 @@ library: plotly
 language: python
 specification_id: radar-basic
 created: '2025-12-23T18:12:18Z'
-updated: '2026-04-29T17:07:09Z'
+updated: '2026-07-24T16:16:32Z'
 generated_by: claude-sonnet
-workflow_run: 25121386382
+workflow_run: 30107246016
 issue: 744
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 92
 review:
   strengths:
-  - 'Full spec compliance: all required features (filled polygon, transparency, gridlines,
-    closed polygon, legend, multi-series) implemented correctly.'
-  - 'Excellent theme adaptation: both light and dark renders pass readability checks
-    with correct background tokens, ink tokens on all text elements, and matching
-    GRID opacity.'
-  - 'Code quality is exemplary: flat, readable, deterministic, clean imports, correct
-    output file names.'
-  - Correct square 3600x3600 canvas for a symmetric polar chart.
+  - The Teamwork crossover (Junior 82 vs Senior 78) is now called out with a star
+    marker + inline text label placed directly in polar coordinates via a dedicated
+    go.Scatterpolar trace, giving the plot a genuine focal point that directly resolves
+    the attempt-1 storytelling gap
+  - Junior Developer markers now carry an explicit ink-colored stroke (line width
+    1), improving contrast for the lavender series on the cream background per the
+    style guide's optional outline-pattern guidance
+  - Translucent fill colors are still derived programmatically from the Imprint hexes
+    (no hardcoded rgba), and the radial-axis ticks remain angle-offset into the Technical
+    Skills/Teamwork gap so they never collide with a spoke label
+  - Correct 2400x2400 square canvas for a symmetric polar chart, mandated title format,
+    and fully theme-adaptive chrome verified correct in both light and dark renders
+  - 'First series is brand green #009E73 and second is Imprint position 2 (#C475FD),
+    correct canonical order; both polygons close correctly via categories + [categories[0]]'
+  - 'Clean, KISS-structured script: no functions/classes, only used imports, deterministic
+    hardcoded data, correct plot-{theme}.png/.html outputs'
   weaknesses:
-  - 'Minor radial tick / angular label crowding: 100 and Communication labels compete
-    spatially on the right edge; consider setting tickangle or adjusting tickprefix
-    on radial axis.'
-  - fillcolor uses hardcoded rgba strings rather than deriving from the OKABE_ITO
-    list (cosmetic code issue, no visual impact).
-  - 'Design storytelling is functional but flat: no annotation, emphasis marker, or
-    highlight draws the viewer to the most interesting contrast.'
+  - Visual refinement is still fairly standard polar chrome — grid and outer angular-axis
+    ring use library-typical treatment with no extra polish beyond the subtle opacity
+    already in place (DE-02)
+  - The new star callout is a nice touch but is a single isolated flourish; a leader
+    line or subtle highlight box around the Teamwork axis label would push the storytelling
+    from 'good' to 'excellent'
+  - Library Mastery usage is solid (idiomatic Scatterpolar, distinctive polar-native
+    text callout) but doesn't yet use a feature that's hard to replicate in any other
+    library, e.g. angular sector shading or per-axis fill emphasis
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "radar-basic · plotly · anyplot.ai" in dark ink, clearly readable. Angular axis labels (Communication, Technical Skills, Teamwork, Problem Solving, Leadership, Creativity) in dark INK token. Radial tick labels (20, 40, 60, 80, 100) in INK_SOFT token, visible. Legend box uses ELEVATED_BG (#FFFDF6) with INK_SOFT border and text.
-      Data: First series (Senior Developer) = #009E73 teal fill with 25% alpha and solid teal border. Second series (Junior Developer) = #D55E00 orange fill with 25% alpha and solid orange border. Overlap region shows blended olive color due to transparency. Markers size 12 visible at each vertex.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "radar-basic · python · plotly · anyplot.ai" centered at top in dark ink, ~59% of canvas width, fully visible with no clipping. Six category labels (Communication, Technical Skills, Teamwork, Problem Solving, Leadership, Creativity) sit at the outer edge in dark ink, all clearly readable. Radial tick labels (20, 40, 60, 80, 100) are soft-gray, placed horizontally in the gap between the Technical Skills and Teamwork spokes, avoiding any collision with axis labels or data. Grid (concentric hexagons + spokes) is subtle and light. Legend is a horizontal, bordered, elevated-background box at the bottom with both series clearly labeled.
+      Data: Senior Developer polygon in brand green (#009E73, line width 3.5, marker size 11) leads on 5 of 6 axes with ~25% alpha fill. Junior Developer polygon in lavender (#C475FD, line width 2.5, marker size 11 now with a 1px ink-colored outline stroke) is nested inside except on Teamwork, where a purple star (size 20, ink-outlined) plus the inline text label "Junior leads" calls out the crossover directly on the chart, with no overlap with the "Teamwork" category label or any other text/data element.
+      Legibility verdict: PASS — all text (title, category labels, tick labels, legend, and the new callout text) is dark-on-light and clearly readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light F0EFE8 ink, clearly readable. Angular axis labels in light INK token. Radial tick labels visible in B8B7B0 INK_SOFT token. Legend box uses #242420 elevated background with subtle border. No dark-on-dark failures detected.
-      Data: Colors identical to light render — #009E73 teal and #D55E00 orange, confirming only chrome flips between themes. Filled polygons and markers look identical in color to light render.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title, category labels, and radial tick labels correctly flip to light ink/soft-gray tokens and remain fully legible in the same positions as the light render. Grid lines are subtle light strokes on the dark surface. Legend box uses the elevated dark surface (#242420) with light text, borders intact.
+      Data: Data colors confirmed identical to the light render — same brand green and lavender hexes, same fill/line/marker treatment, same star callout with "Junior leads" label now rendered in light ink (INK token), clearly visible against the dark-themed fill region with no dark-on-dark issue.
+      Legibility verdict: PASS — no dark-on-dark failures; title, axis labels, tick labels, legend, and the callout text all correctly use the light INK/INK_SOFT tokens.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,77 +63,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 28px, angular labels 20px, radial ticks 16px; all readable
-          in both themes. Minor crowding between 80/100 tick values and Communication
-          label.
+        comment: All font sizes explicitly set; readable in both themes and at both
+          desktop and mobile widths; title fits at ~59% width without clipping
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor crowding between radial tick value 100 and Communication axis
-          label on right edge.
+        comment: New star+text callout does not collide with the Teamwork category
+          label, tick labels, or other data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both polygons clearly visible with size-12 markers and width-3 lines.
-          Transparency correctly conveys overlap.
+        comment: Markers appropriately sized (11px) for the sparse 6-axis, 2-series
+          data; star callout marker (20px) is prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Teal and orange provide strong contrast.
+        comment: Ink-colored outline stroke added to Junior Developer markers, addressing
+          the lavender series' WCAG contrast note from attempt 1
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 px ideal for symmetric polar chart. Generous margins
-          (160px all sides).
+        comment: Correct 2400x2400 square canvas, balanced margins, no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All six category axes labeled; title is correct format radar-basic
-          · plotly · anyplot.ai.
+        comment: Mandated title format correct; category axis labels are descriptive
+          competency names
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73, second = #D55E00, backgrounds are #FAF8F1
-          (light) / #1A1A17 (dark), both themes correct.'
+        comment: 'First series #009E73, second series Imprint position 2 #C475FD;
+          theme-correct chrome confirmed in both renders'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Clean, professional appearance. Correct Okabe-Ito colors with appropriate
-          fill transparency. Good marker sizing and line width. Not exceptional —
-          no additional polish.
+        comment: Computed translucent fills from Imprint hexes, angle-offset radial
+          ticks, and the new outlined star callout show intentional visual hierarchy
+          above a well-configured default
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Polar chart inherently avoids spine issues. Grid uses GRID token
-          at 10% opacity. Generous whitespace. Could push further with ticklen=0 to
-          remove radial tick marks.
+        passed: false
+        comment: Subtle grid, generous whitespace, elevated legend box; otherwise
+          standard polar chrome with no additional refinement added in this repair
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Senior vs Junior contrast legible. No emphasis technique elevates
-          the narrative.
+        comment: Star + 'Junior leads' text label now directly calls out the Teamwork
+          crossover, creating a clear focal point the viewer immediately notices
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +141,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct radar/spider chart using go.Scatterpolar.
+        comment: Correct radar/spider chart via Scatterpolar
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled polygons, alpha ~0.25, gridlines at 20/40/60/80/100, axis
-          labels, polygon closed, distinct colors, legend — all present.
+        comment: Filled translucent polygons, gridlines at 20-interval steps, distinct
+          colors + legend, closed polygons, clear axis labels — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 6 axes (within 4-8 range), 2 series (within 1-3 range), values on
-          0-100 scale.
+        comment: theta/r correctly mapped to categories/values, all 6 axes shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'radar-basic · plotly · anyplot.ai'. Legend labels 'Senior
-          Developer' / 'Junior Developer'.
+        comment: Title format exactly correct; legend labels match trace names
     data_quality:
       score: 14
       max: 15
@@ -164,21 +170,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 'Demonstrates fill transparency, polygon closure, gridlines, multi-series
-          comparison, legend. Missing: third series would exercise full spec range.'
+        comment: Shows dominant-series pattern plus a genuine crossover on Teamwork;
+          could show slightly more spread/variation across axes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee performance competency comparison is a canonical radar chart
-          use case, neutral and plausible.
+        comment: Neutral, plausible employee-performance-review scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 55-92 on 0-100 scale are realistic and differentiated.
+        comment: 0-100 competency scores are realistic and internally consistent
     code_quality:
       score: 10
       max: 10
@@ -188,60 +193,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes, flat procedural structure.
+        comment: Flat imports -> data -> plot -> save structure, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data.
+        comment: Deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects.
+        comment: Only os and plotly.graph_objects, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and readable. Hardcoded rgba fill strings instead of deriving
-          from OKABE_ITO is slightly inelegant but correct.
+        comment: New callout trace is a legitimate chart element, not fake UI or simulated
+          interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: fig.write_image(f'plot-{THEME}.png') and fig.write_html(f'plot-{THEME}.html')
-          both present.
+        comment: Correct plot-{theme}.png / .html outputs via current write_image/write_html
+          API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of go.Scatterpolar including the markers+text polar-native
+          callout pattern
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: go.Scatterpolar with fill='toself' is correct Plotly idiom for radar.
-          Polar layout configuration (radialaxis, angularaxis) properly used.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses hovertemplate for interactive hover labels, HTML export for
-          interactive output, and Plotly's native polar coordinate system. Could leverage
-          more advanced polar config options.
+        comment: Polar-coordinate-native text callout avoids the paper-space annotation
+          math another library would need; not yet a feature that's impossible to
+          replicate elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - hover-tooltips
-  - html-export
+  - annotations
   patterns: []
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
