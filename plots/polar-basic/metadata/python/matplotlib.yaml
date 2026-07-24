@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: polar-basic
 created: '2025-12-23T19:42:39Z'
-updated: '2026-07-24T23:37:04Z'
+updated: '2026-07-24T23:47:01Z'
 generated_by: claude-sonnet
 workflow_run: 30133561866
 issue: 800
@@ -12,123 +12,147 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 77
 review:
   strengths:
-  - 24-hour diurnal cycle fully covered with a smooth sinusoidal base plus noise,
-    giving a realistic and neutral dataset
-  - Peak annotation and dashed daily-average reference ring create clear visual hierarchy
-    and a focal point beyond a bare polar line
-  - 'Idiomatic polar-projection usage: theta_zero_location(''N''), theta_direction(-1),
-    rlabel_position, and a documented zorder fix so radial tick labels draw above
-    the filled data area'
-  - Theme-adaptive chrome correctly threaded through title, ticks, spine, grid, and
-    annotation bbox colors; Imprint brand green identical in both renders
-  - Reproducible (seeded), clean single-script structure with only used imports and
-    current Axes-based API (FuncFormatter for radial tick units)
+  - Correct polar chart type with theta=hour-of-day, radius=temperature, matching
+    the spec's directional/cyclical use case exactly
+  - 'Follows the spec''s notes precisely: theta_zero_location(''N'') + theta_direction(-1)
+    puts midnight at top and time flows clockwise, radial scale starts at 0 so data
+    isn''t compressed near center'
+  - 'Good data storytelling elements: dashed average-temperature reference ring plus
+    a labeled peak annotation give the viewer an immediate anchor for interpreting
+    the diurnal curve'
+  - 'Careful detail work: radial tick labels get a background-colored bbox and an
+    explicitly raised zorder so they stay legible over the filled data area instead
+    of colliding with it'
+  - 'Imprint palette and theme-adaptive chrome correctly applied — brand green #009E73
+    identical in both renders, INK/INK_SOFT correctly threaded through title, ticks,
+    grid, spine, and annotation box across both themes'
+  - 'Clean KISS code structure: seeded reproducible data (np.random.seed(42)), only
+    necessary imports, no functions/classes, correct plot-{THEME}.png output'
   weaknesses:
-  - 'Title is missing the required language segment: it reads ''Hourly Temperature
-    Pattern · polar-basic · matplotlib · anyplot.ai'' but the mandated format is ''{Descriptive
-    Title} · {spec-id} · {language} · {library} · anyplot.ai'' — insert ''python''
-    between ''polar-basic'' and ''matplotlib''.'
-  - A data marker (~4-5 AM hour) is partially hidden behind the '10°C' radial tick
-    label's background box in both light and dark renders — the rlabel_position(67.5)
-    placement lands directly on top of a scatter point. Nudge rlabel_position by a
-    few degrees (e.g. 72-75) or offset the tick label bbox so it clears the data markers.
-  - 'DE-02 refinement is solid but not exceptional: grid and spine treatment are fine,
-    but there is no additional polish (e.g. subtler marker sizing variation or refined
-    annotation typography) beyond the functional theme tokens.'
+  - 'Title is truncated in BOTH renders: the mandated string ends ''...anyplot.ai''
+    in the source (line 92) but the saved PNG only shows ''...anyplot.'' — the final
+    ''ai'' is completely missing, with ~11px of clean background remaining before
+    the physical canvas edge (verified by pixel-scanning both plot-light.png and plot-dark.png:
+    last non-background pixel is at x=2389 of 2400, not at the border). This is not
+    canvas-edge cropping, it looks like the long title (75 chars) at fontsize=12 is
+    being clipped by an internal bbox/clip region before reaching the figure edge.
+    Root cause: the title-length-scaling formula from prompts/library/matplotlib.md
+    (''title_fontsize = max(8, round(12 * 67 / len(title)))'') was not applied — with
+    len(title)=75 that formula gives ~11pt, and this is a 2400px-wide SQUARE canvas
+    (not the 3200px landscape the formula''s baseline assumes), so an even smaller
+    fontsize than 11pt is likely needed here. Fix: compute title_fontsize from the
+    actual title length and reduce further to account for the narrower square canvas
+    so ''anyplot.ai'' fully renders within bounds.'
+  - Because of the above, the mandated title format is not fully displayed — this
+    is a direct Spec Compliance (SC-04) miss even though the source string itself
+    is correct.
+  - 'Design Excellence is solid but not yet exceptional: the peak/average annotations
+    are a good start but fairly standard (single peak callout + reference ring) rather
+    than a distinctive, publication-level treatment — consider a bit more contrast/hierarchy
+    (e.g., subtle color or size emphasis on the peak point itself) to lift Aesthetic
+    Sophistication and Storytelling further.'
+  - Peak temperature (23.4°C) occurs at 12 PM in the data model (sin curve peaks exactly
+    at hour 12); most real diurnal cycles peak a couple hours after solar noon (~2–3
+    PM) — a minor realism nit for Appropriate Scale, not a hard violation.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "Hourly Temperature Pattern · polar-basic · matplotlib · anyplot.ai" in dark ink, clearly legible; 8 hour labels (12 AM...9 PM) around the rim in soft dark gray, all readable; radial tick labels (5°C-25°C) in soft gray with a light bbox for contrast against the green fill, all readable.
-      Data: Brand green (#009E73) filled polygon + connecting line + 24 scatter markers with white edge rings for the hourly temperature cycle; a gray dashed reference ring at "avg 14.8°C" and a callout box for "Peak 23.4°C". Data is a smooth diurnal curve troughing near midnight and peaking mid-afternoon.
-      Legibility verdict: PASS overall, but a scatter marker near the 4-5 AM hour is partially occluded by the "10°C" radial tick label's background box (confirmed via crop) — a real overlap defect, not a legibility failure of the text itself.
+      Background: Warm off-white, matches #FAF8F1 target, not pure white.
+      Chrome: Title reads "Hourly Temperature Pattern · polar-basic · python · matplotlib" then "anyplot." — the trailing "ai" is missing entirely (confirmed via pixel scan: last non-background pixel at x=2389 of a 2400px-wide canvas, with clean background for the remaining ~11px before the edge, so this is an internal text-clip, not a canvas-border crop). Angular hour labels (12 AM, 3 AM, 6 AM, 9 AM, 12 PM, 3 PM, 6 PM, 9 PM) and radial °C tick labels (5°C–25°C) are all dark ink, clearly legible against the light background. Peak annotation box and avg-ring label are both legible.
+      Data: Brand green (#009E73) fill, line, and scatter markers for the 24 hourly readings, forming a smooth diurnal curve with a clear trough near midnight and a peak near noon. Dashed gray-ink reference ring marks the daily average (14.8°C). All data points visible with white-edged markers, no overplotting given only 24 points.
+      Legibility verdict: FAIL (title truncated — "ai" missing from the mandated "anyplot.ai" suffix in both themes).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title, hour labels, and radial tick labels now in light ink/soft light-gray, all clearly readable against the dark background — no dark-on-dark failures observed.
-      Data: Identical Imprint green (#009E73) fill/line/markers and identical annotation content and positions as the light render — only chrome flipped as expected.
-      Legibility verdict: PASS overall, with the same marker/"10°C"-label overlap defect reproduced identically in this theme (confirmed via crop).
+      Background: Warm near-black, matches #1A1A17 target, not pure black.
+      Chrome: Same title truncation defect reproduces identically — pixel scan confirms the same clipping (text ends at x=2389/2400, background all the way to the edge). All other chrome (hour labels, °C tick labels, avg annotation, peak callout box) uses light ink (INK/INK_SOFT tokens) and is clearly readable against the dark background — no dark-on-dark failures found elsewhere.
+      Data: Colors are identical to the light render — same #009E73 fill/line/markers, same dashed avg ring, same peak value and position. Only the chrome (background, text ink, grid, annotation box fill) flipped, as expected.
+      Legibility verdict: FAIL (same title truncation as light render; everything else passes).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 20
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 2
         max: 8
-        passed: true
-        comment: All titles/labels/ticks readable in both themes at full size; minor
-          deduction because a data marker sits under the '10°C' label.
+        passed: false
+        comment: All present text is well-sized and legible, but the mandated title's
+          trailing 'ai' is missing entirely in both renders — a hard legibility/completeness
+          failure on the single most important text element.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: One data marker (~4-5 AM) is partially hidden behind the '10°C' radial
-          tick label bbox in both renders — localized, not severe.
+        comment: No collisions — radial tick labels use background boxes and a raised
+          zorder to stay clear of the filled data area; annotations don't collide
+          with data or each other.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse 24-point series uses prominent size=90 markers with edge rings
-          — good density-aware sizing.
+        comment: 24 sparse points with s=90 markers, 2.5pt line, appropriately sized
+          for this density — nothing barely visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green reads with strong contrast on both surfaces; no red-green
-          reliance.
+        comment: Good contrast throughout, single-hue series with alpha-adjusted fill,
+          no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 0
         max: 4
-        passed: true
-        comment: Canvas gate passed (2400x2400 square). Good margins and no clipping,
-          but the rlabel_position placement overlapping a marker is a layout choice
-          issue.
+        passed: false
+        comment: Title content is cut off before reaching the canvas edge (missing
+          'ai') — falls under 'content cut-off' in the 0-point tier even though it
+          isn't a canvas-border AR-09 crop.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive hour labels and °C-suffixed radial ticks via FuncFormatter.
+        comment: Radial axis has a °C unit formatter, angular axis uses clear hour-of-day
+          labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; identical
-          data colors across themes.'
+        comment: 'First series is #009E73 in both renders, backgrounds and chrome
+          are theme-correct (#FAF8F1 / #1A1A17), identical data color across themes.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Filled area, edge-highlighted markers, styled average-reference ring
-          and peak callout show intentional polish beyond defaults.
+        passed: false
+        comment: Above a plain default (filled area, edge-highlighted markers, formatted
+          radial ticks) but not yet publication-tier polish; the broken title undercuts
+          overall sophistication.
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Subtle grid (alpha 0.15), softly colored polar spine, generous whitespace;
-          nothing exceptional beyond functional theme tokens.
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Peak callout and average reference ring create a clear focal point
-          and guide the viewer through the diurnal pattern.
+        comment: Subtle grid (alpha 0.15), background boxes behind radial ticks to
+          avoid collision, generous whitespace around the polar frame.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Peak callout + average reference ring create real visual hierarchy
+          and a clear takeaway, though it's a fairly standard treatment rather than
+          an especially inventive one.
     spec_compliance:
       score: 13
       max: 15
@@ -138,52 +162,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine polar projection with radial/angular mapping, matches spec.
+        comment: Correct polar chart, theta/radius mapping matches the spec exactly.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: theta/radius mapped correctly, standard-interval angular labels,
-          radial gridlines visible but not overwhelming, scale doesn't compress data
-          near center.
+        comment: Visible-not-overwhelming radial gridlines, standard-interval angular
+          labels, top-start clockwise time direction, radial scale not compressed
+          near center — all spec notes satisfied.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 24 hourly readings plotted; axes show full data range.
+        comment: theta=hour, radius=temperature correct, all 24 points shown, loop
+          correctly closed.
       - id: SC-04
         name: Title & Legend
         score: 1
         max: 3
         passed: false
-        comment: Title omits the mandatory 'python' language segment — reads '...polar-basic
-          · matplotlib · anyplot.ai' instead of '...polar-basic · python · matplotlib
-          · anyplot.ai'.
+        comment: Source title string is the correct mandated format, but the rendered
+          title is truncated ('anyplot.' instead of 'anyplot.ai') in both themes —
+          the displayed title does not match the required format. Legend correctly
+          omitted for single-series.
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full 24-hour cycle, peak and average context annotations exercise
-          the plot type's capabilities.
+        comment: Shows the full diurnal rise/peak/fall/trough cycle with realistic
+          noise; captures the plot type's main characteristics well.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hourly outdoor temperature diurnal cycle is plausible and neutral.
+        comment: Hourly outdoor temperature is a real, neutral, comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 0-30°C range with a 23.4°C afternoon peak is sensible for the domain.
+        comment: Plausible temperature range and noise level; peak occurring exactly
+          at 12 PM (vs. the more typical ~2-3 PM afternoon lag) is a minor realism
+          nit.
     code_quality:
       score: 10
       max: 10
@@ -193,49 +221,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, no functions/classes.
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) used.
+        comment: np.random.seed(42) set before noise generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, pyplot, numpy, FuncFormatter — all used.
+        comment: os, numpy, matplotlib.pyplot, FuncFormatter — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity.
+        comment: Clean and appropriately complex, including a well-commented zorder
+          workaround for the radial ticks; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with current Axes-based API.
+        comment: Saves plot-{THEME}.png, no deprecated calls, no bbox_inches='tight'.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: set_theta_zero_location/direction, rlabel_position, Axes-method usage
-          throughout.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Documented zorder fix for radial labels over filled data, FuncFormatter
-          for units, closed-loop trick via np.append.
+        comment: Correct Axes-method usage throughout (fill_between, plot, scatter,
+          annotate) and proper polar-specific configuration.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses set_theta_zero_location/set_theta_direction/set_rlabel_position
+          — genuinely polar-specific API, though a fairly standard combination for
+          this chart type.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -243,7 +273,6 @@ impl_tags:
   - polar-projection
   - annotations
   - manual-ticks
-  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
