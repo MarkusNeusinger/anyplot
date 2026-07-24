@@ -129,6 +129,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **anyplot.ai white-screen outage (2026-07-23, ~22:15–23:00 UTC): vite pinned back to
+  8.0.16** — the npm-minor Dependabot group (#9657) bumped vite 8.0.16 → 8.1.5, whose rolldown
+  1.1.5 bundler emits a broken `mui`/`@emotion` chunk under our `manualChunks` split; the
+  deployed app died at chunk init (`TypeError: t is not a function`) into a blank page while
+  every HTTP check stayed 200 and all CI stayed green (jsdom tests never execute the built
+  bundle). Bisect across builds pinned it byte-exactly: with vite 8.0.16 the mui chunk hash
+  reverts to the known-good build's. Dependabot now ignores vite minor/major bumps until the
+  upstream codegen issue is verified fixed in a real browser.
 - **Scheduled implementation regeneration is harder to starve silently** — `daily-regen.yml`'s
   cron had gone silent for multi-day stretches (a mix of GitHub's documented top-of-hour
   scheduler overload and the workflow being manually disabled), and because every run that did

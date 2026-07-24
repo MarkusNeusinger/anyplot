@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
-Library: letsplot 4.9.0 | Python 3.14.4
-Quality: 85/100 | Updated: 2026-04-27
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-07-23
 """
 # ruff: noqa: F405
 
@@ -22,16 +22,22 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Imprint sequential colormap (brand green -> blue) for single-polarity activity counts
+IMPRINT_SEQ_LOW = "#009E73"
+IMPRINT_SEQ_HIGH = "#4467A3"
+
 # Data - Generate one year of daily activity data
 np.random.seed(42)
 start_date = pd.Timestamp("2024-01-01")
 end_date = pd.Timestamp("2024-12-31")
 dates = pd.date_range(start=start_date, end=end_date, freq="D")
 
-# Generate realistic activity data (like GitHub contributions)
+# Generate realistic activity data (like GitHub contributions), with a mild
+# year-end ramp-up so the "peak in December" narrative is genuinely visible
 values = []
 for date in dates:
-    base = np.random.poisson(5)
+    seasonal_factor = 0.35 + 1.3 * (date.month - 1) / 11
+    base = np.random.poisson(5 * seasonal_factor)
     if date.dayofweek >= 5:
         base = int(base * 0.4)
     if np.random.random() < 0.1:
@@ -50,20 +56,27 @@ weekday_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 month_positions = df.groupby("month")["week_of_year"].min().tolist()
 
+peak_month = month_names[df.groupby("month")["value"].mean().idxmax() - 1]
+weekday_mean = df[df["weekday"] < 5]["value"].mean()
+weekend_mean = df[df["weekday"] >= 5]["value"].mean()
+weekend_drop_pct = round((1 - weekend_mean / weekday_mean) * 100)
+
 # Plot
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid=element_blank(),
     axis_ticks=element_blank(),
     axis_line=element_blank(),
-    plot_title=element_text(color=INK, size=24, hjust=0.5),
-    axis_title=element_text(color=INK_SOFT, size=18),
-    axis_text_x=element_text(size=18, color=INK_SOFT),
-    axis_text_y=element_text(size=18, color=INK_SOFT),
+    plot_title=element_text(color=INK, size=20, hjust=0.5),
+    plot_subtitle=element_text(color=INK_SOFT, size=13, hjust=0.5),
+    axis_title=element_text(color=INK_SOFT, size=13),
+    axis_text_x=element_text(size=12, color=INK_SOFT),
+    axis_text_y=element_text(size=12, color=INK_SOFT),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=16),
-    legend_title=element_text(color=INK, size=18),
+    legend_text=element_text(color=INK_SOFT, size=11),
+    legend_title=element_text(color=INK, size=13),
 )
 
 plot = (
@@ -75,17 +88,22 @@ plot = (
         width=0.9,
         height=0.9,
     )
-    + scale_fill_viridis(name="Activity")
+    + scale_fill_gradient(low=IMPRINT_SEQ_LOW, high=IMPRINT_SEQ_HIGH, name="Activity")
     + scale_y_reverse(breaks=[0, 1, 2, 3, 4, 5, 6], labels=weekday_labels)
     + scale_x_continuous(breaks=month_positions, labels=month_names)
-    + labs(title="heatmap-calendar · letsplot · anyplot.ai", x="Month (2024)", y="Day of Week")
+    + labs(
+        title="heatmap-calendar · python · letsplot · anyplot.ai",
+        subtitle=f"Peak activity in {peak_month} · Weekends show ~{weekend_drop_pct}% less activity",
+        x="Month (2024)",
+        y="Day of Week",
+    )
     + theme_minimal()
     + anyplot_theme
-    + ggsize(1600, 900)
+    + ggsize(600, 600)
 )
 
 # Save as PNG and HTML
-ggsave(plot, f"plot-{THEME}.png", scale=3, path=".")
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
 ggsave(plot, f"plot-{THEME}.html", path=".")
 
 # Clean up lets-plot-images directory if created

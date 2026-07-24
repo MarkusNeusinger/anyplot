@@ -1,0 +1,249 @@
+library: d3
+language: javascript
+specification_id: heatmap-calendar
+created: '2026-07-23T22:19:12Z'
+updated: '2026-07-23T22:36:35Z'
+generated_by: claude-sonnet
+workflow_run: 30048540824
+issue: 1010
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Directly resolved both Attempt 1 findings: canvas usage grew from ~39% to ~77%
+    of height, and date handling now uses idiomatic d3-time/d3-array utilities (utcDays,
+    utcSunday.count, rollup) instead of manual loops'
+  - New "Peak" annotation + highlighted bar gives the composition a clear, deliberate
+    focal point that was missing before
+  - Correct imprint_seq sequential scale (green → blue) shared identically between
+    the calendar cells, legend gradient, and monthly bars — always in sync
+  - Thoughtful missing-data handling (dashed neutral cells + dedicated legend swatch)
+    with a realistic multi-day + isolated single-day gap pattern
+  - Fully theme-adaptive chrome, confirmed pixel-identical data colors between light/dark
+    renders
+  weaknesses:
+  - Two-panel layout (calendar + monthly bars) is well-executed but still a fairly
+    conventional composition; a bolder visual link between the highlighted month's
+    bar and its corresponding week(s) in the grid above would push Design Excellence
+    further
+  - Only the single seasonal peak is annotated — a secondary annotation (e.g. the
+    lowest month, or the weekday/weekend contrast visible in the grid banding) could
+    deepen the data story
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "heatmap-calendar · javascript · d3 · anyplot.ai", softer dark-gray subtitle "Daily step count (thousands) · 2025", month labels (Jan-Dec) above the grid, weekday labels (Mon-Sun) to the left, "Monthly average — steps (thousands)" section title, bar-chart y-axis ticks and x-axis month ticks, "Peak · Jul · 9.5k" annotation. All clearly readable dark text against the light background.
+      Data: 53x7 calendar grid of rounded cells colored on the green (#009E73) -> blue sequential (imprint_seq) scale by daily step count; dashed-border neutral cells mark missing days (mid-April gap, isolated single days in Jan/Sep/Nov). Legend row shows a dashed "No data" swatch plus a "Less->More" gradient bar sampled live from the same scale. Below, a monthly-average bar chart uses the identical sequential scale per bar, with the July bar outlined in dark ink and a bold "Peak" annotation above it.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching #1A1A17 - not pure black, not light.
+      Chrome: All text (title, subtitle, month/weekday labels, legend text, bar-chart axis ticks, section title, Peak annotation) flips to light ink/gray and remains fully legible. No dark-on-dark failures detected anywhere.
+      Data: Calendar cell colors and bar colors are pixel-identical to the light render (confirmed green->blue hues match); missing-data dashed cells use the theme's elevated dark background fill; the peak-bar outline correctly flips from dark ink to a light stroke for contrast against the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit; readable in both themes and at ~400px scale
+          given the expected density of a 365-cell calendar heatmap.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render, including the Peak annotation
+          and bar-chart axis.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Calendar cells and monthly bars sized appropriately for their density;
+          missing-data cells clearly distinguished via dashed border.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue scale, monotonic luminance, no red-green-only
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed from Attempt 1: composition now spans ~77% of canvas height
+          (vs ~39%), canvas-dimension gate passed, nothing clipped or overflowing.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title/subtitle and monthly-panel section title with units
+          (thousands).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses imprint_seq (green->blue) for continuous data; #FAF8F1/#1A1A17
+          backgrounds correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Coordinated calendar+bar composition, live-scale gradient legend,
+          clear typographic hierarchy; still a fairly conventional two-panel layout.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Domain removed on bar-chart y-axis, subtle gridlines, rounded cells,
+          generous section spacing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bold Peak annotation + highlighted bar gives a clear focal point;
+          monthly panel reinforces the seasonal trend visible in the grid.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct calendar heatmap layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Weekday labels, month labels, sequential colormap, missing-data handling,
+          color legend all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Row=weekday, col=week; all 365 days plotted.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels (Less/More/No data)
+          match the data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows grid, weekday/month structure, missing data, legend, and a
+          monthly rollup summary.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily step count in thousands, neutral and plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values range ~0.6-10.5k with plausible seasonal/weekday variation.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; only small top-level arrow-function helpers (rand, isMissing)
+          as endorsed by the d3.md guide.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG, no browser RNG dependency.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly; current d3 7.9 API; animations
+          not used.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Fixed from Attempt 1: now uses d3.utcDays, d3.utcDay.count, d3.utcSunday.count,
+          d3.rollup/d3.mean instead of manual date-arithmetic loops.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.rollup-driven secondary panel derived live from the grid data,
+          plus the gradient-legend-from-live-scale technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  - custom-legend
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - time-series
+  styling:
+  - gradient-fill
+  - publication-ready

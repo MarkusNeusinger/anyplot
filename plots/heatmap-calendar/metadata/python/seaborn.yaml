@@ -2,57 +2,70 @@ library: seaborn
 language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:34:54Z'
-updated: '2026-04-27T01:39:55Z'
+updated: '2026-07-23T22:33:24Z'
 generated_by: claude-sonnet
-workflow_run: 24971109245
+workflow_run: 30049040990
 issue: 1010
-python_version: 3.14.4
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 88
 review:
   strengths:
-  - 'Calendar structure (pivot: weekday x week_num) is correctly implemented and renders
-    the GitHub-style grid accurately'
-  - Greens sequential colormap is thematically appropriate and CVD-safe for single-polarity
-    contribution data
-  - Both renders have correct background colors (warm off-white / near-black) and
-    all text is legible in both themes
-  - Realistic data simulation with weekday/weekend activity differential and np.random.seed(42)
-    for reproducibility
-  - Clean linear code with no unnecessary abstractions; sns.heatmap() with cbar_kws
-    is idiomatic seaborn usage
+  - Explicit `mask=missing_mask` now makes the partial-final-week handling an intentional,
+    idiomatic seaborn feature instead of relying on implicit NaN blanking (directly
+    addresses the LM-02 feedback from Review 1)
+  - Correct use of the Imprint sequential colormap (imprint_seq, brand green -> blue)
+    for single-polarity daily contribution counts, with identical data colors across
+    both themes
+  - 'Theme-adaptive chrome fully threaded through: figure/axes background, tick colors,
+    colorbar outline and label, and title all correctly flip between #FAF8F1/#1A1A17
+    light/dark surfaces'
+  - Realistic, neutral GitHub-style contribution data with weekday/weekend contrast,
+    zero-activity days, and occasional high-activity spikes
+  - Clean KISS script structure with seeded random data, only used imports, and correct
+    plt.savefig call (no bbox_inches="tight")
   weaknesses:
-  - 'Output saved as plot.png instead of plot-{THEME}.png — violates mandatory output
-    naming convention; fix: plt.savefig(f''plot-{THEME}.png'', ...)'
-  - Code lacks ANYPLOT_THEME environment variable handling — no sns.set_theme(rc={...})
-    with adaptive tokens; theme adaptation relies entirely on the pipeline wrapper
-    rather than the code itself
-  - 'linecolor=''white'' is hardcoded — produces harsh white cell borders in dark
-    render; fix: use linecolor=PAGE_BG for adaptive theme-matching borders'
-  - Month labels appear at the bottom x-axis; the spec specifies 'along the top or
-    as section headers'
-  - 'Secondary annotation summary text at the bottom overlaps the month label row
-    in the light render — fix: use fig.text() with a lower y-position below the plot
-    area'
+  - 'CRITICAL DISCREPANCY: The code adds a `fig.text(...)` "Peak day: {date} · {value}
+    contributions" callout and an `ax.plot(..., marker=''o'', markerfacecolor=''none'',
+    ...)` ring around the peak cell specifically to address Review 1''s DE-03 feedback,
+    but neither element is visible in either rendered PNG. A pixel-level scan of plot-light.png
+    and plot-dark.png confirms zero non-background pixels exist in the band between
+    the title and the month-label row, and zero ink-colored ring pixels exist anywhere
+    on the grid. Reproducing this exact file in an isolated environment DOES render
+    both elements correctly, so this looks like a render-pipeline/environment discrepancy
+    rather than a logic bug in the code itself -- flag for investigation (verify the
+    review render step actually used the latest commit, and check for headless-matplotlib
+    backend/font differences). Because the callout is invisible in the shipped image,
+    DE-03 could not be credited for the intended improvement.'
+  - The right-margin whitespace flagged in Review 1 (~450px / ~14% of canvas width
+    blank to the right of the colorbar) is essentially unchanged in this render (~442px
+    measured) despite the `subplots_adjust(right=0.96)` and `cbar_kws` fraction/pad
+    tweaks -- the fix did not achieve its intended visual effect. VQ-05 remains capped
+    at 3/4.
+  - 'Design Excellence is still at "well-configured default" level: no additional
+    polish beyond the required imprint_seq cmap and punched-out grid is actually visible
+    in the shipped renders'
+  - Library Mastery beyond the new `mask=` usage is still fairly generic pivot-table
+    + sns.heatmap; no other seaborn-distinctive technique is leveraged
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, approximately #FAF8F1 — correct theme surface
-      Chrome: Title "heatmap-calendar · seaborn · anyplot.ai" in dark text at 24pt — clearly readable. Weekday labels (Mon–Sun) in dark text at 16pt — readable. Month labels (Jan–Dec) along bottom x-axis at 16pt — readable. Colorbar "Daily Contributions" label and tick values in dark text — readable. Minor: secondary annotation text at bottom center partially overlaps month labels near Jul/Aug area.
-      Data: Green heatmap cells using "Greens" sequential colormap. Near-white cells for zero/low activity, deep green for high activity (max ~14–15). White cell borders (linewidths=1.5) cleanly separate cells.
-      Legibility verdict: PASS (all primary text readable; minor annotation overlap with month labels)
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "heatmap-calendar · python · seaborn · anyplot.ai" centered at top in dark ink. Month labels (Jan-Dec) run along the top of the grid; weekday labels (Mon-Sun) run down the left side. A vertical colorbar labeled "Daily Contributions" sits to the right of the grid. All chrome text is clearly readable against the light background. NOTE: the code's `fig.text(...)` "Peak day: {date} · {value} contributions" callout (positioned between the title and month-label row) and the `ax.plot(..., marker='o')` ring meant to circle the peak cell are BOTH ABSENT from this render -- confirmed via pixel-level scan (no non-background pixels between the title and month row; no ink-colored ring pixels anywhere on the grid).
+      Data: 52-week x 7-day grid using the Imprint sequential colormap -- brand green #009E73 for low/zero-activity days grading to blue #4467A3 for high-activity days (up to 15). Weekend rows (Sat/Sun) read visibly greener/lower-activity than weekday rows. The final partial week (2024 ends on a Tuesday) correctly leaves Wed-Sun cells blank via the explicit `mask=` parameter rather than fabricating data. First/primary data color is #009E73 as required.
+      Legibility verdict: PASS (all title/axis/tick/colorbar text is legible; the only issue is that the intended peak-day annotation and ring are missing entirely, not a legibility problem).
 
     Dark render (plot-dark.png):
-      Background: Near-black, approximately #1A1A17 — correct dark theme surface
-      Chrome: Title "heatmap-calendar · seaborn · anyplot.ai" in light text — readable. Weekday labels (Mon–Sun) in light text — readable. Month labels (Jan–Dec) in light text — readable. Colorbar tick values in light text — readable. No dark-on-dark failures detected.
-      Data: Same "Greens" colormap colors as light render — data colors identical ✓. Low-value cells (near-white/pale green) contrast well against dark background. White cell borders (linecolor="white", hardcoded) are visually harsh and prominent against the dark background — aesthetic issue but not a readability failure.
-      Legibility verdict: PASS (all text readable against dark background; white cell borders harsh but not failing)
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same layout re-rendered with all chrome (title, month/weekday labels, colorbar ticks/label) flipped to light ink / soft light gray. No dark-on-dark failures -- every label is clearly legible against the near-black surface. Same as the light render, the "Peak day" text callout and the peak-cell ring marker are both absent -- confirmed via the same pixel-level scan.
+      Data: Data cell colors are identical to the light render (same green-to-blue gradient, same weekday/weekend contrast, same partial last week via mask). Confirms the Imprint palette data colors are theme-independent as required.
+      Legibility verdict: PASS (all readable chrome text passes; missing annotation elements are a data-storytelling/rendering issue, not a legibility failure).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -60,76 +73,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, weekday, month labels readable in both themes. Minor overlap
-          of annotation text with month labels at bottom.
+        comment: Explicit font sizes throughout; all chrome legible in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Secondary annotation text at bottom overlaps month label row near
-          Jul/Aug in light render.
+        passed: true
+        comment: No text/text or text/data collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells, colorbar, and labels clearly visible in both themes.
+        comment: 365-day grid cells are clearly visible and appropriately sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Greens sequential colormap is CVD-safe; no red-green-only encoding.
+        comment: Good contrast, CVD-safe sequential ramp
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 landscape format. Heatmap fills canvas well. Minor crowding
-          at bottom due to annotation overlap.
+        comment: Right-margin blank strip (~442px, ~14% of canvas width) flagged in
+          Review 1 is unchanged despite subplots_adjust/cbar_kws tweaks
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Weekday/month labels descriptive; title correctly formatted as spec-id
-          · library · anyplot.ai.
+        comment: Descriptive weekday/month labels and colorbar label with unit context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Greens sequential colormap allowed per style guide for single-polarity
-          brand-tied data. Light bg ~#FAF8F1, dark bg ~#1A1A17 both correct.
+        comment: imprint_seq (brand green -> blue) used correctly, theme-correct chrome
+          in both renders
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: GitHub-style contribution graph aesthetic is intentional and recognizable.
-          Greens colormap thematically appropriate. Above default but no custom typography
-          hierarchy.
+        passed: false
+        comment: Custom cmap and punched-out grid go beyond bare defaults but nothing
+          new visible this attempt
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: Tick marks removed, no grid (correct for heatmap), clean layout.
-          linewidths=1.5 white borders a bit heavy.
+        passed: false
+        comment: Tick marks removed, subtle background-colored grid separation; unchanged
+          from Review 1
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Calendar format naturally communicates temporal patterns. Weekday
-          vs weekend activity difference visible. Annotation provides narrative summary.
+        passed: false
+        comment: Code adds a peak-day text callout and ring marker to address Review
+          1 feedback, but neither renders in either PNG -- no credit given since the
+          shipped image shows no deliberate emphasis
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,56 +147,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Calendar heatmap with days-as-cells, weeks-as-columns. Correct calendar
-          structure.
+        comment: Correct calendar heatmap grid (weekdays x weeks)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Weekday labels, colorbar, sequential colormap all present. Month
-          labels shown at bottom; spec specifies top or section headers.
+        comment: Weekday y-axis labels, month labels at top, sequential colormap,
+          missing dates masked, colorbar legend -- all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Weeks on x-axis, days-of-week on y-axis, color encodes contribution
-          count correctly.
+        comment: Weekday on Y, week-of-year on X, values via color -- correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Rendered title is heatmap-calendar · seaborn · anyplot.ai. Colorbar
-          labeled Daily Contributions.
+        comment: Title format exact; colorbar legend labeled correctly
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows full year, weekday/weekend patterns, zero days, peak days.
-          Colorbar covers full range.
+        comment: Shows zero days, weekday/weekend contrast, spikes, and a capped max
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GitHub-style contributions are plausible, neutral, recognizable domain
-          context. Weekday boost realistic.
+        comment: Neutral GitHub-style contribution scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 365 days (1 year) matches spec recommendation. Values 0-15 are realistic
-          commit counts.
+        comment: 0-15 daily contribution range is plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -194,59 +198,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean linear script.
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (matplotlib, numpy, pandas, seaborn) are used.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; logical pivot-based calendar construction.
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Code saves as plot.png instead of required plot-{THEME}.png. Pipeline
-          works around this but code violates naming convention.
+        passed: true
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight', current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: sns.heatmap() is canonical seaborn API. cbar_kws for colorbar customization
-          is idiomatic.
+        comment: Explicit mask= parameter for missing-data handling is idiomatic seaborn,
+          up from implicit NaN in Review 1
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: true
-        comment: Uses seaborn linewidths/linecolor cell border parameters and cbar_kws
-          shrink/aspect control. Basic but seaborn-native.
+        passed: false
+        comment: Still fundamentally a pivot + sns.heatmap pattern; mask usage helps
+          but isn't a standout distinctive feature
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - long-to-wide
+  - explicit-figure
+  - groupby-aggregation
   dataprep:
   - time-series
   styling:

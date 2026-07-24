@@ -2,50 +2,32 @@ library: letsplot
 language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:13:44Z'
-updated: '2026-04-27T01:16:19Z'
+updated: '2026-07-23T22:45:34Z'
 generated_by: claude-sonnet
-workflow_run: 24971420582
+workflow_run: 30049769147
 issue: 1010
-python_version: 3.14.4
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
-  strengths:
-  - Subtitle communicates two concrete data insights directly in the plot (big improvement
-    from attempt 1)
-  - Theme-adaptive chrome is complete and correct in both renders — no dark-on-dark
-    failures
-  - layer_tooltips() with formatted date and activity count is idiomatic and distinctive
-    to lets_plot
-  - 'Data generation is realistic: Poisson-based, weekend-dampened, with sporadic
-    spikes — genuinely GitHub-like'
-  - All chrome stripped (no grid, no ticks, no axis lines) — clean minimal look
-  - Full spec compliance including month labels at top of grid
-  weaknesses:
-  - 'Canvas format still 16:9: ggsize(1600, 900) with 53 columns x 7 rows produces
-    tiles ~3x taller than wide — switch to ggsize(1200, 1200) for near-square calendar
-    cells (scale=3 gives 3600x3600px square format)'
-  - 'Axis title size still 18pt: axis_title=element_text(size=18) should be size=20
-    per style guide for DPI-based libraries'
-  - 'Aesthetic sophistication plateau at DE-01=4/8: viridis begin value causes zero-activity
-    cells to blend into #1A1A17 dark background — add begin=0.05 to scale_fill_viridis();
-    confirm panel_border=element_blank() is in theme'
+  strengths: []
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "heatmap-calendar · letsplot · anyplot.ai" in dark ink at top — readable. Subtitle "Peak activity in Dec · Weekends show ~60% less activity" in smaller muted text below title — readable. Month labels (Jan-Dec) at top of calendar grid — readable. Weekday tick labels (Mon-Sun) in dark-gray on left — readable. "Month (2024)" X-axis title and "Day of Week" Y-axis title — readable. "Activity" legend title and colorbar labels — readable.
-      Data: Viridis colormap (dark purple for ~0, teal/green for ~10-15, yellow for 30+). Tiles are ~3x taller than wide due to 16:9 canvas. Saturday and Sunday rows visibly darker. Several yellow/green spike cells on weekdays.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "heatmap-calendar · letsplot · anyplot.ai" centered at top in dark ink; subtitle "Peak activity in Dec · Weekends show ~70% less activity" below it in softer gray-ink; "Month (2024)" x-axis title above the Jan-Dec tick labels (scale_x_continuous position="top"); rotated "Day of Week" y-axis title on the left with Mon-Sun tick labels. All chrome text is dark-on-cream and clearly legible.
+      Data: 52x7 grid of tile cells colored on the Imprint sequential gradient from brand green (#009E73, low activity) to blue (#4467A3, high activity), separated by thin cream gaps. First/only data series correctly starts at #009E73. Weekday rows show more blue/teal spikes than weekend rows, visually confirming the "weekends show less activity" subtitle claim. A vertical "Activity" colorbar legend sits to the right in an elevated cream box with a visible border, ticks labeled 0-30.
+      Legibility verdict: PASS — no text is light-on-light or otherwise hard to read.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and subtitle in light cream text — readable. Weekday tick labels (Mon-Sun) in light gray (INK_SOFT) — readable. Month labels in light gray at top — readable. Axis titles in light text — readable. Legend text in light gray — readable. No dark-on-dark failures detected.
-      Data: Viridis colors IDENTICAL to light render (same purple-to-yellow range, same spike cells in same positions). PAGE_BG tile borders near-invisible on dark surface but cells still distinguishable via color difference.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/subtitle/axis-title/tick-label layout as the light render, but all rendered in light ink (title/axis titles) and soft light-gray (subtitle, tick labels, legend text) against the dark background. The legend box uses the darker elevated background token with a light border.
+      Data: Cell colors are identical to the light render — same green-to-blue Imprint sequential gradient, confirming only chrome (not data colors) flips between themes. Weekday/weekend contrast remains visible.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title, axis, tick, and legend text remains clearly readable against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -56,75 +38,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set; axis_title size=18 still below recommended
-          >=20pt for DPI-based libraries
+        comment: All font sizes explicitly set via theme(); readable in both themes;
+          title sits ~70% width as expected for the mandated string
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text or elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Tiles clearly visible; near-zero cells hard to distinguish (inherent
-          to data density); tiles still ~3x taller than wide
+        comment: 365 daily tiles clearly visible and distinguishable at this density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe
+        comment: Green-to-blue sequential gradient has adequate contrast and is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: 16:9 canvas with 53 columns x 7 rows produces tiles ~3x taller than
-          wide; square canvas would give near-square calendar cells
+        passed: false
+        comment: Grid + axes occupy only the top ~68% of the square canvas; unbalanced
+          whitespace concentrated at the bottom
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Month (2024) and Day of Week are descriptive with temporal context
+        comment: '"Month (2024)" and "Day of Week" are descriptive with context'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct for continuous data; #FAF8F1/#1A1A17 backgrounds
-          correct; all chrome tokens properly themed'
+        comment: 'Uses imprint_seq (#009E73 -> #4467A3) correctly for single-polarity
+          data; theme-correct chrome in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Clean and professional; viridis default with PAGE_BG borders; elongated
-          tile proportions and generic layout reduce sophistication
+        comment: Thoughtful sequential palette and computed-insight subtitle push
+          above a plain default, but overall composition is still fairly plain
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid, ticks, axis lines blanked — good minimalism; panel_border status
-          unclear
+        comment: Grid, border, and tick marks removed; subtle cell separators; hurt
+          somewhat by the unbalanced bottom whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtitle 'Peak activity in Dec · Weekends show ~60% less activity'
-          communicates two clear insights; weekend gap visually obvious; upgrade from
-          attempt 1
+        comment: Subtitle calls out concrete insights; weekday/weekend contrast is
+          genuinely visible; December peak claim is less visually supported
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -132,26 +112,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calendar heatmap using geom_tile
+        comment: Correct calendar heatmap via geom_tile on week/weekday grid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Weekday labels Mon-Sun, month labels at top of grid, sequential viridis
-          colormap, color scale legend all present
+        comment: Weekday labels, month labels, sequential colormap, legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: week_of_year->X, weekday->Y, value->fill; all 365 data points visible
+        comment: week_of_year on x, weekday (reversed Mon-Sun) on y, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; legend labeled Activity
+        passed: false
+        comment: Legend correct, but title omits the required "python" language segment
     data_quality:
       score: 14
       max: 15
@@ -161,20 +140,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Full year, weekday/weekend contrast, Poisson spikes, zero-activity
-          days; missing-date handling not demonstrated
+        comment: Shows spikes, zeros, and weekday/weekend variation; no deliberate
+          seasonal trend despite the subtitle referencing one
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GitHub-style daily contribution counts; neutral, real-world domain
+        comment: GitHub-style daily activity counts; real, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-30+ contributions/day is realistic for GitHub activity
+        comment: Poisson-based counts with plausible 0-30 range for daily activity
     code_quality:
       score: 10
       max: 10
@@ -184,31 +163,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> data -> plot -> save'
+        comment: Linear top-to-bottom script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used including shutil for cleanup
+        comment: Only os, shutil, numpy, pandas, lets_plot — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; layer_tooltips() is elegant
+        comment: Appropriately simple, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and .html via current ggsave API
     library_mastery:
       score: 7
       max: 10
@@ -218,27 +197,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper grammar of graphics; geom_tile, scale_fill_viridis, scale_y_reverse,
-          layered theme composition
+        comment: Idiomatic ggplot-style layering with geom_tile, scale_fill_gradient,
+          theme composition
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with formatted date and activity count is lets_plot
-          specific; HTML interactive output generated
-  verdict: REJECTED
+        comment: Uses layer_tooltips() for rich interactive HTML tooltips and position="top"
+          axis placement — lets-plot-specific features beyond generic usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - hover-tooltips
-  - html-export
   - manual-ticks
+  - html-export
   patterns:
   - data-generation
-  - groupby-aggregation
   dataprep:
   - time-series
+  - groupby-aggregation
   styling:
+  - minimal-chrome
   - custom-colormap
