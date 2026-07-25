@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: rug-basic
 created: '2026-07-25T06:56:34Z'
-updated: '2026-07-25T07:01:11Z'
+updated: '2026-07-25T07:08:30Z'
 generated_by: claude-sonnet
 workflow_run: 30148266213
 issue: 978
@@ -12,55 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - Correctly pairs geom_rug with geom_density exactly as the spec's Notes recommend
-    ("works best as a complement to histograms, density plots, or scatter plots"),
-    rather than shipping a bare rug with no context
-  - Rug ticks use alpha = 0.4 so overlapping observations visibly darken into denser
-    bands, directly satisfying the spec's "use semi-transparency when observations
-    overlap" requirement
-  - Bimodal reaction-time dataset (fast/practiced vs. slow/hesitant groups) is realistic,
-    neutral, and specifically chosen so the rug reveals clustering that the smooth
-    density curve alone would blur
-  - 'Canvas is exactly 3200x1800px, backgrounds are pixel-exact #FAF8F1 / #1A1A17,
-    and the first (only) series is pixel-exact Imprint brand green #009E73 in both
-    themes'
-  - 'Clean, reproducible code: set.seed(42), only used imports (ggplot2/tibble/ragg),
-    correct ggsave + ragg::agg_png output pattern matching plot-{THEME}.png'
+  - Rug marks combined with a kernel density curve clearly reveal the bimodal reaction-time
+    distribution -- clusters and the mid-range gap around 500ms that the density alone
+    would blur are directly visible in the tick marks.
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white background
+    (#FAF8F1) in light, warm near-black (#1A1A17) in dark, and the brand green #009E73
+    is pixel-identical data color across both themes.'
+  - Clean single-hue composition with a subtle Y-axis-only grid, L-shaped spines (left+bottom
+    via theme_minimal override), and appropriate semi-transparency (alpha=0.3) on
+    the rug marks per the spec's overlap-handling note.
+  - Realistic, neutral example data (cognitive-test reaction times, fast vs. hesitant
+    groups) with sensible real-world values (~380ms / ~620ms) that gives the rug plot
+    a genuine reason to exist.
   weaknesses:
-  - 'Major gridlines use panel.grid.major.y = element_line(color = INK, linewidth
-    = 0.2) — INK is the full-strength primary text color (#1A1A17 light / #F0EFE8
-    dark), not a faint variant. Pixel-sampled gridlines render at exactly (26,26,23)
-    on light and (240,239,232) on dark — the same brightness as the title text — instead
-    of the style guide''s 15-25% opacity. Fix: since ggplot2''s element_line() doesn''t
-    expose alpha directly, use an 8-digit hex with an alpha channel (e.g. "#1A1A1726"
-    light / "#F0EFE826" dark, ~15% alpha) as the library guide instructs ("use a faint
-    INK color"), not the raw INK token.'
-  - In the two densest reaction-time clusters (~350-420ms and ~600-650ms), overlapping
-    rug ticks merge into a near-solid green band, losing the ability to distinguish
-    individual observations there — slightly undercuts the rug plot's core value proposition
-    of showing exact point locations. Consider a slightly lower alpha (e.g. 0.3) or
-    thinner linewidth to preserve more separation in the densest region while keeping
-    the clustering signal.
-  - Design customization beyond the theme-token boilerplate is modest — same brand-green
-    monochrome fill/line/rug with no additional refinement (e.g. no distinguishing
-    tick color/weight from the density line, no annotation calling out the bimodal
-    structure) — competent but not distinctive relative to the library's fuller styling
-    toolkit.
+  - Rug tick alpha (0.3) reads slightly faint in the light render at this data density
+    (140 points) -- nudging to ~0.35-0.4 would give the marks a touch more presence
+    without losing the overlap-transparency the spec asks for.
+  - 'Design Excellence is solid but stops short of exceptional: a small secondary
+    emphasis (e.g. a light annotation or callout naming the two clusters) would push
+    Data Storytelling from ''good'' to ''excellent''.'
+  - The density+rug layer combination is a common ggplot2 pattern rather than a distinctive
+    one -- a future revision could showcase a more library-specific capability (custom
+    bandwidth via stat_density, or scale-level formatting) to raise Library Mastery
+    further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, pixel-sampled at (250,248,241) which is exactly #FAF8F1 as required — not pure white.
-      Chrome: Title "rug-basic · r · ggplot2 · anyplot.ai" top-left in dark ink, clearly readable. X-axis title "Reaction Time (ms)" and y-axis title "Density" both in dark ink, clearly legible. Tick labels (0.000-0.004 on y, 400/600/800 on x) in softer grey, legible. Horizontal gridlines are present but render at full ink strength (26,26,23) rather than a faint tint — higher contrast than intended, though still thin (0.2 linewidth) and non-dashed.
-      Data: Brand-green (#009E73, confirmed via pixel sample) filled density curve (alpha ~0.25) with a bold green outline, bimodal with a prominent peak near 380ms and a smaller peak near 610ms. Below the x-axis, a rug of short green tick marks (alpha 0.4) shows individual reaction-time observations, visibly denser under the two density peaks and sparser in the trough and tails — this is the only series, single-series, matching the brand-green-first rule.
-      Legibility verdict: PASS — all title/axis/tick text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "rug-basic · r · ggplot2 · anyplot.ai" top-left in dark ink, clearly readable. Y-axis "Density" and X-axis "Reaction Time (ms)" labels are dark and legible. Tick labels (0.000-0.004 on Y, 400/600/800 on X) are a softer gray, clearly readable. Subtle horizontal gridlines only (Y-axis), left+bottom axis lines visible, no top/right spines.
+      Data: Single bimodal KDE curve in brand green (#009E73), semi-transparent green fill under the curve, and a band of small semi-transparent green rug tick marks along the bottom showing the raw observations -- densely packed near the ~380ms peak, sparse in the ~500ms valley, clustered again near the ~620ms peak, thinning into the tail toward ~800ms.
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, pixel-sampled at (26,26,23) which is exactly #1A1A17 as required — not pure black.
-      Chrome: Same title and axis titles now rendered in light ink (#F0EFE8), clearly readable against the dark surface. Tick labels in the lighter secondary grey, legible. No dark-on-dark failures observed. Gridlines again render at full light-ink strength (240,239,232) — same over-strong-contrast issue as the light render, mirrored.
-      Data: Identical brand-green #009E73 density fill/line and rug ticks — pixel-sampled and confirmed unchanged from the light render, only the chrome (background/text/grid) flipped, as required.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; brand green remains highly visible on the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink/gray, fully legible against the dark background. Gridlines are a faint light line, still visible but subtle. No dark-on-dark text found anywhere (title, axis titles, tick labels all clearly light-colored).
+      Data: The KDE curve, fill, and rug marks use the identical brand green (#009E73) as the light render -- confirmed pixel-for-pixel same hue, only the chrome (background/text/grid) flipped to the dark theme tokens.
+      Legibility verdict: PASS -- all text is clearly readable against the dark background, no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -71,52 +60,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title/axis/tick text explicitly sized (12/10/8pt) and readable in
-          both themes; no legibility failures
+        comment: Explicit font sizes throughout (base 8, axis title 10, axis text
+          8, plot title 12), readable in both themes, title fits without overflow
+          (~35-40% width)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No overlap between title, axis labels, ticks, or data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Rug alpha=0.4 correctly shows overlap density, but the two densest
-          clusters merge into near-solid bands, losing individual-point resolution
-          there
+        comment: Density curve and rug marks clearly visible; rug alpha (0.3) is slightly
+          on the faint side for the data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series, good contrast on both surfaces, no red/green-only
-          encoding
+        comment: Single-hue design, good contrast against both backgrounds, no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, no clipping, balanced margins, title well
-          within 50-70% width band
+        comment: Plot fills a large majority of the canvas, balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Reaction Time (ms)" and "Density" are descriptive with units where
-          applicable'
+        comment: '''Reaction Time (ms)'' has units; ''Density'' is the correct descriptive
+          term for a KDE y-axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series pixel-confirmed #009E73; backgrounds pixel-confirmed
-          #FAF8F1/#1A1A17; identical data color across themes'
+        comment: 'First series is #009E73 in both renders; backgrounds are #FAF8F1
+          light / #1A1A17 dark; chrome theme-correct in both'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -124,23 +113,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Competent theme-token styling but modest customization beyond a single
-          monochrome fill/line/rug combo
+        comment: Cohesive single-hue treatment, but reads as a well-configured default
+          rather than a fully custom design
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Gridlines use full-strength INK color instead of a faint tint, rendering
-          at the same brightness as title text — not the 15-25% opacity the style
-          guide and this library's own prompt call for
+        comment: Subtle Y-axis-only grid, L-shaped spines, generous margins -- clear
+          refinement beyond raw defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Deliberately bimodal reaction-time data lets the rug marks reveal
-          clustering that the density curve alone would blur, per the spec's own rationale
+        passed: false
+        comment: Bimodal data deliberately chosen so the rug marks reveal clustering
+          the density curve alone would blur -- visual hierarchy present, no explicit
+          annotation
     spec_compliance:
       score: 15
       max: 15
@@ -150,52 +139,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Rug plot combined with density, matching the spec's guidance to pair
-          it with another plot
+        comment: geom_rug correctly implements the rug plot, paired with density per
+          spec's own 'complement to density plots' guidance
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparency for overlap, small consistent tick height, x-axis
-          default placement, density complement — all present
+        comment: Semi-transparency for overlap, small consistent tick height, default
+          x-axis (bottom) placement
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Single continuous variable mapped to x, correct for a rug plot
+        comment: x = reaction_ms, y = density, full data range shown on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches "rug-basic · r · ggplot2 · anyplot.ai"; legend correctly
-          omitted for single series
+        comment: 'Title format correct: ''rug-basic · r · ggplot2 · anyplot.ai'';
+          no legend needed for single series'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows clustering, gaps, overlap-transparency; individual-point resolution
-          is lost in the two densest clusters
+        comment: Bimodal distribution shows clustering, a gap, and tail thinning --
+          exercises the rug plot's core value proposition
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cognitive-test reaction times, neutral and plausible
+        comment: 'Cognitive-test reaction times: real, neutral, comprehensible scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200-800ms range is sensible for a fast vs. hesitant reaction-time
-          split
+        comment: 380ms / 620ms reaction-time means are realistic for a fast vs. hesitant
+          cognitive-test split
     code_quality:
       score: 10
       max: 10
@@ -205,7 +194,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: Linear imports -> theme tokens -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -217,22 +206,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: ggplot2/tibble/ragg all used
+        comment: ggplot2, tibble, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake interactivity
+        comment: Clean, no over-engineering, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with ragg::agg_png, plot-{THEME}.png pattern, correct 8x4.5in
-          @ 400dpi
+        comment: ggsave with ragg::agg_png, correct plot-{theme}.png naming and 8x4.5in@400dpi
+          canvas sizing
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -240,15 +229,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct geom_density + geom_rug layering per ggplot2 grammar-of-graphics
-          conventions
+        comment: geom_density + geom_rug composed correctly with theme_minimal, but
+          no advanced ggplot2 features leveraged
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic usage, no library-distinctive touches beyond the two standard
-          geoms
+        comment: geom_rug is a standard geom used generically -- no library-specific
+          capability beyond the basic API
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -256,6 +245,8 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - alpha-blending
+  - publication-ready
