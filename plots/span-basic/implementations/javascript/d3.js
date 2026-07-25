@@ -36,17 +36,26 @@ const series = quarters.map((date, i) => {
   return { date, index: level };
 });
 
-const spans = [
+const verticalSpans = [
   { start: new Date(2007, 9, 1), end: new Date(2009, 3, 1), label: "2007–09 recession" },
   { start: new Date(2011, 6, 1), end: new Date(2011, 12, 1), label: "2011 slowdown" },
 ];
+
+// A horizontal span demonstrates the spec's other direction: a fixed value-threshold
+// "correction zone" band, independent of x, spanning the full plot width.
+const horizontalSpans = [{ start: 60, end: 97, label: "Correction zone (index < 97)" }];
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
 // --- Scales --------------------------------------------------------------------
-const x = d3.scaleTime().domain(d3.extent(series, (d) => d.date)).range([0, iw]);
+// Domain covers both the series dates and every vertical span's start/end so a span
+// that extends past the last data point never extrapolates past the plotted x-axis.
+const x = d3
+  .scaleTime()
+  .domain(d3.extent([...series.map((d) => d.date), ...verticalSpans.flatMap((s) => [s.start, s.end])]))
+  .range([0, iw]);
 const y = d3
   .scaleLinear()
   .domain([d3.min(series, (d) => d.index) * 0.95, d3.max(series, (d) => d.index) * 1.05])
@@ -65,10 +74,35 @@ g.append("g")
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
+// --- Horizontal span (drawn beneath everything) — value-threshold band ----------
+const hSpanColor = t.amber; // amber — semantic anchor for warning/caution thresholds
+g.selectAll(".hspan")
+  .data(horizontalSpans)
+  .join("rect")
+  .attr("class", "hspan")
+  .attr("x", 0)
+  .attr("y", (d) => Math.max(y(d.end), 0))
+  .attr("width", iw)
+  .attr("height", (d) => Math.min(y(d.start), ih) - Math.max(y(d.end), 0))
+  .attr("fill", hSpanColor)
+  .attr("opacity", 0.22);
+
+g.selectAll(".hspan-label")
+  .data(horizontalSpans)
+  .join("text")
+  .attr("class", "hspan-label")
+  .attr("x", 12)
+  .attr("y", (d) => Math.max(y(d.end), 0) + 20)
+  .attr("text-anchor", "start")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .style("font-weight", "500")
+  .text((d) => d.label);
+
 // --- Vertical spans (drawn beneath the line) ------------------------------------
 const spanColor = t.palette[4]; // matte red — semantic anchor for downturn periods
 g.selectAll(".span")
-  .data(spans)
+  .data(verticalSpans)
   .join("rect")
   .attr("class", "span")
   .attr("x", (d) => x(d.start))
@@ -79,7 +113,7 @@ g.selectAll(".span")
   .attr("opacity", 0.22);
 
 g.selectAll(".span-label")
-  .data(spans)
+  .data(verticalSpans)
   .join("text")
   .attr("class", "span-label")
   .attr("x", (d) => x(d.start) + (x(d.end) - x(d.start)) / 2)
