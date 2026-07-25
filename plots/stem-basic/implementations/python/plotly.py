@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stem-basic: Basic Stem Plot
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-25
@@ -28,6 +28,11 @@ y = np.exp(-x / 10) * np.cos(x * 0.8) + np.random.randn(30) * 0.05
 # decaying tail recedes visually without drawing separate envelope curves.
 magnitude = np.abs(y)
 alpha = 0.35 + 0.65 * (magnitude / magnitude.max())
+peak_idx = int(np.argmax(magnitude))
+
+# Decay envelope - the exp(-x/10) bound that shapes the oscillation, drawn as a
+# faint dotted band to reinforce the damped-signal story (Plotly shape overlay).
+envelope = np.exp(-x / 10)
 
 # Plot
 fig = go.Figure()
@@ -43,6 +48,20 @@ fig.add_trace(
         hoverinfo="skip",
     )
 )
+
+# Envelope band tracing the damped-oscillation bound
+for sign in (1, -1):
+    fig.add_trace(
+        go.Scatter(
+            x=x,
+            y=sign * envelope,
+            mode="lines",
+            line={"color": INK_SOFT, "width": 1.5, "dash": "dot"},
+            opacity=0.4,
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
 
 # Stems (vertical lines from baseline to data points), alpha-faded by magnitude
 for xi, yi, ai in zip(x, y, alpha, strict=True):
@@ -79,7 +98,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     title={
-        "text": "stem-basic · plotly · anyplot.ai",
+        "text": "stem-basic · python · plotly · anyplot.ai",
         "font": {"size": 20, "color": INK},
         "x": 0.5,
         "xanchor": "center",
@@ -102,6 +121,19 @@ fig.update_layout(
     },
     margin={"l": 70, "r": 35, "t": 75, "b": 60},
     showlegend=False,
+)
+
+# Annotation calling out the dominant peak sample
+fig.add_annotation(
+    x=x[peak_idx],
+    y=y[peak_idx],
+    text="Peak amplitude",
+    showarrow=True,
+    arrowhead=2,
+    arrowcolor=INK_SOFT,
+    ax=40,
+    ay=-35,
+    font={"size": 13, "color": INK},
 )
 
 # Save
