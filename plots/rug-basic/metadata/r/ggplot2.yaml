@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: rug-basic
+created: '2026-07-25T06:56:34Z'
+updated: '2026-07-25T07:08:30Z'
+generated_by: claude-sonnet
+workflow_run: 30148266213
+issue: 978
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Rug marks combined with a kernel density curve clearly reveal the bimodal reaction-time
+    distribution -- clusters and the mid-range gap around 500ms that the density alone
+    would blur are directly visible in the tick marks.
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white background
+    (#FAF8F1) in light, warm near-black (#1A1A17) in dark, and the brand green #009E73
+    is pixel-identical data color across both themes.'
+  - Clean single-hue composition with a subtle Y-axis-only grid, L-shaped spines (left+bottom
+    via theme_minimal override), and appropriate semi-transparency (alpha=0.3) on
+    the rug marks per the spec's overlap-handling note.
+  - Realistic, neutral example data (cognitive-test reaction times, fast vs. hesitant
+    groups) with sensible real-world values (~380ms / ~620ms) that gives the rug plot
+    a genuine reason to exist.
+  weaknesses:
+  - Rug tick alpha (0.3) reads slightly faint in the light render at this data density
+    (140 points) -- nudging to ~0.35-0.4 would give the marks a touch more presence
+    without losing the overlap-transparency the spec asks for.
+  - 'Design Excellence is solid but stops short of exceptional: a small secondary
+    emphasis (e.g. a light annotation or callout naming the two clusters) would push
+    Data Storytelling from ''good'' to ''excellent''.'
+  - The density+rug layer combination is a common ggplot2 pattern rather than a distinctive
+    one -- a future revision could showcase a more library-specific capability (custom
+    bandwidth via stat_density, or scale-level formatting) to raise Library Mastery
+    further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "rug-basic · r · ggplot2 · anyplot.ai" top-left in dark ink, clearly readable. Y-axis "Density" and X-axis "Reaction Time (ms)" labels are dark and legible. Tick labels (0.000-0.004 on Y, 400/600/800 on X) are a softer gray, clearly readable. Subtle horizontal gridlines only (Y-axis), left+bottom axis lines visible, no top/right spines.
+      Data: Single bimodal KDE curve in brand green (#009E73), semi-transparent green fill under the curve, and a band of small semi-transparent green rug tick marks along the bottom showing the raw observations -- densely packed near the ~380ms peak, sparse in the ~500ms valley, clustered again near the ~620ms peak, thinning into the tail toward ~800ms.
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink/gray, fully legible against the dark background. Gridlines are a faint light line, still visible but subtle. No dark-on-dark text found anywhere (title, axis titles, tick labels all clearly light-colored).
+      Data: The KDE curve, fill, and rug marks use the identical brand green (#009E73) as the light render -- confirmed pixel-for-pixel same hue, only the chrome (background/text/grid) flipped to the dark theme tokens.
+      Legibility verdict: PASS -- all text is clearly readable against the dark background, no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (base 8, axis title 10, axis text
+          8, plot title 12), readable in both themes, title fits without overflow
+          (~35-40% width)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, axis labels, ticks, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Density curve and rug marks clearly visible; rug alpha (0.3) is slightly
+          on the faint side for the data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue design, good contrast against both backgrounds, no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large majority of the canvas, balanced margins, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Reaction Time (ms)'' has units; ''Density'' is the correct descriptive
+          term for a KDE y-axis'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both renders; backgrounds are #FAF8F1
+          light / #1A1A17 dark; chrome theme-correct in both'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Cohesive single-hue treatment, but reads as a well-configured default
+          rather than a fully custom design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle Y-axis-only grid, L-shaped spines, generous margins -- clear
+          refinement beyond raw defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Bimodal data deliberately chosen so the rug marks reveal clustering
+          the density curve alone would blur -- visual hierarchy present, no explicit
+          annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_rug correctly implements the rug plot, paired with density per
+          spec's own 'complement to density plots' guidance
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparency for overlap, small consistent tick height, default
+          x-axis (bottom) placement
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = reaction_ms, y = density, full data range shown on both axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format correct: ''rug-basic · r · ggplot2 · anyplot.ai'';
+          no legend needed for single series'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Bimodal distribution shows clustering, a gap, and tail thinning --
+          exercises the rug plot's core value proposition
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Cognitive-test reaction times: real, neutral, comprehensible scenario'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 380ms / 620ms reaction-time means are realistic for a fast vs. hesitant
+          cognitive-test split
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> theme tokens -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, tibble, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png, correct plot-{theme}.png naming and 8x4.5in@400dpi
+          canvas sizing
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_density + geom_rug composed correctly with theme_minimal, but
+          no advanced ggplot2 features leveraged
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: geom_rug is a standard geom used generically -- no library-specific
+          capability beyond the basic API
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - publication-ready
