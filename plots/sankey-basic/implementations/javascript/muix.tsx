@@ -1,17 +1,7 @@
 // anyplot.ai
 // sankey-basic: Basic Sankey Diagram
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-07-25
-//
-// MUI X community has no Sankey primitive (Sankey ships only in the commercial
-// @mui/x-charts-pro tier). Following the same escape hatch used for other
-// unsupported diagram types in this catalog: a <ChartContainer> establishes a
-// pixel-space linear coordinate system, and the nodes/links/labels are SVG
-// overlays positioned through the chart's own useXScale/useYScale hooks. The
-// link ribbon geometry (paired cubic beziers) and node stacking are standard,
-// hand-rolled sankey layout math — everything drawn is community @mui/x-charts
-// + plain SVG, no Pro, no second charting library.
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 88/100 | Created: 2026-07-25
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
