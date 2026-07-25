@@ -1,3 +1,7 @@
+// anyplot.ai
+// polar-basic: Basic Polar Chart
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 89/100 | Updated: 2026-07-25
 //# anyplot-orientation: square
 // anyplot.ai
 // polar-basic: Basic Polar Chart
