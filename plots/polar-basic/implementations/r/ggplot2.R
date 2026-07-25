@@ -5,6 +5,7 @@
 
 library(ggplot2)
 library(ragg)
+library(scales)
 
 set.seed(42)
 
@@ -28,13 +29,21 @@ compass_directions <- c(
 n_directions <- length(compass_directions)
 direction_index <- seq_len(n_directions)
 prevailing_index <- 11 # SW - prevailing onshore wind for this station
+land_breeze_index <- 3 # NE - opposite direction, secondary nighttime land-breeze peak
 
-angular_distance <- pmin(
-    abs(direction_index - prevailing_index),
-    n_directions - abs(direction_index - prevailing_index)
-)
-base_frequency <- 14 * exp(-0.5 * (angular_distance / 2.6)^2) + 1.5
-wind_frequency <- pmax(base_frequency + rnorm(n_directions, 0, 0.6), 0.3)
+angular_distance <- function(center) {
+    pmin(abs(direction_index - center), n_directions - abs(direction_index - center))
+}
+
+# Dominant onshore SW wind plus a smaller offshore NE land-breeze counter-peak.
+prevailing_bump <- exp(-0.5 * (angular_distance(prevailing_index) / 2.6)^2)
+land_breeze_bump <- 0.35 * exp(-0.5 * (angular_distance(land_breeze_index) / 2.0)^2)
+base_frequency <- prevailing_bump + land_breeze_bump + 0.05
+
+# A frequency distribution across all 16 directions must sum to 100%, so
+# normalize before adding measurement noise.
+base_frequency <- base_frequency / sum(base_frequency) * 100
+wind_frequency <- pmax(base_frequency + rnorm(n_directions, 0, 0.4), 0.3)
 
 wind_rose <- tibble::tibble(
     direction = factor(compass_directions, levels = compass_directions),
@@ -59,7 +68,7 @@ p <- ggplot(wind_rose, aes(x = direction, y = frequency)) +
     geom_text(
         data = compass_labels,
         aes(x = direction, y = label_radius, label = direction),
-        inherit.aes = FALSE, color = INK, size = 3.2
+        inherit.aes = FALSE, color = INK, size = 2.8
     ) +
     coord_polar(theta = "x") +
     scale_y_continuous(
@@ -77,7 +86,7 @@ p <- ggplot(wind_rose, aes(x = direction, y = frequency)) +
         plot.background = element_rect(fill = PAGE_BG, color = PAGE_BG),
         panel.background = element_rect(fill = PAGE_BG, color = NA),
         panel.grid.major.x = element_blank(),
-        panel.grid.major.y = element_line(color = INK, linewidth = 0.3),
+        panel.grid.major.y = element_line(color = scales::alpha(INK, 0.2), linewidth = 0.3),
         panel.grid.minor = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_text(color = INK, size = 10),
