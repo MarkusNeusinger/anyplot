@@ -121,9 +121,13 @@ const nodeById = {};
 // --- Draw: node rectangles, ribbons, labels ---------------------------------
 const g = chart.renderer.g("sankey").add();
 const f = (v) => v.toFixed(2);
+const maxValue = Math.max(...LINKS.map((l) => l[2]));
 
 // Ribbons first so the node rectangles sit cleanly on top of their ends.
-LINKS.forEach(([sourceId, targetId, value]) => {
+// A thin ink stroke on every ribbon keeps individual flows traceable where
+// several 0.55-alpha fills overlap and would otherwise blend into off-palette
+// secondary hues in the crossing zone.
+const ribbons = LINKS.map(([sourceId, targetId, value]) => {
   const src = nodeById[sourceId];
   const tgt = nodeById[targetId];
   const h = value * unitScale;
@@ -139,9 +143,21 @@ LINKS.forEach(([sourceId, targetId, value]) => {
     `M ${f(src.x1)} ${f(sy0)} C ${f(midX)} ${f(sy0)} ${f(midX)} ${f(ty0)} ${f(tgt.x0)} ${f(ty0)} ` +
     `L ${f(tgt.x0)} ${f(ty1)} C ${f(midX)} ${f(ty1)} ${f(midX)} ${f(sy1)} ${f(src.x1)} ${f(sy1)} Z`;
 
+  // The single largest flow (Coal -> Industrial) gets a bolder stroke and a
+  // touch more fill so the diagram's main point reads at a glance.
+  const isDominant = value === maxValue;
+  const baseOpacity = isDominant ? 0.72 : 0.55;
+
   const path = chart.renderer
     .path()
-    .attr({ fill: SOURCE_COLOR[sourceId], "fill-opacity": 0.55 })
+    .attr({
+      fill: SOURCE_COLOR[sourceId],
+      "fill-opacity": baseOpacity,
+      stroke: t.ink,
+      "stroke-width": isDominant ? 1.5 : 0.75,
+      "stroke-opacity": isDominant ? 0.35 : 0.18,
+    })
+    .css({ cursor: "pointer" })
     .add(g);
   path.element.setAttribute("d", d);
 
@@ -149,6 +165,22 @@ LINKS.forEach(([sourceId, targetId, value]) => {
   const titleEl = document.createElementNS("http://www.w3.org/2000/svg", "title");
   titleEl.textContent = `${sourceId} → ${targetId}: ${value} TWh`;
   path.element.appendChild(titleEl);
+
+  return { path, baseOpacity };
+});
+
+// Genuine hover-highlight interactivity for the HTML view: dim every other
+// ribbon and bring the hovered one to full opacity, using chart.renderer's
+// element-level event API (no sankey series/tooltip module available).
+ribbons.forEach((ribbon) => {
+  ribbon.path.on("mouseover", () => {
+    ribbons.forEach((other) => {
+      other.path.attr({ "fill-opacity": other === ribbon ? 1 : 0.12 });
+    });
+  });
+  ribbon.path.on("mouseout", () => {
+    ribbons.forEach((other) => other.path.attr({ "fill-opacity": other.baseOpacity }));
+  });
 });
 
 NODES.forEach((n) => {
