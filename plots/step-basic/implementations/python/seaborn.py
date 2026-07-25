@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 step-basic: Basic Step Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-04-30
+Library: seaborn | Python 3.13
+Quality: pending | Updated: 2026-07-25
 """
 
 import os
@@ -12,21 +12,27 @@ import pandas as pd
 import seaborn as sns
 
 
-# Theme tokens
+# Theme tokens (Imprint — see prompts/default-style-guide.md)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
+MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+IMPRINT_PALETTE = ["#009E73", "#C475FD"]  # brand green, lavender
 
-# Data - Monthly cumulative sales figures
-month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-months = np.arange(1, 13)
-monthly_sales = np.array([45, 52, 68, 75, 82, 95, 88, 92, 105, 115, 130, 155])
-cumulative_sales = np.cumsum(monthly_sales)
+# Data - warehouse inventory levels held between restock events (13 weekly checks)
+weeks = np.arange(1, 14)
+earbuds_stock = np.array([500, 460, 410, 650, 600, 540, 480, 700, 640, 580, 510, 440, 380])
+speakers_stock = np.array([320, 290, 250, 210, 480, 430, 380, 330, 280, 520, 460, 400, 340])
 
-df = pd.DataFrame({"Month": months, "Cumulative Sales ($K)": cumulative_sales})
+df = pd.DataFrame(
+    {
+        "Week": np.concatenate([weeks, weeks]),
+        "Units in Stock": np.concatenate([earbuds_stock, speakers_stock]),
+        "Product": ["Wireless Earbuds"] * len(weeks) + ["Bluetooth Speakers"] * len(weeks),
+    }
+)
 
 # Plot
 sns.set_theme(
@@ -40,33 +46,75 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.12,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-sns.lineplot(data=df, x="Month", y="Cumulative Sales ($K)", color=BRAND, linewidth=3, drawstyle="steps-post", ax=ax)
+# Muted fill between the two step curves - highlights the stock differential
+# without competing with the data lines (semantic "muted" anchor, not a data color)
+ax.fill_between(weeks, earbuds_stock, speakers_stock, step="post", color=MUTED, alpha=0.08, linewidth=0, zorder=1)
 
-# Markers at each data point to show where changes occur
-ax.scatter(df["Month"], df["Cumulative Sales ($K)"], s=150, color=BRAND, edgecolors=PAGE_BG, linewidth=2, zorder=5)
+# Single hue-mapped lineplot drives both step series and the shared legend
+sns.lineplot(
+    data=df,
+    x="Week",
+    y="Units in Stock",
+    hue="Product",
+    hue_order=["Wireless Earbuds", "Bluetooth Speakers"],
+    palette=IMPRINT_PALETTE,
+    drawstyle="steps-post",
+    linewidth=2.5,
+    marker="o",
+    markersize=9,
+    markeredgecolor=PAGE_BG,
+    markeredgewidth=1.5,
+    ax=ax,
+    zorder=3,
+)
 
-# Style
-ax.set_xlabel("Month", fontsize=20, color=INK)
-ax.set_ylabel("Cumulative Sales ($K)", fontsize=20, color=INK)
-ax.set_title("step-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-ax.set_xticks(months)
-ax.set_xticklabels(month_names)
-ax.set_ylim(0, cumulative_sales[-1] * 1.15)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+# Restock annotation - the defining moment a step plot exists to show
+ax.annotate(
+    "Restock",
+    xy=(4, 650),
+    xytext=(5.4, 745),
+    fontsize=9,
+    color=INK_SOFT,
+    ha="left",
+    arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 1},
+)
+
+# Style - title and subtitle anchored to the figure (not the axes) to avoid overlap
+fig.text(
+    0.5, 0.965, "step-basic · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, ha="center", va="top"
+)
+fig.text(
+    0.5,
+    0.90,
+    "Warehouse inventory held constant between weekly checks — restocks create the jumps",
+    fontsize=9,
+    color=INK_SOFT,
+    ha="center",
+    va="top",
+)
+ax.set_xlabel("Week", fontsize=10, color=INK)
+ax.set_ylabel("Units in Stock", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.set_xticks(weeks)
+ax.set_ylim(0, 800)
+ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, color=INK)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+legend = ax.legend(fontsize=8, title=None, loc="lower left", frameon=True, handlelength=2.2, markerscale=0.8)
+legend.get_frame().set_facecolor(ELEVATED_BG)
+legend.get_frame().set_edgecolor(INK_SOFT)
+
+fig.subplots_adjust(top=0.80, bottom=0.14, left=0.09, right=0.97)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
