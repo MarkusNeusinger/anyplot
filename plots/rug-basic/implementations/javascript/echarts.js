@@ -1,7 +1,7 @@
 // anyplot.ai
 // rug-basic: Basic Rug Plot
 // Library: echarts 6.1.0 | JavaScript 22.23.1
-// Quality: 83/100 | Created: 2026-07-25
+// Quality: 92/100 | Created: 2026-07-25
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
