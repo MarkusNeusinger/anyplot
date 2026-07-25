@@ -1,0 +1,265 @@
+library: d3
+language: javascript
+specification_id: rose-basic
+created: '2026-07-25T10:38:48Z'
+updated: '2026-07-25T10:55:42Z'
+generated_by: claude-sonnet
+workflow_run: 30154555826
+issue: 1003
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Both previous-attempt weaknesses are verifiably fixed: same-value wedges are
+    now pixel-identical across themes (e.g. Jul wedge samples RGB(168,224,206) in
+    both plot-light.png and plot-dark.png), and the grid-ring value labels are now
+    16px, matching the month labels and staying legible at the 400px mobile thumbnail'
+  - Correct rose/coxcomb chart type built idiomatically with d3.arc() + scaleLinear()
+    + the standard selection.data().join() pattern
+  - 'Realistic, well-researched data: temperate coastal monthly rainfall with a plausible
+    seasonal shape (19-158mm) and sensible ~1011mm annual total'
+  - 'Pixel-verified palette compliance: background exactly #FAF8F1 (light, RGB 250,248,241)
+    / #1A1A17 (dark, RGB 26,26,23); peak-value wedge (Dec) is exactly #009E73 in both
+    themes; title/chrome text exactly matches INK tokens (#1A1A17 light / #F0EFE8
+    dark)'
+  - Radial gridline value labels thoughtfully tucked into the one spoke direction
+    (Jul) that stays clear of tall wedges - no overlap with data or other text in
+    either theme
+  - Title format exactly matches the mandated string, no clipping in either render
+    at any canvas edge, balanced margins verified via crop inspection
+  weaknesses:
+  - The value-to-lightness wedge fill (wedgeColor = d3.scaleLinear().domain([0,maxRainfall]).range(["#BFE9DB",
+    t.palette[0]])) is a genuinely continuous encoding of the mm value via color,
+    but it uses a hand-picked custom hex (#BFE9DB) as the low end instead of the sanctioned
+    imprint_seq stops (t.seq) that prompts/library/d3.md documents for exactly this
+    case (d3.scaleSequential(d3.interpolateRgbBasis(t.seq)).domain(...)). Not a hard
+    violation (the brand-green high end is correct and the encoding is theme-consistent),
+    but it deviates from the 'only imprint_seq/imprint_div for continuous data' rule
+    - swap the range for the documented t.seq interpolation, or simplify to a single
+    flat palette[0] fill (the spec explicitly allows either 'single color with varying
+    saturation' or 'distinct colors per category', so a flat fill is also a valid
+    fix that sidesteps the colormap question entirely).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-sampled RGB(250,248,241) = #FAF8F1, exactly on spec.
+      Chrome: Bold dark title "rose-basic · javascript · d3 · anyplot.ai" centered at top (pixel-sampled RGB(26,26,23) = INK token, exact match), fully visible with no clipping at any canvas edge. Twelve month labels (Jan at 12 o'clock, clockwise) sit just outside the wedge fan in ink-soft gray, all legible with generous clearance from the wedge tips. Three subtle circular gridlines (50/100/150 mm) with 16px value labels tucked along the bottom (Jul) spoke, in the one direction that stays clear of tall wedges.
+      Data: Wedges radiate from center with radius proportional to monthly rainfall (19-158mm). Fill is a lightness-scaled green: full Imprint brand green #009E73 (pixel-verified) at the December peak, fading to a pale mint tint at the driest months (Jun/Jul), double-encoding magnitude via both length and color.
+      Legibility verdict: PASS - all text readable against the light background, no overlap between labels, data, or gridlines.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-sampled RGB(26,26,23) = #1A1A17, exactly on spec.
+      Chrome: Title and month/grid labels render in light gray/off-white (pixel-sampled RGB(240,239,232) for title = INK token, exact match) - fully readable against the dark background, no dark-on-dark failures anywhere.
+      Data: Wedge colors are pixel-identical to the light render at every sampled value (e.g. Jan wedge (19,166,126) in both renders, Jul wedge (168,224,206) in both renders, Dec wedge (0,158,115)=#009E73 in both renders) - confirms the previous fill-opacity theme-inconsistency issue from Attempt 1 is fixed; the same rainfall value now reads as the same color regardless of theme.
+      Legibility verdict: PASS - all text readable against the dark background, no dark-on-dark or light-on-light failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 26px, month labels 16px, grid-ring
+          value labels now 16px, up from the 13px flagged in Attempt 1). Confirmed
+          legible at the 400px mobile thumbnail in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, month labels, grid labels, or wedges in
+          either theme; verified via crop inspection at multiple edges.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 wedges with 0.82x angle padding read cleanly as distinct segments
+          at all radii, including the smallest (Jun/Jul).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Attempt 1''s fill-opacity-over-theme-background issue is fixed:
+          pixel-sampled wedge colors are now identical between light and dark renders
+          for every value tested.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Ring diameter fills a large majority of the 2400x2400 canvas; radial
+          value labels are placed in the one empty region (Jul spoke) rather than
+          wasted margin.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Grid value labels include units ('50 mm', '100 mm', '150 mm').
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Background and peak-value wedge color are pixel-exact Imprint tokens,
+          and chrome is theme-correct in both renders. However the value-to-color
+          gradient uses a custom hex (#BFE9DB) as its low end instead of the documented
+          imprint_seq stops (t.seq) for continuous data - a real, fixable deviation
+          from the 'only imprint_seq/imprint_div for continuous data' rule, though
+          not a severe violation since the high end is exact brand green and the encoding
+          is theme-consistent.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Fully custom polar layout with a thoughtful value-to-lightness gradient;
+          clearly above library defaults, not yet publication-tier.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-ring-width gridlines, generous whitespace, clean wedge
+          separation via stroke gaps; solid but not maximally polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Double encoding (radius + lightness) gives an immediate visual read
+          of the wet-winter/dry-summer seasonal pattern.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct rose/coxcomb chart: equal-angle wedges, radius (not area)
+          proportional to value.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Radial gridlines present, natural circular ordering (months), consistent
+          single-hue color scheme, start position at 12 o'clock - all spec notes satisfied.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category -> angle, value -> radius mapping correct; all 12 months
+          visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; no legend needed for a
+          single-series radial chart.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full seasonal range shown: wet winter peak (Dec 158mm) through dry
+          summer trough (Jul 19mm).'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Neutral, real-world scenario: temperate coastal city monthly rainfall.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~1011mm annual total and the winter-wet/summer-dry shape are physically
+          plausible for a temperate coastal climate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data array.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used, no extraneous imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex for a radial chart; the theme-consistency
+          comment documents a real design decision.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container per the harness contract, no manual file
+          I/O, no animation.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Textbook d3.arc() + scaleLinear() + selection.data().join() pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Manual polar-coordinate construction via d3-shape's arc() generator
+          is d3-idiomatic but a fairly generic technique for this library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
