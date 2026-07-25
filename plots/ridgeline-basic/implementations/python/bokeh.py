@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-25
@@ -66,6 +66,8 @@ x_grid = np.linspace(temp_min - pad, temp_max + pad, 300)
 # Pre-compute all patch coordinates for ColumnDataSource
 all_xs = []
 all_ys = []
+all_xs_line = []
+all_ys_line = []
 all_colors = []
 all_months_labels = []
 all_mean_temps = []
@@ -91,15 +93,28 @@ for _i, month in enumerate(reversed(months)):
     y_patch_numeric = np.concatenate([[0], density_normalized, [0]])
     # Categorical offset tuples: (month_label, float_offset)
     y_patches = [(month, float(v)) for v in y_patch_numeric]
+    # Curve-only outline (excludes the zero-baseline) so the stroke traces just
+    # the ridge silhouette instead of a full-width line under empty regions.
+    y_line = [(month, float(v)) for v in density_normalized]
 
     all_xs.append(list(x_patch))
     all_ys.append(y_patches)
+    all_xs_line.append(list(x_grid))
+    all_ys_line.append(y_line)
     all_colors.append(colors_by_month[month])
     all_months_labels.append(month)
     all_mean_temps.append(round(float(np.mean(temps)), 1))
 
 source = ColumnDataSource(
-    data={"xs": all_xs, "ys": all_ys, "color": all_colors, "month": all_months_labels, "mean_temp": all_mean_temps}
+    data={
+        "xs": all_xs,
+        "ys": all_ys,
+        "xs_line": all_xs_line,
+        "ys_line": all_ys_line,
+        "color": all_colors,
+        "month": all_months_labels,
+        "mean_temp": all_mean_temps,
+    }
 )
 
 # Plot (3200 x 1800 px — canonical anyplot landscape canvas)
@@ -107,7 +122,7 @@ source = ColumnDataSource(
 p = figure(
     width=3200,
     height=1800,
-    title="ridgeline-basic · bokeh · anyplot.ai",
+    title="ridgeline-basic · python · bokeh · anyplot.ai",
     x_axis_label="Temperature (°C)",
     y_axis_label="Month",
     y_range=FactorRange(factors=months[::-1], range_padding=0.2),
@@ -118,10 +133,14 @@ p = figure(
     min_border_right=260,
 )
 
-p.patches("xs", "ys", fill_color="color", fill_alpha=0.85, line_color=INK_SOFT, line_width=2, source=source)
+# Fill has no outline of its own — the outline is drawn separately below,
+# following only the ridge curve, so the flat zero-baseline under empty
+# regions stays clutter-free instead of drawing a full-width stroke.
+patches_renderer = p.patches("xs", "ys", fill_color="color", fill_alpha=0.85, line_color=None, source=source)
+p.multi_line("xs_line", "ys_line", line_color=INK_SOFT, line_width=1.5, source=source)
 
 # HoverTool — distinctive Bokeh interactivity
-hover = HoverTool(tooltips=[("Month", "@month"), ("Mean temp", "@mean_temp °C")])
+hover = HoverTool(renderers=[patches_renderer], tooltips=[("Month", "@month"), ("Mean temp", "@mean_temp °C")])
 p.add_tools(hover)
 
 # ColorBar — makes the temperature-to-color encoding explicit (previous review's weakness)
@@ -154,11 +173,8 @@ p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
-p.xaxis.major_tick_line_color = INK_SOFT
 p.xaxis.axis_line_width = 2
 p.yaxis.axis_line_width = 2
-p.xaxis.major_tick_line_width = 2
-p.yaxis.major_tick_line_width = 2
 
 # Grid
 p.xgrid.grid_line_color = INK
@@ -167,7 +183,9 @@ p.xgrid.grid_line_dash = "solid"
 p.ygrid.grid_line_color = INK
 p.ygrid.grid_line_alpha = 0.05
 
-# Remove y-axis tick marks
+# Remove tick marks on both axes (keep tick labels) for consistent minimalism
+p.xaxis.major_tick_line_color = None
+p.xaxis.minor_tick_line_color = None
 p.yaxis.major_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
