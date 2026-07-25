@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-25
@@ -85,7 +85,7 @@ def label(x, color, label):
         -0.02,
         0.06,
         f"μ ≈ {x.mean():.0f} ms",
-        fontsize=8,
+        fontsize=10,
         color=INK_SOFT,
         ha="right",
         va="center",
@@ -106,6 +106,6 @@ g.axes[-1, 0].tick_params(axis="x", labelsize=9, colors=INK_SOFT)
 
 g.figure.set_size_inches(8, 4.5)
 g.figure.patch.set_facecolor(PAGE_BG)
-g.figure.suptitle("ridgeline-basic · seaborn · anyplot.ai", fontsize=13, y=0.98, fontweight="bold", color=INK)
+g.figure.suptitle("ridgeline-basic · python · seaborn · anyplot.ai", fontsize=13, y=0.98, fontweight="bold", color=INK)
 
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
