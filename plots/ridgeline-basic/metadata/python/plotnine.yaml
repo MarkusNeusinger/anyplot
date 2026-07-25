@@ -2,104 +2,103 @@ library: plotnine
 language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:44:00Z'
-updated: '2026-04-30T03:45:25Z'
+updated: '2026-07-25T04:23:25Z'
 generated_by: claude-sonnet
-workflow_run: 25145390024
+workflow_run: 30143048001
 issue: 923
-python_version: 3.13.13
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 89
 review:
   strengths:
-  - 'Full theme-adaptive chrome: both renders are completely readable with correct
-    #FAF8F1/#1A1A17 backgrounds and properly adapted text tokens'
-  - All font sizes explicitly set at correct scale (24/20/16pt) for the 4800x2700px
-    canvas
-  - Realistic and engaging dataset (monthly temperatures) with meaningful seasonal
-    narrative
-  - Clean grammar of graphics composition with idiomatic use of inherit_aes=False
-    for multi-layer annotation
-  - Peak annotation with leader line creates effective storytelling focal point without
-    over-annotating
+  - Correctly implements a ridgeline plot with 12 chronologically ordered monthly
+    KDE curves and clear 50-70% vertical overlap per the spec.
+  - 'Uses the Imprint sequential gradient (imprint_seq: #009E73 -> #4467A3) to color
+    the ridges, correctly anchoring January at brand green rather than picking colors
+    arbitrarily.'
+  - 'Showcases plotnine''s layered grammar distinctively: a separate geom_text data
+    layer with inherit_aes=False plus an annotate(''segment'', ...) leader line to
+    create a focal-point callout on the July peak.'
+  - Theme-adaptive chrome is threaded correctly end-to-end (INK/INK_SOFT tokens, PAGE_BG)
+    -- both light and dark renders are fully legible with matching data colors.
+  - 'Thoughtful KDE post-processing: walks outward from each month''s density peak
+    to keep only the contiguous visible run, avoiding stray near-zero-density slivers
+    stretching across the full x-range.'
+  - Canvas is exactly 3200x1800 with generous margins; no clipped text at any edge.
   weaknesses:
-  - 'VQ-07 partial: months are categorical — first ridge (January) should render in
-    #009E73 per Okabe-Ito rule; cividis is approved for continuous data but months
-    as categories technically require Okabe-Ito'
-  - DE-01 could reach 8 with further typography refinement (bold subtitle, stronger
-    weight contrast between title and subtitle)
-  - DE-03 could reach 6 with an annotation explaining the seasonal spread pattern,
-    not just the single peak
+  - 'The ''Peak: Jul ~= 25C'' annotation''s leader line (the annotate(''segment'',
+    ...) call) terminates almost exactly at the right-aligned label''s text box, so
+    the green line visibly cuts through the label (through the tilde/approx symbol)
+    in BOTH light and dark renders -- shorten xend/yend so the segment stops clearly
+    short of the text, or add extra x-margin between the label anchor (x=34.5) and
+    the segment''s xend (currently 33.5).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — not pure white, correct theme surface
-      Chrome: Title "ridgeline-basic · plotnine · anyplot.ai" in dark #1A1A17 at 24pt; subtitle in #4A4A44 at 16pt; month labels on y-axis in #4A4A44 at 16pt; "Temperature (°C)" x-axis label in #1A1A17 at 20pt — all clearly readable
-      Data: 12 monthly ridgeline density curves using cividis colormap (dark navy blue for Jan → gray-green for Jun/Jul/Aug → bright yellow for Dec); ribbons at alpha=0.85 with INK_SOFT outlines; "Peak: Jul ≈ 25°C" annotation in #009E73 with diagonal leader line
-      First series color: January renders as dark navy (cividis position 0), NOT #009E73
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Bold dark title "ridgeline-basic · python · plotnine · anyplot.ai" top-left, grey subtitle below it, dark "Month" y-axis title (rotated) and light-grey-brown "Temperature (°C)" x-axis title, both clearly readable. Y-axis tick labels (Jan-Dec) and x-axis tick labels (0/10/20/30) are dark/soft-grey and fully legible. A faint vertical gridline is visible at each major x tick.
+      Data: 12 stacked, partially-overlapping KDE ridges running bottom (Jan) to top (Dec), colored on the imprint_seq gradient from brand green (#009E73, Jan) through teal/blue to blue (Dec) -- confirms first series is the brand green. Ridge outlines are a soft dark stroke. A green annotation "Peak: Jul ≈ 25°C" sits near the July/August ridges with a diagonal green leader line pointing at the July peak; the leader line visibly crosses through the middle of the annotation text.
+      Legibility verdict: PASS (one annotation legibility nit noted above, not a blocking failure -- title/axis/tick text is all clean).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — not pure black, correct theme surface
-      Chrome: Title in light #F0EFE8; subtitle and tick labels in #B8B7B0; axis labels in #F0EFE8 — all clearly readable against dark background; no dark-on-dark failures detected
-      Data: Cividis gradient colors are IDENTICAL to light render — dark navy Jan, gray-green summer months, yellow Dec; peak annotation in #009E73 still visible and readable
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Same title/subtitle now in light cream/grey, y/x axis titles and tick labels rendered in light tones, all clearly readable against the dark background -- no dark-on-dark failures observed. Ridge outline stroke switches to a light grey so it stays visible against the darker ridge fills.
+      Data: Same 12 ridges, same green-to-blue gradient identical to the light render -- confirms data colors are unchanged between themes, only chrome flipped. Same "Peak: Jul ≈ 25°C" annotation with the same leader-line-through-text issue reproduced identically.
+      Legibility verdict: PASS (same annotation nit as light render; all core text legible).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt, subtitle 16pt — all
-          explicitly set and readable in both themes
+        comment: Title/axis/tick text fully legible in both themes; annotation text
+          slightly hurt by leader line crossing it
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text collisions; annotation placed at (34.5, 6.5) away from dense
-          ridgeline area
+        comment: Peak annotation's leader line cuts directly through its own label
+          text in both renders
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Density ribbons at alpha=0.85 with INK_SOFT outlines; all 12 months
-          clearly defined
+        comment: Density-appropriate ribbon fills and stroke, distinguishable via
+          color gradient despite expected ridge overlap
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Cividis is CVD-safe perceptually-uniform colormap; ribbon outlines
-          add boundary definition
+        comment: Sequential green-to-blue gradient, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good utilization; minor empty space above December ridge (y-limit
-          14 vs data peak ~13.5)
+        comment: 3200x1800 confirmed, generous margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) with units; Month as clear group descriptor
+        comment: Temperature (°C) and Month, descriptive with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Chrome is theme-correct in both renders; cividis is approved sequential
-          colormap; but months are categorical and first series (January) should be
-          #009E73, not dark navy'
+        passed: true
+        comment: 'First series #009E73, imprint_seq gradient, correct theme backgrounds
+          both renders'
     design_excellence:
       score: 15
       max: 20
@@ -109,23 +108,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: deliberate cividis gradient encodes temporal ordering,
-          clean minimal chrome, peak annotation adds professional polish — clearly
-          above defaults'
+        comment: Custom sequential gradient anchored to brand color, layered composition
+          with annotation callout -- raised from default with evidence
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Panel border removed, only subtle x-axis gridlines at alpha=0.10,
-          minor grid cleared, good margins; ribbon outlines create clean ridge separation
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Peak annotation with leader line creates clear focal point; subtitle
-          establishes real-world context; seasonal shift visible
+        comment: Spines removed, minimal x-only grid at low alpha, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point via July-peak annotation guides the viewer to the
+          seasonal maximum
     spec_compliance:
       score: 15
       max: 15
@@ -135,54 +132,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ridgeline plot with KDE density curves stacked vertically
-          with significant overlap
+        comment: Correct ridgeline / joy plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Partial overlap, y-axis group labels, color differentiation, chronological
-          ordering all present
+        comment: Overlapping density curves, group labels on y-axis, color differentiation,
+          chronological order
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x-axis, months on y-axis, all 12 months shown with
-          correct distribution centers
+        comment: x=temperature, y=month index mapped to labels correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches ridgeline-basic · plotnine · anyplot.ai; no redundant
-          legend (months labeled on y-axis)
+        comment: Title matches mandated format; no legend needed for continuous gradient
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All ridgeline aspects: 12 groups, varying distribution centers (2°C
-          to 25°C), varying spreads (3–5°C std), meaningful overlap'
+        comment: 12 months, 200 obs/month, KDE-smoothed -- covers ridgeline feature
+          set well
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly temperature distributions for Northern Hemisphere temperate
-          climate — neutral, scientifically plausible
+        comment: Plausible, neutral Northern Hemisphere temperate-climate monthly
+          temperatures
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Temperature values factually realistic: Jan≈2°C, Jul≈25°C, Dec≈4°C
-          with plausible standard deviations'
+        comment: -10C to 40C range sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -192,32 +185,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports→data→KDE→plot→save flow; no functions or classes
+        comment: No functions/classes, top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; scipy.stats for KDE, all plotnine elements referenced
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; zip(..., strict=True) is modern practice; separate
-          DataFrame annotation pattern is idiomatic
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at dpi=300
+        comment: Saves plot-{THEME}.png via plot.save with correct dpi/width/height
     library_mastery:
       score: 9
       max: 10
@@ -227,16 +219,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert grammar of graphics: multiple geom layers, inherit_aes=False
-          for separate-dataframe annotations, scale_fill_cmap for continuous mapping'
+        comment: 'Idiomatic ggplot2-style layered grammar: geom_ribbon + geom_line
+          + geom_text + annotate'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: inherit_aes=False multi-layer pattern with separate DataFrames is
-          distinctively ggplot/plotnine; annotate(segment) leader line; geom_ribbon
-          for KDE fills
+        comment: Multi-layer composition with a separate inherit_aes=False data layer
+          for the callout -- a plotnine-distinctive pattern
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -250,4 +241,5 @@ impl_tags:
   dataprep:
   - kde
   styling:
+  - gradient-fill
   - alpha-blending
