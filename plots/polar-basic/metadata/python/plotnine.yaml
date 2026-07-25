@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: polar-basic
 created: '2025-12-23T19:56:42Z'
-updated: '2026-07-24T23:43:17Z'
+updated: '2026-07-25T00:00:31Z'
 generated_by: claude-sonnet
 workflow_run: 30134015746
 issue: 800
@@ -12,148 +12,158 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 76
 review:
   strengths:
+  - 'Code correctly addresses attempt-1 feedback: the radial grid is now sized dynamically
+    from the actual data range (grid_max = ceil(activity.max()*1.15/10)*10) instead
+    of a hardcoded 0-100 scale, a radial axis title (''Activity Level'') was added,
+    the title now includes the mandated ''python'' language segment, and the misleading
+    angle-convention code comment was corrected.'
   - 'Clever, honest workaround for plotnine''s missing coord_polar: the circular grid,
     radial spokes, and hour labels are hand-built from geom_path/geom_segment/geom_point/geom_text
-    with coord_fixed(ratio=1), producing a genuine polar chart without any fake/simulated
-    interactivity.'
-  - 'Theme-adaptive chrome is correctly threaded through: PAGE_BG/INK/INK_SOFT/INK_MUTED
-    all read cleanly in both the FAF8F1 light and 1A1A17 dark renders, with identical
-    brand-green data color across both.'
-  - The peak activity hour is emphasized with a larger marker, giving the chart a
-    clear focal point and light data storytelling.
-  - Correct Imprint brand green (#009E73) as the sole series color, single-series
-    legend correctly omitted.
-  - Clean KISS script structure, seeded reproducible data (np.random.seed(42)), no
-    unused imports, saved correctly as plot-{THEME}.png at the square 2400×2400 canvas.
+    with coord_fixed(ratio=1) -- a genuine polar chart with no fake/simulated interactivity
+    (LM-02).'
+  - 'Reproducible and clean: np.random.seed(42), no unused imports, flat KISS script
+    structure, correct plot.save(f''plot-{THEME}.png'', ...) output pattern.'
+  - Peak activity hour is emphasized with a larger marker, giving the chart a clear
+    focal point (DE-03).
+  - Correct Imprint brand green (#009E73) as the sole series color; single-series
+    legend correctly omitted (VQ-07).
   weaknesses:
-  - 'Radial scale wastes most of the chart area: activity values only reach ~65-70
-    (base_activity maxes at 60, +8 noise), yet the grid rings extend to 100 and scale_x/y_continuous
-    limits go to ±145 — the data polygon is compressed into roughly the inner quarter
-    of the polar area, leaving a large unused outer annulus. This directly conflicts
-    with the spec note ''use an appropriate radial scale that doesn''t compress data
-    near the center.'' Tighten the grid_rows radii / axis limits to fit the actual
-    data range so the shape fills more of the circle.'
-  - The radial axis has no descriptive label — only bare numbers (25/50/75/100) appear
-    near the 06:00 spoke with no 'Activity Level' (or similar) label indicating what
-    they measure; a reader must infer this solely from the title.
-  - 'Title is missing the mandated language segment: current title is ''Hourly Activity
-    Levels · polar-basic · plotnine · anyplot.ai'' but the required format is ''{Descriptive
-    Title} · {spec-id} · {language} · {library} · anyplot.ai'' — insert ''· python''
-    between ''polar-basic'' and ''plotnine''.'
-  - The radius value labels (25/50/75/100) sit very close to / slightly crowd the
-    low-activity data points clustered near the center along the 04:00-06:00 arc —
-    increase the label x-offset or reduce label size slightly to avoid the crowding.
-  - There is a noticeably large empty gap between the title and the top of the polar
-    circle (roughly 10% of canvas height) that is not mirrored elsewhere, giving slightly
-    unbalanced margins — reduce the gap or add balancing bottom margin.
-  - Code comment says '0 hours = top, clockwise' but the actual geometry places hour
-    0 at the bottom with hours increasing counter-clockwise (12:00 at top, 06:00 at
-    right) — the comment is misleading relative to the real mapping; doesn't affect
-    the rendered output but should be corrected for maintainability.
+  - 'CRITICAL / PIPELINE FAILURE: plot_images/plot-light.png and plot-dark.png do
+    NOT reflect the current implementation (commit 972dbd8a9). Running the current
+    script''s data/grid logic with np.random.seed(42) gives activity.max() = 65.32,
+    so grid_max = ceil(65.32*1.15/10)*10 = 80 and grid_radii = [20, 40, 60, 80] --
+    but the rendered images show radial gridline labels ''25'', ''50'', ''75'', ''100'',
+    which are the OLD hardcoded values from the pre-fix version of the file (radius
+    in [25, 50, 75, 100], scale limits fixed at ±145). The labels also sit in a constant-y
+    horizontal row at the 06:00 spoke (matching the OLD formula ''x'': r + 4, ''y'':
+    6), not scattered up the 12:00-15:00 arc at increasing y as the NEW radius_label_angle=100deg
+    formula would place them (computed positions: (-9.5,19.7), (-12.9,39.4), (-16.4,59.1),
+    (-19.9,78.8)). This proves the preview PNGs are stale leftovers from attempt 1,
+    not a render of this attempt''s code. Per review policy this makes visual scoring
+    (VQ/DE) unverifiable and the review invalid until the pipeline regenerates plot-light.png/plot-dark.png
+    from the current commit -- this looks like a CI caching/regeneration bug, not
+    a code bug; no further code changes to the radius-label logic should be made blindly
+    until a correct render can be inspected.'
+  - 'Because the true current render cannot be inspected, VQ-05 (Layout & Canvas)
+    and VQ-06 (Axis Labels & Title) are scored conservatively/uncertain rather than
+    confirmed: it cannot be verified whether the new ''Activity Level'' axis-title
+    text (computed position ~(-22.3, 92.6)) or the ''80'' radius label (~(-19.9, 78.8))
+    collide with the enlarged peak marker, which sits at approximately (0, 65.3) for
+    the seed-42 peak hour (12:00) -- these points are only ~24 data units apart out
+    of an axis span of ~232, which is close enough to warrant a visual check once
+    a correct render is available.'
+  - Once fresh images are generated, re-verify that the previously reported radius-label
+    crowding near the 04:00-06:00 valley is actually resolved (it should be, given
+    the angle changed from a fixed horizontal placement to radius_label_angle=100deg),
+    since that cannot be confirmed from the current (stale) artifacts.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Hourly Activity Levels · polar-basic · plotnine · anyplot.ai" is dark ink text, clearly legible at the top. Hour labels (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00) are medium-gray, all clearly legible around the circle. Radial value labels (25, 50, 75, 100) are lighter gray, legible but positioned close to nearby low-activity data points near the center-right. Dashed circular gridlines and straight radial spokes are subtle light-gray, visible but unobtrusive.
-      Data: A single brand-green (#009E73) closed polygon connects 24 hourly points with a dashed-adjacent solid path; regular points are green-filled circles with a light stroke, and one point (the daily peak, near 12:00) is rendered noticeably larger for emphasis. The shape occupies only the inner portion of the drawn grid (activity values top out well below the 100 ring), leaving a large unused outer band of grid.
-      Legibility verdict: PASS (all text is clearly readable against the light background; no light-on-light issues).
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "Hourly Activity Levels · polar-basic · plotnine · anyplot.ai" (note: NO "python" segment visible, even though the current source code's labs(title=...) call includes "· python ·" -- another sign this render predates the current commit) is dark ink text, clearly legible at the top. Hour labels (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00) are medium-gray, all clearly legible around the circle. Radial value labels read "25", "50", "75", "100" in a horizontal row at the 06:00 spoke height. Dashed circular gridlines (4 rings) and straight radial spokes are subtle light-gray, visible but unobtrusive.
+      Data: A single brand-green (#009E73) closed polygon connects 24 hourly points; regular points are green-filled circles with a light stroke, and one point (the daily peak, near 12:00) is rendered noticeably larger for emphasis. The shape only fills roughly the inner 2/3 of the drawn grid, leaving a visible unused outer band -- consistent with the OLD fixed 0-145 scale, not the new data-driven grid_max=80/axis_limit=116 scale the current code computes.
+      Legibility verdict: PASS (all text is clearly readable against the light background; no light-on-light issues) -- but see the critical pipeline note below: this render's title text and grid numbers do not match what the current source file would produce.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, hour labels, and radial value labels all render in light ink/gray tones (matching the light render's chrome mapped to the dark tokens) and remain clearly legible against the dark surface. Gridlines/spokes are still subtle light-gray at low alpha, visible but not competing with data.
-      Data: The same brand-green (#009E73) polygon and points, identical in color, size, and layout to the light render — confirming only chrome flipped between themes, not data color. The same radial-scale underutilization (shape confined to inner ~quarter of the grid) is present here too.
-      Legibility verdict: PASS (all text is clearly readable against the dark background; no dark-on-dark failures — tick/hour labels and title all use light INK/INK_SOFT/INK_MUTED tokens, not black-on-black).
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title, hour labels, and radial value labels (same "25/50/75/100" as the light render) render in light ink/gray tones and remain clearly legible against the dark surface. Gridlines/spokes are subtle light-gray at low alpha.
+      Data: The same brand-green (#009E73) polygon and points, identical in color/size/layout to the light render -- confirming only chrome flipped between themes.
+      Legibility verdict: PASS (all text is clearly readable against the dark background; no dark-on-dark failures) -- same caveat as the light render applies.
+
+    CRITICAL PIPELINE FINDING: Both renders appear to be stale artifacts from the pre-fix (attempt 1) version of plots/polar-basic/implementations/python/plotnine.py, not the current commit (972dbd8a9, "fix(plotnine): address review feedback for polar-basic"). Evidence: (1) title text lacks the "· python ·" segment that IS present in the current source's labs(title=...) call; (2) radial gridline labels read 25/50/75/100 -- the OLD hardcoded radius list -- while the current code computes grid_radii dynamically as [20, 40, 60, 80] for this seed (verified by executing the current data-generation logic: np.random.seed(42) gives activity.max()=65.32, so grid_max=ceil(65.32*1.15/10)*10=80); (3) the radius labels sit in a perfectly horizontal row at the 06:00 spoke (y constant), matching the OLD formula ("x": r+4, "y": 6), not the NEW radius_label_angle=100deg formula, which would place labels at increasing height near the 12:00-15:00 arc (computed: (-9.5,19.7), (-12.9,39.4), (-16.4,59.1), (-19.9,78.8)). This means VQ/DE scoring in this review is based on the WRONG artifact and cannot certify whether attempt 2's fixes actually render correctly.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 18
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); readable at full size
-          and would remain legible scaled down; title fits comfortably without overflow
-          in either render.
+        comment: Legible in the (stale) provided renders, but cannot confirm the current
+          code's title (with the added 'python' segment) or new 'Activity Level' label
+          render without overlap issues -- scored conservatively pending a correct
+          render.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Minor crowding: radial value labels (25/50/75/100) sit close to
-          low-activity data points near the center along the 04:00-06:00 arc.'
+        comment: No overlap visible in the stale render, but the new 'Activity Level'
+          label (~-22,93) and '80' radius label (~-20,79) sit only ~24 units from
+          the enlarged peak marker (~0,65) in the current code's actual geometry --
+          unverified, needs a real render to confirm.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Markers and line are visible and appropriately sized for 24 sparse
-          points, peak point enlarged for emphasis; not optimal since the small radial
-          footprint makes everything look smaller than it needs to be.
+        comment: Markers/peak emphasis look fine in the stale render; unverified against
+          the current data-driven grid scale.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series green with good contrast against both theme backgrounds;
-          no red-green reliance.
+        comment: Single brand-green series, good contrast on both theme backgrounds,
+          no red-green reliance -- verifiable from code, unaffected by the stale-render
+          issue.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 0
         max: 4
-        passed: true
-        comment: 'Overall bounding content fills a reasonable share of the canvas,
-          but there is real wasted space: a large unused outer annulus inside the
-          polar grid (data never reaches the 75-100 rings) plus an unbalanced gap
-          between title and chart top.'
+        passed: false
+        comment: 'Cannot be scored: the rendered images use the OLD fixed 0-145 axis
+          scale, not the current code''s data-driven grid_max=80/axis_limit=116 scale,
+          so the actual current layout/proportions are unverified.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: Hour (angular) labels are descriptive, but the radial axis has no
-          label at all describing what the numbers represent (e.g. 'Activity Level')
-          — only bare digits.
+        comment: Current code adds a radial axis title ('Activity Level') and fixes
+          the title's missing language segment, but neither is visible in the provided
+          (stale) renders -- cannot confirm they actually render as intended.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 used as the only series, identical across themes;
-          backgrounds are theme-correct #FAF8F1/#1A1A17; chrome theme-correct in both
-          renders.'
+        comment: 'Brand green #009E73 as the only series, theme-correct #FAF8F1/#1A1A17
+          backgrounds in both renders -- verifiable from code and unaffected by the
+          staleness issue.'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Custom-built minimalist polar frame with intentional hierarchy (peak
-          emphasis, hidden default axes); above a configured default, but held back
-          visually by the radial-scale underuse.
+        comment: Default score -- hand-built minimalist polar frame is promising in
+          code, but cannot raise above default without a correct render to confirm
+          the improved proportions actually look right.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Subtle dashed grid, no default spines/ticks, generous overall whitespace
-          — but whitespace reads as wasted rather than intentional given how little
-          of the polar area the data shape fills.
+        comment: Default score pending a correct render; code shows added plot margins
+          and a tighter data-driven scale which should reduce the previously-flagged
+          wasted-space issue.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Enlarged peak marker creates a clear focal point highlighting the
-          daily activity peak; no annotation needed since spec doesn't request one.
+        comment: Enlarged peak marker still creates a clear focal point; default-ish
+          score since layout balance around it is unverified.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -161,42 +171,41 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar/circular chart, achieved via a legitimate Cartesian-geom
-          workaround since plotnine lacks coord_polar.
+        comment: Correct polar/circular chart via a legitimate Cartesian-geom workaround
+          since plotnine lacks coord_polar.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Radial gridlines, standard-interval angular labels (every 3h) present;
-          radial scale doesn''t avoid center-compression as the spec notes request
-          (opposite issue: over-generous outer scale wastes area) and radial axis
-          has no label.'
+        comment: Radial gridlines, standard-interval angular labels, a now data-driven
+          radial scale that avoids center-compression, and a radial axis title are
+          all present in the current source.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: theta/radius correctly mapped from hour/activity, all 24 hours represented.
+        comment: theta/radius correctly mapped from hour/activity; all 24 hours represented.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title includes descriptive prefix + spec-id + library + anyplot.ai,
-          but is missing the mandated language segment ('python') between spec-id
-          and library.
+        comment: 'Current source''s labs(title=...) now includes the mandated ''python''
+          language segment: ''Hourly Activity Levels · polar-basic · python · plotnine
+          · anyplot.ai''.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Shows the cyclical pattern, natural variation via noise, and a highlighted
-          peak; optional category dimension not used (acceptable, it's optional).
+          peak.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -208,8 +217,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Value range and daily cyclical shape are plausible for an activity-level
-          metric.
+        comment: Value range and daily cyclical shape are plausible; the grid now
+          scales to the actual data range.
     code_quality:
       score: 10
       max: 10
@@ -231,7 +240,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used; the added sys-path guard is appropriately marked
+          with noqa: E402.'
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -246,19 +256,19 @@ review:
         passed: true
         comment: Saves as plot-{THEME}.png via plot.save(), no deprecated calls.
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
         comment: Idiomatic grammar-of-graphics layering (aes/geom_*/theme) throughout,
-          appropriately adapted to the library's coord_polar gap.
+          appropriately adapted to plotnine's coord_polar gap.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
         comment: Manually reconstructing a polar coordinate system from Cartesian
@@ -271,6 +281,7 @@ impl_tags:
   - polar-projection
   - manual-ticks
   - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep: []
