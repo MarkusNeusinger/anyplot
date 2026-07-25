@@ -74,21 +74,60 @@ for (const n of nodes) {
   n.x1 = n.x0 + nodeWidth;
 }
 
-// --- Vertical (value-proportional) layout ------------------------------------
-const nodePadding = 26;
+// --- Crossing reduction: reorder nodes within each column by the value-
+// weighted average rank of the nodes they connect to in the adjacent column
+// (barycenter heuristic), sweeping forward then backward until it converges.
+// This is a lightweight, d3-sankey-free stand-in for the iterative relaxation
+// idiomatic Sankey layouts use, and it only reorders nodes within a column --
+// it never touches the `nodes` array that drives palette-index assignment.
 const columns = d3.groups(nodes, (d) => d.column).sort((a, b) => a[0] - b[0]);
-const maxPadding = d3.max(columns, ([, ns]) => (ns.length - 1) * nodePadding);
+for (const [, colNodes] of columns) colNodes.forEach((n, i) => (n.rank = i));
+
+const barycenter = (n, links, neighborOf) => {
+  const weight = d3.sum(links, (l) => l.value);
+  return weight > 0 ? d3.sum(links, (l) => neighborOf(l).rank * l.value) / weight : n.rank;
+};
+
+for (let sweep = 0; sweep < 4; sweep++) {
+  const forward = sweep % 2 === 0;
+  const order = forward ? d3.range(1, numColumns) : d3.range(numColumns - 2, -1, -1);
+  for (const c of order) {
+    const [, colNodes] = columns[c];
+    const links = forward ? "targetLinks" : "sourceLinks";
+    const neighborOf = forward ? (l) => l.source : (l) => l.target;
+    colNodes
+      .map((n) => ({ n, key: barycenter(n, n[links], neighborOf) }))
+      .sort((a, b) => a.key - b.key)
+      .forEach(({ n }, i) => {
+        colNodes[i] = n;
+        n.rank = i;
+      });
+  }
+}
+
+// --- Vertical (value-proportional) layout ------------------------------------
+// Interior (non-first/last) columns label above each node, which needs ~41px
+// of clearance to the sibling node stacked above it -- outer columns label
+// beside the node at its own mid-height instead, so they don't need extra
+// room. Give interior columns a taller gap so a stacked sibling's rect never
+// sits under another node's label (independent of which node the
+// crossing-reduction pass above happens to rank first).
+const outerPadding = 26;
+const innerPadding = 50;
+const paddingFor = (c) => (c === 0 || c === numColumns - 1 ? outerPadding : innerPadding);
+const maxPadding = d3.max(columns, ([c, ns]) => (ns.length - 1) * paddingFor(c));
 const maxColumnValue = d3.max(columns, ([, ns]) => d3.sum(ns, (n) => n.value));
 const ky = (ih - maxPadding) / maxColumnValue;
 
-for (const [, colNodes] of columns) {
+for (const [c, colNodes] of columns) {
   for (const n of colNodes) n.h = n.value * ky;
-  const total = d3.sum(colNodes, (n) => n.h) + (colNodes.length - 1) * nodePadding;
+  const pad = paddingFor(c);
+  const total = d3.sum(colNodes, (n) => n.h) + (colNodes.length - 1) * pad;
   let cursor = margin.top + (ih - total) / 2;
   for (const n of colNodes) {
     n.y0 = cursor;
     n.y1 = cursor + n.h;
-    cursor = n.y1 + nodePadding;
+    cursor = n.y1 + pad;
   }
 }
 
@@ -110,10 +149,25 @@ for (const n of nodes) {
   }
 }
 
-// --- Color: each node gets a distinct Imprint hue; links inherit their
-// immediate source node's color. First encountered node (a true source,
-// "Coal") is #009E73 — the mandated first categorical series. ------------------
-const colorOf = new Map(nodes.map((n, i) => [n.id, t.palette[i % t.palette.length]]));
+// --- Color: source and carrier nodes each get a distinct Imprint hue (links
+// inherit their immediate source node's color); the first encountered node
+// (a true source, "Coal") is #009E73 — the mandated first categorical series.
+// End-use nodes (the last column) each aggregate multiple unrelated flows, so
+// they get the theme-adaptive "muted" semantic anchor instead of continuing
+// the palette cycle, which would otherwise recycle hues onto categories that
+// have no relationship to the source node that first used that color. ------
+const isLight = window.ANYPLOT_THEME === "light";
+const muted = isLight ? "#6B6A63" : "#A8A79F";
+const colorOf = new Map();
+let paletteIdx = 0;
+for (const n of nodes) {
+  if (n.column === numColumns - 1) {
+    colorOf.set(n.id, muted);
+  } else {
+    colorOf.set(n.id, t.palette[paletteIdx % t.palette.length]);
+    paletteIdx++;
+  }
+}
 
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -181,11 +235,18 @@ nodeG.each(function (n) {
     ty2 = n.y0 - 10;
   }
 
+  // A page-bg halo keeps labels legible where a link ribbon's curve happens
+  // to sweep behind them (e.g. the middle carrier column, whose incoming
+  // ribbons fan out across the full source-column height).
   g.append("text")
     .attr("x", tx)
     .attr("y", ty1)
     .attr("text-anchor", anchor)
     .attr("fill", t.ink)
+    .attr("paint-order", "stroke")
+    .attr("stroke", t.pageBg)
+    .attr("stroke-width", 5)
+    .attr("stroke-linejoin", "round")
     .style("font-size", "17px")
     .style("font-weight", "600")
     .text(n.id);
@@ -195,7 +256,12 @@ nodeG.each(function (n) {
     .attr("y", ty2)
     .attr("text-anchor", anchor)
     .attr("fill", t.inkSoft)
-    .style("font-size", "13px")
+    .attr("paint-order", "stroke")
+    .attr("stroke", t.pageBg)
+    .attr("stroke-width", 5)
+    .attr("stroke-linejoin", "round")
+    .style("font-size", "14px")
+    .style("font-weight", "600")
     .text(`${fmt(n.value)} TWh`);
 });
 
