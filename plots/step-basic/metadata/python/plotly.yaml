@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: step-basic
 created: 2025-12-15 17:03:40+00:00
-updated: '2026-07-25T15:38:38Z'
+updated: '2026-07-25T15:45:33Z'
 generated_by: claude-sonnet
 workflow_run: 30163709895
 issue: 956
@@ -12,43 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Correct step interpolation ('hv'/post-style) with markers at every change point,
-    matching the spec's notes
-  - Theme-adaptive chrome is threaded correctly through every element (title, axes,
-    ticks, grid, reference line) - both renders are clean and legible
-  - The dotted year-total reference line + annotation is a nice storytelling touch
-    that gives the chart a clear focal point beyond the raw step data
-  - Clean KISS code with a reproducible seed and correct output API (write_image +
-    write_html, correct filenames)
+  - The December-marker/annotation crowding flagged in Attempt 1 is fully resolved
+    — the "Year total" label now sits top-left with a clear gap above the dashed line
+    in both renders.
+  - The new subtle area fill under the step (rgba(0,158,115,0.12)) adds visual weight
+    and reinforces the cumulative-growth story without competing with the line or
+    markers.
+  - Theme-adaptive chrome remains correctly threaded through every element in both
+    renders.
+  - Clean KISS code, reproducible seed, correct output API.
   weaknesses:
-  - The 'Year total $375,467' annotation sits with almost no vertical gap above the
-    December marker - in both renders the marker nearly touches the bottom of the
-    '$' glyph. Increase the annotation's y-offset above the dashed line, or shift
-    it left so it no longer crowds the endpoint marker.
-  - Library Mastery is generic - the plotly-specific touches used (add_hline, add_annotation,
-    hovertemplate) are common patterns; more distinctive use of the library (e.g.
-    a subtle area fill under the step, or emphasis on the first/last points) would
-    raise both Design Excellence and Library Mastery.
+  - Library Mastery is still generic — the area fill, while a nice addition, is a
+    common cross-library technique. A more plotly-distinctive touch (e.g., range slider,
+    custom hover card styling beyond the current template, or go.Scatter marker emphasis
+    on first/last points) would raise LM-02 further.
+  - Design Excellence, while improved, still reads as 'strong default plus a couple
+    of thoughtful touches' rather than fully publication-grade — further refinement
+    (e.g. slightly more distinctive typography treatment or emphasis on the endpoint)
+    would help.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "step-basic · python · plotly · anyplot.ai" centered in dark ink; axis titles "Cumulative Sales ($)" and "Month" dark and clearly visible; tick labels softer dark gray; horizontal (y-axis only) grid subtle; dotted gray reference line + "Year total $375,467" annotation near top-right.
-      Data: Brand green (#009E73) step line ('hv' shape) with white-edged size-11 markers at each of the 12 monthly points, from ~$39k (Jan) to ~$375k (Dec).
-      Legibility verdict: PASS - all text readable against the light background.
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title, axis titles ("Cumulative Sales ($)", "Month"), and tick labels are dark ink and clearly readable. "Year total $375,467" annotation now anchored top-left with a clear vertical gap above the dotted reference line — no longer crowding the December marker.
+      Data: Brand green (#009E73) step line ('hv'/post shape), size-11 white-edged markers at each of the 12 monthly points, subtle green area fill (rgba(0,158,115,0.12)) under the step.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Title and axis titles near-white; tick labels and annotation a lighter warm gray; same layout as light render, chrome correctly flipped.
-      Data: Identical brand green (#009E73) step line and markers as the light render - confirms data colors are constant across themes.
-      Legibility verdict: PASS - all text readable against the dark background; no dark-on-dark issues found.
-
-    Shared issue (both renders): the "Year total" annotation text crowds the December marker with almost no vertical gap - flagged as a VQ-02 weakness for repair.
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title and axis titles are near-white; tick labels and annotation are light warm gray. All clearly legible — no dark-on-dark failures. Annotation spacing fix holds here too.
+      Data: Identical brand green (#009E73) line, markers, and area fill as the light render — only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,50 +55,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; all text reads clearly in both themes,
-          no light-on-light or dark-on-dark issues.
+        comment: Explicit font sizes throughout; all text reads clearly in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-to-text collisions, but the 'Year total' annotation crowds
-          the December marker.
+        comment: Annotation crowding from Attempt 1 fixed — clear gap above December
+          marker
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse 12-point series gets prominent size-11 markers with an edge
-          stroke; correct density-aware sizing.
+        comment: Sparse series with prominent size-11 markers, correct density-aware
+          sizing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green contrasts strongly on both surfaces; no
-          red-green reliance.
+        comment: Strong contrast on both surfaces, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, generous margins, nothing clipped or overflowing.
+        comment: Correct 3200x1800 canvas, generous margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units.
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds match theme tokens, data color
-          constant across themes.'
+        comment: 'First series #009E73, correct theme-adaptive backgrounds'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -107,21 +103,20 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Brand-consistent color, dotted reference line + annotation show above-default
-          design thought.
+        comment: Brand color, reference line, subtle area fill — thoughtful but not
+          top-tier
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Spines removed, subtle y-axis grid, generous whitespace - but annotation/marker
-          crowding undercuts the refinement.
+        passed: true
+        comment: Crowding fixed, area fill adds polish; spines removed, subtle grid
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Year-total reference line + annotation creates a clear focal point.
+        comment: Year-total reference line + annotation creates a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -131,26 +126,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step (stair) plot using 'hv' (post) interpolation.
+        comment: Correct step plot using 'hv' post interpolation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Markers at each step per spec notes; y-axis grid helps trace values.
+        comment: Markers at every step, grid aids tracing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = all 12 months, Y = cumulative sales, full range visible.
+        comment: X = 12 months, Y = cumulative sales, full range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend correctly omitted for
-          single series.
+        comment: Title matches mandated format; legend correctly omitted
     data_quality:
       score: 15
       max: 15
@@ -160,21 +154,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates the step/stair pattern, discrete jump markers, and a
-          running-total callout.
+        comment: Step pattern, discrete jumps, running-total callout
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly cumulative sales figures are realistic and neutral.
+        comment: Monthly cumulative sales, realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales range ($15k-45k/month, ~$375k/year) is plausible for a small/mid-size
-          business.
+        comment: Plausible small/mid-size business sales range
     code_quality:
       score: 10
       max: 10
@@ -184,31 +176,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects - all used.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity.
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct write_image/write_html filenames, current plotly API.
+        comment: Correct write_image/write_html filenames
     library_mastery:
       score: 6
       max: 10
@@ -218,24 +210,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic go.Figure + go.Scatter with 'hv' line shape, add_hline/add_annotation
-          for the reference line.
+        comment: Idiomatic go.Figure + go.Scatter, add_hline/add_annotation
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: add_hline/add_annotation + hovertemplate are plotly-specific but
-          fairly common; nothing highly distinctive to the library.
-  verdict: REJECTED
+        comment: Area fill is a generic cross-library technique, not plotly-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - edge-highlighting
-  - publication-ready
+  - alpha-blending
