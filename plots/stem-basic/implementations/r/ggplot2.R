@@ -3,7 +3,6 @@
 #' Library: ggplot2 3.5.1 | R 4.4.1
 #' Quality: 82/100 | Created: 2026-07-25
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -13,6 +12,7 @@ THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+GRID_COLOR <- adjustcolor(INK, alpha.f = 0.15)
 
 IMPRINT_PALETTE <- c(
   "#009E73", # 1 - first categorical series (brand green)
@@ -36,7 +36,7 @@ p <- ggplot(df, aes(x = n, y = amplitude)) +
   geom_hline(yintercept = 0, color = INK_SOFT, linewidth = 0.4) +
   geom_segment(
     aes(x = n, xend = n, y = 0, yend = amplitude),
-    color = IMPRINT_PALETTE[1], linewidth = 0.9
+    color = IMPRINT_PALETTE[1], linewidth = 1.2
   ) +
   geom_point(
     fill = IMPRINT_PALETTE[1],
@@ -53,7 +53,7 @@ p <- ggplot(df, aes(x = n, y = amplitude)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.3),
+    panel.grid.major.y = element_line(color = GRID_COLOR, linewidth = 0.3),
     panel.grid.minor  = element_blank(),
     panel.grid.major.x = element_blank(),
     axis.title        = element_text(color = INK, size = 10),
