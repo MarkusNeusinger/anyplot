@@ -22,6 +22,7 @@ const scalingEvents = [
   { hour: 24, instances: 4 },
 ];
 const points = scalingEvents.map((e) => ({ x: e.hour, y: e.instances }));
+const peakIndex = points.reduce((best, p, i, arr) => (p.y > arr[best].y ? i : best), 0);
 
 const formatHour = (hour) => {
   const h = Math.floor(hour) % 24;
@@ -29,9 +30,33 @@ const formatHour = (hour) => {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 };
 
+const hexToRgba = (hex, alpha) => {
+  const int = parseInt(hex.slice(1), 16);
+  const r = (int >> 16) & 255;
+  const g = (int >> 8) & 255;
+  const b = int & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
+
+// --- Peak callout plugin (labels the daily peak as a storytelling focal point) --
+const peakCalloutPlugin = {
+  id: "peakCallout",
+  afterDatasetsDraw(chart) {
+    const point = chart.getDatasetMeta(0).data[peakIndex];
+    if (!point) return;
+    const { ctx } = chart;
+    ctx.save();
+    ctx.fillStyle = t.ink;
+    ctx.font = "600 14px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("Daily peak", point.x + 12, point.y - 12);
+    ctx.restore();
+  },
+};
 
 // --- Chart ---------------------------------------------------------------
 new Chart(canvas, {
@@ -43,23 +68,26 @@ new Chart(canvas, {
         data: points,
         stepped: "after",
         borderColor: t.palette[0],
-        backgroundColor: t.palette[0],
+        backgroundColor: hexToRgba(t.palette[0], 0.14),
+        fill: "origin",
         borderWidth: 3.5,
-        pointRadius: 5,
-        pointHoverRadius: 6,
+        // Scriptable point styling: the daily-peak marker reads larger than the
+        // rest, giving the viewer a focal point without introducing a new color.
+        pointRadius: (ctx) => (ctx.dataIndex === peakIndex ? 8 : 5),
+        pointHoverRadius: (ctx) => (ctx.dataIndex === peakIndex ? 9 : 6),
         pointBackgroundColor: t.palette[0],
         pointBorderColor: t.pageBg,
-        pointBorderWidth: 1.5,
-        fill: false,
+        pointBorderWidth: (ctx) => (ctx.dataIndex === peakIndex ? 2.5 : 1.5),
         tension: 0,
       },
     ],
   },
+  plugins: [peakCalloutPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 8, right: 24, bottom: 4, left: 4 } },
+    layout: { padding: { top: 8, right: 40, bottom: 4, left: 4 } },
     plugins: {
       title: {
         display: true,
@@ -86,6 +114,7 @@ new Chart(canvas, {
       },
       y: {
         beginAtZero: true,
+        grace: "10%",
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
         title: { display: true, text: "Active Instances", color: t.ink, font: { size: 16 } },
