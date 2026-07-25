@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: sankey-basic
 created: '2026-04-30T09:01:18Z'
-updated: '2026-07-25T12:08:16Z'
+updated: '2026-07-25T12:19:36Z'
 generated_by: claude-sonnet
 workflow_run: 30156971735
 issue: 810
@@ -12,45 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - 'Source-column colors follow the canonical Imprint order exactly, first series
-    is #009E73 as required'
-  - Dominant-flow emphasis (higher opacity + inline MLD label) directly implements
-    the spec's own suggestion to use link opacity to manage crossing flows
-  - Fully deterministic, single-source-of-truth Style-token-driven code with no unused
-    imports and no functions/classes
-  - Both themes render correctly with identical data colors and correct theme-adaptive
-    chrome — no dark-on-dark or light-on-light failures
-  - Native SVG <title> tooltips plus CSS hover states give real interactivity in the
-    HTML output despite pygal having no native Sankey chart class
-  - Canvas is exactly 3200x1800 with no edge clipping and generous margins around
-    both node-label columns
+  - Rigorous crossing-minimization (exhaustive 4!×4! permutation search over source/target
+    column ordering) substantially untangles the diagram compared to the unordered
+    layout flagged in the prior review
+  - Dominant-flow highlighting (higher opacity + value annotation for flows ≥20 MLD)
+    directly serves the spec's goal of making major pathways easy to identify
+  - Thin-ribbon stroke halo keeps small flows (e.g. Desalination Plant → Agriculture,
+    2 MLD) visible once the 3200px canvas is downscaled to ~400px mobile width, without
+    distorting the underlying flow geometry
+  - Full theme-adaptive token architecture sourced from a single pygal.style.Style
+    object (background, foreground, palette, font sizes) — no hardcoded values duplicated
+    in the raw-SVG drawing code
+  - 'Correct Imprint palette in canonical order with #009E73 first; both renders are
+    theme-correct (#FAF8F1 light / #1A1A17 dark backgrounds, readable chrome in both)'
+  - Realistic, well-scaled municipal water-distribution dataset (15 flows, 4 sources
+    × 4 targets, no circular flows) with plausible MLD magnitudes
   weaknesses:
-  - Node ordering (source and target columns) isn't optimized to minimize link crossings
-    — with 15 many-to-many flows the middle of the diagram becomes a dense crossing
-    'hairball', making individual flow paths harder to trace even with the opacity
-    weighting; a barycentric/median reorder heuristic would reduce clutter
-  - Thinnest non-dominant ribbons (~18px at the 2 MLD flow, computed scale ~8.8 px/MLD)
-    shrink to only ~2px when the image is scaled to the 400px mobile width — consider
-    a minimum-width floor so the smallest flows stay visible on mobile
-  - pygal has no native Sankey class, so the implementation never touches pygal's
-    actual chart-building API — Style is used only to source color/font tokens, which
-    caps how much idiomatic library usage the code can demonstrate (not really avoidable
-    given the library gap, but scored accordingly under Library Mastery)
+  - Despite the crossing-minimization pass, the middle band of the diagram still reads
+    as visually dense where 3+ semi-transparent ribbons overlap, producing muddy blended
+    colors that make individual flows harder to trace at a glance — consider increasing
+    NODE_GAP slightly or lowering ALPHA_DEFAULT further in the densest crossing region
+  - The _count_crossings permutation-search helper is a minor deviation from strict
+    KISS 'no functions' guidance; acceptable as a one-time deterministic layout computation,
+    but keep it as the only helper if further changes are made
+  - Library Mastery stays modest because pygal has no native Sankey chart class —
+    the implementation compensates well via the Style-token architecture and CSS hover/<title>
+    tooltips, but most of the diagram is hand-rolled SVG rather than pygal-specific
+    chart features
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "Water Distribution Network · sankey-basic · python · pygal · anyplot.ai" centered at top, clearly readable against the light bg. Four source node labels (Mountain Reservoir, Groundwater Wells, River Intake, Desalination Plant) with per-node MLD totals in a softer gray-brown to the left; four target node labels (Residential, Agriculture, Industrial, Municipal) with totals to the right. All chrome text is dark ink on the light surface — fully legible.
-      Data: Source node bars colored green/lavender/blue/ochre in canonical Imprint order (first = #009E73). Target node bars are a neutral dark-gray (INK_SOFT), not part of the categorical pool, which is an appropriate choice since they aggregate multiple source colors. Flow ribbons are colored by source with two opacity tiers — dominant flows (≥20 MLD) drawn on top at ~0.72 alpha with an inline "XX MLD" value label, non-dominant flows underneath at ~0.48 alpha with no inline label (available via hover tooltip in the HTML). Ribbon widths are visibly proportional to flow value.
-      Legibility verdict: PASS — no illegible or overlapping text found; all node labels, totals, title, and dominant-flow value labels are clearly readable.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Water Distribution Network · sankey-basic · python · pygal · anyplot.ai" is bold dark text, fully visible, not clipped. Node labels (source names left, target names right) and their MLD totals are dark/muted-grey text respectively, both clearly legible against the light background.
+      Data: Four source nodes colored in Imprint order — Mountain Reservoir #009E73 (green, first series correct), Groundwater Wells (purple), River Intake (blue), Desalination Plant (ochre). Flow ribbons match their source node's color at reduced alpha; dominant flows (>=20 MLD) are drawn at higher opacity with a "XX MLD" value label (28 MLD, 32 MLD, 22 MLD visible). Target nodes (Residential, Agriculture, Municipal, Industrial) are neutral grey bars.
+      Legibility verdict: PASS — all text readable, no dark-on-light or light-on-light failures, no clipping at canvas edges.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same title now rendered in off-white, fully legible against the dark bg. Node labels flip to light ink (#F0EFE8) and totals to a softer light-gray (#B8B7B0) — no dark-on-dark issue anywhere; target node bars flip to a light gray (INK_SOFT dark-theme value) so they remain distinguishable from the near-black background.
-      Data: All flow ribbon colors and the four source node bar colors are pixel-identical to the light render (only chrome — background, node-bar gray, and text — flips with theme), confirming the Imprint data palette stayed constant across themes as required. Dominant-flow value labels remain fully legible in the darker off-white ink used for data-adjacent text.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome and data-adjacent text reads clearly against the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and node labels now rendered in light/off-white text, clearly legible against the dark background. Value labels (46 MLD, 62 MLD, etc.) render in a lighter muted grey, still readable, no dark-on-dark text found anywhere.
+      Data: Node and ribbon colors are pixel-identical to the light render (#009E73 green first, same purple/blue/ochre order) — only the chrome (background, text) flipped as expected. Dominant-flow value annotations remain legible against the ribbon colors.
+      Legibility verdict: PASS — no dark-on-dark failures, brand green #009E73 remains vivid on the dark surface, all chrome theme-correct.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -61,77 +64,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes, no dark-on-dark/light-on-light;
-          only non-dominant flow values are hover-only, which is fine for an interactive
-          library
+        comment: All font sizes explicit via Style object; readable in both themes;
+          title correctly scaled down for the long mandated string
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text overlap, but unsorted node ordering causes a dense
-          crossing 'hairball' of 15 flows in the middle that reduces per-flow traceability
+        comment: No text-on-text or text-on-data collisions; labels sit clear of the
+          ribbon area
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Dominant vs default alpha weighting works well; thinnest non-dominant
-          ribbons (~2 MLD, ~18px) will be only ~2px at 400px mobile width
+        comment: Thin-ribbon halo keeps small flows visible, but the densest crossing
+          band produces muddy blended colors that reduce individual-flow traceability
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; source colors carry the categorical
-          signal, no red-green-only encoding
+        comment: Imprint palette is CVD-safe; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, no clipping, generous margins on both label
-          columns
+        comment: Diagram fills the canvas well with balanced, purposeful margins;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes for a Sankey; node labels carry units (MLD) via
-          totals and tooltips
+        comment: Title descriptive and correctly formatted; node labels carry units
+          (MLD)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order for the 4 source nodes, correct
-          theme backgrounds in both renders, data colors identical across themes'
+        comment: 'First source #009E73, canonical Imprint order for remaining sources,
+          theme-correct backgrounds in both renders'
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Dominant/default opacity tiering and rounded node corners show above-generic
-          polish, but overall composition stays close to a straightforward reference
-          Sankey
+        comment: Custom palette, intentional dominant-flow hierarchy, deliberate crossing
+          minimization — clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Clean three-tier text hierarchy (ink/soft/muted) and generous margins,
-          but otherwise minimal additional refinement
+        comment: No spines (custom SVG), generous margins, rounded node corners, halo
+          detailing; middle crossing band keeps it just short of perfect
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Dominant-flow highlighting creates a real focal point, but the unminimized
-          crossing layout works against overall narrative clarity
+        comment: Opacity + value-label emphasis on dominant flows guides the viewer
+          to major pathways as the spec requests
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +141,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Sankey diagram, link widths proportional to flow value
+        comment: Correct Sankey diagram with proportional link widths
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: source/target/value present, no circular flows, distinct source colors,
-          opacity used to manage crossing flows per the spec's own note, labels don't
-          overlap links
+        comment: source/target/value all represented; no circular flows; distinct
+          source colors
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sources left / targets right, node totals and ribbon widths both
-          encode value correctly
+        comment: Sources left, targets right, all 15 flows and node totals shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; no legend
-          needed since nodes are directly labeled
+        comment: Title format correct with descriptive prefix; node labels self-identify
+          colors, no legend needed
     data_quality:
       score: 15
       max: 15
@@ -173,31 +171,32 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 sources x 4 targets, 15 flows, varying magnitudes, node totals,
-          dominant-flow emphasis — full feature coverage for the plot type
+        comment: Full 4x4 source/target coverage with dominant and minor flows both
+          represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Municipal water distribution scenario, plausible and neutral
+        comment: Municipal water distribution is a real, neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2-32 MLD flows, 18-70 MLD node totals — sensible municipal utility
-          scale
+        comment: MLD magnitudes and proportions are plausible for a mid-size municipal
+          system
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes, linear top-to-bottom script
+        comment: Mostly linear imports/data/plot/save, but includes one helper function
+          (_count_crossings) for the layout search
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -209,53 +208,52 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, sys, cairosvg, Style — all used
+        comment: Only used imports (os, sys, itertools.permutations, cairosvg, pygal.style.Style)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Raw SVG construction is a reasonable, non-fake approach given pygal
-          has no native Sankey class
+        comment: No fake UI; complexity justified by pygal lacking a native Sankey
+          class
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via cairosvg and plot-{THEME}.html, matching
-          pygal's own render pipeline
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Style object used as single source of truth for all tokens, the idiomatic
+          pygal theming pattern, within the constraint of no native Sankey class
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: No pygal chart class exists for Sankey, so the code never touches
-          pygal's charting API — Style is used only for token derivation, the best
-          available approach but limited idiomatic usage to demonstrate
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: true
-        comment: Native <title> tooltips and CSS hover states give the HTML output
-          real interactivity in place of pygal's own chart JS
+        comment: CSS hover states plus native <title> tooltips mirror pygal's own
+          interactive chart behavior, but most of the diagram is generic hand-rolled
+          SVG
   verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - bezier-curves
+  - annotations
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
+  - data-generation
   - iteration-over-groups
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
   - publication-ready
