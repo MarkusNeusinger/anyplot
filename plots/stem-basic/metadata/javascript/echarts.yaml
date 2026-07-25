@@ -1,0 +1,256 @@
+library: echarts
+language: javascript
+specification_id: stem-basic
+created: '2026-07-25T17:53:36Z'
+updated: '2026-07-25T18:07:59Z'
+generated_by: claude-sonnet
+workflow_run: 30168375316
+issue: 972
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Peak-sample halo (soft glow + page-colored border ring) gives the chart a genuine
+    visual-hierarchy focal point, directly fixing the previous review's flagged Design
+    Excellence gap, while keeping the marker at the same 16px size as every other
+    point (spec's consistent marker size requirement still holds).
+  - Custom tooltip formatter surfaces 'Sample n = ...' / 'Amplitude = ...' from the
+    axis-triggered pointer -- a real ECharts-specific tooltip pattern rather than
+    a default field dump.
+  - Bar (barWidth 3, barGap -100%) + scatter + markLine combo remains a clean, idiomatic
+    workaround for ECharts' lack of a native stem/lollipop chart type.
+  - Data is a genuinely on-spec damped second-order impulse response (signal-processing
+    example straight from the spec's own Applications list), fully deterministic (closed-form,
+    no RNG), 40 points within the 10-100 range.
+  - Theme-adaptive tokens (t.ink, t.inkSoft, t.grid, t.palette[0], t.pageBg) are threaded
+    through every chrome element; both renders are fully legible with pixel-identical
+    data color.
+  - Title fontSize increased from 22px to 26px versus the previous attempt, tightening
+    the previously-flagged width headroom without overflowing.
+  weaknesses:
+  - Title still occupies only ~30-35% of canvas width -- below the 50-70% comfortable
+    target (not a deduction per the style guide's overflow/squeeze rule, but still
+    headroom for a stronger visual anchor).
+  - The two series names ('stem', 'sample value') remain unused in the UI (no legend,
+    not referenced in the tooltip text) -- acceptable for a single conceptual series,
+    but a small missed polish opportunity.
+  - 'LM-02 remains fairly standard: the itemStyle glow and markLine are competent
+    but not a showcase of a truly ECharts-exclusive capability (e.g. custom graphic
+    elements, dataZoom, or a bespoke symbol path).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "stem-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible (26px). X-axis title "Sample Index (n)" and Y-axis title "Amplitude" both in dark ink, matched font sizes (18px). Tick labels (0, 5, 10 ... 35 on x; -0.6 to 1.2 on y) in a softer gray-ink tone, all readable (14px). Horizontal-only gridlines are subtle. A thin horizontal baseline line sits exactly at y=0.
+      Data: 40 stems in brand green (#009E73) -- thin vertical bars from the y=0 baseline to each sample value, each topped with a solid green circular marker (16px). The n=0 peak sample carries an added soft glow halo and page-colored border ring, creating a deliberate focal point while remaining the same 16px marker size as every other point. Clear damped-oscillation shape decaying toward zero.
+      Legibility verdict: PASS -- all title/axis/tick text is clearly dark-on-light and readable at full size.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title and axis titles now rendered in light/off-white ink, clearly visible against the dark surface. Tick labels in a lighter soft-gray tone, all legible. Gridlines are a faint light gray, visible but unobtrusive. The y=0 baseline line is visible in the dark theme's chrome tone.
+      Data: Same 40 green (#009E73) stems and markers, pixel-identical in color and position to the light render, including the peak-sample glow halo -- only the chrome (background, text, gridlines) has flipped; the data colors did not change.
+      Legibility verdict: PASS -- no dark-on-dark issues; all text is light-on-dark and clearly readable. Brand green data markers and the peak halo read strongly against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 26px, axis titles 18px, ticks 14px),
+          fully readable in both themes, no overflow or squeeze
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; tick interval avoids label crowding across
+          40 categories
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 16px markers and 3px stems clearly visible and appropriately sized
+          for 40 sparse-to-medium density points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single high-contrast brand green, glow does not hurt contrast, no
+          red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed at exact 3200x1800; nothing cut off, generous
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles ('Sample Index (n)', 'Amplitude'); mandated
+          title format exact
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both bar and scatter; identical data
+          color across themes; correct theme-adaptive chrome backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Peak-sample halo adds a thoughtful hierarchy device beyond the prior
+          single-hue-only look, clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines effectively removed, grid subtle and y-only, generous whitespace,
+          theme-adaptive baseline line
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Deliberate glow/border emphasis on the peak sample now guides the
+          viewer to a clear focal point via visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Bar (as stem) + scatter (as marker) combo correctly renders a stem/lollipop
+          plot despite ECharts lacking a native type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin consistent stems, visible consistent markers, explicit y=0 baseline
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=sample index, y=amplitude, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exact match; legend correctly omitted for single conceptual
+          series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all stem-plot aspects: stems, markers, baseline, consistent
+          sizing'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral signal-processing impulse response example, directly
+          matches spec's Applications list
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 40 points within spec's 10-100 range; amplitude range is sensible
+          for a normalized impulse response
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic closed-form formula, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the global echarts is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately simple, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract: echarts.init with no explicit size/devicePixelRatio,
+          setOption with animation:false'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic option-based configuration, correct use of grid/axis/series/markLine
+          structure
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Per-point itemStyle glow (shadowBlur/shadowColor) and custom axis-tooltip
+          formatter add some library-specific technique beyond the standard bar+scatter
+          combo
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting
