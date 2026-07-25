@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-07-25
@@ -45,7 +45,7 @@ for i, month in enumerate(months):
     data[month] = np.random.normal(base_temps[i], std, 200)
 
 # X range for density evaluation
-x_range = np.linspace(-15, 40, 300)
+x_range = np.linspace(-15, 40, 400)
 
 # Imprint sequential colormap (brand green -> blue) sampled across the chronological ridges
 imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
@@ -68,17 +68,42 @@ for idx in reversed(range(len(months))):
     density = kde(x_range)
     density = density / density.max() * ridge_scale
     y_offset = idx * (1 - overlap) * ridge_scale
-    y_fill = density + y_offset
 
+    # Crop each ridge to where its own density is non-negligible (>1.5% of
+    # its peak) instead of plotting across the full shared x_range. The KDE
+    # tails are asymptotically flat near zero, so evaluating every ridge
+    # over the same wide range produced long near-baseline lines that cut
+    # straight through neighboring ridges' fills.
+    support = np.flatnonzero(density > 0.015 * ridge_scale)
+    lo = max(support[0] - 1, 0)
+    hi = min(support[-1] + 1, len(x_range) - 1)
+    x_curve = x_range[lo : hi + 1]
+    y_fill = density[lo : hi + 1] + y_offset
+
+    # Fill trace: closed polygon (curve + flat baseline return path) with an
+    # invisible line so only the shaded area shows, not the baseline itself.
     fig.add_trace(
         go.Scatter(
-            x=np.concatenate([[x_range[0]], x_range, [x_range[-1]]]),
+            x=np.concatenate([[x_curve[0]], x_curve, [x_curve[-1]]]),
             y=np.concatenate([[y_offset], y_fill, [y_offset]]),
             fill="toself",
             fillcolor=colors[idx],
-            line={"color": LINE_EDGE, "width": 1.5},
+            line={"width": 0},
             mode="lines",
             name=month,
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+
+    # Outline trace: only the density curve itself, cropped to its own
+    # support, so neighboring ridges aren't crossed by a baseline line.
+    fig.add_trace(
+        go.Scatter(
+            x=x_curve,
+            y=y_fill,
+            mode="lines",
+            line={"color": LINE_EDGE, "width": 1.5},
             showlegend=False,
             hovertemplate=f"{month}<br>Temperature: %{{x:.1f}}°C<extra></extra>",
         )
@@ -92,7 +117,7 @@ fig.update_layout(
     autosize=False,
     title={
         "text": "ridgeline-basic · python · plotly · anyplot.ai",
-        "font": {"size": 16, "color": INK},
+        "font": {"size": 18, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
