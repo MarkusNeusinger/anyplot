@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:50:52Z'
-updated: '2026-07-25T11:59:09Z'
+updated: '2026-07-25T12:07:06Z'
 generated_by: claude-sonnet
 workflow_run: 30156850861
 issue: 810
@@ -12,53 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/altair/plot-dark.html
-quality_score: 49
+quality_score: 89
 review:
   strengths:
+  - 'Fixed the attempt-1 defect: the legend now sits in its own clear space (orient="right",
+    top-right corner) so all four target node labels (Transport, Industrial, Commercial,
+    Residential) are fully visible in both renders with no collision'
   - 'Correct Imprint palette: source flows use #009E73/#C475FD/#4467A3/#BD8233 (canonical
-    positions 1-4) with target nodes on the theme-adaptive neutral (INK) anchor, and
-    both light/dark renders keep the data hues identical while chrome flips correctly'
+    positions 1-4) with target nodes on the theme-adaptive neutral (INK) anchor; both
+    light/dark renders keep data hues identical while chrome flips correctly'
   - Custom hand-built Sankey via layered smoothstep bezier link bands (mark_line filled=True)
-    instead of a generic bar chart substitute — genuinely reads as a Sankey diagram,
+    instead of a generic bar-chart substitute — genuinely reads as a Sankey diagram,
     with node widths and link widths both proportional to flow value
   - Clean theme-adaptive chrome throughout (background, title, subtitle, legend fill/stroke,
     node stroke) with no pure-white/pure-black backgrounds
   - Deterministic, realistic energy-flow dataset covering 4 sources x 4 targets with
     varied magnitudes (10-45) and no circular flows, matching the spec's data requirements
   weaknesses:
-  - 'Legend box (orient=''bottom-right'') overlaps the largest target node''s label
-    in both renders — the ''Residential'' node (the bottommost target after Altair''s
-    default y-axis inversion, total flow 95, second-largest of the four targets) has
-    no visible text label; the legend panel (title ''Energy Source'' + 4 rows) sits
-    directly on top of where that label would render. Only Transport, Industrial,
-    and Commercial labels are legible. This directly violates the spec''s own Notes
-    requirement: ''Node labels should be clearly visible and not overlap.'' Fix: move
-    the legend outside the plotting bounds (e.g. as a separate concatenated legend
-    chart, or reposition source_labels/target_labels so the right-side label column
-    never falls under the bottom-right legend anchor — e.g. shrink node_padding/fill_ratio
-    further or move the legend to top-right / outside via alt.Legend(orient=''none'',
-    legendX=..., legendY=...) placed clear of the target label column).'
-  - 'LM-02 (Distinctive Features): usage is fairly generic Vega-Lite layering (mark_rect,
-    mark_line, mark_text) — none of Altair''s more distinctive capabilities (interactive
-    selections/params, faceting, transform_fold, etc.) are used beyond a static tooltip
-    encoding.'
-  - DE-02 visual refinement is undercut by the legend/label collision — otherwise
-    clean minimal chrome (no grid, no axes) is let down by this one sloppy overlap.
+  - 'LM-02 (Distinctive Features) still generic: usage is fairly standard Vega-Lite
+    layering (mark_rect, mark_line, mark_text) — none of Altair''s more distinctive
+    capabilities (interactive selections/params, transform_fold, faceting) are used
+    beyond a static tooltip encoding. Not blocking, but the next design pass could
+    add an interactive param-based highlight-on-hover for the source flows to lean
+    into Altair''s native strengths.'
+  - Flow bands cross heavily in the middle of the chart (12 links, 4x4 mapping) producing
+    some muddy blended-color patches where 2-3 translucent bands overlap — inherent
+    to this data density, only a minor visual polish item, not a legibility failure.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Title "sankey-basic · python · altair · anyplot.ai" and subtitle "Energy Flow from Sources to Sectors" render in dark ink, centered, clearly legible. Source node labels on the left (Renewable, Nuclear, Gas, Coal, top to bottom) are bold dark text, clearly legible. Target-side labels "Transport", "Industrial", "Commercial" (top to bottom) are legible, but the fourth (bottommost, largest) target node has NO visible label — its position is occupied by the "Energy Source" legend box, which overlaps it.
-      Data: Four source node bars (ochre/Renewable, blue/Nuclear, lavender/Gas, green/Coal) on the left flow via curved translucent bands into four dark neutral-colored target bars on the right. First series (Coal) is confirmed #009E73 brand green.
-      Legibility verdict: FAIL — one target node label ("Residential") is completely hidden behind the legend panel.
+      Chrome: Title "sankey-basic · python · altair · anyplot.ai" and subtitle "Energy Flow from Sources to Sectors" render in dark ink, centered, clearly legible. Source node labels on the left (Renewable, Nuclear, Gas, Coal, top to bottom) are bold dark text, clearly legible. All four target-side labels (Transport, Industrial, Commercial, Residential, top to bottom) are now fully visible — the "Energy Source" legend box sits in its own clear space to the right of the node column with a visible gap, no longer overlapping any label (this was the attempt-1 defect, now fixed).
+      Data: Four source node bars (ochre/Renewable, blue/Nuclear, lavender/Gas, green/Coal) on the left flow via curved translucent bands into four dark neutral-colored target bars on the right. First series (Coal) confirmed #009E73 brand green.
+      Legibility verdict: PASS — all chrome and node labels readable, no overlap.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: Title and subtitle render in light ink (near-white / soft gray), clearly legible against the dark background — no dark-on-dark failures observed. Source and "Transport"/"Industrial"/"Commercial" target labels are light-colored and legible.
+      Chrome: Title and subtitle render in light ink (near-white / soft gray), clearly legible against the dark background — no dark-on-dark failures observed. Source and all four target labels (Transport, Industrial, Commercial, Residential) are light-colored, bold, and fully legible, with the legend box clear of the node column just as in the light render.
       Data: Confirmed identical hues to the light render — same ochre/blue/lavender/green source flows, target nodes on the theme-adaptive neutral (light ink) anchor. Only chrome (background, text, legend box fill/stroke) flipped, as required.
-      Legibility verdict: FAIL for the same reason as the light render — the fourth (largest, bottommost) target node's label is hidden behind the "Energy Source" legend box; every other text element is readable.
+      Legibility verdict: PASS — no dark-on-dark issues, all labels readable, legend/label collision from attempt 1 is resolved.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,15 +62,14 @@ review:
         passed: true
         comment: All font sizes explicitly set (fontSize=12 labels, titleFontSize=16,
           legend/axis sizing configured); readable at full size in both themes; mandated
-          long title fits at ~expected proportion with no clipping
+          long title fits with no clipping
       - id: VQ-02
         name: No Overlap
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: Legend box overlaps and completely hides the 'Residential' target
-          node's label in both renders — a real, visible defect, and a direct violation
-          of the spec's own 'labels should not overlap' note
+        passed: true
+        comment: 'Fixed from attempt 1: legend now positioned clear of the target
+          label column in both renders, all four target labels fully visible'
       - id: VQ-03
         name: Element Visibility
         score: 5
@@ -84,7 +77,7 @@ review:
         passed: true
         comment: Flow bands sized proportional to value with opacity=0.55 tuned for
           the crossing-heavy layout; reasonably distinguishable despite 12 overlapping
-          bands
+          bands, some muddying where 2-3 bands cross
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -98,8 +91,8 @@ review:
         max: 4
         passed: true
         comment: Chart content fills a good majority of the 3200x1800 canvas after
-          padding, balanced margins, legend positioned near the plot (not isolated),
-          nothing clipped at the canvas edge
+          padding, balanced margins, legend positioned near the plot, nothing clipped
+          at the canvas edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -116,7 +109,7 @@ review:
           canonical positions 2-4; target nodes use theme-adaptive neutral anchor;
           identical data hues across light/dark, backgrounds theme-correct
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -129,11 +122,11 @@ review:
           defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No grid/axes, generous whitespace, subtle node strokes — but the
-          legend/label collision is a sloppy, unpolished detail
+        comment: No grid/axes, generous whitespace, subtle node strokes; the attempt-1
+          legend/label collision that undercut this is now fixed
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -143,7 +136,7 @@ review:
           visual hierarchy of which source dominates which sector, without needing
           annotations
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -155,11 +148,11 @@ review:
           between them
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Spec explicitly requires 'node labels clearly visible and not overlapping'
-          — violated for one target node's label, hidden by the legend
+        passed: true
+        comment: Node labels now clearly visible and non-overlapping in both renders,
+          satisfying the spec's explicit 'not overlap' requirement
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -253,7 +246,7 @@ review:
         comment: Declarative layering plus tooltip encoding is somewhat Altair-flavored,
           but nothing uses Altair's more distinctive capabilities (selections, transform_fold,
           faceting)
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
