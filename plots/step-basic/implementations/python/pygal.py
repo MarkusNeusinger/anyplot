@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 step-basic: Basic Step Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-25
