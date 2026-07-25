@@ -1,0 +1,249 @@
+library: ggplot2
+language: r
+specification_id: step-basic
+created: '2026-07-25T15:48:54Z'
+updated: '2026-07-25T16:00:09Z'
+generated_by: claude-sonnet
+workflow_run: 30164192435
+issue: 956
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
+review:
+  strengths:
+  - Correct geom_step usage with direction = "hv" (post-style step) and circular markers
+    placed precisely at the 8 meetings where the rate actually changed, not every
+    month
+  - Change-point markers enlarged from 2.8 to 3.8 per the prior review's data-density
+    feedback — now appropriately prominent for a sparse 24-point series
+  - 'Theme-adaptive chrome (INK / INK_SOFT / PAGE_BG) threaded consistently through
+    title, axes, grid, and background; both renders are fully legible with identical
+    #009E73 data color'
+  - Title format, single-series legend omission, and y-axis-only grid styling match
+    spec and style-guide requirements exactly
+  weaknesses:
+  - 'The annotate("text", ..., y = peak_rate + 0.18, label = "Cycle peak: 5.50%")
+    callout added in the repair pass is completely invisible in BOTH renders — its
+    y-position (5.68) exceeds the y-scale''s expanded upper panel limit (5.5 + 1.0
+    * 0.16 = 5.66), so ggplot2''s default panel clipping silently drops it. This was
+    meant to be the design-excellence flourish requested after attempt 1 but delivers
+    zero visible benefit. Fix by either lowering the offset (e.g. peak_rate + 0.08)
+    or widening the top expansion (e.g. expansion(mult = c(0.05, 0.22))) so the label
+    stays inside the visible panel in both themes.'
+  - Y-axis label "Policy Rate" still omits the unit (e.g. "Policy Rate (%)") — the
+    percent-suffixed tick labels make it unambiguous, but an explicit unit would be
+    clearer per VQ-06
+  - Styling otherwise remains close to theme_minimal defaults with only grid/axis-line
+    tuning; once the peak annotation actually renders it should meaningfully lift
+    Design Excellence, so keep it rather than removing it
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "Central Bank Policy Rate · step-basic · r · ggplot2 · anyplot.ai" renders fully in dark ink, not clipped. Y-axis tick labels (4.5%-5.5%) and rotated (~30°) X-axis date labels (Feb 2023 ... Nov 2024) render in soft dark grey, clearly legible. "Meeting Date" / "Policy Rate" axis titles in darker ink. Subtle horizontal-only grid lines at ~15% opacity. NOTE: the "Cycle peak: 5.50%" text annotation that the source code adds via annotate() at the Nov 2023 peak is NOT visible anywhere in the image — it is clipped outside the panel's expanded y-range.
+      Data: Single brand-green (#009E73) step line in "hv" (post) style, with circular markers (size increased to 3.8 in this attempt) placed only at the 8 points where the policy rate actually changed.
+      Legibility verdict: PASS (all rendered chrome and data are readable; the missing annotation is a rendering bug, not a legibility failure, since the element simply never appears)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title now in light/off-white ink, fully visible. Tick labels and axis titles render in light grey, clearly legible against the dark surface — no dark-on-dark failures. Grid lines remain subtle and horizontal-only. Same as light render, the "Cycle peak: 5.50%" annotation is completely absent — confirmed via the same y-position math (5.68 vs. panel limit 5.66), so this is a rendering bug consistent across both themes, not a theme-specific legibility issue.
+      Data: Step line and change-markers use the identical #009E73 green as the light render — only chrome (background, text, grid) flipped, confirming data-color consistency.
+      Legibility verdict: PASS (no dark-on-dark issues; all rendered elements readable; missing annotation is a clipping bug affecting both themes equally)
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (base_size=8, axis.title=10, axis.text=8,
+          plot.title=12), well-proportioned, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Change markers enlarged to size=3.8, appropriately prominent for
+          a sparse 24-point / 8-change series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green on cream/near-black surfaces has strong contrast in both
+          themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the landscape canvas well, balanced margins, nothing cut
+          off at canvas edges
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles; y tick labels carry the % unit
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both renders; backgrounds are theme-correct
+          #FAF8F1/#1A1A17; chrome flips correctly'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Close to theme_minimal defaults; the intended peak-annotation flourish
+          is invisible due to a clipping bug so it earns no visual credit
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: L-shaped axis line, single-axis subtle grid, rotated date labels
+          — modest refinement above minimal defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Change-point markers isolate real rate-change moments, but the peak
+          callout meant to add explicit storytelling never renders
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct step chart via geom_step
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Step style chosen (post/hv), markers at change points, grid lines
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=date, y=rate correctly mapped, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend correctly omitted for single
+          series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows both hikes and cuts and a plateau; doesn't demonstrate other
+          step styles but only one is required
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic central-bank policy-rate scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Quarter-point increments and 4.5-5.5% range are realistic for a policy-rate
+          cycle
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear imports/data/plot/save structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data is deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, scales, ragg all actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: The annotate() callout is dead code in practice — its y-position
+          exceeds the scale's expanded panel limit so it never renders in either theme
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct dimensions
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level ggplot2 API usage, doesn't push further into advanced
+          patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses geom_step's direction parameter but no further library-distinctive
+          touches
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - dplyr
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
