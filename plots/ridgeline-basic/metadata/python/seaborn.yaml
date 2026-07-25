@@ -2,127 +2,142 @@ library: seaborn
 language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:43:58Z'
-updated: '2026-04-30T03:15:53Z'
+updated: '2026-07-25T04:08:40Z'
 generated_by: claude-sonnet
-workflow_run: 25145166418
+workflow_run: 30142819635
 issue: 923
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 93
 review:
   strengths:
-  - Correct ridgeline/Joy Plot implementation using seaborn FacetGrid pattern
-  - viridis sequential palette appropriate for 12-group temporal data — cool-to-warm
-    mirrors seasonal temperature progression
-  - 'Fully theme-adaptive chrome: PAGE_BG, INK, INK_SOFT tokens threaded through all
-    elements'
-  - 'Font sizes explicitly set throughout: title 26pt, month labels 20pt bold, x-label
-    22pt, ticks 18pt'
-  - 'Perfect spec compliance: density curves with 50% overlap, chronological order,
-    labeled ridges replacing legend'
-  - Realistic neutral domain (Northern Hemisphere monthly temperatures) with accurate
-    base temperatures and spread
+  - 'Idiomatic use of seaborn''s official FacetGrid ridgeline recipe: negative hspace
+    overlap plus a dual-layer kdeplot (filled density + elevated-bg outline stroke)
+    that keeps overlapping ridges visually separated in both themes.'
+  - 'Semantically meaningful color gradient (Imprint green -> blue) mapped to the
+    ordinal task-complexity ordering, with the first series exactly #009E73 per brand
+    rule.'
+  - 'Clean, refined chrome: spines and y-ticks removed, subtle baseline hairlines,
+    generous whitespace, and theme tokens (PAGE_BG/INK/INK_SOFT) threaded consistently
+    through both renders.'
+  - Realistic, appropriately scaled synthetic data (gamma-distributed, right-skewed
+    reaction times, 281ms -> 950ms mean progression matching real UI-interaction complexity).
+  - Per-ridge mu annotations add quantitative grounding without cluttering the chart.
   weaknesses:
-  - 'DE-03 moderate: the viridis color story is implicit — could be stronger with
-    more explicit visual emphasis on the seasonal arc'
-  - 'LM-02 partially generic: FacetGrid ridgeline is a well-known seaborn template;
-    no truly novel seaborn-specific technique beyond the standard pattern'
-  - 'Dark-mode separator outline (color=PAGE_BG = #1A1A17) is nearly invisible on
-    dark purple January ridge — consider INK_SOFT instead of PAGE_BG for dark mode
-    separation'
+  - 'PIPELINE ISSUE (not an implementation defect): the plot_images/plot-light.png
+    and plot-dark.png supplied for this review were stale — rendered from a revision
+    that predates the ''fix(seaborn): address review feedback'' commit (3a2cd1b) already
+    on this branch, so the title read ''ridgeline-basic · seaborn · anyplot.ai'' (missing
+    the language segment). Re-running plots/ridgeline-basic/implementations/python/seaborn.py
+    directly at the exact reviewed commit (both ANYPLOT_THEME=light and =dark) confirms
+    the current source already renders the correct title ''ridgeline-basic · python
+    · seaborn · anyplot.ai'' in both themes. This review is scored against the freshly-regenerated,
+    correct images. Flagging so the workflow can be checked for artifact-caching/staleness
+    between the repair commit and the image-capture step.'
+  - The label() helper mapped via g.map() is required by seaborn's canonical FacetGrid
+    ridgeline idiom for per-facet text placement, so it's justified here, but it is
+    technically a function definition and a strict CQ-01 (KISS, no functions/classes)
+    read dings it slightly.
+  - 'The per-group hue uses a sampled LinearSegmentedColormap (imprint_seq) rather
+    than the discrete IMPRINT_PALETTE list; this is a defensible, spec-encouraged
+    choice for these 9 ordinally-ordered groups (first swatch lands exactly on #009E73)
+    but is worth a second look in future audits of the categorical-palette rule.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correctly matches the anyplot light surface.
-      Chrome: Title "ridgeline-basic · seaborn · anyplot.ai" in bold dark ink, large and prominent at the top. Month labels positioned left of each ridge, bold 20pt, colored in their respective viridis hue — readable at all positions. X-axis label "Temperature (°C)" in dark ink at bottom. X-axis tick labels (-10, 0, 10, 20, 30) in muted dark ink, clearly readable. No y-axis labels or ticks (correct for ridgeline). All text fully readable against the off-white background.
-      Data: 12 ridges stacked vertically, January at top through December at bottom. viridis gradient runs purple (January) → blue/teal (April–August) → yellow-green (November, December). Filled density curves with alpha=0.85 and white separator outlines. Distribution centers shift progressively right (cold winter months left, warm summer months right), clearly showing the seasonal temperature cycle.
-      Legibility verdict: PASS — all text elements clearly readable against the light background.
+      Background: Warm off-white (#FAF8F1), matches spec target.
+      Chrome: Title "ridgeline-basic · python · seaborn · anyplot.ai" in bold dark ink at top, comfortable gap above the tallest ridge. Nine group labels ("Single Tap" through "Multi-Step Form") run down the left margin in a green-to-blue gradient matching each ridge's fill color, each paired with a smaller "μ ≈ X ms" annotation in soft ink. X-axis "Reaction Time (ms)" label and numeric ticks (0-2500) at the bottom, dark-on-light and clearly legible. No y-axis ticks/label (by design — group identity is carried by the row labels).
+      Data: Nine overlapping filled density curves (gamma-distributed reaction times) stacked with ~50-60% vertical overlap, each with a white/elevated-bg outline stroke that keeps adjacent ridges visually distinct even where they cross. First (topmost, "Single Tap") ridge is #009E73 Imprint green; colors shift smoothly toward Imprint blue (#4467A3) for "Multi-Step Form," tracking the rising task-complexity order. A thin dark baseline runs under each ridge.
+      Legibility verdict: PASS — all text (title, group labels, mu annotations, axis label, tick labels) is clearly readable against the light background; no light-on-light issues found.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correctly matches the anyplot dark surface.
-      Chrome: Title in light near-white, bold, clearly readable. Month labels retain their viridis colors (unchanged between themes, as required) — all readable against the dark background, including the lighter yellow-green November/December. X-axis label and tick labels appear in light/muted color, clearly readable. No dark-on-dark text failures detected.
-      Data: Identical viridis colors to the light render — data colors unchanged between themes as required. Ridge separator outline uses color=PAGE_BG (dark #1A1A17) in dark mode, creating subtle rather than strong separation between ridges — perceptible but less defined than in light mode on the dark purple upper ridges. Density curves remain clearly distinguishable.
-      Legibility verdict: PASS — all text readable against dark background; data colors identical to light render.
+      Background: Warm near-black (#1A1A17), matches spec target.
+      Chrome: Same title text now in light ink, same gradient-colored group labels (still readable — the green/teal/blue swatches hold contrast against the dark surface), mu annotations in light soft-ink gray. X-axis label and tick labels rendered in light gray, clearly visible. Baselines and outline strokes switch to the dark elevated-bg tone so ridge separation still reads correctly.
+      Data: Identical curve shapes, identical per-group colors to the light render (verified by eye — same green-to-blue progression, same relative densities and modes) — only the chrome (background, ink, outline color) flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; every title/label/tick/annotation is clearly visible against the near-black background.
+
+    Note: the plot_images/ artifacts originally supplied for this review predated the branch's title-fix commit and showed "ridgeline-basic · seaborn · anyplot.ai" (missing "python"). The description above reflects the correct renders produced by re-running the current committed implementation directly (both themes), which is what will actually ship.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 26pt bold, month labels 20pt
-          bold, x-label 22pt, ticks 18pt. Readable in both themes.'
+        comment: Explicit font sizes; title, group labels, mu annotations, axis label
+          and ticks all legible in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Month labels positioned left with ha=right, no
-          overlap.
+        comment: Checked pixel crops around every label/ridge boundary and the title/top-ridge
+          gap — no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled density curves with alpha=0.85 clearly visible. Baseline separators
-          visible. Elements well-adapted to ridgeline density.
+        comment: Dual-layer kdeplot (fill + elevated-bg outline) keeps overlapping
+          ridges distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is perceptually uniform and CVD-safe.
+        comment: Green-to-blue gradient, good contrast on both backgrounds, not red/green-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 format, good canvas utilization, nothing cut off.
+        comment: 3200x1800 canvas confirmed, no clipping, comfortable margins, title
+          width in expected range
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) includes units. Title format correct.
+        comment: '''Reaction Time (ms)'' descriptive with units; mandated title format
+          correct in the committed code'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'viridis sequential correct for 12-group temporal data (>6 groups).
-          Backgrounds #FAF8F1/#1A1A17 correct. Chrome theme-adaptive.'
+        comment: 'First series exactly #009E73, imprint_seq-derived gradient, correct
+          #FAF8F1/#1A1A17 backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: viridis gradient creates visual flow, colored ridge
-          labels are a deliberate design choice. Not FiveThirtyEight-level but clearly
-          intentional.'
+        comment: Semantic gradient tied to complexity order, outline-stroke separation,
+          mu annotations show real design intent beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, y-axis hidden, transparent facet backgrounds, PAGE_BG
-          separator outline, hspace=-0.5 for proper overlap. Good refinement.
+        comment: Spines removed, y-ticks hidden, subtle baseline hairlines, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: viridis cool-to-warm maps naturally to seasonal temperature story.
-          Distribution centers shift right across months. Implicit but effective narrative.
+        comment: Meaningful complexity ordering plus color gradient creates a clear
+          top-to-bottom narrative
     spec_compliance:
       score: 15
       max: 15
@@ -132,26 +147,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ridgeline/Joy Plot with stacked overlapping density curves.
+        comment: Overlapping stacked density curves — correct ridgeline/joyplot type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Partial overlap (~50%), group labels on y-axis, color gradient, chronological
-          ordering.
+        comment: Partial overlap, y-axis shows group labels not numeric values, color
+          gradient differentiation, meaningful (complexity) ordering
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x-axis, months on y-axis via FacetGrid rows.
+        comment: x=reaction_time density; all 9 groups shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Ridge labels serve legend function.
+        comment: Title renders 'ridgeline-basic · python · seaborn · anyplot.ai' in
+          the current commit (verified via direct re-run of both themes); no legend
+          needed since the single grouping var is carried by row labels
     data_quality:
       score: 15
       max: 15
@@ -161,59 +178,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 12 months with distinct distribution centers and realistic spread.
-          Full seasonal cycle demonstrated.
+        comment: 9 groups, overlapping density curves, per-ridge mu annotations, gradient
+          ordering — full ridgeline feature set
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Northern Hemisphere monthly temperatures — neutral natural science
-          domain.
+        comment: UI task reaction-time distributions are realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base temps 2-24°C, sigma=3.5°C, 150 obs/month — all realistic for
-          a temperate climate.
+        comment: 180 obs/group, 250-2000ms range plausible for human interaction reaction
+          times
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: One small label helper required by FacetGrid.map() pattern — idiomatic,
-          not over-engineering.
+        comment: One small label() function required by seaborn's FacetGrid.map idiom
+          for per-facet text — justified but technically a function
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used.
+        comment: All imports (os, plt, np, pd, sns, LinearSegmentedColormap) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic seaborn FacetGrid ridgeline code.
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct facecolor parameter.
+        comment: Saves plot-{THEME}.png at dpi=400, no bbox_inches='tight'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -221,22 +237,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: FacetGrid with row faceting is the canonical seaborn ridgeline approach.
-          g.map(), g.despine(), g.set() all idiomatic.
+        comment: Textbook seaborn FacetGrid + kdeplot ridgeline recipe, the library's
+          own recommended joyplot pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: FacetGrid aspect=15/height=0.6 ratio for narrow ridges, clip_on=False
-          for cross-panel overflow, transparent axes facecolor trick — seaborn-specific
-          but a known template.
+        comment: Negative hspace overlap, dual-layer kdeplot (fill + outline), hue-mapped
+          gradient palette, mapped per-facet label function
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
+  - layer-composition
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
@@ -244,3 +261,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
+  - gradient-fill
