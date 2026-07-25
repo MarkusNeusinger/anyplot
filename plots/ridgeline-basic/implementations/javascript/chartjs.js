@@ -62,8 +62,23 @@ function kde(samples, bandwidth) {
 
 const monthDensities = monthSamples.map((samples) => kde(samples, BANDWIDTH));
 
+// Clip each ridge to where its density is non-negligible so flat
+// near-zero-density tails don't run across the full canvas width.
+function clipToSignificant(x, density, threshold) {
+  let lo = 0;
+  let hi = density.length - 1;
+  while (lo < hi && density[lo] < threshold) lo++;
+  while (hi > lo && density[hi] < threshold) hi--;
+  lo = Math.max(0, lo - 1);
+  hi = Math.min(density.length - 1, hi + 1);
+  return { x: x.slice(lo, hi + 1), density: density.slice(lo, hi + 1) };
+}
+const monthCurves = monthDensities.map((density) =>
+  clipToSignificant(xGrid, density, Math.max(...density) * 0.02),
+);
+
 // --- Layout: stack ridges bottom (Jan) to top (Dec), ~55% overlap ----------
-const SPACING = 35;
+const SPACING = 40;
 const HEIGHT_SCALE = 650;
 
 // --- Color: diverging imprint colormap keyed to mean temperature -----------
@@ -98,12 +113,13 @@ const numMonths = MONTHS.length;
 const datasets = MONTHS.map((month, i) => {
   const baseline = i * SPACING;
   const borderColor = divergingColor(month.mean, centerTemp, halfRange, 1);
-  const fillColor = divergingColor(month.mean, centerTemp, halfRange, 0.55);
+  const fillColor = divergingColor(month.mean, centerTemp, halfRange, 0.45);
+  const { x: curveX, density: curveDensity } = monthCurves[i];
   return {
     label: month.name,
-    data: xGrid.map((x, j) => ({
+    data: curveX.map((x, j) => ({
       x,
-      y: baseline + monthDensities[i][j] * HEIGHT_SCALE,
+      y: baseline + curveDensity[j] * HEIGHT_SCALE,
     })),
     borderColor,
     backgroundColor: fillColor,
