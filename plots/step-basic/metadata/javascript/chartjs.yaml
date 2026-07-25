@@ -1,0 +1,228 @@
+library: chartjs
+language: javascript
+specification_id: step-basic
+created: '2026-07-25T15:52:46Z'
+updated: '2026-07-25T16:07:28Z'
+generated_by: claude-sonnet
+workflow_run: 30164328220
+issue: 956
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Directly resolves all three attempt-1 weaknesses: added area fill + emphasis
+    for design polish, a peak callout for data storytelling, and a custom plugin +
+    scriptable styling for library mastery'
+  - 'Correct Imprint palette compliance: brand green #009E73 identical across light/dark,
+    theme-adaptive chrome correctly sourced from ANYPLOT_TOKENS'
+  - 'Correct step semantics: stepped: "after" matches the spec''s ''post'' style,
+    markers placed exactly at each scaling event'
+  - Realistic, plausible auto-scaling dataset with a full mix of up/down transitions
+  - Fixed the attempt-1 minor layout note (tight rightmost tick) via explicit layout.padding
+  weaknesses:
+  - Design Excellence still reads as a well-executed default rather than a distinctive
+    visual system - the area fill and callout are effective but common techniques
+  - Peak callout text is fairly small (14px) relative to the chart's overall scale;
+    a touch larger or with a subtle background chip would improve its role as the
+    storytelling focal point
+  - Only one focal point (the peak) is highlighted - the overnight trough is arguably
+    an equally interesting event that goes unmarked
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "step-basic · javascript · chartjs · anyplot.ai" in dark ink, centered top. Axis titles "Time of Day" / "Active Instances" in dark ink; tick labels in softer grey. Subtle horizontal-only grid, thin L-shaped axis lines. All readable.
+      Data: Single step-line series in brand green (#009E73), stepped "after", with a light-alpha area fill beneath, circular markers with light halo at each of 11 scaling events, and an enlarged marker + bold "Daily peak" text callout at the 09:30/30-instance peak.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Same title and axis titles now in light/off-white ink; tick labels in lighter soft grey; grid lines still subtle but visible. No dark-on-dark failures.
+      Data: Step line, area fill, markers, and "Daily peak" callout colors identical to the light render - only chrome flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/axis titles/ticks/callout all explicitly sized and readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Daily peak callout sits clear of gridline and other elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse dataset with prominent markers, peak marker enlarged for emphasis
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Strong contrast on both surfaces, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: layout.padding.right fixed attempt-1's tight rightmost tick
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical across themes, theme-correct backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Area fill and peak emphasis add polish but are common techniques,
+          not distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only grid, L-shaped spines, marker halo, area fill read as refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Enlarged marker + callout gives a clear focal point, resolves attempt-1
+          weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct step plot via stepped: "after"'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Markers, grid lines, appropriate step style
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=hour linear 0-24, Y=instance count, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match, legend correctly omitted
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Good mix of up/down transitions across 11 events
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Auto-scaling web-service scenario, realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 4-30 instance range, plausible daytime-heavy pattern
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data -> mount -> chart plus small helpers and one draw plugin
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Peak plugin is a real Chart.js technique, not fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'fill: origin, scriptable callbacks, correct token contract'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw plugin and scriptable per-point styling
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
