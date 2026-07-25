@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: matplotlib 3.11.1 | Python 3.13.14
-Quality: 78/100 | Updated: 2026-07-25
+Quality: 76/100 | Updated: 2026-07-25
 """
 
 import os

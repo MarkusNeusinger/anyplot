@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:45:16Z'
-updated: '2026-07-25T12:10:55Z'
+updated: '2026-07-25T12:32:01Z'
 generated_by: claude-sonnet
 workflow_run: 30156615215
 issue: 810
@@ -12,52 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 76
 review:
   strengths:
-  - 'All four overlap issues flagged in the previous review are now resolved: ''Commercial
-    45 TWh'' no longer pierced by the arrowhead, ''Coal'' and ''Losses'' labels no
-    longer sit on their ribbon''s curved bend, and ''Renewables''/''Nuclear 60 TWh''
-    now have a clear gap — the manual LABEL_OFFSETS technique worked.'
-  - The gray seam-line rendering artifacts that previously cut across the green and
-    purple ribbons are gone — both diagrams now render as clean, continuous ribbon
-    shapes.
-  - 'Correct Imprint palette (brand green #009E73 for the generation stage, lavender
-    #C475FD for the distribution stage), fully theme-adaptive chrome, and identical
-    data colors between light and dark renders.'
+  - 'The two overlap issues flagged in the previous review are resolved: ''Industrial
+    80 TWh'' and ''Transport 20 TWh'' now have a clear gap between them, and no arrowhead
+    pierces any label text.'
+  - No AR-09 edge clipping in either render — 'Commercial 45 TWh' and 'Residential
+    55 TWh' sit close to the right/bottom canvas edges but every pixel of every letter
+    is fully visible with a comfortable margin, confirmed via pixel-level crop inspection.
+  - 'Correct Imprint palette (brand green #009E73 first, lavender #C475FD second),
+    fully theme-adaptive chrome, and data colors are pixel-identical between light
+    and dark renders.'
   - Realistic, neutral energy-flow dataset (TWh scale) with a programmatically verified
     conservation balance (assert total_primary == net_delivered + losses).
-  - Clean, fully reproducible KISS code with no fake interactivity and no unused imports.
+  - Clean, fully reproducible KISS code — no randomness, proper Sankey add()/connect()
+    multi-diagram pattern, no fake interactivity.
   weaknesses:
-  - 'New label collision: the ''Industrial / 80 TWh'' label directly touches the ''Transport
-    / 20 TWh'' label immediately to its right — the bottom of ''80 TWh'' abuts the
-    top of ''Transport'' with no gap, visible in both light and dark renders. Apply
-    the same manual LABEL_OFFSETS technique already used for Residential/Coal/Losses/Renewables/Commercial
-    to nudge one of these two labels clear.'
-  - '''Natural Gas / 90 TWh'' label is overlapped by its own ribbon''s downward bend
-    (the same seam where the Nuclear/Renewables ribbons curve into the hub) — the
-    green ribbon fill visually crosses through the text at the ''Gas''/''90 TWh''
-    boundary. Nudge this label''s position (or adjust the pathlengths for the flows
-    bending in from above) so the ribbon clears the text.'
-  - Only two colors (brand green for all four primary sources, lavender for all four
-    end-use sectors) differentiate the flows, rather than distinguishing the individual
-    source categories the spec explicitly calls out ('Use distinct colors for different
-    source categories or flow types'). Consider giving each primary source its own
-    Imprint palette color (still positions 1→N) once the remaining label overlaps
-    are fixed, or keep the two-stage scheme but note it's an intentional simplification
-    given matplotlib's Sankey API constraints.
+  - 'The ''Natural Gas / 90 TWh'' label is still crossed by a ribbon: the thin vertical
+    Renewables-inflow segment runs directly through the ''s'' in ''Gas'' and through
+    the ''90 TWh'' line beneath it, in both renders. This is the same defect flagged
+    in the previous review (then described as the ribbon''s bend crossing the label)
+    — the repair shifted the label but a different, thinner segment of the same ribbon
+    still overlaps it. Nudge the label further left/down via LABEL_OFFSETS, or shorten
+    the Renewables inbound pathlength so its vertical run doesn''t pass through the
+    label''s bounding box.'
+  - Only two colors differentiate the 8 flow categories (brand green for all sources,
+    lavender for all sectors) rather than distinguishing individual source categories,
+    which the spec explicitly requests ('Use distinct colors for different source
+    categories or flow types'). The code comment documents this as an intentional
+    two-stage design tradeoff, which is a defensible reading of the spec, but it is
+    only a partial fulfillment of that specific requirement.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - correct, not pure white.
-      Chrome: Title "sankey-basic · python · matplotlib · anyplot.ai" is dark, centered, clearly readable. Node labels (Coal, Natural Gas, Nuclear, Renewables, Losses, Residential, Commercial, Industrial, Transport) are bold dark text, readable against the cream background.
-      Data: Two-stage Sankey - brand green (#009E73) ribbons carry the four primary sources (Coal 120, Natural Gas 90, Nuclear 60, Renewables 30 TWh) into a generation hub, splitting into Losses (100 TWh) and a lavender (#C475FD) net-delivered flow that fans out to Residential (55), Commercial (45), Industrial (80), and Transport (20 TWh). First series correctly uses brand green, second stage correctly uses Imprint position 2. Ribbons render as clean continuous shapes with no seam artifacts.
-      Legibility verdict: PASS with minor issues - all text is readable and no letters are missing/obscured, but the "80 TWh"/"Transport" label pair touch with no gap, and the ribbon bend behind "Natural Gas / 90 TWh" visually crosses the text. Previously-flagged severe overlaps (Commercial "45 TWh" pierced by arrowhead, Coal/Losses on ribbon bends, Renewables/Nuclear crowding) are all fixed.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "sankey-basic · python · matplotlib · anyplot.ai" is dark, bold-medium, centered, fully within canvas bounds. All 9 node labels (Coal, Natural Gas, Nuclear, Renewables, Losses, Residential, Commercial, Industrial, Transport) are dark, bold, 18pt text, readable against the light background.
+      Data: Two-stage Sankey. Brand-green (#009E73) ribbons carry 4 primary sources (Coal 120, Natural Gas 90, Nuclear 60, Renewables 30 TWh) into a generation hub; hub splits into a Losses branch (100 TWh, green) and a lavender (#C475FD) net-delivered flow fanning to Residential (55), Commercial (45), Industrial (80), Transport (20 TWh). Ribbons render as clean continuous shapes with no seam artifacts. First series is confirmed brand green.
+      Legibility verdict: FAIL (minor) — the thin vertical Renewables-inflow ribbon segment crosses directly through the letters of "Natural Gas" ('s' in "Gas") and "90 TWh" ('9'/'0'); the characters remain identifiable but a data element visibly overlaps the text. All other 8 labels are fully clear of ribbons and of each other, including the previously-flagged Industrial/Transport pair which now has a clean gap.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - correct, not pure black.
-      Chrome: Title and node labels render in light ink (#F0EFE8-equivalent), clearly readable against the dark background - no dark-on-dark failures observed.
-      Data: Same brand green and lavender flow colors as the light render - data colors are identical between themes, confirming only chrome flips as required. Ribbons are clean and seam-free here too.
-      Legibility verdict: PASS with minor issues - identical to the light render since the remaining overlap issues are geometry-driven (not theme-driven): the Industrial/Transport label touch and the Natural Gas/ribbon-bend overlap persist in both themes, but no text is unreadable.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title and 9 node labels rendered in light ink (#F0EFE8), fully readable against the dark background. No dark-on-dark failures anywhere.
+      Data: Identical ribbon geometry and identical brand-green / lavender data colors to the light render — confirms only chrome flipped between themes.
+      Legibility verdict: FAIL (minor) — same "Natural Gas / 90 TWh" ribbon-crossing-text defect reproduces identically in this render (geometry-driven, not theme-driven). No other legibility failures; Commercial and Residential sit close to the right/bottom canvas edges respectively but are not clipped (verified via pixel crop — comfortable margin present in both themes).
   criteria_checklist:
     visual_quality:
       score: 23
@@ -68,56 +65,51 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All labels explicitly sized (18pt bold) and fully readable in both
-          themes; two labels touch/overlap slightly (Industrial-Transport, Natural
-          Gas-ribbon) which keeps this below a perfect score
+        comment: Explicit 18pt bold labels, readable in both themes; one label ('Natural
+          Gas/90 TWh') has a thin ribbon crossing its characters but remains identifiable
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
         passed: false
-        comment: 'Minimal overlap remains: ''Industrial/80 TWh'' touches ''Transport/20
-          TWh'' with no gap, and ''Natural Gas/90 TWh'' is crossed by its ribbon''s
-          bend. Main content stays readable (down from severe/0 in the previous review)
-          but is not yet clean'
+        comment: '''Natural Gas/90 TWh'' label still crossed by a ribbon segment (a
+          different part of the same ribbon flagged last review); Industrial/Transport
+          collision from the previous review is now fully resolved'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Ribbon widths correctly proportional to flow values; previous gray
-          seam-line rendering artifacts are gone, ribbons now render as clean continuous
-          shapes
+        comment: Ribbon widths proportional to flow values, clean continuous shapes,
+          no seam artifacts
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pairing has good contrast, no red-green-only signal,
-          dark ink text reads fine over both fill colors
+        comment: Good contrast, CVD-safe two-color scheme
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good use of canvas, nothing clipped
-          at edges, slightly uneven whitespace distribution
+        comment: Canvas gate passed (3200x1800), nothing clipped at edges, reasonable
+          margins with some unused whitespace bottom-right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for Sankey; title matches mandated format
-          exactly
+        comment: Title matches mandated format exactly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series brand green #009E73, second series Imprint position
-          2 lavender; correct theme backgrounds; data colors identical across themes'
+        comment: Brand green first series, Imprint position-2 lavender second, theme-correct
+          backgrounds, identical data colors across themes
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -125,25 +117,25 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured two-stage color scheme and bold labels, but remaining
-          label collisions and single-color-per-stage simplification keep this at
-          a well-configured-default level rather than exceptional
+        comment: Well-tuned pathlengths/gap/radius/shoulder and per-label manual offsets,
+          but the recurring label/ribbon collision undercuts polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clean seam-free ribbons and axis removed via axis('off'), but the
-          two remaining text collisions hold back full refinement credit
+        comment: Seam-free ribbons and hidden axes, but the same class of defect (text
+          crossed by a ribbon) has now persisted across two consecutive review-repair
+          cycles
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Clear two-stage hierarchy (generation -> distribution) with a distinct
-          losses branch communicates the energy-balance story
+        passed: false
+        comment: Clear two-stage generation-to-distribution hierarchy with a distinct
+          losses branch
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -151,27 +143,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Sankey diagram using matplotlib's native Sankey class
+        comment: Correct Sankey diagram using matplotlib.sankey.Sankey
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Source/target/value flows present and mostly non-overlapping now
-          (2 minor touches remain); color-by-source-category is still only partially
-          met (colored by stage instead of per-source)
+        passed: false
+        comment: Spec explicitly requires labels not overlap links (still violated
+          for one label) and distinct colors per source category (only stage-based
+          two-color scheme used)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Flow widths map correctly to values, balance verified programmatically
+        comment: Flow widths map correctly to values; energy balance verified in code
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly
+        comment: Title matches mandated format; node labels serve as direct data labels
     data_quality:
       score: 14
       max: 15
@@ -181,8 +173,7 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Multiple sources, an intermediate losses stage, and multiple end-use
-          sectors covered
+        comment: Multiple sources, a losses stage, and multiple end-use sectors shown
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -204,7 +195,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -216,20 +207,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, pyplot, Sankey imported and used
+        comment: Only os, pyplot, and Sankey imported and used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity, appropriate complexity for a two-stage
-          Sankey
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png correctly with bbox_inches left at default
+        comment: Saves plot-{THEME}.png with bbox_inches left at default
     library_mastery:
       score: 7
       max: 10
@@ -239,20 +229,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of matplotlib.sankey.Sankey with multi-diagram add()/connect()
-          pattern
+        comment: Proper multi-diagram add()/connect() pattern, idiomatic Sankey usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Tuned gap/radius/shoulder/pathlengths and per-label manual position
-          offsets beyond defaults
-  verdict: REJECTED
+        passed: false
+        comment: Tuned gap/radius/shoulder/pathlengths plus manual per-label text-position
+          offsets beyond library defaults
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - patches
+  techniques: []
   patterns:
   - explicit-figure
   dataprep: []
