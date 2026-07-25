@@ -1,3 +1,7 @@
+// anyplot.ai
+// slope-basic: Basic Slope Chart (Slopegraph)
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 88/100 | Created: 2026-07-25
 //# anyplot-orientation: landscape
 // anyplot.ai
 // slope-basic: Basic Slope Chart (Slopegraph)
