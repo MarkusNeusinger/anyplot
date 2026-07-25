@@ -1,0 +1,251 @@
+library: makie
+language: julia
+specification_id: rose-basic
+created: '2026-07-25T10:39:48Z'
+updated: '2026-07-25T10:59:44Z'
+generated_by: claude-sonnet
+workflow_run: 30154441735
+issue: 1003
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Alpha ramp keyed to value (0.55-1.0) plus outline strokes on the peak (Dec) and
+    trough (Jul) wedges directly address the prior attempt's Design Excellence feedback,
+    giving the chart a clear focal point without breaking the spec's 'consistent color
+    scheme, single color with varying saturation' guidance
+  - rticklabelsize bumped from 12 to 15, resolving the prior attempt's mobile-legibility
+    weakness on radial tick labels
+  - 'Correct rose/coxcomb geometry: equal-angle wedges via band! sampled over 40 arc
+    points per wedge, radius (not area) proportional to value, true curved edges exploiting
+    PolarAxis''s per-vertex transform'
+  - 'Full theme-adaptive chrome — data colors (Imprint green #009E73 with alpha ramp)
+    identical across both renders, only chrome (background, ink, grid) flips'
+  - 'Thoughtful PolarAxis configuration: January at 12 o''clock, clockwise month ordering
+    matching calendar convention'
+  - Realistic, neutral monthly-rainfall data (33-95mm) with a plausible wet-winter/dry-summer
+    temperate-coastal cycle
+  - Clean KISS script, explicit font sizes throughout, deterministic via Random.seed!(42)
+  weaknesses:
+  - The radial tick labels for the 0mm and 20mm rings sit directly on top of the trough
+    (Jul) wedge's colored fill rather than in clear whitespace, because that wedge
+    itself extends past 20mm — this partially contradicts the code comment's stated
+    intent to route labels through a gap. Text stays readable but contrast is reduced
+    versus the plain background; consider nudging rtickangle further into true whitespace
+    or skipping/repositioning the innermost 1-2 tick labels.
+  - Still fundamentally a single-hue radial chart — the alpha ramp and peak/trough
+    outlines add real hierarchy, but there is room for further polish (e.g., a subtle
+    secondary visual cue) before this reaches top-tier Design Excellence.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Monthly Rainfall · rose-basic · julia · makie · anyplot.ai" in dark ink, comfortably sized and centered above the "Jan" label. 12 month labels (Jan-Dec) ring the outer edge clockwise from 12 o'clock, all clearly legible in dark gray/ink. Radial gridlines at 0/20/40/60/80/100 mm render as subtle light-gray circles. "mm"-suffixed radial tick labels are routed along the Jul/Aug angular gap; the 40/60/80/100 mm labels land cleanly in whitespace, but the 0 mm and 20 mm labels overlap the trough (Jul) wedge's own fill since that wedge extends past 20mm.
+      Data: 12 equal-angle wedges filled in Imprint brand green (#009E73) with per-wedge alpha ramped from ~0.55 (driest month, Jul) to ~1.0 (wettest month, Dec) — radius proportional to rainfall value. The Dec (peak) and Jul (trough) wedges carry an additional dark outline stroke as an explicit callout, giving the chart a clear visual focal point on the wet/dry extremes.
+      Legibility verdict: PASS (title, axis labels, and tick labels all readable against the light background; the 0mm/20mm tick labels sit on wedge fill rather than plain background, which is a minor contrast reduction but not a failure — text remains legible).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout with chrome flipped — title and month labels in light ink/off-white, radial tick labels in light gray, gridlines in low-opacity light gray. No dark-on-dark failures; all chrome text reads clearly against the near-black surface.
+      Data: Identical Imprint green (#009E73) wedges with the same alpha ramp and peak/trough outline treatment (now in a light/white stroke instead of dark) — confirms data colors are unchanged between themes, only chrome adapted.
+      Legibility verdict: PASS (all text readable against the dark background; same minor 0mm/20mm tick-label-over-wedge-fill placement as the light render, but legible in both cases).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: rticklabelsize bumped to 15 (from 12), all text explicitly sized
+          and readable in both themes; minor contrast dip where 0mm/20mm tick labels
+          sit on wedge fill
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 0mm and 20mm radial tick labels overlap the trough wedge's fill instead
+          of clean whitespace; no text-on-text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 wedges appropriately sized/spaced; alpha ramp keeps every wedge
+          distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High contrast, no red-green reliance, single-hue ramp is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Rose fills the square 2400x2400 canvas with balanced margins, nothing
+          clipped, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Radial ticks carry explicit 'mm' units, angular axis self-describing
+          via month labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 identical across themes, backgrounds theme-correct
+          (#FAF8F1 / #1A1A17)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Alpha ramp by value plus peak/trough outline callouts add real polish
+          over the prior flat single-color fill
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle low-opacity grid, single clean spine, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak (Dec) and trough (Jul) wedges are now explicitly outlined, giving
+          the seasonal story an immediate visual anchor
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct rose/coxcomb chart: equal-angle wedges, radius-encoded values'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Radius (not area) proportional to value, natural circular ordering,
+          consistent color w/ varying saturation, 12 o'clock start, radial gridlines
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category to angle, value to radius correct, all 12 months visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; single series, no legend needed
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Full seasonal cycle (33-95mm) with clear high/low, variation is fairly
+          smooth
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral temperate-coastal-city rainfall scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and seasonality consistent with real temperate coastal climates
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data -> plot -> save, only a simple per-wedge loop
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, comments justify band! over poly! and the
+          alpha/outline choices
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: PolarAxis with correct theta_0/direction/rtick configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: band! sampled over 40 points per wedge exploits PolarAxis's per-vertex
+          transform for true curved arcs — a Makie-specific technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
