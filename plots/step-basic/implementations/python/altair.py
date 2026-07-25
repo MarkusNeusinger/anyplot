@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 step-basic: Basic Step Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-25
@@ -25,7 +25,6 @@ from PIL import Image  # noqa: E402, I001
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
@@ -35,6 +34,13 @@ months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
 cumulative_revenue = [12, 25, 31, 48, 52, 67, 89, 95, 108, 124, 145, 168]
 
 df = pd.DataFrame({"Month": months, "Cumulative Revenue": cumulative_revenue})
+
+# Largest month-over-month jump — used to give the chart a focal point (size/opacity
+# accent only, no text callout; brand green stays the only data color per the palette rules)
+deltas = [b - a for a, b in zip(cumulative_revenue, cumulative_revenue[1:], strict=False)]
+peak_idx = deltas.index(max(deltas)) + 1
+peak_month = months[peak_idx]
+peak_df = df[df["Month"] == peak_month]
 
 # Step line
 line = (
@@ -46,6 +52,13 @@ line = (
     )
 )
 
+# Thicker overlay on the steepest step to emphasize the largest jump
+highlight_line = (
+    alt.Chart(df.iloc[peak_idx - 1 : peak_idx + 1])
+    .mark_line(interpolate="step-after", strokeWidth=6, color=BRAND)
+    .encode(x=alt.X("Month:N", sort=months), y="Cumulative Revenue:Q")
+)
+
 # Markers at each data point
 points = (
     alt.Chart(df)
@@ -53,9 +66,21 @@ points = (
     .encode(x=alt.X("Month:N", sort=months), y="Cumulative Revenue:Q")
 )
 
+# Soft halo + enlarged marker at the peak jump's endpoint — the chart's focal point
+peak_halo = (
+    alt.Chart(peak_df)
+    .mark_point(size=320, color=BRAND, filled=True, opacity=0.20)
+    .encode(x=alt.X("Month:N", sort=months), y="Cumulative Revenue:Q")
+)
+peak_marker = (
+    alt.Chart(peak_df)
+    .mark_point(size=160, color=BRAND, filled=True, opacity=1.0)
+    .encode(x=alt.X("Month:N", sort=months), y="Cumulative Revenue:Q")
+)
+
 # Compose and style — see prompts/library/altair.md "Canvas" for the inner-view sizing rationale
 chart = (
-    (line + points)
+    (line + highlight_line + points + peak_halo + peak_marker)
     .properties(
         width=620,
         height=320,
@@ -72,14 +97,6 @@ chart = (
         titleColor=INK,
         labelFontSize=10,
         titleFontSize=12,
-    )
-    .configure_legend(
-        fillColor=ELEVATED_BG,
-        strokeColor=INK_SOFT,
-        labelColor=INK_SOFT,
-        titleColor=INK,
-        labelFontSize=10,
-        titleFontSize=10,
     )
 )
 
