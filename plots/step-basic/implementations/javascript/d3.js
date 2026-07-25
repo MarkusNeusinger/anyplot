@@ -64,6 +64,24 @@ const stepLine = d3
   .y((d) => y(d.units))
   .curve(d3.curveStepAfter);
 
+// Restock jumps are the story: soft halo behind the two vertical step
+// transitions at hour 8 and hour 16, drawn before the main line so it reads
+// as a glow rather than an outline.
+const restockSegments = [
+  [inventory[7], inventory[8]],
+  [inventory[15], inventory[16]],
+];
+g.selectAll(".restock-glow")
+  .data(restockSegments)
+  .join("path")
+  .attr("class", "restock-glow")
+  .attr("fill", "none")
+  .attr("stroke", t.palette[0])
+  .attr("stroke-width", 12)
+  .attr("stroke-linecap", "round")
+  .attr("stroke-opacity", 0.16)
+  .attr("d", stepLine);
+
 g.append("path")
   .datum(inventory)
   .attr("fill", "none")
@@ -72,14 +90,18 @@ g.append("path")
   .attr("stroke-linejoin", "round")
   .attr("d", stepLine);
 
-// --- Markers at each recorded reading ------------------------------------------
+// --- Markers at each recorded reading (restock readings emphasized) ----------
+const restockHours = new Set([8, 16]);
+const markerFill = d3.scaleOrdinal().domain([true, false]).range([t.palette[0], t.pageBg]);
+const markerRadius = d3.scaleOrdinal().domain([true, false]).range([9, 7]);
+
 g.selectAll("circle")
   .data(inventory)
   .join("circle")
   .attr("cx", (d) => x(d.hour))
   .attr("cy", (d) => y(d.units))
-  .attr("r", 7)
-  .attr("fill", t.pageBg)
+  .attr("r", (d) => markerRadius(restockHours.has(d.hour)))
+  .attr("fill", (d) => markerFill(restockHours.has(d.hour)))
   .attr("stroke", t.palette[0])
   .attr("stroke-width", 3);
 
@@ -97,7 +119,9 @@ const yAxis = g.append("g").call(d3.axisLeft(y));
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
   ax.selectAll("line").attr("stroke", t.inkSoft);
-  ax.select(".domain").attr("stroke", t.inkSoft);
+  // Lightened, spine-free baseline: keep the L-shaped frame but de-emphasize it
+  // relative to the data.
+  ax.select(".domain").attr("stroke", t.inkSoft).attr("stroke-opacity", 0.4).attr("stroke-width", 1);
 }
 
 // --- Axis labels --------------------------------------------------------------
