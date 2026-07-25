@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: stem-basic
 created: '2025-12-23T20:45:07Z'
-updated: '2026-07-25T17:39:49Z'
+updated: '2026-07-25T17:46:30Z'
 generated_by: claude-sonnet
 workflow_run: 30167762866
 issue: 972
@@ -12,9 +12,11 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
+  - Title now matches the mandated format exactly ("stem-basic · python · altair ·
+    anyplot.ai"), fixing the language-token omission flagged in the previous review
   - Elegant layered composition — the shaded decay envelope plus dashed bounds add
     genuine data storytelling around the exponential decay pattern, well beyond a
     bare stem plot
@@ -27,22 +29,19 @@ review:
   - Clean KISS code structure with explicit font sizes, seeded reproducibility (np.random.seed(42)),
     and correct canvas-padding/gate handling per the altair library rules
   weaknesses:
-  - 'Title omits the required {language} token — rendered title is ''stem-basic ·
-    altair · anyplot.ai'' but prompts/plot-generator.md mandates ''{spec-id} · {language}
-    · {library} · anyplot.ai''. Fix: change the alt.Title(...) string to ''stem-basic
-    · python · altair · anyplot.ai''.'
-  - Because the title is missing the language segment it renders shorter than the
-    ~67-char mandated baseline, landing below the ideal 50-70% title-width proportion
-    — adding the language token will naturally correct this too
   - Data story is a single, uniform decay+oscillation regime across all 30 samples
     — a slightly larger anomalous sample or a brief regime change would better demonstrate
     discrete-signal feature coverage (minor, optional)
   - Markers/stems are attractive but could be pushed slightly larger/higher-contrast
-    for the sparse 30-point regime to fully maximize element-visibility polish (minor)
+    for the sparse 30-point regime to fully maximize element-visibility polish (minor,
+    optional)
+  - Hover-driven marker sizing (alt.selection_point + alt.condition) is a nice distinctive
+    Altair feature but has zero visible effect on the static PNG review artifact —
+    only observable in the HTML output
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "stem-basic · altair · anyplot.ai" centered at top; "Sample Index (n)" x-axis title and "Amplitude (a.u.)" y-axis title in bold dark ink; tick labels in soft dark gray. Only left+bottom spines visible (L-shaped frame), no grid. All text clearly readable against the light background.
+      Chrome: Bold dark title "stem-basic · python · altair · anyplot.ai" centered at top (full mandated format, language token now present); "Sample Index (n)" x-axis title and "Amplitude (a.u.)" y-axis title in bold dark ink; tick labels in soft dark gray. Only left+bottom spines visible (L-shaped frame), no grid. All text clearly readable against the light background.
       Data: Brand-green (#009E73) vertical stems from the y=0 baseline to each of 30 sample points, capped with green circular markers with a light cream stroke for definition. A subtle green-tinted shaded envelope (upper/lower exponential bounds) with dashed gray boundary lines frames the decay pattern, plus a solid gray baseline rule at y=0.
       Legibility verdict: PASS — no light-on-light or illegible elements found.
 
@@ -53,17 +52,16 @@ review:
       Legibility verdict: PASS — all text and data elements read clearly on the dark surface; palette identity between themes is confirmed.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes; title sits
-          slightly below ideal width proportion because it is missing the language
-          token
+        comment: Explicit font sizes throughout, readable in both themes; title now
+          includes the language token so it lands within the ideal 50-70% width proportion
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -89,8 +87,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Chart area fills roughly 75-80% of the canvas with balanced margins,
-          nothing clipped
+        comment: Chart area fills a well-balanced portion of the canvas with balanced
+          margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -130,7 +128,7 @@ review:
         comment: Envelope shading guides the eye to the decay pattern; a good visual-hierarchy
           win though not a fully annotated narrative
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -154,11 +152,11 @@ review:
         comment: x=sample index, y=amplitude, full data range shown
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is missing the mandated {language} token ("python") required
-          by prompts/plot-generator.md; legend is correctly omitted for single-series
+        passed: true
+        comment: Title now matches "stem-basic · python · altair · anyplot.ai" exactly;
+          legend correctly omitted for single-series
     data_quality:
       score: 13
       max: 15
@@ -235,8 +233,8 @@ review:
         max: 5
         passed: true
         comment: alt.selection_point + alt.condition hover-driven sizing is a genuinely
-          Altair-specific declarative feature
-  verdict: REJECTED
+          Altair-specific declarative feature, though invisible in the static PNG
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
