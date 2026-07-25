@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:47:34Z'
-updated: '2026-07-25T12:10:44Z'
+updated: '2026-07-25T12:20:19Z'
 generated_by: claude-sonnet
 workflow_run: 30157095246
 issue: 810
@@ -12,124 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
+  - Node/flow-total labels resized from geom_text(size=16) down to size=5.5, now proportioned
+    correctly against the diagram (attempt 1 weakness fully fixed)
+  - Legend title "Energy Source" now has visible breathing room before the first color
+    swatch in both themes (attempt 1 weakness fully fixed)
   - Smooth cubic-bezier flow curves (ease = t*t*(3-2t)) give the ribbons a professional,
     polished look instead of straight-line links
-  - Dominant flow (Natural Gas → Residential, 35 TWh) is explicitly called out via
-    a darker border, higher opacity, and a subtitle callout, creating a clear focal
-    point and a real storytelling moment
-  - Imprint palette applied in canonical order (Coal=#009E73, Natural Gas, Nuclear,
-    Renewable) and identical across both renders; only chrome (background, node ink,
-    text) flips between light and dark
-  - Realistic, neutral energy-flow data matching the spec's own suggested example
-    almost exactly, with plausible source/sector magnitudes
-  - layer_tooltips() gives real flow- and node-level tooltips (flow id + value, node
-    name + total) in the HTML export — genuine interactivity rather than a simulated
-    one
+  - Dominant flow (Natural Gas -> Residential, 35 TWh) explicitly called out via darker
+    border, higher opacity, and a subtitle callout - a real storytelling moment
+  - Imprint palette applied in canonical order and identical across both renders;
+    only chrome (node fill, text, legend frame) flips between light and dark
+  - layer_tooltips() gives real flow- and node-level tooltips in the HTML export -
+    genuine interactivity, not simulated
+  - Realistic, neutral energy-flow data matching the spec's own suggested example,
+    with plausible TWh magnitudes
   weaknesses:
-  - Node/flow-total labels use geom_text(size=16) — roughly 3x the library guide's
-    recommended 3-5mm for annotation text (prompts/library/letsplot.md). Measured
-    cap-height is ~90px on the 1800px-tall canvas, so labels like 'Natural Gas (75
-    TWh)' visually dominate the diagram and crowd out the actual flow ribbons. Reduce
-    to size=5-6.
-  - The 'Energy Source' legend title touches the Coal color swatch with zero gap in
-    both renders (no space between the text and the box) — add legend spacing/padding
-    so the title doesn't run into the first swatch.
-  - Flow ribbons that cross (e.g. Renewable → Industrial crossing Natural Gas → Commercial)
-    blend into slightly muddy intermediate colors at the overlap — acceptable given
-    the alpha is used intentionally per the spec note on crossing flows, but keep
-    an eye on it if more sources/targets are ever added.
+  - Flow ribbons that cross (e.g. Renewable ochre over Natural Gas purple, Nuclear
+    blue over Coal green) blend into muddy intermediate colors at the overlap, slightly
+    reducing element visibility in the busiest crossing region between the source
+    and target columns - consider a touch more separation or a lower alpha on non-highlighted
+    flows if revisited
+  - 10 flows is on the lower end of the spec's 5-50 range - a couple more flows (e.g.
+    a Nuclear->Residential or Renewable->Nuclear-adjacent link) would show a slightly
+    richer distribution without a redesign
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold black title "sankey-basic · python · letsplot · anyplot.ai" and gray subtitle "Largest flow: Natural Gas → Residential (35 TWh)" both fully visible, not clipped at the top edge. A thin dark rectangle frames the diagram area. Node labels (Renewable/Nuclear/Natural Gas/Coal on the left, Commercial/Residential/Industrial on the right) render in dark gray with their TWh totals, but are notably oversized relative to the rest of the chart (see weaknesses). Bottom legend "Energy Source" plus four color swatches (Coal/Natural Gas/Nuclear/Renewable) sits on a slightly lighter background band; the legend title text touches the first swatch with no gap.
-      Data: Four source nodes (black bars) on the left flow via curved, bezier-smoothed ribbons into three target nodes (black bars) on the right. Coal=teal green (#009E73), Natural Gas=light purple (#C475FD), Nuclear=slate blue (#4467A3), Renewable=ochre/brown (#BD8233) — matches canonical Imprint order, first series is #009E73. The Natural Gas → Residential ribbon is drawn with a darker outline and higher opacity to mark it as the dominant flow.
-      Legibility verdict: PASS (all text readable against the light background; no dark-on-dark or light-on-light failures)
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Bold near-black title "sankey-basic · python · letsplot · anyplot.ai" and gray subtitle "Largest flow: Natural Gas → Residential (35 TWh)" fully visible, not clipped at top. Node bars rendered in near-black (INK token). Bottom legend "Energy Source" with 4 swatches (Coal, Natural Gas, Nuclear, Renewable) now has clear spacing between the title and the first swatch (fixed from attempt 1). All chrome text is dark-on-light and clearly readable.
+      Data: Four source nodes (Coal, Natural Gas, Nuclear, Renewable) on the left with totals in TWh, three target nodes (Industrial, Residential, Commercial) on the right, connected by bezier-smoothed ribbons colored by source: Coal=#009E73, Natural Gas=#C475FD, Nuclear=#4467A3, Renewable=#BD8233 - matches canonical Imprint order, first series is brand green. Node/flow-total labels are now proportionate (geom_text size=5.5, down from size=16 in attempt 1) and no longer dominate the diagram.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and subtitle now render in light/cream text, fully legible against the dark background, not clipped at the top. Node bars flip to a light cream/off-white fill (theme-adaptive ink token), replacing the black bars from the light render — correct theme adaptation. Node/legend labels render in light gray, same oversized-relative-to-chart issue as light render, and the same legend-title-touches-swatch spacing issue persists.
-      Data: Flow ribbon colors are identical to the light render (Coal green, Natural Gas purple, Nuclear blue, Renewable ochre) — confirmed unchanged data-color mapping across themes; only chrome (background, node fill, text) flipped as required.
-      Legibility verdict: PASS (all text is light-on-dark and clearly readable; no dark-on-dark failures found)
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title/subtitle and node/legend labels flip to light/cream text (INK / INK_SOFT tokens), fully legible, not clipped. Node bars flip to a light cream fill - correct chrome swap, only structural color inverted. Legend spacing fix persists in dark theme too.
+      Data: Flow ribbon colors are pixel-identical to the light render (#009E73/#C475FD/#4467A3/#BD8233) - only chrome flipped, as required. No dark-on-dark text failures found; all labels read clearly against the near-black surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 7
         max: 8
-        passed: false
-        comment: All text readable in both themes, but node-total labels (geom_text
-          size=16) are ~3x the library-guide max of 3-5mm, visually dominating the
-          diagram
+        passed: true
+        comment: Node/flow-total geom_text resized from size=16 to size=5.5 (attempt
+          1 fix); readable and well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: No text-on-text overlap, but 'Energy Source' legend title touches
-          the Coal swatch with zero gap in both renders
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Flow ribbon widths clearly scaled to value; alpha used intentionally
-          where flows cross
+        comment: No text-on-text overlap; legend title/swatch spacing fixed (attempt
+          1 issue resolved)
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Ribbon widths scaled to value, but crossing flows blend into muddy
+          intermediate colors at overlaps, reducing distinctiveness in the busiest
+          crossing zone
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette hues are well-separated and CVD-safe, no red-green
-          as sole signal
+        comment: Imprint hues well-separated, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Diagram fills the canvas well overall, but oversized node labels
-          unbalance the layout relative to the flow area
+        passed: true
+        comment: Canvas gate passed (3200x1800), good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Node labels double as descriptive category+unit labels (e.g. 'Natural
-          Gas (75 TWh)')
+        comment: Node labels double as descriptive category+unit labels (TWh)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining series follow canonical Imprint
-          order, identical across themes; chrome theme-correct in both renders'
+        comment: Canonical Imprint order, identical across themes, chrome theme-correct
     design_excellence:
-      score: 16
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
-        comment: Custom bezier-smoothed flow curves and Imprint palette read as clearly
-          above library defaults
+        passed: true
+        comment: Custom bezier flow curves + Imprint palette + intentional dominant-flow
+          hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Grid and axes fully removed, generous whitespace, but the cramped
-          legend-title/swatch spacing keeps it from perfect
+        passed: true
+        comment: Grid/axes fully removed, generous whitespace, legend spacing now
+          fixed
       - id: DE-03
         name: Data Storytelling
         score: 6
         max: 6
-        comment: Explicit subtitle callout plus a highlighted (darker border, higher
-          opacity) dominant flow gives the viewer an immediate focal point
+        passed: true
+        comment: Subtitle callout + highlighted dominant flow gives an immediate focal
+          point
     spec_compliance:
       score: 15
       max: 15
@@ -138,25 +134,27 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct Sankey diagram with proportional-width links between nodes
+        passed: true
+        comment: Correct Sankey diagram with proportional-width links
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: source/target/value flows, no circular flows, distinct source colors,
-          opacity for crossing flows, non-overlapping labels
+        passed: true
+        comment: source/target/value, no circular flows, distinct colors, opacity
+          on crossings
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Sources on the left, targets on the right, ribbon width = value,
-          node totals shown
+        passed: true
+        comment: Sources left, targets right, width=value, totals shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches 'sankey-basic · python · letsplot · anyplot.ai' exactly;
-          legend labels match source categories
+        passed: true
+        comment: Title matches required format exactly; legend labels match data
     data_quality:
       score: 14
       max: 15
@@ -165,19 +163,21 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: 10 flows across 4 sources / 3 targets with varied magnitudes (6-35
-          TWh); solid but not maximal many-to-many coverage
+        passed: true
+        comment: 10 flows across 4 sources / 3 targets, varied magnitudes - lower
+          end of the 5-50 spec range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Real, neutral energy-flow scenario matching the spec's own example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: TWh magnitudes and source/sector proportions are plausible for an
-          illustrative national energy split
+        passed: true
+        comment: Plausible TWh magnitudes and proportions
     code_quality:
       score: 10
       max: 10
@@ -186,28 +186,33 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Linear imports → data → layout math → plot → save, no functions/classes
+        passed: true
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully deterministic hardcoded flow data, no randomness
+        passed: true
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Every import is used
+        passed: true
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Manual polygon/bezier construction is appropriately complex given
-          letsplot has no native sankey geom; no fake UI
+        passed: true
+        comment: Manual polygon/bezier construction is appropriately complex; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave with scale=4
+        passed: true
+        comment: plot-{THEME}.png + .html via ggsave(scale=4)
     library_mastery:
       score: 7
       max: 10
@@ -216,21 +221,20 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Idiomatic ggplot layering (aes, scale_fill_manual, theme) used to
-          compose a custom sankey from geom_polygon/geom_rect/geom_text, the best
-          available approach in letsplot
+        passed: true
+        comment: Idiomatic ggplot layering used to compose a custom sankey (no native
+          geom in lets-plot)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        comment: layer_tooltips() and HTML export with hover tooltips on flows and
-          nodes are lets-plot-distinctive, not generic across libraries
-  verdict: REJECTED
+        passed: true
+        comment: layer_tooltips() + HTML hover export are lets-plot-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
-  - layer-composition
   - hover-tooltips
   - html-export
   patterns:

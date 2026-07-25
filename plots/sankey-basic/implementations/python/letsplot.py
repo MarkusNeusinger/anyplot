@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: letsplot 4.11.0 | Python 3.13.14
-Quality: 84/100 | Updated: 2026-07-25
+Quality: 91/100 | Updated: 2026-07-25
 """
 
 import os
