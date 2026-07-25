@@ -2,50 +2,67 @@ library: bokeh
 language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:43:46Z'
-updated: '2026-04-30T04:00:39Z'
+updated: '2026-07-25T04:08:59Z'
 generated_by: claude-sonnet
-workflow_run: 25145277876
+workflow_run: 30142932374
 issue: 923
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Viridis temperature-to-color encoding is clever and meaningful — cold months purple,
-    warm months yellow creates immediate visual storytelling
-  - Both themes are fully correct and professional-looking with no chrome adaptation
-    failures
-  - Clean L-frame, subtle dual-alpha grid (x=0.10, y=0.05), removed y-axis ticks —
-    refined visual design
-  - 'Idiomatic Bokeh: FactorRange with categorical (month, offset) tuple coordinates
-    is a distinctive technique'
-  - HoverTool adds genuine interactive value; HTML export alongside PNG
-  - Smooth KDE with Silverman's bandwidth rule produces excellent density curves
+  - 'Title now correctly includes the mandated `python` language token: "ridgeline-basic
+    · python · bokeh · anyplot.ai"'
+  - Zero-baseline stroke issue is fixed — the outline now traces only the ridge silhouette
+    (multi_line on xs_line/ys_line) while the patch fill itself has no stroke, so
+    the full-width baseline clutter from Attempt 1 is gone
+  - Tick marks are now consistently removed on both axes (major/minor on x AND y),
+    matching the y-axis's cleaner treatment flagged in the previous review
+  - Excellent custom imprint_seq sequential colormap (brand green → blue) mapped to
+    mean monthly temperature, with an explicit theme-adaptive ColorBar making the
+    color encoding legible instead of purely decorative
+  - Real Gaussian KDE computed manually with Silverman's bandwidth rule, keeping the
+    implementation self-contained and mathematically transparent
+  - 'Both themes fully readable: explicit min_border_* reservations and theme-adaptive
+    INK/INK_SOFT tokens threaded through title, axes, grid, and ColorBar; data colors
+    identical between light and dark renders'
+  - 'Idiomatic, distinctive Bokeh usage: HoverTool tooltips (month + mean temp) and
+    a categorical FactorRange y-axis with float offsets driving the ridge-stacking
+    technique'
+  - x_range tied to the actual data support (with small margin) instead of an arbitrary
+    wide range, avoiding wasted canvas
   weaknesses:
-  - 'Canvas utilization: ~20% of canvas height below Dec row is empty and data cloud
-    does not extend into lower-right quadrant — reduce range_padding or adjust ridge_height
-    to fill canvas better'
-  - Viridis temperature-color encoding lacks a colorbar to make the mapping explicit
-    to the viewer
+  - Adjacent high-temperature months (Jun/Jul/Aug) still render in very similar blue
+    hues from the imprint_seq gradient, making them harder to distinguish by color
+    alone — y-axis labels and outline strokes do most of the disambiguation work (imprint_seq
+    is mandatory so no colormap swap; consider alternating outline weight or leaning
+    on HoverTool)
+  - No explicit annotation sharpens the "hottest/coldest month" takeaway (e.g. a small
+    text callout near the Jul/Aug peak) — optional but would strengthen data storytelling
+  - All 12 monthly distributions still share identical spread (std=3, only the mean
+    shifts) — varying spread/skew across a few months would better showcase the ridgeline's
+    ability to reveal distribution-shape differences, not just mean shifts
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "ridgeline-basic · bokeh · anyplot.ai" in top-left — readable dark text. Y-axis label "Month" and x-axis label "Temperature (°C)" both clearly visible with dark ink. Month tick labels (Jan-Dec) and temperature tick labels all readable with INK_SOFT muted color.
-      Data: 12 Viridis-colored ridgeline density curves stacked vertically. Cold months (Jan, Dec, Nov, Feb) in dark purple; transitioning through teal (Mar, Oct), green (Apr, Sep), bright green (May, Aug), to yellow (Jun, Jul). First series (bottom data, temp-encoded) is not Okabe-Ito but Viridis which is correct for this continuous temperature encoding. Ridge curves are smooth with fill_alpha=0.85.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+      Background: Warm off-white, matching #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark title "ridgeline-basic · python · bokeh · anyplot.ai" top-left (language token now present, fixing Attempt 1's SC-04 gap); italic "Month" (y-axis) and "Temperature (°C)" (x-axis) labels in dark ink; Jan-Dec category labels down the y-axis and numeric 0/10/20/30 x-ticks in softer gray; a vertical ColorBar on the right labeled "Mean °C" with ticks 5-25. All tick marks removed on both axes (labels retained) for consistent minimalism. All chrome is clearly readable against the light background.
+      Data: 12 partially overlapping density ridges (Jan at top, Dec at bottom), filled with the custom imprint_seq green→blue sequential gradient keyed to each month's mean temperature, ~65-70% overlap. Each ridge's outline now traces only the curve silhouette (no full-width zero-baseline stroke), removing the grid-like clutter flagged in Attempt 1. First categorical position is not forced to #009E73 because this is continuous (magnitude-encoded) data, correctly using imprint_seq per the style guide.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and axis labels in light #F0EFE8 ink, clearly visible on dark surface. Tick labels in #B8B7B0 (INK_SOFT dark variant) — fully readable. No dark-on-dark failures anywhere. Grid lines are subtle with low alpha.
-      Data: Viridis colors are identical to light render — purple through yellow gradient preserved exactly. No data color changes between themes.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
+      Background: Warm near-black, matching #1A1A17 -- not pure black, not light.
+      Chrome: Title and axis labels render in light/white ink, tick labels in softer light gray, ColorBar title/ticks also light-colored -- all fully legible, no dark-on-dark failures anywhere. Tick marks removed on both axes, consistent with the light render.
+      Data: The 12 ridges use the exact same green→blue gradient as the light render (Jan's green and Aug's blue match) -- only chrome (background, text, grid/stroke colors) flips to the dark theme. Baseline-stroke cleanup and tick-mark removal are identical fixes carried through to this theme.
+      Legibility verdict: PASS
+
+    Edge check (both renders): title, y-axis "Month" label, x-axis "Temperature (°C)" label, and the right-edge ColorBar (title + 5/10/15/20/25 ticks) were all inspected via cropped close-ups -- no clipped or missing pixels at any canvas border. No AR-09 violation.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,72 +70,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 32pt, axis labels 24pt, tick
-          labels 18pt — all above minimums'
+        comment: All font sizes explicit, well-proportioned, readable in both themes
+          and both edge crops
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; month labels and tick labels well spaced
+        comment: No text/data collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ridges clearly visible at fill_alpha=0.85; smooth KDE curves with
-          good contrast
+        comment: Ridge curves and fills clearly visible, appropriate alpha for overlap
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Viridis is CVD-safe and perceptually uniform; good element contrast
+        passed: false
+        comment: Jun/Jul/Aug sit close together on the sequential ramp and are hard
+          to tell apart by hue alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Notable empty space: ~20% of canvas height below Dec ridge, large
-          blank upper-right and lower-right quadrants'
+        passed: true
+        comment: 3200x1800 canvas gate passed; good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) with units, Month as y-axis label
+        comment: Both axes have units/descriptive labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis256 for continuous temperature encoding (correct), backgrounds
-          #FAF8F1/#1A1A17, chrome fully theme-adaptive in both renders'
+        comment: 'imprint_seq used correctly for continuous mean-temp encoding; #FAF8F1/#1A1A17
+          backgrounds correct in both themes'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Viridis temperature mapping is intentional and elegant; clean L-frame;
-          clearly above defaults but not FiveThirtyEight-level
+        comment: Thoughtful temperature-keyed color ramp with ColorBar beyond a plain
+          multi-color ridgeline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Outline removed (L-frame), x-grid 0.10 alpha, y-grid 0.05 alpha,
-          y-axis tick marks removed — good refinement
+        comment: Zero-baseline stroke fixed (curve-only outline), tick marks now consistently
+          removed on both axes, outline box removed, subtle grid
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Temperature-to-color encoding creates clear seasonal narrative; viewer
-          immediately sees winter/summer contrast
+        passed: false
+        comment: Chronological order + color hierarchy guides the reader, but still
+          no explicit insight callout
     spec_compliance:
       score: 15
       max: 15
@@ -128,52 +144,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ridgeline/joy plot with stacked overlapping density curves
+        comment: Correct ridgeline/joy plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Partial overlap via ridge_height=1.5, y-axis group labels, color
-          differentiation, chronological ordering
+        comment: Stacked overlapping density curves, group labels on y-axis, meaningful
+          chronological order
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=temperature value, Y=month (group) — correct mapping
+        comment: Value on x, group on y, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format ridgeline-basic · bokeh · anyplot.ai correct; no legend
-          needed as y-axis labels serve as group identifiers
+        comment: Title now includes the mandated python language token
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 12 groups with realistic seasonal variation; full temperature range
-          covered
+        passed: false
+        comment: All 12 months share identical spread (std=3); only the mean shifts
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly temperature distributions are a canonical, neutral, real-world
-          ridgeline use case
+        comment: Plausible, neutral monthly temperature data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Celsius temperatures ~-5 to 35°C with seasonal variation — realistic
-          for temperate-zone city
+        comment: Sensible Celsius range
     code_quality:
       score: 10
       max: 10
@@ -183,35 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> tokens -> data -> KDE -> plot -> style ->
-          save'
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual KDE appropriate since bokeh has no built-in KDE; clean and
-          readable
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: plot-{theme}.png + plot-{theme}.html via current API
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -219,28 +229,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource, FactorRange, patches() — all idiomatic Bokeh; (category,
-          offset) tuple coordinates is distinctly Bokeh
+        comment: ColumnDataSource, FactorRange, patches/multi_line, ColorBar all idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: HoverTool for interactive month display, FactorRange with tuple offsets,
-          HTML export — genuinely Bokeh-specific techniques
+        passed: false
+        comment: HoverTool + ColorBar are Bokeh-flavored but not pushed to a fully
+          unique feature
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
+  - colorbar
   - html-export
-  - patches
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
+  - columndatasource
   dataprep:
   - kde
   styling:
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
+  - minimal-chrome
