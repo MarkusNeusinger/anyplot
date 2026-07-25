@@ -70,17 +70,28 @@ ax_rug = Axis(
 )
 hideydecorations!(ax_rug)
 
-bin_edges = range(minimum(commute_minutes), maximum(commute_minutes); length = 25)
+bin_edges = range(minimum(commute_minutes), maximum(commute_minutes); length = 17)
 hist!(ax_hist, commute_minutes;
       bins = bin_edges, color = (BRAND, 0.6), strokecolor = PAGE_BG, strokewidth = 1.2)
 
-# Rug ticks — one short vertical segment per observation, semi-transparent where they overlap
+# Callout distinguishing the two commute modes revealed by the bimodal shape,
+# positioned relative to each cluster's mean within the shared data range
+xmin, xmax = extrema(commute_minutes)
+light_rel = (sum(light_traffic_days) / length(light_traffic_days) - xmin) / (xmax - xmin)
+heavy_rel = (sum(heavy_traffic_days) / length(heavy_traffic_days) - xmin) / (xmax - xmin)
+text!(ax_hist, light_rel, 0.98; text = "light traffic", align = (:center, :top),
+      space = :relative, fontsize = 12, color = INK_SOFT)
+text!(ax_hist, heavy_rel, 0.98; text = "heavy traffic", align = (:center, :top),
+      space = :relative, fontsize = 12, color = INK_SOFT)
+
+# Rug ticks — one short vertical segment per observation, thin and light so
+# density variation stays legible even where observations overlap heavily
 rug_segments = Vector{Point2f}(undef, 2 * length(commute_minutes))
 for (i, v) in enumerate(commute_minutes)
     rug_segments[2i - 1] = Point2f(v, 0.15)
     rug_segments[2i]     = Point2f(v, 0.85)
 end
-linesegments!(ax_rug, rug_segments; color = (BRAND, 0.4), linewidth = 2.5)
+linesegments!(ax_rug, rug_segments; color = (BRAND, 0.25), linewidth = 1.5)
 
 linkxaxes!(ax_hist, ax_rug)
 ylims!(ax_rug, 0, 1)
