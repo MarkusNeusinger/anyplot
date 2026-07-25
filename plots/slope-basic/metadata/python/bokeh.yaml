@@ -2,52 +2,58 @@ library: bokeh
 language: python
 specification_id: slope-basic
 created: '2025-12-23T20:45:11Z'
-updated: '2026-04-30T17:02:00Z'
+updated: '2026-07-25T23:44:21Z'
 generated_by: claude-sonnet
-workflow_run: 25177392699
+workflow_run: 30179339860
 issue: 981
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 92
 review:
   strengths:
-  - Direction-coded slope lines (green=increase, orange=decrease) using Okabe-Ito
-    positions 1 and 2
-  - Custom spread_labels algorithm prevents endpoint label overlap on both sides
-  - Full theme support with properly threaded INK/INK_SOFT tokens in both light and
-    dark renders
-  - HoverTool with product/period/value tooltips leverages Bokeh interactive capability
-  - Clean slopegraph layout with hidden x-axis and Q1/Q4 as text labels at correct
-    positions
-  - 'Correct title format: slope-basic · bokeh · anyplot.ai'
+  - Endpoint labels placed outside the line span (x=-0.05 / x=1.05) so text never
+    crosses the diagonal slope lines, and a custom label-spreading pass keeps dense
+    clusters (e.g. Q4 65/67/71) legible in both themes.
+  - 'Direction encoding is redundant, not color-only: line slope, endpoint position,
+    and the printed start/end values all confirm increase vs. decrease alongside the
+    green/red color.'
+  - WCAG-tuned label text colors (deeper green on light, lighter red on dark) are
+    distinct from the true Imprint line/marker colors, preserving palette identity
+    while keeping small text readable on both backgrounds.
+  - HoverTool wired to a ColumnDataSource gives per-point product/period/value tooltips
+    in the HTML output, a real interactive value-add beyond the static PNG.
+  - Legend relocated outside the plot frame (right sidebar) so it doesn't compete
+    with data for vertical space.
   weaknesses:
-  - 'CQ-01 violation: spread_labels helper function defined — breaks KISS structure;
-    label spreading logic could be inlined or replaced with a simpler clamping pass'
-  - 'DQ-02 penalty: product labels are generic (Product A–J) rather than named real-world
-    products, reducing realism'
-  - 'VQ-05 minor: some top-canvas whitespace wasted by direction legend placement
-    between title and data area'
-  - 'DE-01 ceiling: design is functional and correct but lacks the refined typography
-    and polish for a 6+ score'
+  - 'No visual emphasis on the most dramatic mover (Water Bottle: 40 -> 67, the largest
+    relative increase) — every line gets identical width/alpha, so the chart lacks
+    a single clear focal point beyond the increase/decrease split.'
+  - Mandated title without a descriptive prefix renders at roughly 40-45% of plot
+    width, well under the usual 50-70% guideline — acceptable per style-guide but
+    worth a short descriptive prefix (e.g. 'Product Sales Momentum · ') to fill the
+    title role more fully next time.
+  - Line width and alpha are uniform across all 10 entities; scaling width or alpha
+    slightly with |change magnitude| would reinforce the storytelling on top of the
+    color split.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correct, not pure white.
-      Chrome: Title "slope-basic · bokeh · anyplot.ai" bold, dark ink, centered at top. Y-axis label "Sales (thousands)" visible in dark ink. Y-axis tick labels (40–100) in INK_SOFT (#4A4A44), clearly readable. "Q1" and "Q4" text labels at bottom in dark ink. Direction legend ("— Increase" in green, "— Decrease" in orange) positioned below title.
-      Data: Ten slope lines color-coded by direction — #009E73 (Okabe-Ito brand green) for increases, #D55E00 (Okabe-Ito vermillion) for decreases. Endpoint labels on left ("Product X: value") and right ("value: Product X") in matching line colors, spread to avoid overlap. Circular markers (size=18) at each endpoint.
-      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "slope-basic · python · bokeh · anyplot.ai" centered at top; italic dark "Sales (thousands)" y-axis label; dark "Q1"/"Q4" column labels drawn inside the plot near the bottom; grey y-axis tick labels; subtle horizontal gridlines. All chrome text is clearly legible against the light background.
+      Data: 10 slope lines connecting Q1 to Q4 values, colored green (#009E73, brand green, "Increase") or matte red (#AE3030, "Decrease") per direction. Each line has filled circular markers at both endpoints and a text label ("Product: value" on the left, "value: Product" on the right) in a WCAG-tuned variant of the line color. A "Direction" legend with Increase/Decrease swatches sits in a card outside the plot frame on the right. First categorical color is the mandated brand green.
+      Legibility verdict: PASS — no light-on-light text anywhere; labels are well spread (custom anti-collision pass) with no overlaps between text, markers, or lines.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — correct, not pure black.
-      Chrome: Title and Q1/Q4 labels rendered in light INK (#F0EFE8), clearly visible against dark background. Y-axis tick labels in INK_SOFT (#B8B7B0), readable. Direction legend text in matching data colors (green/orange), clearly visible. No dark-on-dark failures observed.
-      Data: Slope line colors (#009E73 and #D55E00) are identical to light render — only background and chrome flip. Endpoint label text uses the same data colors and is clearly legible against the dark background. Markers visible with distinct dot endpoints.
-      Legibility verdict: PASS — all text readable against dark background; no near-black-on-near-black failures; data colors consistent with light render.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title/axis-label/tick layout as the light render, now in light ink (#F0EFE8 title/axis label, lighter grey tick labels) — clearly visible against the dark background. Q1/Q4 column labels also flip to light ink.
+      Data: Line and marker colors are identical to the light render (#009E73 green / #AE3030 red) — only the chrome flipped, as required. Endpoint label text uses the dark-theme variants (brand green stays as-is; red brightens to #E86A6A for contrast) and remains legible against the dark surface.
+      Legibility verdict: PASS — no dark-on-dark text; tick labels, title, and endpoint labels all read clearly against #1A1A17.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,78 +61,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title 32pt, axis label 22pt, tick labels 18pt, endpoint labels 18pt,
-          Q1/Q4 labels 28pt — all explicitly set and readable. Minor deduction: endpoint
-          label color uses data color (not INK) so relies on sufficient contrast.'
+        comment: All text explicitly sized and readable in both themes; endpoint labels
+          use WCAG-tuned colors distinct from data lines.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: spread_labels algorithm effectively separates endpoint labels on
-          both sides; all labels readable.
+        comment: Custom label-spreading pass keeps dense clusters (Q4 65/67/71 region)
+          fully separated; no text/line/marker collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at line_width=4 and markers at size=18 are clearly visible
-          at 4800x2700 canvas.
+        comment: size=18 markers and line_width=4 are prominent and appropriate for
+          10 sparse entities.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 and 2 (green/orange) are CVD-safe and have
-          good luminance contrast.
+        comment: Red/green direction coding is redundant with slope direction and
+          printed values, not a sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas usage overall; top section (title + direction legend)
-          creates notable whitespace above the data.
+        comment: Canvas gate passed (3200x1800); generous min_border reservations,
+          no clipping, balanced whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Sales (thousands)'' with units. Title: correct format.
-          Q1/Q4 column labels clearly identify time points.'
+        comment: Y-axis labeled with units ('Sales (thousands)'); Q1/Q4 time points
+          labeled; title matches mandated format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: INCREASE_COLOR=#009E73 (Okabe-Ito pos 1), DECREASE_COLOR=#D55E00
-          (pos 2). PAGE_BG light=#FAF8F1, dark=#1A1A17. All theme chrome tokens correct.
+        comment: 'First series #009E73; decrease uses Imprint position 5 (#AE3030)
+          per semantic-exception rule; backgrounds correct in both themes.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Purposeful design: direction color coding, hidden x-axis, custom
-          label placement algorithm. Above configured defaults but lacks FiveThirtyEight-level
-          typography refinement.'
+        comment: Custom label positioning, WCAG-tuned text colors, relocated legend
+          card — clear design intent beyond defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: X-grid hidden, Y-grid alpha=0.10, toolbar removed, outline_line_color=None.
-          Clean but axis frame still visible.
+        comment: Outline removed, grid alpha 0.10, generous margins, clean legend
+          card.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Direction color coding creates immediate visual narrative. Mixed
-          increases/decreases demonstrate the chart type well. Data choice shows clear
-          insight potential.
+        comment: Increase/decrease split is a clear grouping device, but no single
+          line is emphasized as the standout mover (e.g. Water Bottle's +67% swing).
     spec_compliance:
       score: 15
       max: 15
@@ -136,29 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct slopegraph with slope lines connecting two time points.
+        comment: Correct slopegraph structure.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Labels at both endpoints, color coding by direction, time point column
-          labels — all present.
+        comment: Endpoint labels, direction color coding, labeled time-point axes,
+          10 entities within spec range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = time points (Q1/Q4), Y = sales values; all 10 products visible.
+        comment: X = Q1/Q4 time points, Y = sales value; y_range covers all data with
+          padding.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'slope-basic · bokeh · anyplot.ai' correct. Direction legend
-          with matching colors.
+        comment: Title matches mandated format exactly; legend labels ('Increase'/'Decrease')
+          match the data's direction encoding.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -166,62 +170,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Includes both increases and decreases, varied magnitudes, rank inversions/crossovers,
-          10 products within recommended range.
+        comment: Covers endpoints, direction, labels, and hover detail for the full
+          slope-chart feature set.
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Business scenario is plausible, but 'Product A' through 'Product
-          J' are generic abstract labels, not real product names.
+        comment: Plausible, neutral consumer-product sales scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 40-95 thousand for quarterly sales — plausible and internally
-          consistent.
+        comment: 40-95 (thousands) is a sensible range for product sales.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: spread_labels helper function defined at module level — breaks KISS
-          (no functions/classes) structure. Logic could be inlined.
+        passed: true
+        comment: Flat script, no functions/classes, linear imports -> data -> plot
+          -> save.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded — fully deterministic, no seed needed.
+        comment: Fully deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, export_png, save, ColumnDataSource, HoverTool,
-          Label, figure, CDN.'
+        comment: Every import (os, time, pathlib, bokeh submodules, selenium) is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; strict=True in zip calls is modern Python; no
-          fake UI or over-engineering.
+        comment: Label-spreading loop is proportionate to the problem it solves; no
+          fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: export_png to plot-{THEME}.png and save to plot-{THEME}.html with
-          CDN resources.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via the documented Selenium
+          screenshot pattern.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -229,26 +230,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource for scatter (enabling HoverTool), Label via add_layout,
-          toolbar_location=None — good Bokeh patterns. Lines drawn per-entity in loop
-          is slightly non-idiomatic vs. multi_line.
+        comment: ColumnDataSource for hover-enabled scatter, add_layout for annotations,
+          legend relocation — solid idiomatic bokeh.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: HoverTool for product/period/value interactivity and HTML export
-          with CDN resources are distinctively Bokeh features.
+        comment: HoverTool tooltips and Label-based custom annotations are genuinely
+          bokeh-distinctive, not generic plotting.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
   - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - columndatasource
   - iteration-over-groups
+  - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
