@@ -1,7 +1,7 @@
 # anyplot.ai
 # stem-basic: Basic Stem Plot
-# Library: Makie.jl 0.21 | Julia 1.11
-# Quality: pending | Created: 2026-07-25
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 87/100 | Created: 2026-07-25
 
 using CairoMakie
 using Colors
