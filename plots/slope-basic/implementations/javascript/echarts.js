@@ -1,7 +1,7 @@
 // anyplot.ai
 // slope-basic: Basic Slope Chart (Slopegraph)
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-07-25
+// Library: echarts 6.1.0 | JavaScript 22.23.1
+// Quality: 87/100 | Created: 2026-07-25
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
