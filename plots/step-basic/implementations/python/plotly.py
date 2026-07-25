@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 step-basic: Basic Step Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 89/100 | Created: 2026-04-30
+Library: plotly 6.9.0 | Python 3.13.12
+Quality: 89/100 | Updated: 2026-07-25
 """
 
 import os
@@ -10,14 +10,13 @@ import numpy as np
 import plotly.graph_objects as go
 
 
-# Theme tokens
+# Theme tokens (Imprint palette — theme-adaptive chrome)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND = "#009E73"  # Okabe-Ito position 1
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+BRAND = "#009E73"  # Imprint palette position 1
 
 # Data - Monthly cumulative sales showing discrete jumps
 np.random.seed(42)
@@ -26,6 +25,7 @@ x = list(range(len(months)))
 
 monthly_sales = np.random.randint(15000, 45000, size=12)
 cumulative_sales = np.cumsum(monthly_sales)
+year_total = int(cumulative_sales[-1])
 
 # Plot
 fig = go.Figure()
@@ -35,48 +35,65 @@ fig.add_trace(
         x=x,
         y=cumulative_sales,
         mode="lines+markers",
-        line={"shape": "hv", "color": BRAND, "width": 4},
-        marker={"size": 14, "color": BRAND, "line": {"color": PAGE_BG, "width": 2}},
+        line={"shape": "hv", "color": BRAND, "width": 3},
+        marker={"size": 11, "color": BRAND, "line": {"color": PAGE_BG, "width": 2}},
         name="Cumulative Sales",
+        customdata=months,
+        hovertemplate="<b>%{customdata}</b><br>Cumulative: $%{y:,.0f}<extra></extra>",
     )
+)
+
+# Year-total reference line — focal point highlighting the running total
+fig.add_hline(y=year_total, line_dash="dot", line_color=INK_SOFT, line_width=1.5, opacity=0.7)
+fig.add_annotation(
+    x=1,
+    xref="paper",
+    y=year_total,
+    yref="y",
+    xanchor="right",
+    yanchor="bottom",
+    text=f"Year total ${year_total:,.0f}",
+    showarrow=False,
+    font={"size": 11, "color": INK_SOFT},
 )
 
 # Style
 fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     title={
-        "text": "Monthly Cumulative Sales · step-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "step-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Month", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Month", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickmode": "array",
         "tickvals": x,
         "ticktext": months,
-        "showgrid": True,
-        "gridcolor": GRID,
-        "gridwidth": 1,
+        "showgrid": False,
         "linecolor": INK_SOFT,
-        "zerolinecolor": INK_SOFT,
+        "zeroline": False,
     },
     yaxis={
-        "title": {"text": "Cumulative Sales ($)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Cumulative Sales ($)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
         "gridcolor": GRID,
         "gridwidth": 1,
         "linecolor": INK_SOFT,
-        "zerolinecolor": INK_SOFT,
+        "zeroline": False,
     },
     showlegend=False,
-    margin={"l": 100, "r": 50, "t": 100, "b": 80},
+    margin={"l": 90, "r": 50, "t": 90, "b": 70},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
