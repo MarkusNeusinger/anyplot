@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: span-basic
 created: '2026-07-25T14:43:08Z'
-updated: '2026-07-25T14:48:46Z'
+updated: '2026-07-25T15:03:44Z'
 generated_by: claude-sonnet
 workflow_run: 30161964236
 issue: 980
@@ -12,126 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - 'Correct Imprint palette use: primary line is brand green (#009E73), and the maintenance-window
-    span uses the amber semantic anchor rather than a custom hex'
-  - 'Clean minimal chrome: L-shaped axes, subtle horizontal-only grid, and the single-series
-    legend is correctly hidden rather than shown redundantly'
-  - Spec-compliant, well-documented workaround for the missing community ChartsReferenceArea
-    using useXScale/useDrawingArea hooks, staying entirely within the @mui/x-charts
-    community surface
-  - Both dashed edge reference lines AND a descriptive 'Maintenance window' text label
-    are included, exceeding the spec's optional enhancement notes
-  - 'Realistic, neutral, causally coherent scenario: hourly API latency spiking during
-    an overnight maintenance window'
-  - Title format exact, skipAnimation set, deterministic in-memory data, both themes
-    render correctly with identical data colors and only chrome flipping
+  - 'Correct Imprint palette usage: brand green (#009E73) for the data line, semantic
+    amber for both span regions — an intentional ''warning/caution'' role fit, not
+    a decorative color pick'
+  - Demonstrates both span directions from the spec in one chart (vertical maintenance
+    window across x, horizontal degraded-latency threshold across y) — full feature
+    coverage of the 'direction' field rather than only one case
+  - Clever hooks-based workaround (useXScale/useYScale/useDrawingArea) to reproduce
+    a reference-area fill since no ChartsReferenceArea ships in the @mui/x-charts
+    community package — solid distinctive library mastery within the allowed community
+    surface
+  - Theme-adaptive chrome is correct and consistent in both renders; realistic, plausible
+    dataset (24h API latency with a maintenance-driven spike)
+  - Single-series legend correctly hidden per style guide; dashed ChartsReferenceLine
+    boundaries mark the span edges cleanly without clutter
   weaknesses:
-  - Axis and tick labels rely on MUI X default font sizing — no explicit tickLabelStyle/labelStyle
-    fontSize set on xAxis/yAxis, unlike the title and reference-line label which are
-    explicitly sized
-  - Line series uses showMark={false} on sparse 24-point hourly data; per the data-density
-    heuristic sparse data should have prominent visible markers — consider showMark
-    or per-point markers so each hourly measurement reads as discrete
-  - Only one vertical span region is demonstrated; the spec allows 1-5 regions on
-    either axis — a second overlay (e.g. a horizontal threshold band) would more fully
-    exercise feature coverage
-  - The 'Maintenance window' label sits just outside (to the right of) the shaded
-    span rather than inside it — placing it inside the highlighted region would tie
-    the annotation more directly to what it labels
+  - Horizontal threshold span uses fillOpacity 0.12, below the spec's suggested 0.2-0.3
+    alpha range for span fills — bump toward 0.2 for consistency with the maintenance
+    span (0.25) and the spec's own guidance
+  - Span annotation text (fontSize 13) is smaller than the axis tick labels (14) and
+    axis labels (16) — bump to at least 14px so annotation text doesn't become the
+    weakest-legibility element at mobile/thumbnail scale
+  - 'Header comment block omits the license line (e.g. ''// License: @mui/x-charts
+    — MIT (community). Pro/Premium are out of scope.'') present in the library''s
+    header-style template — add for consistency with other muix implementations'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "span-basic · javascript · muix · anyplot.ai" in dark ink, top-left, clearly legible. Axis labels "Hour of Day (UTC)" and "Latency (ms)" both dark and readable. Tick labels (0:00-24:00, 100-340) in soft dark gray, legible. Subtle horizontal grid lines only. A tan/amber semi-transparent vertical span from ~2:00 to ~5:00 with dashed amber border lines and a "Maintenance window" gray text label just past the right edge of the span.
-      Data: Single line in brand green (#009E73), smooth monotone curve with two peaks (a sharp overnight spike to ~338ms inside the shaded span, and a broader daytime bump peaking ~182ms around noon). No legend shown (correct for single series).
-      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "span-basic · javascript · muix · anyplot.ai" in dark ink, clearly visible top-left. Y-axis label "Latency (ms)" and x-axis label "Hour of Day (UTC)" both dark and legible. Tick labels (100-340 on y, 0:00-24:00 on x, every 2h) are dark gray and readable. Horizontal grid lines are thin and subtle, do not compete with the data line.
+      Data: Single green (#009E73) line with circular markers tracing 24 hourly latency values, sharp spike from ~2:00-5:00 up to ~338ms. Two amber-tinted overlay regions: a vertical band from 2:00-5:00 (the "Maintenance window", labeled in the band) bounded by dashed amber vertical lines, and a horizontal band above the 200ms line (the "Degraded (>200ms)" zone) bounded by a dotted amber horizontal line. Where the two bands overlap (top-left) the fill reads visibly darker/more saturated, which correctly signals the double condition.
+      Legibility verdict: PASS — all title/axis/tick/annotation text is clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and axis labels rendered in light/off-white text, clearly legible against the dark background. Tick labels in light gray, legible. Grid lines subtle and visible. The vertical span renders as an olive-tinted rectangle (amber at ~0.25 opacity over the dark background) with amber dashed border lines; the "Maintenance window" label renders in light gray text, readable against the dark surface — no dark-on-dark failure.
-      Data: Same brand green (#009E73) line, identical shape and color to the light render — confirms data colors are theme-independent.
-      Legibility verdict: PASS — all text and data elements are readable in the dark theme; no dark-on-dark or light-on-light failures found.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title in light/off-white ink, clearly visible. Axis labels and tick labels rendered in light gray, legible against the dark background. Grid lines are thin, low-contrast light lines, subtle but present.
+      Data: The data line is the identical #009E73 green as the light render — confirmed no shift in data color between themes. The two amber overlay bands render as a warm olive/brown tint against the dark surface, with the same dashed/dotted amber boundary lines as the light render. Annotation text ("Maintenance window", "Degraded (>200ms)") uses the light ink-soft token and reads clearly against the olive-tinted overlay — no dark-on-dark failure.
+      Legibility verdict: PASS — all chrome and annotation text is legible in the dark theme; only the chrome (background/text colors) changed between renders, data colors are identical as required.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title and reference-line label have explicit fontSize; axis/tick
-          labels rely on MUI X defaults rather than explicit sizing, but remain fully
-          readable in both themes
+        comment: All title/axis/tick text readable in both themes; span annotation
+          fontSize (13) slightly smaller than tick labels (14), a minor mobile-legibility
+          risk
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions in either render
+        comment: No collisions between labels, data, or span annotations
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Line is clearly visible, but showMark={false} on sparse 24-point
-          hourly data means no discrete markers — the data-density heuristic favors
-          prominent markers here
+        comment: Circular markers prominent for 24 sparse points; line thickness appropriate
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between green line, amber span, and both backgrounds;
-          no red-green reliance
+        comment: Good contrast; no red-green sole-signal reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the canvas generously with balanced margins; no cut-off
-          content
+        comment: Good proportions, nothing cut off, balanced axis labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Hour of Day (UTC)'' and ''Latency (ms)'' are descriptive with
-          units'
+        comment: Descriptive axis labels with units (Latency (ms), Hour of Day (UTC))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, span uses amber semantic anchor appropriately,
-          both themes correct, backgrounds match #FAF8F1/#1A1A17'
+        comment: 'First series is #009E73; amber used correctly as the semantic warning
+          anchor for spans; both backgrounds theme-correct'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Thoughtful semantic color use and clean typography, above a generic
-          default but not publication-level
+        passed: true
+        comment: Thoughtful semantic amber usage and dashed boundary lines beyond
+          generic defaults, though the chart itself is a simple single-series line
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: L-shaped axes, subtle horizontal-only grid, generous whitespace —
-          some refinement visible
+        passed: true
+        comment: L-shaped axes, subtle horizontal grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
-        comment: The shaded maintenance window directly ties the latency spike to
-          its cause, creating a clear focal point and narrative
+        passed: true
+        comment: The two annotated spans build a clear narrative (maintenance window
+          driving the SLA breach) with an obvious focal point
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -139,47 +134,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with a highlighted vertical span
+        comment: Line chart with span overlays matches the span-basic spec exactly
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Span with semi-transparent fill, edge lines, and text label all present
+        comment: Both direction variants (vertical + horizontal) and edge lines/labels
+          present; horizontal span alpha (0.12) is below the spec's suggested 0.2-0.3
+          range
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = hour of day, Y = latency, correctly mapped
+        comment: X = hour of day, Y = latency ms, full 24h range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend correctly hidden for single series
+        comment: Title matches required format exactly; single-series legend correctly
+          hidden
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        comment: Demonstrates one vertical span well but doesn't show multiple regions
-          or the horizontal direction the spec also allows
+        passed: true
+        comment: Shows both span directions plus edge lines and text labels — full
+          coverage of the plot type's optional features
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible API-latency/maintenance-window scenario
+        comment: API latency over 24h with a maintenance-driven spike and SLA threshold
+          — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Latency values and the spike magnitude are realistic for the domain
+        comment: Latency values (100-340ms) are sensible for the domain
     code_quality:
       score: 9
       max: 10
@@ -188,34 +188,34 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: One helper component (MaintenanceSpan) is needed for hook access;
-          justified but deviates from pure imports-data-plot structure
+        passed: true
+        comment: Two small helper components (MaintenanceSpan, ThresholdSpan) are
+          required to access chart hooks (useXScale/useYScale) — justified by the
+          React/MUI X API, not gratuitous abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded arrays
+        comment: Hardcoded deterministic data arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports from @mui/x-charts
+        comment: Only the needed @mui/x-charts imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, appropriate complexity for the community-surface
-          constraint
+        comment: No fake UI; complexity matches what the workaround requires
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation, no manual
-          save/mount'
+        comment: Correct mount-node contract, skipAnimation set, sizes from window.ANYPLOT_SIZE
     library_mastery:
       score: 8
       max: 10
@@ -224,15 +224,16 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correct high-level LineChart/ChartsReferenceLine usage plus idiomatic
-          use of useXScale/useDrawingArea hooks for the missing ChartsReferenceArea
+        passed: true
+        comment: High-level LineChart/ChartsReferenceLine API used correctly
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: The hooks-based custom overlay is genuinely distinctive to MUI X's
-          composable chart architecture
-  verdict: REJECTED
+        passed: true
+        comment: Hooks-based custom reference-area overlay is a genuinely distinctive
+          technique for working within the community-only surface
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:

@@ -1,7 +1,7 @@
 // anyplot.ai
 // span-basic: Basic Span Plot (Highlighted Region)
 // Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 85/100 | Created: 2026-07-25
+// Quality: 91/100 | Created: 2026-07-25
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
