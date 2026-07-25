@@ -1,7 +1,7 @@
 // anyplot.ai
 // rug-basic: Basic Rug Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 77/100 | Created: 2026-07-25
+// Quality: 93/100 | Created: 2026-07-25
 
 const t = window.ANYPLOT_TOKENS;
 
