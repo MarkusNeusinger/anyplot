@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 rug-basic: Basic Rug Plot
-Library: plotnine 0.15.7 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-07-25
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 93/100 | Updated: 2026-07-25
 """
 
 import os
