@@ -20,6 +20,7 @@ const IMPRINT_PALETTE = [
 ]
 const ANYPLOT_AMBER = colorant"#DDCC77"  # warning / caution — outside the categorical pool
 const ANYPLOT_MUTED = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
+const ANYPLOT_ALERT = colorant"#AE3030"  # bad / breach — semantic-red anchor
 
 # --- Data ---------------------------------------------------------------
 # Daily API response latency (ms) over a 90-day monitoring window, with two
@@ -33,6 +34,8 @@ latency[incident_days] .+= 55.0 .+ randn(length(incident_days)) .* 5.0
 
 maintenance_days = 65:70
 latency[maintenance_days] .+= 18.0 .+ randn(length(maintenance_days)) .* 3.0
+
+sla_threshold = 160.0  # ms — response times above this breach the SLA
 
 # --- Plot -----------------------------------------------------------------
 fig = Figure(
@@ -69,7 +72,20 @@ ax = Axis(
 
 vspan!(ax, 34.5, 41.5; color = (ANYPLOT_AMBER, 0.25), label = "Incident: Database Failover")
 vspan!(ax, 64.5, 70.5; color = (ANYPLOT_MUTED, 0.2), label = "Scheduled Maintenance")
+hspan!(ax, sla_threshold, 200; color = (ANYPLOT_ALERT, 0.09), label = "SLA Threshold (>160ms)")
+
+# Thin edge strokes give each span a crisper boundary against the grid,
+# without adding duplicate legend entries.
+vlines!(ax, [34.5, 41.5]; color = ANYPLOT_AMBER, linewidth = 1.5, linestyle = :dash)
+vlines!(ax, [64.5, 70.5]; color = ANYPLOT_MUTED, linewidth = 1.5, linestyle = :dash)
+hlines!(ax, [sla_threshold]; color = ANYPLOT_ALERT, linewidth = 1.5, linestyle = :dash)
+
 lines!(ax, days, latency; color = IMPRINT_PALETTE[1], linewidth = 3, label = "Response Latency")
+
+# Fix y-limits to the data's natural range; the SLA hspan's upper bound (200)
+# is intentionally past the visible area so the "breach zone" reads as
+# extending to the top of the chart, without dragging the autolimits along.
+ylims!(ax, 95, 195)
 
 axislegend(
     ax;
