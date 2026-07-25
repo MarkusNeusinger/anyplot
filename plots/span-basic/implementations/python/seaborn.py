@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-25
@@ -63,7 +63,7 @@ ax.axvline(recession_start, color=SPAN_RECESSION, alpha=0.5, linewidth=1, linest
 ax.axvline(recession_end, color=SPAN_RECESSION, alpha=0.5, linewidth=1, linestyle="--")
 
 # Horizontal span — target sales zone
-ax.axhspan(120, 140, alpha=0.16, color=SPAN_TARGET, zorder=0)
+ax.axhspan(120, 140, alpha=0.22, color=SPAN_TARGET, zorder=0)
 ax.axhline(120, color=SPAN_TARGET, alpha=0.4, linewidth=1, linestyle="--")
 ax.axhline(140, color=SPAN_TARGET, alpha=0.4, linewidth=1, linestyle="--")
 
@@ -93,7 +93,7 @@ ax.set_ylabel("Sales (thousands $)", fontsize=10, color=INK)
 ax.xaxis.set_major_locator(mdates.YearLocator())
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
-sns.despine(ax=ax)
+sns.despine(ax=ax, offset=6)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 fig.subplots_adjust(left=0.10, right=0.97, top=0.88, bottom=0.14)
