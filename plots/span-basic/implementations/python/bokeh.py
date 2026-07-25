@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-25
@@ -19,7 +19,6 @@ from selenium.webdriver.chrome.options import Options
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Imprint palette position 1 — always first series
@@ -56,12 +55,12 @@ p.add_layout(vertical_span)
 
 # Add horizontal span - highlight target revenue range (122-135) using Imprint amber
 horizontal_span = BoxAnnotation(
-    bottom=122, top=135, fill_alpha=0.15, fill_color="#DDCC77", line_color="#DDCC77", line_width=2, line_alpha=0.5
+    bottom=122, top=135, fill_alpha=0.22, fill_color="#DDCC77", line_color="#DDCC77", line_width=2, line_alpha=0.5
 )
 p.add_layout(horizontal_span)
 
 # Plot line with markers (Imprint palette position 1)
-p.line(x="x", y="y", source=source, line_width=4, line_color=BRAND, legend_label="Monthly Revenue")
+p.line(x="x", y="y", source=source, line_width=4, line_color=BRAND)
 p.scatter(x="x", y="y", source=source, size=16, fill_color=BRAND, line_color=PAGE_BG, line_width=2)
 
 # HoverTool — showcases Bokeh's interactive HTML output
@@ -76,7 +75,7 @@ vertical_label = Label(
 p.add_layout(vertical_label)
 
 horizontal_label = Label(
-    x=17, y=137, text="Target Range", text_font_size="28pt", text_color=INK, text_font_style="bold"
+    x=6.5, y=127, text="Target Range", text_font_size="28pt", text_color=INK, text_font_style="bold"
 )
 p.add_layout(horizontal_label)
 
@@ -103,13 +102,6 @@ p.yaxis.major_tick_line_color = INK_SOFT
 p.xgrid.grid_line_color = None  # y-only grid preferred for line charts
 p.ygrid.grid_line_color = INK
 p.ygrid.grid_line_alpha = 0.10
-
-# Legend — top-left for better visual balance
-p.legend.label_text_font_size = "34pt"
-p.legend.location = "top_left"
-p.legend.background_fill_color = ELEVATED_BG
-p.legend.border_line_color = INK_SOFT
-p.legend.label_text_color = INK_SOFT
 
 # Save — write the interactive HTML, then screenshot it with headless Chrome
 # (bokeh.io.export_png is unreliable in this environment's chromedriver setup)
