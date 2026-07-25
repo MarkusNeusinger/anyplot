@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 rose-basic: Basic Rose Chart
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-07-25
@@ -48,7 +48,7 @@ fig.update_layout(
     width=600,
     height=600,
     title={
-        "text": "rose-basic · plotly · anyplot.ai",
+        "text": "rose-basic · python · plotly · anyplot.ai",
         "font": {"size": 34, "color": INK},
         "x": 0.5,
         "xanchor": "center",
@@ -68,10 +68,10 @@ fig.update_layout(
             "tickfont": {"size": 15, "color": INK_SOFT},
             "gridcolor": GRID,
             "linecolor": INK_SOFT,
-            "ticksuffix": " mm",
-            "angle": 15,
+            "angle": 285,
+            "tickmode": "array",
             "tickvals": [25, 50, 75, 100],
-            "dtick": 35,
+            "ticktext": ["25 mm", "50 mm", "75 mm", "100 mm"],
         },
     },
     showlegend=False,
