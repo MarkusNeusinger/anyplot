@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 86/100 | Created: 2026-07-25
@@ -27,7 +27,12 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Span fill opacity stays within the spec's 0.2-0.3 range on both themes
 SPAN_OPACITY = ".3" if THEME == "dark" else ".25"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Semantic colors (style guide's semantic-exception rule): the recession span is a
+# negative economic event (matte red), the risk zone is a warning threshold (amber),
+# freeing brand green for the primary stock-price line rather than a secondary span
+RECESSION_COLOR = "#AE3030"  # Imprint position 5 - loss / bad-event anchor
+RISK_COLOR = "#DDCC77"  # amber semantic anchor - warning / caution
+PRICE_COLOR = "#009E73"  # brand green - primary data series
 
 # Data - Stock prices with highlighted events
 np.random.seed(42)
@@ -53,7 +58,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
+    colors=(RECESSION_COLOR, RISK_COLOR, PRICE_COLOR),
     opacity=SPAN_OPACITY,
     opacity_hover=".5",
     title_font_size=66,
@@ -65,7 +70,11 @@ custom_style = Style(
 )
 
 # Plot — x-guides disabled for a cleaner grid; human_readable for polished tooltips;
-# truncate_legend=-1 keeps "Recession Period" from being clipped in the legend
+# truncate_legend=-1 keeps "Recession Period" from being clipped in the legend;
+# spacing (pygal's uniform title/legend/axis padding knob) is raised from the
+# native 10px default so the legend isn't flush against the canvas edge; the
+# inline css softens pygal's default solid axis box lines to match the subtle
+# gridline treatment (opacity ~0.25) instead of a hard foreground_strong outline
 chart = pygal.XY(
     style=custom_style,
     width=3200,
@@ -82,6 +91,8 @@ chart = pygal.XY(
     stroke=True,
     truncate_legend=-1,
     human_readable=True,
+    spacing=28,
+    css=("file://style.css", "file://graph.css", "inline:.axis .line { stroke-opacity: .25; }"),
 )
 
 # Vertical span: Recession Period (2008-2009) — closed polygon
