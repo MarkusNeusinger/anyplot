@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 rug-basic: Basic Rug Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-07-25
@@ -28,7 +28,7 @@ values = np.concatenate(
     ]
 )
 
-df = pd.DataFrame({"values": values, "y": [0] * len(values), "y2": [3.3] * len(values)})
+df = pd.DataFrame({"values": values, "y": [0] * len(values), "y2": [0.6] * len(values)})
 
 # Plot
 rug = (
