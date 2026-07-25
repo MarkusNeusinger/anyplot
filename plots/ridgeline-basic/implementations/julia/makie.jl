@@ -5,7 +5,6 @@
 
 using CairoMakie
 using Colors
-using ColorSchemes
 using Random
 using Statistics
 
@@ -29,7 +28,23 @@ mean_temp = [1.6, 2.5, 6.1, 10.4, 14.6, 17.9, 19.8, 19.4, 14.9, 10.2, 5.5, 2.5]
 std_temp = [4.0, 4.0, 3.7, 3.3, 3.0, 2.7, 2.5, 2.5, 2.8, 3.2, 3.6, 3.9]
 n_obs = 250
 
-daily_temps = [randn(n_obs) .* std_temp[m] .+ mean_temp[m] for m in 1:12]
+# Most months are a single symmetric Gaussian; Jan and Jul get an extra
+# minority component (a cold-snap / heat-spike bump) so the ridgeline also
+# demonstrates shape differences, not just shift/spread differences.
+n_bump = 40
+daily_temps = Vector{Vector{Float64}}(undef, 12)
+for m in 1:12
+    main = randn(n_obs - (m in (1, 7) ? n_bump : 0)) .* std_temp[m] .+ mean_temp[m]
+    if m == 1
+        cold_snap = randn(n_bump) .* (std_temp[m] * 0.5) .+ (mean_temp[m] - 9.0)
+        daily_temps[m] = vcat(main, cold_snap)
+    elseif m == 7
+        heat_spike = randn(n_bump) .* (std_temp[m] * 0.5) .+ (mean_temp[m] + 7.5)
+        daily_temps[m] = vcat(main, heat_spike)
+    else
+        daily_temps[m] = main
+    end
+end
 
 # Shared temperature grid for the kernel density estimate
 grid_min = minimum(minimum.(daily_temps)) - 3.0
@@ -77,8 +92,13 @@ ax = Axis(
     ygridvisible = false,
 )
 
+# Color keyed to actual mean temperature (min-max normalized), not month
+# index, so the gradient reinforces the warm/cold story instead of just
+# re-encoding the chronological order the Y-axis already shows.
+temp_norm = (mean_temp .- minimum(mean_temp)) ./ (maximum(mean_temp) - minimum(mean_temp))
+
 for m in 12:-1:1
-    ridge_color = get(IMPRINT_SEQ, (m - 1) / 11)
+    ridge_color = get(IMPRINT_SEQ, temp_norm[m])
     band!(ax, temp_grid, fill(baselines[m], length(temp_grid)), ridge_curves[m];
           color = ridge_color)
     lines!(ax, temp_grid, ridge_curves[m]; color = INK, linewidth = 1.3)
