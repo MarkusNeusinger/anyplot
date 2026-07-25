@@ -2,45 +2,60 @@ library: seaborn
 language: python
 specification_id: step-basic
 created: '2025-12-23T21:04:58Z'
-updated: '2026-04-30T13:00:40Z'
+updated: '2026-07-25T15:47:12Z'
 generated_by: claude-sonnet
-workflow_run: 25165564875
+workflow_run: 30163641852
 issue: 956
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Perfect visual quality across both themes: correct backgrounds, readable text,
-    no overlaps, and data colours that survive the light→dark flip unchanged'
-  - Two-series design with alpha fill and annotation meaningfully elevates the spec
-    beyond a single-line step chart, adding business context and a clear narrative
-    focal point
-  - Theme-adaptive chrome is implemented exactly per the style guide — all tokens
-    correctly applied to title, labels, ticks, grid, spines, legend, and facecolor
+  - Title now reads exactly "step-basic · python · seaborn · anyplot.ai", fixing the
+    missing language token flagged in the attempt-1 review (SC-04)
+  - Legend refined to a borderless, alpha-blended box (edgecolor="none", alpha=0.85)
+    instead of attempt 1's plain bordered frame, directly addressing the prior DE-02
+    note
+  - 'Restock annotation now quantifies the exact magnitude ("Restock: +240 units")
+    on the single largest jump in the dataset (Wireless Earbuds week 3→4), strengthening
+    the data-storytelling focal point'
+  - 'Correct canonical Imprint palette: Wireless Earbuds in brand green #009E73, Bluetooth
+    Speakers in lavender #C475FD, pixel-identical across both themes'
+  - Theme tokens threaded correctly through sns.set_theme's rc dict — both renders
+    are fully readable with no dark-on-dark or light-on-light failures
+  - drawstyle="steps-post" on sns.lineplot correctly implements the spec's 'post'
+    step semantics, with prominent markers (size 9) at every data point
+  - Low-alpha fill_between(step="post") between the two step curves uses the semantic-muted
+    anchor color (not a categorical slot) to highlight the stock differential without
+    competing with the data
+  - Canvas is exactly 3200×1800, no edge clipping, no overlap between legend, annotation,
+    and data
   weaknesses:
-  - 'DE-01 still below publication threshold: the fill could use a lower alpha, and
-    a subtitle or caption below the title would add a second level of typographic
-    hierarchy'
-  - 'Library mastery is constrained: seaborn''s high-level hue-mapping (hue= parameter
-    on lineplot) could replace the two separate lineplot calls and unify the legend
-    creation idiomatically'
+  - 'Design Excellence is strong but not yet exceptional: the single-focal-point storytelling
+    could push further — the second restock (Wireless Earbuds week 7→8, +220 units)
+    is left unannotated, so a reader only gets the magnitude for one of the two comparable
+    jumps'
+  - 'Minor decoration nit: x-axis tick marks (the small vertical dashes below the
+    week numbers) are still drawn — the style guide''s decoration-removal checklist
+    prefers keeping only the tick labels'
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "step-basic · seaborn · anyplot.ai" in dark ink, clearly readable; axis labels "Month" and "Cumulative Sales ($K)" dark and legible; tick labels (Jan–Dec, 0–2000) in INK_SOFT — all readable
-      Data: Two step series — Electronics in #009E73 (brand green, first series) and Apparel in #D55E00 (Okabe-Ito position 2); circular markers at each data point with page-colour edges; light teal alpha fill between the two lines; "Holiday Q4 surge" annotation with arrow to Q4 jump
-      Legibility verdict: PASS
+    NOTE: The plot-light.png / plot-dark.png supplied in plot_images/ for this review run were stale — they matched attempt 1's pre-fix code (title missing " · python", annotation reading "Restock" with no magnitude, bordered legend), not the current implementation on this PR. I re-ran plots/step-basic/implementations/python/seaborn.py directly (ANYPLOT_THEME=light / dark, seaborn 0.13.2) to get accurate renders and reviewed those instead. Both are 3200x1800. Description below is of the freshly-regenerated, code-accurate renders.
 
-    Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, tick labels rendered in light-coloured text — clearly visible against dark surface; no dark-on-dark text failures detected; legend box uses elevated dark background
-      Data: Electronics (#009E73) and Apparel (#D55E00) colours are IDENTICAL to light render — only chrome flips; fill area still visible against dark surface
-      Legibility verdict: PASS
+    Light render (plot-light.png, regenerated):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "step-basic · python · seaborn · anyplot.ai" (dark ink, centered) and subtitle "Warehouse inventory held constant between weekly checks — restocks create the jumps" both render in dark/muted ink, clearly legible. X-axis "Week" (1-13) and Y-axis "Units in Stock" (0-800) labels and tick labels are dark and crisp against the light background. Legend box (bottom-left, "Wireless Earbuds" / "Bluetooth Speakers") now uses a borderless, alpha-blended off-white fill — no visible frame edge, sitting cleanly below the lowest data excursion.
+      Data: Two step series — green (#009E73) "Wireless Earbuds" and lavender (#C475FD) "Bluetooth Speakers" — both drawn as post-step lines with circular markers with light halos at each of the 13 weekly checkpoints. A faint muted-gray fill shades the area between the two curves. A "Restock: +240 units" annotation with a thin leader line points at the week 3→4 jump in the green series (410→650), which is the single largest jump in the dataset.
+      Legibility verdict: PASS — no light-on-light text anywhere.
+
+    Dark render (plot-dark.png, regenerated):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, subtitle, axis labels, and tick labels all render in light ink/gray tones, clearly legible against the dark background. Legend box uses a dark, alpha-blended fill, borderless, text fully readable. Grid lines (y-axis only) are faint but visible.
+      Data: Same green (#009E73) and lavender (#C475FD) step lines and markers as the light render — colors are pixel-identical, only the chrome (background, text, grid, legend fill) flipped. "Restock: +240 units" annotation and leader line remain legible in light gray/ink.
+      Legibility verdict: PASS — no dark-on-dark text anywhere; brand green remains vivid on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,72 +66,79 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title, labels, ticks readable in both
-          themes
+        comment: All font sizes explicitly set (title 12, subtitle 9, axis labels
+          10, ticks 8, legend 8, annotation 9); title now includes the full mandated
+          language token and remains well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 12 month labels space cleanly; annotation, legend, and data do not
-          collide
+        comment: Annotation text sits clear of the week-8 marker; legend box sits
+          below the lowest data excursion (purple week-4 point at 210) with no collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step lines and markers clearly sized and distinguishable
+        comment: Sparse data (13 points/series) paired with prominent markersize=9
+          and linewidth=2.5 — correctly sized for the density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1+2 are CVD-safe; teal/orange provides strong
-          luminance contrast
+        comment: Green vs lavender is CVD-safe and high-contrast; distinct step positions
+          reinforce identity beyond hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well-utilised; balanced margins; nothing cut off
+        comment: Canvas exactly 3200x1800; plot fills the canvas with balanced margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units ($K); X-axis labelled Month
+        comment: '''Week'' and ''Units in Stock'' are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
-          theme-correct chrome in both renders'
+        comment: 'First series #009E73, second #C475FD (canonical order), identical
+          across themes; backgrounds #FAF8F1/#1A1A17; muted fill uses the semantic-neutral/muted
+          anchor, not a categorical slot'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: alpha fill and annotation add depth and narrative.
-          Not yet publication-quality — no subtitle, fill could be more nuanced'
+        comment: Custom Imprint palette, subtitle framing, differential shading, borderless
+          legend — clearly above library defaults, short of full publication-level
+          polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, Y-only grid at low alpha, marker edge colours
-          match page background
+        comment: Top/right spines removed, grid subtle and y-axis-only, legend now
+          frameless/alpha-blended (fixed from attempt 1's bordered frame); minor tick-mark
+          decoration remains
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Holiday Q4 surge annotation with arrow creates focal point; fill
-          between series emphasises the gap
+        comment: Restock annotation now quantifies the exact magnitude (+240 units)
+          on the single largest jump, plus subtitle and differential shading create
+          real hierarchy; the second-largest jump (week 7-8, +220 units) is left unannotated
     spec_compliance:
       score: 15
       max: 15
@@ -126,51 +148,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stair-step pattern using steps-post drawstyle
+        comment: Correct step plot via drawstyle='steps-post', matching the spec's
+          'post' style description
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Markers at data points, grid lines, step style applied
+        comment: Markers at data points, grid for tracing values, explicit step style
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = sequential months Jan-Dec, Y = cumulative values; all 12 data
-          points visible per series
+        comment: X=Week, Y=Units in Stock, full data range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format step-basic · seaborn · anyplot.ai correct; legend labels
-          Electronics and Apparel match data
+        comment: Title now reads exactly 'step-basic · python · seaborn · anyplot.ai',
+          fixing attempt 1's missing language token; legend labels match the data
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Two-series comparison demonstrates all key step plot characteristics
+        comment: Both series show rises, gradual declines, and multiple restock jumps
+          at different weeks; good variation across 13 weeks
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly cumulative sales for two retail product lines is a real,
-          neutral, comprehensible business scenario
+        comment: Warehouse inventory scenario is neutral, business-plausible, and
+          comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Electronics ~$1550K and Apparel ~$1100K by year-end with Q4 holiday
-          surge is factually plausible
+        comment: 200-700 unit range and weekly restock cadence are realistic for small-electronics
+          warehouse stock tracking
     code_quality:
       score: 10
       max: 10
@@ -180,61 +204,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → tokens → data → plot → save; no functions or classes
+        comment: Imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data; no random state needed
+        comment: Fully deterministic hardcoded arrays, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib, numpy, pandas, seaborn all used
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the visualisation; no fake functionality
+        comment: Appropriate complexity, no fake UI, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct facecolor passthrough
+        comment: Saves plot-{THEME}.png with dpi=400, facecolor set, no bbox_inches='tight'
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: sns.lineplot with drawstyle='steps-post' and hue mapping is the idiomatic
+          seaborn pattern for multi-series step plots (seaborn has no native step
+          geom)
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.lineplot with drawstyle=steps-post is the seaborn way; sns.set_theme
-          with full rc dict used correctly
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Seaborn theming system distinctively used, but fill-between and annotation
-          are pure matplotlib; seaborn hue-mapping not leveraged
+        comment: Long-form DataFrame + hue-driven palette/legend generation in a single
+          lineplot call, with fill_between's step param matched to the drawstyle —
+          a genuine seaborn-idiomatic touch over manual per-group matplotlib iteration
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - annotations
-  - layer-composition
+  - manual-ticks
   patterns:
-  - explicit-figure
   - data-generation
-  dataprep:
-  - cumulative-sum
+  - explicit-figure
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling

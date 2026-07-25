@@ -2,58 +2,55 @@ library: altair
 language: python
 specification_id: step-basic
 created: '2025-12-23T20:45:36Z'
-updated: '2026-04-30T12:58:48Z'
+updated: '2026-07-25T15:48:33Z'
 generated_by: claude-sonnet
-workflow_run: 25165679709
+workflow_run: 30163852091
 issue: 956
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: step-after interpolation correctly implements step plot
-    with markers at every data point'
-  - 'Correct Okabe-Ito palette — BRAND green #009E73 used for single series, identical
-    across light and dark renders'
-  - 'Both themes fully readable: warm off-white (#FAF8F1) and near-black (#1A1A17)
-    backgrounds with properly adaptive chrome tokens'
-  - All font sizes explicitly set (title 28px, axis labels 22px, tick labels 18px)
-    per style guide
-  - 'Clean KISS code: linear flow with Altair layer composition (+), deterministic
-    hardcoded data, no over-engineering'
-  - 'Idiomatic Altair usage: encoding types (N/Q), configure_axis/configure_view/configure_legend
-    pattern, scale_factor=3.0 for 4K output'
-  - 'Realistic, neutral data context: monthly cumulative software subscription revenue
-    with plausible growth trajectory'
+  - Peak-jump focal point (soft halo, thicker step-after overlay, and enlarged marker
+    on the Nov→Dec step) directly addresses attempt 1's data-storytelling weakness
+    and gives the chart a clear visual hierarchy without adding a second data color
+  - Correct step-after interpolation with prominent point markers, exactly matching
+    the spec's guidance (post style + markers at change points)
+  - Theme-adaptive chrome tokens correctly threaded through configure_view/configure_axis,
+    giving fully readable renders in both light and dark
+  - Canvas sizing follows the altair.md guide precisely (620×320 inner view, scale_factor=4.0,
+    pad-to-3200×1800) and lands exactly on the canonical target with no cropping
+  - Font sizes explicitly set and matching style-guide defaults (title 16, axis titles
+    12, tick/legend labels 10)
+  - Realistic, neutral business scenario (monthly cumulative SaaS subscription revenue)
+    with plausible month-over-month deltas
+  - Single-series legend correctly omitted since color alone (brand green) is sufficient
   weaknesses:
-  - 'Design Excellence is moderate: configure_view(stroke=INK_SOFT) creates a visible
-    border frame around the plot rather than an L-shaped spine layout; removing or
-    minimizing the top/right border would look cleaner'
-  - 'DE-03 storytelling is minimal in the code: the rendered images show a milestone
-    reference line at y=100 with ''First $100k'' annotation that is absent from the
-    current implementation file — if this was removed during repair, the storytelling
-    was lost'
-  - Small annotation text in the rendered images has no explicit font size set, making
-    it harder to read at full 4800x2700px resolution
-  - 'Design sophistication (DE-01) sits at default level: typography and layout are
-    correct but not distinctive — could benefit from stronger visual hierarchy or
-    focal point emphasis'
+  - The peak-highlight halo/thicker-segment sits on the last (Dec) point, which is
+    also the chart's natural endpoint and highest value — the emphasis reads as 'this
+    is the end' almost as much as 'this is the biggest jump'; a brief structural cue
+    (e.g. slightly increasing marker size only, without needing the halo) could make
+    the largest-delta signal even more unambiguous
+  - configure_legend(...) is defined but never used since the chart has no color encoding
+    to legend — harmless but unnecessary code
+  - Design remains single-hue (brand green only); still relatively conservative for
+    Aesthetic Sophistication even with the added emphasis layers
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct per style guide, not pure white
-      Chrome: Title "step-basic · altair · anyplot.ai" in dark ink clearly visible at top center; X-axis label "Month" and Y-axis label "Cumulative Revenue (thousands $)" are dark and readable; tick labels (Jan-Dec, 0-180) are dark gray, all readable against the light background
-      Data: Single step line in #009E73 (brand green) with step-after interpolation, correctly creating horizontal-then-vertical stair pattern; filled circle markers at each of the 12 monthly data points, same green color; a dashed horizontal reference line at y=100 with small annotation "First $100k" visible near Sep label (this annotation appears in the rendered image but is not present in the current implementation code — possible stale image from prior attempt)
-      Legibility verdict: PASS — all major text elements are clearly readable; annotation text is present but small
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "step-basic · python · altair · anyplot.ai" centered at top; bold dark axis titles "Month" (x) and "Cumulative Revenue (thousands $)" (y, rotated); soft dark-gray tick labels for the 12 months and revenue values (0-180); subtle light-gray horizontal-only gridlines at low opacity; thin ink-colored axis domain lines. All text is clearly readable against the light background.
+      Data: Single brand-green (#009E73) step line (step-after/"post" interpolation) with filled circular markers at each monthly point, climbing from 12 to 168. The Nov→Dec segment carries a visibly thicker green overlay plus a soft translucent halo and an enlarged marker at the Dec endpoint, creating a clear focal point on the largest month-over-month jump.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct per style guide, not pure black
-      Chrome: Title visible in light cream (#F0EFE8) against dark background; axis labels and tick labels rendered in INK_SOFT dark-theme value (#B8B7B0 — medium gray, good contrast against near-black); no dark-on-dark failures observed
-      Data: Step line and markers remain identical #009E73 (brand green) — same as light render, data colors did not flip; reference line and annotation visible in muted style
-      Legibility verdict: PASS — all text is readable against the dark background; brand green #009E73 is clearly visible on both surfaces
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as light — bold off-white/cream title and axis titles, light-gray tick labels, subtle light-gray gridlines at matching low opacity. All text is clearly readable against the dark background; no dark-on-dark failures observed anywhere (title, axis titles, tick labels, and axis lines all use light tones).
+      Data: The step line, markers, halo, and highlight overlay are the identical brand green (#009E73) as the light render — only chrome (background, text, grid) flipped, confirming palette consistency across themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -64,71 +61,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All required font sizes explicitly set (title 28px, axis 22px, ticks
-          18px); annotation text visible in image has no explicit size set — minor
-          deduction
+        comment: Font sizes explicitly set (title 16, axis titles 12, ticks 10), well-proportioned,
+          readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month labels evenly spaced, no overlap; no text collisions
+        comment: No overlap between title, axis labels, ticks, or the new halo/highlight
+          layers
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line strokeWidth=5 and markers size=220 clearly visible at 4800x2700px
+        comment: Markers and line sized appropriately for 12 sparse data points; peak
+          marker/halo clearly visible without obscuring neighbors
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series #009E73, high contrast, CVD-safe'
+        comment: Single-hue series, strong contrast on both light and dark backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well, nothing cut off
+        comment: Plot area fills a large, balanced share of the 3200x1800 canvas;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units '(thousands $)', X-axis 'Month' descriptive
+        comment: Descriptive axis titles, y-axis includes units (thousands $)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, #FAF8F1 light bg, #1A1A17 dark bg, all chrome
-          adaptive'
+        comment: 'First series is #009E73, identical across themes; backgrounds are
+          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: Well-configured default; correct color token system; not exceptional
-          in typography or hierarchy
+        comment: Thoughtful intentional hierarchy via peak halo/marker emphasis, clearly
+          above generic defaults, but still a single-hue chart
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid at 0.10 opacity; configure_view stroke creates frame
-          border instead of L-shaped spines
+        comment: Subtle grid (10% opacity), no boxed view border, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Reference line milestone visible in images adds context; step progression
-          shows growth story; above default
+        comment: Peak-jump halo/thicker overlay/larger marker create a clear focal
+          point guiding the viewer to the largest month-over-month jump, directly
+          addressing attempt 1 feedback
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +137,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: mark_line(interpolate='step-after') correctly implements step-after
-          style
+        comment: Genuine step-after (post-style) step plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step line, markers at data points, grid lines — all spec notes addressed
+        comment: Markers at change points and gridlines both present per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Month (N), Y=Cumulative Revenue (Q), all 12 months displayed
+        comment: Month on x, cumulative revenue on y, all 12 months shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'step-basic · altair · anyplot.ai' matches required format
-          exactly; no legend needed for single series
+        comment: Title format exact; legend correctly omitted for single series
     data_quality:
       score: 15
       max: 15
@@ -168,21 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 data points with varied step sizes demonstrate all aspects of
-          step-after behavior
+        comment: Shows discrete step jumps of varying size, constant-until-next-change
+          behavior, and markers at each change point
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly cumulative software subscription revenue — realistic, neutral,
-          business context
+        comment: Neutral, realistic SaaS cumulative revenue scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 12k-168k over 12 months with realistic growth trajectory
+        comment: Plausible monthly deltas (3-31k) and growth curve for a scaling subscription
+          business
     code_quality:
       score: 10
       max: 10
@@ -192,58 +189,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → chart → save; no functions
-          or classes'
+        comment: No functions/classes, linear imports -> data -> chart -> save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data, no random seed needed
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, altair, pandas — all used; sys.path workaround for naming
-          conflict is documented
+        comment: altair, pandas, PIL.Image all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Altair layer composition with + operator; no over-engineering
+        comment: Extra layers are purposeful (peak emphasis), no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with scale_factor=3.0 and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current API
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Encoding type system (N/Q), configure_* pattern, layer composition,
-          interpolate parameter — all idiomatic
+        comment: Idiomatic layered Chart composition, proper N/Q encoding, configure_*
+          chaining
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Altair layer composition (+), HTML export, interpolate='step-after'
-          — uses library-specific features
+        comment: Five-layer composition (line + highlight overlay + points + halo
+          + peak marker) leverages Altair's declarative layering, a signature library
+          feature
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
