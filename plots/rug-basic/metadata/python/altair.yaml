@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: rug-basic
 created: '2025-12-23T19:43:41Z'
-updated: '2026-07-25T06:50:12Z'
+updated: '2026-07-25T06:55:30Z'
 generated_by: claude-sonnet
 workflow_run: 30147960293
 issue: 978
@@ -12,48 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/altair/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
+  - 'Tick height fixed since the previous review: y2=0.6 against a y-domain of [0,4]
+    now spans ~15% of the plot height, reading as a slim rug strip instead of a barcode/spike
+    chart — matches the spec''s ''small relative to the plot'' requirement.'
   - 'Bimodal synthetic data (dense cluster ~25ms, sparser cluster ~55ms) clearly demonstrates
     the rug plot''s core value: revealing clustering and gaps that a coarser binned
     view would hide.'
-  - 'Correct Imprint palette usage: brand green #009E73 for the single series, theme-adaptive
-    chrome (background, axis, title, grid) all correctly flip between #FAF8F1/light-ink
-    and #1A1A17/dark-ink with no dark-on-dark or light-on-light failures.'
+  - 'Correct Imprint palette usage: brand green #009E73 for the single series, identical
+    between light and dark renders; theme-adaptive chrome (background, axis, title,
+    grid) all correctly flip between #FAF8F1/dark-ink and #1A1A17/light-ink with no
+    dark-on-dark or light-on-light failures.'
   - Semi-transparent strokes (opacity=0.6) per the spec's 'use semi-transparency when
     observations overlap' note, giving a visible density gradient in the dense cluster
     without fully saturating.
   - 'Clean, idiomatic altair declarative code: KISS structure, explicit font sizes
     via configure_axis/configure_title, seeded data generation, correct plot-{THEME}.png
-    / .html output contract.'
-  - Y-axis correctly hidden (axis=None) since the y-position is a layout artifact,
-    not encoded data — avoids a meaningless numeric y-axis.
+    / .html output contract with a hard canvas-padding gate.'
   weaknesses:
-  - 'Rug tick marks are far too tall relative to the plot: y2=3.3 against a y-domain
-    of [0,4] makes each tick span ~83% of the visible plot height, filling the chart
-    like a barcode/spike chart. The spec explicitly states ''Tick height should be
-    consistent and small relative to the plot'' — reduce y2 to roughly 10-15% of the
-    y-domain (e.g. y2=0.5 with domain [0,4], or shrink the domain itself) so the ticks
-    read as a slim rug strip rather than dominating the chart area.'
   - No visual hierarchy or storytelling beyond the raw tick marks — no KDE/histogram
     companion, annotation, or callout drawing attention to the two clusters and the
     gaps between them (data storytelling default, not a defect but leaves points on
     the table).
-  - 'Design is functional but generic: single flat color, no distinctive layering
-    or refinement beyond the mandated theme tokens — reads as a well-configured default
-    rather than a polished, publication-ready plot.'
+  - 'Design is functional but still fairly plain: single flat color at one opacity/stroke-width
+    throughout, no distinctive layering or refinement beyond the mandated theme tokens
+    — reads as a well-configured default rather than a fully polished, publication-ready
+    plot.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "rug-basic · altair · anyplot.ai" in bold dark ink, clearly legible and centered above the plot. X-axis title "Response Time (ms)" in bold dark ink below the tick labels. Tick labels (5, 10, 15 ... 80) in soft gray ink, fully legible. Faint vertical gridlines aligned with each major tick, subtle and non-competing. No y-axis is drawn (intentionally hidden).
-      Data: All rug ticks are brand green (#009E73) at ~0.6 opacity, drawn as vertical rules spanning from the x-axis up to roughly 83% of the plot's visible height. Two visible clusters: a dense band from ~15-30ms and a sparser band from ~48-63ms, with a scattering of isolated ticks in between (33-46ms) and after (66-68ms), and empty gaps (e.g. 0-15ms, 30-33ms, 40-46ms) clearly visible.
+      Chrome: Title "rug-basic · altair · anyplot.ai" in bold dark ink, clearly legible and centered above the plot. X-axis title "Response Time (ms)" in bold dark ink below the tick labels. Tick labels (5, 10, 15 ... 80) in soft gray ink, fully legible. Faint vertical gridlines aligned with each major tick, subtle and non-competing. No y-axis is drawn (intentionally hidden, since y is a layout artifact not encoded data).
+      Data: All rug ticks are brand green (#009E73) at ~0.6 opacity, drawn as short vertical rules sitting just above the x-axis, spanning roughly 15% of the plot's visible height — a slim rug strip rather than a barcode/spike chart. Two visible clusters: a dense band from ~15-30ms and a sparser band from ~48-63ms, with a scattering of isolated ticks in between (33-46ms) and after (66-68ms), and empty gaps (e.g. 0-15ms, 30-33ms, 40-46ms) clearly visible. Overlapping ticks in the dense cluster read visibly darker/more saturated due to alpha stacking.
       Legibility verdict: PASS — all title, axis title, and tick label text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and x-axis title now rendered in light/off-white ink, fully legible against the dark background. Tick labels rendered in a lighter soft-gray tone, fully legible. Gridlines are faint light lines at low opacity, consistent with the light render's subtlety.
-      Data: Rug ticks are the identical brand green (#009E73) at the same 0.6 opacity and same x-positions/heights as the light render — data colors are unchanged between themes, only the chrome inverted.
+      Chrome: Title and x-axis title rendered in light/off-white ink, fully legible against the dark background. Tick labels rendered in a lighter soft-gray tone, fully legible. Gridlines are faint light lines at low opacity, consistent with the light render's subtlety.
+      Data: Rug ticks are the identical brand green (#009E73) at the same 0.6 opacity, same x-positions, and same ~15%-height as the light render — data colors and tick geometry are unchanged between themes, only the chrome inverted.
       Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axis title, tick labels) is clearly visible against the dark background.
   criteria_checklist:
     visual_quality:
@@ -93,8 +90,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot area, title, and axis fill the 3200x1800 canvas with balanced
-          margins; nothing cut off at the border.
+        comment: Axis box and title fill the 3200x1800 canvas with balanced margins;
+          nothing cut off at the border.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,7 +106,7 @@ review:
         comment: 'First (only) series is #009E73, identical across themes; backgrounds
           and chrome are theme-correct in both renders.'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -121,21 +118,21 @@ review:
           flourish beyond the mandated palette/typography.'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Tick marks span ~83% of the plot height rather than reading as a
-          slim rug strip, undercutting the minimalist refinement expected of this
-          plot type.
+        passed: true
+        comment: Tick height fix now reads as a slim rug strip (~15% of plot height)
+          instead of dominating the chart — clear improvement, though still just a
+          single flat stroke style with no further layering.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data itself shows clusters/gaps but nothing in the design (annotation,
-          emphasis, companion density curve) calls attention to the insight.
+        comment: Data shows clusters/gaps but nothing in the design (annotation, emphasis,
+          companion density curve) calls attention to the insight.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -146,11 +143,12 @@ review:
         comment: Correct rug plot via mark_rule along the x-axis.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Spec explicitly requires tick height 'small relative to the plot';
-          here ticks span ~83% of the visible plot height, the opposite of small.
+        passed: true
+        comment: Tick height fixed to y2=0.6 on a [0,4] domain (~15% of plot height)
+          — now matches the spec's 'small relative to the plot' requirement, resolving
+          the prior deduction.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -163,8 +161,9 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{spec-id} · altair · anyplot.ai' exactly; legend correctly
-          omitted for a single series.
+        comment: Title matches '{spec-id} · altair · anyplot.ai' exactly (consistent
+          with the python-omits-language convention used across this spec's other
+          implementations); legend correctly omitted for a single series.
     data_quality:
       score: 15
       max: 15
@@ -242,7 +241,7 @@ review:
         comment: Uses altair's y/y2 rule-encoding trick to draw ticks declaratively
           — altair-specific but a well-known standard pattern, not a rare distinctive
           feature.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
