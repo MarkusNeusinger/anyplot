@@ -1,0 +1,249 @@
+library: makie
+language: julia
+specification_id: stem-basic
+created: '2026-07-25T17:46:59Z'
+updated: '2026-07-25T18:17:04Z'
+generated_by: claude-sonnet
+workflow_run: 30168174173
+issue: 972
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Idiomatic, well-parameterized use of CairoMakie's stem! recipe (color, stemcolor,
+    marker, markersize, trunkcolor, trunkwidth, strokewidth/strokecolor all explicitly
+    tuned)
+  - 'Perfect Imprint palette compliance -- brand green #009E73 identical across both
+    renders, fully theme-adaptive chrome in both light and dark'
+  - Realistic, physically-motivated DSP data (damped second-order impulse response)
+    that is deterministic and shows positive, negative, and near-zero stems
+  - Sample count trimmed from 40 to 30 (n=0:29) versus the previous attempt, reducing
+    the low-information near-zero tail as requested
+  - Clean KISS script structure with all font sizes explicitly set, correct 3200x1800
+    canvas, no overlap or clipping in either theme
+  weaknesses:
+  - 'The decay-envelope lines! calls and the peak-highlight scatter!+text! calls added
+    in this attempt do not actually render in either PNG -- verified via pixel-level
+    crops near the peak (n=2, amplitude~0.74) and the troughs (n=5, n=6): no dashed
+    envelope curve is visible anywhere (checked near n=0 where the envelope would
+    be at its most visible value of 1.0, and near the troughs where it should hug
+    the data closely), no translucent halo around the peak marker, and no ''peak:
+    0.74'' text label. The requested explicit storytelling device from the previous
+    review is present in source but has zero visual effect, so Design Excellence did
+    not actually improve -- debug why these draw calls produce nothing (check axis
+    autolimits vs the envelope''s y=1.0 value at n=0, check that RGBAf alpha channel
+    is honored, check draw order/z-index) or remove the dead code'
+  - Design Excellence is still close to a well-configured library default -- no visible
+    custom polish beyond spine/grid theme tokens
+  - Library Mastery usage is solid but generic-ish -- beyond stem!'s trunk/stem color
+    split, nothing showcases a Makie-distinctive capability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "stem-basic · julia · makie · anyplot.ai" bold dark ink, centered top. Axis labels "Sample Index (n)" / "Amplitude" and tick labels in dark/soft-dark ink, all clearly legible. Subtle y-axis-only gridlines at low opacity; top/right spines removed, left/bottom spines in soft ink.
+      Data: 30 stems (n=0..29) in brand green #009E73 -- circular markers atop thin vertical stems, all rooted to a horizontal baseline trunk at y=0. Amplitude rises to two large positive peaks (~0.62, ~0.74) around n=1-2, dips to large negative troughs (~-0.35, -0.40) around n=5-6, then oscillates with decaying amplitude toward near-zero by n~20-29. No decay-envelope curve and no peak-highlight halo/label are visible anywhere on the canvas, despite being present in the source code (confirmed via pixel-level crops at the peak and at the troughs).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same title, axis labels, and tick labels now render in light ink (#F0EFE8 / #B8B7B0), spines in soft light-gray, gridlines subtle light-on-dark. No dark-on-dark or black-on-black text found.
+      Data: Brand-green (#009E73) stems, markers, and trunk baseline are identical in shape/position/color to the light render -- only chrome flipped. Same absence of the decay-envelope lines and peak-highlight halo/label as in the light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes; title is compliant
+          format but visually modest relative to canvas width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions anywhere, even in the dense early-index region
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 16px markers / 2.5 stemwidth well-suited to 30 sparse points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand-green series, good contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing cut off, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Sample Index (n)' / 'Amplitude'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 identical across themes, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Still reads as a well-configured library default; attempted custom
+          envelope/halo touches do not render
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed, subtle grid, generous whitespace; no additional polish
+          visible over prior attempt
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Natural decay still creates an implicit focal point, but the explicit
+          envelope/peak-highlight device added this attempt does not actually render
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stem plot via stem!
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin stems, visible circular markers, baseline trunk at y=0, consistent
+          sizing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=sample index, y=amplitude, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; single-series legend correctly
+          omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Positive, negative, and near-zero stems all present; trimmed to n=0:29
+          reduces the flat tail from the previous attempt
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Damped 2nd-order impulse response, classic neutral DSP scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physically plausible decaying-oscillation amplitude values
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic closed-form signal
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie + Colors, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Envelope lines! and peak halo/text! calls add complexity but produce
+          no visible output -- dead/broken code
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{theme}.png output, px_per_unit=2
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, well-tuned use of stem!, but doesn't reach for more advanced
+          Makie patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: trunkcolor/trunkwidth split is a nice Makie-specific touch, but usage
+          is otherwise generic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
