@@ -1,7 +1,7 @@
 // anyplot.ai
 // span-basic: Basic Span Plot (Highlighted Region)
 // Library: chartjs 4.4.7 | JavaScript 22.23.1
-// Quality: 84/100 | Created: 2026-07-25
+// Quality: 92/100 | Created: 2026-07-25
 
 const t = window.ANYPLOT_TOKENS;
 
