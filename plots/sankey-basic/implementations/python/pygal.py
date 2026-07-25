@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 85/100 | Created: 2026-04-30
+Library: pygal 3.1.3 | Python 3.13.12
+Quality: pending | Updated: 2026-07-25
 """
 
 import os
@@ -23,9 +23,13 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# pygal Style is the single source of truth for all visual properties
+# pygal Style is the single source of truth for all Imprint tokens.
+# pygal has no native Sankey chart class, so the diagram itself is built as raw
+# SVG below (also true of every other pygal Sankey in this codebase) — but every
+# color/font value the SVG uses is read back off this Style object rather than
+# hardcoded twice.
 chart_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -33,9 +37,9 @@ chart_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
-    title_font_size=48,
-    label_font_size=38,
-    value_font_size=28,
+    title_font_size=66,
+    label_font_size=56,
+    value_font_size=36,
     font_family="sans-serif",
 )
 
@@ -44,54 +48,55 @@ BG = chart_style.background
 FG = chart_style.foreground
 FG_SUBTLE = chart_style.foreground_subtle
 PALETTE = chart_style.colors
-TITLE_SIZE = chart_style.title_font_size
 LABEL_SIZE = chart_style.label_font_size
 VALUE_SIZE = chart_style.value_font_size
 FONT = chart_style.font_family
 
-# Canvas
-WIDTH = 4800
-HEIGHT = 2700
-MARGIN_L = 400
-MARGIN_R = 440
-MARGIN_T = 220
-MARGIN_B = 130
-NODE_W = 52
-NODE_GAP = 40
+# Canvas — 3200x1800 landscape (Step 0 hard contract)
+WIDTH = 3200
+HEIGHT = 1800
+MARGIN_L = 620
+MARGIN_R = 400
+MARGIN_T = 170
+MARGIN_B = 100
+NODE_W = 36
+NODE_GAP = 26
+BREATHING_ROOM = 0.90  # shrink node/link scale so columns don't touch top/bottom margins
 
 # Dominant flows get higher opacity to direct attention to key pathways
 ALPHA_DOMINANT = 0.72
-ALPHA_DEFAULT = 0.38
-DOMINANT_THRESHOLD = 20  # TWh
+ALPHA_DEFAULT = 0.48
+DOMINANT_THRESHOLD = 20  # MLD (million liters per day)
 
-# Data — energy flow in TWh (sources → end-use sectors)
+# Data — municipal water distribution, sources to end-use sectors (MLD)
 node_labels = [
-    "Coal",
-    "Natural Gas",
-    "Nuclear",
-    "Renewables",
+    "Mountain Reservoir",
+    "Groundwater Wells",
+    "River Intake",
+    "Desalination Plant",
     "Residential",
-    "Commercial",
+    "Agriculture",
     "Industrial",
-    "Transportation",
+    "Municipal",
 ]
 N_SRC = 4  # first 4 are sources; rest are targets
 
 flows = [
-    (0, 4, 5),  # Coal → Residential
-    (0, 5, 8),  # Coal → Commercial
-    (0, 6, 25),  # Coal → Industrial  ← dominant
-    (1, 4, 22),  # Gas → Residential   ← dominant
-    (1, 5, 18),  # Gas → Commercial
-    (1, 6, 15),  # Gas → Industrial
-    (1, 7, 3),  # Gas → Transportation
-    (2, 4, 12),  # Nuclear → Residential
-    (2, 5, 10),  # Nuclear → Commercial
-    (2, 6, 8),  # Nuclear → Industrial
-    (3, 4, 8),  # Renewables → Residential
-    (3, 5, 6),  # Renewables → Commercial
-    (3, 6, 5),  # Renewables → Industrial
-    (3, 7, 4),  # Renewables → Transportation
+    (0, 4, 28),  # Mountain Reservoir -> Residential  <- dominant
+    (0, 5, 12),  # Mountain Reservoir -> Agriculture
+    (0, 7, 6),  # Mountain Reservoir -> Municipal
+    (1, 4, 18),  # Groundwater Wells -> Residential
+    (1, 5, 32),  # Groundwater Wells -> Agriculture   <- dominant
+    (1, 6, 9),  # Groundwater Wells -> Industrial
+    (1, 7, 3),  # Groundwater Wells -> Municipal
+    (2, 4, 10),  # River Intake -> Residential
+    (2, 5, 15),  # River Intake -> Agriculture
+    (2, 6, 22),  # River Intake -> Industrial         <- dominant
+    (2, 7, 5),  # River Intake -> Municipal
+    (3, 4, 14),  # Desalination Plant -> Residential
+    (3, 5, 2),  # Desalination Plant -> Agriculture
+    (3, 6, 8),  # Desalination Plant -> Industrial
+    (3, 7, 4),  # Desalination Plant -> Municipal
 ]
 
 # Compute per-node totals
@@ -100,11 +105,12 @@ for src, tgt, val in flows:
     node_total[src] += val
     node_total[tgt] += val
 
-# Layout: vertical scale so the taller column fills available height
+# Layout: vertical scale so the taller column fills available height, with
+# breathing room left top/bottom (previous review: whitespace too tight)
 avail_h = HEIGHT - MARGIN_T - MARGIN_B
 n_src_gaps = N_SRC - 1
 n_tgt_gaps = len(node_labels) - N_SRC - 1
-scale = (avail_h - max(n_src_gaps, n_tgt_gaps) * NODE_GAP) / sum(node_total[:N_SRC])
+scale = (avail_h - max(n_src_gaps, n_tgt_gaps) * NODE_GAP) / sum(node_total[:N_SRC]) * BREATHING_ROOM
 
 # Node y positions
 node_x = []
@@ -162,34 +168,43 @@ for src, tgt, val in flows:
     dominant = val >= DOMINANT_THRESHOLD
     # Ribbon midpoint for annotation placement
     ribbon_mid_y = (y1t + y1b + y2t + y2b) / 4
-    link_data.append((f"rgba({r},{g},{b},{alpha})", path, dominant, cx, ribbon_mid_y, val))
+    tooltip = f"{node_labels[src]} → {node_labels[tgt]}: {val} MLD"
+    link_data.append((f"rgba({r},{g},{b},{alpha})", path, dominant, cx, ribbon_mid_y, val, tooltip))
 
+# Title — scale fontsize down for long titles (see plot-generator.md "Title
+# fontsize must scale with title length")
+title_text = "Water Distribution Network · sankey-basic · python · pygal · anyplot.ai"
+title_ratio = 67 / len(title_text) if len(title_text) > 67 else 1.0
+title_size = max(44, round(chart_style.title_font_size * title_ratio))
 
-# Build SVG string
+# Build SVG string. pygal ships no Sankey chart class, so nodes/links are drawn
+# as raw SVG (colors/fonts still sourced from chart_style above). Hover
+# highlighting + native <title> tooltips give the HTML output real
+# interactivity even without pygal's own chart JS.
 parts = [
     f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}">',
+    "<style>.flow{transition:opacity 0.15s ease}.flow:hover{opacity:0.95 !important}.node:hover{opacity:0.85}</style>",
     f'<rect width="{WIDTH}" height="{HEIGHT}" fill="{BG}"/>',
-    # Title — font size from chart_style.title_font_size
+    # Title — font size from chart_style.title_font_size, scaled for length
     f'<text x="{WIDTH // 2}" y="{MARGIN_T // 2}" text-anchor="middle" '
-    f'dominant-baseline="middle" font-family="{FONT}" font-size="{TITLE_SIZE}" '
-    f'font-weight="600" fill="{FG}">'
-    f"Energy Distribution · sankey-basic · pygal · anyplot.ai</text>",
+    f'dominant-baseline="middle" font-family="{FONT}" font-size="{title_size}" '
+    f'font-weight="700" fill="{FG}">{title_text}</text>',
     '<g id="links">',
 ]
 
 # Non-dominant flows drawn first (background layer)
-for fill, path, dominant, _cx, _ribbon_mid_y, _val in link_data:
+for fill, path, dominant, _cx, _ribbon_mid_y, _val, tooltip in link_data:
     if not dominant:
-        parts.append(f'<path d="{path}" fill="{fill}" stroke="none"/>')
+        parts.append(f'<path class="flow" d="{path}" fill="{fill}" stroke="none"><title>{tooltip}</title></path>')
 
 # Dominant flows drawn on top with annotation showing their magnitude
-for fill, path, dominant, cx, ribbon_mid_y, val in link_data:
+for fill, path, dominant, cx, ribbon_mid_y, val, tooltip in link_data:
     if dominant:
-        parts.append(f'<path d="{path}" fill="{fill}" stroke="none"/>')
+        parts.append(f'<path class="flow" d="{path}" fill="{fill}" stroke="none"><title>{tooltip}</title></path>')
         parts.append(
             f'<text x="{cx:.1f}" y="{ribbon_mid_y:.1f}" text-anchor="middle" '
             f'dominant-baseline="middle" font-family="{FONT}" font-size="{VALUE_SIZE}" '
-            f'font-weight="700" fill="{FG}" opacity="0.80">{val} TWh</text>'
+            f'font-weight="700" fill="{FG}" opacity="0.80">{val} MLD</text>'
         )
 
 parts.append("</g>")
@@ -201,7 +216,10 @@ for i in range(len(node_labels)):
     x = node_x[i]
     y0 = node_y0[i]
     h = node_y1[i] - node_y0[i]
-    parts.append(f'<rect x="{x:.1f}" y="{y0:.1f}" width="{NODE_W}" height="{h:.1f}" fill="{color}" rx="5"/>')
+    parts.append(
+        f'<rect class="node" x="{x:.1f}" y="{y0:.1f}" width="{NODE_W}" height="{h:.1f}" '
+        f'fill="{color}" rx="5"><title>{node_labels[i]}: {node_total[i]} MLD</title></rect>'
+    )
 parts.append("</g>")
 
 # Labels — font sizes from chart_style.label_font_size / chart_style.value_font_size
@@ -209,7 +227,7 @@ parts.append('<g id="labels">')
 for i in range(len(node_labels)):
     y_mid = (node_y0[i] + node_y1[i]) / 2
     label = node_labels[i]
-    val_str = f"{node_total[i]} TWh"
+    val_str = f"{node_total[i]} MLD"
     if i < N_SRC:
         tx = node_x[i] - 24
         anchor = "end"
@@ -217,12 +235,12 @@ for i in range(len(node_labels)):
         tx = node_x[i] + NODE_W + 24
         anchor = "start"
     parts.append(
-        f'<text x="{tx:.1f}" y="{y_mid - 22:.1f}" text-anchor="{anchor}" '
+        f'<text x="{tx:.1f}" y="{y_mid - 30:.1f}" text-anchor="{anchor}" '
         f'dominant-baseline="middle" font-family="{FONT}" font-size="{LABEL_SIZE}" '
         f'font-weight="500" fill="{FG}">{label}</text>'
     )
     parts.append(
-        f'<text x="{tx:.1f}" y="{y_mid + 26:.1f}" text-anchor="{anchor}" '
+        f'<text x="{tx:.1f}" y="{y_mid + 34:.1f}" text-anchor="{anchor}" '
         f'dominant-baseline="middle" font-family="{FONT}" font-size="{VALUE_SIZE}" '
         f'fill="{FG_SUBTLE}">{val_str}</text>'
     )
@@ -231,7 +249,7 @@ parts.append("</svg>")
 
 svg_content = "\n".join(parts)
 
-# Save HTML (pygal-style interactive output)
+# Save HTML (pygal-style interactive output — hover a flow or node for its tooltip)
 html_content = (
     f'<!DOCTYPE html><html><head><meta charset="utf-8">'
     f"<title>sankey-basic · pygal · anyplot.ai</title>"
