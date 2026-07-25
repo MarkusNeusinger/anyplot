@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 step-basic: Basic Step Plot
 Library: bokeh 3.9.1 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-07-25
+Quality: 85/100 | Updated: 2026-07-25
 """
 
 import os
