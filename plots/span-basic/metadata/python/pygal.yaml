@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: span-basic
 created: 2025-12-17 03:09:41+00:00
-updated: '2026-07-25T14:28:51Z'
+updated: '2026-07-25T14:38:59Z'
 generated_by: claude-sonnet
 workflow_run: 30161438289
 issue: 980
@@ -12,53 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Correct span-basic feature set: both a vertical (time-based, Recession Period
-    2008-2009) and a horizontal (threshold-based, Risk Zone 140-160) span are shown
-    in the same plot, covering both direction cases from the spec.'
-  - Semi-transparent fills correctly land inside the spec's 0.2-0.3 alpha range and
-    are tuned per theme (0.25 light / 0.3 dark), so the underlying price line stays
-    visible through both spans.
-  - 'Theme-adaptive chrome is fully correct: the three Imprint data colors are pixel-identical
-    between light and dark renders, backgrounds match #FAF8F1/#1A1A17 exactly, and
-    all text is high-contrast in both themes.'
-  - 'Creative library-specific technique: pygal''s XY chart has no native axvspan/axhspan
-    primitive, so the implementation builds closed 5-point polygons to simulate rectangular
-    span regions - a genuine workaround distinctive to this library.'
-  - Realistic, neutral financial scenario (2008 recession dip, post-recession lower
-    plateau) with economically plausible proportions and a real-world event pattern.
-  - 'Clean, reproducible KISS code: single flat script, np.random.seed(42), no unused
-    imports.'
+  - 'Semantic color reassignment now correctly maps meaning: recession span is matte
+    red (#AE3030), risk zone is amber (#DDCC77), and brand green (#009E73) is freed
+    for the primary Stock Price line — directly resolves attempt 1''s biggest storytelling
+    weakness.'
+  - Inline CSS softens the default solid axis-box lines to ~25% stroke-opacity, reducing
+    the default-pygal-chrome look flagged in the previous review.
+  - 'Both direction cases from the spec are present: a vertical time-based span (Recession
+    Period, 2008-2009) and a horizontal threshold span (Risk Zone, $140-160), each
+    rendered as clean closed polygons since pygal''s XY chart has no native axvspan/axhspan
+    primitive.'
+  - 'Theme-adaptive chrome is fully correct — the three data colors are pixel-identical
+    between light and dark renders, and backgrounds match #FAF8F1/#1A1A17 exactly.'
+  - Per-point custom tooltip labels (dict format with formatted dollar values) add
+    real interactive value visible in the HTML export.
+  - 'Clean, reproducible KISS code: single seed, no unused imports, tight y-range
+    that avoids dead canvas space.'
   weaknesses:
-  - 'Semantic color mismatch weakens the storytelling: ''Recession Period'' (a negative
-    economic event) is rendered in brand green #009E73, which readers typically associate
-    with growth/positive outcomes, while ''Risk Zone'' (a danger/threshold zone) uses
-    lavender rather than a warning-associated hue. Per default-style-guide.md''s semantic-exception
-    rule, reassign span colors to reinforce meaning - e.g. matte red #AE3030 or amber
-    #DDCC77 for the recession/bad-period span, amber #DDCC77 for the risk/warning
-    threshold - and let the actual price line (the primary data) keep the brand green
-    as the first, most prominent series.'
-  - Legend swatches and text sit flush against the left canvas edge with almost no
-    margin - add left padding/margin so the legend has breathing room instead of crowding
-    the border.
-  - Aesthetic still reads close to a well-configured pygal default (standard axis
-    box lines, default typography weight) - push further into a distinctive custom
-    look (e.g. more refined tick/grid treatment, typographic weight variation) to
-    lift it out of 'configured default' territory.
+  - Legend still crowds the left canvas edge — the spacing=28 knob only nudged the
+    margin slightly (roughly 1% of canvas width); increase left-side padding substantially
+    (e.g. a larger margin_left, or extra left-padding around the legend column) so
+    it has real breathing room.
+  - Where the vertical Recession span overlaps the horizontal Risk Zone span, the
+    two semi-transparent fills blend into a muddy brownish patch (most noticeable
+    in the dark render) that reads as an unintended third color region — consider
+    adjusting stacking order or opacity so the overlap reads cleaner.
+  - Overall polish is still closer to a well-configured pygal default than a fully
+    distinctive custom look — typography weight is uniform across the title/axis/tick
+    hierarchy; push more deliberate weight/size contrast to lift Design Excellence
+    further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white.
-      Chrome: Title "span-basic · pygal · anyplot.ai" is dark and centered at top, fully visible with no clipping. "Price ($)" y-axis label (rotated) and "Year" x-axis label are dark and clearly legible. Tick labels (130-210 on y, 2006-2016 on x) are dark and readable. Horizontal dashed gridlines are subtle. Legend (top-left: "Recession Period", "Risk Zone", "Stock Price") is dark text with small color swatches, fully readable but sits very close to the left canvas edge.
-      Data: A green (#009E73) translucent vertical rectangle spans 2008-2009 (Recession Period); a lavender (#C475FD) translucent horizontal band spans price 140-160 (Risk Zone); a blue (#4467A3) line traces the stock price from ~$196 in 2006 down through the 2008-2009 recession to a ~$140-150 plateau through 2016. Where the green and lavender fills overlap, the blend reads as a muted teal-gray, which is expected alpha-blending behavior.
-      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Title "span-basic · pygal · anyplot.ai" is bold, dark, and fully visible at the top. Axis titles "Year" and "Price ($)" and all tick labels are dark ink, clearly legible against the light surface. Top-left legend ("Recession Period", "Risk Zone", "Stock Price") is dark text with small color swatches, fully readable but positioned with very little left margin (swatches/text start almost at the canvas edge).
+      Data: A matte-red translucent vertical band spans 2008-2009 (Recession Period), an amber translucent horizontal band spans price 140-160 (Risk Zone), and a brand-green (#009E73) line traces the stock price from ~$196 in 2006 down through the 2008-2009 recession dip to a ~$140-150 plateau through 2016. The green line is the clear focal point.
+      Legibility verdict: PASS — no light-on-light issues; only a minor legend-margin crowding concern (not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black.
-      Chrome: Title, axis labels, tick labels, and legend text are all rendered in a light off-white tone and are clearly visible against the dark background. Gridlines are subtle light dashed lines. No dark-on-dark failures observed anywhere.
-      Data: The same green (#009E73), lavender (#C475FD), and blue (#4467A3) hues as the light render - confirmed pixel-identical data colors, only the chrome (background, text, grid) flipped to the dark theme.
-      Legibility verdict: PASS - all text is clearly readable against the dark background; no dark-on-dark issues.
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Title, axis titles, tick labels, and legend text all flip to light off-white tone, clearly legible against the dark surface. No dark-on-dark failures detected.
+      Data: The three data colors (matte-red span, amber span, brand-green line) are pixel-identical to the light render — only the chrome flipped, as required. Where the two spans overlap (2008-2009 within the 140-160 price range), the fills blend into a muddy brownish patch that is a bit visually busy but does not obscure the price line running through it.
+      Legibility verdict: PASS — all chrome text reads clearly on the dark surface; the only cosmetic note is the overlap blending, not a legibility failure.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -69,75 +66,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via Style object; readable at full
-          size in both themes; title fits without clipping.
+        comment: All text readable in both themes at good size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: No text/data collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: show_dots=False appropriate for the dense line; line stays visible
-          through both translucent span fills.
+        comment: Line and spans clear; overlap region between the two spans is slightly
+          muddy
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe, no red-green-only signal, redundant legend
-          labels distinguish series.
+        comment: Distinct hues, redundant labels, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization overall; legend sits uncomfortably close
-          to the left edge (no clipping, just tight margin).
+        comment: No clipping, but legend still crowds the left edge despite spacing=28
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Price ($)" has units; "Year" is descriptive.'
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First added series is #009E73, Imprint palette used in canonical
-          order, backgrounds and chrome are theme-correct and identical data colors
-          across themes.'
+        comment: 'Correct semantic-exception usage: brand green for primary series,
+          matte-red/amber anchors for spans; correct theme backgrounds'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured library default; theme-adaptive Style object is a
-          nice touch but overall polish is not exceptional.
+        comment: Semantic color scheme and axis-line softening show custom thought,
+          but overall still reads close to a configured default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Y-only subtle grid, no markers on the dense line; pygal's default
-          axis box lines remain.
+        comment: Subtle y-only grid, softened axis-box CSS; legend margin and typography
+          weight uniformity hold this back
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: The overlap of recession and risk-zone spans does create some visual
-          hierarchy, but the counterintuitive green-for-bad-event color choice undercuts
-          the narrative clarity.
+        comment: Green primary line now correctly the visual focal point, spans reinforce
+          meaning via color; overlap blending muddies the story a bit
     spec_compliance:
       score: 15
       max: 15
@@ -147,27 +139,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart with highlighted span regions, exactly matching span-basic.
+        comment: Correct span-over-line chart via pygal.XY
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both vertical and horizontal span directions present, alpha within
-          0.2-0.3 spec range.
+        comment: Both vertical and horizontal span directions present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Year, Y=Price, full data range visible.
+        comment: X=Year, Y=Price, spans correctly positioned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; legend labels correctly describe
-          both spans and the data series.
+        comment: Title matches mandated format; legend labels are descriptive
     data_quality:
       score: 15
       max: 15
@@ -177,22 +167,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both a vertical (time) and horizontal (threshold) span, plus
-          overlap between them.
+        comment: Shows both span directions plus an underlying line series
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible finance scenario referencing a 2008-2009
-          recession dip.
+        comment: Plausible, neutral financial recession/risk-zone scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Stock price magnitude and recession-driven decline are plausible
-          and internally consistent.
+        comment: Price range and span bounds are sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -202,32 +189,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, theme tokens, data, style, plot, save.'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, os, sys, pygal - all used.
+        comment: Only os, sys, numpy, pygal used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the polygon-based span workaround; no
-          fake UI.
+        comment: No fake functionality, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal API.
+        comment: Saves plot-{theme}.png and plot-{theme}.html correctly
     library_mastery:
       score: 8
       max: 10
@@ -237,26 +223,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Full Style object customization, XY chart used idiomatically for
-          span polygons plus continuous line data.
+        comment: Proper Style object, theme tokens, XY chart usage
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Closed-polygon span workaround and per-point dict data with custom
-          tooltip labels are distinctive to pygal's API.
-  verdict: REJECTED
+        comment: Closed-polygon span workaround, per-point custom tooltip labels,
+          truncate_legend
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
   - hover-tooltips
-  - patches
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
   - alpha-blending
-  - publication-ready
