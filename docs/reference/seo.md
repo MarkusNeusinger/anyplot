@@ -259,27 +259,33 @@ signals, the welcomed AI agents, the declined training collectors — so it hold
 regardless of what Cloudflare does or does not prepend (see
 [AI crawler policy](#ai-crawler-policy)):
 
-```txt
-… welcomed AI agents (Claude*, OAI-SearchBot, ChatGPT-User, Perplexity*)
-      + Content-Signal, Allow: /, Disallow: /debug, /interactive
-… declined training collectors (GPTBot, CCBot, Bytespider, Amazonbot, meta-externalagent)
-… opt-out tokens (Google-Extended, Applebot-Extended)
+Four groups in this order — welcomed AI agents (`ClaudeBot`, `Claude-User`,
+`Claude-SearchBot`, `OAI-SearchBot`, `ChatGPT-User`, `PerplexityBot`,
+`Perplexity-User`), declined training collectors (`GPTBot`, `CCBot`,
+`Bytespider`, `Amazonbot`, `meta-externalagent`), opt-out tokens
+(`Google-Extended`, `Applebot-Extended`), and finally the wildcard. The first
+group verbatim; read the file for the rest:
 
-User-agent: *
+```txt
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
 Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
-Allow: /
 Disallow: /debug
 Disallow: /interactive
-
-Sitemap: https://anyplot.ai/sitemap.xml
+Allow: /
 ```
 
-Two properties of that file are deliberate:
+Three properties of that file are deliberate and should survive any cleanup:
 
-- The `Content-Signal` line is **repeated** in the welcomed-AI group. A crawler
-  obeys the single group that matches it, so an agent named in its own group
-  never sees the signal declared under `User-agent: *` — and that group is
-  precisely where the training reservation has to land.
+- The `Content-Signal` line is repeated in **every** group, declining ones
+  included. A crawler reads only the group that matches it, so a reservation
+  declared once under `User-agent: *` never reaches a named agent — least of all
+  the training collectors it is aimed at.
 - The named groups come **before** the wildcard group. A spec-compliant crawler
   picks the most specific match regardless of order, but simpler parsers take
   the first match and would read `Allow: /` and stop.

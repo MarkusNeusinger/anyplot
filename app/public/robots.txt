@@ -25,11 +25,14 @@
 # ai-input: retrieval for AI answers, grounding, citation — yes
 # ai-train: training or fine-tuning models — no
 #
+# The signal is repeated in EVERY group below, because a crawler reads only the
+# group that matches it: a reservation declared once under `User-agent: *` would
+# never reach a named agent — least of all the training collectors it is aimed
+# at.
+#
 # AI assistants, AI search and citation crawlers. These send readers back and
 # are the reason /llms.txt exists; the *-User agents fetch only because a human
-# asked their assistant to open the page. The signal is declared per group
-# because a crawler obeys only the group that matches it — the agents named
-# here are precisely the ones the training reservation has to reach.
+# asked their assistant to open the page.
 User-agent: ClaudeBot
 User-agent: Claude-User
 User-agent: Claude-SearchBot
@@ -52,12 +55,14 @@ User-agent: CCBot
 User-agent: Bytespider
 User-agent: Amazonbot
 User-agent: meta-externalagent
+Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
 Disallow: /
 
 # Opt-out tokens for vendors that crawl under a different user agent
 # (Googlebot / Applebot fetch for search and stay allowed).
 User-agent: Google-Extended
 User-agent: Applebot-Extended
+Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
 Disallow: /
 
 # Everyone else: search engines, social/link previews, feed readers.
