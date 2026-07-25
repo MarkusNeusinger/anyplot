@@ -24,6 +24,10 @@ Disallow: /interactive
 # AI assistants, AI search and citation crawlers. These send readers back and
 # are the reason /llms.txt exists; the *-User agents fetch only because a human
 # asked their assistant to open the page.
+# The Content-Signal line is REPEATED here on purpose: a crawler obeys the one
+# group that matches it most specifically, so an agent named below would never
+# see the signal declared in the `User-agent: *` group above — and this is
+# exactly the group the training reservation has to reach.
 User-agent: ClaudeBot
 User-agent: Claude-User
 User-agent: Claude-SearchBot
@@ -31,6 +35,7 @@ User-agent: OAI-SearchBot
 User-agent: ChatGPT-User
 User-agent: PerplexityBot
 User-agent: Perplexity-User
+Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
 Allow: /
 Disallow: /debug
 Disallow: /interactive

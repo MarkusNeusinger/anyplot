@@ -272,6 +272,11 @@ Disallow: /interactive
 Sitemap: https://anyplot.ai/sitemap.xml
 ```
 
+The `Content-Signal` line is repeated inside the welcomed-AI group: a crawler
+obeys the single group that matches it most specifically, so an agent named in
+its own group never sees the signal declared under `User-agent: *` — and that
+group is precisely where the training reservation has to land.
+
 ### Backend (api.anyplot.ai)
 
 Dynamic endpoint at `GET /robots.txt`:
