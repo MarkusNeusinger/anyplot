@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: rose-basic
 created: '2026-07-25T10:46:01Z'
-updated: '2026-07-25T10:50:50Z'
+updated: '2026-07-25T10:59:18Z'
 generated_by: claude-sonnet
 workflow_run: 30154498550
 issue: 1003
@@ -12,64 +12,65 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 95
 review:
   strengths:
-  - Palette order is pixel-perfect against the canonical Imprint sequence, including
-    first-series green
-  - Realistic, well-motivated wind-rose dataset (percentages sum to 100%, directionally
-    plausible prevailing-westerlies pattern)
-  - 'Thoughtful engineering: N/NW values deliberately kept under the first gridline
-    ring so neither wedge fights with the r-axis tick labels for space, and it''s
-    documented in a comment'
-  - Legend intentionally omitted since angular point labels already carry the category
-    identity, avoiding redundant chrome
-  - Both renders are theme-correct with identical data colors and fully legible chrome
+  - 'Repair directly and precisely addressed every Attempt 1 weakness: added typographic
+    hierarchy (bold title / italic subtitle), and gave the dominant wedge (W, 24%)
+    a heavier border + bold label exactly as requested'
+  - New subtitle turns 'prevailing westerlies' from an implicit pattern into an explicit,
+    immediately-readable insight — textbook DE-03 execution
+  - Chart.js scriptable options (borderWidth/font as functions of the data index)
+    are a nice library-idiomatic touch for conditional emphasis
+  - Palette order remains pixel-perfect against the canonical Imprint sequence; both
+    renders remain fully theme-correct
+  - Data quality and spec compliance remain flawless (100%-summing, realistic wind-rose
+    distribution, all required features present)
   weaknesses:
-  - 'Design Excellence is the main gap: the plot reads as a well-configured default
-    rather than a deliberately designed piece - add typographic hierarchy for the
-    title, a subtler/refined grid, or a highlighted treatment for the dominant wedge
-    to sharpen the ''prevailing wind direction'' story'
-  - LM-02 usage of polarArea is standard configuration with no library-distinctive
-    flourish (e.g., custom tooltip formatting, per-wedge callback styling) beyond
-    the required token wiring
+  - Grid line styling (color, width, opacity) is unchanged from Attempt 1 — the earlier
+    feedback's 'soften/thin the grid' suggestion was only partially addressed via
+    the outer padding, not the grid strokes themselves
+  - DE-01 is still built from the standard token palette/typography scale rather than
+    any exceptional customization beyond what the style guide provides — solid but
+    not 'publication-ready' territory
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1
-      Chrome: title "rose-basic · javascript · chartjs · anyplot.ai" (dark, bold, ~55% width), compass point labels (N/NE/E/SE/S/SW/W/NW), radial tick labels (10%/15%/20%/25%) - all dark and clearly readable against the light background
-      Data: 8 polar-area wedges, one per compass direction, radius proportional to frequency %. Colors follow canonical Imprint order: N=#009E73 (brand green), NE=#C475FD (lavender), E=#4467A3 (blue), SE=#BD8233 (ochre), S=#AE3030 (red), SW=#2ABCCD (cyan), W=#954477 (rose), NW=#99B314 (lime). Largest wedges (W=24%, SW=19%, S=15%) cluster in the west/south quadrant, showing prevailing westerlies.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "rose-basic · javascript · chartjs · anyplot.ai" above a new italic gray subtitle "Prevailing wind: W (24%) → SW (19%) → S (15%)". Compass point labels (N/NE/E/SE/S/SW/W/NW) and radial "%" tick labels are dark and clearly legible; the "W" point label renders bold to match the emphasized dominant wedge.
+      Data: 8 wedges in canonical Imprint order — N=green #009E73 (8%), NE=lavender (11%), E=blue (9%), SE=ochre (6%), S=red (15%), SW=cyan (19%), W=rose (24%, largest, heavier border), NW=lime (8%). First series confirmed #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17
-      Chrome: title, compass labels, and radial tick labels are all light-colored and clearly legible against the dark background; gridlines are subtle light-gray
-      Data: identical wedge colors to the light render (verified pixel-for-pixel match of the 8-color sequence) - only chrome flipped
-      Legibility verdict: PASS - no dark-on-dark failures observed anywhere
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle now light-colored, fully legible. Compass/point labels light-colored with "W" still bold. Radial gridlines subtle light-gray on dark. No dark-on-dark failures observed.
+      Data: Wedge colors identical to light render (green/lavender/blue/ochre/red/cyan/rose/lime) — only chrome flipped, confirming theme-adaptive tokens were used correctly.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, r-ticks 14, point labels
-          16); readable in both themes with no overflow
+        comment: All sizes explicit (title 24 bold, subtitle 15 italic, r-ticks 14,
+          point labels 16/bold-for-dominant); no overflow, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; tick labels sit in the open band above the deliberately-capped
-          N/NW wedges
+        comment: No collisions; large wedges stay inside the 25% ring, tick labels
+          sit in the open N-axis band
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8 wedges clearly distinguished via color + 2px border separation
+        comment: 8 wedges clearly distinguished via color + border separation, dominant
+          wedge further emphasized
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -82,46 +83,47 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Circle fills most of the 2400x2400 canvas, well-centered, nothing
-          clipped
+        comment: Circle fills majority of the 2400x2400 canvas, well-centered, nothing
+          clipped; new layout.padding keeps margins balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial ticks carry '%' units via callback
+        comment: Radial ticks carry % units via callback
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: N=#009E73, remaining 7 wedges follow canonical Imprint order exactly;
-          backgrounds theme-correct in both renders
+          both renders theme-correct
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Correct token usage but reads as a well-configured library default;
-          no typographic hierarchy or extra polish beyond the mandated palette
+        passed: true
+        comment: Clear typographic hierarchy now present and intentional per-wedge
+          emphasis — clearly above a configured default, though still built from the
+          standard token set
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Wedge border separation and the deliberate legend-omission are nice
-          touches above bare defaults, but grid/whitespace are otherwise untouched
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Size variation across wedges clearly surfaces the 'prevailing westerlies'
-          pattern (W/SW/S cluster dominates), giving the viewer an immediate takeaway
+        passed: true
+        comment: Outer padding added giving the circle more breathing room; grid line
+          styling itself unchanged from Attempt 1, so refinement is partial
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: New subtitle explicitly narrates the insight and the dominant wedge
+          is visually emphasized — viewer sees the takeaway immediately
     spec_compliance:
       score: 15
       max: 15
@@ -137,9 +139,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Radius proportional to value, natural circular compass ordering,
-          distinct-color-per-category scheme, 12-o'clock start, radial gridlines all
-          present
+        comment: Radius proportional to value, natural circular ordering, distinct
+          colors, 12-o'clock start, radial gridlines all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -152,8 +153,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend intentionally disabled since angular point
-          labels already identify each category
+        comment: Title format exact; legend intentionally omitted since point labels
+          + subtitle already identify categories
     data_quality:
       score: 15
       max: 15
@@ -176,8 +177,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Values sum exactly to 100% and the W/SW/S dominance pattern is a
-          factually plausible real-world wind rose shape
+        comment: Values sum exactly to 100%; dominance pattern is a factually plausible
+          real-world wind rose shape
     code_quality:
       score: 10
       max: 10
@@ -187,7 +188,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data -> mount -> chart, no functions/classes
+        comment: Linear data to mount to chart, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -211,9 +212,9 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract, animation: false set'
+        comment: Correct mount-node contract, animation:false set
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -221,16 +222,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Textbook new Chart(...) with polarArea type and correct token-to-options
+        comment: Textbook new Chart() with polarArea type, correct token to options
           mapping
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses Chart.js's native polarArea type, but configuration is otherwise
-          standard - no distinctive callback/formatting flourishes
-  verdict: REJECTED
+        passed: true
+        comment: Uses Chart.js scriptable options (function-valued borderWidth and
+          font) to conditionally emphasize the dominant wedge
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
