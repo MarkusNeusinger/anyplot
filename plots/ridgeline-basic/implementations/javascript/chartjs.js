@@ -1,7 +1,7 @@
 // anyplot.ai
 // ridgeline-basic: Basic Ridgeline Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.1
-// Quality: 87/100 | Created: 2026-07-25
+// Quality: 88/100 | Created: 2026-07-25
 
 const t = window.ANYPLOT_TOKENS;
 
