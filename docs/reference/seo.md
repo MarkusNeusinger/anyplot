@@ -52,7 +52,7 @@ Our solution uses **nginx-based bot detection** to serve pre-rendered HTML with 
 
 ### Detected Bots
 
-nginx detects 27 bots via User-Agent matching, organized by category:
+nginx detects 37 User-Agent patterns, organized by category:
 
 **Social Media:**
 | Bot | User-Agent Pattern |
@@ -82,11 +82,29 @@ nginx detects 27 bots via User-Agent matching, organized by category:
 | Bot | User-Agent Pattern |
 |-----|-------------------|
 | Google | `googlebot` |
+| Google URL inspection | `google-inspectiontool` |
+| Google misc crawler | `googleother` |
 | Bing | `bingbot` |
 | Yandex | `yandexbot` |
 | DuckDuckGo | `duckduckbot` |
 | Baidu | `baiduspider` |
 | Apple | `applebot` |
+
+**AI Assistants & AI Search:**
+| Bot | User-Agent Pattern | Role |
+|-----|-------------------|------|
+| Anthropic crawler | `claudebot` | index/crawl |
+| Claude user fetch | `claude-user` | a human asked Claude to open the page |
+| Claude search | `claude-searchbot` | citation index |
+| OpenAI crawler | `gptbot` | training (declined in robots.txt, mapped anyway — see below) |
+| ChatGPT search | `oai-searchbot` | citation index |
+| ChatGPT user fetch | `chatgpt-user` | a human asked ChatGPT to open the page |
+| Perplexity | `perplexitybot`, `perplexity-user` | citation index / user fetch |
+
+None of these execute JavaScript, so without the map entries an AI answer
+citing anyplot would describe the empty SPA shell. The map decides **what** a
+crawler is served, never **whether** it may fetch — that is the robots.txt +
+Cloudflare question in [AI crawler policy](#ai-crawler-policy).
 
 **Link Preview Services:**
 | Bot | User-Agent Pattern |
@@ -236,12 +254,20 @@ Uses **MonoLisa** variable font (commercial, not in repo):
 
 ### Frontend (anyplot.ai)
 
-Static file at `app/public/robots.txt`:
+Static file at `app/public/robots.txt`. It carries the full policy — content
+signals, the welcomed AI agents, the declined training collectors — so it holds
+regardless of what Cloudflare does or does not prepend (see
+[AI crawler policy](#ai-crawler-policy)):
 
 ```txt
 User-agent: *
+Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
 Allow: /
 Disallow: /debug
+Disallow: /interactive
+… welcomed AI agents (Claude*, OAI-SearchBot, ChatGPT-User, Perplexity*)
+… declined training collectors (GPTBot, CCBot, Bytespider, Amazonbot, meta-externalagent)
+… opt-out tokens (Google-Extended, Applebot-Extended)
 
 Sitemap: https://anyplot.ai/sitemap.xml
 ```
@@ -259,6 +285,61 @@ Disallow: /
 - APIs should not be indexed by search engines
 - Prevents crawling of debug endpoints, docs, and API responses
 - Social media bots (WhatsApp, Twitter, etc.) are unaffected - they fetch og:images directly
+
+### AI crawler policy
+
+**Decision (issue #9633):** AI agents that *retrieve and cite* are welcome;
+agents that only *collect for training* are declined. anyplot's entire strategy
+is to be consumable by AI agents — `/llms.txt`, the MCP server, MIT-licensed
+code on every page — so blocking the retrieval side works against the product.
+The training reservation stays expressed, and it is the legally load-bearing
+part: `Content-Signal: ai-train=no` is an express reservation of rights under
+Article 4 of EU Directive 2019/790.
+
+| Group | Agents | Policy |
+|---|---|---|
+| Retrieval / citation / user-directed | `ClaudeBot`, `Claude-User`, `Claude-SearchBot`, `OAI-SearchBot`, `ChatGPT-User`, `PerplexityBot`, `Perplexity-User` | allowed |
+| Training collectors | `GPTBot`, `CCBot`, `Bytespider`, `Amazonbot`, `meta-externalagent` | declined |
+| Opt-out tokens (vendor crawls under another UA) | `Google-Extended`, `Applebot-Extended` | declined |
+
+`GPTBot` is the deliberate borderline call: it is OpenAI's *training* crawler,
+so it sits with the declined group, while ChatGPT's retrieval path
+(`OAI-SearchBot`, `ChatGPT-User`) stays open. Reversing that is a one-group
+edit in `app/public/robots.txt`. Vendor UA roles shift — re-check the current
+role of each agent against Cloudflare's AI Crawl Control categories before
+changing the policy.
+
+#### Cloudflare is the enforcement layer
+
+Measured 2026-07-25 on the live zone: Cloudflare prepends a **managed
+robots.txt** block (`Disallow: /` for ClaudeBot, GPTBot, CCBot, Google-Extended,
+Amazonbot, Applebot-Extended, Bytespider, meta-externalagent,
+CloudflareBrowserRenderingCrawler) *and* answers those user agents with a hard
+`HTTP 403 Your request was blocked.` at the edge — including `Claude-User` and
+`ChatGPT-User`, and including `/llms.txt` itself. The file written for AI agents
+was unreachable to every agent it was written for. Googlebot passes (200).
+
+`api.anyplot.ai` is **not** covered by the block (ClaudeBot gets 200 there), so
+the MCP server stayed reachable.
+
+Aligning the edge with this policy is a dashboard action (zone `anyplot.ai` →
+**AI Crawl Control** / Bots): allow the retrieval group, keep the training
+group blocked, and either turn off the managed robots.txt (this repo's file
+already carries the content signals) or leave it on and accept that the live
+file is stricter than the repo's.
+
+Verify afterwards:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)" https://anyplot.ai/llms.txt   # expect 200
+curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; CCBot/2.0; +https://commoncrawl.org/faq/)"   https://anyplot.ai/          # expect 403
+curl -sA "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)" https://anyplot.ai/scatter-basic | grep -o '<title>[^<]*</title>'   # per-route title, not the SPA shell
+```
+
+The last command is the part this repo owns: `app/nginx.conf` maps the AI UAs
+onto the seo-proxy path, and `.github/workflows/bot-serving-check.yml` guards it
+daily against the Cloud Run origin (origin, not edge — so it reports on the
+nginx map no matter what the zone policy is).
 
 ## Sitemap
 
@@ -335,10 +416,12 @@ curl -o test.png https://api.anyplot.ai/og/scatter-basic.png
 | File | Purpose |
 |------|---------|
 | `app/nginx.conf` | Bot detection, SPA routing, sitemap proxy |
-| `app/public/robots.txt` | Frontend robots.txt (blocks /debug) |
+| `app/public/robots.txt` | Frontend robots.txt (content signals, AI crawler policy, blocks /debug) |
+| `app/public/llms.txt` | Agent-facing site summary; served directly, never via the seo-proxy |
 | `api/routers/seo.py` | SEO proxy endpoints, robots.txt, sitemap generation |
 | `api/routers/og_images.py` | Branded og:image endpoints |
 | `core/images.py` | Image processing, branding functions |
+| `.github/workflows/bot-serving-check.yml` | Daily synthetic check of the bot → seo-proxy path |
 
 ## Multi-Language URL Strategy
 

@@ -18,6 +18,15 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **AI crawler policy, written down and served** — `app/public/robots.txt` now states the whole
+  policy itself (content signals incl. the Art. 4 EU-DSM training reservation, the welcomed
+  retrieval/citation agents, the declined training collectors), so it holds with or without
+  Cloudflare's managed block; `app/nginx.conf` routes `Claude*`, `GPTBot`, `OAI-SearchBot`,
+  `ChatGPT-User` and `Perplexity*` to the prerendered seo-proxy pages like the search engines
+  (they run no JavaScript and were being served the empty SPA shell); the daily
+  `bot-serving-check` now covers an AI UA and `llms.txt` under an AI UA. `docs/reference/seo.md`
+  documents the decision, the measured edge behaviour and the Cloudflare steps that lift the
+  403 (#9633).
 - **`CODE_OF_CONDUCT.md`** — Contributor Covenant 2.1, linked from `docs/contributing.md`
   (closes the last repo-health gap from audit 2026-07-15 Medium#29) (#9644).
 - **Bot-served pages got a real SEO surface** — `seo_home()` now emits the site-level JSON-LD
