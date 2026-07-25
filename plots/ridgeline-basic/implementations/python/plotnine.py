@@ -1,7 +1,7 @@
 """ anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
-Library: plotnine 0.15.3 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-04-30
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-07-25
 """
 
 import os
@@ -15,11 +15,12 @@ from plotnine import (
     element_line,
     element_rect,
     element_text,
+    geom_line,
     geom_ribbon,
     geom_text,
     ggplot,
     labs,
-    scale_fill_cmap,
+    scale_fill_gradient,
     scale_y_continuous,
     theme,
     theme_minimal,
@@ -32,7 +33,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-ACCENT = "#009E73"  # Okabe-Ito green for focal annotation
+ACCENT = "#009E73"  # Imprint palette position 1 — focal annotation accent
 
 # Data - Monthly temperature distributions for a temperate climate
 np.random.seed(42)
@@ -40,18 +41,18 @@ np.random.seed(42)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 temp_params = {
-    "Jan": (2, 4),
-    "Feb": (4, 4),
+    "Jan": (2, 3),
+    "Feb": (4, 3),
     "Mar": (8, 5),
     "Apr": (13, 4),
     "May": (18, 4),
     "Jun": (22, 3),
     "Jul": (25, 3),
     "Aug": (24, 3),
-    "Sep": (20, 4),
+    "Sep": (20, 4.5),
     "Oct": (14, 4),
     "Nov": (8, 4),
-    "Dec": (4, 4),
+    "Dec": (4, 3),
 }
 
 # Generate raw samples for KDE
@@ -68,6 +69,13 @@ df = pd.DataFrame(data)
 x_range = np.linspace(-10, 40, 300)
 ridge_scale = 2.5
 
+# Trim each month's near-zero-density tails before building ridge_df so the
+# ribbon fill (and the top-edge line drawn separately below) only cover the
+# visible bump, instead of a sliver extending across the full x_range. The
+# threshold mask alone isn't guaranteed contiguous -- gaussian_kde's tail
+# estimate can ripple back above a lenient threshold far from the mode -- so
+# walk outward from the density peak and stop at the first drop below
+# threshold, keeping only that single contiguous run for geom_line to trace.
 density_data = []
 for i, month in enumerate(months):
     month_data = df[df["month"] == month]["temp"]
@@ -75,7 +83,19 @@ for i, month in enumerate(months):
     density = kde(x_range)
     density_scaled = density / density.max() * ridge_scale
 
-    for x, d in zip(x_range, density_scaled, strict=True):
+    threshold = 0.05 * ridge_scale
+    peak_idx = int(np.argmax(density_scaled))
+    left = peak_idx
+    while left > 0 and density_scaled[left - 1] > threshold:
+        left -= 1
+    right = peak_idx
+    while right < len(density_scaled) - 1 and density_scaled[right + 1] > threshold:
+        right += 1
+
+    x_visible = x_range[left : right + 1]
+    density_visible = density_scaled[left : right + 1]
+
+    for x, d in zip(x_visible, density_visible, strict=True):
         density_data.append(
             {"x": x, "ymin": float(i), "ymax": float(i) + d, "group": month, "month_idx": float(i) / 11.0}
         )
@@ -88,44 +108,50 @@ ridge_df["group"] = pd.Categorical(ridge_df["group"], categories=months, ordered
 jul_idx = months.index("Jul")
 peak_df = pd.DataFrame([{"x": 34.5, "y": float(jul_idx) + 0.5, "label": "Peak: Jul ≈ 25°C"}])
 
-# Plot
+# Plot — month order is a continuous temporal axis, so the ridges use the
+# Imprint sequential gradient (imprint_seq: brand green -> blue) rather than
+# a categorical palette; this keeps January anchored at #009E73.
 plot = (
     ggplot(ridge_df, aes(x="x", ymin="ymin", ymax="ymax", fill="month_idx", group="group"))
-    + geom_ribbon(alpha=0.85, color=INK_SOFT, size=0.5)
-    + scale_fill_cmap(cmap_name="cividis")
+    # No ribbon outline: the ymin edge would stroke a flat line across each
+    # ridge's full visible x-span, cutting through neighboring ridges. Instead
+    # only the top density curve (ymax) is stroked, drawn as a separate line.
+    + geom_ribbon(alpha=0.85, color=None)
+    + geom_line(aes(y="ymax"), color=INK_SOFT, size=0.5)
+    + scale_fill_gradient(low="#009E73", high="#4467A3")
     # geom_text from a separate dataframe anchored to July's y-band (showcases multi-layer grammar)
     + geom_text(
         data=peak_df,
         mapping=aes(x="x", y="y", label="label"),
         inherit_aes=False,
         color=ACCENT,
-        size=10,
+        size=3.5,
         fontweight="bold",
         ha="right",
         va="center",
     )
     # Diagonal leader segment from label anchor to July's density peak at (25, jul_idx+ridge_scale)
     + annotate(
-        "segment", x=25.5, xend=33.5, y=jul_idx + ridge_scale - 0.3, yend=float(jul_idx) + 0.5, color=ACCENT, size=0.9
+        "segment", x=25.5, xend=33.5, y=jul_idx + ridge_scale - 0.3, yend=float(jul_idx) + 0.5, color=ACCENT, size=0.8
     )
-    + scale_y_continuous(breaks=list(range(12)), labels=months, limits=(-0.5, 14))
+    + scale_y_continuous(breaks=list(range(12)), labels=months, limits=(-0.5, 13.8))
     + labs(
         x="Temperature (°C)",
         y="Month",
-        title="ridgeline-basic · plotnine · anyplot.ai",
+        title="ridgeline-basic · python · plotnine · anyplot.ai",
         subtitle="Monthly temperature distributions — Northern Hemisphere temperate climate",
     )
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_border=element_blank(),
-        text=element_text(size=14, color=INK_SOFT),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK),
-        plot_subtitle=element_text(size=16, color=INK_SOFT),
+        text=element_text(size=7, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=12, color=INK, fontweight="bold"),
+        plot_subtitle=element_text(size=8, color=INK_SOFT),
         plot_margin=0.03,
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
@@ -135,4 +161,4 @@ plot = (
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
