@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 step-basic: Basic Step Plot
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-25
@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Span
+from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Span
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -35,7 +35,7 @@ W, H = 3200, 1800
 p = figure(
     width=W,
     height=H,
-    title="step-basic · bokeh · anyplot.ai",
+    title="step-basic · python · bokeh · anyplot.ai",
     x_axis_label="Month",
     y_axis_label="Cumulative Sales (units)",
     tools="",
@@ -45,6 +45,11 @@ p = figure(
     min_border_top=110,
     min_border_right=50,
 )
+
+# Above-target shading - a distinctive bokeh BoxAnnotation that highlights the
+# region where cumulative sales have cleared the full-year milestone.
+above_target = BoxAnnotation(bottom=target, fill_color=BRAND, fill_alpha=0.06)
+p.add_layout(above_target)
 
 # Reference line - annotates the milestone where cumulative sales crossed the
 # full-year target, giving the step pattern a storytelling focal point.
