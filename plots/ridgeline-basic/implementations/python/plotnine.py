@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
 Library: plotnine 0.15.3 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-04-30
+Quality: pending | Updated: 2026-07-25
 """
 
 import os
@@ -19,7 +19,7 @@ from plotnine import (
     geom_text,
     ggplot,
     labs,
-    scale_fill_cmap,
+    scale_fill_gradient,
     scale_y_continuous,
     theme,
     theme_minimal,
@@ -32,7 +32,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-ACCENT = "#009E73"  # Okabe-Ito green for focal annotation
+ACCENT = "#009E73"  # Imprint palette position 1 — focal annotation accent
 
 # Data - Monthly temperature distributions for a temperate climate
 np.random.seed(42)
@@ -88,44 +88,46 @@ ridge_df["group"] = pd.Categorical(ridge_df["group"], categories=months, ordered
 jul_idx = months.index("Jul")
 peak_df = pd.DataFrame([{"x": 34.5, "y": float(jul_idx) + 0.5, "label": "Peak: Jul ≈ 25°C"}])
 
-# Plot
+# Plot — month order is a continuous temporal axis, so the ridges use the
+# Imprint sequential gradient (imprint_seq: brand green -> blue) rather than
+# a categorical palette; this keeps January anchored at #009E73.
 plot = (
     ggplot(ridge_df, aes(x="x", ymin="ymin", ymax="ymax", fill="month_idx", group="group"))
     + geom_ribbon(alpha=0.85, color=INK_SOFT, size=0.5)
-    + scale_fill_cmap(cmap_name="cividis")
+    + scale_fill_gradient(low="#009E73", high="#4467A3")
     # geom_text from a separate dataframe anchored to July's y-band (showcases multi-layer grammar)
     + geom_text(
         data=peak_df,
         mapping=aes(x="x", y="y", label="label"),
         inherit_aes=False,
         color=ACCENT,
-        size=10,
+        size=3.5,
         fontweight="bold",
         ha="right",
         va="center",
     )
     # Diagonal leader segment from label anchor to July's density peak at (25, jul_idx+ridge_scale)
     + annotate(
-        "segment", x=25.5, xend=33.5, y=jul_idx + ridge_scale - 0.3, yend=float(jul_idx) + 0.5, color=ACCENT, size=0.9
+        "segment", x=25.5, xend=33.5, y=jul_idx + ridge_scale - 0.3, yend=float(jul_idx) + 0.5, color=ACCENT, size=0.8
     )
-    + scale_y_continuous(breaks=list(range(12)), labels=months, limits=(-0.5, 14))
+    + scale_y_continuous(breaks=list(range(12)), labels=months, limits=(-0.5, 13.8))
     + labs(
         x="Temperature (°C)",
         y="Month",
-        title="ridgeline-basic · plotnine · anyplot.ai",
+        title="ridgeline-basic · python · plotnine · anyplot.ai",
         subtitle="Monthly temperature distributions — Northern Hemisphere temperate climate",
     )
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_border=element_blank(),
-        text=element_text(size=14, color=INK_SOFT),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK),
-        plot_subtitle=element_text(size=16, color=INK_SOFT),
+        text=element_text(size=7, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=12, color=INK, fontweight="bold"),
+        plot_subtitle=element_text(size=8, color=INK_SOFT),
         plot_margin=0.03,
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
@@ -135,4 +137,4 @@ plot = (
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
