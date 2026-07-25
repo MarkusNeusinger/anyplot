@@ -2,152 +2,174 @@ library: letsplot
 language: python
 specification_id: rug-basic
 created: '2025-12-23T19:49:08Z'
-updated: '2026-04-30T05:42:56Z'
+updated: '2026-07-25T07:10:59Z'
 generated_by: claude-sonnet
-workflow_run: 25148880653
+workflow_run: 30148204719
 issue: 978
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 84
 review:
   strengths:
-  - Full theme-adaptive chrome — PAGE_BG/INK/INK_SOFT applied to all elements; both
-    renders pass legibility check
-  - 'All three rug plot features demonstrated: clustering, gaps, and outliers immediately
-    visible'
-  - Realistic neutral response-time scenario with plausible trimodal distribution
-  - All font sizes explicitly set to spec values (24/20/16pt)
-  - Correct output filenames with scale=3 for 4800×2700px
+  - Density curve + rug marks combined exactly as the spec notes recommend, clearly
+    revealing the trimodal clustering (~80/180/300ms) and the sparse outlier tail
+    (420-610ms) with minimal visual footprint
+  - 'All font sizes explicitly set (title 24pt, axis title 20pt, axis text 16pt) producing
+    a well-proportioned layout: title occupies ~51% of plot width, no overflow or
+    overlap in either render'
+  - Correct Imprint brand green (#009E73) used consistently for density fill/line
+    and rug ticks, identical across light and dark renders; both theme backgrounds
+    and text tokens match the style guide exactly
+  - Realistic, neutral data scenario (API/service response-time distribution) with
+    well-chosen alpha (0.55) on rug marks so overlapping observations in the dense
+    cluster still read as density rather than a solid smear
+  - Clean, reproducible KISS-structured code (np.random.seed(42), no functions/classes)
+    with a helpful comment documenting why geom_segment substitutes for the still-missing
+    geom_rug() in lets-plot 4.11.0
   weaknesses:
-  - 'Repeated # noqa: F405 on every lets_plot function call — use named imports instead
-    of wildcard to eliminate lint noise'
-  - Both x and y axis gridlines visible — remove vertical gridlines for cleaner density+rug
-    composition
-  - geom_segment used for rug marks instead of native geom_rug() if available in the
-    lets-plot version
+  - 'Rendered title is missing the mandated language segment in BOTH renders: it reads
+    ''rug-basic · letsplot · anyplot.ai'' instead of ''rug-basic · python · letsplot
+    · anyplot.ai'' -- the word ''python'' is silently dropped even though the source
+    string in labs(title=...) includes it. Likely cause: plot_title is sized at 24pt
+    while the library default is 16pt (prompts/library/letsplot.md), and lets-plot
+    renders/wraps the title at the base 800x450 canvas before the 4x scale is applied
+    -- at 24pt the 44-char title probably overflows the 800px base width and lets-plot
+    drops a token instead of wrapping. Fix: reduce plot_title fontsize toward the
+    ~16-18pt range (or otherwise verify the full title fits the 800px base canvas)
+    so all four title components render.'
+  - Panel border renders as a full 4-sided box in both themes (top/right/bottom/left
+    all visible) even though panel_border=element_blank() was set -- contrary to the
+    style guide's default L-shaped frame (top/right spines removed). Investigate whether
+    axis_line=element_line() is producing all four sides, or drop axis_line entirely
+    and rely on panel_grid only for a cleaner look.
+  - Right-side margin is nearly zero (panel border sits ~22px from the 3200px canvas
+    edge) while the left margin is roughly 290px -- noticeably unbalanced whitespace.
+    Nothing is clipped, but tightening the x-axis range padding or adding symmetric
+    panel margin would improve balance.
+  - Design is fairly minimal/single-hue (only the brand green is used); could gain
+    more Design Excellence polish from a secondary muted-neutral accent (e.g. a subtle
+    reference line or annotation calling out the outlier cluster) to strengthen the
+    storytelling beyond just color+shape.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct
-      Chrome: Title "rug-basic · letsplot · anyplot.ai" in dark ink (readable); X-axis "Response Time (ms)" and Y-axis "Density" in dark ink (readable); tick labels in soft dark (#4A4A44) — all readable
-      Data: Brand green #009E73 density curve with 25% opacity fill; rug marks (geom_segment) as short green vertical ticks at bottom; trimodal distribution visible (peaks ~120ms, ~250ms, ~400ms); outlier rug marks at 550–780ms
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1-consistent), not pure white -- correct.
+      Chrome: Title "rug-basic · letsplot · anyplot.ai" in dark ink, top-left, ~51% of plot width -- readable, but missing the mandated "python" language segment (should read "rug-basic · python · letsplot · anyplot.ai"). Axis titles "Response Time (ms)" (x) and "Density" (y, rotated) in dark ink, clearly readable. Tick labels in a softer gray, legible. Horizontal Y-axis gridlines only, subtle. Full 4-sided panel border visible (not the default L-shape).
+      Data: Brand green (#009E73) KDE curve with a light translucent green fill showing a trimodal shape (peaks near ~80ms, ~180ms, and a smaller bump near ~300ms), plus green rug tick marks along the x-axis baseline showing individual observations -- dense clustering in 60-220ms, sparser marks 270-350ms, and four isolated outlier ticks from 420-610ms.
+      Legibility verdict: PASS (all rendered text is clearly readable against the light background; the title's missing word is a content/spec-compliance defect, not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) — correct
-      Chrome: Title and axis labels in light text (#F0EFE8 equivalent) — clearly readable; tick labels in soft light color — readable; no dark-on-dark failures detected
-      Data: Identical brand green #009E73 for density curve and rug marks — colors unchanged from light render; data remains clearly distinguishable against dark background
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17-consistent), not pure black -- correct.
+      Chrome: Same title text and same missing "python" segment issue. Title and axis titles render in light off-white ink, tick labels in a lighter gray -- both clearly legible against the dark background, no dark-on-dark failures observed. Gridlines and the 4-sided panel border are visible at low contrast, matching the light render's structure.
+      Data: Identical brand green (#009E73) curve, fill, and rug tick colors/positions as the light render -- confirms only chrome (background/text/grid) flipped, data colors held constant as required.
+      Legibility verdict: PASS (all text readable in the dark theme; no dark-on-dark or light-on-light failures; same title defect as light render).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title=24, axis_title=20, axis_text=16 explicitly set; readable in
-          both renders
+        comment: All sizes explicit (title 24pt, axis title 20pt, tick 16pt); title
+          fits ~51% of plot width, no overflow, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Density curve prominent; rug marks visible with appropriate height
-          and alpha=0.7
+        comment: Density curve and rug ticks clearly visible; densest cluster (60-100ms)
+          merges into a solid block, alpha=0.55 helps but individual ticks are hard
+          to distinguish there
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series Okabe-Ito #009E73, CVD-safe'
+        comment: Single-hue brand green, strong contrast on both cream and near-black
+          backgrounds, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions; some empty space in upper-right due to right-skewed
-          distribution
+        comment: Plot fills ~75% of canvas (good), but right margin (~22px) is far
+          tighter than left margin (~290px) -- unbalanced whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Response Time (ms) with units, Density; correct title format
+        comment: '''Response Time (ms)'' has units, ''Density'' is descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 for single series; #FAF8F1 light / #1A1A17 dark backgrounds;
-          chrome adapts correctly'
+        comment: 'Brand green #009E73 identical across themes, backgrounds and chrome
+          tokens match Imprint style guide exactly'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Clean professional density+rug with semi-transparent fill; above
-          defaults but not publication-ready
+        comment: Thoughtful density+rug composition and graduated typography, but
+          a single-hue design that stops short of 'strong design' tier
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Minor grid removed, major grid subtly styled (size=0.2); both x/y
-          gridlines still visible
+        comment: Grid pared down to subtle y-only major lines, but a full 4-sided
+          panel border remains contrary to the style guide's default L-shaped frame
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Trimodal distribution and gap between fast/medium/slow clusters immediately
-          legible from KDE and rug
+        comment: The density shape plus rug ticks together clearly surface clustering
+          and outliers without needing annotations -- decent visual hierarchy
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Rug marks along x-axis complemented by density curve per spec
+        comment: Correct rug plot, paired with a density curve exactly as the spec's
+          Notes/Applications recommend
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Semi-transparency, consistent tick height, x-axis position, paired
-          with density
+        comment: Semi-transparency for overlap, small/consistent tick height, x-axis
+          position by default, complements a density curve -- all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: Continuous variable on x-axis, density on y-axis, all 99 observations
-          represented
+        comment: response_time correctly on x, density on y, rug at y=0..small; full
+          data range visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: rug-basic · letsplot · anyplot.ai exact format; no legend (single-series,
-          correct)
+        comment: Rendered title is missing the mandated 'python' language segment
+          in both renders (reads 'rug-basic · letsplot · anyplot.ai' instead of the
+          required 4-part format); no legend needed for single series
     data_quality:
       score: 15
       max: 15
@@ -156,82 +178,74 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: Shows clustering, gaps, exact observation positions, and outliers
+        comment: Trimodal clustering, gaps between clusters, and isolated outliers
+          all present -- covers the full feature set a rug plot should demonstrate
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: API/server response time — real, neutral, comprehensible scenario
+        comment: Plausible, neutral API/service response-time scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: 100–800ms realistic for web service latency; cluster proportions
-          plausible
+        comment: Response-time values (80-610ms) are realistic for the domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Linear imports→data→plot→save; no functions or classes
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: All imports used; wildcard import is idiomatic for lets-plot
+        comment: Only numpy/pandas/os/lets_plot symbols actually used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: true
-        comment: 'Repeated # noqa: F405 on every geom/theme call clutters code; named
-          imports would eliminate noise'
+        comment: Clean, appropriately simple; comment documents the geom_segment-for-geom_rug
+          workaround
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html via current
+          ggsave API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Correct ggplot grammar, layered geoms, proper theme() override, ggsize()
-          for canvas
+        comment: Idiomatic ggplot-grammar layering (geom_density + geom_segment +
+          theme); geom_segment is the documented correct workaround given lets-plot
+          has no native geom_rug()
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: true
-        comment: Uses ggsize+scale=3 for high-res export (lets-plot distinctive);
-          does not use native geom_rug() if available
+        comment: Emits both a static PNG and an interactive HTML export, leveraging
+          lets-plot's built-in interactivity beyond what static-only libraries offer
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - alpha-blending

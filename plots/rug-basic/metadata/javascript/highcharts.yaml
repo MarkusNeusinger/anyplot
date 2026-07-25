@@ -1,0 +1,253 @@
+library: highcharts
+language: javascript
+specification_id: rug-basic
+created: '2026-07-25T06:56:27Z'
+updated: '2026-07-25T07:10:01Z'
+generated_by: claude-sonnet
+workflow_run: 30148142622
+issue: 978
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Fixed the attempt-1 canvas-utilization problem directly: a dual-pane layout now
+    dedicates the top ~72% of canvas height to a Gaussian KDE areaspline and the bottom
+    ~22% to the rug strip, eliminating the large blank dead zone that previously wasted
+    60%+ of the vertical space.'
+  - 'Strong data storytelling now present: plotBands shaded regions explicitly label
+    the ''Gap'' between the two clusters (~3.5-4.5h) and the ''Outliers'' region (~9.4-13.4h)
+    directly on the chart, tying the annotation to both the density curve and the
+    rug ticks beneath it.'
+  - 'Distinctive Highcharts technique: percentage-based multi-pane yAxis composition
+    (top/height splits) sharing one xAxis between an areaspline density trace and
+    a column-as-rug series is a genuinely Highcharts-idiomatic pattern, addressing
+    the attempt-1 ''generic column chart'' critique.'
+  - 'Clean theme-adaptive chrome carried over from attempt 1: explicit font sizes
+    throughout, correct Imprint green (#009E73) with alpha for both curve and rug,
+    correct #FAF8F1/#1A1A17 backgrounds, deterministic fixed-seed LCG data generation,
+    no fake interactivity.'
+  weaknesses:
+  - The areaspline density curve has no legend, axis title, or on-chart label identifying
+    it as a density/KDE estimate -- legend is fully disabled and the y-axis for that
+    pane is hidden, so a first-time viewer has to infer what the top curve represents
+    purely from convention. A small text label (e.g. 'Density estimate') near the
+    curve, or re-enabling a minimal legend, would remove the ambiguity.
+  - 'Minor residual headroom in the rug pane itself: yAxis[1] runs 0 to 1.2 while
+    every rug mark has height 1, leaving about 17% of that sub-pane''s height unused
+    above the ticks -- tightening max to ~1.05-1.1 would let the ticks read as a marginally
+    taller, denser band without affecting the overall dual-pane composition.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Bold dark title "rug-basic · javascript · highcharts · anyplot.ai" at top, soft-gray subtitle "Daily screen time reported by 356 survey respondents" beneath it. Two light shaded plotBands span the full chart height: a neutral-gray "Gap" band around 3.5-4.6h and a pale-green "Outliers" band around 9.4-13.4h, each with a small centered label near the top. X-axis line with tick numbers (0, 2, 4, 6, 8, 10, 12, 14) in soft gray and axis title "Daily Screen Time (hours)" below. All chrome text is dark-on-light and clearly legible; no clipping at any edge.
+      Data: A bimodal Gaussian KDE areaspline (green line + light green fill, ~18% opacity) fills the top ~72% of the canvas, showing a tall peak near 2h and a shorter, broader peak near 6.5h, dropping to near-zero through the shaded Gap and Outliers bands. Below it, in the bottom ~22% of the canvas, a dense horizontal band of thin vertical green (#009E73, ~55% opacity) rug ticks: a dense cluster ~0.5-3.5h, a second dense cluster ~4.6-8h, a visible empty gap between them matching the "Gap" band, and six sparse individual ticks beyond ~9.5h matching the "Outliers" band. The dual-pane layout uses nearly the full canvas height with no large dead zone.
+      Legibility verdict: PASS -- all text readable, no light-on-light issues, no edge clipping, no overlap between the Gap/Outliers labels and the curve or ticks.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Title, subtitle, axis numbers, and axis title all flip to light/off-white text and remain clearly readable -- no dark-on-dark failure. The Gap/Outliers plotBands flip to subtle dark-gray/dark-green shading appropriate for the dark surface, labels remain legible in light gray.
+      Data: The KDE curve and rug ticks are the identical Imprint green (#009E73) at the identical opacity as the light render -- confirmed only chrome (background/text/band shading) flipped, data colors did not change. Same bimodal density shape, same cluster/gap/outlier tick pattern is visible.
+      Legibility verdict: PASS -- no dark-on-dark or light-on-light failures in either render; both themes are readable with no edge clipping.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (22/14/16/14/12px), readable in both
+          themes, no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements; Gap/Outliers labels sit clear
+          of curve and ticks
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Rug ticks and density curve both clearly visible with appropriate
+          alpha and thickness
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue series, no red/green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Dual-pane composition (72% density / 22% rug) fills the canvas; previous
+          large blank dead zone is resolved
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis label includes units (hours)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint #009E73, correct theme-adaptive backgrounds
+          in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dual-pane density+rug composition with shaded annotation bands reads
+          as intentional, well-considered design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/gridlines absent, subtle band shading, generous but no longer
+          excessive whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Gap and Outliers bands plus the bimodal KDE clearly guide the viewer
+          to the distribution's key features; missing an explicit label for the density
+          curve keeps this just short of max
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct rug plot via thin semi-transparent column ticks
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparency, consistent small tick height, x-axis positioning
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X correctly maps screen-time values; both y-axes appropriately hidden
+          since neither carries meaningful units
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend disabled is acceptable given the visual
+          convention, though a density label would help (see weaknesses)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Now pairs the rug with a KDE density complement exactly as the spec's
+          notes suggest, fully covering clustering, gap, and outliers
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral survey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible daily screen-time hour values including heavy-use outliers
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart mount-node contract, animation disabled
+          on both chart and series
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Percentage-based multi-pane yAxis composition, plotBands, custom
+          tooltip formatter -- all idiomatic Highcharts patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Dual-pane shared-xAxis density+rug layout is genuinely distinctive
+          to Highcharts' axis-pane model, a clear improvement over attempt 1's bare
+          column-as-rug
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - minimal-chrome
