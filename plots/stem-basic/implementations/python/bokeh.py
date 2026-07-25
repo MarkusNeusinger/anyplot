@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stem-basic: Basic Stem Plot
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-25
@@ -14,7 +14,7 @@ sys.path = [p for p in sys.path if not p.endswith("/python")]
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, Label, Range1d
+from bokeh.models import ColumnDataSource, HoverTool, Label, Range1d
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -46,7 +46,7 @@ W, H = 3200, 1800
 p = figure(
     width=W,
     height=H,
-    title="stem-basic · bokeh · anyplot.ai",
+    title="stem-basic · python · bokeh · anyplot.ai",
     x_axis_label="Sample Index",
     y_axis_label="Amplitude",
     toolbar_location=None,
@@ -64,7 +64,10 @@ p.y_range = Range1d(start=y.min() - y_pad, end=y.max() + y_pad)
 p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=stem_source, line_width=4, color=BRAND, alpha=0.85)
 
 # Draw markers at data points
-p.scatter(x="x", y="y", source=source, size=25, color=BRAND, alpha=1.0)
+marker_renderer = p.scatter(x="x", y="y", source=source, size=25, color=BRAND, alpha=1.0)
+
+# Hover tooltip on markers, showcasing bokeh's interactivity in the HTML output
+p.add_tools(HoverTool(renderers=[marker_renderer], tooltips=[("Sample", "@x"), ("Amplitude", "@y{0.00}")]))
 
 # Highlight the peak-amplitude sample as a focal point
 p.scatter(x=[x[peak_idx]], y=[y[peak_idx]], size=34, color=AMBER, line_color=INK, line_width=2, level="overlay")
