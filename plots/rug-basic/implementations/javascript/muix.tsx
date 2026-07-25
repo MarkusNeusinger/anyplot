@@ -22,47 +22,52 @@ function randn() {
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand());
 }
 
-// Reaction times (ms) in a visual cognitive task, two testing sessions
-const morning = Array.from({ length: 140 }, () => 420 + 55 * randn());
-const evening = Array.from({ length: 140 }, () => 458 + 70 * randn());
-// A few slow trials at the tail — attention lapses, visible as outlier ticks
-morning.push(636);
-evening.push(688, 706, 727);
+// Reaction times (ms) in a visual cognitive task, two testing sessions.
+// Each observation tracks whether it is a slow-trial "attention lapse" so the
+// tail can be emphasized visually rather than only in a code comment.
+const morning = Array.from({ length: 140 }, () => ({ v: 420 + 55 * randn(), outlier: false }));
+const evening = Array.from({ length: 140 }, () => ({ v: 458 + 70 * randn(), outlier: false }));
+morning.push({ v: 636, outlier: true });
+evening.push({ v: 688, outlier: true }, { v: 706, outlier: true }, { v: 727, outlier: true });
 
 const LANES = [
-  { label: "Morning session", values: morning, color: t.palette[0] },
-  { label: "Evening session", values: evening, color: t.palette[1] },
+  { label: "Morning session", values: morning, color: t.palette[0], strokeLabel: false },
+  { label: "Evening session", values: evening, color: t.palette[1], strokeLabel: true },
 ];
 
-const allValues = LANES.flatMap((lane) => lane.values);
+const allValues = LANES.flatMap((lane) => lane.values.map((d) => d.v));
 const X_MIN = Math.floor(Math.min(...allValues) / 20) * 20 - 20;
 const X_MAX = Math.ceil(Math.max(...allValues) / 20) * 20 + 20;
 
-const TICK_HEIGHT = 250; // px, consistent height for every observation tick
 const TITLE_H = 60;
+const NORMAL_TICK_FRAC = 0.72; // fraction of the lane band used by regular ticks
+const OUTLIER_TICK_FRAC = 0.92; // outlier ticks read taller, at a glance
 
-// One rug lane: an optional baseline rule plus one semi-transparent tick per
-// observation. Overlapping trials (frequent near the distribution centre)
-// darken naturally.
-function RugLane({ values, color, baselineY, showRule }) {
+// One rug lane: a subtle tinted background band plus one semi-transparent
+// tick per observation. Overlapping trials (frequent near the distribution
+// centre) darken naturally. Outlier "attention lapse" trials are drawn
+// taller and more opaque so the tail reads at a glance, not just on close
+// reading.
+function RugLane({ values, color, top, laneHeight }) {
   const xs = useXScale();
   const { left, width } = useDrawingArea();
   if (!xs) return null;
+  const baselineY = top + laneHeight;
+  const normalHeight = laneHeight * NORMAL_TICK_FRAC;
+  const outlierHeight = laneHeight * OUTLIER_TICK_FRAC;
   return (
     <g>
-      {showRule && (
-        <line x1={left} x2={left + width} y1={baselineY} y2={baselineY} stroke={t.grid} strokeWidth={1} />
-      )}
-      {values.map((v, i) => (
+      <rect x={left} y={top} width={width} height={laneHeight} fill={color} opacity={0.05} />
+      {values.map((d, i) => (
         <line
           key={i}
-          x1={xs(v)}
-          x2={xs(v)}
+          x1={xs(d.v)}
+          x2={xs(d.v)}
           y1={baselineY}
-          y2={baselineY - TICK_HEIGHT}
+          y2={baselineY - (d.outlier ? outlierHeight : normalHeight)}
           stroke={color}
-          strokeWidth={2}
-          strokeOpacity={0.42}
+          strokeWidth={d.outlier ? 2.5 : 2}
+          strokeOpacity={d.outlier ? 0.85 : 0.42}
           strokeLinecap="round"
         />
       ))}
@@ -70,33 +75,45 @@ function RugLane({ values, color, baselineY, showRule }) {
   );
 }
 
-function LaneLabel({ text, baselineY, color }) {
+function LaneLabel({ text, top, color, strokeLabel }) {
   const { left } = useDrawingArea();
   return (
-    <text x={left} y={baselineY - TICK_HEIGHT - 16} fontSize={16} fontFamily={FONT} fontWeight={600} fill={color}>
+    <text
+      x={left}
+      y={top + 20}
+      fontSize={16}
+      fontFamily={FONT}
+      fontWeight={600}
+      fill={color}
+      stroke={strokeLabel ? t.ink : "none"}
+      strokeWidth={strokeLabel ? 0.75 : 0}
+      paintOrder="stroke"
+    >
       {text}
     </text>
   );
 }
 
-// Two rug lanes sharing one x-axis, vertically split within the drawing area.
-// The second lane sits flush on the axis line; the first gets its own rule.
+// Two rug lanes sharing one x-axis, evenly split within the drawing area.
+// Each lane gets its own faint tinted band instead of a dividing rule, so
+// the split reads without adding an extra line of visual clutter.
 function RugPlot() {
   const { top, height } = useDrawingArea();
-  const baselines = [top + height * 0.48, top + height];
+  const laneHeight = height / 2;
+  const laneTops = [top, top + laneHeight];
   return (
     <g>
       {LANES.map((lane, i) => (
-        <RugLane
-          key={lane.label}
-          values={lane.values}
-          color={lane.color}
-          baselineY={baselines[i]}
-          showRule={i === 0}
-        />
+        <RugLane key={lane.label} values={lane.values} color={lane.color} top={laneTops[i]} laneHeight={laneHeight} />
       ))}
       {LANES.map((lane, i) => (
-        <LaneLabel key={lane.label} text={lane.label} baselineY={baselines[i]} color={lane.color} />
+        <LaneLabel
+          key={lane.label}
+          text={lane.label}
+          top={laneTops[i]}
+          color={lane.color}
+          strokeLabel={lane.strokeLabel}
+        />
       ))}
     </g>
   );
