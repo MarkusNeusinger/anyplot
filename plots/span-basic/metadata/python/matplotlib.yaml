@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: span-basic
 created: '2025-12-23T20:44:32Z'
-updated: '2026-07-25T14:17:02Z'
+updated: '2026-07-25T14:25:40Z'
 generated_by: claude-sonnet
 workflow_run: 30161047770
 issue: 980
@@ -12,9 +12,17 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
+  - Legend frame is now fully opaque (leg.get_frame().set_alpha(1.0)), fixing the
+    attempt-1 overlap where the price line washed out underneath it — both renders
+    now show clean separation between legend and data.
+  - Horizontal span alpha raised from 0.18 to 0.22, now inside the spec's recommended
+    0.2-0.3 range and consistent with the vertical span's alpha.
+  - New axvline edge markers at 2008/2010 give the time-based span a distinct visual
+    treatment from the threshold span, sharpening the visual hierarchy between the
+    two span types.
   - Both span directions from the spec are implemented (vertical time-based recession
     period, horizontal threshold-based risk zone), with in-span text labels as the
     spec's optional enhancement.
@@ -26,30 +34,34 @@ review:
     chrome throughout.'
   - Clean, reproducible, KISS-structured code with no unused imports or over-engineering.
   weaknesses:
-  - Legend frame is only semi-transparent (default framealpha), so the price line
-    washes out visibly underneath it in the 2004-2005 region in both themes -- set
-    leg.get_frame().set_alpha(1.0) for a fully opaque frame, or reposition/shrink
-    the legend so it clears the highest price values.
-  - Horizontal span alpha (0.18) sits just under the spec's recommended 0.2-0.3 range
-    -- bump to ~0.2 for consistency with the vertical span (0.22) and full spec compliance.
-  - Design excellence is solid but not yet exceptional -- consider differentiating
-    the two span types further (e.g., a subtle edge line on one, distinct label styling)
-    to sharpen the visual hierarchy.
+  - 'Title is ''span-basic · matplotlib · anyplot.ai'' but the mandatory format is
+    ''{spec-id} · {language} · {library} · anyplot.ai'' — the ''python'' language
+    token is missing. Fix: ax.set_title("span-basic · python · matplotlib · anyplot.ai",
+    ...); the new string is still well under the 67-char baseline so no fontsize change
+    is needed.'
+  - Design excellence is solid but not yet exceptional — consider one more differentiator
+    (e.g. a short data-driven annotation calling out the trough value) to push Design
+    Excellence further above the 'good' tier.
+  - The 8pt italic vertical-span label is the smallest text element on the chart —
+    comfortably readable at full resolution but borderline at ~400px mobile width;
+    consider 9-10pt if headroom allows.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
-      Chrome: Bold dark title "span-basic · matplotlib · anyplot.ai" centered at top; dark "Year" / "Price Index" axis labels; dark-ink tick labels; subtle horizontal grid lines; boxed legend (upper-left) with dark border and near-white fill. All chrome elements clearly readable against the light background.
-      Data: Brand-green (#009E73) "Stock Price Index" line runs 2004-2016, declining sharply through a lavender vertical span (2008-2010 "Recession Period") and settling into a blue-gray horizontal span (70-95, "Risk Zone"). Italic in-span text labels do not overlap the data line. One flaw: the legend frame is only semi-transparent, so the top of the price line (2004-2005, the chart's highest values) visibly washes out underneath the legend box and its color swatches. Legend text itself stays fully readable.
-      Legibility verdict: PASS (title/axis/tick text fully readable; the legend-over-data wash-out is a VQ-02 overlap issue, not a legibility failure)
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark title "span-basic · matplotlib · anyplot.ai" centered at top (note: missing the mandatory "python" language token - see weaknesses). Axis labels "Year" / "Price Index" and tick labels render in dark ink, clearly legible against the cream background. Legend (upper-left) is now a fully opaque cream box with a solid border - the price line no longer shows through underneath it (fixed from attempt 1).
+      Data: Brand-green (#009E73) "Stock Price Index" line declining from ~124 (2004) through a lavender-shaded vertical span (2008-2010, Imprint position 2, #C475FD, now with subtle edge lines at the span boundaries) down to a blue-gray horizontal span (Imprint position 3, #4467A3, "Risk Zone", 70-95, alpha now 0.22). Italic rotated "2008-2010 Recession" label sits inside the vertical span above the line; bold "RISK ZONE" tag sits inside the horizontal span at the left, before the data starts. No overlap between labels and the price line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
-      Chrome: Title, axis labels, and tick labels render in light ink (#F0EFE8 / #B8B7B0 range) and are clearly visible; no dark-on-dark failures observed. Grid lines subtle but visible. Legend frame uses the dark elevated background with light text, fully readable.
-      Data: Line color is identical brand green (#009E73) to the light render, confirming data-color consistency. The vertical span reads as a muted plum and the horizontal span as a muted navy -- these are the same underlying Imprint hexes (positions 2/3) alpha-composited onto the dark background, which is expected and not a palette violation. The same legend-over-data wash-out recurs here, identical in nature to the light render.
-      Legibility verdict: PASS (no dark-on-dark text; brand green reads clearly on the dark surface; legend/data overlap noted separately under VQ-02)
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, axis labels, and tick labels render in light ink and are clearly readable - no dark-on-dark failures. Legend box is now a fully opaque dark-elevated fill (#242420-ish) with light text and a soft border - no data visible through it (fixed from attempt 1).
+      Data: Identical brand-green line to the light render. The vertical span reads as a muted plum and the horizontal span as a muted navy - expected alpha-compositing of the same underlying Imprint hexes on the dark surface, not a palette violation (positions 2/3 unchanged). Span edge lines and text labels are legible against the dark background.
+      Legibility verdict: PASS
+
+    Both renders viewed and checked for theme-adaptive chrome correctness. Both attempt-1 weaknesses (legend/data overlap, horizontal span alpha below spec range) are visibly resolved in this attempt. One new/carried compliance issue found on closer inspection: the title is missing the mandatory "python" language token required by the current title-format rule.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -58,30 +70,29 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 12pt bold, axis 10pt, ticks/legend/annotations
-          8pt); readable in both themes. Smallest element (8pt italic span annotations)
-          is borderline at mobile scale.
+          8pt); well-proportioned and readable in both themes. The 8pt italic span
+          annotation is the smallest element and borderline at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Legend frame's default framealpha lets the price line show through
-          underneath it in both themes, obscuring part of the 2004-2005 data. Text
-          itself stays legible.
+        comment: Legend frame is now fully opaque (set_alpha(1.0)) - the attempt-1
+          overlap where the price line washed out underneath it is fixed in both themes.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3pt line prominent for this density; span alphas (0.22/0.18) keep
+        comment: 3pt line is prominent for this density; span alphas (0.22 each) keep
           the underlying line visible through both shaded regions.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue-gray easily distinguished by hue and alpha; no
-          red-green-only encoding.
+        comment: Green line, purple span, blue-gray span distinguished by hue and
+          alpha; no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -94,17 +105,18 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: '"Year" / "Price Index" descriptive; index has no natural unit.'
+        comment: '''Year'' / ''Price Index'' are descriptive; an index has no natural
+          unit to append.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series #009E73; spans use Imprint positions 2 (#C475FD) and
-          3 (#4467A3) in canonical order; backgrounds correct; chrome theme-correct
+          3 (#4467A3) in canonical order; backgrounds #FAF8F1/#1A1A17; chrome theme-correct
           in both renders.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -112,24 +124,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful multi-span composition with blended-transform label anchoring;
-          above configured default, short of publication-grade polish.
+        comment: Thoughtful multi-span composition with blended-transform label anchoring
+          and now-differentiated span edge treatment; above a configured default,
+          short of publication-grade polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, generous whitespace -- but semi-transparent
-          legend frame sitting over live data is an unpolished detail.
+        comment: Spines removed, subtle y-grid, generous whitespace, opaque legend
+          frame, and new axvline edges at span boundaries - the attempt-1 refinement
+          gap (legend over data) is closed.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear focal point (2008-2010 collapse) reinforced by color contrast
-          between the two span types.
+        comment: Clear focal point (the 2008-2010 collapse) reinforced by color contrast
+          between the two span types; viewer reads the story without needing further
+          annotation.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -143,21 +158,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Both directions covered (vertical + horizontal span), semi-transparent
-          fill, optional in-span text labels -- full feature set.
+        comment: Both directions covered, semi-transparent fill now at 0.22/0.22 (within
+          the spec's 0.2-0.3 range), optional in-span text labels present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on X, price index on Y; axes show full data range.
+        comment: Dates on X, price index on Y; axes show the full data range.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title exactly "span-basic · matplotlib · anyplot.ai"; legend labels
-          match data.
+        passed: false
+        comment: Legend labels correct, but the title 'span-basic · matplotlib · anyplot.ai'
+          is missing the mandatory 'python' language token required by the current
+          title format rule.
     data_quality:
       score: 13
       max: 15
@@ -168,20 +184,22 @@ review:
         max: 6
         passed: true
         comment: Shows decline, recession dip, and post-crisis recovery/plateau; a
-          secondary rally/volatility cluster would round it out further.
+          brief secondary rally or volatility cluster would round out coverage further.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible finance scenario, no sensitive content.
+        comment: Neutral, plausible finance scenario (recession period, risk threshold)
+          with no sensitive content.
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
         passed: true
-        comment: Magnitude/shape of crash and recovery plausible for a generic price
-          index, not anchored to a specific real-world benchmark.
+        comment: Magnitude and shape of the crash/recovery are plausible for a generic
+          price index; not anchored to a specific real-world benchmark, which is fine
+          but keeps this shy of a perfect score.
     code_quality:
       score: 10
       max: 10
@@ -225,16 +243,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct axvspan/axhspan plus blended-transform label anchoring --
-          solid idiomatic matplotlib.
+        comment: Correct axvspan/axhspan usage plus get_xaxis_transform()/get_yaxis_transform()
+          blended transforms and axvline edge markers - solid, idiomatic matplotlib.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Blended-transform label anchoring is matplotlib-specific but overall
-          span usage is fairly generic.
-  verdict: REJECTED
+        comment: Blended-transform label anchoring is matplotlib-specific and isn't
+          trivially replicated elsewhere, but the overall approach is still fairly
+          generic span usage.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
