@@ -1,12 +1,8 @@
 // anyplot.ai
 // stem-basic: Basic Stem Plot
-// Library: d3 7.9.0 | JavaScript 22.23.1
-// Quality: 83/100 | Created: 2026-07-25
-//# anyplot-orientation: landscape
-// anyplot.ai
-// stem-basic: Basic Stem Plot
 // Library: d3 7.9.0 | JavaScript 22
 // Quality: pending | Created: 2026-07-25
+//# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -17,9 +13,10 @@ const ih = height - margin.top - margin.bottom;
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Discrete-time impulse response of a damped oscillator: h[n] = e^(-0.15n) * cos(0.5n)
 const sampleCount = 40;
+const envelope = (n) => Math.exp(-0.15 * n);
 const data = Array.from({ length: sampleCount }, (_, n) => ({
   n,
-  amplitude: Math.exp(-0.15 * n) * Math.cos(0.5 * n),
+  amplitude: envelope(n) * Math.cos(0.5 * n),
 }));
 
 // --- SVG mount ----------------------------------------------------------------
@@ -36,6 +33,30 @@ const y = d3
   .domain(d3.extent(data, (d) => d.amplitude))
   .nice()
   .range([ih, 0]);
+// Marker radius tied to |amplitude|: the decaying envelope reads directly
+// through marker prominence, not just vertical position.
+const r = d3.scaleLinear().domain([0, 1]).range([5.5, 11]).clamp(true);
+
+// --- Decay-envelope guide (d3-shape line generator) -----------------------------
+// A thin dashed guide along +/- e^(-0.15n) gives the reader an immediate read
+// on the envelope the stems are riding, rather than leaving it implicit.
+const envelopeLine = d3
+  .line()
+  .curve(d3.curveMonotoneX)
+  .x((d) => x(d.n))
+  .y((d) => y(d.value));
+const upperEnvelope = data.map((d) => ({ n: d.n, value: envelope(d.n) }));
+const lowerEnvelope = data.map((d) => ({ n: d.n, value: -envelope(d.n) }));
+for (const env of [upperEnvelope, lowerEnvelope]) {
+  g.append("path")
+    .datum(env)
+    .attr("fill", "none")
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", 1.25)
+    .attr("stroke-dasharray", "5,4")
+    .attr("stroke-opacity", 0.35)
+    .attr("d", envelopeLine);
+}
 
 // --- Baseline (y = 0) ----------------------------------------------------------
 g.append("line")
@@ -47,6 +68,8 @@ g.append("line")
   .attr("stroke-width", 1.5);
 
 // --- Stems ----------------------------------------------------------------------
+// Positive samples render at full opacity; negative samples are slightly
+// dimmed, so the sign transition of the oscillation is visible at a glance.
 g.selectAll(".stem")
   .data(data)
   .join("line")
@@ -56,7 +79,8 @@ g.selectAll(".stem")
   .attr("y1", y(0))
   .attr("y2", (d) => y(d.amplitude))
   .attr("stroke", t.palette[0])
-  .attr("stroke-width", 2.5);
+  .attr("stroke-width", 2.5)
+  .attr("stroke-opacity", (d) => (d.amplitude >= 0 ? 1 : 0.55));
 
 // --- Markers ----------------------------------------------------------------------
 g.selectAll(".marker")
@@ -65,8 +89,9 @@ g.selectAll(".marker")
   .attr("class", "marker")
   .attr("cx", (d) => x(d.n))
   .attr("cy", (d) => y(d.amplitude))
-  .attr("r", 7)
+  .attr("r", (d) => r(Math.abs(d.amplitude)))
   .attr("fill", t.palette[0])
+  .attr("fill-opacity", (d) => (d.amplitude >= 0 ? 1 : 0.55))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5);
 
