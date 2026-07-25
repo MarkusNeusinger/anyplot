@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 49/100 | Updated: 2026-07-25
@@ -16,8 +16,11 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint palette — position 1 (brand) for the source/generation stage,
-# position 2 for the downstream end-use distribution stage
+# Imprint palette — chosen semantic mapping is stage-based rather than
+# per-source: position 1 (brand) for the source/generation stage, position 2
+# for the downstream end-use distribution stage. This keeps the two-stage
+# flow structure (inputs -> hub -> sectors) visually legible as two families
+# of ribbons instead of splintering it into eight near-identical hues.
 BRAND = "#009E73"
 SECONDARY = "#C475FD"
 
@@ -72,11 +75,10 @@ sankey.add(
     flows=[coal, natural_gas, nuclear, renewables, -losses, -net_delivered],
     labels=["Coal\n120 TWh", "Natural Gas\n90 TWh", "Nuclear\n60 TWh", "Renewables\n30 TWh", "Losses\n100 TWh", ""],
     orientations=[-1, 0, 1, 1, -1, 0],
-    pathlengths=[0.5, 0.3, 0.9, 0.6, 0.55, 0.5],
+    pathlengths=[0.5, 0.3, 0.9, 0.75, 0.55, 0.5],
     facecolor=BRAND,
-    edgecolor=INK_SOFT,
-    alpha=0.8,
-    linewidth=1.5,
+    edgecolor="none",
+    alpha=0.85,
 )
 
 # Add distribution to end-use sectors (second diagram connected to first)
@@ -84,29 +86,45 @@ sankey.add(
     flows=[net_delivered, -residential, -commercial, -industrial, -transportation],
     labels=["", "Residential\n55 TWh", "Commercial\n45 TWh", "Industrial\n80 TWh", "Transport\n20 TWh"],
     orientations=[0, -1, 0, 1, 1],
-    pathlengths=[0.3, 1.0, 0.3, 0.9, 0.6],
+    pathlengths=[0.3, 1.0, 0.95, 0.9, 0.6],
     prior=0,
     connect=(5, 0),
     facecolor=SECONDARY,
-    edgecolor=INK_SOFT,
-    alpha=0.8,
-    linewidth=1.5,
+    edgecolor="none",
+    alpha=0.85,
 )
 
 # Finish and get diagram objects
 diagrams = sankey.finish()
 
 # Style all labels with larger, theme-adaptive text for visibility
+# A few default label positions sit on top of their own ribbon's curved bend
+# or too close to a neighboring label — nudge those clear by hand (offsets
+# tuned against the rendered PNG, same technique for every entry below).
+LABEL_OFFSETS = {
+    # Residential's default position sits close to Losses (both hubs break
+    # away near the same seam) — nudge it clear to avoid a text collision
+    "Residential": (0.35, -0.45),
+    # Coal's label sits on the ribbon's downward bend into the hub
+    "Coal": (-0.95, -0.25),
+    # Losses' label sits on the ribbon's downward bend into the hub
+    "Losses": (0.15, -0.05),
+    # Renewables crowds edge-to-edge against the Nuclear/"60 TWh" label
+    "Renewables": (-0.4, 0.15),
+    # Commercial's straight horizontal flow passes directly through the
+    # label at the same height — lift the label clear of the arrow tip
+    "Commercial": (0.2, 0.35),
+}
 for diagram in diagrams:
     for text in diagram.texts:
         text.set_fontsize(18)
         text.set_fontweight("bold")
         text.set_color(INK)
-        # Residential's default position sits close to Losses (both hubs break
-        # away near the same seam) — nudge it clear to avoid a text collision
-        if text.get_text().startswith("Residential"):
+        label_name = text.get_text().split("\n")[0]
+        if label_name in LABEL_OFFSETS:
+            dx, dy = LABEL_OFFSETS[label_name]
             x, y = text.get_position()
-            text.set_position((x + 0.35, y - 0.45))
+            text.set_position((x + dx, y + dy))
 
 # Title (mandated format; length is under the 67-char baseline, so default fontsize applies)
 title = "sankey-basic · python · matplotlib · anyplot.ai"
