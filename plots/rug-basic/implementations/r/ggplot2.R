@@ -10,10 +10,11 @@ library(ragg)
 set.seed(42)
 
 # --- Theme tokens -------------------------------------------------------
-THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
-PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
-INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
-INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+THEME     <- Sys.getenv("ANYPLOT_THEME", "light")
+PAGE_BG   <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+INK       <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+INK_SOFT  <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+INK_FAINT <- if (THEME == "light") "#1A1A1726" else "#F0EFE826"  # INK at ~15% alpha, for gridlines
 
 IMPRINT_PALETTE <- c(
   "#009E73", "#C475FD", "#4467A3", "#BD8233",
@@ -38,7 +39,7 @@ p <- ggplot(df, aes(x = reaction_ms)) +
   geom_rug(
     sides     = "b",
     color     = BRAND,
-    alpha     = 0.4,
+    alpha     = 0.3,
     linewidth = 0.6,
     length    = unit(0.035, "npc")
   ) +
@@ -53,7 +54,7 @@ p <- ggplot(df, aes(x = reaction_ms)) +
     panel.background    = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major.x  = element_blank(),
     panel.grid.minor    = element_blank(),
-    panel.grid.major.y  = element_line(color = INK, linewidth = 0.2),
+    panel.grid.major.y  = element_line(color = INK_FAINT, linewidth = 0.2),
     axis.line           = element_line(color = INK_SOFT, linewidth = 0.4),
     axis.title          = element_text(color = INK, size = 10),
     axis.text           = element_text(color = INK_SOFT, size = 8),
