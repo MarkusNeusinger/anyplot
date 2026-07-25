@@ -1,7 +1,7 @@
 """ anyplot.ai
 sankey-basic: Basic Sankey Diagram
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-04-30
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-07-25
 """
 
 import os
@@ -19,6 +19,7 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_fill_manual,
     scale_x_continuous,
     scale_y_continuous,
@@ -37,7 +38,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for source categories (canonical order, first = #009E73)
+# Imprint palette for source categories (canonical order, first = #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Energy flow data: sources -> sectors (realistic energy distribution)
@@ -57,6 +58,9 @@ flows = [
 sources = ["Coal", "Natural Gas", "Nuclear", "Renewable"]
 targets = ["Industrial", "Residential", "Commercial"]
 source_color_map = dict(zip(sources, IMPRINT, strict=True))
+
+# The single largest flow gets a callout to give the diagram a point of view
+dominant_source, dominant_target, dominant_value = max(flows, key=lambda f: f[2])
 
 # Calculate totals for each node
 source_totals = {}
@@ -122,9 +126,20 @@ for src, tgt, val in flows:
 
     x_polygon = x_vals_top + x_vals_bottom[::-1]
     y_polygon = y_vals_top + y_vals_bottom[::-1]
+    is_dominant = src == dominant_source and tgt == dominant_target and val == dominant_value
 
     for x, y in zip(x_polygon, y_polygon, strict=False):
-        flow_data.append({"x": x, "y": y, "flow_id": f"{src}->{tgt}", "source": src, "value": val})
+        flow_data.append(
+            {
+                "x": x,
+                "y": y,
+                "flow_id": f"{src} → {tgt}",
+                "source": src,
+                "target": tgt,
+                "value": val,
+                "highlight": is_dominant,
+            }
+        )
 
 df_flows = pd.DataFrame(flow_data)
 
@@ -135,13 +150,27 @@ node_width = 0.025
 for src in sources:
     pos = source_positions[src]
     node_rects.append(
-        {"xmin": pos["x"] - node_width / 2, "xmax": pos["x"] + node_width / 2, "ymin": pos["y0"], "ymax": pos["y1"]}
+        {
+            "xmin": pos["x"] - node_width / 2,
+            "xmax": pos["x"] + node_width / 2,
+            "ymin": pos["y0"],
+            "ymax": pos["y1"],
+            "name": src,
+            "total": source_totals[src],
+        }
     )
 
 for tgt in targets:
     pos = target_positions[tgt]
     node_rects.append(
-        {"xmin": pos["x"] - node_width / 2, "xmax": pos["x"] + node_width / 2, "ymin": pos["y0"], "ymax": pos["y1"]}
+        {
+            "xmin": pos["x"] - node_width / 2,
+            "xmax": pos["x"] + node_width / 2,
+            "ymin": pos["y0"],
+            "ymax": pos["y1"],
+            "name": tgt,
+            "total": target_totals[tgt],
+        }
     )
 
 df_nodes = pd.DataFrame(node_rects)
@@ -172,17 +201,40 @@ for tgt in targets:
 
 df_labels = pd.DataFrame(labels)
 
+flow_tooltips = layer_tooltips().line("@flow_id").line("@value TWh")
+node_tooltips = layer_tooltips().line("@name").line("@total TWh")
+
 # Plot
 plot = (
     ggplot()
     + geom_polygon(
-        aes(x="x", y="y", group="flow_id", fill="source"), data=df_flows, alpha=0.65, color=PAGE_BG, size=0.2
+        aes(x="x", y="y", group="flow_id", fill="source"),
+        data=df_flows[~df_flows["highlight"]],
+        alpha=0.6,
+        color=PAGE_BG,
+        size=0.2,
+        tooltips=flow_tooltips,
     )
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), data=df_nodes, fill=INK, color=INK, size=1.5)
+    + geom_polygon(
+        aes(x="x", y="y", group="flow_id", fill="source"),
+        data=df_flows[df_flows["highlight"]],
+        alpha=0.9,
+        color=INK,
+        size=0.6,
+        tooltips=flow_tooltips,
+    )
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
+        data=df_nodes,
+        fill=INK,
+        color=INK,
+        size=1.5,
+        tooltips=node_tooltips,
+    )
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_labels[df_labels["side"] == "left"],
-        size=14,
+        size=5.5,
         hjust=1,
         color=INK_SOFT,
         family="sans-serif",
@@ -190,32 +242,36 @@ plot = (
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_labels[df_labels["side"] == "right"],
-        size=14,
+        size=5.5,
         hjust=0,
         color=INK_SOFT,
         family="sans-serif",
     )
-    + scale_fill_manual(values=[source_color_map[s] for s in sources], name="Energy Source")
-    + labs(title="Energy Flow · sankey-basic · letsplot · anyplot.ai")
+    + scale_fill_manual(values=[source_color_map[s] for s in sources], name="Energy Source   ")
+    + labs(
+        title="sankey-basic · python · letsplot · anyplot.ai",
+        subtitle=f"Largest flow: {dominant_source} → {dominant_target} ({dominant_value} TWh)",
+    )
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=30, face="bold", color=INK),
+        plot_title=element_text(size=20, face="bold", color=INK),
+        plot_subtitle=element_text(size=13, color=INK_SOFT),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
-        legend_text=element_text(size=18, color=INK_SOFT),
-        legend_title=element_text(size=20, face="bold", color=INK),
+        legend_text=element_text(size=13, color=INK_SOFT),
+        legend_title=element_text(size=14, face="bold", color=INK),
         legend_position="bottom",
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     )
-    + scale_x_continuous(limits=[-0.02, 1.02])
+    + scale_x_continuous(limits=[-0.22, 1.22])
     + scale_y_continuous(limits=[-0.02, 1.02])
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save PNG (scale 3x for 4800 × 2700 px) and HTML
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# Save PNG (3200 × 1800 px) and interactive HTML (hover tooltips on flows and nodes)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
