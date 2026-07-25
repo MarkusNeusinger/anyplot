@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: polar-basic
 created: '2026-07-24T23:55:46Z'
-updated: '2026-07-25T00:00:57Z'
+updated: '2026-07-25T00:16:07Z'
 generated_by: claude-sonnet
 workflow_run: 30134625637
 issue: 800
@@ -12,56 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Correctly reconstructs a genuine polar coordinate system (angle = hour-of-day,
-    radius = visits) despite the core Highcharts bundle lacking highcharts-more, matching
-    the spec's core requirement instead of returning NOT_FEASIBLE
-  - Hour 0 placed at top with clockwise progression (per spec note 'consider starting
-    angle at top for time-based data'), with clean 8-point compass-style hour labels
-    (12 AM/3 AM/6 AM/.../9 PM)
-  - Radial gridlines at 1,000/2,000/3,000/4,000 are clearly visible but not overwhelming,
-    and the scale starts at 0 so the diurnal curve isn't compressed near the center
-  - 'First (only) data series correctly uses Imprint brand green #009E73, identical
-    in both light and dark renders; theme-adaptive chrome (title, subtitle, hour labels,
-    grid, ring labels) is correctly readable in both themes with no dark-on-dark or
-    light-on-light failures'
-  - Adds a real, data-bound Highcharts scatter series (hidden markers, genuine tooltip
-    formatter reporting hour + visit count) layered under the custom-drawn overlay,
-    so the interactive HTML actually hovers/tooltips correctly instead of faking it
+  - Successfully converted most of the manual chart.renderer text-drawing (hour labels,
+    ring-scale labels) from attempt 1 into real Highcharts dataLabels bound to actual
+    scatter-series points — meaningfully improves idiomatic API usage while producing
+    an identical visual result
+  - Added an explicit "Visits" unit label next to the radial ring-scale numbers, resolving
+    the VQ-06 gap flagged in the previous review
+  - Added Peak/Trough dataLabel call-outs on the actual peak/trough hours (via the
+    series' own dataLabels API), giving the diurnal curve an explicit focal point
+    instead of relying on shape alone (addresses prior DE-03 weakness)
+  - 'Both renders remain fully theme-correct: identical brand-green (#009E73) data
+    curve across light/dark, correct #FAF8F1/#1A1A17 backgrounds, no dark-on-dark
+    or light-on-light failures'
+  - Genuine data-bound tooltip series (hover reveals hour + visit count) — no faked
+    interactivity
   - 'Realistic, neutral dataset (hourly website traffic) with a believable diurnal
     shape: overnight trough (~350 visits) and evening peak (~3,950 visits)'
-  - Title fontsize scaling formula correctly keeps the mandated title from overflowing
   weaknesses:
-  - 'Library Mastery is weak: nearly the entire visual (grid rings, spokes, hour labels,
-    ring-scale labels, the data curve and its markers) is drawn manually via chart.renderer
-    primitives (circle/path/text) rather than any native Highcharts series or axis
-    API — the only real series is a hidden-marker scatter series added purely to back
-    the tooltip. This is a clever workaround for the missing highcharts-more polar
-    chart, but it scores low on idiomatic usage of the library''s high-level API.'
-  - 'VQ-06: the radial scale numbers (1,000/2,000/3,000/4,000) have no attached unit/quantity
-    label (e.g. ''Visits'') directly on the chart — the viewer must infer the meaning
-    from the subtitle alone. Add a small axis label near the radial scale or top of
-    the rings.'
-  - DE-03/data storytelling is only 'good' rather than 'excellent' — the diurnal shape
-    itself creates hierarchy, but there is no explicit emphasis (e.g. highlighting/annotating
-    the ~9 PM peak or the overnight trough) to sharpen the takeaway.
-  - Single series only — spec's optional 'category' grouping is unused, so feature
-    coverage (DQ-01) shows one clean cycle without demonstrating variation across
-    groups/categories.
+  - 'Header block dropped the mandatory "// License: Highcharts — commercial license,
+    free for non-commercial use (highcharts.com/license)" line during this attempt''s
+    header rewrite — the highcharts library rules explicitly require keeping this
+    line visible in every generated snippet; add it back above the Quality line.'
+  - 'Minor marker crowding near the plot center: the low-visit hours (roughly 2 AM–6
+    AM, ~350–680 visits) place their scatter markers so close together near the origin
+    that several white-ringed circles visually touch/overlap. The spec note warns
+    against compressing data near the center — consider a small non-zero inner-radius
+    offset (or a mildly non-linear radial scale) so low values stay visually distinguishable.'
+  - 'Library Mastery still capped: grid rings, spokes, and the data curve/fill remain
+    drawn via chart.renderer primitives (no native polar axis exists in the core bundle,
+    so this is an accepted workaround) rather than a native series/axis API.'
+  - Single series only — the spec's optional 'category' grouping is still unused (unchanged
+    from attempt 1), so feature coverage shows one clean cycle without demonstrating
+    variation across groups.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "polar-basic · javascript · highcharts · anyplot.ai" centered at top, lighter grey subtitle "Average hourly visits over a 24-hour cycle" beneath it. Eight bold dark hour labels (12 AM, 3 AM, 6 AM, 9 AM, 12 PM, 3 PM, 6 PM, 9 PM) ring the outside of the polar plot at 45° intervals. Four subtle grey concentric rings mark the radial scale, with small grey numeric labels (1,000 / 2,000 / 3,000 / 4,000) placed along the top (12 AM) spoke. All chrome text is clearly readable against the light background.
-      Data: A single closed green (#009E73) curve with a translucent green fill traces 24 hourly data points (small green-filled circular markers with light stroke) around the circle — low near 12 AM–6 AM (trough ~350–850 visits), rising through the day to a broad peak around 6 PM–9 PM (~3,600–3,950 visits), then falling back toward midnight. First (and only) series correctly uses the Imprint brand green.
-      Legibility verdict: PASS — all text is dark-on-light and clearly legible, no overlap between labels, ring-scale numbers, or the data curve.
+      Chrome: Bold dark title "polar-basic · javascript · highcharts · anyplot.ai" centered at top, lighter grey subtitle "Average hourly visits over a 24-hour cycle" beneath it. Eight bold dark hour labels (12 AM, 3 AM, 6 AM, 9 AM, 12 PM, 3 PM, 6 PM, 9 PM) ring the outside of the polar plot at 45° intervals — now rendered via real dataLabels on a hidden-marker series instead of raw renderer.text. Four subtle grey concentric rings mark the radial scale, with grey numeric labels (1,000 / 2,000 / 3,000 / 4,000) along the top (12 AM) spoke, plus a new small italic "Visits" unit label just past the outermost ring — the VQ-06 fix from the previous review. Bold "Peak · 3,950" and "Trough · 350" call-outs sit next to the corresponding data points (new this attempt). All chrome text is clearly readable against the light background.
+      Data: A single closed green (#009E73) curve with a translucent green fill traces 24 hourly data points (small green-filled circular markers with light stroke) around the circle — low near 12 AM–6 AM (trough ~350–850 visits), rising through the day to a broad peak around 6 PM–9 PM (~3,600–3,950 visits), then falling back toward midnight. First (and only) series correctly uses the Imprint brand green. On close inspection, the markers for the lowest-value hours (roughly 2 AM–6 AM) cluster tightly enough near the center that a few circles touch/overlap slightly.
+      Legibility verdict: PASS — all text is dark-on-light and clearly legible; no label-vs-label or label-vs-curve collisions, only the minor marker-vs-marker crowding noted above.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as the light render — title and subtitle now rendered in white/light-grey, the eight hour labels in white bold text, and the four radial-scale numbers in light grey. Grid rings are faint light-grey circles, still visible but subtle against the dark background.
-      Data: The green curve, translucent fill, and markers are visually identical in hue and shape to the light render — same #009E73 brand green, same 24-point diurnal shape (trough near midnight, peak in the evening).
-      Legibility verdict: PASS — all text is light-on-dark and clearly legible; no dark-on-dark failures found (title, subtitle, hour labels, and ring-scale numbers are all correctly using light theme tokens).
+      Chrome: Same layout as the light render — title and subtitle rendered in white/light-grey, the eight hour labels in white bold text, the four radial-scale numbers plus "Visits" unit label in light grey, and the Peak/Trough call-outs in white bold text. Grid rings are faint light-grey circles, still visible but subtle against the dark background.
+      Data: The green curve, translucent fill, and markers are visually identical in hue and shape to the light render — same #009E73 brand green, same 24-point diurnal shape (trough near midnight/early morning, peak in the evening), same minor marker crowding near the center.
+      Legibility verdict: PASS — all text is light-on-dark and clearly legible; no dark-on-dark failures found (title, subtitle, hour labels, ring-scale numbers, and the new Peak/Trough labels all correctly use light-theme tokens).
   criteria_checklist:
     visual_quality:
       score: 28
@@ -73,16 +70,17 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 22px scaled by length formula,
-          subtitle 14px, hour labels 15px bold, ring labels 12px); readable in both
-          themes, title well-proportioned
+          subtitle 14px, hour labels 15px bold, ring labels 12px, Peak/Trough 13px
+          bold); readable in both themes, title well-proportioned
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Hour labels sit just outside the outer ring; ring-scale numbers sit
-          inside the plot but never touch the low-value region of the data curve;
-          no collisions
+        comment: Hour labels, ring-scale numbers, and Peak/Trough call-outs never
+          collide with each other or the data curve; on close inspection the low-value
+          (2 AM-6 AM) markers cluster tightly enough near the center that a few circles
+          visually touch
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -103,14 +101,16 @@ review:
         max: 4
         passed: true
         comment: Polar disk plus labels use a large, balanced share of the square
-          canvas; margins accommodate the title without crowding
+          canvas; margins accommodate the title without crowding; nothing clipped
+          at any edge
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hour labels are descriptive, but the radial scale numbers have no
-          attached unit label (e.g. 'Visits') on the chart itself, only in the subtitle
+        passed: true
+        comment: Hour labels are descriptive; radial scale now carries an explicit
+          'Visits' unit label next to the ring numbers, fixing the gap from the previous
+          review
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -119,7 +119,7 @@ review:
         comment: 'First series is #009E73, identical across themes; backgrounds are
           FAF8F1/1A1A17; chrome is theme-correct in both renders'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -137,11 +137,12 @@ review:
         comment: Subtle grid rings, no clutter/spines, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: The diurnal shape itself creates a clear visual hierarchy (trough
-          vs. peak), though no explicit annotation/emphasis marks the peak
+        comment: New Peak/Trough dataLabel call-outs give the diurnal curve an explicit
+          focal point on top of the shape-driven hierarchy, addressing the previous
+          review's weakness
     spec_compliance:
       score: 15
       max: 15
@@ -158,7 +159,7 @@ review:
         max: 4
         passed: true
         comment: Radial gridlines, standard-interval angular labels, top-start clockwise
-          convention, non-compressed radial scale — all present
+          convention, unit-labeled radial scale — all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -205,9 +206,9 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: A few small helper arrow functions (formatHour, angleOf, pointAt)
-          are used for the polar projection math — reasonable but not pure linear
-          script
+        comment: A few small helper arrow functions (formatHour, angleOf, pointAt,
+          toAxisXY) support the polar projection math — reasonable but not a pure
+          linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -232,35 +233,38 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correctly uses Highcharts.chart with animation disabled; harness
-          owns file output
+        comment: 'Correctly uses Highcharts.chart with animation disabled; harness
+          owns file output. Note: header block is missing the mandatory License line
+          (see weaknesses) — fix this even though it falls outside the numeric criteria'
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Almost all visual elements are drawn via chart.renderer primitives
-          instead of native series/axis APIs; only a hidden-marker scatter series
-          uses the high-level series API
+        passed: true
+        comment: Hour labels, ring-scale labels, and Peak/Trough call-outs are now
+          real dataLabels bound to actual scatter-series points; only the grid rings,
+          spokes, and data curve/fill remain chart.renderer primitives, which is an
+          accepted workaround for the missing highcharts-more polar axis
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Creative use of the SVG renderer combined with a real data-bound
-          series for genuine tooltip interactivity — distinctive to Highcharts' renderer
-          + series architecture
-  verdict: REJECTED
+        comment: Creative use of the SVG renderer combined with real data-bound series
+          for genuine tooltip interactivity and native dataLabels — distinctive to
+          Highcharts' renderer + series architecture
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - manual-ticks
   - hover-tooltips
+  - annotations
   patterns:
   - data-generation
   dataprep: []
