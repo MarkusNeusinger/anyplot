@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stem-basic: Basic Stem Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-25
@@ -53,7 +53,7 @@ plot = (
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.5)
     + geom_segment(aes(x="t", xend="t", y="zero", yend="signal"), color=BRAND, size=1.0)
     + geom_point(aes(y="signal"), color=BRAND, size=3.0, stroke=0.5)
-    + labs(x="Sample Index", y="Amplitude (normalized)", title="stem-basic · plotnine · anyplot.ai")
+    + labs(x="Sample Index", y="Amplitude (normalized)", title="stem-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -66,7 +66,6 @@ plot = (
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_major_x=element_line(color=INK, size=0.0, alpha=0.0),
         panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-        axis_line=element_line(color=INK_SOFT),
     )
 )
 
