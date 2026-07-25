@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: polar-basic
 created: '2025-12-23T19:43:43Z'
-updated: '2026-07-24T23:44:29Z'
+updated: '2026-07-25T00:00:50Z'
 generated_by: claude-sonnet
 workflow_run: 30133922226
 issue: 800
@@ -12,58 +12,63 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/altair/plot-dark.html
-quality_score: 82
+quality_score: 89
 review:
   strengths:
+  - 'All three attempt-1 weaknesses are correctly fixed in the current source: title
+    now reads ''polar-basic · python · altair · anyplot.ai'' (language token restored),
+    the legend title ''Temp (°C)'' now sits fully inside its frame border with no
+    overlap, and the diurnal sine phase was shifted from (hours-6) to (hours-9) so
+    the cycle now troughs near dawn and peaks around 15:00, matching real thermal
+    lag'
   - Manually reconstructs a true polar coordinate system in Altair (which has no native
-    theta/radius encoding) via a clean theta->x/y trig conversion, with concentric
-    dashed radial gridlines and angular spokes that read as a proper polar grid
+    theta/radius encoding) via a clean trig conversion, with concentric dashed radial
+    gridlines and angular spokes that read as a proper polar grid
   - 'Continuous color encoding correctly uses the imprint_seq gradient (#009E73 ->
-    #4467A3) matching the library''s mandated single-polarity colormap, identical
-    across both light and dark renders'
-  - Radial scale-reference labels (e.g. '9°C', '21°C') are deliberately placed at
-    angles where the data path is far from that ring, avoiding crossing the line -
-    a thoughtful, non-obvious layout decision
-  - Marker size (200, sparse 24-point data) and line weight follow the data-density
-    heuristic well; white/cream point strokes give clean definition against both theme
-    backgrounds
-  - 'Correctly follows the altair canvas contract: sized the inner view to 500x460,
-    then pad-only (never crop) to the canonical 2400x2400 square, matching prompts/library/altair.md
-    exactly'
-  - Adds genuine hover interactivity (selection_point + size/tooltip encoding) for
-    the HTML export without faking anything in the static PNG
+    #4467A3), identical across both light and dark renders, doubling up with radius
+    to reinforce the same value'
+  - Radial scale-reference labels ('10°C', '21°C') are deliberately placed at angles
+    where the data path is far from that ring, avoiding crossing the line
+  - 'Correctly follows the altair canvas contract: 500x460 inner view padded (never
+    cropped) to the canonical 2400x2400 square, landing exactly on target with comfortable
+    margins on every side'
+  - Genuine hover interactivity (selection_point + conditional size/tooltip encoding)
+    for the HTML export, with no faked interactivity in the static PNG
   weaknesses:
-  - Legend title 'Temp (°C)' visually overlaps the legend's own frame border on both
-    the left and right sides, in both light and dark renders - the 'T' and ')' glyphs
-    cross the drawn box outline. Not canvas-edge clipping (AR-09), but a real, reproducible
-    overlap defect. Fix by widening the legend (larger gradientLength/legend width)
-    or trimming titleFontSize/titleLimit so the title fits inside its frame.
-  - 'Title omits the required {language} token: current SC-04 format is ''{spec-id}
-    · {language} · {library} · anyplot.ai'' but the rendered title is ''polar-basic
-    · altair · anyplot.ai'' - should read ''polar-basic · python · altair · anyplot.ai''.'
-  - Diurnal temperature curve is a pure sinusoid with its minimum at 00:00 and maximum
-    at 12:00; real-world diurnal cycles trough near dawn (~05:00-06:00) and peak in
-    the mid-afternoon (~15:00-16:00) due to thermal lag. Shifting the phase (e.g.
-    using (hours - 15) instead of (hours - 6)) would make the hourly pattern more
-    factually realistic.
-  - The legend sits quite close to the right canvas edge (~49px / ~2% margin) - comfortably
-    inside the canvas and not clipped, but tighter than the generous whitespace called
-    for elsewhere; a little more right-side padding would balance the composition.
+  - 'PIPELINE NOTE (not a code issue — no code change needed): the plot-light.png/plot-dark.png
+    supplied to this review via GCS staging are stale — they are pixel-for-pixel consistent
+    with the PRE-repair code (title missing the ''python'' token, temperature peak
+    at 12:00, legend title crossing its frame border), not the current commit on this
+    branch. I independently re-ran plots/polar-basic/implementations/python/altair.py
+    from the current source (altair 6.2.2, matching library_version) for both themes
+    and confirmed the current code already fixes all three attempt-1 findings. This
+    review''s score is based on those freshly-rendered images. Recommend the impl-repair
+    job explicitly re-execute the implementation script after editing (or otherwise
+    verify staged PNGs are rebuilt) before uploading to gs://anyplot-images/staging/,
+    so future review attempts don''t score against superseded renders.'
+  - 'Design excellence is solid but not exceptional: the dual radius+color encoding
+    gives an immediate read of the daily cycle, but there''s no explicit callout/emphasis
+    on the daily min/max beyond the natural color and size cues'
+  - The italic radial scale-reference labels ('10°C', '21°C') at fontSize=11 are legible
+    at full resolution and at a 400px mobile scale-down, but have little headroom
+    left — consider fontSize=12-13 if the layout allows
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Bold dark title "polar-basic · altair · anyplot.ai" centered at top; 8 bold dark clock labels (00:00, 03:00, ... 21:00) around the perimeter at 3-hour intervals; dashed light-gray concentric radial gridlines and straight angular spokes at low opacity; two italic gray radial scale-reference labels ("21°C", "9°C") placed off the data path; legend "Temp (°C)" top-right with a vertical green-to-blue gradient bar and tick labels 5/10/15/20/25. All chrome text is dark-on-light and clearly readable, EXCEPT the legend title glyphs ("T" and the closing ")") visibly cross the legend's own frame border line - a minor overlap defect, not an illegibility issue.
-      Data: A closed 24-point loop (one point per hour) connecting via a green line, each point filled with a green-to-blue continuous color scale (imprint_seq: #009E73 low temp -> #4467A3 high temp) and a light stroke edge. The loop is tightest (smallest radius, greenest) near the top (00:00, coolest hours) and widest (largest radius, bluest) near the bottom (12:00, warmest hour), correctly reflecting the hourly temperature cycle. First/only data series correctly starts from the Imprint brand green.
-      Legibility verdict: PASS (all text readable; the legend-title/frame overlap is a visual polish issue, not a readability failure).
+    NOTE ON IMAGE PROVENANCE: The plot-light.png / plot-dark.png delivered to this review via GCS staging are stale — they match the PRE-repair (attempt 1) code byte-for-byte in visible content (title missing "python", temperature peak at 12:00 instead of ~15:00, legend title overlapping its frame border), not the current commit on this PR branch. I independently re-ran plots/polar-basic/implementations/python/altair.py from the current source under altair==6.2.2 (matching the recorded library_version) for both ANYPLOT_THEME=light and =dark, producing 2400x2400 PNGs that match the current code. The descriptions below are of those freshly-rendered, verified-current images (the originally supplied plot-light.png / plot-dark.png were also opened and visually confirmed to show the stale content described above).
 
-    Dark render (plot-dark.png):
+    Light render (plot-light.png, freshly re-rendered from current source):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark title "polar-basic · python · altair · anyplot.ai" centered at top (all four required segments present, ~55% of canvas width); 8 bold dark clock labels (00:00, 03:00, ... 21:00) around the perimeter at 3-hour intervals; dashed light-gray concentric radial gridlines (5 rings) and straight angular spokes at low opacity; two italic gray radial scale-reference labels ("21°C", "10°C") placed off the data path. Legend "Temp (°C)" top-right in a bordered box with a vertical green-to-blue gradient bar and tick labels 5/10/15/20 - the legend title now sits fully inside its frame border with no overlap (previously-flagged defect is fixed). All chrome text is dark-on-light and clearly readable, including at a 400px mobile-width scale-down.
+      Data: A closed 24-point loop (one point per hour) connecting via a green line, each point filled with a green-to-blue continuous color scale (imprint_seq: #009E73 low temp -> #4467A3 high temp) and a light stroke edge. The loop is tightest (smallest radius, greenest) near the top (00:00-03:00, coolest hours) and widest (largest radius, bluest) near 15:00 (lower-left), correctly reflecting a realistic diurnal cycle with the trough near dawn and the peak in mid-afternoon. First/only data series correctly starts from the Imprint brand green at the low end of the continuous scale.
+      Legibility verdict: PASS (all text readable in both full-resolution and mobile-scale views; no overlap or clipping found).
+
+    Dark render (plot-dark.png, freshly re-rendered from current source):
       Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Same title, clock labels, radial/angular gridlines and ring-reference labels, all correctly re-colored to light-on-dark (off-white title/labels, light-gray gridlines and ring labels). Legend box re-themed with light text/border on dark fill. No dark-on-dark failures found - all chrome text is clearly legible against the near-black background. Same legend-title/frame-border overlap defect reproduces here as in the light render.
+      Chrome: Same title, clock labels, radial/angular gridlines, and ring-reference labels, all correctly re-colored to light-on-dark (off-white title/labels, light-gray gridlines and ring labels). Legend box re-themed with light text/border on dark fill; title still fits fully inside the frame. No dark-on-dark failures found - all chrome text is clearly legible against the near-black background.
       Data: Identical green-to-blue point colors and identical loop shape/positions as the light render - only the chrome (background, gridlines, text, legend fill/border) flipped theme, confirming palette consistency across themes.
       Legibility verdict: PASS (all text readable in both themes; no dark-on-dark or light-on-light failures observed).
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -71,15 +76,16 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; minor ding
-          tied to the legend-title overflow issue
+        comment: All font sizes explicit, readable in both themes and at 400px mobile
+          scale-down; the italic 11pt ring-reference labels are legible but have little
+          headroom left
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Legend title 'Temp (°C)' overlaps its own legend frame border on
-          both sides, in both renders
+        passed: true
+        comment: Previously-flagged legend title/frame overlap is fixed (titleLimit=200,
+          gradientThickness=20, padding=6); no overlaps found in either theme
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -91,15 +97,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Continuous gradient with white point strokes gives good contrast
+        comment: Continuous gradient with light point strokes gives good contrast
           and CVD-safe distinguishability
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Content fills ~92% width / ~78% height, nothing cut off, canvas gate
-          passed; right-side legend margin is a bit tight (~2%)
+        comment: Exact 2400x2400 canvas, title ~55% of width, comfortable legend margin,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -114,32 +120,32 @@ review:
         comment: 'imprint_seq gradient (#009E73 -> #4467A3) used exactly as specified;
           theme-correct chrome in both renders'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful typography hierarchy (bold clock labels, italic ring labels)
-          and correct gradient, docked for the legend-title glitch
+        comment: Thoughtful typography hierarchy and correct gradient use; competent
+          but not exceptional polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle dashed grid, no spines/frame, generous whitespace overall;
-          legend-title/frame overlap is a detail-level flaw
+        comment: Subtle dashed grid, no frame clutter, generous whitespace, legend
+          now fits cleanly
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Radial layout + color gradient together give an immediate visual
-          read of the daily temperature cycle
+        comment: Radial layout + color gradient give an immediate visual read of the
+          daily cycle, but there is no explicit callout on the min/max
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -163,18 +169,18 @@ review:
         comment: All 24 hours mapped and shown as a closed loop
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing required {language} token ('python'); legend labels
-          otherwise correct
+        passed: true
+        comment: Title now reads 'polar-basic · python · altair · anyplot.ai' - the
+          previously-missing language token is fixed; legend labels correct
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Shows full 24h cycle with realistic hour-to-hour variation via noise
@@ -183,14 +189,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Hourly outdoor temperature is a real, neutral scenario
+        comment: Hourly outdoor temperature is a real, neutral scenario, now with
+          a physically realistic phase (dawn trough, mid-afternoon peak)
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Amplitude/values are plausible, but the sinusoid's min-at-00:00/max-at-12:00
-          timing skips the real-world thermal lag (trough near dawn, peak mid-afternoon)
+        passed: true
+        comment: 5-25°C daily swing is plausible and the phase shift ((hours-9)) fixes
+          the previously-flagged unrealistic min-at-00:00/max-at-12:00 timing
     code_quality:
       score: 10
       max: 10
@@ -225,7 +232,8 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html via current chart.save API
+        comment: Saves plot-{THEME}.png (pad-only, never crop) and .html via current
+          chart.save API
     library_mastery:
       score: 7
       max: 10
@@ -241,9 +249,10 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses selection_point-driven conditional encoding for hover, distinctive
-          to Altair/Vega-Lite's interaction grammar
-  verdict: REJECTED
+        comment: Uses selection_point-driven conditional encoding for hover - a real
+          Vega-Lite interaction-grammar feature, though a fairly standard pattern
+          from the altair docs
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
@@ -252,6 +261,7 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - colorbar
+  - annotations
   patterns:
   - data-generation
   dataprep: []
