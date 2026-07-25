@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 49/100 | Updated: 2026-07-25
@@ -193,7 +193,7 @@ links_chart = (
                 title="Energy Source",
                 titleFontSize=10,
                 labelFontSize=10,
-                orient="bottom-right",
+                orient="right",
                 symbolType="square",
                 symbolSize=120,
             ),
