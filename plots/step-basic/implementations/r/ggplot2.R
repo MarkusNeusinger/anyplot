@@ -40,15 +40,28 @@ df <- tibble::tibble(date = meeting_dates, rate = policy_rate)
 changes <- df %>%
   filter(row_number() == 1 | rate != lag(rate))
 
+# Mark the first meeting the cycle reached its peak rate, for a callout
+peak_rate <- max(df$rate)
+peak_date <- df$date[df$rate == peak_rate][1]
+
 # --- Plot -----------------------------------------------------------------
 p <- ggplot(df, aes(x = date, y = rate)) +
   geom_step(color = IMPRINT_PALETTE[1], linewidth = 1.2, direction = "hv") +
-  geom_point(data = changes, color = IMPRINT_PALETTE[1], size = 2.8) +
+  geom_point(data = changes, color = IMPRINT_PALETTE[1], size = 3.8) +
+  annotate(
+    "text",
+    x = peak_date, y = peak_rate + 0.18,
+    label = sprintf("Cycle peak: %.2f%%", peak_rate),
+    color = INK_SOFT, size = 3, hjust = 0
+  ) +
   scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") +
-  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  scale_y_continuous(
+    labels = function(x) paste0(x, "%"),
+    expand = expansion(mult = c(0.05, 0.16))
+  ) +
   labs(
     x = "Meeting Date",
-    y = "Policy Rate",
+    y = "Policy Rate (%)",
     title = "Central Bank Policy Rate · step-basic · r · ggplot2 · anyplot.ai"
   ) +
   theme_minimal(base_size = 8) +
