@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: stem-basic
 created: '2025-12-23T20:45:35Z'
-updated: '2026-07-25T17:32:41Z'
+updated: '2026-07-25T17:38:43Z'
 generated_by: claude-sonnet
 workflow_run: 30167558369
 issue: 972
@@ -12,51 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Theme-adaptive chrome is implemented correctly and consistently in both renders
-    — correct #FAF8F1/#1A1A17 backgrounds, correct ink/ink-soft text tokens, and the
-    brand green #009E73 stays identical across themes.'
-  - The dashed decay-envelope traces add genuine signal-processing storytelling context
-    (the |exp(-0.1n)| bound) beyond a bare stem plot.
-  - The 'Peak amplitude' annotation with a leader line creates a clear focal point
-    and guides the viewer through the decay narrative.
-  - sns.scatterplot's statistical size mapping (size='Magnitude', sizes=(30,140))
-    is a distinctive seaborn feature, redundantly encoding amplitude magnitude through
-    marker size.
+  - Title now conforms exactly to the mandated format 'stem-basic · python · seaborn
+    · anyplot.ai' — the missing language token flagged in attempt 1 is fixed.
+  - Marker size is now uniform (s=200) across all 30 samples, satisfying the spec's
+    explicit 'consistent marker size and stem width' requirement and landing well
+    within the VQ-03 sparse-data guideline.
+  - 'Theme-adaptive chrome remains correct and consistent across both renders — correct
+    #FAF8F1/#1A1A17 backgrounds, correct ink/ink-soft tokens, and brand green #009E73
+    stays identical across themes.'
+  - The dashed decay-envelope traces and 'Peak amplitude' annotation still provide
+    genuine signal-processing storytelling context beyond a bare stem plot.
   - Clean KISS code structure, explicit font sizes throughout, reproducible via np.random.seed(42),
     and correct plot-{THEME}.png output with facecolor set.
   weaknesses:
-  - 'Title is missing the required language token: current title is ''stem-basic ·
-    seaborn · anyplot.ai'' but the mandated format is ''{spec-id} · {language} · {library}
-    · anyplot.ai'' — fix ax.set_title(...) to read ''stem-basic · python · seaborn
-    · anyplot.ai''.'
-  - Marker sizes vary by magnitude (sizes=(30, 140) via size='Magnitude'), but the
-    specification's Notes explicitly require 'Consistent marker size and stem width
-    throughout the plot.' Either switch to a single uniform marker size to match the
-    spec literally, or if the size-encoding is kept intentionally for storytelling,
-    at least document/justify the deviation clearly.
-  - Some near-zero-amplitude samples render at the low end of the size range (30),
-    noticeably smaller than the VQ-03 density guideline of ~200-400 for sparse (<30)
-    point counts — increase the overall size scale (e.g. sizes=(80, 220)) so even
-    the smallest markers stay prominent at full resolution and when scaled down for
-    mobile.
+  - 'LM-02 (Distinctive Features) drops from the previous review''s 4/5 to 2/5: fixing
+    the spec-mandated uniform marker size removed the sns.scatterplot statistical
+    size-mapping (size=''Magnitude'') that was previously credited as the library''s
+    distinctive feature. Consider a different seaborn-specific technique (e.g. hue-mapped
+    envelope band, native CI shading) to recover Library Mastery points without reintroducing
+    the marker-size violation — not blocking.'
+  - Y-axis label 'Amplitude' has no explicit unit; acceptable since this is a dimensionless
+    synthetic DSP signal with no natural physical unit, but an optional '(a.u.)' suffix
+    would make VQ-06 airtight.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "stem-basic · seaborn · anyplot.ai" in dark ink, centered top, fully visible and not clipped. X-axis label "Sample Index (n)" and Y-axis label "Amplitude" in dark ink, both clearly readable and similarly sized. Tick labels on both axes are soft dark gray, similarly sized, no overlap. A subtle horizontal-only grid (light gray, low alpha) is visible behind the data. The "Peak amplitude" annotation with a thin gray leader line points at the largest sample without overlapping any other element.
-      Data: All 30 stems and markers render in brand green (#009E73), with marker size scaling from small (near-zero amplitude, e.g. sample 0) to large (near the peak, samples 2-4). A dashed gray decay-envelope traces the theoretical |exp(-0.1n)*2.5| bound above and below the data. Baseline at y=0 is a thin gray horizontal line.
+      Chrome: Title "stem-basic · python · seaborn · anyplot.ai" in dark ink, centered top, fully visible and not clipped (correctly includes the "python" language token this time). X-axis label "Sample Index (n)" and Y-axis label "Amplitude" in dark ink, both clearly readable and similarly sized. Tick labels on both axes are soft dark gray, similarly sized, no overlap. A subtle horizontal-only grid (light gray, low alpha) is visible behind the data. The "Peak amplitude" annotation with a thin gray leader line points at the largest sample without overlapping any other element.
+      Data: All 30 stems and markers render in brand green (#009E73) with a single, uniform marker size (s=200) — no more magnitude-scaled sizing. A dashed gray decay-envelope traces the theoretical |exp(-0.1n)*2.5| bound above and below the data. Baseline at y=0 is a thin gray horizontal line.
       Legibility verdict: PASS — all title, axis labels, tick labels, and the annotation are clearly legible against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
       Chrome: Same title, axis labels, tick labels, and grid layout as the light render, now rendered in light ink/soft-light-gray tokens. The "Peak amplitude" annotation and its leader line render in a light gray that stays readable against the dark background.
-      Data: Data colors (stems and markers) are identical brand green (#009E73) to the light render — confirmed unchanged across themes. The dashed envelope and baseline render in the same light-gray token used for tick labels.
+      Data: Data colors (stems and markers) are identical brand green (#009E73) to the light render — confirmed unchanged across themes, still uniform marker size. The dashed envelope and baseline render in the same light-gray token used for tick labels.
       Legibility verdict: PASS — no dark-on-dark failures observed; title, axis labels, tick labels, and annotation are all clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,7 +60,8 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks/annotation
-          8pt); readable in both themes; no overflow.
+          8pt); readable in both themes; short mandated title fits comfortably without
+          overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -74,11 +70,11 @@ review:
         comment: No overlap between title, labels, ticks, annotation, or data.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Magnitude-scaled markers (30-140) are visible but the smallest markers
-          fall below the ~200-400 guideline for sparse (<30 pt) data.
+        comment: Uniform s=200 markers are prominent for the 30-sample sparse plot,
+          within the VQ-03 sizing guideline; fixes the prior undersized-marker issue.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -91,8 +87,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a good share of the canvas, nothing
-          cut off.
+        comment: Canvas dimension gate passed; balanced margins, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -128,10 +123,10 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Peak annotation and magnitude-scaled markers create a clear visual
-          hierarchy and focal point.
+        comment: Peak annotation and envelope bounds create a clear visual hierarchy
+          and focal point.
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,11 +137,11 @@ review:
         comment: Correct stem plot (vlines + markers to baseline).
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Spec Notes require 'consistent marker size ... throughout the plot'
-          but markers vary 30-140 by magnitude.
+        passed: true
+        comment: 'Fixed: markers now use a single uniform size (s=200), matching the
+          spec''s ''consistent marker size and stem width'' requirement.'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -155,11 +150,11 @@ review:
         comment: X = sample index, Y = amplitude, all 30 samples shown.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing the required '{language}' token (should be 'stem-basic
-          · python · seaborn · anyplot.ai').
+        passed: true
+        comment: 'Fixed: title now reads ''stem-basic · python · seaborn · anyplot.ai'',
+          the full mandated format including the language token.'
     data_quality:
       score: 14
       max: 15
@@ -218,7 +213,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png with facecolor set, no bbox_inches='tight'.
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -230,12 +225,13 @@ review:
           (seaborn has no native stem function).
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: sns.scatterplot statistical size mapping (size=) is a genuinely distinctive
-          seaborn feature.
-  verdict: REJECTED
+        passed: false
+        comment: 'Dropped from 4/5: removing the size=''Magnitude'' statistical mapping
+          (to fix SC-02) also removed the plot''s only seaborn-distinctive feature;
+          remaining usage (set_theme, despine) is largely generic.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
