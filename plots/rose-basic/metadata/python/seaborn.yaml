@@ -2,100 +2,113 @@ library: seaborn
 language: python
 specification_id: rose-basic
 created: '2025-12-23T19:43:56Z'
-updated: '2026-04-30T07:13:45Z'
+updated: '2026-07-25T10:28:40Z'
 generated_by: claude-sonnet
-workflow_run: 25151670488
+workflow_run: 30153919346
 issue: 1003
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Dual encoding of rainfall through both radius and Blues color depth is an intentional
-    and effective design choice
-  - 'Complete spec compliance: radial gridlines, value labels, clockwise-from-top
-    orientation all present'
-  - Theme adaptation fully correct in both renders — backgrounds match required hex
-    values, no dark-on-dark failures
-  - 'Code quality exemplary: flat script, deterministic data, all imports used, correct
-    output filename'
+  - Rose/coxcomb chart correctly built on a polar projection with radius (not area)
+    proportional to value, matching the spec's core requirement
+  - 'Bars colored via an Imprint sequential gradient (#009E73 -> #4467A3) assigned
+    by rainfall rank, so color depth reinforces magnitude alongside radius — a genuine
+    continuous encoding, not a decorative gradient'
+  - 'Attempt-1 fix confirmed: title now reads ''Monthly Rainfall (mm) · rose-basic
+    · python · seaborn · anyplot.ai'', restoring the required language token'
+  - 'Attempt-1 fix confirmed: the halo-boxed ''50 mm'' radial tick label was moved
+    into the angular gap between the Jun/Jul bars and no longer overlaps bar fill'
+  - 'Both renders are theme-correct: #FAF8F1/#1A1A17 backgrounds, all chrome (title,
+    month labels, radial ticks, value labels) clearly legible in both themes, data
+    colors identical across themes'
+  - Clean square 2400x2400 canvas, all 12 months and their value labels fit without
+    clipping or overflow
+  - Realistic, neutral monthly rainfall dataset with a plausible seasonal curve (72-168
+    mm)
   weaknesses:
-  - Radial tick labels at 14pt are slightly undersized for the 3600x3600 canvas; 16pt
-    recommended
-  - Bar edgecolor set to PAGE_BG makes edges invisible in dark mode, reducing inter-bar
-    definition
-  - Jan tick label crowds the title because the 12 o clock polar tick label lands
-    in the title pad area
+  - Core petal rendering still uses raw matplotlib ax.bar() on a polar Axes rather
+    than any seaborn plotting function — seaborn has no native polar/rose chart API,
+    so this is a real library limitation, but it continues to cap Library Mastery
+    credit (sns.set_theme + sns.blend_palette are the only idiomatic seaborn touches)
+  - Data storytelling still relies mainly on the chart type's inherent bar-length
+    encoding; the color-by-magnitude gradient is a nice secondary cue but there is
+    no explicit focal-point treatment (e.g. a callout or emphasis on the June peak)
+    to create a stronger visual hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Monthly Rainfall (mm) · rose-basic · seaborn · anyplot.ai" at 24pt bold in dark ink — fully legible. Month labels at 20pt bold, dark ink around perimeter — readable. Radial tick labels "100 mm" and "150 mm" at 14pt in INK_SOFT — legible but slightly small for canvas. Value labels (89, 72, 95, etc.) at 14pt — readable. Jan label crowds title area slightly but no collision.
-      Data: Blues sequential palette, 12 wedge bars from light steel blue (low rainfall ~72mm) to deep navy (high rainfall ~168mm). All bars clearly visible.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), applied consistently to both the figure and the polar axes background.
+      Chrome: Bold dark title "Monthly Rainfall (mm) · rose-basic · python · seaborn · anyplot.ai" at top-left, fully visible and not clipped (language token "python" now present, fixing the attempt-1 finding). Twelve bold dark month labels (Jan-Dec) ring the plot, starting at 12 o'clock (Jan) and proceeding clockwise. Radial tick labels "100 mm" and "150 mm" sit in soft gray near the upper-right spoke; the "50 mm" tick is a manually drawn, halo-boxed label now placed in the open angular gap between the Jun and Jul bars (moved off the bar fill per attempt-1 feedback). Per-bar value labels (89, 72, 95, 112, 135, 168, 142, 125, 98, 76, 82, 91) sit just outside each bar tip in bold soft-dark gray.
+      Data: 12 polar bars ("petals"), one per month, radius proportional to rainfall value. Bar fill follows an Imprint sequential gradient from brand green (#009E73) to blue (#4467A3) assigned by rainfall rank (driest months greenest, wettest bluest), each bar outlined with a thin dark edge and separated by clear gaps.
+      Legibility verdict: PASS — all title, tick, and value text reads cleanly against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and all text (month labels, radial labels, value labels) flipped to light cream/gray tones — all readable against dark surface. No dark-on-dark failures detected. Bar edges (PAGE_BG=#1A1A17 in dark mode) are invisible against background, slightly reducing bar definition.
-      Data: Blues bar colors identical to light render — only chrome flipped. Deeper navy wedges (Jun-Jul-Aug) pop well against dark background. Lighter steel-blue wedges (Feb, Oct) remain distinguishable.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17), applied consistently to both the figure and the polar axes background.
+      Chrome: Same title text (including the "python" token) now rendered in light ink, fully visible. Month labels switch to light-colored bold text; the "100 mm"/"150 mm" radial labels and the repositioned halo-boxed "50 mm" label render in light gray with a dark halo box, all legible and clear of bar fill. Value labels per bar remain in the dark-theme INK_SOFT tone.
+      Data: Same 12 bars in the identical green-to-blue gradient and radial proportions as the light render — only the chrome (background, text, grid, halo box) flipped to dark-theme colors, confirming the data-color identity requirement.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all tick labels, month labels, title, and value labels are clearly readable against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title 24pt, month labels 20pt pass; radial tick labels 14pt slightly
-          undersized for 3600x3600 canvas
+        comment: All text (title, month labels, radial ticks, value labels) reads
+          clearly in both themes at explicit font sizes; the previously cramped '50
+          mm' halo label is now in clear space, resolving the attempt-1 deduction
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Jan tick label crowds title area but no collision; all other labels
-          cleanly placed
+        comment: The '50 mm' halo label was moved into the Jun/Jul angular gap and
+          no longer overlaps bar fill; no other text/data collisions found
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 12 bars visible; lightest Blues bars slightly less prominent
-          on light background
+        comment: 12 bars is a moderate count; edge outlines and 0.92 alpha keep each
+          petal clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential Blues palette is CVD-safe; no red-green signal
+        comment: Green-to-blue gradient, no red-green reliance, adequate contrast
+          against both backgrounds
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 12x12 in at 300dpi = 3600x3600 correct square format; slight crowding
-          at top
+        comment: Square 2400x2400 canvas gate passed; balanced proportions, title
+          within bounds, no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title; radial labels include mm unit
+        comment: Title descriptive with units (mm); radial ticks explicitly labeled
+          '100 mm'/'150 mm'/'50 mm'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Correct backgrounds (#FAF8F1/#1A1A17); Blues justified by spec but
-          brand-green first-series rule not met
+        comment: 'Bar gradient built from Imprint sequential endpoints #009E73->#4467A3;
+          backgrounds and chrome match theme tokens in both renders'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -103,22 +116,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Blues dual-encoding (radius + color) thoughtful; value labels add
-          info; professional look
+        comment: Rank-based gradient coloring and the halo-label workaround show polish
+          beyond generic defaults, but overall composition stays close to a standard
+          rose chart
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 0.85 width factor gives clean gaps; polar spine removed; dashed grid
-          at low alpha
+        comment: Polar spine hidden, subtle dashed radial/angular grid, generous whitespace
+          between petals
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Summer peak Jun-Jul immediately legible through radius and color
-          depth; cyclical story clear
+        passed: false
+        comment: Color-by-magnitude adds a secondary read of the seasonal pattern,
+          but the dominant visual driver is bar length inherent to the chart type,
+          not added emphasis on a focal point
     spec_compliance:
       score: 15
       max: 15
@@ -128,29 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct rose chart: equal-angle wedges with radius proportional
-          to value'
+        comment: Correct rose/coxcomb chart with equal-angle wedges and radius proportional
+          to value
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Radial gridlines, value annotations, clockwise from 12 o clock, consistent
-          Blues scheme
+        comment: Circular month ordering, 12 o'clock start, radial gridlines all present
+          as required by spec
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 12 equal-angle wedges for 12 months; radius proportional to rainfall;
-          ylim at max x 1.15
+        comment: Angle = month, radius = rainfall; all 12 categories and their values
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format; no legend needed for single-metric
-          chart
+        comment: Title now reads 'Monthly Rainfall (mm) · rose-basic · python · seaborn
+          · anyplot.ai', matching the mandated format with the language token restored
     data_quality:
       score: 15
       max: 15
@@ -160,22 +175,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full rose chart feature set: circular arrangement, proportional
-          radii, gridlines, value labels, sequential color'
+        comment: 'Covers all rose-chart aspects called out in the spec: proportional
+          radius, circular ordering, radial gridlines, top-start orientation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly rainfall canonical use case; values 72-168 mm/month plausible
-          for rainy temperate region
+        comment: Monthly rainfall in mm is plausible and neutral, matches spec's suggested
+          example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 months (optimal per spec); rainfall range covers meaningful spread
-          without extreme outliers
+        comment: 72-168 mm range is a sensible real-world seasonal rainfall curve
     code_quality:
       score: 10
       max: 10
@@ -185,31 +199,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat linear script
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data; fully deterministic
+        comment: Fully deterministic static data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, seaborn — all actively used
+        comment: os, matplotlib.pyplot, numpy, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean angle/width calculations; no fake UI
+        comment: Appropriate complexity for the chart type, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct facecolor argument
+        comment: Saves plot-{THEME}.png with bbox_inches left at default
     library_mastery:
       score: 5
       max: 10
@@ -218,16 +232,17 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: sns.set_theme() with full rc dict is recommended seaborn pattern;
-          actual polar rendering is matplotlib
+        passed: false
+        comment: sns.set_theme and sns.blend_palette are used idiomatically, but the
+          core petal rendering is raw matplotlib ax.bar on a polar Axes since seaborn
+          has no native rose-chart API
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: sns.color_palette('Blues') is seaborn-native; limited seaborn usage
-          beyond theme setup
+        comment: sns.blend_palette to build the Imprint gradient is a real seaborn-specific
+          technique, but usage is otherwise limited
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -239,6 +254,6 @@ impl_tags:
   - explicit-figure
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
+  - alpha-blending
   - grid-styling

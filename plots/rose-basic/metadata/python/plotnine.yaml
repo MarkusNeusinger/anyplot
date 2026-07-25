@@ -2,119 +2,137 @@ library: plotnine
 language: python
 specification_id: rose-basic
 created: '2025-12-23T19:59:11Z'
-updated: '2026-04-30T07:32:55Z'
+updated: '2026-07-25T10:28:32Z'
 generated_by: claude-sonnet
-workflow_run: 25151963204
+workflow_run: 30154156003
 issue: 1003
-python_version: 3.13.13
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Viridis colormap double-encodes rainfall via both radius and color, making the
-    seasonal pattern immediately readable
-  - 'Full spec compliance: all required rose-chart features present (gridlines, spokes,
-    circular ordering, 12-o-clock start)'
-  - Theme-adaptive chrome works correctly in both renders with no dark-on-dark or
-    light-on-light failures
-  - 'Perfect data and code quality: realistic monthly rainfall scenario, deterministic,
-    clean linear structure'
+  - Radius is honestly proportional to value (not area) via `value * cos/sin`, matching
+    the spec's explicit anti-pattern warning
+  - 'Rich, native grammar-of-graphics construction: layered geom_path (radial grid
+    + spokes) + geom_polygon (wedges) + geom_text (month + value labels) — no matplotlib
+    fallback despite plotnine lacking a robust coord_polar bar path'
+  - Alpha scales with rainfall value (scale_alpha_continuous) as a redundant encoding
+    on top of radius, on a single consistent brand-green hue, exactly matching the
+    spec's 'single color with varying saturation' guidance
+  - Correct 12 o'clock start position and natural Jan→Dec circular ordering for cyclical
+    month data
+  - Fully theme-adaptive chrome (INK/INK_SOFT/INK_MUTED, PAGE_BG) verified correct
+    and legible in both light and dark renders, including the wedge-separator strokes
+    which correctly flip color per theme
+  - 'Clean square-canvas execution: exactly 2400×2400 px, generous balanced margins,
+    no clipped text at any edge'
+  - Deterministic, KISS-structured script with only used imports and no fake interactivity
   weaknesses:
-  - 'Font sizes below recommended minimums: title 22pt (need >=24pt), month labels
-    14pt (need >=16pt), value labels 10pt (quite small at 3600px)'
-  - matplotlib color utilities used to compute viridis hex values; native scale_fill_cmap(cmap_name=viridis)
-    with continuous fill aesthetic would be more idiomatic plotnine
+  - No explicit callout/annotation of the wettest (Nov, 95mm) or driest (Apr, 48mm)
+    month — visual hierarchy relies entirely on radius+alpha rather than a direct
+    label, which would push Data Storytelling (DE-03) further
+  - Radial tick labels (20/40/60/80/100) show bare numbers with no 'mm' unit marker
+    on the axis itself — the unit is only conveyed via the title, which is acceptable
+    but not maximal
+  - geom_polygon fill alpha is a fairly subtle 0.35–1.0 range; the driest months (Feb/Apr/May)
+    read close to each other in saturation and lean mostly on radius alone to differentiate
+    — a slightly wider alpha floor/ceiling would sharpen the redundant encoding
+  - 'LM-02: the manual trigonometric polygon construction is a workaround for plotnine''s
+    limited polar-bar support rather than a feature genuinely unique to plotnine —
+    a distinctive but not irreplicable technique'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 -- correct
-      Chrome: Title "Monthly Rainfall (mm) * rose-basic * plotnine * anyplot.ai" in dark ink, readable; month labels in bold dark text clearly positioned outside perimeter; radial value labels (20-100) visible near top-right spoke; all readable
-      Data: 12 wedges colored via viridis gradient (deep purple for low values ~48mm, through teal/green, to bright yellow-green for high values ~95mm); white gaps between wedges; dashed radial grid circles at alpha=0.15; spoke lines at alpha=0.12; annotations "Peak 95 mm" on Nov and "Min 48 mm" on Apr visible
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Monthly Rainfall (mm) · rose-basic · python · plotnine · anyplot.ai" is dark ink, centered, ~77% of canvas width, fully visible with comfortable margins on all sides. Bold month labels (Jan–Dec) ring the chart in dark ink, fully legible, none clipped at any canvas edge. Radial value ticks (20/40/60/80/100) render in a muted gray-brown tone along the Dec/Jan boundary spoke, legible against both the plain background and the semi-transparent green wedges beneath them. Dashed radial gridlines and thin spoke lines are subtle (~12-15% alpha) and do not compete with the data.
+      Data: All 12 monthly wedges render in the single Imprint brand green (#009E73) with alpha scaling by rainfall value (higher rainfall = more opaque/saturated green), giving a redundant value encoding on top of radius. Thin off-white strokes separate adjacent wedges cleanly. Radius is proportional to value (not area), correctly per spec.
+      Legibility verdict: PASS — all text (title, month labels, tick labels) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 -- correct
-      Chrome: Title and all text labels render in light colors (#F0EFE8 / #B8B7B0); no dark-on-dark failures observed; grid and spokes remain subtle
-      Data: Viridis colors identical to light render -- same purple-to-yellow-green gradient; both annotations visible with light text
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and month labels render in light off-white ink, fully legible against the dark background, no clipping at any edge. Radial value ticks (20/40/60/80/100) render in a light muted gray, clearly legible over both the plain dark background and the semi-transparent green wedges. Grid/spoke lines remain subtle and visible without dominating.
+      Data: Data colors are identical to the light render — same brand green #009E73 with the same alpha-by-value gradient across all 12 wedges. Wedge-separator strokes correctly flip to a dark/near-black tone in this theme (matching PAGE_BG) rather than staying off-white, confirming proper theme-adaptive chrome on every non-data element.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title, label, and tick text is clearly readable against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set; title 22pt below 24pt guideline, month
-          labels 14pt below 16pt guideline, value labels 10pt small
+        comment: All font sizes explicitly set; readable at full size and legible
+          in both themes; title fits without overflow at ~77% width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month labels evenly distributed around perimeter, no collisions
+        comment: No collisions between month labels, value ticks, wedges, or title
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 12 wedges clearly visible with viridis gradient providing strong
-          differentiation
+        comment: 12 wedges sized prominently for a sparse 12-category dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe
+        comment: Single-hue encoding with radius as primary signal avoids any CVD
+          ambiguity
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 format; chart fills canvas well with balanced margins
+        comment: Rose fills a large majority of the 2400x2400 canvas with balanced
+          margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes units (mm), descriptive and informative
+        comment: Title states units '(mm)'; radial scale numbers are self-evident
+          given the title context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correctly used for value-encoded colors; backgrounds #FAF8F1/#1A1A17
-          correct; chrome theme-adaptive'
+        comment: 'Sole series is Imprint brand green #009E73 in both themes; backgrounds
+          are correct #FAF8F1/#1A1A17; chrome fully theme-adaptive'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: viridis double-encodes rainfall, clean circular form,
-          white wedge gaps, no axes/spines'
+        comment: Fully hand-built polar geometry with redundant alpha-by-value encoding,
+          clearly above a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Dashed radial grid at alpha=0.15, spokes at alpha=0.12, legend suppressed,
-          axis elements blanked
+        comment: Spines/ticks blanked, subtle dashed grid, theme-matched chrome, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color gradient creates visual hierarchy; rendered peak/min annotations
-          emphasize seasonal story
+        comment: Radius + alpha jointly guide the eye to the wetter autumn/winter
+          months without needing explicit annotation
     spec_compliance:
       score: 15
       max: 15
@@ -124,29 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rose/Nightingale chart; equal-angle wedges, radius proportional
-          to value
+        comment: Correct rose/coxcomb chart with radius-proportional wedges
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Radial gridlines, spoke lines, circular ordering, 12-o-clock start
-          all present
+        comment: Radius-not-area, natural month ordering, 12-o'clock start, radial
+          gridlines, consistent single-hue scheme — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Monthly rainfall correctly drives segment radius; all 12 categories
-          shown
+        comment: Category -> angle, value -> radius, correctly mapped and fully visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains all required components; months labeled directly,
-          no legend needed
+        comment: Title format correct with descriptive prefix; legend correctly omitted
+          for single-series data
     data_quality:
       score: 15
       max: 15
@@ -156,20 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Seasonal variation well represented; values span 48-95mm showing
-          clear pattern
+        comment: Full seasonal range from 48mm to 95mm shows clear variation across
+          all 12 months
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly rainfall for temperate climate is realistic and neutral
+        comment: Neutral, real-world monthly rainfall scenario for a temperate climate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 48-95mm monthly totals plausible for temperate oceanic climate
+        comment: Values and seasonal pattern (wetter autumn/winter) are plausible
+          for a temperate climate
     code_quality:
       score: 10
       max: 10
@@ -179,58 +196,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: tokens -> data -> geometry DataFrames -> plot -> save; no
-          functions or classes'
+        comment: Linear imports -> data -> plot -> save script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data; no random generation
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path fix commented; matplotlib color utilities
-          justified
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Geometry loops necessary for this chart type in plotnine; appropriate
-          complexity
+        comment: Appropriate complexity for manual polar geometry; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current plotnine 0.15.3 API
+        comment: Saves plot-{THEME}.png at correct 6x6in/400dpi via plot.save()
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, idiomatic layered-geom grammar-of-graphics construction
+          given plotnine's lack of a reliable coord_polar bar path
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct ggplot grammar with layered geoms and theme; manual Cartesian
-          polygon approach bypasses polar support
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: geom_polygon for wedges and scale_fill_manual with computed colors;
-          somewhat distinctive but not deeply plotnine-specific
+        comment: Data-driven geometry construction via aes(group=...) layering is
+          a recognizable ggplot-family pattern, though it is a workaround rather than
+          a plotnine-unique feature
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - polar-projection
   - patches
+  - layer-composition
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
@@ -238,3 +255,4 @@ impl_tags:
   styling:
   - alpha-blending
   - minimal-chrome
+  - publication-ready
