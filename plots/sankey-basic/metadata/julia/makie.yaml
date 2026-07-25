@@ -1,0 +1,258 @@
+library: makie
+language: julia
+specification_id: sankey-basic
+created: '2026-07-25T12:08:29Z'
+updated: '2026-07-25T12:24:46Z'
+generated_by: claude-sonnet
+workflow_run: 30157213866
+issue: 810
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Hand-built Sankey from CairoMakie primitives (poly! ribbons + text! labels) since
+    Makie has no native sankey recipe — exactly the approach the library rules call
+    for
+  - Barycenter-ordering algorithm reorders both source and target columns to minimize
+    ribbon crossings, applied iteratively (source -> target -> source) while keeping
+    the palette-to-source assignment fixed
+  - Cubic-bezier ribbons with alpha=0.55 fill make overlapping flows readable, matching
+    the spec's 'link opacity helps when flows cross over' guidance
+  - 'First categorical series (Coal) is Imprint brand green #009E73; data colors are
+    pixel-identical between light and dark renders, only chrome (background, title/label
+    ink, node stroke) flips'
+  - Canvas lands exactly on the 3200x1800 landscape target with no clipping; realistic,
+    spec-matching energy-flow dataset (Coal/Natural Gas/Nuclear/Wind/Solar -> Residential/Commercial/Industrial/Transportation)
+    with plausible relative magnitudes
+  weaknesses:
+  - Diagram is visually busy — with 5 sources x 4 targets and barycenter reordering,
+    many ribbons still cross near the middle, making it hard to trace a single flow
+    start-to-end at a glance; consider a stronger focal-flow emphasis (e.g. slightly
+    higher alpha or highlight on the largest flow) to aid storytelling
+  - Node label fontsize (15pt) is small relative to the 52pt title — legible in both
+    full-size renders and the 400px mobile crop, but there's little breathing room
+    if the catalog ever needs a smaller thumbnail size
+  - barycenter_order helper function deviates from the KISS 'no functions' default;
+    justified here since it's genuinely reused (computed twice for sources, once for
+    targets) rather than an unnecessary abstraction, but noted per CQ-01
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "sankey-basic · julia · makie · anyplot.ai" centered at top, ~78% of plot width, clearly readable. Five source node labels (Solar, Nuclear, Wind, Natural Gas, Coal) right-aligned to the left of their colored bars; four target node labels (Residential, Commercial, Transportation, Industrial) left-aligned to the right of gray target bars. All labels render in dark ink, clearly legible against the light background, and confirmed still readable at the 400px mobile crop.
+      Data: Source node bars and their outgoing ribbons are colored by the Imprint palette — Coal is brand green #009E73 (first-assigned series), Natural Gas is lavender, Nuclear is blue, Wind is ochre, Solar is matte red. Target node bars are a neutral muted gray. Ribbons are semi-transparent (alpha ≈ 0.55) cubic-bezier fills with widths proportional to flow value; Natural Gas's four flows visibly form the largest aggregate band, matching its largest total value in the underlying data.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and node-label layout, now in light ink (near-white) against the dark background. Node bar separators use background-colored strokes so they read correctly in both themes. No dark-on-dark or light-on-light failures observed — every title, node label, and target label is clearly legible.
+      Data: Confirmed pixel-identical hues to the light render (Coal green, Natural Gas lavender, Nuclear blue, Wind ochre, Solar red) — only the chrome (background, ink, node stroke color) flips between themes, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and node labels readable in both themes and at 400px mobile
+          crop; node labels small (15pt) relative to title (52pt) but not illegible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collides with other text or with links/nodes; ribbon crossings
+          are expected sankey behavior, mitigated by alpha blending
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 14 flows rendered with clearly visible, appropriately-scaled ribbon
+          widths and node bars
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used; red (Solar) and green (Coal) are spatially
+          separated and redundantly labeled, not relied on as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas verified at exactly 3200x1800; no overflow or cut-off elements;
+          generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format exactly; node labels serve as the descriptive
+          category labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First-assigned series (Coal) is #009E73; data colors identical across
+          themes; chrome correctly theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom bezier-ribbon sankey with a barycenter crossing-minimization
+          algorithm — clearly above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/decorations removed, alpha-blended ribbons, background-colored
+          node strokes as clean separators; diagram is somewhat visually busy from
+          residual crossings
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Width-encoded flows and crossing-minimization reveal Natural Gas's
+          dominance, but no additional emphasis/annotation highlights a specific focal
+          flow
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Sankey diagram with value-proportional link widths
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct source colors, link opacity for crossings, non-overlapping
+          labels, no circular flows
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Source/target/value correctly mapped to node heights and ribbon widths
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches 'sankey-basic · julia · makie · anyplot.ai' exactly;
+          direct node labeling substitutes for a legend appropriately
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 sources, 4 targets, 14 flows within spec's 5-50 range, covering
+          multi-source/multi-target structure
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Energy-flow scenario matches spec's own example verbatim (Coal/Gas/Nuclear
+          -> Residential/Commercial/Industrial), neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Flow magnitudes (8-45 GWh) are plausible and proportionally sensible
+          relative to each other
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper function (barycenter_order) — a justified, reused abstraction
+          rather than premature structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is hard-coded/deterministic, no randomness to seed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; bezier ribbon math is appropriately complex
+          for the primitive-based approach
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via px_per_unit=2, current CairoMakie API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly builds on Makie primitives (poly!, text!, hidedecorations!/hidespines!)
+          since no native sankey recipe exists, per library rules
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Bezier ribbon construction and crossing-minimization show craftsmanship
+          but don't showcase a Makie-exclusive feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - patches
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
