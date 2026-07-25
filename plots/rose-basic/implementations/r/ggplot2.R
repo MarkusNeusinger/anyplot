@@ -4,7 +4,6 @@
 #' Quality: 87/100 | Created: 2026-07-25
 
 library(ggplot2)
-library(dplyr)
 library(scales)
 library(ragg)
 
@@ -35,7 +34,7 @@ start_offset <- -(2 * pi / 12) / 2
 title_text <- "rose-basic · r · ggplot2 · anyplot.ai"
 title_fontsize <- if (nchar(title_text) > 67) round(12 * 67 / nchar(title_text)) else 12
 
-p <- ggplot(df, aes(x = month, y = rainfall_mm)) +
+p <- ggplot(df, aes(x = month, y = rainfall_mm, alpha = rainfall_mm)) +
   geom_col(fill = BRAND, color = PAGE_BG, linewidth = 0.4, width = 1) +
   coord_polar(theta = "x", start = start_offset) +
   scale_y_continuous(
@@ -43,6 +42,7 @@ p <- ggplot(df, aes(x = month, y = rainfall_mm)) +
     breaks = pretty(c(0, df$rainfall_mm), n = 4),
     expand = c(0, 0)
   ) +
+  scale_alpha_continuous(range = c(0.55, 1), guide = "none") +
   labs(title = title_text, x = NULL, y = "Rainfall (mm)") +
   theme_minimal(base_size = 8) +
   theme(
@@ -53,7 +53,7 @@ p <- ggplot(df, aes(x = month, y = rainfall_mm)) +
     axis.title.y       = element_text(color = INK_SOFT, size = 8),
     axis.title.x       = element_blank(),
     axis.text.x        = element_text(color = INK, size = 10, face = "bold"),
-    axis.text.y        = element_text(color = INK_SOFT, size = 7),
+    axis.text.y        = element_text(color = INK_SOFT, size = 8),
     axis.ticks         = element_blank(),
     plot.title         = element_text(color = INK, size = title_fontsize, hjust = 0.5, margin = margin(b = 12)),
     plot.margin        = margin(t = 20, r = 30, b = 10, l = 30)
