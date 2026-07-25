@@ -1,0 +1,258 @@
+library: highcharts
+language: javascript
+specification_id: ridgeline-basic
+created: '2026-07-25T04:04:12Z'
+updated: '2026-07-25T04:11:32Z'
+generated_by: claude-sonnet
+workflow_run: 30143162749
+issue: 923
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Real Gaussian KDE evaluated on a shared temperature grid, with per-month Silverman
+    bandwidth — a genuine statistical technique rather than a hard-coded bump shape
+  - 'Chronological color gradient built from the two official imprint_seq tokens (seq[0]
+    -> seq[1]), keeping the first ridge (Jan) exactly #009E73 and identical across
+    light/dark renders'
+  - 'Faithful ridgeline construction: ~70% vertical overlap via threshold-offset area
+    series, y-axis shows only group (month) labels rather than numeric values, groups
+    ordered chronologically — all match the spec''s notes'
+  - Deterministic LCG-based data generation (seed=42), fully reproducible, no external
+    RNG dependency
+  - 'Both renders are theme-correct: warm off-white/near-black backgrounds, all title/axis/tick
+    text legible, no clipping at any canvas edge, credits watermark disabled'
+  weaknesses:
+  - Title occupies only ~33% of the 3200px canvas width (measured ~1056px) at the
+    documented 22px default — notably narrower than the ~50-70% guideline for a shorter
+    custom-length mandated title; a slightly larger title fontsize (~26-28px) would
+    improve top-of-canvas balance without risking overflow
+  - Adjacent mid-sequence months (roughly Apr-Jul) land on similar teal hues from
+    the seq[0]->seq[1] tween, slightly reducing at-a-glance color distinctiveness
+    between neighboring ridges — the y-axis month labels fully compensate, but a touch
+    more hue separation would help
+  - Applying the continuous imprint_seq gradient across 12 ordinal category rows (rather
+    than cycling the discrete 8-color Imprint categorical palette) is a reasonable
+    and well-justified deviation given brand-green-first is preserved end to end,
+    but worth noting as a non-default choice for future consistency checks
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "ridgeline-basic · javascript · highcharts · anyplot.ai" centered at top, clearly readable (measured ~1056px / 33% of the 3200px canvas width, narrower than typical but not clipped). Y-axis shows month labels Jan (top) through Dec (bottom) in dark-gray text, no numeric y-axis. X-axis title "Temperature (°C)" with units, tick labels from -12 to 34 in steps of 2, all in soft dark-gray. Subtle light-gray vertical gridlines. No legend (not needed — labels already identify each ridge).
+      Data: 12 overlapping density "ridges", one per month, filled with a smooth green-to-blue gradient (Jan = #009E73 brand green, transitioning through teal to blue by Dec). Peaks visibly shift right (warmer) through mid-year and back left (colder) toward Dec, tracing the seasonal temperature cycle. Ridges overlap ~65-70% vertically with each row's outline drawn in the same hue as its fill.
+      Legibility verdict: PASS — title, axis labels, tick labels, and month labels are all clearly readable against the light background; no light-on-light text.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title now in white/light text, fully readable. Month labels and axis text rendered in light gray. Gridlines subtle but visible against the dark surface. Same layout and structure as the light render.
+      Data: Identical green-to-blue gradient and ridge shapes/positions as the light render — Jan is the same #009E73 green, Dec the same blue; only the chrome (background, text, grid) flipped for the dark theme.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/month text is clearly visible against the near-black background, and the data colors read well on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes, no clipping; title
+          occupies only ~33% of width (narrower than the 50-70% guideline for a shorter
+          title)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ridges are solidly filled (fillOpacity 0.92) and clearly visible
+          at this data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue gradient is CVD-safe; no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Ridges fill nearly the full width and height of the canvas, balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis has units ('Temperature (°C)'); y-axis intentionally uses
+          month labels only, per spec
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First ridge (Jan) is exactly #009E73; gradient built from imprint_seq
+          tokens (seq[0]->seq[1]), identical across themes; backgrounds theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom chronological gradient palette, minimalist chrome, intentional
+          hierarchy — clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-gridlines fully removed, x-gridlines subtle, no legend clutter,
+          generous whitespace; top title area slightly underfilled
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The seasonal 'wave' of peaks shifting right then left across months
+          immediately conveys the temperature cycle without needing annotations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Textbook ridgeline via stacked, offset, partially-overlapping density
+          curves
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: ~65-70% overlap, group labels on y-axis, color differentiation, meaningful
+          (chronological) group order — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on x, month group on y, axes show the full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; no legend needed since
+          y-axis labels already identify each ridge
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak position and spread (std 2.3-4.2) vary meaningfully across months;
+          all groups still share a similar unimodal shape
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly temperature readings — real, comprehensible, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Monthly means (2-24°C) and shrinking summer / growing winter std
+          are realistic for a temperate climate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script; small helper functions (LCG, KDE) are necessary for
+          the technique, not gratuitous
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the Highcharts global, as required
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for KDE-based ridgeline; no fake UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart('container', ...) contract, animation disabled
+          everywhere
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct core-bundle workaround for ridgelines (threshold-offset area
+          series, reversed axis, custom label formatter) — the standard idiomatic
+          pattern given no native ridgeline type
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Highcharts.color().tweenTo() for the gradient — a library-specific
+          color API touch, though the overall ridgeline technique is portable to other
+          libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - publication-ready
+  - alpha-blending
+  - gradient-fill
+  - grid-styling
