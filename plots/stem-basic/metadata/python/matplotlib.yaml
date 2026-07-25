@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: stem-basic
 created: '2025-12-23T20:45:06Z'
-updated: '2026-07-25T17:29:59Z'
+updated: '2026-07-25T17:37:55Z'
 generated_by: claude-sonnet
 workflow_run: 30167490498
 issue: 972
@@ -12,49 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 96
 review:
   strengths:
-  - 'Semantic color exception applied correctly: positive-amplitude stems use Imprint
-    position 1 (#009E73) and negative-amplitude stems use the semantic red anchor
-    (#AE3030), matching the style guide''s sentiment/polarity exception, and this
-    split is identical across both themes.'
-  - Custom baseline handling (basefmt=" " plus a manual ax.axhline at y=0 in INK_SOFT)
-    is a more polished stem-plot pattern than the library-default dashed baseline.
-  - Marker edge-halo (markeredgecolor=PAGE_BG, markeredgewidth=2) gives each stem
-    marker visual separation from overlapping stems, a deliberate refinement beyond
-    stock ax.stem() output.
-  - Data (damped, noisy discrete oscillation with np.random.seed(42)) exercises both
-    signal polarities and a decay envelope, a realistic and neutral signal-processing
-    example that matches the spec's suggested use case.
-  - Clean KISS script structure, explicit font sizes/marker sizes per the style guide,
-    correct L-shaped spines, subtle y-axis-only grid, and theme-correct chrome in
-    both renders (verified visually).
+  - 'Directly addressed both attempt-1 weaknesses: added a dashed exponential decay
+    envelope tracing the oscillation bound, and a ''Peak 1.02 V'' annotation on the
+    n=0 sample, both matching what the prior review explicitly suggested and pushing
+    Design Excellence and Library Mastery up meaningfully.'
+  - 'Semantic color exception applied correctly and consistently: positive-amplitude
+    stems use Imprint position 1 (#009E73), negative-amplitude stems use the semantic
+    red anchor (#AE3030) — identical across both themes, matching the style guide''s
+    sentiment/polarity exception.'
+  - Annotation callout box uses theme-adaptive tokens correctly (ELEVATED_BG fill,
+    INK_SOFT border/arrow, INK text) and reads clearly on both the light and dark
+    render, confirmed by pixel-level crop.
+  - Custom baseline handling (basefmt=" " plus a manual ax.axhline at y=0) and marker
+    edge-halo (markeredgecolor=PAGE_BG) remain more polished than stock ax.stem()
+    output.
+  - Title fontsize reduced from 12pt to 11pt versus attempt 1, tightening the title-width
+    proportion as the prior review suggested, without any overflow or clipping.
+  - Clean KISS script, explicit font/marker sizes per the style guide, correct L-shaped
+    spines, subtle y-axis-only grid, and verified theme-correct chrome in both renders.
   weaknesses:
-  - Design Excellence is still close to 'well-configured default' — the color-split
-    and marker halo are nice but the plot lacks a stronger focal point (e.g., a subtle
-    dashed exponential envelope over the peaks, or a light annotation calling out
-    the peak amplitude at n=0) that would push it from 'good' to 'publication-ready'.
-  - 'Library Mastery is generic: ax.stem() is the expected baseline feature for a
-    stem-basic spec in matplotlib, so it doesn''t yet demonstrate a matplotlib-distinctive
-    technique beyond what any stem implementation would use — consider something matplotlib-specific
-    like per-stemline LineCollection styling variation, an inset zoom on the first
-    few samples, or annotating the decay envelope.'
-  - Title occupies roughly 75-80% of the axis width at fontsize=12 for a comparatively
-    short ~46-char string; not overflowing or clipped (no deduction taken), but there
-    is headroom to tighten slightly if the repair pass touches typography.
+  - ax.stem() combined with an annotated envelope is a nice touch but is still an
+    additive overlay rather than a matplotlib-only mechanism (e.g. LineCollection
+    per-stem styling) — Library Mastery has headroom left for an even more distinctive
+    technique in a future iteration.
+  - The dashed decay-envelope line passes within a few pixels of two positive markers
+    around n=15-16 in both renders — not an overlap today (verified via pixel crop),
+    but tight enough that further tuning of the envelope's y-offset or the marker
+    size should keep an eye on this.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "stem-basic · python · matplotlib · anyplot.ai" in dark ink, centered, fully visible with no clipping. X-axis label "Sample Index (n)" and y-axis label "Amplitude (V)" in dark ink, clearly legible. Tick labels in a softer dark gray, legible. A subtle horizontal y-axis grid is visible without competing with the data. L-shaped spines (left + bottom only, top/right removed) in a muted ink tone.
-      Data: 30 stems from n=0..29. Positive-amplitude stems (roughly the first ~10 samples and a few scattered later ones) are rendered in Imprint brand green (#009E73) with a large circular marker with a light-colored edge halo. Negative-amplitude stems are rendered in the semantic red anchor (#AE3030), same marker style. A thin horizontal baseline at y=0 in a muted ink tone. Stems clearly show a damped oscillation: large amplitude near n=0 decaying toward ~0 by n≈25-29, with small noise-driven zig-zagging between positive/negative.
-      Legibility verdict: PASS — all title, axis labels, and tick labels are clearly readable against the light background; no light-on-light text found.
+      Background: Warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: Title "stem-basic · python · matplotlib · anyplot.ai" in dark ink, centered, fully visible, occupying a tighter ~55-60% of plot width than attempt 1 (fontsize reduced 12pt->11pt). X-axis label "Sample Index (n)" and y-axis label "Amplitude (V)" in dark ink, clearly legible. Tick labels in a softer dark gray, legible. Subtle horizontal y-axis grid visible without competing with data. L-shaped spines (left+bottom only) in a muted ink tone.
+      Data: 30 stems (n=0..29) showing a damped, noisy oscillation. Positive-amplitude stems in Imprint brand green (#009E73), negative-amplitude stems in the semantic red anchor (#AE3030), both with large circular markers and a light edge-halo. A new dashed gray decay-envelope (±exp(-n/10)) traces the oscillation bound above and below the stems. A "Peak 1.02 V" annotation with an arrow points to the n=0 sample, boxed in a light callout with dark text and a muted border — clearly legible, no overlap with any stem or grid line (verified via pixel crop).
+      Legibility verdict: PASS — all title, axis labels, tick labels, and the new annotation are clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis labels rendered in light/off-white ink, clearly visible against the dark background. Tick labels in a lighter muted gray-white, legible. Grid line is a faint light horizontal line, subtle but visible. Spines (left/bottom) in a muted light-gray tone, top/right removed as in the light render.
-      Data: Identical stem pattern and identical data colors to the light render — same Imprint green (#009E73) for positive stems and same semantic red (#AE3030) for negative stems, confirming only chrome (not data color) flips between themes. Marker edge halo now matches the dark background color, preserving the same visual separation effect.
-      Legibility verdict: PASS — no dark-on-dark failures; all text elements (title, axis labels, tick labels) are clearly legible light text on the dark surface.
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Title and axis labels in light/off-white ink, clearly visible. Tick labels in a lighter muted gray-white, legible. Grid line faint but visible. Spines (left/bottom) in a muted light-gray tone, top/right removed as in the light render.
+      Data: Identical stem pattern and identical data colors to the light render — same Imprint green (#009E73) for positive stems and semantic red (#AE3030) for negative stems, confirming only chrome flips between themes. The dashed envelope is rendered in the dark-theme muted tone. The "Peak 1.02 V" annotation box now uses the dark elevated background with a light border and light text — confirmed legible via pixel crop, no dark-on-dark failure.
+      Legibility verdict: PASS — no dark-on-dark failures; all text elements (title, axis labels, tick labels, annotation) are clearly legible light text/box on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,14 +64,15 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks
-          8pt); readable in both themes; no overflow or clipping
+        comment: All font sizes explicitly set (title 11pt, axis labels 10pt, ticks
+          8pt, annotation 8pt); readable in both themes; no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or marker overlap in either render
+        comment: No text/marker overlap in either render; annotation box and arrow
+          verified clean via pixel crop
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -86,14 +86,14 @@ review:
         max: 2
         passed: true
         comment: Green/red is redundantly encoded by position relative to the y=0
-          baseline, so it is not a red-green-only signal
+          baseline, not a red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large, balanced portion of the 3200x1800 canvas with
-          even margins
+        comment: Canvas dimension gate passed; plot fills a large, balanced portion
+          of the 3200x1800 canvas with even margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,34 +105,34 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First/positive series is Imprint #009E73; negative series correctly
-          uses the semantic red anchor #AE3030 (sentiment/polarity exception); backgrounds
+        comment: 'Positive series is Imprint #009E73; negative series correctly uses
+          the semantic red anchor #AE3030 (sentiment/polarity exception); backgrounds
           and chrome are theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Semantic color split plus marker edge-halo is above a plain default,
-          but not yet publication-grade
+        comment: Decay envelope overlay + peak annotation + semantic color split +
+          marker halo push this well past a generic default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
         comment: Spines removed, subtle y-only grid, custom baseline handling, generous
-          whitespace
+          whitespace, tighter title proportion than attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Color contrast between positive/negative stems creates clear visual
-          hierarchy of the decaying oscillation, no annotations needed for this score
+        comment: Peak annotation plus the decay envelope give the chart a clear focal
+          point and narrate the damped-oscillation story
     spec_compliance:
       score: 15
       max: 15
@@ -164,15 +164,16 @@ review:
         comment: Title exactly matches the mandated format; no legend needed since
           polarity is self-evident from the y=0 baseline
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows both signal polarities plus a decaying envelope and noise
+        comment: Shows both signal polarities, a decaying envelope, noise, and now
+          an explicit peak callout
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -222,7 +223,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png with dpi=400 and no bbox_inches='tight'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -234,21 +235,22 @@ review:
           suppression for a custom baseline
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: ax.stem itself is the expected baseline feature for this spec; usage
-          is solid but not yet a standout matplotlib-only technique
-  verdict: REJECTED
+        comment: Envelope overlay + ax.annotate peak callout directly answers the
+          prior review's request for a matplotlib-distinctive technique beyond stock
+          ax.stem()
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
-  - explicit-figure
+  - annotations
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling
   - alpha-blending
+  - grid-styling
