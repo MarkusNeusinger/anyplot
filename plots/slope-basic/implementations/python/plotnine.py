@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 79/100 | Updated: 2026-07-25
@@ -53,8 +53,10 @@ entities = [
     "Vietnam",
     "Turkey",
 ]
+# Poland and Vietnam 2024 values nudged slightly further from their nearest
+# neighbor (China, Turkey) so the endpoint markers no longer visually merge.
 share_2014 = [44, 30, 84, 92, 39, 63, 74, 66, 19, 27]
-share_2024 = [23, 1, 57, 84, 15, 42, 76, 59, 34, 36]
+share_2024 = [23, 1, 52, 84, 15, 42, 76, 59, 30, 36]
 
 changes = ["Increase" if end >= start else "Decrease" for start, end in zip(share_2014, share_2024, strict=True)]
 
