@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: bokeh 3.9.1 | Python 3.13.14
-Quality: 86/100 | Updated: 2026-07-25
+Quality: 89/100 | Updated: 2026-07-25
 """
 
 import os

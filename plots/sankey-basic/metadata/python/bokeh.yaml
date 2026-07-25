@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:43:20Z'
-updated: '2026-07-25T12:03:39Z'
+updated: '2026-07-25T12:14:02Z'
 generated_by: claude-sonnet
 workflow_run: 30156791979
 issue: 810
@@ -12,61 +12,68 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Creative, correct Sankey implementation built from bokeh primitives (patches +
-    quad + ColumnDataSource) since bokeh has no native Sankey glyph — bezier flow
-    ribbons are mathematically sound and proportional to flow value
-  - 'First encountered source category (Coal) uses #009E73 and remaining sources follow
-    canonical Imprint order; target (sector) nodes use the theme-adaptive neutral
-    INK token, a sensible structural-vs-categorical color distinction'
-  - 'Theme handling is thorough: background, ink, node borders, and even flow opacity
-    (FLOW_ALPHA 0.45 light / 0.65 dark) are tuned per theme so ribbons stay legible
-    on both the warm off-white and near-black canvases, with identical hue values
-    in both renders'
-  - Deliberate x_range margin (-40 to 150) reserves room for the outward-facing node
-    labels so nothing clips at the canvas edge, and toolbar_location=None + min_border_top=110
-    keep the 3200x1800 canvas exact
-  - Per-flow and per-node HoverTool tooltips add real interactive value in the HTML
-    detail view (flow source/target/value, node totals) without harming the static
-    PNG
+  - Barycenter crossing-minimization heuristic (_barycenter_reorder, 4 iterations
+    alternating source/target order) directly addresses the attempt-1 weakness about
+    visual clutter — node stacking order now converges toward each node's weighted-average
+    connection position, giving the diagram a noticeably calmer read than an unordered
+    layout
+  - 'The attempt-1 cosmetic weakness (a 1px light-gray line bleeding through at the
+    top/left canvas edge in the dark render) is fixed by explicitly zeroing document.documentElement/body
+    background and margin before the Selenium screenshot — pixel-sampled at (0,0)
+    in the new dark render: RGB (25,25,22), matching the #1A1A17 background almost
+    exactly, no stray border'
+  - 'Palette compliance is pixel-verified, not just visually plausible: sampling the
+    five source-node fills against the expected Imprint hexes composited at fill_alpha=0.92
+    over the page background reproduces the measured RGB values almost exactly for
+    all five sources (Coal=#009E73, Gas=#C475FD, Nuclear=#4467A3, Hydro=#BD8233, Solar=#AE3030)
+    — first-encountered source (Coal) is confirmed #009E73'
+  - 'Theme-adaptive chrome is thorough and pixel-verified: target-node neutral fill
+    and both backgrounds land within 1 RGB unit of their spec hex in both themes;
+    flow opacity is tuned per theme (0.45 light / 0.65 dark) to keep ribbons legible
+    on both surfaces with identical underlying hues'
+  - Creative, mathematically sound Sankey construction from bokeh primitives (bezier
+    patches + quad nodes + ColumnDataSource) since bokeh has no native Sankey glyph,
+    with a slightly more opaque/thicker ribbon stroke so a ribbon's own edge stays
+    traceable through alpha-blended crossings
   - Realistic, neutral energy-flow dataset (Coal/Gas/Nuclear/Hydro/Solar → Residential/Commercial/Industrial,
-    11 flows, 5-65 TWh) matches the spec's suggested example almost exactly, with
-    no circular flows
+    11 flows, 5-65 TWh) with no circular flows, closely matching the spec's own suggested
+    example
   weaknesses:
-  - Node vertical order (Solar, Hydro, Nuclear, Gas, Coal top-to-bottom on the left;
-    Commercial, Residential, Industrial on the right) is not optimized to reduce ribbon
-    crossings — the diagram reads as visually busy with many overlapping ribbons in
-    the middle. Reordering sources/targets by a barycenter or largest-flow-adjacency
-    heuristic would reduce crossings and give the chart a clearer focal point (helps
-    VQ-02/VQ-03/DE-03).
-  - Where 2-3 semi-transparent ribbons overlap (e.g. the Gas/Nuclear/Hydro crossing
-    band in the middle), the alpha blending shifts the perceived hue enough that it's
-    momentarily hard to trace which ribbon belongs to which source without hovering
-    — consider a slightly lower overlap zone or nudging node order to shrink these
-    crossing bands.
-  - 'Minor cosmetic artifact: a 1px light-gray line is visible along the top and left
-    canvas edges in the dark render (RGB ~(197,197,196) at the very first row/column
-    vs. the (26,26,23) background), even though outline_line_color is set to None
-    — likely a Chrome/bokeh root-div default border bleeding through the screenshot.
-    Not visually disruptive, but worth a repair-loop check (e.g. explicit border/outline
-    styling on the root div) so it doesn''t regress into something more visible.'
+  - The 5-source/3-target fan-out is structurally busy — even after barycenter reordering,
+    one long diagonal ribbon (Nuclear → Commercial) still crosses through the Gas/Hydro/Solar
+    band, and alpha-blended overlaps in that middle crossing zone momentarily blur
+    which ribbon belongs to which source without hovering. A true minimum-crossing
+    bipartite ordering (or accepting some crossings as inherent to this many-to-many
+    structure) is the ceiling here; further reordering tweaks would only yield marginal
+    gains.
+  - 'CQ-01 (KISS Structure): the code now defines a helper function (_barycenter_reorder)
+    called in a loop, which is a reasonable way to avoid duplicating the reorder logic
+    for sources and targets across 4 iterations, but it is a deviation from the strict
+    ''Imports → Data → Plot → Save, no functions/classes'' KISS ideal scored under
+    this criterion.'
+  - 'Data Storytelling could go further: color-by-source and width-by-value provide
+    some hierarchy, but with 3 similarly-sized targets (45/53/58 TWh) there isn''t
+    a single obvious focal point the viewer''s eye is drawn to first — a subtle emphasis
+    technique (e.g. slightly higher opacity or a highlight on the single largest flow,
+    Gas→Residential at 30 TWh) would sharpen the story.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold, centered title "sankey-basic · python · bokeh · anyplot.ai" in dark ink, clearly visible. Source node labels (Solar, Hydro, Nuclear, Gas, Coal, each annotated with a "(N TWh)" total) sit in dark ink text to the left of narrow colored node bars; target node labels (Commercial, Residential, Industrial with totals) sit in dark ink text to the right of narrow near-black node bars. No axes, ticks, or grid are drawn (appropriate for a Sankey). No text clipped at any canvas edge.
-      Data: Five source-colored ribbon families run from left to right — green (Coal), violet (Gas), blue (Nuclear), amber/brown (Hydro), red (Solar) — with widths proportional to flow value, converging and crossing into the three target nodes. First source encountered (Coal) is #009E73 as required.
-      Legibility verdict: PASS
+      Background: Warm off-white, pixel-sampled at RGB (250,248,241) — an exact match to #FAF8F1. Not pure white, not dark.
+      Chrome: Bold, centered title "sankey-basic · python · bokeh · anyplot.ai" in dark ink, clearly visible and comfortably within the canvas (no clipping at any edge). Source node labels (Solar, Hydro, Gas, Nuclear, Coal — each annotated with a "(N TWh)" total) sit in dark ink text to the left of narrow colored node bars; target node labels (Commercial, Residential, Industrial with totals) sit in dark ink text to the right of narrow near-black node bars. No axes, ticks, or grid are drawn, which is correct for a Sankey.
+      Data: Five source-colored ribbon families run left to right with widths proportional to flow value, converging into the three target nodes via the barycenter-reordered stacking (Solar, Hydro, Gas, Nuclear, Coal top-to-bottom on the left; Commercial, Residential, Industrial top-to-bottom on the right). Pixel-sampling each source node against the expected Imprint hexes (composited at fill_alpha=0.92 over the page background) reproduces the measured colors almost exactly: Coal=#009E73 (measured 20,166,125 vs expected 20,165,124), Gas=#C475FD, Nuclear=#4467A3, Hydro=#BD8233, Solar=#AE3030 — confirming the first-encountered source (Coal) is the required brand green.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title now in light/cream text, clearly legible against the dark backdrop. Source and target node labels are rendered in light ink text and remain fully readable — no dark-on-dark failures observed. Target node bars flip to a light cream fill (theme-adaptive neutral), which reads clearly against the dark background.
-      Data: Ribbon hues are pixel-identical to the light render (same five source colors), only the fill/line alpha increases slightly (0.65 vs 0.45) to keep ribbons visible on the darker surface — no chrome/data color confusion.
-      Legibility verdict: PASS (minor cosmetic note: a 1px light-gray line is visible along the top/left canvas edge, likely a root-div rendering artifact — does not affect text or data legibility)
+      Background: Warm near-black, pixel-sampled at RGB (26,26,23) — an exact match to #1A1A17. Not pure black, not light.
+      Chrome: Same title now in light/cream text, clearly legible against the dark backdrop. Source and target node labels are rendered in light ink text and remain fully readable — no dark-on-dark failures observed anywhere. Target node bars flip to a light cream fill (theme-adaptive neutral), reading clearly against the dark background. The attempt-1 cosmetic weakness (a stray 1px light-gray line along the top/left canvas edge) is confirmed fixed: pixel-sampling (0,0) through (10,0) and (0,0) through (0,10) now returns RGB (25,25,22) in every case, matching the background rather than a bleed-through page border.
+      Data: Ribbon hues are pixel-identical to the light render (same five source colors); only the fill/line alpha increases (0.65 vs 0.45) to keep ribbons visible on the darker surface — no chrome/data color confusion.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues, no edge artifact.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -74,22 +81,25 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 26pt node labels and 50pt title readable in both themes; no dark-on-dark
-          or light-on-light issues
+        comment: 26pt node labels and 50pt title, explicitly set, readable in both
+          themes; no dark-on-dark or light-on-light issues; title fits comfortably
+          without clipping
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No text-text overlap, but dense ribbon crossings create visual clutter
-          in the middle band
+        comment: No text-text overlap; barycenter reordering reduced ribbon crossing
+          clutter vs attempt 1, though one long Nuclear->Commercial ribbon still crosses
+          the middle band
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Ribbons and nodes clearly visible individually, but alpha-blended
-          overlaps at crossing points blur hue identification
+        comment: Ribbons and nodes clearly visible; the thicker/more-opaque ribbon
+          stroke keeps individual flows traceable through alpha-blended crossings
+          better than attempt 1
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -102,8 +112,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, generous x_range margin keeps labels from
-          clipping, title proportion appropriate
+        comment: Exact 3200x1800 canvas (no canvas-gate flag), generous x_range margin
+          keeps labels from clipping, title proportion appropriate
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -115,32 +125,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First encountered source (Coal) is #009E73, remaining sources follow
-          canonical order, backgrounds theme-correct in both renders'
+        comment: 'Pixel-sampled: first encountered source (Coal) is #009E73, remaining
+          sources follow canonical Imprint order exactly, backgrounds theme-correct
+          (pixel-exact) in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Theme-adaptive alpha tuning, careful margin reservation, thoughtful
-          neutral-vs-categorical node coloring
+        comment: Theme-adaptive alpha tuning, careful margin reservation, structural-vs-categorical
+          node coloring, and a genuine crossing-minimization algorithm go beyond a
+          well-configured default
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No axes/grid/outline, minimal chrome throughout
+        comment: No axes/grid/outline, minimal chrome throughout, edge-highlight stroke
+          on ribbons for definition
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Color-by-source and width-by-value give some hierarchy, but the busy
-          crossing pattern undercuts a clear single focal point
+        passed: true
+        comment: Color-by-source, width-by-value, and reduced crossings give clearer
+          visual hierarchy than attempt 1, but with 3 similarly-sized targets there's
+          still no single obvious focal point
     spec_compliance:
       score: 15
       max: 15
@@ -199,16 +213,17 @@ review:
         comment: 5-65 TWh values are a sensible illustrative scale with no circular
           flows
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes; procedural flow computation is as simple as
-          the geometry allows
+        comment: A helper function (_barycenter_reorder) was added for the crossing-minimization
+          loop — reasonable to avoid duplication across 4 iterations, but a deviation
+          from the strict no-functions KISS ideal
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -220,14 +235,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports (numpy, bokeh, selenium) are used
+        comment: All imports (numpy, bokeh, os, sys, time, pathlib, selenium) are
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Bezier-curve math is warranted since bokeh has no native Sankey glyph;
-          no fake UI
+        comment: Bezier-curve math and barycenter heuristic are warranted since bokeh
+          has no native Sankey glyph; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -251,8 +267,9 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Custom bezier-patch ribbons, dual per-renderer HoverTools, and per-node
-          Label placement build a chart type bokeh doesn't natively support
+        comment: Custom bezier-patch ribbons, dual per-renderer HoverTools, per-node
+          Label placement, and a barycenter crossing-minimization algorithm build
+          a chart type bokeh doesn't natively support
   verdict: APPROVED
 impl_tags:
   dependencies:
