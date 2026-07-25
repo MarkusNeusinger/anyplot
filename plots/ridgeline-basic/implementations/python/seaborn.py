@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-07-25
+Quality: 93/100 | Updated: 2026-07-25
 """
 
 import os

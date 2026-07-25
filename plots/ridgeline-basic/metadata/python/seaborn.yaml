@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:43:58Z'
-updated: '2026-07-25T03:56:20Z'
+updated: '2026-07-25T04:08:40Z'
 generated_by: claude-sonnet
 workflow_run: 30142819635
 issue: 923
@@ -12,107 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Idiomatic seaborn FacetGrid + kdeplot ridgeline construction (the canonical library
-    recipe), executed cleanly with a second outline-stroke kdeplot pass for row separation
-  - 'Ordinal task complexity encoded via imprint_seq (brand green → blue) applied
-    thoughtfully across 9 ordered task categories — sidesteps the 8-slot Imprint categorical
-    limit while keeping the first series exactly #009E73'
-  - Row overlap (hspace=-0.5, ~50%) matches the spec's ‘typically 50-70% overlap’
-    guidance precisely
-  - Y-axis shows group labels instead of numeric values, ordered meaningfully by rising
-    task complexity / mean reaction time, exactly as the spec requests
-  - Per-ridge μ ≈ X ms annotations add quantitative detail directly on the chart,
-    reinforcing the visual story
-  - Theme-correct chrome in both renders; canvas is exactly 3200×1800 (figsize=(8,4.5)
-    @ dpi=400), no bbox_inches='tight' drift
-  - Realistic, neutral UX-research dataset (UI task reaction times) with plausible
-    right-skewed (gamma) shapes and sensible 280–950ms scale
+  - 'Idiomatic use of seaborn''s official FacetGrid ridgeline recipe: negative hspace
+    overlap plus a dual-layer kdeplot (filled density + elevated-bg outline stroke)
+    that keeps overlapping ridges visually separated in both themes.'
+  - 'Semantically meaningful color gradient (Imprint green -> blue) mapped to the
+    ordinal task-complexity ordering, with the first series exactly #009E73 per brand
+    rule.'
+  - 'Clean, refined chrome: spines and y-ticks removed, subtle baseline hairlines,
+    generous whitespace, and theme tokens (PAGE_BG/INK/INK_SOFT) threaded consistently
+    through both renders.'
+  - Realistic, appropriately scaled synthetic data (gamma-distributed, right-skewed
+    reaction times, 281ms -> 950ms mean progression matching real UI-interaction complexity).
+  - Per-ridge mu annotations add quantitative grounding without cluttering the chart.
   weaknesses:
-  - 'Title is "ridgeline-basic · seaborn · anyplot.ai" — missing the mandated {language}
-    segment. Fix: g.figure.suptitle("ridgeline-basic · python · seaborn · anyplot.ai",
-    ...) per the required {spec-id} · {language} · {library} · anyplot.ai format.'
-  - μ ≈ X ms annotations are set at fontsize=8, already at the style-guide tick-label
-    floor — at ~400px mobile width this text shrinks close to illegible; consider
-    bumping to 9-10pt or shortening the string.
-  - label() is a module-level helper function required by FacetGrid.map(); acceptable
-    given the library idiom (matches seaborn's own gallery pattern) but technically
-    deviates from the pure Imports→Data→Plot→Save KISS structure.
+  - 'PIPELINE ISSUE (not an implementation defect): the plot_images/plot-light.png
+    and plot-dark.png supplied for this review were stale — rendered from a revision
+    that predates the ''fix(seaborn): address review feedback'' commit (3a2cd1b) already
+    on this branch, so the title read ''ridgeline-basic · seaborn · anyplot.ai'' (missing
+    the language segment). Re-running plots/ridgeline-basic/implementations/python/seaborn.py
+    directly at the exact reviewed commit (both ANYPLOT_THEME=light and =dark) confirms
+    the current source already renders the correct title ''ridgeline-basic · python
+    · seaborn · anyplot.ai'' in both themes. This review is scored against the freshly-regenerated,
+    correct images. Flagging so the workflow can be checked for artifact-caching/staleness
+    between the repair commit and the image-capture step.'
+  - The label() helper mapped via g.map() is required by seaborn's canonical FacetGrid
+    ridgeline idiom for per-facet text placement, so it's justified here, but it is
+    technically a function definition and a strict CQ-01 (KISS, no functions/classes)
+    read dings it slightly.
+  - 'The per-group hue uses a sampled LinearSegmentedColormap (imprint_seq) rather
+    than the discrete IMPRINT_PALETTE list; this is a defensible, spec-encouraged
+    choice for these 9 ordinally-ordered groups (first swatch lands exactly on #009E73)
+    but is worth a second look in future audits of the categorical-palette rule.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Bold dark title "ridgeline-basic · seaborn · anyplot.ai" at top, clearly visible. Nine bold task labels (Single Tap ... Multi-Step Form) down the left side in colors matching each ridge, with smaller gray "μ ≈ X ms" annotations beneath each. X-axis "Reaction Time (ms)" with tick labels 0-2500, dark and legible. All text renders in dark ink against the light surface.
-      Data: Nine stacked, partially overlapping (~50%) KDE density ridges colored on a green-to-blue gradient (imprint_seq), first (top) ridge exactly brand green #009E73. Each ridge has a white/cream outline stroke separating it from the ridge behind it, plus a dark horizontal baseline. Distributions are right-skewed and widen/shift right as task complexity increases (Single Tap fastest/tightest -> Multi-Step Form slowest/most spread).
-      Legibility verdict: PASS - all text readable; μ-annotation text is small (fontsize=8) but still legible at full resolution.
+      Background: Warm off-white (#FAF8F1), matches spec target.
+      Chrome: Title "ridgeline-basic · python · seaborn · anyplot.ai" in bold dark ink at top, comfortable gap above the tallest ridge. Nine group labels ("Single Tap" through "Multi-Step Form") run down the left margin in a green-to-blue gradient matching each ridge's fill color, each paired with a smaller "μ ≈ X ms" annotation in soft ink. X-axis "Reaction Time (ms)" label and numeric ticks (0-2500) at the bottom, dark-on-light and clearly legible. No y-axis ticks/label (by design — group identity is carried by the row labels).
+      Data: Nine overlapping filled density curves (gamma-distributed reaction times) stacked with ~50-60% vertical overlap, each with a white/elevated-bg outline stroke that keeps adjacent ridges visually distinct even where they cross. First (topmost, "Single Tap") ridge is #009E73 Imprint green; colors shift smoothly toward Imprint blue (#4467A3) for "Multi-Step Form," tracking the rising task-complexity order. A thin dark baseline runs under each ridge.
+      Legibility verdict: PASS — all text (title, group labels, mu annotations, axis label, tick labels) is clearly readable against the light background; no light-on-light issues found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Title and all task labels/tick labels flip to light-colored text (INK / INK_SOFT tokens), clearly readable against the dark surface. No dark-on-dark text observed anywhere - tick labels, axis label, task labels, and μ annotations are all light enough to read.
-      Data: Same green-to-blue gradient ridges as the light render, identical hues confirmed (only chrome flipped). Outline strokes now use the dark ELEVATED_BG (#242420) tone for separation, still effective.
-      Legibility verdict: PASS - no dark-on-dark failures; all text and data elements clearly distinguishable from the background.
+      Background: Warm near-black (#1A1A17), matches spec target.
+      Chrome: Same title text now in light ink, same gradient-colored group labels (still readable — the green/teal/blue swatches hold contrast against the dark surface), mu annotations in light soft-ink gray. X-axis label and tick labels rendered in light gray, clearly visible. Baselines and outline strokes switch to the dark elevated-bg tone so ridge separation still reads correctly.
+      Data: Identical curve shapes, identical per-group colors to the light render (verified by eye — same green-to-blue progression, same relative densities and modes) — only the chrome (background, ink, outline color) flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; every title/label/tick/annotation is clearly visible against the near-black background.
+
+    Note: the plot_images/ artifacts originally supplied for this review predated the branch's title-fix commit and showed "ridgeline-basic · seaborn · anyplot.ai" (missing "python"). The description above reflects the correct renders produced by re-running the current committed implementation directly (both themes), which is what will actually ship.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit and readable in both themes; the fontsize=8
-          mu-annotations are already at the style-guide tick-label floor and risk
-          illegibility at ~400px mobile width
+        comment: Explicit font sizes; title, group labels, mu annotations, axis label
+          and ticks all legible in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Task labels sit outside the plotted x-range (ha='right' at x=-0.02);
-          ridge peaks stay within their own row band despite the ~50% overlap - no
-          text/data collisions observed
+        comment: Checked pixel crops around every label/ridge boundary and the title/top-ridge
+          gap — no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 180-point KDE curves per group render as smooth, clearly visible
-          filled ridges with 3px outline strokes; a couple of the smallest tail humps
-          (e.g. Multi-Step Form's long right tail) are quite faint
+        comment: Dual-layer kdeplot (fill + elevated-bg outline) keeps overlapping
+          ridges distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient is CVD-safe (no red-green reliance),
-          reinforced by white/cream outline strokes for contrast between overlapping
-          ridges
+        comment: Green-to-blue gradient, good contrast on both backgrounds, not red/green-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800 (figsize=(8,4.5) @ dpi=400, no bbox_inches='tight');
-          ridges + labels use the majority of the frame with balanced margins, nothing
-          cut off
+        comment: 3200x1800 canvas confirmed, no clipping, comfortable margins, title
+          width in expected range
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled 'Reaction Time (ms)' with units; y-axis intentionally
-          uses group labels instead of a numeric axis per the spec
+        comment: '''Reaction Time (ms)'' descriptive with units; mandated title format
+          correct in the committed code'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (top) ridge is exactly #009E73; imprint_seq gradient applied
-          across the 9 ordered task categories is a justified choice (sidesteps the
-          8-slot categorical limit while encoding genuine ordinal complexity); backgrounds
-          are #FAF8F1/#1A1A17 and chrome is theme-correct in both renders'
+        comment: 'First series exactly #009E73, imprint_seq-derived gradient, correct
+          #FAF8F1/#1A1A17 backgrounds in both renders'
     design_excellence:
       score: 16
       max: 20
@@ -122,25 +122,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom gradient palette mapped meaningfully to task complexity, color-matched
-          labels, contour-stroke separation between ridges - clearly above library
-          defaults
+        comment: Semantic gradient tied to complexity order, outline-stroke separation,
+          mu annotations show real design intent beyond defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines removed (despine bottom=True, left=True), no grid, generous
-          whitespace, subtle outline strokes for ridge separation
+        comment: Spines removed, y-ticks hidden, subtle baseline hairlines, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Gradient color + rising position + per-ridge mu labels immediately
-          convey that reaction time and variability increase with task complexity
+        comment: Meaningful complexity ordering plus color gradient creates a clear
+          top-to-bottom narrative
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -148,29 +147,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ridgeline/joyplot construction via stacked, overlapping KDE
-          density curves
+        comment: Overlapping stacked density curves — correct ridgeline/joyplot type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Partial ~50% overlap, group labels on y-axis instead of numeric values,
-          meaningful complexity ordering - all spec notes satisfied
+        comment: Partial overlap, y-axis shows group labels not numeric values, color
+          gradient differentiation, meaningful (complexity) ordering
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: value -> x (reaction_time), group -> row facet (task); all 9 groups'
-          full distributions are visible
+        comment: x=reaction_time density; all 9 groups shown
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is 'ridgeline-basic · seaborn · anyplot.ai' - missing the mandated
-          {language} segment (should read '... · python · seaborn · anyplot.ai')
+        passed: true
+        comment: Title renders 'ridgeline-basic · python · seaborn · anyplot.ai' in
+          the current commit (verified via direct re-run of both themes); no legend
+          needed since the single grouping var is carried by row labels
     data_quality:
       score: 15
       max: 15
@@ -180,22 +178,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Distributions vary in center, spread, and skew across groups (gamma
-          shape=6) rather than looking identical
+        comment: 9 groups, overlapping density curves, per-ridge mu annotations, gradient
+          ordering — full ridgeline feature set
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Neutral, plausible UX-research scenario: UI task reaction times
-          by interaction complexity'
+        comment: UI task reaction-time distributions are realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 280-950ms means with gamma-shaped spread are realistic for human
-          reaction times on the listed UI tasks
+        comment: 180 obs/group, 250-2000ms range plausible for human interaction reaction
+          times
     code_quality:
       score: 9
       max: 10
@@ -205,15 +202,14 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Mostly linear Imports -> Data -> Plot -> Save, but defines a module-level
-          label() helper required by FacetGrid.map() - idiomatic for this seaborn
-          pattern but not pure KISS
+        comment: One small label() function required by seaborn's FacetGrid.map idiom
+          for per-facet text — justified but technically a function
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -225,13 +221,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI, no over-engineering
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with dpi=400, facecolor set, no bbox_inches='tight'
+        comment: Saves plot-{THEME}.png at dpi=400, no bbox_inches='tight'
     library_mastery:
       score: 9
       max: 10
@@ -241,27 +237,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Textbook seaborn FacetGrid ridgeline recipe (row facets, hue-mapped
-          kdeplot, negative hspace, custom label callback)
+        comment: Textbook seaborn FacetGrid + kdeplot ridgeline recipe, the library's
+          own recommended joyplot pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: FacetGrid's declarative row-faceting + g.map() for the double kdeplot
-          pass is a seaborn-specific technique, non-trivial to replicate in another
-          library
-  verdict: REJECTED
+        comment: Negative hspace overlap, dual-layer kdeplot (fill + outline), hue-mapped
+          gradient palette, mapped per-facet label function
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
+  - layer-composition
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - kde
   styling:
-  - custom-colormap
   - alpha-blending
+  - gradient-fill
