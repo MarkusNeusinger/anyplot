@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:44:19Z'
-updated: '2026-07-25T11:59:17Z'
+updated: '2026-07-25T12:09:23Z'
 generated_by: claude-sonnet
 workflow_run: 30156909226
 issue: 810
@@ -12,52 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Genuine custom Sankey built via geom_polygon with cubic Hermite-interpolated ribbon
-    curves — a real grammar-of-graphics workaround for plotnine's lack of native Sankey
-    support, not a matplotlib fallback
+  - Genuine hand-built Sankey via geom_polygon with cubic Hermite-interpolated ribbons
+    — a real grammar-of-graphics workaround for plotnine's lack of native Sankey support,
+    not a matplotlib fallback
+  - 'Canvas utilization fix landed: the diagram core now spans ~89-93% of the 3200x1800
+    canvas (measured via pixel bounding box), resolving the prior narrow-central-column
+    critique'
+  - Title now correctly reads 'Energy Flow · sankey-basic · python · plotnine · anyplot.ai'
+    — the missing language token from the previous attempt is fixed
   - 'Correct Imprint palette usage: Coal is #009E73 (first series), Gas/Nuclear/Renewables
     follow canonical positions 2-4; theme-adaptive chrome (title, node labels, ''Sources''/''Sectors''
-    captions) flips correctly between light and dark renders'
-  - Flow value labels are only drawn for larger flows and staggered along each source's
-    outgoing ribbons so co-sourced flows don't collide
+    captions, target-node fill) flips correctly between light and dark renders with
+    data colors identical across themes'
+  - Flow value labels are staggered per source so co-sourced flows don't collide,
+    remain fully legible in both themes even where ribbons overlap
   - Data respects the 'no circular flows' rule, shows realistic sparsity (not every
     source feeds every sector), and depicts a neutral, plausible energy-flow scenario
-  - Node and ribbon widths are correctly proportional to flow values, with alpha blending
-    used to keep overlapping ribbons legible
+    with proportional node/ribbon widths
   weaknesses:
-  - 'SC-04: Title is ''Energy Flow · sankey-basic · plotnine · anyplot.ai'' — missing
-    the mandated language token. Correct format is ''{Descriptive Title} · {spec-id}
-    · {language} · {library} · anyplot.ai''; should read ''Energy Flow · sankey-basic
-    · python · plotnine · anyplot.ai''.'
-  - 'VQ-05: Horizontal canvas utilization is modest — the diagram core (nodes + links)
-    sits in a fairly narrow central column with large empty margins on both sides
-    before the canvas edge; widen the x_left/x_right spread or trim outer margins
-    so the chart fills more of the 3200×1800 canvas.'
-  - 'DE-02: At ribbon-crossing zones (e.g. Renewables vs. Gas/Nuclear crossings) the
-    semi-transparent overlaps blend into muddy olive/brown hues outside the Imprint
-    palette; consider slightly reducing alpha or adjusting node stacking order to
-    shrink the overlap area.'
-  - 'LM-02: The manual polygon/Hermite-curve construction is a generic ''draw shapes''
-    technique replicable in any plotting library — it doesn''t lean on anything distinctive
-    to plotnine''s ggplot2-style grammar (e.g., faceting, stat layers).'
+  - 'DE-02: At ribbon-crossing zones (e.g. Gas/Nuclear/Renewables crossings around
+    the diagram center) the semi-transparent overlaps still blend into off-palette
+    muddy hues (teal, olive, rust) even after the alpha reduction from 0.62 to 0.44;
+    try alpha ~0.3 or reorder node stacking to shrink the overlap area further'
+  - 'LM-02: The manual polygon/Hermite-curve construction remains a generic ''draw
+    shapes'' technique replicable in any plotting library — it doesn''t lean on anything
+    distinctive to plotnine''s ggplot2-style grammar (e.g., faceting, stat layers)'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Energy Flow · sankey-basic · plotnine · anyplot.ai" is bold dark text, clearly legible and centered at the top. "Sources" and "Sectors" captions below the diagram are medium-gray, readable. Node labels (Coal, Gas, Nuclear, Renewables, Industrial, Commercial, Residential) are bold dark text, right/left-aligned outward from their nodes, no overlap with links.
-      Data: Four source nodes colored in Imprint order (Coal=#009E73 green, Gas=lavender, Nuclear=blue, Renewables=ochre); three target nodes rendered in a neutral dark-gray block. Semi-transparent ribbons connect sources to targets with bold value labels (35, 25, 20, 18, 15, 15, 12, 12) placed on the ribbons, all readable against their host ribbon color.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues found. Title omits the required "python" language token (see weaknesses), which is a spec-compliance issue, not a legibility one.
+      Chrome: Title "Energy Flow · sankey-basic · python · plotnine · anyplot.ai" is bold dark text, clearly legible and centered at the top, spanning ~68% of canvas width (expected for the mandated title with descriptive prefix). "Sources" and "Sectors" captions below the diagram are medium-gray, readable. Node labels (Coal, Gas, Nuclear, Renewables, Industrial, Commercial, Residential) are bold dark text, right/left-aligned outward from their nodes, no overlap with links.
+      Data: Four source nodes colored in Imprint order (Coal=#009E73 green, Gas=lavender, Nuclear=blue, Renewables=ochre); three target nodes rendered in a neutral dark-gray block. Semi-transparent ribbons (alpha=0.44) connect sources to targets with bold value labels (35, 25, 20, 18, 15, 15, 12, 12) placed on the ribbons, all readable against their host ribbon color. At crossing zones the overlapping ribbons still blend into muddy teal/olive/rust hues outside the Imprint palette, but text remains fully legible over them.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues found. Title correctly includes the "python" language token this time (previous attempt's SC-04 issue is fixed).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
       Chrome: Title, node labels, and value labels all render in light/off-white text, clearly visible against the dark background. "Sources"/"Sectors" captions are light gray, readable. Target nodes flip to a light silver-gray block (theme-adaptive), sources keep identical hues to the light render.
-      Data: Source colors (green/lavender/blue/ochre) are pixel-identical to the light render — only the chrome (background, target-node fill, text colors) flips. No dark-on-dark text found anywhere, including at ribbon crossings.
+      Data: Source colors (green/lavender/blue/ochre) are pixel-identical to the light render — only the chrome (background, target-node fill, text colors) flips. No dark-on-dark text found anywhere, including at ribbon crossings; the same muddy-hue crossing zones are present but text contrast holds.
       Legibility verdict: PASS — no dark-on-dark or unreadable elements detected in either render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -66,21 +63,22 @@ review:
         max: 8
         passed: true
         comment: Font sizes explicitly set (plot_title=12, geom_text=7/9, annotate=8);
-          readable at full size in both themes; title fits comfortably without overflow
+          readable at full size in both themes; title fits without overflow (~68%
+          width)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Flow labels are staggered per-source so co-sourced flows don't collide;
-          no text-on-text overlap observed
+        comment: Flow labels staggered per-source so co-sourced flows don't collide;
+          no text-on-text overlap observed even at ribbon crossings
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ribbon alpha (0.62) and node/flow widths well matched to the flow
-          magnitudes; nothing barely visible
+        comment: Ribbon alpha (0.44) and node/flow widths well matched to flow magnitudes;
+          nothing barely visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -90,11 +88,12 @@ review:
           sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nothing cut off, but the diagram core sits in a narrower central
-          column with noticeable unused margin on both sides
+        comment: 'Fixed from prior attempt: diagram+labels now span ~89-93% of the
+          3200x1800 canvas (pixel-measured bounding box), nothing cut off, balanced
+          margins'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -125,17 +124,17 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Spines/grid/ticks removed, generous whitespace, but ribbon-crossing
-          zones blend into off-palette muddy hues
+        comment: Spines/grid/ticks removed, generous whitespace; alpha reduced 0.62->0.44
+          but ribbon-crossing zones still blend into off-palette muddy hues (teal/olive/rust)
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Width + color + value labels together make the dominant Coal→Industrial
+        comment: Width + color + value labels together make the dominant Coal->Industrial
           pathway immediately readable
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -160,11 +159,12 @@ review:
           represented
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title omits the mandated language token ('python'); direct node labeling
-          correctly substitutes for a legend
+        passed: true
+        comment: 'Fixed: title now reads ''Energy Flow · sankey-basic · python · plotnine
+          · anyplot.ai'' — mandated language token present; direct node labeling correctly
+          substitutes for a legend'
     data_quality:
       score: 15
       max: 15
@@ -197,8 +197,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; linear imports → data → plot → save shape despite
-          the necessary geometry math
+        comment: No functions/classes; linear imports -> data -> plot -> save shape
+          despite the necessary geometry math
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -243,7 +243,7 @@ review:
         passed: true
         comment: Hermite-curve ribbon construction is a reasonable technique but not
           distinctive to plotnine specifically
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
