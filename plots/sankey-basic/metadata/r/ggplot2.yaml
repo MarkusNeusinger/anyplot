@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: sankey-basic
 created: '2026-07-25T12:03:03Z'
-updated: '2026-07-25T12:08:45Z'
+updated: '2026-07-25T12:19:59Z'
 generated_by: claude-sonnet
 workflow_run: 30157152292
 issue: 810
@@ -12,61 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 93
 review:
   strengths:
+  - 'All three attempt-1 weaknesses are directly and verifiably addressed: the stack_nodes()/make_curve()
+    helper functions are gone (now a flat dplyr/tidyr pipeline, satisfying strict
+    KISS), every ribbon gets a thin source-colored edge stroke that keeps individual
+    flows traceable through the dense crossing zone, and the dominant Coal -> Industrial
+    flow is redrawn on top at higher saturation with an ink outline so the chart''s
+    main insight reads at a glance.'
   - Fully hand-rolled Sankey diagram built from pure ggplot2 primitives (geom_ribbon
-    + geom_rect + geom_text) with a custom smoothstep-eased curve algorithm for the
-    flow ribbons — a genuinely creative solution given ggplot2 has no native Sankey
-    geom and the library rules forbid falling back to another backend.
+    + geom_rect + geom_text) with a custom smoothstep-eased curve algorithm -- a genuinely
+    creative solution given ggplot2 has no native Sankey geom and the library rules
+    forbid falling back to another backend.
   - 'Clean, uncluttered layout: theme_void() strips all chrome, node labels sit directly
     beside their bars (''Coal · 380 PJ'') instead of a separate legend, and coord_cartesian(clip=''off'')
-    with generous plot.margin gives the labels room without touching the canvas edge.'
+    with generous plot.margin gives labels room without touching the canvas edge.'
   - 'Imprint palette applied correctly and canonically: first source (Coal) is #009E73,
     remaining sources follow palette positions 2-5 in canonical order, target nodes
-    use the theme-adaptive INK_SOFT tone to visually distinguish ''sink'' nodes from
-    source categories.'
-  - 'Theme-adaptive chrome is fully correct — backgrounds match #FAF8F1/#1A1A17, title
-    and node-label text flip from dark-on-light to light-on-dark, and the flow colors
-    are pixel-identical between the two renders.'
+    use theme-adaptive INK_SOFT to visually distinguish sink nodes from source categories,
+    and flow colors are pixel-identical between light and dark renders.'
   - Realistic, neutral energy-flow dataset (17 flows, 5 sources -> 4 sectors, values
     10-220 PJ) within the spec's 5-50 flow range, with plausible real-world proportions
     (coal/gas dominating industrial and residential use, renewables smaller shares).
   weaknesses:
-  - 'CQ-01 KISS Structure: the script defines two helper functions (stack_nodes(),
-    make_curve()) instead of a flat imports -> data -> plot -> save script. Understandable
-    given ggplot2 has no native Sankey geom and the layout math has to live somewhere,
-    but it''s still a deduction under the strict ''no functions/classes'' rule — consider
-    inlining if it can be done without hurting readability, otherwise this is an accepted
-    tradeoff for this plot type.'
-  - 'DE-01 Aesthetic Sophistication: ribbons are flat, uniform alpha=0.6 fills with
-    no additional depth (e.g. a subtle gradient along the ribbon length, or a slightly
-    higher opacity/stroke on the single largest flow) — a bit more visual richness
-    would push this from ''strong'' to genuinely publication-ready.'
-  - 'VQ-03 Element Visibility: with 17 flows crossing between 5 sources and 4 targets,
-    several ribbons overlap and their alpha=0.6 fills blend into a slightly muddy
-    color in the crossing zone (most visible around the Gas/Nuclear/Wind crossing
-    band). A subtle stroke on ribbon edges, or reordering the source/target stacking
-    to reduce crossings, would improve individual-flow legibility.'
-  - 'DE-03 Data Storytelling: the per-node value labels are a nice touch, but the
-    dominant flow (Coal -> Industrial, the widest ribbon) isn''t otherwise emphasized
-    — a slightly higher opacity or a thin highlight stroke on the largest flow would
-    sharpen the visual hierarchy and make the chart''s main insight even more immediate.'
+  - The dominant-flow ink outline (color = INK, linewidth = 0.35 on the Coal -> Industrial
+    ribbon) is barely perceptible at render resolution -- pixel-sampling the boundary
+    shows only a 1px antialiased transition, not a visible dark stroke. The saturation
+    boost still reads clearly, so this doesn't hurt legibility, but the outline itself
+    is effectively invisible; consider bumping linewidth to ~0.6-0.8 if a visible
+    stroke is wanted.
+  - The densest crossing band (Gas/Nuclear/Wind ribbons overlapping around the Residential/Commercial
+    column) still blends into a slightly busy area even with the new edge strokes
+    -- a minor readability cost inherent to 17 flows over 4 targets, not a defect
+    to fix at the cost of the dataset's realism.
+  - 'LM-01: the aes(fill = I(fill_color)) escape hatch for node rects is a minor workaround
+    rather than a pure mapped aesthetic -- functionally fine but not the most idiomatic
+    ggplot2 pattern.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "sankey-basic · r · ggplot2 · anyplot.ai" in dark ink near the top-left, comfortably sized (~40% of canvas width), not clipped or overflowing. Node labels ("Coal · 380 PJ" ... "Transport · 50 PJ") in dark ink flank the diagram on both sides, clearly legible against the light background.
-      Data: Five source nodes (Coal, Gas, Nuclear, Wind, Solar) stacked on the left as solid color bars, four target nodes (Industrial, Residential, Commercial, Transport) stacked on the right as dark-gray bars. Flow ribbons connect them with widths proportional to value, colored by source: Coal = brand green #009E73, Gas = lavender, Nuclear = blue, Wind = ochre, Solar = matte red — matching the Imprint palette in canonical order. Ribbons use ~0.6 alpha so overlapping flows remain distinguishable, though some crossing bands blend slightly.
-      Legibility verdict: PASS — all title and node-label text is clearly readable against the light background, no dark-on-light or light-on-light failures.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "sankey-basic · r · ggplot2 · anyplot.ai" in dark ink near the top-left, comfortably sized (~35% of canvas width, well below the 90% overflow threshold), not clipped. Node labels ("Coal · 380 PJ" ... "Transport · 50 PJ") in dark ink flank the diagram on both sides, clearly legible against the light background with no overlap onto the ribbons.
+      Data: Five source nodes (Coal, Gas, Nuclear, Wind, Solar) stacked left as solid color bars; four target nodes (Industrial, Residential, Commercial, Transport) stacked right as dark-gray bars. Flow ribbons connect them with widths proportional to value, colored by source in canonical Imprint order (Coal=#009E73 green, Gas=lavender, Nuclear=blue, Wind=ochre, Solar=matte red). Every ribbon now carries a thin source-colored edge stroke, and the single largest flow (Coal -> Industrial, 220 PJ) is redrawn on top at higher saturation/opacity so it visually dominates the composition -- addressing the prior review's "dominant flow not emphasized" note.
+      Legibility verdict: PASS -- all title and node-label text is clearly readable against the light background, no dark-on-light or light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
       Chrome: Title and all node labels render in light ink (near-white), clearly legible against the dark background. Target-node bars flip to a light-gray tone (INK_SOFT for dark theme) instead of the dark-gray used in the light render, correctly following the theme-adaptive chrome rule.
-      Data: Flow ribbon colors are pixel-identical to the light render — same green/lavender/blue/ochre/red source colors — confirming only chrome (background, text, target-node fill) flips between themes, not the categorical data colors.
-      Legibility verdict: PASS — no dark-on-dark failures; all title and node-label text is clearly visible against the near-black background, and the brand green remains visible on both surfaces.
+      Data: Flow ribbon colors are pixel-identical to the light render -- same green/lavender/blue/ochre/red source colors -- confirming only chrome (background, text, target-node fill) flips between themes, not the categorical data colors. The dominant Coal -> Industrial highlight is equally visible here.
+      Legibility verdict: PASS -- no dark-on-dark failures; all title and node-label text is clearly visible against the near-black background, and the brand green remains visible on both surfaces.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -82,14 +79,15 @@ review:
         max: 6
         passed: true
         comment: Node labels sit outside the node bars with margin; no collisions
-          with links or other text
+          with links or other text in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Ribbon widths correctly proportional to flow value; some crossing
-          bands blend slightly at alpha=0.6, minor clutter in dense crossing zone
+        comment: 'Fixed from attempt 1: thin source-colored edge stroke now added
+          to every ribbon, keeping individual flows traceable through the dense crossing
+          zone instead of blending into a muddy overlap'
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -101,8 +99,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Diagram fills most of the canvas with balanced margins; nothing cut
-          off
+        comment: Diagram fills most of the canvas with balanced margins; verified
+          no edge clipping on title, node labels, or ribbons at any border
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -118,17 +116,17 @@ review:
         comment: 'First series #009E73, canonical order for sources 1-5, theme-correct
           backgrounds and chrome in both renders, data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful custom Sankey construction and palette use, clearly above
-          library defaults, but flat uniform ribbon fills without extra visual refinement
-          keep it short of publication-ready
+        passed: true
+        comment: 'Fixed from attempt 1: ribbons are no longer flat uniform fills --
+          added edge strokes plus a saturated, ink-bordered dominant-flow overlay
+          give real visual depth beyond the previous version'
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -138,11 +136,12 @@ review:
           and margins, subtle PAGE_BG-colored node borders for separation
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Width-encoded flows plus per-node value labels create clear visual
-          hierarchy, though the dominant flow isn't further emphasized
+        comment: 'Fixed from attempt 1: the dominant Coal -> Industrial flow is now
+          explicitly emphasized (higher saturation, re-drawn on top), sharpening the
+          visual hierarchy so the chart''s main insight is immediate'
     spec_compliance:
       score: 15
       max: 15
@@ -200,17 +199,17 @@ review:
         comment: Plausible real-world proportions (coal/gas dominate industrial and
           residential, renewables smaller shares)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Uses two helper functions (stack_nodes, make_curve) rather than a
-          flat script; justified by the hand-rolled layout but still a deduction under
-          strict KISS
+        passed: true
+        comment: 'Fixed from attempt 1: the stack_nodes()/make_curve() helper functions
+          have been removed -- now a flat imports -> data -> layout pipeline -> plot
+          -> save script using only dplyr/tidyr pipes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -222,14 +221,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, tibble, ragg all used
+        comment: ggplot2, dplyr, tidyr, tibble, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
         comment: No fake UI/interactivity, appropriate complexity for a custom chart
-          type
+          type, vectorized crossing() approach avoids per-row helpers
       - id: CQ-05
         name: Output & API
         score: 1
@@ -254,10 +253,10 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Custom smoothstep-eased ribbon curves and coord_cartesian(clip='off')
-          label overflow are distinctive uses of ggplot2's flexible layer system,
-          though the general pattern is portable to other grammar-based libraries
-  verdict: REJECTED
+        comment: Custom smoothstep-eased ribbon curves, layered edge-stroke + dominant-highlight
+          technique, and coord_cartesian(clip='off') label overflow are distinctive
+          uses of ggplot2's flexible layer system
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:

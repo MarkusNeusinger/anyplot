@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' sankey-basic: Basic Sankey Diagram
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 89/100 | Created: 2026-07-25
+#' Quality: 93/100 | Created: 2026-07-25
 
 library(ggplot2)
 library(dplyr)
