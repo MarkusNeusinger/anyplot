@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 step-basic: Basic Step Plot
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-04-30
+Quality: 87/100 | Updated: 2026-07-25
 """
 
 import os
@@ -20,6 +20,7 @@ import altair as alt  # noqa: E402, I001
 sys.path.insert(0, _cwd)
 
 import pandas as pd  # noqa: E402, I001
+from PIL import Image  # noqa: E402, I001
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -38,7 +39,7 @@ df = pd.DataFrame({"Month": months, "Cumulative Revenue": cumulative_revenue})
 # Step line
 line = (
     alt.Chart(df)
-    .mark_line(interpolate="step-after", strokeWidth=5, color=BRAND)
+    .mark_line(interpolate="step-after", strokeWidth=3, color=BRAND)
     .encode(
         x=alt.X("Month:N", title="Month", sort=months, axis=alt.Axis(labelAngle=0)),
         y=alt.Y("Cumulative Revenue:Q", title="Cumulative Revenue (thousands $)"),
@@ -48,20 +49,20 @@ line = (
 # Markers at each data point
 points = (
     alt.Chart(df)
-    .mark_point(size=220, color=BRAND, filled=True, opacity=1.0)
+    .mark_point(size=90, color=BRAND, filled=True, opacity=1.0)
     .encode(x=alt.X("Month:N", sort=months), y="Cumulative Revenue:Q")
 )
 
-# Compose and style
+# Compose and style — see prompts/library/altair.md "Canvas" for the inner-view sizing rationale
 chart = (
     (line + points)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
         background=PAGE_BG,
-        title=alt.Title("step-basic · altair · anyplot.ai", fontSize=28, color=INK),
+        title=alt.Title("step-basic · python · altair · anyplot.ai", fontSize=16, color=INK),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -69,12 +70,35 @@ chart = (
         gridOpacity=0.10,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=10,
+        titleFontSize=12,
     )
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+    )
 )
 
 # Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# Pad-to-target — vl-convert pads the inner view with title/axis/legend extents,
+# so the saved PNG rarely lands exactly on the canonical size (see altair.md "Canvas")
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
