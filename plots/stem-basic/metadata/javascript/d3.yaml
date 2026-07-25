@@ -1,0 +1,246 @@
+library: d3
+language: javascript
+specification_id: stem-basic
+created: '2026-07-25T17:51:06Z'
+updated: '2026-07-25T18:04:15Z'
+generated_by: claude-sonnet
+workflow_run: 30168310197
+issue: 972
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Directly answers the attempt-1 feedback: adds a dashed decay-envelope guide (d3.line
+    + curveMonotoneX) that gives the decaying signal a clear visual narrative'
+  - Amplitude-driven marker radius and sign-based opacity create real visual hierarchy
+    and emphasis without any fake interactivity
+  - 'Correct, spec-compliant stem plot: thin stems, clear circular markers with white
+    stroke, visible baseline at y=0'
+  - Fully deterministic, realistic damped-oscillator signal-processing data (h[n]
+    = e^(-0.15n) * cos(0.5n))
+  - Explicit font sizing and theme-adaptive chrome correctly threaded through for
+    both light and dark renders; Imprint green identical across themes
+  - Clean, idiomatic D3 data-join pattern (selectAll().data().join()), no fake interactivity
+  weaknesses:
+  - Marker radius now varies 5.5-11px with |amplitude| (r scale), which directly contradicts
+    the specification's explicit note 'Consistent marker size and stem width throughout
+    the plot' -- revert to a single, larger uniform radius (e.g. r=9-10 for all points)
+    instead of encoding magnitude through size
+  - 'Design Excellence is still close to a well-configured default: single-hue palette
+    with no additional accent/typography refinement beyond the new envelope guide'
+  - Sign-based opacity (1.0 vs 0.55) for negative samples is a nice touch but subtle
+    enough that the positive/negative story isn't immediately obvious without close
+    inspection
+  - Distinctive D3 usage is still fairly minimal -- the new envelope guide is the
+    only library-specific technique (d3-shape line generator); most of the file remains
+    baseline join/scale/axis primitives
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1
+      Chrome: title "stem-basic · javascript · d3 · anyplot.ai" bold and centered; "Sample Index (n)" x-axis label; "Amplitude" rotated y-axis label; tick labels 0/5/.../40 and 1.0/0.8/.../-0.6 -- all dark ink, clearly readable
+      Data: damped-oscillator impulse response (40 samples), green (#009E73) stems from a y=0 baseline to circular markers with light stroke; a new thin dashed gray envelope guide (+/- e^(-0.15n)) traces the decay; marker radius scales with |amplitude| (large at n=0-2, small toward the tail); negative-amplitude stems/markers are rendered at reduced opacity (0.55) vs full opacity for positive ones
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17
+      Chrome: same title/labels/ticks, all flipped to light-colored ink, clearly readable against dark background; no dark-on-dark issues; dashed envelope guide remains visible and subtle
+      Data: identical geometry and identical #009E73 green stems/markers as the light render (same marker-radius encoding and opacity encoding), confirming color consistency across themes
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (14/16/22px), readable in both themes, well-proportioned
+          title and axis labels
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers now clearly visible at all amplitudes (5.5-11px radius),
+          sparse-data 40-point density well served
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: White-stroke markers give good edge definition/contrast in both themes;
+          opacity difference adds redundant encoding beyond hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas generously with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels appropriate to the signal-processing domain
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes, backgrounds theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Envelope guide + magnitude-encoded marker size is a thoughtful, above-default
+          aesthetic choice, though still single-hue
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle dashed envelope, no grid, minimal spines, generous whitespace;
+          polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Envelope guide and size/opacity encoding create real visual hierarchy
+          guiding the reader toward the decay and sign-transition story
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stem plot with baseline, stems, and markers
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Stem width is consistent, but marker radius now varies with |amplitude|,
+          contradicting the spec's explicit 'Consistent marker size ... throughout
+          the plot' note
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=sample index, y=amplitude, axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend correctly omitted for single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows both positive/negative amplitudes and decay; still a fairly
+          simple monotonic-envelope pattern
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Damped-oscillator impulse response is a neutral, real signal-processing
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Exponential decay + oscillation formula is mathematically sound and
+          realistically scaled
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic closed-form data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the global d3
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately simple, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current D3 v7 API (.join), no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Textbook selectAll().data().join() pattern, scaleLinear, axisBottom/axisLeft,
+          d3.line() with curveMonotoneX
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3-shape line generator for the envelope guide and a data-driven
+          radius scale are D3-specific touches beyond generic join/scale/axis
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - alpha-blending

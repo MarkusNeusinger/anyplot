@@ -1,0 +1,255 @@
+library: muix
+language: javascript
+specification_id: stem-basic
+created: '2026-07-25T17:56:22Z'
+updated: '2026-07-25T18:07:01Z'
+generated_by: claude-sonnet
+workflow_run: 30168445431
+issue: 972
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/muix/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Correct stem-plot semantics: thin stems run from the y=0 baseline to each marker,
+    with clearly visible circular markers and consistent stem width/marker size throughout'
+  - Custom SVG stem rendering via useXScale/useYScale hooks inside ChartContainer
+    — an idiomatic, advanced MUI X composition pattern for a chart type the community
+    package has no built-in primitive for
+  - 'Theme-adaptive chrome is correct in both renders: brand green (#009E73) is identical
+    light/dark, backgrounds match #FAF8F1/#1A1A17, and all text is legible in both
+    themes'
+  - Explicit ChartsReferenceLine at y=0 makes the baseline unambiguous
+  - Realistic, deterministic damped-sinusoid impulse-response signal (40 samples,
+    within the spec's 10-100 range) — a textbook signal-processing use case for stem
+    plots
+  - skipAnimation set and margins tuned so axis labels/ticks aren't clipped at the
+    canvas edges
+  weaknesses:
+  - 'Duplicated/malformed header comment block (lines 1-10): two ''anyplot.ai'' banners,
+    two ''Library:'' lines, and conflicting Quality values (''88/100'' vs ''pending'');
+    the ''//# anyplot-orientation: landscape'' directive is buried mid-block instead
+    of at the very top of the file. Collapse to a single header per the muix.md ''Header
+    Style'' skeleton — since landscape is already the default orientation, the directive
+    line can simply be dropped.'
+  - X-axis shows every single integer tick (-1 through 40, 42 labels) which is denser
+    than needed and adds visual clutter — show every 4th-5th tick (or use a tick formatter/interval)
+    for a cleaner, more breathable axis consistent with the whitespace guideline.
+  - Design excellence is minimal beyond the required elements — no additional visual
+    hierarchy or emphasis (e.g. highlighting the peak sample, subtle callout on the
+    decay envelope) to give the chart more storytelling value beyond the raw data
+    shape.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "stem-basic · javascript · muix · anyplot.ai" centered at top in dark ink, clearly readable. Y-axis label "Amplitude" (rotated) and X-axis label "Sample Index (n)" both in dark ink, clearly legible. Tick labels on both axes in a slightly softer dark grey, all legible. Horizontal grid lines are subtle and do not compete with the data. A thin horizontal reference line marks the y=0 baseline.
+      Data: First (only) series rendered in brand green (#009E73) — 40 stems (thin vertical lines with strokeLinecap round) rising/falling from the y=0 baseline to circular markers at each sample's amplitude, showing a damped decaying oscillation starting at 1.0 and settling toward 0 by sample ~30. Markers are clearly visible and proportionally sized for this sparse (40-point) dataset.
+      Legibility verdict: PASS — no text is light-on-light; all chrome reads cleanly against the cream background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink/soft-light grey, clearly visible against the dark background. Grid lines remain subtle. The y=0 reference line is visible in a soft light tone.
+      Data: The stem/marker colors are identical brand green (#009E73) to the light render — only the chrome (background, text, grid, reference line) flipped tone, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; all tick labels, axis labels, and the title are clearly legible against the near-black surface, and the green data reads well on both surfaces.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; title 22px,
+          axis labels 15px, ticks 13px CSS — matches style-guide targets.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (size 9 CSS px) and 2.5px stems are prominent and well-sized
+          for this sparse (40-point) dataset.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series brand green has strong contrast against both backgrounds;
+          no red-green dependency.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no drift file); good margins, no clipping, balanced
+          axis labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Sample Index (n)' and 'Amplitude' labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17 exactly;
+          identical data color across themes.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean and professional but largely default-level polish; no distinctive
+          custom styling beyond required elements.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid and generous whitespace, but the dense every-integer
+          x tick labels add clutter.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: No added emphasis or focal point beyond the raw decay shape of the
+          data itself.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct stem plot: markers connected to baseline via vertical stems.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin stems, clear circular markers, y=0 baseline, consistent sizing
+          — all spec notes satisfied.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = sample index, Y = amplitude; all 40 points shown within axis
+          bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'stem-basic · javascript · muix · anyplot.ai';
+          single-series so legend correctly omitted.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full decay envelope from peak to near-zero clearly shown across all
+          40 samples.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Damped-sinusoid impulse response is a realistic, neutral, textbook
+          signal-processing example.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 40 samples within the spec's 10-100 range; amplitude values sensible
+          for a normalized impulse response.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Duplicated header comment block (two banners, two Library lines,
+          conflicting Quality values) is dead/confusing content; the code logic itself
+          is simple and appropriate.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic closed-form signal generation, no RNG needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity for a custom stem
+          overlay.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: default export, skipAnimation, sized from
+          window.ANYPLOT_SIZE.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct community-only ChartContainer composition with ScatterPlot
+          + ChartsReferenceLine + ChartsGrid.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useXScale/useYScale hooks to render a custom stem overlay is a genuinely
+          distinctive MUI X technique, not just a basic chart call.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
