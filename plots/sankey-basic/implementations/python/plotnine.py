@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-25
@@ -62,9 +62,9 @@ sources = ["Coal", "Gas", "Nuclear", "Renewables"]
 targets = ["Industrial", "Commercial", "Residential"]
 
 # X positions with margins for labels
-x_left = 0.2
-x_right = 0.8
-node_width = 0.08
+x_left = 0.10
+x_right = 0.90
+node_width = 0.06
 node_gap = 0.03
 
 # Calculate node sizes based on total flow
@@ -198,7 +198,7 @@ flow_labels_df = pd.DataFrame(flow_labels)
 plot = (
     ggplot()
     # Flow polygons with transparency
-    + geom_polygon(flows_df, aes(x="x", y="y", group="flow_id", fill="source"), alpha=0.62)
+    + geom_polygon(flows_df, aes(x="x", y="y", group="flow_id", fill="source"), alpha=0.44)
     # Node rectangles
     + geom_rect(
         nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="node_color"), color="white", size=0.5
@@ -232,8 +232,8 @@ plot = (
         fontweight="bold",
     )
     + scale_fill_manual(values={**source_colors_map, **target_colors_map})
-    + labs(title="Energy Flow · sankey-basic · plotnine · anyplot.ai", x="", y="")
-    + coord_cartesian(xlim=(-0.05, 1.1))
+    + labs(title="Energy Flow · sankey-basic · python · plotnine · anyplot.ai", x="", y="")
+    + coord_cartesian(xlim=(-0.02, 1.02))
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
