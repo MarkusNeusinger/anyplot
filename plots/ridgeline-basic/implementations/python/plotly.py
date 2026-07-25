@@ -58,15 +58,16 @@ fig = go.Figure()
 ridge_scale = 0.12
 overlap = 0.5
 
-# Add ridges bottom-to-top so January sits at the bottom
-for i, month in enumerate(reversed(months)):
-    idx = len(months) - 1 - i
+# Add ridges December-to-January (back-to-front) so January sits at the bottom,
+# each foreground ridge partially occluding the one behind it
+for idx in reversed(range(len(months))):
+    month = months[idx]
     temps = data[month]
 
     kde = gaussian_kde(temps)
     density = kde(x_range)
     density = density / density.max() * ridge_scale
-    y_offset = i * (1 - overlap) * ridge_scale
+    y_offset = idx * (1 - overlap) * ridge_scale
     y_fill = density + y_offset
 
     fig.add_trace(
@@ -83,8 +84,8 @@ for i, month in enumerate(reversed(months)):
         )
     )
 
-# Y-tick positions aligned to ridge peaks
-y_ticks = [(len(months) - 1 - i) * (1 - overlap) * ridge_scale + ridge_scale * 0.4 for i in range(len(months))]
+# Y-tick positions aligned to ridge peaks (same idx-based offset as the traces above)
+y_ticks = [idx * (1 - overlap) * ridge_scale + ridge_scale * 0.4 for idx in range(len(months))]
 
 # Style
 fig.update_layout(
@@ -108,7 +109,7 @@ fig.update_layout(
         "title": {"text": "", "font": {"size": 12}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "tickvals": y_ticks,
-        "ticktext": list(reversed(months)),
+        "ticktext": months,
         "showgrid": False,
         "zeroline": False,
         "range": [-0.02, max(y_ticks) + ridge_scale * 0.7],
