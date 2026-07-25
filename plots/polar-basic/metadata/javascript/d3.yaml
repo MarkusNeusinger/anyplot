@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: polar-basic
 created: '2026-07-24T23:52:17Z'
-updated: '2026-07-24T23:57:32Z'
+updated: '2026-07-25T00:07:42Z'
 generated_by: claude-sonnet
 workflow_run: 30134638855
 issue: 800
@@ -12,50 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
+  - 'Repair loop directly addressed both attempt-1 weaknesses: a subtle radial gradient
+    fill (denser toward the rim) plus a halo + labeled callout (''Peak · 1.85 kWh'')
+    now give the chart a clear storytelling focal point on the 7pm evening peak'
+  - A donut-style inner-radius offset (13% of outer radius) now keeps the compressed
+    overnight-hour cluster (12am-6am, ~0.3-0.7 kWh) legibly separated from the plot
+    center and from the radial tick labels, resolving the prior VQ-02/VQ-03 crowding
+    note
   - Correct, idiomatic polar/radial construction (d3.lineRadial + curveLinearClosed,
-    scaleLinear for radius)
-  - Radial and angular gridlines both present, with hour labels at standard 3-hour
-    intervals as the spec requests
+    scaleLinear for radius, manual angle-to-point helper reused consistently for spokes,
+    labels, markers, and the peak callout)
   - 'Brand green #009E73 used consistently and identically across both themes; all
-    chrome (background, text, grid) is fully theme-adaptive and legible in both renders'
-  - Realistic, well-shaped bimodal dataset (morning + evening consumption peaks) matching
-    the spec's own suggested example
-  - Clean KISS code with explicit font sizes and a correct output/API contract for
-    the D3 render harness
+    chrome (background, title, grid, tick/angular labels) is fully theme-adaptive
+    and legible in both renders'
+  - Realistic, well-shaped bimodal household energy dataset (morning + evening consumption
+    peaks, overnight trough) matching the spec's own suggested example
+  - Clean KISS code with explicit font sizes, deterministic hardcoded data, and a
+    correct output/API contract for the D3 render harness (no animation, single svg
+    append)
   weaknesses:
-  - Aesthetic treatment is competent but plain - a single uniform-opacity fill/line
-    with no additional visual hierarchy (e.g. highlighting the peak hour, a subtle
-    gradient, or a small annotation calling out the evening peak) to sharpen the story
-  - Radial tick labels (0.5, 1.0, 1.5, 2.0 kWh) sit close to the cluster of low-value
-    overnight data points/markers near the center along the 12am spoke - mild visual
-    crowding; consider nudging labels outward or de-emphasizing markers in the crowded
-    low-value cluster
-  - The linear radial scale starting at 0 compresses the closely-valued overnight
-    hours (12am-6am, ~0.3-0.7 kWh) near the plot center, which works against the spec's
-    note to use an appropriate radial scale that doesn't compress data near the center
-    - consider a small inner-radius offset (donut-style start) to give low values
-    more room
-  - Library Mastery is solid but not maximized - spokes/labels rely on manual trigonometry
-    rather than a D3 radial-axis helper; a more distinctive technique would raise
-    LM-02 further
+  - Angular spokes, tick labels, and the peak callout are still positioned via manual
+    Math.sin/Math.cos trigonometry rather than any D3 radial-axis helper — not required,
+    but the single remaining gap keeping Library Mastery from a higher score
+  - The radial-gradient area fill is a nice touch but very subtle (5%-28% opacity)
+    — could be pushed slightly further for more visible depth without competing with
+    the data line
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1
-      Chrome: Title "Household Energy Use by Hour · polar-basic · javascript · d3 · anyplot.ai" in bold dark text; hour labels (12am/3am/6am/9am/12pm/3pm/6pm/9pm) and radial kWh gridline labels (0.5/1.0/1.5/2.0) in dark gray - all clearly legible
-      Data: Single brand-green (#009E73) closed radial line with 15%-opacity fill and small white-stroked green marker dots, forming a lopsided blob that bulges toward the 6pm-12am arc (evening peak ~1.85 kWh at 7pm) and compresses near center for low-value overnight/midday hours
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Household Energy Use by Hour · polar-basic · javascript · d3 · anyplot.ai" in bold dark text at top, clearly legible. Angular hour labels (12am/3am/6am/9am/12pm/3pm/6pm/9pm) in gray around the rim, radial kWh gridline labels (0.5/1.0/1.5/2.0 kWh) stacked along the top (12am) spoke. All chrome is dark-on-light and fully readable, no overlap with the (now donut-offset) data cluster near the center.
+      Data: A single brand-green (#009E73) closed radial line with a subtle radial gradient fill (5% opacity near center, 28% near the rim) and white-stroked marker dots at each hour. The polygon is a lopsided blob that bulges toward the 6pm-9pm arc (evening peak) and stays smaller — but no longer crowded into the exact center — for the 12am-6am/12pm-6pm hours. The 7pm peak (1.85 kWh) is highlighted with a soft green halo, a larger marker, and a bold "Peak · 1.85 kWh" label pointing outward from the rim.
+      Legibility verdict: PASS — all text (title, hour labels, radial tick labels, peak callout) is clearly readable against the light background; no light-on-light text.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17
-      Chrome: Title and all hour/radial labels render in light off-white/light-gray text, clearly legible against the dark surface; gridlines are subtle light-gray. No dark-on-dark issues found.
-      Data: Green line, fill, and markers are visually identical in hue and shape to the light render (same #009E73, same evening-peak blob) - confirms data colors are theme-independent
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout; title and hour labels now render in light/off-white text, radial tick labels in soft light gray, gridlines subtle light-gray-on-dark. All fully legible, no dark-on-dark failures anywhere (title, hour labels, radial labels, peak callout text all confirmed readable).
+      Data: Identical #009E73 green line, gradient fill, and marker colors to the light render — same lopsided evening-peak shape, same donut-style inner offset, same peak halo/label treatment — confirming data colors are theme-independent and only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark text; peak callout and all axis/tick text remain clearly visible on the near-black surface.
+
+    Both renders directly inspected via the Read tool; both paragraphs above reflect what was visually confirmed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,71 +64,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (13/15/20px), readable in both themes, good title
-          proportion
+        comment: Explicit font sizes (13/15/20/14px), readable in both themes, well-proportioned
+          title
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text overlap, but radial tick labels sit close to clustered
-          overnight-hour points near center
+        comment: Donut-style inner-radius offset now separates the overnight-hour
+          cluster from the radial tick labels near center
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers/line well sized for 24 sparse points, but linear radial scale
-          compresses low-value points near center
+        comment: Inner-radius offset gives low values room; markers (r=6) and 3px
+          line well sized for 24 sparse points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series green with good contrast on both surfaces
+        comment: Single-series green, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Circle fills ~65-68% of square canvas, balanced margins
+        comment: Circle fills ~65-70% of the square canvas, balanced margins around
+          the title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial axis labeled with unit (kWh), hour labels standard
+        comment: Radial axis labeled with unit (kWh), hour labels standard/clear
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 identical across themes, chrome fully theme-correct'
+        comment: '#009E73 identical across themes, backgrounds and chrome fully theme-correct'
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Competent but plain - single uniform-opacity fill/line, no additional
-          visual emphasis
+        passed: true
+        comment: Subtle radial gradient fill and peak halo treatment are clearly above
+          default styling
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid, clean typography, decent whitespace; slight crowding
-          near center
+        passed: true
+        comment: Subtle grid, generous whitespace, white-stroked markers, gradient
+          depth cue
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Shape hints at bimodal pattern but no explicit emphasis/annotation
-          on peaks
+        passed: true
+        comment: Explicit peak callout (halo + larger marker + labeled annotation)
+          creates a clear focal point on the evening peak
     spec_compliance:
       score: 15
       max: 15
@@ -143,8 +145,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Radial gridlines, angular labels at 3h intervals, top starting angle,
-          appropriate scale
+        comment: Radial gridlines, angular labels at 3h intervals, top-start angle,
+          appropriate non-compressing radial scale
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -156,7 +158,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; no legend needed
+        comment: Title format correct with descriptive prefix; no legend needed (single
+          series)
     data_quality:
       score: 15
       max: 15
@@ -166,7 +169,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clear bimodal daily cycle - morning + evening peaks, overnight trough
+        comment: Clear bimodal daily cycle (morning + evening peaks, overnight trough)
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -223,22 +226,25 @@ review:
         max: 5
         passed: true
         comment: Idiomatic d3.lineRadial/curveLinearClosed, scaleLinear, .data().join()
-          pattern
+          pattern, radialGradient defs
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses d3.lineRadial (genuine D3-specific), but spokes/labels built
-          via manual trigonometry
-  verdict: REJECTED
+        comment: Uses d3.lineRadial (genuinely D3-specific), but spokes/labels/peak
+          callout still positioned via manual trigonometry rather than a D3 radial-axis
+          helper
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
+  - gradient-fill
+  - edge-highlighting
