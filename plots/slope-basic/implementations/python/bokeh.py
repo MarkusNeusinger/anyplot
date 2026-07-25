@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-25
@@ -25,6 +25,12 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INCREASE_COLOR = "#009E73"  # Imprint position 1 (brand green)
 DECREASE_COLOR = "#AE3030"  # Imprint position 5 (matte red, semantic anchor)
 
+# Endpoint-label TEXT uses theme-tuned variants of the direction colors so the
+# small text clears WCAG contrast against its background; the lines, markers,
+# and legend swatches stay at the true Imprint colors above for palette identity.
+LABEL_INCREASE_COLOR = "#006644" if THEME == "light" else INCREASE_COLOR  # deeper green: 6.6:1 on light bg
+LABEL_DECREASE_COLOR = "#E86A6A" if THEME == "dark" else DECREASE_COLOR  # lighter red: 5.6:1 on dark bg
+
 products = [
     "Wireless Earbuds",
     "Smart Thermostat",
@@ -41,6 +47,9 @@ q1_sales = [85, 72, 91, 45, 68, 53, 78, 62, 40, 88]
 q4_sales = [92, 65, 88, 71, 74, 48, 95, 58, 67, 82]
 
 colors = [INCREASE_COLOR if end > start else DECREASE_COLOR for start, end in zip(q1_sales, q4_sales, strict=True)]
+label_colors = [
+    LABEL_INCREASE_COLOR if end > start else LABEL_DECREASE_COLOR for start, end in zip(q1_sales, q4_sales, strict=True)
+]
 directions = ["Increase" if end > start else "Decrease" for start, end in zip(q1_sales, q4_sales, strict=True)]
 
 # Spread label y-positions apart so dense clusters don't overlap (inlined per
@@ -64,7 +73,7 @@ for side, ys in (("left", q1_sales), ("right", q4_sales)):
         spread[orig_i] = adjusted[new_i]
     label_ys[side] = spread
 
-title = "slope-basic · bokeh · anyplot.ai"
+title = "slope-basic · python · bokeh · anyplot.ai"
 p = figure(
     width=3200,
     height=1800,
@@ -123,9 +132,10 @@ for product, start, end, color in zip(products, q1_sales, q4_sales, colors, stri
 source = ColumnDataSource(data=scatter_data)
 
 # Draw slope lines (legend_label merges same-labeled renderers into one entry)
-# and endpoint labels
-for i, (product, start, end, color, direction) in enumerate(
-    zip(products, q1_sales, q4_sales, colors, directions, strict=True)
+# and endpoint labels. Label TEXT uses the theme-tuned label_color (WCAG-safe)
+# while the line/marker keeps the true Imprint color for palette identity.
+for i, (product, start, end, color, label_color, direction) in enumerate(
+    zip(products, q1_sales, q4_sales, colors, label_colors, directions, strict=True)
 ):
     p.line(x=[0, 1], y=[start, end], line_width=4, line_color=color, line_alpha=0.85, legend_label=direction)
     p.add_layout(
@@ -136,7 +146,7 @@ for i, (product, start, end, color, direction) in enumerate(
             text_font_size="18pt",
             text_align="right",
             text_baseline="middle",
-            text_color=color,
+            text_color=label_color,
         )
     )
     p.add_layout(
@@ -147,7 +157,7 @@ for i, (product, start, end, color, direction) in enumerate(
             text_font_size="18pt",
             text_align="left",
             text_baseline="middle",
-            text_color=color,
+            text_color=label_color,
         )
     )
 
