@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stem-basic: Basic Stem Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-25
@@ -56,20 +56,10 @@ sns.lineplot(x=x, y=-envelope, ax=ax, color=INK_SOFT, linewidth=1.2, linestyle="
 # Stems (thin vertical lines from baseline y=0 to data values)
 ax.vlines(x=df["Sample Index"], ymin=0, ymax=df["Amplitude"], color=BRAND, linewidth=1.5, alpha=0.8, zorder=2)
 
-# Markers sized by amplitude magnitude (seaborn statistical size mapping) - plain
-# dots with no background-colored edge, a deliberate departure from the
-# matplotlib/plotly treatment of this spec.
+# Markers - uniform size per the spec's "consistent marker size" requirement;
+# plain dots with no background-colored edge.
 sns.scatterplot(
-    data=df,
-    x="Sample Index",
-    y="Amplitude",
-    size="Magnitude",
-    sizes=(30, 140),
-    color=BRAND,
-    edgecolor="none",
-    legend=False,
-    ax=ax,
-    zorder=3,
+    data=df, x="Sample Index", y="Amplitude", s=200, color=BRAND, edgecolor="none", legend=False, ax=ax, zorder=3
 )
 
 # Baseline at y=0
@@ -87,7 +77,7 @@ ax.annotate(
 
 ax.set_xlabel("Sample Index (n)", fontsize=10)
 ax.set_ylabel("Amplitude", fontsize=10)
-ax.set_title("stem-basic · seaborn · anyplot.ai", fontsize=12)
+ax.set_title("stem-basic · python · seaborn · anyplot.ai", fontsize=12)
 ax.tick_params(axis="both", labelsize=8)
 
 ax.yaxis.grid(True, linestyle="-", linewidth=0.4, alpha=0.15)
