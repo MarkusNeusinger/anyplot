@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: ridgeline-basic
 created: '2026-07-25T04:14:39Z'
-updated: '2026-07-25T04:20:25Z'
+updated: '2026-07-25T04:32:25Z'
 generated_by: claude-sonnet
 workflow_run: 30143473687
 issue: 923
@@ -12,53 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Row overlap is exactly 60% ((RIDGE_HEIGHT-ROW_STEP)/RIDGE_HEIGHT), matching the
-    spec's '50-70% overlap' guidance precisely and explicitly commented in code
-  - Y-axis correctly shows categorical month labels instead of numeric density values,
-    as the spec requires
-  - Proper Gaussian KDE per group with Silverman's rule bandwidth selection, not a
-    shortcut histogram or fake smoothing
-  - Deterministic fixed-seed LCG random generator gives full reproducibility despite
-    the browser having no seeded RNG
-  - Back-to-front z-order draw with a background-colored stroke on each ridge cleanly
-    separates overlapping mounds, aiding readability
-  - Theme-adaptive chrome (title, axis label, ticks, group labels) is correctly threaded
-    through window.ANYPLOT_TOKENS; data colors are identical between light and dark
-    renders
+  - KDE tails are now clipped below 0.8% of each group's own peak density, so every
+    ridge tapers to a clean point instead of the flat sliver flagged in attempt 1
+  - Ridge color is now keyed to each month's actual mean temperature (a genuinely
+    continuous quantity) via scaleSequential + interpolateRgbBasis(t.seq), with a
+    code comment explaining the rationale — resolves the attempt-1 palette-compliance
+    concern about using imprint_seq on an ordinal grouping variable
+  - 60% row overlap is precise and matches the spec's 50-70% guidance
+  - Y-axis correctly shows categorical month labels instead of numeric density values
+  - Proper Gaussian KDE per group with Silverman's-rule bandwidth, not a shortcut
+    histogram
+  - Deterministic fixed-seed LCG gives full reproducibility despite no seeded RNG
+    in the browser
+  - Theme-adaptive chrome correctly threaded through window.ANYPLOT_TOKENS; both renders
+    pass the legibility check with no dark-on-dark or light-on-light failures
   - Realistic, physically plausible monthly temperature progression for a temperate
-    city that visually tells a clear seasonal story
+    city forms a clear seasonal narrative, reinforced redundantly by the color gradient
   weaknesses:
-  - 'Ridge color uses a continuous d3.scaleSequential(interpolateRgbBasis(t.seq))
-    gradient keyed to group index, but ''group'' (month) is a categorical variable
-    per the spec, and the style guide reserves imprint_seq for continuous/intensity
-    data rather than categorical identity; this is a defensible adaptation for 12
-    ordered groups exceeding the 8-slot categorical palette (and it does correctly
-    anchor the first ridge to brand green #009E73), but it''s a palette-compliance
-    gray area worth tightening in a future pass'
-  - Gaussian KDE tails never truly reach zero, so several ridges trail a faint but
-    visible near-flat sliver of fill across most of the plot width beneath the main
-    hump; clip density below roughly 0.5-1% of each group's peak before building the
-    area path so ridges taper to a clean point instead of a flat shelf
-  - Library Mastery is solid but conventional — the implementation follows a well-known
-    joyplot recipe without showcasing more distinctive d3-specific capabilities
+  - fill-opacity 0.92 on the ridge fills blends with the page background, so the rendered
+    data colors drift by roughly 15-20/255 between the light (#FAF8F1) and dark (#1A1A17)
+    surfaces at overlap regions -- the underlying hex fed to `fill` is identical,
+    but the visually perceived color isn't quite pixel-identical across themes; consider
+    fill-opacity closer to 1.0 if stricter cross-theme color parity is wanted
+  - Library Mastery still reads as a solid, fairly conventional joyplot recipe --
+    the temperature-keyed gradient is a nice touch, but there's room for a more distinctive
+    D3-specific flourish (e.g. a d3-interpolate path transition baked into a static
+    multi-state comparison, or leveraging d3-array bisector for a per-ridge peak annotation)
+    to push Library Mastery further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "ridgeline-basic · javascript · d3 · anyplot.ai" centered at top; y-axis lists Jan-Dec descending in dark-gray text; x-axis is a plain domain line with tick labels (-10, 0, 10, 20, 30) and the axis title "Average Daily Temperature (°C)" beneath it. All chrome text is clearly legible against the light background.
-      Data: 12 overlapping mound-shaped KDE density ridges, stacked with ~60% vertical overlap, colored on a continuous gradient from brand green (#009E73, Jan, top) through teal to blue (Dec, bottom). Each ridge has a thin background-colored stroke that cleanly separates it from the ridge behind it where they overlap. The stack visually narrates the seasonal temperature arc: cold, left-shifted mounds in winter months, sliding right and widening/narrowing plausibly through spring into a warm summer peak (Jun-Aug, far right), then sliding back left into autumn/winter.
-      Legibility verdict: PASS — no light-on-light or illegible text found.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Bold dark title "ridgeline-basic · javascript · d3 · anyplot.ai" centered at top; y-axis lists Jan-Dec (descending) in dark-gray text; x-axis shows tick labels (-10 to 30) plus the axis title "Average Daily Temperature (°C)". All chrome text is clearly readable against the light background.
+      Data: Twelve overlapping KDE density ridges with ~60% vertical overlap, colored on a continuous gradient from brand green (#009E73, coldest months near 0°C mean) through teal to blue (warmest months, ~24°C mean), each ridge separated by a thin page-background-colored stroke. Ridges now taper cleanly to a point at both tails -- no visible flat slivers.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now rendered in light/white text; y-axis month labels and x-axis tick labels rendered in light gray, both clearly readable against the dark surface. Axis domain line and grid-adjacent elements are visible but subtle.
-      Data: Identical green-to-blue gradient and identical ridge shapes/positions as the light render, confirming only chrome (not data color) flipped between themes. The white-on-light-render stroke separators appropriately render as a near-black stroke here, still cleanly separating overlapping ridges.
-      Legibility verdict: PASS — no dark-on-dark failures found; all text and data remain clearly distinguishable from the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title and layout, rendered in light text (title/axis in near-white, ticks in a softer light gray) -- fully legible against the dark surface. No dark-on-dark failures.
+      Data: Ridge fill hues are the same gradient identity as the light render (verified: e.g. a mid-blue ridge sampled at ~(2400,1000) reads RGB(66,106,161) in light vs RGB(65,104,160) in dark -- effectively identical). Some sampled points nearer heavy ridge overlap show up to ~18/255 drift because fill-opacity=0.92 blends each layer with the very different page backgrounds; the underlying fill hex itself is unchanged between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,79 +64,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text clearly readable in both themes; proportionate hierarchy
-          (title 22px, axis label 16px, ticks 14px, group labels 15px).
+        comment: All title/axis/tick text reads clearly in both themes at style-guide
+          sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; overlapping ridges by design are cleanly separated
-          via background-colored strokes.
+        comment: No text/data collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Ridges clearly visible and well-sized, but long Gaussian KDE tails
-          leave a faint flat sliver extending across most of the plot width beneath
-          several ridges.
+        comment: KDE tails now clip below 0.8% of peak, ridges taper cleanly -- attempt-1
+          sliver issue fixed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Group identity is fully disambiguated by row position, not color
-          alone; gradient avoids red-green confusion.
+        comment: imprint_seq green-to-blue gradient is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Generous margins, no clipping or overflow; canvas dimension gate
-          passed.
+        comment: Exact 3200x1800, good margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Average Daily Temperature (°C)'' is descriptive with units; y-axis
-          month labels are self-explanatory.'
+        comment: Descriptive axis title with units (°C)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First ridge correctly anchors to brand green #009E73 and only Imprint-derived
-          hues are used, but a continuous imprint_seq gradient colors a categorical
-          grouping variable (12 months) rather than the discrete categorical palette
-          — a defensible adaptation for a 12-group ridgeline but a style-guide gray
-          area.'
+        passed: true
+        comment: imprint_seq now keyed to each group's genuinely continuous mean temperature
+          rather than ordinal index; backgrounds theme-correct in both renders
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Polished, coherent color gradient and clean overlap technique, but
-          follows a well-known joyplot recipe rather than unusual custom polish.
+        passed: true
+        comment: Data-driven temperature-keyed gradient and clean divider strokes
+          show intentional polish beyond a generic joyplot
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Minimal chrome (no spines, no grid), generous whitespace; docked
-          for the visible KDE-tail slivers.
+        passed: true
+        comment: Minimal chrome, no grid, generous whitespace; sliver artifact from
+          attempt 1 resolved
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Ridge stack visually narrates the seasonal temperature arc from cold
-          winter to hot summer and back — a strong, legible focal story.
+        comment: Color gradient redundantly reinforces the seasonal-arc narrative
+          already told by x-position
     spec_compliance:
       score: 15
       max: 15
@@ -148,29 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ridgeline/joyplot with genuine KDE-derived overlapping density
-          curves.
+        comment: Correct ridgeline / joyplot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 60% row overlap matches spec's 50-70% guidance exactly; color differentiates
-          ridges; ordering is chronological (Jan-Dec).
+        comment: Partial overlap, categorical y-axis, distinct color per ridge, meaningful
+          chronological order
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = temperature value, Y = group (month); x-axis range covers the
-          full data spread.
+        comment: x=value (temperature), y=group (month) correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated format; no legend needed since
-          y-axis labels serve that role.
+        comment: Title matches mandated format exactly; no legend needed given y-axis
+          labels
     data_quality:
       score: 15
       max: 15
@@ -180,22 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers all 12 months (within 5-20 recommended), 130 obs/group (within
-          50-500 recommended), realistic distribution shapes.
+        comment: Demonstrates overlap, group labels, color differentiation, meaningful
+          ordering
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible temperate-city monthly temperature data, neutral subject
-          matter.
+        comment: Plausible, neutral temperate-city monthly temperature data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature domain (roughly -15°C to +36°C) is sensible for a temperate
-          climate.
+        comment: Realistic mean/std values for the domain
     code_quality:
       score: 9
       max: 10
@@ -205,35 +191,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: A few small helper functions (kde, silvermanBandwidth, randNormal)
-          are necessary for the KDE math; no classes, still reasonably flat.
+        comment: A few small arrow-function helpers (kde, silvermanBandwidth, randNormal)
+          needed for the math; otherwise flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG makes the browser-generated data fully deterministic.
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global d3.
+        comment: Only the global d3, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; complexity matches the KDE requirement.
+        comment: No fake UI, appropriate complexity for KDE math
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Respects the mount-node contract with no filesystem writes and no
-          animation.
+        comment: Correct mount-node contract, no animation, single svg
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -241,16 +226,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of d3-scale (scaleSequential + interpolateRgbBasis),
-          d3-shape (area + curveBasis), d3-array (min/max/mean/sum/range), and d3-axis.
+        comment: Idiomatic scales/axes/area with curveBasis
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Some distinctive touches (gradient color scale keyed to group index,
-          background-stroke ridge separation) but doesn't reach into d3's more advanced
-          or unique capabilities.
+        passed: true
+        comment: interpolateRgbBasis keyed to a real covariate and back-to-front z-order
+          strokes are a nice touch, but still a fairly conventional joyplot recipe
+          overall
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -262,5 +246,6 @@ impl_tags:
   dataprep:
   - kde
   styling:
-  - custom-colormap
+  - gradient-fill
+  - alpha-blending
   - edge-highlighting
