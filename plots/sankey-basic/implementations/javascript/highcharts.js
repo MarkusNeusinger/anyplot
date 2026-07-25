@@ -1,7 +1,7 @@
 // anyplot.ai
 // sankey-basic: Basic Sankey Diagram
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 87/100 | Created: 2026-07-25
+// Quality: 90/100 | Created: 2026-07-25
 
 // Only the core Highcharts bundle is loaded (no `sankey` module), so the
 // diagram is drawn natively with `chart.renderer`: node rectangles plus

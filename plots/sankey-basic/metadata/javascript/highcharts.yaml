@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: sankey-basic
 created: '2026-07-25T12:11:38Z'
-updated: '2026-07-25T12:19:16Z'
+updated: '2026-07-25T12:28:20Z'
 generated_by: claude-sonnet
 workflow_run: 30157227871
 issue: 810
@@ -12,59 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Correct, spec-faithful Sankey structure: proportional cubic-bezier ribbons whose
-    width encodes flow value, node heights sum consistently, and no circular flows
-    (source never equals target)'
-  - 'Energy conservation holds exactly: source totals (190+190+240+140) sum to the
-    same 760 TWh as sink totals (280+180+260+40), a nice factual-rigor touch not required
-    by the spec'
-  - Labels sit cleanly in the outer margins on both sides and never overlap a ribbon
-    or node in either theme, directly satisfying the spec's 'node labels should not
-    overlap links' requirement
-  - 'Thoughtful semantic color mapping: each source gets a distinct Imprint hue (canonical
-    order, first = brand green) while sink nodes stay neutral ink since they aggregate
-    multiple sources — avoids a misleading second color dimension'
-  - 'Theme-adaptive chrome is fully correct: identical data hex values in light/dark
-    (verified node color patches pixel-for-pixel), theme-correct background/text tokens,
-    no dark-on-dark or light-on-light failures'
-  - Realistic, neutral, business/science-appropriate scenario (energy generation routed
-    to end-use sectors) with plausible relative magnitudes
+  - 'Ribbon-crossing legibility fix applied exactly as requested: every ribbon path
+    now carries a thin ink stroke, so individual flows stay traceable through the
+    busy middle crossing zone even where 0.55-alpha fills blend into secondary hues'
+  - Genuine hover-highlight interactivity added via chart.renderer element event handlers
+    (mouseover dims every ribbon but the hovered one to 0.12 and restores on mouseout)
+    - real functionality for the HTML view, not a simulated affordance
+  - 'Dominant-flow emphasis added: the single largest link (Coal -> Industrial, 120
+    TWh) gets a bolder stroke and higher fill-opacity, visibly bolder in both renders
+    and giving the diagram an explicit focal point'
+  - 'Correct, spec-faithful Sankey structure: proportional cubic-bezier ribbons, no
+    circular flows, energy conservation holds exactly (both source and sink totals
+    sum to 760 TWh)'
+  - 'Theme-adaptive chrome fully correct in both renders: identical source-node hex
+    values in light/dark, correct background/text tokens, no dark-on-dark or light-on-light
+    failures, no edge clipping'
+  - Realistic, neutral energy-sector scenario (Solar & Wind / Coal / Natural Gas /
+    Nuclear routed to Residential / Commercial / Industrial / Transportation) with
+    plausible relative magnitudes
   weaknesses:
-  - In the busy crossing zone (middle third of the diagram), overlapping 0.55-alpha
-    ribbons blend into muddy secondary colors (e.g. blue+purple, blue+ochre) that
-    aren't part of the Imprint palette — add a thin ink-colored stroke on each ribbon
-    path (per the style guide's 'Optional outline pattern') or a subtle per-ribbon
-    z-order/opacity tweak so individual flows stay traceable even where several cross
-  - No real hover interaction is wired up for the HTML view beyond a native SVG <title>
-    tooltip — since chart.renderer elements support .on('mouseover'/'mouseout', ...),
-    add a genuine highlight-on-hover (e.g. dim other ribbons, bring the hovered one
-    to full opacity) to make better use of the interactive HTML output without faking
-    anything in the PNG
-  - Data storytelling relies entirely on ribbon width with no emphasis device — consider
-    a small direct callout or bolder stroke on the single largest flow (Coal → Industrial,
-    120 TWh) so the diagram makes its main point at a glance rather than requiring
-    the viewer to compare band widths
-  - The hand-drawn chart.renderer approach (necessary since the sankey/dependency-wheel
-    module isn't vendored) means no Highcharts series, tooltip, or dataLabel API is
-    actually exercised — functionally this is closer to generic SVG drawing than idiomatic
-    Highcharts usage; if a future Highcharts release or bundle change ever vendors
-    the sankey module, migrating to the native series would raise both idiomatic usage
-    and library-mastery scores
+  - The dense middle crossing zone still blends several ribbons into muddy off-palette
+    secondary colors (e.g. green+tan olive, purple+blue indigo) - the new ink stroke
+    helps trace edges but doesn't fully resolve fill-color muddiness; a per-ribbon
+    z-order pass (draw thinner/lower-value ribbons on top) could sharpen it further
+  - The approach still bypasses Highcharts' series/options API entirely (necessary
+    since the sankey module isn't vendored), so idiomatic-usage credit remains capped
+    even with the added renderer-level interactivity
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "sankey-basic · javascript · highcharts · anyplot.ai" centered at top, gray-ish subtitle below it explaining the flow encoding. Four source-node labels ("Solar & Wind · 190 TWh", "Coal · 190 TWh", "Natural Gas · 240 TWh", "Nuclear · 140 TWh") sit right-aligned in the left margin; four sink-node labels ("Residential · 280 TWh", "Commercial · 180 TWh", "Industrial · 260 TWh", "Transportation · 40 TWh") sit left-aligned in the right margin. All text is dark ink on the light surface and fully legible; edge crops confirm no label is clipped at the canvas border.
-      Data: Four source node bars in distinct Imprint hues (green #009E73, lavender, blue, ochre) on the left; four neutral dark-gray sink bars on the right. 14 semi-transparent bezier ribbons connect them, width proportional to flow value, colored by their source node. Ribbons cross in the middle third of the canvas, blending into secondary hues where multiple flows overlap.
-      Legibility verdict: PASS.
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Bold dark title "sankey-basic · javascript · highcharts · anyplot.ai" centered at top, gray subtitle below explaining the encoding. Four source-node bars (Solar & Wind, Coal, Natural Gas, Nuclear) on the left with right-aligned dark-text labels including TWh totals; four neutral dark-gray sink-node bars (Residential, Commercial, Industrial, Transportation) on the right with left-aligned labels. All text is dark-on-light and clearly readable; no clipping at any canvas edge.
+      Data: 14 semi-transparent cubic-bezier ribbons, width proportional to flow value, colored by source (green/lavender/blue/ochre - Imprint positions 1-4, first series = #009E73 brand green as required). Each ribbon now carries a thin ink-colored stroke, keeping individual flows traceable through the crossing zone. The single largest flow (Coal -> Industrial, 120 TWh) is visibly bolder (higher opacity + thicker stroke) than the rest, giving the diagram a clear focal point.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/subtitle, now in light/off-white text; same node labels, now in light text, still fully legible with no dark-on-dark failures. Sink node bars render as light-gray (t.ink at 0.85 opacity) rather than the dark-gray used in the light theme — correct theme-adaptive chrome behavior.
-      Data: Source node colors are pixel-identical to the light render (verified via cropped side-by-side comparison — green/lavender/blue/ochre unchanged), confirming only chrome flipped. Ribbon blending in the crossing zone is again present, now reading as deeper/darker blended tones against the dark backdrop.
-      Legibility verdict: PASS.
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Same title/subtitle/labels now rendered in light text, fully legible with no dark-on-dark failures. Sink-node bars correctly flip to a lighter neutral gray (theme-adaptive ink token) while remaining distinct from the page background.
+      Data: Source node and ribbon colors are identical hex values to the light render - only chrome (background, text, sink-node fill) flipped, as required. The dominant Coal -> Industrial flow reads as the boldest ribbon here too, confirming the emphasis survives the theme flip.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -72,54 +60,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicit (22px title, 14px subtitle/labels), fully readable
-          both themes, no clipping
+        comment: All text readable in both themes; font sizes explicit and appropriately
+          scaled
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels sit in the margins, verified via edge crops — never overlap
-          ribbons or nodes
+        comment: Labels sit cleanly in outer margins, never overlap ribbons or each
+          other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 14 flows, ribbon widths clearly proportional and visible even for
-          the thinnest (20 TWh) flow
+        comment: Ribbon widths and node bars clearly visible and proportioned to 14-flow
+          density
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Base hues are CVD-safe and distinct, but overlapping ribbons blend
-          into off-palette secondary colors in the crossing zone
+        comment: CVD-safe Imprint palette; new ink stroke keeps overlapping ribbons
+          traceable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, diagram plus labels use the large majority of the
-          3200x1800 canvas
+        comment: Good margins, nothing cut off, title within expected proportion
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Every node label carries units (TWh); descriptive subtitle
+        comment: Node labels descriptive with TWh units; no axes needed for a Sankey
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining sources follow canonical order,
-          sinks correctly use neutral ink; chrome theme-correct in both renders'
+        comment: 'First source = #009E73; canonical Imprint order; correct light/dark
+          backgrounds'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -127,22 +114,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Fully bespoke rendering with intentional color/hierarchy choices,
-          clearly above a configured library default
+        comment: Fully bespoke rendering with thoughtful color/hierarchy choices and
+          dominant-flow emphasis
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Generous whitespace, no grid clutter, subtle rounded node corners;
-          docked for the muddy ribbon-crossing blend
+        comment: Generous whitespace, no clutter; ink stroke sharpened ribbon edges,
+          some crossing-zone muddiness remains
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Width + color encode hierarchy and guide the eye, but no explicit
-          emphasis on the single largest flow
+        comment: Bolder stroke/opacity on the single largest flow (Coal -> Industrial)
+          now gives the diagram an explicit focal point
     spec_compliance:
       score: 15
       max: 15
@@ -152,28 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Sankey diagram
+        comment: Genuine Sankey diagram (hand-built since the module isn't vendored)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: No circular flows, distinct source colors, link opacity mitigates
-          crossovers, non-overlapping labels — all spec notes satisfied
+        comment: source/target/value, distinct source colors, opacity for crossovers,
+          no circular flows
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Source/target/value correctly mapped to node position and ribbon
-          width
+        comment: Node totals correctly sum from link values on both sides
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; no legend needed since node labels directly identify
-          each category
+        comment: Title matches required format exactly; node labels double as an implicit
+          legend
     data_quality:
       score: 14
       max: 15
@@ -183,21 +169,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Varying flow magnitudes and asymmetric connections (Coal/Nuclear
-          skip Transportation); a fairly regular bipartite structure overall
+        comment: 14 flows across 4 sources / 4 sinks, within the spec's 5-50 flow
+          range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Energy generation to end-use sectors — real, neutral, comprehensible
+        comment: Plausible, neutral energy-sector scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible TWh magnitudes; source and sink totals both sum to 760
-          TWh (flow-conserving)
+        comment: TWh values sensible for a national energy-flow domain
     code_quality:
       score: 10
       max: 10
@@ -207,64 +192,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> layout -> draw, only small necessary helper
-          arrow functions, no classes
+        comment: No classes; helper functions justified by the manual layout math
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hardcoded, deterministic data
+        comment: Deterministic hard-coded data, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused globals/imports
+        comment: Only the ANYPLOT_TOKENS/Highcharts globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a hand-drawn diagram, no fake UI
+        comment: No fake UI; hover interactivity is real, wired through renderer event
+          handlers
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, harness owns output
-          files
+        comment: Correct mount-node contract, animation disabled, __anyplotReady signal
+          set
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Correct necessary workaround for the missing sankey module, but bypasses
-          Highcharts' series/options API entirely in favor of manual chart.renderer
-          drawing
+        passed: false
+        comment: Correct workaround for the missing sankey module, but still bypasses
+          Highcharts' series/options API entirely
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: true
-        comment: chart.renderer usage is technically Highcharts API but the manual
-          path/rect/text technique isn't distinctive to this library over any other
-          SVG-capable renderer
-  verdict: REJECTED
+        passed: false
+        comment: Genuine chart.renderer event-driven hover-highlight is a real Highcharts-specific
+          technique, though the base rendering is generic SVG
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
+  - patches
   - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
-  - publication-ready
+  - edge-highlighting
