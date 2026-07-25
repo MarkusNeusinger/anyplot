@@ -16,6 +16,24 @@ for (let n = 0; n < N; n++) {
   indices.push(String(n));
   values.push(Number((Math.exp(-decay * n) * Math.cos(omega * n)).toFixed(4)));
 }
+const peakIndex = values.indexOf(Math.max(...values));
+
+// Peak marker keeps the same 16px size (spec requires consistent marker size)
+// but gets a soft halo + glow so the eye lands on the dominant sample first.
+const scatterData = values.map((v, i) =>
+  i === peakIndex
+    ? {
+        value: v,
+        itemStyle: {
+          color: t.palette[0],
+          borderColor: t.pageBg,
+          borderWidth: 3,
+          shadowBlur: 18,
+          shadowColor: t.palette[0],
+        },
+      }
+    : v,
+);
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -28,11 +46,15 @@ chart.setOption({
   title: {
     text: "stem-basic · javascript · echarts · anyplot.ai",
     left: "center",
-    textStyle: { color: t.ink, fontSize: 22 },
+    textStyle: { color: t.ink, fontSize: 26 },
   },
   tooltip: {
     trigger: "axis",
     axisPointer: { type: "line" },
+    formatter: (params) => {
+      const p = params.find((d) => d.seriesType === "scatter") ?? params[0];
+      return `Sample n = ${p.axisValueLabel}<br/>Amplitude = ${p.value.toFixed(4)}`;
+    },
   },
   grid: { left: 100, right: 60, top: 100, bottom: 90 },
   xAxis: {
@@ -78,7 +100,7 @@ chart.setOption({
     {
       name: "sample value",
       type: "scatter",
-      data: values,
+      data: scatterData,
       symbolSize: 16,
       itemStyle: { color: t.palette[0] },
       z: 3,
