@@ -1,0 +1,250 @@
+library: d3
+language: javascript
+specification_id: polar-basic
+created: '2026-07-24T23:52:17Z'
+updated: '2026-07-25T00:07:42Z'
+generated_by: claude-sonnet
+workflow_run: 30134638855
+issue: 800
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Repair loop directly addressed both attempt-1 weaknesses: a subtle radial gradient
+    fill (denser toward the rim) plus a halo + labeled callout (''Peak · 1.85 kWh'')
+    now give the chart a clear storytelling focal point on the 7pm evening peak'
+  - A donut-style inner-radius offset (13% of outer radius) now keeps the compressed
+    overnight-hour cluster (12am-6am, ~0.3-0.7 kWh) legibly separated from the plot
+    center and from the radial tick labels, resolving the prior VQ-02/VQ-03 crowding
+    note
+  - Correct, idiomatic polar/radial construction (d3.lineRadial + curveLinearClosed,
+    scaleLinear for radius, manual angle-to-point helper reused consistently for spokes,
+    labels, markers, and the peak callout)
+  - 'Brand green #009E73 used consistently and identically across both themes; all
+    chrome (background, title, grid, tick/angular labels) is fully theme-adaptive
+    and legible in both renders'
+  - Realistic, well-shaped bimodal household energy dataset (morning + evening consumption
+    peaks, overnight trough) matching the spec's own suggested example
+  - Clean KISS code with explicit font sizes, deterministic hardcoded data, and a
+    correct output/API contract for the D3 render harness (no animation, single svg
+    append)
+  weaknesses:
+  - Angular spokes, tick labels, and the peak callout are still positioned via manual
+    Math.sin/Math.cos trigonometry rather than any D3 radial-axis helper — not required,
+    but the single remaining gap keeping Library Mastery from a higher score
+  - The radial-gradient area fill is a nice touch but very subtle (5%-28% opacity)
+    — could be pushed slightly further for more visible depth without competing with
+    the data line
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Household Energy Use by Hour · polar-basic · javascript · d3 · anyplot.ai" in bold dark text at top, clearly legible. Angular hour labels (12am/3am/6am/9am/12pm/3pm/6pm/9pm) in gray around the rim, radial kWh gridline labels (0.5/1.0/1.5/2.0 kWh) stacked along the top (12am) spoke. All chrome is dark-on-light and fully readable, no overlap with the (now donut-offset) data cluster near the center.
+      Data: A single brand-green (#009E73) closed radial line with a subtle radial gradient fill (5% opacity near center, 28% near the rim) and white-stroked marker dots at each hour. The polygon is a lopsided blob that bulges toward the 6pm-9pm arc (evening peak) and stays smaller — but no longer crowded into the exact center — for the 12am-6am/12pm-6pm hours. The 7pm peak (1.85 kWh) is highlighted with a soft green halo, a larger marker, and a bold "Peak · 1.85 kWh" label pointing outward from the rim.
+      Legibility verdict: PASS — all text (title, hour labels, radial tick labels, peak callout) is clearly readable against the light background; no light-on-light text.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout; title and hour labels now render in light/off-white text, radial tick labels in soft light gray, gridlines subtle light-gray-on-dark. All fully legible, no dark-on-dark failures anywhere (title, hour labels, radial labels, peak callout text all confirmed readable).
+      Data: Identical #009E73 green line, gradient fill, and marker colors to the light render — same lopsided evening-peak shape, same donut-style inner offset, same peak halo/label treatment — confirming data colors are theme-independent and only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark text; peak callout and all axis/tick text remain clearly visible on the near-black surface.
+
+    Both renders directly inspected via the Read tool; both paragraphs above reflect what was visually confirmed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (13/15/20/14px), readable in both themes, well-proportioned
+          title
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Donut-style inner-radius offset now separates the overnight-hour
+          cluster from the radial tick labels near center
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Inner-radius offset gives low values room; markers (r=6) and 3px
+          line well sized for 24 sparse points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green, good contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Circle fills ~65-70% of the square canvas, balanced margins around
+          the title
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Radial axis labeled with unit (kWh), hour labels standard/clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: '#009E73 identical across themes, backgrounds and chrome fully theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Subtle radial gradient fill and peak halo treatment are clearly above
+          default styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, white-stroked markers, gradient
+          depth cue
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Explicit peak callout (halo + larger marker + labeled annotation)
+          creates a clear focal point on the evening peak
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar/radial chart with theta (hour) and radius (value)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Radial gridlines, angular labels at 3h intervals, top-start angle,
+          appropriate non-compressing radial scale
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Hour to angle, value to radius correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; no legend needed (single
+          series)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear bimodal daily cycle (morning + evening peaks, overnight trough)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Household hourly energy consumption is real, neutral, comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (0.3-1.9 kWh/hour) realistic for household load
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data array
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports, d3 global only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current d3 v7 join API, no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic d3.lineRadial/curveLinearClosed, scaleLinear, .data().join()
+          pattern, radialGradient defs
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses d3.lineRadial (genuinely D3-specific), but spokes/labels/peak
+          callout still positioned via manual trigonometry rather than a D3 radial-axis
+          helper
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
+  - edge-highlighting
