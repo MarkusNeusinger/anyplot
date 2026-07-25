@@ -26,7 +26,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   (they run no JavaScript and were being served the empty SPA shell); the daily
   `bot-serving-check` now covers an AI UA and `llms.txt` under an AI UA. `docs/reference/seo.md`
   documents the decision, the measured edge behaviour and the Cloudflare steps that lift the
-  403 (#9633).
+  403 (#9898, decision #9633).
 - **`CODE_OF_CONDUCT.md`** — Contributor Covenant 2.1, linked from `docs/contributing.md`
   (closes the last repo-health gap from audit 2026-07-15 Medium#29) (#9644).
 - **Bot-served pages got a real SEO surface** — `seo_home()` now emits the site-level JSON-LD
