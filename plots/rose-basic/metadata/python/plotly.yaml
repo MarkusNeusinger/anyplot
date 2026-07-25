@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: rose-basic
 created: '2025-12-23T19:43:10Z'
-updated: '2026-07-25T10:18:56Z'
+updated: '2026-07-25T10:27:29Z'
 generated_by: claude-sonnet
 workflow_run: 30153974943
 issue: 1003
@@ -12,102 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'Redundant color+radius encoding via the imprint_seq colorscale (#009E73 -> #4467A3)
-    on the bars makes the winter rainfall peak immediately visible, adding real data
-    storytelling without clutter'
-  - Clean, idiomatic go.Barpolar usage with a refined donut hole (hole=0.08) for the
-    center treatment
-  - Realistic, factually plausible monthly rainfall dataset (12-105mm) showing a clear
-    seasonal cycle across all 12 months
-  - KISS code structure, deterministic hardcoded data, minimal clean imports, correct
-    write_image + write_html output pipeline
-  - Theme-adaptive chrome correctly threaded through title, tick fonts, grid, and
-    axis line colors in both light and dark renders
+  - Fixed title to include the required 'python' language token — now renders exactly
+    'rose-basic · python · plotly · anyplot.ai'
+  - 'Fixed the radial tick labels: ''ticktext'' array now explicitly renders ''25
+    mm / 50 mm / 75 mm / 100 mm'' in both themes, replacing the previously invisible
+    ''ticksuffix'''
+  - Fixed the tick/wedge overlap from attempt 1 by relocating the radial axis angle
+    from 15° to 285°, so the value ruler now crosses the small Jun/Jul wedges instead
+    of the March wedge
+  - 'Redundant color+radius encoding via imprint_seq (#009E73 -> #4467A3) on the bars
+    makes the winter rainfall peak immediately readable without annotations'
+  - Clean, idiomatic go.Barpolar usage with a refined donut hole (hole=0.08), deterministic
+    realistic seasonal rainfall dataset, and correctly threaded theme-adaptive chrome
+    in both renders
   weaknesses:
-  - 'Title is missing the required language token: renders as ''rose-basic · plotly
-    · anyplot.ai'' instead of the mandated ''rose-basic · python · plotly · anyplot.ai'''
-  - Radial axis tick labels (25/50/75/100) render with no visible ' mm' unit suffix
-    in either theme, even though the code sets ticksuffix=' mm' -- confirmed by pixel-cropping
-    both plot-light.png and plot-dark.png around the radial axis, including the outermost
-    '100' tick
-  - The '25' radial tick label visibly overlaps the March wedge in both themes because
-    radialaxis angle=15 sits in a narrow ~3deg gap between the March and April wedges,
-    and the tick label's text width spills into the March wedge at that radius
+  - 'Adding the mandated ''python'' token lengthened the title without a compensating
+    fontsize reduction: it now spans roughly 90%+ of the 2400x2400 canvas width at
+    fontsize=34 (up from ~73% in attempt 1), giving a squeezed, no-breathing-room
+    look. Not clipped, but reduce title fontsize to ~26-28 to restore a comfortable
+    ~70-80% proportion on the square canvas.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 -- not pure white.
-      Chrome: Title "rose-basic · plotly · anyplot.ai" in large dark text at top, centered, ~73% of canvas width. Month labels (Jan-Dec) arranged clockwise starting at 12 o'clock, dark-gray, all clearly legible. Radial gridlines (concentric circles) and tick labels 25/50/75/100 along a diagonal reference line between the Mar/Apr wedges -- legible dark-gray text, but missing their intended " mm" unit suffix, and the "25" label visibly overlaps the March wedge.
-      Data: 12 polar bar wedges (one per month), radius proportional to rainfall value, colored via a continuous green-to-blue colorscale (imprint_seq) keyed to value -- low-rainfall summer months (Jun/Jul) are brand green #009E73 and short, high-rainfall winter months (Nov/Dec/Jan) are blue #4467A3-ish and long. Thin off-white gaps separate wedges. Small donut hole at center.
-      Legibility verdict: PASS (all chrome text readable; only the "25" tick label has a minor overlap with a data wedge, not a legibility failure)
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "rose-basic · python · plotly · anyplot.ai" in large dark text at top-left-to-right, spanning roughly 90%+ of the canvas width (tight but not clipped — every letter is fully visible). Month labels (Jan-Dec) arranged clockwise starting at 12 o'clock, dark-gray INK_SOFT color, all clearly legible. Radial gridlines (concentric circles) and tick labels "25 mm / 50 mm / 75 mm / 100 mm" now render with a visible unit suffix, placed along a diagonal reference line crossing the small Jun/Jul wedges — no overlap with any wedge.
+      Data: 12 polar bar (Barpolar) wedges, one per month, radius proportional to rainfall value (12-105mm), colored via a continuous green-to-blue colorscale (imprint_seq) keyed to value — low-rainfall summer months (Jun/Jul) are brand green #009E73 and short, high-rainfall winter months (Nov/Dec/Jan) are blue #4467A3-ish and long. Thin page-background-colored gaps separate wedges. Small donut hole at center.
+      Legibility verdict: PASS (all chrome text readable against the light background; title is tight to the canvas edges but no pixels are missing)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 -- not pure black.
-      Chrome: Same title and month labels now in light off-white text, clearly legible against the dark background. Radial gridlines and tick labels 25/50/75/100 render in light gray, same missing " mm" suffix issue and same "25"-over-March-wedge overlap as the light render.
-      Data: Same 12 wedges, identical green-to-blue colorscale and radii as light render -- confirms data colors are unchanged across themes; only chrome (background, text, grid) flipped correctly.
-      Legibility verdict: PASS (no dark-on-dark failures; all text has light-on-dark contrast; same minor tick/wedge overlap as light render)
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Same title and month labels now in light off-white/INK text, clearly legible against the dark background. Radial gridlines and "25 mm / 50 mm / 75 mm / 100 mm" tick labels render in light gray (INK_SOFT), same placement crossing the Jun/Jul wedges, no overlap.
+      Data: Same 12 wedges, identical green-to-blue colorscale and radii as the light render — confirms data colors are unchanged across themes; only chrome (background, text, grid) flipped correctly.
+      Legibility verdict: PASS (no dark-on-dark failures; all text has clear light-on-dark contrast; brand green #009E73 reads well on the dark surface)
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 34, angular tick 20, radial
-          tick 15); title occupies ~73% of canvas width, well within range; readable
-          in both themes
+        comment: All fonts explicitly set and readable in both themes, but title now
+          spans ~90%+ of the square canvas at fontsize=34 (grew after adding the required
+          'python' token) — squeezed, no breathing room.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: 'Minor overlap: the ''25'' radial tick label sits on top of the March
-          wedge in both renders because the radial axis angle=15 gap is too narrow
-          for the label width'
+        comment: Attempt-1 overlap between the '25' radial tick and the March wedge
+          is fixed — axis relocated to angle=285, now crossing only the small Jun/Jul
+          wedges. No overlap in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 wedges clearly visible with subtle white gaps (width=0.9), well
-          adapted to category count
+        comment: 12 wedges clearly visible with subtle page-bg-colored gaps (width=0.9),
+          well adapted to category count.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
         comment: Sequential green-blue gradient, good contrast, no red-green reliance,
-          redundant radius encoding backs up color
+          redundant radius encoding backs up color.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills ~73-80% of the 2400x2400 canvas, balanced margins, no
-          clipping at any edge (verified via pixel scan)
+        comment: Nothing clipped at any edge, but the lengthened title now occupies
+          ~90%+ of canvas width — fontsize should be reduced to restore breathing
+          room.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Radial tick labels (25/50/75/100) have no visible unit suffix in
-          either render despite ticksuffix=' mm' in code -- units effectively invisible
-          to the viewer
+        passed: true
+        comment: Radial tick labels now explicitly show '25 mm / 50 mm / 75 mm / 100
+          mm' via tickvals/ticktext in both renders — attempt-1 missing-unit issue
+          is fixed.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'Correct use of imprint_seq (#009E73 -> #4467A3) for single-polarity
-          continuous rainfall data, cmin=0/cmax=max correct, theme-correct backgrounds
-          and chrome in both renders'
+          continuous rainfall data; theme-correct #FAF8F1/#1A1A17 backgrounds and
+          chrome in both renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -116,23 +115,24 @@ review:
         max: 8
         passed: true
         comment: Value-driven colorscale on the bars plus a refined donut hole go
-          beyond a configured default, though not quite publication-tier
+          beyond configured defaults, though not quite publication-tier.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle 10% opacity grid, clean off-white wedge separators, generous
-          margins; not every detail maximally polished
+        comment: Subtle 10% opacity grid, clean page-bg wedge separators, generous
+          margins, and the fixed radial-axis placement (now over the low-value wedges)
+          show real attention to refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Redundant color+radius encoding creates a clear visual hierarchy
-          that immediately highlights the winter rainfall peak without needing annotations
+          that immediately highlights the winter rainfall peak without needing annotations.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,28 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rose/polar bar chart via go.Barpolar
+        comment: Correct rose/polar bar chart via go.Barpolar.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Radius proportional to value, natural circular month ordering, consistent
-          color scheme, radial gridlines present, starts at 12 o'clock going clockwise
+          color scheme, radial gridlines present, starts at 12 o'clock going clockwise.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: theta=months, r=rainfall correctly mapped, all 12 categories visible
+        comment: theta=months, r=rainfall correctly mapped; all 12 categories visible.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing the required language token ('python'); renders as
-          'rose-basic · plotly · anyplot.ai' instead of 'rose-basic · python · plotly
-          · anyplot.ai'. Legend correctly omitted (single continuous-colored series)
+        passed: true
+        comment: Title now correctly reads 'rose-basic · python · plotly · anyplot.ai'
+          — attempt-1 missing-language-token issue is fixed. Legend correctly omitted
+          (single continuous-colored series).
     data_quality:
       score: 15
       max: 15
@@ -172,20 +172,20 @@ review:
         max: 6
         passed: true
         comment: Shows the full seasonal cycle with clear high-winter/low-summer variation
-          across all 12 months
+          across all 12 months.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic monthly rainfall scenario
+        comment: Neutral, realistic monthly rainfall scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: 12-105mm monthly totals and seasonal proportions are plausible for
-          real-world climates
+          real-world climates.
     code_quality:
       score: 10
       max: 10
@@ -195,32 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> theme tokens -> data -> plot -> save, no functions/classes
+        comment: 'Linear script: imports -> theme tokens -> data -> plot -> save,
+          no functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data list
+        comment: Deterministic hardcoded data list.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects, both used
+        comment: Only os and plotly.graph_objects, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake functionality
+        comment: Clean, appropriate complexity, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: Correct plot-{THEME}.png / .html outputs via write_image/write_html,
-          current API
+          current API.
     library_mastery:
       score: 9
       max: 10
@@ -231,15 +232,15 @@ review:
         max: 5
         passed: true
         comment: go.Figure + add_trace(go.Barpolar(...)) is the idiomatic high-level
-          pattern for plotly rose charts
+          pattern for plotly rose charts.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
         comment: Barpolar with a continuous marker.colorscale mapped to bar value
-          is a distinctive, plotly-specific technique going beyond generic usage
-  verdict: REJECTED
+          is a distinctive, plotly-specific technique going beyond generic usage.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
