@@ -6,14 +6,13 @@ title: Basic Slope Chart (Slopegraph)
 
 # Specification tracking
 created: 2025-12-15T20:42:48Z
-updated: 2025-12-15T20:42:48Z
+updated: 2026-07-25T23:15:21Z
 issue: 981
 suggested: MarkusNeusinger
 
 # Classification tags (applies to all library implementations)
 tags:
   plot_type:
-    - slope
     - line
   data_type:
     - numeric
