@@ -1,0 +1,254 @@
+library: echarts
+language: javascript
+specification_id: step-basic
+created: '2026-07-25T15:56:54Z'
+updated: '2026-07-25T16:02:01Z'
+generated_by: claude-sonnet
+workflow_run: 30164462979
+issue: 956
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Correct step semantics: step: "end" holds each setpoint constant until the next
+    scheduled change, matching the spec''s ''post'' style definition exactly'
+  - 'Markers rendered only at actual change points (symbolSize: isChange ? 14 : 0)
+    — a precise implementation of the spec''s suggestion to highlight where changes
+    occur, without cluttering flat segments'
+  - Explicit, well-proportioned font sizing across the hierarchy (title 22px, axis
+    names 16px, ticks 14px) with balanced X/Y treatment and no overlap
+  - 'Clean theme-adaptive chrome: y-axis spine removed, x-axis spine kept subtle,
+    y-axis-only split lines, both renders read correctly (#FAF8F1 light / #1A1A17
+    dark, identical #009E73 data color)'
+  - Realistic, neutral thermostat-schedule scenario with plausible setpoints (17-22°C)
+    and varied hold durations that clearly demonstrate step-function behavior
+  - Deterministic, dependency-free data generation; single small helper function keeps
+    the script linear and easy to follow
+  - Thoughtful x-axis tick thinning (every 3rd hour) avoids label crowding across
+    25 categories without losing readability
+  weaknesses:
+  - Design stays close to a well-configured library default (single accent color,
+    8% area fill) rather than showing distinctive aesthetic sophistication — no secondary
+    visual device (e.g. subtle period shading, direct labeling of the schedule phases)
+    to lift it beyond competent minimalism
+  - No annotation or direct labeling of what each held segment represents (e.g. 'night
+    setback', 'evening occupied') — the schedule is legible but the viewer has to
+    infer meaning from time-of-day alone rather than the chart telling the story
+  - Per-point marker sizing via the {value, symbol, symbolSize} object syntax is a
+    light ECharts idiom but is easily replicated in most other charting libraries
+    — doesn't showcase a feature genuinely unique to ECharts
+  - X-axis spine (axisLine) is still shown while the y-axis spine was removed — an
+    inconsistency in chrome refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "step-basic · javascript · echarts · anyplot.ai" centered at top in bold dark ink, clearly legible. X-axis title "Time of Day" and Y-axis title "Setpoint Temperature (°C)" both in dark ink, readable. Tick labels (hour marks every 3h, temperature values 15-24) in a softer dark gray, all legible against the light background. Horizontal gridlines are subtle light gray, visible but not dominant; vertical gridlines are off (splitLine: show:false on x-axis), keeping the chart clean.
+      Data: Single step line in Imprint green (#009E73) with a light 8%-opacity green area fill beneath it. Circular markers (14px) appear only at the 5 points where the setpoint actually changes (00:00, 06:00, 09:00, 16:00, ~22:00); flat segments have no markers, keeping the plot uncluttered. The step pattern clearly shows: 17°C night setback -> 21°C morning -> 19°C daytime away -> 22°C evening -> 17°C night setback again.
+      Legibility verdict: PASS — all text is dark and clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels have all flipped to light/white text, clearly legible against the dark background. Gridlines are a subtle dark gray, visible but unobtrusive. No dark-on-dark text anywhere — every label, tick, and title is unambiguously readable.
+      Data: Step line and markers remain identical Imprint green (#009E73), matching the light render exactly; area fill again uses a subtle green tint that reads well on the dark surface. The green is highly legible on the near-black background.
+      Legibility verdict: PASS — all text is light-colored and clearly readable against the dark background; no dark-on-dark failures found.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (title 22px, axis names 16px, ticks 14px),
+          balanced and readable in both themes, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements; thinned x-axis ticks avoid
+          crowding
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3.5px line, 14px markers only at change points — well adapted to
+          a 25-point sparse series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single high-contrast green line on both warm-cream and warm-black
+          backgrounds; no reliance on hue-only distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills roughly 70-80% of the canvas with balanced margins;
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Time of Day" and "Setpoint Temperature (°C)" — descriptive with
+          units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 via t.palette[0]; backgrounds and chrome
+          are theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful single-accent minimalism with subtle area fill, but close
+          to a well-configured default rather than a distinctive design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-axis spine removed, y-axis-only subtle gridlines, generous whitespace;
+          x-axis spine still present
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Markers-at-change-points create clear focal points and visual hierarchy,
+          though no direct phase labeling
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct step/stair line chart using step: "end" (post-style)'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Change-point markers, gridlines for tracing values — all spec notes
+          addressed
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = time of day, Y = setpoint temperature, all data visible within
+          axis bounds
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; no legend needed for single
+          series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Five distinct step transitions with varied hold durations (2h-7h)
+          demonstrate the step-function pattern thoroughly
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral thermostat scheduling scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 17-22°C setpoints are realistic for residential HVAC scheduling
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data -> init -> option flow, single small helper for schedule
+          logic
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global echarts instance
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately simple, no fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false set, no explicit size/devicePixelRatio, current
+          ECharts API'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level setOption/series usage following recommended patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Per-datum {value, symbol, symbolSize} styling is a light ECharts
+          idiom but easily replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

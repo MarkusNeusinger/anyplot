@@ -2,126 +2,156 @@ library: bokeh
 language: python
 specification_id: step-basic
 created: '2025-12-23T20:46:08Z'
-updated: '2026-04-30T13:01:00Z'
+updated: '2026-07-25T15:53:26Z'
 generated_by: claude-sonnet
-workflow_run: 25165590984
+workflow_run: 30163783583
 issue: 956
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: correct step type with after mode, markers at data points,
-    grid lines, proper title format'
-  - 'Perfect Visual Quality: all font sizes explicitly set to correct values, both
-    themes fully adapted with no legibility failures'
-  - 'Excellent data quality: realistic cumulative sales scenario with plausible step
-    variation'
-  - Clean, minimal code structure — textbook KISS organization
-  - Bokeh-specific fill behavior below the step line adds visual depth appropriate
-    for cumulative data
+  - 'Genuine bokeh interactivity: HoverTool surfaces exact month/value pairs on the
+    scatter markers, a real (not simulated) interactive feature in the HTML output.'
+  - Target reference line (Span + text annotation) gives the chart a clear storytelling
+    focal point, showing exactly when cumulative sales crossed the 150-unit milestone
+    between months 9 and 10.
+  - Markers use a page-background-colored halo (line_color=PAGE_BG, line_width=3)
+    that cleanly separates each marker from the step line -- a nice polish detail.
+  - 'Clean theme-adaptive chrome: identical brand-green (#009E73) data color and correctly
+    flipped ink/background tokens in both renders, with no dark-on-dark or light-on-light
+    legibility failures.'
+  - min_border_* values correctly reserved so title, axis labels, and ticks are fully
+    contained within the 3200x1800 canvas with no clipping.
+  - Source (plots/step-basic/implementations/python/bokeh.py) already contains the
+    SC-04 title fix and a new BoxAnnotation storytelling element requested by the
+    previous review -- the code-level fix is done.
   weaknesses:
-  - outline_line_color = INK_SOFT creates visible rectangular frame border — set p.outline_line_color
-    = None for cleaner look
-  - 'No data storytelling: no reference line or annotation to create a focal point
-    on the step pattern'
-  - HoverTool absent — Bokeh signature interactive feature is unused; would raise
-    LM-02 score
+  - 'CRITICAL / PROCESS: plot_images/plot-{light,dark}.png and .html under review
+    are STALE -- they are byte-for-byte the same render already reviewed in Attempt
+    1 (quality_score 87), not a fresh render of the current PR HEAD (commit 7786f2506,
+    ''fix(bokeh): address review feedback for step-basic''). Evidence: bokeh.py:38
+    already reads title="step-basic · python · bokeh · anyplot.ai", but both plot-light.html
+    and plot-dark.html still embed title:"step-basic · bokeh · anyplot.ai" (grep -c
+    python plot-light.html => 0). Likewise bokeh.py:49-52 now adds a BoxAnnotation
+    (above-target shading) that has zero pixel-level presence in the reviewed PNGs
+    (verified by sampling background pixels above the target line in both renders
+    -- flat #FAF8F1/#1A1A17 with no green tint at any alpha). This means the CI render
+    step did not pick up the repair commit before invoking this review. No further
+    code change is needed for the title; the pipeline needs to regenerate plot_images
+    from current HEAD and re-run review before this can be trusted as a true Attempt-2
+    evaluation.'
+  - 'SC-04: as literally rendered (the artifact being scored), the title reads ''step-basic
+    · bokeh · anyplot.ai'' -- missing the required {language} segment. Scored against
+    the actual PNG/HTML per protocol, this fails the exact-format check even though
+    the underlying .py source is already correct.'
+  - 'DE-02: grid lines are drawn on both the x-axis and y-axis for this step/line
+    chart; the style guide recommends Y-axis-only grid for line/bar charts. Minor
+    -- alpha is subtle (0.10) so it doesn''t compete with the data, but it''s a small
+    deviation from the guideline.'
+  - 'DE-01/LM-02: the new BoxAnnotation (above-target shading, fill_alpha=0.06) cannot
+    be credited from this render since it isn''t visually present in the artifact
+    under review -- once a fresh render is produced, re-verify it actually shows a
+    perceptible tint (6% alpha on brand green over a cream/near-black background is
+    quite subtle and may need a slightly higher alpha, e.g. 0.08-0.10, to read clearly
+    at thumbnail sizes).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "step-basic · bokeh · anyplot.ai" in dark text top-left; y-axis label "Cumulative Sales (units)" readable; x-axis label "Month" visible; tick labels in medium-dark gray — all legible
-      Data: Step line in #009E73 (brand green), semi-transparent teal fill below step (Bokeh default), markers at data points with white/PAGE_BG edges
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white, verified pixel-exact #FAF8F1 (250,248,241) -- not pure white.
+      Chrome: Bold dark title "step-basic · bokeh · anyplot.ai" top-left, fully visible with no clipping (NOTE: missing the "python" language segment that the current bokeh.py source already includes -- see weaknesses). Italic axis labels "Month" (x) and "Cumulative Sales (units)" (y) in dark ink. Soft dark-gray tick labels on both axes. Subtle light vertical/horizontal gridlines (alpha ~0.10). Dashed gray "Target: 150 units" reference line and label. All chrome text is clearly legible against the light background.
+      Data: Single step series (post/"after" mode) in brand green, pixel-verified #009E73 (0,158,115), 4px line width, with 14px green markers outlined in the page-background color at each of the 12 monthly data points. No visible green tint/shading above the target line (the BoxAnnotation the source adds is not observable in this render).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light cream text; tick labels in light gray; axis labels in light color — all clearly readable. No dark-on-dark failures detected.
-      Data: Step line remains identical #009E73 (unchanged from light render); fill below step is darker teal variant; markers retain edge definition
-      Legibility verdict: PASS — all text clearly readable against dark background; data colors identical to light render
+      Background: Warm near-black, verified pixel-exact #1A1A17 (26,26,23) -- not pure black.
+      Chrome: Bold off-white title (same missing-"python" issue as light render), fully visible with no clipping. Italic light-ink axis labels, soft light-gray tick labels on both axes. Subtle light gridlines against the dark background. No dark-on-dark or light-on-light failures anywhere -- all chrome text reads cleanly.
+      Data: Same brand-green (#009E73) step line, markers, and dashed target-line color/position as the light render -- confirms data colors are identical and only chrome (background, ink, grid) flipped between themes.
+      Legibility verdict: PASS
+
+    Both renders are pixel-identical in structure to the Attempt-1 artifact already reviewed (same quality_score.txt=87 render) -- see weaknesses for the stale-artifact finding.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
-          labels 18pt; all readable in both themes'
+        comment: Explicit font sizes at every level; all text clearly readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; step pattern clean with well-spaced markers
+        comment: No collisions between title, axes, target label, and data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line at line_width=5, markers at size=18 with edge color clearly
-          visible
+        comment: 14px markers + 4px line well-sized for 12 sparse data points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green on warm off-white/near-black provides strong contrast;
-          white-edged markers add definition
+        comment: Green step vs. dashed gray target line -- distinguishable without
+          relying on color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Data fills canvas well from month 1-12; balanced margins; no cut-off
-          elements
+        comment: 3200x1800 canvas respected (no canvas-gate failure file present);
+          min_border reservations prevent clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Cumulative Sales (units) includes units; Month is descriptive
+        comment: Descriptive labels with units ('Cumulative Sales (units)', 'Month')
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series uses #009E73; backgrounds #FAF8F1 (light) and #1A1A17
-          (dark); chrome fully theme-adaptive in both renders'
+        comment: 'Pixel-verified first series #009E73, correct theme-adaptive backgrounds
+          (#FAF8F1/#1A1A17) in both renders'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: 'Well-configured: brand green, theme-adaptive chrome, white-edged
-          markers, subtle fill — polished default, not yet publication-ready'
+        comment: Halo markers and target annotation show polish, but overall stays
+          close to Imprint defaults; the new BoxAnnotation shading isn't visible in
+          this (stale) render so can't be credited yet
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Grid at 10% alpha is excellent; markers have edge highlighting; but
-          outline_line_color creates visible rectangular frame border
+        comment: No outline frame, subtle grid, generous whitespace; minor deviation
+          -- grid drawn on both axes instead of Y-only for a line/step chart
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Step pattern shows cumulative growth but no emphasis on milestones
-          or visual hierarchy
+        comment: Target-line annotation creates a clear focal point around the milestone
+          crossing
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -129,51 +159,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step plot using Bokeh p.step() with mode=after (post step
-          style)
+        comment: Correct step plot, mode='after' matches spec's 'post' step style
+          description
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step mode implemented, markers at data points, grid lines present
+        comment: Markers at data points, step style choice appropriate, grid present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Month on x-axis, Cumulative Sales on y-axis, all 12 data points visible
+        comment: X=month (1-12), Y=cumulative sales, monotonically increasing, all
+          data shown
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: Title step-basic · bokeh · anyplot.ai is correct; no legend needed
-          for single series
+        passed: false
+        comment: 'As rendered, title reads ''step-basic · bokeh · anyplot.ai'' --
+          missing the required {language} segment. NOTE: bokeh.py:38 already contains
+          the correct title; this is a stale-render issue, not an unfixed code defect
+          -- see weaknesses.'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows clear step pattern with varying step sizes, demonstrates characteristic
-          stair-step visual
+        comment: Step pattern, markers, and reference-line milestone all demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly cumulative sales is genuine neutral business scenario
+        comment: Plausible neutral monthly cumulative sales scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales from 15 to 195 units over 12 months represents realistic growth;
-          step intervals plausible
+        comment: Non-round, realistic unit values across the year
     code_quality:
       score: 10
       max: 10
@@ -183,33 +214,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports -> theme tokens -> data -> figure
-          -> glyphs -> style -> save'
+        comment: Flat top-level script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded; fully deterministic, no randomness
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, ColumnDataSource, export_png, output_file,
-          figure, save'
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; appropriate complexity
+        comment: Clean, appropriately complex, genuine (not faked) interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-THEME.png and plot-THEME.html; current Bokeh 3.x API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via output_file/save
+          + Selenium screenshot per library convention
     library_mastery:
       score: 7
       max: 10
@@ -219,22 +249,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of ColumnDataSource, figure, step() with mode, scatter(),
-          export_png, output_file+save — solid idiomatic Bokeh
+        comment: ColumnDataSource, high-level p.step/p.scatter, HoverTool all used
+          idiomatically; toolbar_location=None and min_border_* follow library rules
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses step() with mode parameter, ColumnDataSource, HTML export; does
-          not leverage HoverTool or custom JS callbacks
-  verdict: APPROVED
+        comment: Span + HoverTool used well; the new BoxAnnotation is a good addition
+          in source but not observable in this render to credit yet
+  verdict: REJECTED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
+  - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - columndatasource
-  dataprep: []
+  - data-generation
+  dataprep:
+  - cumulative-sum
   styling:
+  - publication-ready
   - edge-highlighting
