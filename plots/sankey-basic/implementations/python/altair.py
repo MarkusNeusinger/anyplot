@@ -1,13 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-04-30
+Library: altair 6.2.2 | Python 3.13.12
+Quality: pending | Updated: 2026-07-25
 """
 
 import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -35,11 +36,13 @@ flows = [
 
 df = pd.DataFrame(flows)
 
-# Canvas dimensions: 1600x900 internal → 4800x2700 px at scale_factor=3.0
-width = 1600
-height = 900
-node_width = 80
-node_padding = 25
+# Canvas: 620x320 inner view @ scale_factor=4.0 — vl-convert pads title/legend
+# outside this view, landing near the 3200x1800 target (see prompts/library/altair.md).
+width = 620
+height = 320
+node_width = 18
+node_padding = 6
+fill_ratio = 0.84  # leaves headroom so the last node never brushes the canvas edge
 
 # Compute node positions
 sources = df["source"].unique().tolist()
@@ -49,44 +52,41 @@ source_totals = df.groupby("source")["value"].sum().to_dict()
 target_totals = df.groupby("target")["value"].sum().to_dict()
 total_flow = df["value"].sum()
 
-top_margin = 100
-bottom_margin = 60
+top_margin = 40
+bottom_margin = 34
 available_height = height - top_margin - bottom_margin
 
 # Position source nodes on left, vertically centered
-source_total_height = sum(source_totals.values()) / total_flow * available_height * 0.85
+source_total_height = sum(source_totals.values()) / total_flow * available_height * fill_ratio
 source_total_with_padding = source_total_height + node_padding * (len(sources) - 1)
 start_y_sources = top_margin + (available_height - source_total_with_padding) / 2
 
 source_positions = {}
 current_y = start_y_sources
 for src in sources:
-    node_height = (source_totals[src] / total_flow) * available_height * 0.85
+    node_height = (source_totals[src] / total_flow) * available_height * fill_ratio
     source_positions[src] = {"y": current_y, "height": node_height}
     current_y += node_height + node_padding
 
 # Position target nodes on right, vertically centered
-target_total_height = sum(target_totals.values()) / total_flow * available_height * 0.85
+target_total_height = sum(target_totals.values()) / total_flow * available_height * fill_ratio
 target_total_with_padding = target_total_height + node_padding * (len(targets) - 1)
 start_y_targets = top_margin + (available_height - target_total_with_padding) / 2
 
 target_positions = {}
 current_y = start_y_targets
 for tgt in targets:
-    node_height = (target_totals[tgt] / total_flow) * available_height * 0.85
+    node_height = (target_totals[tgt] / total_flow) * available_height * fill_ratio
     target_positions[tgt] = {"y": current_y, "height": node_height}
     current_y += node_height + node_padding
 
-# Okabe-Ito palette for source colors — distinct, colorblind-safe
+# Imprint palette positions 1-4 for source colors — distinct, colorblind-safe
 source_colors = {
-    "Coal": "#009E73",  # Okabe-Ito #1 (brand green)
-    "Gas": "#C475FD",  # Okabe-Ito #2 (vermillion)
-    "Nuclear": "#4467A3",  # Okabe-Ito #3 (blue)
-    "Renewable": "#BD8233",  # Okabe-Ito #4 (reddish purple)
+    "Coal": "#009E73",  # Imprint #1 (brand green) — ALWAYS first series
+    "Gas": "#C475FD",  # Imprint #2 (lavender)
+    "Nuclear": "#4467A3",  # Imprint #3 (blue)
+    "Renewable": "#BD8233",  # Imprint #4 (ochre)
 }
-
-# Target node colors — muted, distinct from source palette
-target_colors = {"Residential": "#7EC8C8", "Commercial": "#A8D8A8", "Industrial": "#E8C07A", "Transport": "#C8A8E8"}
 
 # Build node rectangles data
 nodes_data = []
@@ -100,7 +100,7 @@ for src in sources:
             "x2": node_width,
             "y2": pos["y"] + pos["height"],
             "color": source_colors[src],
-            "label_x": node_width + 15,
+            "label_x": node_width + 8,
             "label_y": pos["y"] + pos["height"] / 2,
             "total": source_totals[src],
             "side": "source",
@@ -111,13 +111,15 @@ for tgt in targets:
     pos = target_positions[tgt]
     nodes_data.append(
         {
+            # Target nodes use the theme-adaptive neutral anchor, not a categorical
+            # color — they are aggregation/baseline blocks, not their own data series.
             "name": tgt,
             "x": width - node_width,
             "y": pos["y"],
             "x2": width,
             "y2": pos["y"] + pos["height"],
-            "color": target_colors[tgt],
-            "label_x": width - node_width - 15,
+            "color": INK,
+            "label_x": width - node_width - 8,
             "label_y": pos["y"] + pos["height"] / 2,
             "total": target_totals[tgt],
             "side": "target",
@@ -176,7 +178,8 @@ for _, row in df.iterrows():
 
 flows_df = pd.DataFrame(all_flow_data)
 
-# Flow polygons colored by source
+# Flow polygons colored by source — symbolType="square" so the legend swatch
+# reads as a filled band rather than the line-mark default
 links_chart = (
     alt.Chart(flows_df)
     .mark_line(filled=True, opacity=0.55, strokeWidth=0)
@@ -186,7 +189,14 @@ links_chart = (
         color=alt.Color(
             "source:N",
             scale=alt.Scale(domain=list(source_colors.keys()), range=list(source_colors.values())),
-            legend=alt.Legend(title="Energy Source", titleFontSize=18, labelFontSize=16, orient="bottom-right"),
+            legend=alt.Legend(
+                title="Energy Source",
+                titleFontSize=10,
+                labelFontSize=10,
+                orient="bottom-right",
+                symbolType="square",
+                symbolSize=120,
+            ),
         ),
         detail="flow_id:N",
         order="order:Q",
@@ -196,13 +206,14 @@ links_chart = (
 # Node rectangles
 nodes_chart = (
     alt.Chart(nodes_df)
-    .mark_rect(stroke=INK_SOFT, strokeWidth=2)
+    .mark_rect(stroke=INK_SOFT, strokeWidth=1.5)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, width])),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height])),
         x2="x2:Q",
         y2="y2:Q",
         color=alt.Color("color:N", scale=None),
+        opacity=alt.condition(alt.datum.side == "target", alt.value(0.8), alt.value(1.0)),
         tooltip=[alt.Tooltip("name:N", title="Node"), alt.Tooltip("total:Q", title="Total Flow (units)")],
     )
 )
@@ -211,7 +222,7 @@ nodes_chart = (
 source_labels_df = nodes_df[nodes_df["side"] == "source"]
 source_labels = (
     alt.Chart(source_labels_df)
-    .mark_text(fontSize=20, fontWeight="bold", align="left", baseline="middle")
+    .mark_text(fontSize=12, fontWeight="bold", align="left", baseline="middle")
     .encode(
         x=alt.X("label_x:Q", scale=alt.Scale(domain=[0, width])),
         y=alt.Y("label_y:Q", scale=alt.Scale(domain=[0, height])),
@@ -224,7 +235,7 @@ source_labels = (
 target_labels_df = nodes_df[nodes_df["side"] == "target"]
 target_labels = (
     alt.Chart(target_labels_df)
-    .mark_text(fontSize=20, fontWeight="bold", align="right", baseline="middle")
+    .mark_text(fontSize=12, fontWeight="bold", align="right", baseline="middle")
     .encode(
         x=alt.X("label_x:Q", scale=alt.Scale(domain=[0, width])),
         y=alt.Y("label_y:Q", scale=alt.Scale(domain=[0, height])),
@@ -241,10 +252,10 @@ chart = (
         height=height,
         background=PAGE_BG,
         title=alt.Title(
-            text="sankey-basic · altair · anyplot.ai",
+            text="sankey-basic · python · altair · anyplot.ai",
             subtitle="Energy Flow from Sources to Sectors",
-            fontSize=28,
-            subtitleFontSize=20,
+            fontSize=16,
+            subtitleFontSize=13,
             anchor="middle",
             color=INK,
             subtitleColor=INK_SOFT,
@@ -252,10 +263,24 @@ chart = (
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_legend(
-        padding=15, cornerRadius=5, fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK
+        padding=10, cornerRadius=4, fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK
     )
 )
 
-# Save outputs (PNG at 4800×2700 px + HTML for interactivity)
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save outputs — PNG padded to the exact 3200x1800 target (see altair.md "Canvas")
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
