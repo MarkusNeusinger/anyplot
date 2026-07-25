@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 rug-basic: Basic Rug Plot
 Library: bokeh 3.9.1 | Python 3.13.14
-Quality: 85/100 | Updated: 2026-07-25
+Quality: 89/100 | Updated: 2026-07-25
 """
 
 import io
