@@ -1,7 +1,7 @@
 """ anyplot.ai
 sankey-basic: Basic Sankey Diagram
-Library: plotnine 0.15.3 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-04-30
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-07-25
 """
 
 import os
@@ -35,6 +35,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Imprint palette (canonical order) for source categories
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Energy flow from sources to sectors
@@ -61,9 +62,9 @@ sources = ["Coal", "Gas", "Nuclear", "Renewables"]
 targets = ["Industrial", "Commercial", "Residential"]
 
 # X positions with margins for labels
-x_left = 0.2
-x_right = 0.8
-node_width = 0.08
+x_left = 0.10
+x_right = 0.90
+node_width = 0.06
 node_gap = 0.03
 
 # Calculate node sizes based on total flow
@@ -99,7 +100,7 @@ for tgt in targets:
     }
     current_y = current_y - height - node_gap
 
-# Okabe-Ito colors for sources; theme-adaptive neutral for targets
+# Imprint colors for sources; theme-adaptive neutral for targets
 source_colors_map = {"Coal": IMPRINT[0], "Gas": IMPRINT[1], "Nuclear": IMPRINT[2], "Renewables": IMPRINT[3]}
 target_colors_map = {"Industrial": INK_SOFT, "Commercial": INK_SOFT, "Residential": INK_SOFT}
 
@@ -142,46 +143,53 @@ nodes_df = pd.DataFrame(node_data)
 # Build flow polygons (curved paths between nodes)
 flow_polygons = []
 flow_labels = []
-for _, row in flows.iterrows():
-    src = row["source"]
-    tgt = row["target"]
-    val = row["value"]
+flow_x_left = x_left + node_width
+flow_x_right = x_right - node_width
+n_points = 50
 
-    flow_height = val / total_flow * 0.8
+# Stagger the label sample point along each source's outgoing flows so
+# labels for flows sharing a source/target pair don't collide, while still
+# sitting exactly on that flow's own curve (not an arbitrary offset).
+for src in sources:
+    src_flows = flows[flows["source"] == src].reset_index(drop=True)
+    n_src_flows = len(src_flows)
+    for i, row in src_flows.iterrows():
+        tgt = row["target"]
+        val = row["value"]
 
-    src_pos = source_positions[src]
-    src_y_top = src_pos["y_top"] - src_pos["flow_offset"]
-    src_y_bottom = src_y_top - flow_height
-    src_pos["flow_offset"] += flow_height
+        flow_height = val / total_flow * 0.8
 
-    tgt_pos = target_positions[tgt]
-    tgt_y_top = tgt_pos["y_top"] - tgt_pos["flow_offset"]
-    tgt_y_bottom = tgt_y_top - flow_height
-    tgt_pos["flow_offset"] += flow_height
+        src_pos = source_positions[src]
+        src_y_top = src_pos["y_top"] - src_pos["flow_offset"]
+        src_y_bottom = src_y_top - flow_height
+        src_pos["flow_offset"] += flow_height
 
-    # Smooth cubic Hermite interpolation for flow curves
-    flow_x_left = x_left + node_width
-    flow_x_right = x_right - node_width
-    n_points = 50
+        tgt_pos = target_positions[tgt]
+        tgt_y_top = tgt_pos["y_top"] - tgt_pos["flow_offset"]
+        tgt_y_bottom = tgt_y_top - flow_height
+        tgt_pos["flow_offset"] += flow_height
 
-    t = np.linspace(0, 1, n_points)
-    x_top = flow_x_left + (flow_x_right - flow_x_left) * t
-    y_top = src_y_top + (tgt_y_top - src_y_top) * (3 * t**2 - 2 * t**3)
+        # Smooth cubic Hermite interpolation for flow curves
+        t = np.linspace(0, 1, n_points)
+        x_top = flow_x_left + (flow_x_right - flow_x_left) * t
+        y_top = src_y_top + (tgt_y_top - src_y_top) * (3 * t**2 - 2 * t**3)
 
-    x_bottom = flow_x_right + (flow_x_left - flow_x_right) * t
-    y_bottom = tgt_y_bottom + (src_y_bottom - tgt_y_bottom) * (3 * t**2 - 2 * t**3)
+        x_bottom = flow_x_right + (flow_x_left - flow_x_right) * t
+        y_bottom = tgt_y_bottom + (src_y_bottom - tgt_y_bottom) * (3 * t**2 - 2 * t**3)
 
-    x_polygon = np.concatenate([x_top, x_bottom])
-    y_polygon = np.concatenate([y_top, y_bottom])
+        x_polygon = np.concatenate([x_top, x_bottom])
+        y_polygon = np.concatenate([y_top, y_bottom])
 
-    for i in range(len(x_polygon)):
-        flow_polygons.append({"x": x_polygon[i], "y": y_polygon[i], "flow_id": f"{src}_{tgt}", "source": src})
+        for j in range(len(x_polygon)):
+            flow_polygons.append({"x": x_polygon[j], "y": y_polygon[j], "flow_id": f"{src}_{tgt}", "source": src})
 
-    mid_idx = n_points // 2
-    flow_center_y = (y_top[mid_idx] + y_bottom[n_points - 1 - mid_idx]) / 2
-    src_idx = sources.index(src)
-    label_x_offset = 0.35 + src_idx * 0.1
-    flow_labels.append({"x": label_x_offset, "y": flow_center_y, "value": str(val), "flow_height": flow_height})
+        # Sample the label position from a point that actually lies on this
+        # flow's ribbon, staggered by index so co-sourced flows don't overlap.
+        t_label = 0.35 + (i / max(n_src_flows - 1, 1)) * 0.3 if n_src_flows > 1 else 0.5
+        label_idx = int(round(t_label * (n_points - 1)))
+        label_x = x_top[label_idx]
+        label_y = (y_top[label_idx] + y_bottom[n_points - 1 - label_idx]) / 2
+        flow_labels.append({"x": label_x, "y": label_y, "value": str(val), "flow_height": flow_height})
 
 flows_df = pd.DataFrame(flow_polygons)
 flow_labels_df = pd.DataFrame(flow_labels)
@@ -190,7 +198,7 @@ flow_labels_df = pd.DataFrame(flow_labels)
 plot = (
     ggplot()
     # Flow polygons with transparency
-    + geom_polygon(flows_df, aes(x="x", y="y", group="flow_id", fill="source"), alpha=0.5)
+    + geom_polygon(flows_df, aes(x="x", y="y", group="flow_id", fill="source"), alpha=0.44)
     # Node rectangles
     + geom_rect(
         nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="node_color"), color="white", size=0.5
@@ -201,7 +209,7 @@ plot = (
         aes(x="x", y="y", label="value"),
         ha="center",
         va="center",
-        size=11,
+        size=7,
         color=INK,
         fontweight="bold",
     )
@@ -210,7 +218,7 @@ plot = (
         nodes_df[nodes_df["side"] == "source"],
         aes(x="label_x", y="label_y", label="name"),
         ha="right",
-        size=16,
+        size=9,
         color=INK,
         fontweight="bold",
     )
@@ -219,26 +227,26 @@ plot = (
         nodes_df[nodes_df["side"] == "target"],
         aes(x="label_x", y="label_y", label="name"),
         ha="left",
-        size=16,
+        size=9,
         color=INK,
         fontweight="bold",
     )
     + scale_fill_manual(values={**source_colors_map, **target_colors_map})
-    + labs(title="Energy Flow · sankey-basic · plotnine · anyplot.ai", x="", y="")
-    + coord_cartesian(xlim=(-0.05, 1.1))
+    + labs(title="Energy Flow · sankey-basic · python · plotnine · anyplot.ai", x="", y="")
+    + coord_cartesian(xlim=(-0.02, 1.02))
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
+        plot_title=element_text(size=12, ha="center", weight="bold", color=INK),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
         legend_position="none",
     )
-    + annotate("text", x=x_left + node_width / 2, y=-0.05, label="Sources", size=16, color=INK_SOFT, fontweight="bold")
-    + annotate("text", x=x_right - node_width / 2, y=-0.05, label="Sectors", size=16, color=INK_SOFT, fontweight="bold")
+    + annotate("text", x=x_left + node_width / 2, y=-0.05, label="Sources", size=8, color=INK_SOFT, fontweight="bold")
+    + annotate("text", x=x_right - node_width / 2, y=-0.05, label="Sectors", size=8, color=INK_SOFT, fontweight="bold")
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
