@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: stem-basic
 created: '2025-12-23T20:46:36Z'
-updated: '2026-07-25T17:45:40Z'
+updated: '2026-07-25T17:52:23Z'
 generated_by: claude-sonnet
 workflow_run: 30167900092
 issue: 972
@@ -12,58 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/pygal/plot-dark.html
-quality_score: 71
+quality_score: 84
 review:
   strengths:
+  - 'Stem-plot defect from attempt 1 fully fixed: each of the 30 samples is now added
+    as its own independent XY series (baseline anchor with node radius 0 -> peak marker),
+    and both renders confirm no diagonal connector lines run between stems - the discrete,
+    unconnected stem visual is intact'
+  - Marker size and stem width are now constant across all 30 stems (dots_size=10,
+    stroke_width=5, no per-point radius/opacity overrides), directly fixing the spec
+    violation from attempt 1 ('Consistent marker size and stem width throughout the
+    plot')
   - 'Correct Imprint palette: single series renders as #009E73, identical between
     light and dark renders'
   - 'Theme-correct chrome in both renders: #FAF8F1 light background with dark ink
     text, #1A1A17 dark background with light ink text, no dark-on-dark or light-on-light
     failures'
-  - All font sizes explicitly set (title/axis/tick/legend), title fits without clipping,
-    canvas well utilized with no cut-off elements
-  - Title format matches the mandated 'stem-basic · pygal · anyplot.ai' exactly
+  - All font sizes explicitly set (title/axis/tick), title fits without clipping,
+    canvas well utilized with balanced margins and nothing cut off
   - Realistic, well-scaled decaying-oscillation signal-processing example (impulse
-    response) with np.random.seed(42) for reproducibility
-  - Clean KISS script structure with only necessary imports (numpy, pygal), correctly
-    saves plot-{THEME}.png and plot-{THEME}.html per pygal's interactive-library convention
+    response) with np.random.seed(42) for reproducibility; clean KISS script structure
+    with only necessary imports (numpy, pygal)
   weaknesses:
-  - 'CRITICAL - broken stem separation: the raw SVG path in plot-light.html proves
-    all 30 stems are rendered as ONE continuous connected path (<path d="M x0,base
-    L x0,peak x1,base x1,peak x2,base x2,peak ...">) because the `None` sentinel placed
-    between stem groups in `stem_data` does NOT create a break in pygal''s XY line
-    rendering. This produces spurious diagonal connector lines running from the top
-    of each stem down to the baseline of the next stem (e.g. a visible diagonal from
-    the peak at n=1, y≈1.25, down to the baseline at n=2, then a vertical rise to
-    the peak at n=2, y≈1.62), which destroys the ''discrete, unconnected stems'' visual
-    that defines this plot type. Fix: pygal''s `None` entry does not reliably break
-    XY line strokes here — add each stem as its own independent series instead (e.g.
-    loop `chart.add(f''n={i}'', [(xi, 0.0), (xi, yi)])` for each of the 30 points,
-    or another break mechanism verified against the actual rendered SVG/PNG, not assumed
-    from pygal docs) so each stem is visually isolated with no line connecting it
-    to its neighbors.'
-  - Spec Notes explicitly state 'Consistent marker size and stem width throughout
-    the plot', but the implementation intentionally varies marker radius (9–17) and
-    fill-opacity (0.5–1.0) by |amplitude| emphasis — this directly contradicts the
-    spec's explicit guidance. Use one constant marker radius and opacity for all stems.
-  - Once the stem-break fix is applied, re-verify the r=0 baseline anchor points don't
-    leave any stray artifacts (e.g. tiny visible dots or leftover connector fragments)
-    now that each stem is its own series.
+  - 'Design Excellence is still largely default: 30 flat green stems with no visual
+    emphasis distinguishing the dominant peaks (n=1, n=2) or troughs (n=5, n=6) from
+    the many near-zero noise-floor stems - consider a subtle, spec-compliant hierarchy
+    technique (e.g. a light reference band, or a text annotation on the single largest
+    positive/negative sample) that does not touch marker size or stem width'
+  - Y-axis tick labels mix formatting precision ("1" and "0" render without a decimal
+    while neighboring ticks show "1.6", "0.2") due to pygal's default number formatter
+    - set an explicit value formatter for consistent one-decimal precision across
+    all ticks for a more polished look
+  - Chrome is otherwise fully default pygal styling beyond the theme tokens and y-only
+    guides - a touch more visual refinement (e.g. slightly lighter guide lines, tighter
+    tick density) would help Visual Refinement without breaking the existing theme
+    handling
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 - correct.
-      Chrome: Title "stem-basic · pygal · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Sample Index (n)" and Y-axis title "Amplitude (a.u.)" both dark ink, descriptive with units. Tick labels (0-28 on x, -0.8 to 1.6 on y) dark and readable. Horizontal dashed gridlines (y-guides only) are subtle grey-green, visible but not dominant.
-      Data: Single series in Imprint green (#009E73). Circular markers of varying radius mark each of the 30 data points at a decaying oscillatory amplitude. However, instead of isolated vertical stems from baseline to each marker, the render shows a continuous zig-zag/sawtooth line: after each marker there is a diagonal line descending to the x-axis baseline at the NEXT sample index before rising again to that next marker - stems are NOT visually disconnected from one another.
-      Legibility verdict: PASS (all text readable), but visual-quality FAIL on the core plot-type semantic (see weaknesses - stems are connected, not discrete).
+      Chrome: Title "stem-basic · pygal · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Sample Index (n)" and Y-axis title "Amplitude (a.u.)" both in dark ink, descriptive with units. Tick labels (0-28 on x, -0.8 to 1.6 on y) are dark and readable. Horizontal dashed y-guides are subtle grey-green, visible but not dominant; no x-guides (as configured).
+      Data: Single series in Imprint green (#009E73). All 30 samples are rendered as visually discrete vertical stems from the y=0 baseline up (or down) to a circular marker at the data value - no diagonal connector lines run between adjacent stems (the attempt-1 defect is gone). Marker size and stem stroke width are visibly constant across every stem, matching the spec's "consistent marker size and stem width" requirement.
+      Legibility verdict: PASS (all text readable, no overlap, stems correctly discrete).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 - correct.
       Chrome: Same title and axis titles now rendered in light ink (near-white), fully legible against the dark background. Tick labels are light-colored and readable - no dark-on-dark failures observed. Gridlines use the same subtle muted tone, appropriately dimmed for the dark surface.
-      Data: Series color is identical #009E73 green, confirming palette consistency between themes. Same diagonal connector-line defect as the light render is present here too (identical geometry, just re-themed chrome).
-      Legibility verdict: PASS (all text readable in both themes, no dark-on-dark or light-on-light issues), but the same stem-connection defect persists.
+      Data: Series color is identical #009E73 green, confirming palette consistency between themes. Same discrete-stem geometry as the light render - no connector-line artifacts, constant marker/stem sizing preserved.
+      Legibility verdict: PASS (all text readable in both themes, no dark-on-dark or light-on-light issues, data colors identical to light render).
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -72,22 +70,20 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set, readable in both themes, title fits
-          without clipping
+          without clipping; minor tick-label decimal-precision inconsistency
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text overlap; minor visual clutter where connector lines cross
-          near markers
+        comment: No text overlap; connector-line clutter from attempt 1 is gone
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Markers are visible, but spurious diagonal connector lines between
-          stems (broken None-based line break) severely compromise the intended stem
-          visualization
+        passed: true
+        comment: 'Fixed: 30 discrete stems with constant marker/stroke sizing, no
+          spurious connector lines'
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -123,40 +119,37 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured pygal defaults with an attempted emphasis technique
-          (size/opacity scaling), but not publication-ready
+        comment: Well-configured pygal defaults with brand green; not publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle y-only gridlines and clean chrome, but refinement undercut
-          by the connector-line clutter
+        comment: Subtle y-only gridlines and clean chrome, but otherwise default styling
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Intended peak emphasis via marker size is undermined by the connecting-line
-          artifact confusing the visual hierarchy
+        comment: Data displayed but no visual hierarchy or emphasis on notable peaks/troughs
     spec_compliance:
-      score: 10
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Base stem-plot concept present but stems are not visually discrete
-          - confirmed via SVG path that all stems form one continuous connected line
+        passed: true
+        comment: 'Correct stem plot with genuinely discrete stems (verified: independent
+          per-stem series, no connector lines)'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Spec explicitly requires 'consistent marker size and stem width'
-          - implementation deliberately varies both by amplitude
+        passed: true
+        comment: 'Fixed: constant marker size (dots_size=10) and stem width (stroke_width=5)
+          throughout, baseline at y=0'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -168,18 +161,19 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches spec; no legend needed for single series
+        comment: Title format exactly matches mandated pattern; no legend needed/shown
+          for the single logical series
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Shows decay, sign changes, and noise - covers the discrete-signal
-          use case reasonably well
+        comment: Shows decay, sign changes, and noise floor - covers the discrete-signal
+          use case well
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -220,7 +214,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, reasonable complexity
+        comment: No fake functionality; per-stem loop is a reasonable, well-commented
+          workaround for a documented pygal limitation
       - id: CQ-05
         name: Output & API
         score: 1
@@ -228,30 +223,31 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: The None-based line-break workaround for faking stems in pygal.XY
-          does not actually work as intended
+        passed: true
+        comment: Correctly diagnosed and worked around pygal's XY None-sentinel line-break
+          limitation using independent per-stem series
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-node radius/fill-opacity styling on individual data points is
-          a genuinely distinctive pygal SVG-level feature
-  verdict: REJECTED
+        comment: Per-node radius override (r=0 on baseline anchors) is a genuinely
+          distinctive pygal SVG-level feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling:
-  - alpha-blending
+  styling: []
