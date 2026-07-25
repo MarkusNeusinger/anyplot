@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-07-25
@@ -6,6 +6,7 @@ Quality: 83/100 | Updated: 2026-07-25
 
 import os
 import sys
+from itertools import permutations
 
 
 # Pop script dir so this file (pygal.py) doesn't shadow the installed pygal package
@@ -68,6 +69,11 @@ ALPHA_DOMINANT = 0.72
 ALPHA_DEFAULT = 0.48
 DOMINANT_THRESHOLD = 20  # MLD (million liters per day)
 
+# Thinnest ribbons get a same-color stroke halo so they stay visible once the
+# 3200px canvas is downscaled to the ~400px mobile width (previous review:
+# ~2px flows vanished on mobile)
+MIN_RIBBON_PX = 48
+
 # Data — municipal water distribution, sources to end-use sectors (MLD)
 node_labels = [
     "Mountain Reservoir",
@@ -105,6 +111,33 @@ for src, tgt, val in flows:
     node_total[src] += val
     node_total[tgt] += val
 
+# Crossing-minimization: with 4x4 nodes both columns can be exhaustively
+# searched (4! x 4! = 576 combinations) to find the vertical stacking order
+# that minimizes link crossings — previous review flagged the unordered
+# layout as a dense "hairball" in the middle of the diagram.
+tgt_indices = list(range(N_SRC, len(node_labels)))
+
+
+def _count_crossings(src_perm, tgt_perm):
+    src_pos = {node: pos for pos, node in enumerate(src_perm)}
+    tgt_pos = {node: pos for pos, node in enumerate(tgt_perm)}
+    crossings = 0
+    for i in range(len(flows)):
+        s1, t1, _ = flows[i]
+        for j in range(i + 1, len(flows)):
+            s2, t2, _ = flows[j]
+            if s1 == s2 or t1 == t2:
+                continue
+            if (src_pos[s1] - src_pos[s2]) * (tgt_pos[t1] - tgt_pos[t2]) < 0:
+                crossings += 1
+    return crossings
+
+
+src_order, tgt_order = min(
+    ((sp, tp) for sp in permutations(range(N_SRC)) for tp in permutations(tgt_indices)),
+    key=lambda pair: _count_crossings(*pair),
+)
+
 # Layout: vertical scale so the taller column fills available height, with
 # breathing room left top/bottom (previous review: whitespace too tight)
 avail_h = HEIGHT - MARGIN_T - MARGIN_B
@@ -112,48 +145,67 @@ n_src_gaps = N_SRC - 1
 n_tgt_gaps = len(node_labels) - N_SRC - 1
 scale = (avail_h - max(n_src_gaps, n_tgt_gaps) * NODE_GAP) / sum(node_total[:N_SRC]) * BREATHING_ROOM
 
-# Node y positions
-node_x = []
-node_y0 = []
-node_y1 = []
+# Node y positions, indexed by original node index. Stacking order within
+# each column follows src_order/tgt_order (the crossing-minimized order),
+# not the raw node index.
+node_x = [0.0] * len(node_labels)
+node_y0 = [0.0] * len(node_labels)
+node_y1 = [0.0] * len(node_labels)
 
 # Source nodes (left column)
 src_block_h = sum(node_total[i] * scale for i in range(N_SRC)) + n_src_gaps * NODE_GAP
 y = MARGIN_T + (avail_h - src_block_h) / 2
-for i in range(N_SRC):
+for i in src_order:
     h = node_total[i] * scale
-    node_x.append(MARGIN_L)
-    node_y0.append(y)
-    node_y1.append(y + h)
+    node_x[i] = MARGIN_L
+    node_y0[i] = y
+    node_y1[i] = y + h
     y += h + NODE_GAP
 
 # Target nodes (right column)
-tgt_indices = list(range(N_SRC, len(node_labels)))
 tgt_block_h = sum(node_total[i] * scale for i in tgt_indices) + n_tgt_gaps * NODE_GAP
 y = MARGIN_T + (avail_h - tgt_block_h) / 2
-for i in tgt_indices:
+for i in tgt_order:
     h = node_total[i] * scale
-    node_x.append(WIDTH - MARGIN_R - NODE_W)
-    node_y0.append(y)
-    node_y1.append(y + h)
+    node_x[i] = WIDTH - MARGIN_R - NODE_W
+    node_y0[i] = y
+    node_y1[i] = y + h
     y += h + NODE_GAP
 
-# Link paths (cubic bezier ribbons)
+# Link paths (cubic bezier ribbons). Each node's incident flows are stacked
+# by the *other* endpoint's column position (not data-definition order) so
+# ribbons don't gratuitously twist right where they leave/enter a node —
+# this complements the src_order/tgt_order column reorder above in cutting
+# down the crossing "hairball" the previous review flagged.
+src_pos = {node: pos for pos, node in enumerate(src_order)}
+tgt_pos = {node: pos for pos, node in enumerate(tgt_order)}
+src_link_order = sorted(range(len(flows)), key=lambda i: (flows[i][0], tgt_pos[flows[i][1]]))
+tgt_link_order = sorted(range(len(flows)), key=lambda i: (flows[i][1], src_pos[flows[i][0]]))
+
+y1t_by_flow = [0.0] * len(flows)
 src_cursor = list(node_y0[:N_SRC])
+for i in src_link_order:
+    src, _tgt, val = flows[i]
+    y1t_by_flow[i] = src_cursor[src]
+    src_cursor[src] += val * scale
+
+y2t_by_flow = [0.0] * len(flows)
 tgt_cursor = list(node_y0[N_SRC:])
+for i in tgt_link_order:
+    _src, tgt, val = flows[i]
+    tgt_local = tgt - N_SRC
+    y2t_by_flow[i] = tgt_cursor[tgt_local]
+    tgt_cursor[tgt_local] += val * scale
+
 link_data = []
-for src, tgt, val in flows:
+for i, (src, tgt, val) in enumerate(flows):
     h = val * scale
     x1 = node_x[src] + NODE_W
-    y1t = src_cursor[src]
+    y1t = y1t_by_flow[i]
     y1b = y1t + h
-    src_cursor[src] += h
-
-    tgt_local = tgt - N_SRC
     x2 = node_x[tgt]
-    y2t = tgt_cursor[tgt_local]
+    y2t = y2t_by_flow[i]
     y2b = y2t + h
-    tgt_cursor[tgt_local] += h
 
     cx = (x1 + x2) / 2
     path = (
@@ -169,7 +221,11 @@ for src, tgt, val in flows:
     # Ribbon midpoint for annotation placement
     ribbon_mid_y = (y1t + y1b + y2t + y2b) / 4
     tooltip = f"{node_labels[src]} → {node_labels[tgt]}: {val} MLD"
-    link_data.append((f"rgba({r},{g},{b},{alpha})", path, dominant, cx, ribbon_mid_y, val, tooltip))
+    # Same-color stroke halo widens the visible ribbon for thin flows without
+    # disturbing the node-band geometry (previous review: ~2 MLD ribbons
+    # shrank to ~2px once downscaled to the 400px mobile width)
+    thin_halo = max(0.0, MIN_RIBBON_PX - h)
+    link_data.append((f"rgba({r},{g},{b},{alpha})", path, dominant, cx, ribbon_mid_y, val, tooltip, thin_halo))
 
 # Title — scale fontsize down for long titles (see plot-generator.md "Title
 # fontsize must scale with title length")
@@ -193,14 +249,16 @@ parts = [
 ]
 
 # Non-dominant flows drawn first (background layer)
-for fill, path, dominant, _cx, _ribbon_mid_y, _val, tooltip in link_data:
+for fill, path, dominant, _cx, _ribbon_mid_y, _val, tooltip, thin_halo in link_data:
     if not dominant:
-        parts.append(f'<path class="flow" d="{path}" fill="{fill}" stroke="none"><title>{tooltip}</title></path>')
+        stroke = f' stroke="{fill}" stroke-width="{thin_halo:.1f}"' if thin_halo > 0 else ' stroke="none"'
+        parts.append(f'<path class="flow" d="{path}" fill="{fill}"{stroke}><title>{tooltip}</title></path>')
 
 # Dominant flows drawn on top with annotation showing their magnitude
-for fill, path, dominant, cx, ribbon_mid_y, val, tooltip in link_data:
+for fill, path, dominant, cx, ribbon_mid_y, val, tooltip, thin_halo in link_data:
     if dominant:
-        parts.append(f'<path class="flow" d="{path}" fill="{fill}" stroke="none"><title>{tooltip}</title></path>')
+        stroke = f' stroke="{fill}" stroke-width="{thin_halo:.1f}"' if thin_halo > 0 else ' stroke="none"'
+        parts.append(f'<path class="flow" d="{path}" fill="{fill}"{stroke}><title>{tooltip}</title></path>')
         parts.append(
             f'<text x="{cx:.1f}" y="{ribbon_mid_y:.1f}" text-anchor="middle" '
             f'dominant-baseline="middle" font-family="{FONT}" font-size="{VALUE_SIZE}" '
