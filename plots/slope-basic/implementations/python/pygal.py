@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-07-25
@@ -57,7 +57,11 @@ custom_style = Style(
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
-    value_label_font_size=36,
+    value_label_font_size=44,
+    # value_font_size drives pygal's dot-to-label offset (x/y = dot + value_font_size),
+    # not just the (unused, print_values=False) value text itself — raised well past
+    # the default 16 so category labels clear the y-axis line at the Q1 column.
+    value_font_size=40,
     stroke_width=6,
 )
 
@@ -70,7 +74,7 @@ chart = pygal.Line(
     height=1800,
     title="slope-basic · python · pygal · anyplot.ai",
     x_title="Time Period",
-    y_title="Sales (units)",
+    y_title="Sales (thousands of units)",
     style=custom_style,
     show_dots=True,
     dots_size=18,
@@ -82,7 +86,7 @@ chart = pygal.Line(
     print_values=False,
     print_labels=True,
     range=(30, 120),
-    margin_right=340,
+    margin_right=480,
 )
 
 chart.x_labels = ["Q1 2024", "Q4 2024"]
