@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: stem-basic
 created: '2026-07-25T17:44:20Z'
-updated: '2026-07-25T17:48:13Z'
+updated: '2026-07-25T17:55:00Z'
 generated_by: claude-sonnet
 workflow_run: 30168106632
 issue: 972
@@ -12,49 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 86
 review:
   strengths:
+  - 'All three attempt-1 weaknesses fixed: gridlines faded to ~15% alpha, unused library(dplyr)
+    removed, stem linewidth bumped 0.9->1.2 for prominence'
   - 'Faithful stem-plot construction: geom_hline baseline + geom_segment stems + geom_point
-    markers exactly matches the spec''s structural notes (thin stems from y=0, clearly
-    visible circular markers, consistent sizing throughout).'
-  - Data is a realistic damped, decaying oscillator (exp(-0.09n)*cos(0.55n) + noise)
-    — the canonical signal-processing example explicitly named in the spec's Applications
-    section, with plausible amplitude scale.
-  - 'Theme handling is correct: the brand-green data color (#009E73) is identical
-    between light and dark renders, and all chrome (title, axis text, gridlines, marker
-    stroke) flips via INK/INK_SOFT/PAGE_BG tokens with no dark-on-dark or light-on-light
-    failures.'
-  - Canvas matches the landscape target exactly (8x4.5in @ 400dpi = 3200x1800), and
-    the title follows the exact mandated format with the legend correctly omitted
-    for a single series.
+    markers exactly matches the spec''s structural notes'
+  - 'Realistic, neutral data: damped decaying oscillator (exp(-0.09n)*cos(0.55n) +
+    noise), the canonical signal-processing example named in the spec'
+  - 'Theme handling correct end-to-end: identical brand-green data color across themes,
+    chrome flips via INK/INK_SOFT/PAGE_BG tokens, canvas matches landscape target
+    exactly (3200x1800), title format and legend omission both correct'
   weaknesses:
-  - Major gridlines (panel.grid.major.y) are drawn in full-strength INK color instead
-    of a faded/reduced-opacity tone, so the horizontal grid reads nearly as bold as
-    the axis text/baseline in both renders — the style guide calls for grid at ~15-25%
-    opacity (rgba(26,26,23,0.15) light / rgba(240,239,232,0.15) dark). Fade the grid
-    line color toward the page background (or blend INK with PAGE_BG) so it recedes
-    behind the data.
-  - '`library(dplyr)` is imported but never used anywhere in the script (no dplyr
-    verbs or %>% pipes) — remove the unused import.'
-  - Stem linewidth is 0.9 for a sparse series (40 points, well under the <50-point
-    'thicker lines' density guidance) — could go slightly thicker (~1.1-1.3) for a
-    touch more prominence relative to the markers.
+  - 'Design Excellence remains the weakest category: relies entirely on theme_minimal()
+    + standard chrome tokens with no additional design device to actively guide the
+    eye beyond the raw decay pattern'
+  - shape=21 marker and explicit x breaks are solid but not library-distinctive; a
+    ggplot2-specific technique (e.g. annotate() marking the decay envelope) would
+    lift Library Mastery
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "stem-basic · r · ggplot2 · anyplot.ai" top-left, clearly readable. "Sample index n" x-axis label and "Amplitude" y-axis label (rotated) in dark ink, both legible. Tick labels (0/5/10/.../35 on x; -0.5/0.0/0.5/1.0 on y) in a softer grey, still readable. Horizontal gridlines at each major y-tick are solid and fairly dark — more prominent than the "subtle" style-guide target, though not to the point of illegibility.
-      Data: 40 stems in brand green (#009E73) — thin vertical segments from a y=0 baseline to circular markers with a light cream stroke. Damped oscillation clearly visible: large stems near n=0-8 tapering to near-zero by n=35+. No overlapping text or clipped elements.
+      Background: Warm off-white, consistent with #FAF8F1 - PASS (not pure white, not dark)
+      Chrome: Bold dark title "stem-basic · r · ggplot2 · anyplot.ai" top-left; "Sample index n" / "Amplitude" axis titles in dark ink; softer-grey tick labels. Major gridlines faded (~15% alpha), receding behind data. All clearly visible.
+      Data: 40 brand-green (#009E73) stems from a y=0 baseline to circular markers with a light stroke, tracing a damped decaying oscillation. First (and only) series confirmed #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and axis labels render in light off-white ink, clearly visible against the dark background. Tick labels in a lighter grey, readable. Gridlines flip to a light tone at similar (still somewhat bold) weight as the light render — no dark-on-dark failures anywhere.
-      Data: Same 40 green (#009E73) stems and markers as the light render, confirmed pixel-identical in hue/pattern — only chrome (background, text, grid, marker stroke color) changed between themes. Marker stroke flips from cream to a dark ink tone appropriate for the dark surface.
+      Background: Warm near-black, consistent with #1A1A17 - PASS (not pure black, not light)
+      Chrome: Title and axis labels flip to light off-white ink; tick labels to lighter grey. Gridlines flip to faint light tone at same reduced opacity. No dark-on-dark failures found anywhere.
+      Data: Stems/markers use identical #009E73 green as the light render - confirmed pixel-identical hue and pattern; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,49 +53,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12pt, axis labels 10pt, tick labels 8pt — matches style-guide
-          defaults exactly; readable in both themes
+        comment: All text readable in both themes, sized per style guide defaults
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No collisions between text or data elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers (size 3.2, stroke 0.9) clearly visible; stem linewidth 0.9
-          slightly light for a sparse 40-point series
+        comment: Stem linewidth bumped to 1.2, appropriately prominent for sparse
+          40-point series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green reads well on both surfaces; no red-green reliance
+        comment: High-contrast single-series green, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, nothing clipped, but bold gridlines slightly
-          compete with the layout's intended subtlety
+        comment: Canvas exactly 3200x1800, good margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Sample index n' / 'Amplitude' labels
+        comment: Descriptive axis labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, correct PAGE_BG both themes, data colors identical
-          across themes'
+        comment: 'First series #009E73, correct theme-adaptive backgrounds in both
+          renders'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -112,23 +101,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Standard anyplot theme boilerplate applied correctly; no distinctive
-          extra polish beyond defaults
+        comment: Standard anyplot theme boilerplate, little extra polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: L-shaped spines correctly kept minimal, but major gridlines use full-strength
-          INK instead of faded ~15% opacity, reading bolder than intended
+        passed: true
+        comment: 'Fixed: gridlines now faded to ~15% alpha per style guide'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Natural decaying-oscillation shape gives a clear focal point at n=0,
-          though this comes from the data choice rather than an intentional design
-          device
+        comment: Focal point comes from data shape, not an intentional design device
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +123,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stem plot via geom_segment + geom_point
+        comment: Correct stem plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thin stems, visible markers, y=0 baseline, consistent sizing — all
-          present
+        comment: Stems, markers, baseline all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=sample index, y=amplitude, full data range shown
+        comment: n on x, amplitude on y, all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact mandated title format; legend correctly omitted for single
-          series
+        comment: Title matches mandated format exactly; legend correctly omitted
     data_quality:
       score: 14
       max: 15
@@ -168,22 +151,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers positive/negative stems and decay pattern well
+        comment: Shows decay, sign changes, oscillation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Damped oscillator is the textbook signal-processing use case named
-          in the spec
+        comment: Canonical damped-oscillator signal-processing example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitude range (-0.6 to 1.0) and n=0-39 both sensible
+        comment: Sensible normalized amplitude range
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -191,7 +173,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,10 +182,10 @@ review:
         comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but never used
+        passed: true
+        comment: 'Fixed: unused library(dplyr) removed'
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -215,7 +197,7 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png
+        comment: Saves plot-{THEME}.png via ragg::agg_png at correct dims
     library_mastery:
       score: 6
       max: 10
@@ -225,15 +207,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_segment + geom_point layering is the idiomatic ggplot2 approach
-          to stem plots (no native geom_stem)
+        comment: geom_hline + geom_segment + geom_point is the idiomatic ggplot2 stem-plot
+          pattern
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: shape=21 filled+stroked point and explicit scale_x_continuous breaks
-          are modest distinctive touches, nothing exceptional
+        comment: shape=21 stroke and explicit breaks are modest, not exceptional
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -242,4 +223,6 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
+  - edge-highlighting
