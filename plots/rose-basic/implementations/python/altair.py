@@ -1,7 +1,7 @@
 """ anyplot.ai
 rose-basic: Basic Rose Chart
-Library: altair 6.2.2 | Python 3.13.12
-Quality: pending | Created: 2026-07-25
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-07-25
 """
 
 import os
