@@ -1,7 +1,7 @@
 // anyplot.ai
 // slope-basic: Basic Slope Chart (Slopegraph)
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 89/100 | Created: 2026-07-25
+// Quality: 96/100 | Created: 2026-07-25
 
 const t = window.ANYPLOT_TOKENS;
 

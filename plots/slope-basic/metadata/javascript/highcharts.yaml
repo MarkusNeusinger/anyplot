@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: slope-basic
 created: '2026-07-25T23:38:12Z'
-updated: '2026-07-25T23:44:03Z'
+updated: '2026-07-25T23:58:38Z'
 generated_by: claude-sonnet
 workflow_run: 30179585442
 issue: 981
@@ -12,54 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 96
 review:
   strengths:
-  - 'Correct Imprint semantic color mapping: brand green (palette[0]) for "Improved",
-    matte-red semantic anchor (palette[4]) for "Declined" — matches the style guide''s
-    finance/sentiment semantic-exception rule'
-  - Direct dual-endpoint data labels (name + value at both Survey Wave 1 and Survey
-    Wave 2) satisfy the spec's "labels at both endpoints" requirement without relying
-    on hover
-  - 'Clean, minimal chrome: no gridlines, transparent background, theme-adaptive ink
-    tokens correctly threaded through title/axis/legend/dataLabels in both light and
-    dark renders'
-  - Phantom-series legend pattern (showInLegend:false on the 10 real product lines,
-    two empty dummy series for "Improved"/"Declined") avoids an unreadable 10-entry
-    legend while still explaining the color coding
-  - Color direction is redundantly encoded by each line's slope (up = improved, down
-    = declined), keeping the chart colorblind-safe despite the red/green semantic
-    choice
+  - Y-axis domain is now tightened to the actual data band (~50-95 vs. the prior fixed
+    40-100), eliminating the dead space flagged in the attempt-1 review and giving
+    the plot excellent canvas utilization
+  - 'Endpoint-label collision nudging (labelNudges helper) resolves the tight label
+    clusters from attempt 1 — verified pixel-level via cropped zooms on both the FlowStream/LinkHub/PixelPro
+    cluster and the CoreLogic/TaskFlow/CloudSync/FlowStream cluster: no overlap in
+    either theme'
+  - Real product series no longer set enableMouseTracking:false — native Highcharts
+    tooltips now work on the actual data, while the two phantom legend-only series
+    (empty data) still correctly use enableMouseTracking:false to avoid polluting
+    the legend without disabling interactivity where it matters
+  - The largest-magnitude mover (LinkHub, -18) is visually emphasized with a heavier
+    line (3.5 vs 2 lineWidth) and larger marker (6.5 vs 5 radius), giving the chart
+    a clear focal point without resorting to fake/simulated interactivity
+  - 'Correct Imprint semantic color mapping retained: brand green (palette[0]) for
+    improved, matte red (palette[4]) for declined — matches the style guide''s finance/sentiment
+    semantic-exception rule, and direction is redundantly encoded by slope, keeping
+    it colorblind-safe'
+  - All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend/dataLabels
+    14px), readable in both light and dark renders with no theme-adaptation failures
   weaknesses:
-  - Y-axis is fixed to a 40-100 range while actual data spans only 55-91, leaving
-    roughly 30% of the vertical canvas as dead space above and below the data band
-    — tighten the domain (e.g. ~50-95) for better canvas utilization (VQ-05)
-  - A few endpoint label pairs sit close together vertically (e.g. '84 · CoreLogic'
-    / '82 · TaskFlow' and '78 · CloudSync' / '76 · FlowStream' on Survey Wave 2; the
-    80/77/74 cluster on Survey Wave 1) — not clipped but tight; consider a small collision-nudge
-    or leader-line offset when two labels fall within ~3 score points of each other
-    (VQ-02)
-  - plotOptions.series.enableMouseTracking:false disables all native Highcharts hover/tooltip
-    interactivity for every series, discarding the interactive library's distinctive
-    value-add in the HTML detail view; since data is already fully labeled, consider
-    re-enabling tooltips instead of disabling tracking entirely (LM-02)
-  - No explicit callout/annotation on the standout mover (e.g. NetGuard +17 or LinkHub
-    -18) — a small highlight would sharpen the data-storytelling focal point (DE-03)
+  - The standout-mover emphasis (thicker line/larger marker) is a good visual-hierarchy
+    device but is still not an explicit callout — a small text annotation or delta
+    badge (e.g. '-18') on the standout line would push the storytelling further toward
+    publication-grade
+  - 'Distinctive-feature usage is still moderate rather than showcase-level: the phantom-series
+    legend and dataLabels crop/overflow handling are genuinely Highcharts-specific,
+    but the chart otherwise reads as a fairly standard direct-labeled line chart that
+    other JS libraries could approximate with similar effort'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "slope-basic · javascript · highcharts · anyplot.ai" bold dark text at top center; y-axis title "Customer Satisfaction Score" and tick labels (40-100) in soft dark gray on the left; x-axis category labels "Survey Wave 1" / "Survey Wave 2" below the two vertical lanes; legend ("Improved" / "Declined") centered at the bottom. All chrome text is dark and clearly legible against the light background.
-      Data: 10 product lines connect Wave 1 to Wave 2 values, each line colored brand green (#009E73, "Improved") or matte red ("Declined") depending on direction. Direct data labels showing "{name} · {value}" flank both endpoints of every line, right-aligned on the left column and left-aligned on the right column, in soft ink color. Markers are small filled circles at each endpoint.
-      Legibility verdict: PASS — every title, axis label, tick label, and data label is clearly readable; no light-on-light text found.
+      Chrome: Title "slope-basic · javascript · highcharts · anyplot.ai" in bold dark text, top center. Y-axis title "Customer Satisfaction Score" (rotated) and tick labels (50-95, tightened to the actual data band) in soft dark gray on the left. X-axis category labels "Survey Wave 1" / "Survey Wave 2" below the two vertical lanes. Legend ("Improved" / "Declined") centered at the bottom. All chrome text is dark and clearly legible against the light background.
+      Data: 10 product lines connect Wave 1 to Wave 2 values, each colored brand green (#009E73, "Improved") or matte red ("Declined") depending on direction. The largest-magnitude mover (LinkHub, 77→59) renders with a visibly heavier line and larger marker than the rest, creating a clear focal point. Direct data labels showing "{name} · {value}" flank both endpoints of every line, right-aligned on the left column and left-aligned on the right column. Zoomed crops of the two closest label clusters (FlowStream/LinkHub/PixelPro on Wave 1; CoreLogic/TaskFlow/CloudSync/FlowStream on Wave 2) confirm no overlap — the collision-nudge logic keeps every label pair legibly separated.
+      Legibility verdict: PASS — every title, axis label, tick label, and data label is clearly readable; no light-on-light text found; no clipping at any canvas edge (verified via edge crops).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
       Chrome: Same title, axis titles, tick labels, category labels, and legend, now rendered in light gray/off-white tones against the dark background. Layout is pixel-identical to the light render.
-      Data: The same 10 lines with identical brand-green and matte-red hues as the light render — data colors did not shift between themes, only the chrome (text, background) flipped as expected.
-      Legibility verdict: PASS — no dark-on-dark failures; all text (title, axis labels, tick labels, data labels, legend) is clearly visible against the near-black surface.
+      Data: The same 10 lines with identical brand-green and matte-red hues as the light render — data colors did not shift between themes, only chrome (text, background) flipped as expected. The LinkHub standout emphasis is equally visible in this theme.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, axis labels, tick labels, data labels, legend) is clearly visible against the near-black surface, confirmed via the same cluster crops used for the light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -71,31 +70,33 @@ review:
           14px); no overflow; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No true overlap, but a few endpoint-label pairs sit tightly stacked
-          (2-3 score points apart)
+        comment: Collision-nudge logic fixed the tight endpoint-label clusters flagged
+          in attempt 1 — verified via zoomed crops, no overlap remains
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker radius 5 / line width 2 well matched for 10 sparse lines
+        comment: Marker radius 5 (6.5 standout) / line width 2 (3.5 standout) well
+          matched for 10 sparse lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
         comment: Green/red direction encoding is redundant with each line's up/down
-          slope
+          slope, colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Fixed 40-100 y-domain leaves noticeable dead space above/below the
-          55-91 data band
+        comment: Y-domain now tightened to the actual 55-91 data band (padded ~50-95),
+          fixing the dead-space issue from attempt 1; balanced margins confirmed via
+          edge crops
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,9 +110,9 @@ review:
         max: 2
         passed: true
         comment: Correct Imprint semantic assignment (green=improved pos.1, matte
-          red=declined pos.5); theme-correct chrome both renders
+          red=declined pos.5); theme-correct chrome in both renders
     design_excellence:
-      score: 16
+      score: 18
       max: 20
       items:
       - id: DE-01
@@ -119,22 +120,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color use, phantom-series legend, direct labeling
-          — clearly above a generic default line chart
+        comment: Thoughtful semantic color use, phantom-series legend, direct labeling,
+          standout-mover emphasis — clearly above a generic default line chart, though
+          short of FiveThirtyEight-level polish
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No gridlines, minimal chrome, generous whitespace; docked slightly
-          for label crowding
+        comment: No gridlines, minimal chrome, generous whitespace, and the label-crowding
+          weakness from attempt 1 is now resolved
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Color + slope direction instantly conveys the up/down story; no explicit
-          callout on the largest mover
+        comment: Color + slope direction plus the standout-mover line-weight/marker
+          emphasis gives the chart a clear, immediate focal point
     spec_compliance:
       score: 15
       max: 15
@@ -176,7 +178,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both increases and decreases across 10 entities
+        comment: Shows both increases and decreases with varying magnitude across
+          10 entities
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -199,7 +202,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear data-then-chart structure
+        comment: No functions/classes beyond small inline helpers, linear data-then-chart
+          structure
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -211,13 +215,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No stray imports; uses only the Highcharts global
+        comment: No stray imports; uses only the Highcharts global and window tokens
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake UI
+        comment: Clean, appropriate complexity for the collision-nudge logic, no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -225,24 +230,25 @@ review:
         passed: true
         comment: Correct mount-node contract, animation disabled, credits disabled
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic dataLabels + phantom-legend-series pattern, though enableMouseTracking:false
-          is an unusual choice for an interactive library
+        comment: Idiomatic dataLabels + phantom-legend-series pattern; enableMouseTracking:false
+          now correctly scoped only to the empty legend-proxy series
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Direction-coded line-with-labels approach is fairly generic and replicable
-          in other libraries; native interactivity was disabled rather than leveraged
-  verdict: REJECTED
+        passed: true
+        comment: Tooltips re-enabled on real series, plus dataLabels crop:false/overflow:allow
+          and the phantom-legend pattern are genuinely Highcharts-specific techniques,
+          though the overall chart remains a fairly standard direct-labeled line chart
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
