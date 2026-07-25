@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-04-30
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 from scipy import stats
 
 
@@ -42,14 +43,17 @@ for i, month in enumerate(months):
     data[month] = np.random.normal(base_temps[i], variation, 150)
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 x_range = np.linspace(-10, 40, 500)
 overlap = 0.6
 scale = 2.5
 
-colors = plt.cm.viridis(np.linspace(0.1, 0.9, len(months)))
+# Imprint sequential colormap (brand green -> blue) drives the 12 ordered
+# ridges; January (top ridge) anchors at the mandated first-series #009E73.
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+colors = imprint_seq(np.linspace(0, 1, len(months)))
 
 for i, month in enumerate(reversed(months)):
     y_offset = i * (1 - overlap)
@@ -72,12 +76,12 @@ for i, month in enumerate(reversed(months)):
 # Y-ticks
 y_positions = [(len(months) - 1 - i) * (1 - overlap) for i in range(len(months))]
 ax.set_yticks(y_positions)
-ax.set_yticklabels(months, fontsize=16, color=INK_SOFT)
+ax.set_yticklabels(months, fontsize=8, color=INK_SOFT)
 
 # Style
-ax.set_xlabel("Temperature (°C)", fontsize=20, color=INK)
-ax.set_title("ridgeline-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT)
+ax.set_xlabel("Temperature (°C)", fontsize=10, color=INK)
+ax.set_title("ridgeline-basic · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT)
 ax.set_xlim(-10, 40)
 
 ax.spines["top"].set_visible(False)
@@ -88,4 +92,4 @@ ax.spines["bottom"].set_color(INK_SOFT)
 ax.grid(True, axis="x", alpha=0.15, color=INK)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
