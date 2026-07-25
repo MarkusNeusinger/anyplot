@@ -1,7 +1,7 @@
 // anyplot.ai
 // span-basic: Basic Span Plot (Highlighted Region)
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-07-25
+// Library: echarts 6.1.0 | JavaScript 22.23.1
+// Quality: 91/100 | Created: 2026-07-25
 
 const t = window.ANYPLOT_TOKENS;
 
