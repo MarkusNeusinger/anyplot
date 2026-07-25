@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sankey-basic: Basic Sankey Diagram
-Library: altair 6.2.2 | Python 3.13.12
-Quality: pending | Updated: 2026-07-25
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 49/100 | Updated: 2026-07-25
 """
 
 import os
