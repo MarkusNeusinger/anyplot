@@ -1,7 +1,7 @@
 // anyplot.ai
 // stem-basic: Basic Stem Plot
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-07-25
+// Library: d3 7.9.0 | JavaScript 22.23.1
+// Quality: 90/100 | Created: 2026-07-25
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
