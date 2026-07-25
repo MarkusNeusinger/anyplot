@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: rose-basic
 created: '2025-12-23T19:42:44Z'
-updated: '2026-07-25T10:16:09Z'
+updated: '2026-07-25T10:28:53Z'
 generated_by: claude-sonnet
 workflow_run: 30153860732
 issue: 1003
@@ -12,53 +12,64 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 90
 review:
   strengths:
-  - Theme-adaptive chrome is correctly threaded through every element (title, month/tick
-    labels, spines, grid) — both light and dark renders are fully legible with an
-    identical Imprint brand-green data color.
-  - Correct square canvas choice (2400×2400) for a circular/symmetric chart type,
-    with a length-aware title fontsize formula that avoids overflow.
-  - Radius (not area) is directly proportional to value via ax.bar(bottom=0), matching
-    the spec's core requirement; small angular gaps between wedges give clean separation
-    without needing edge strokes.
-  - Realistic, neutral monthly rainfall data with a clear monsoon-like seasonal cycle
-    (72mm to 180mm) that fully demonstrates the plot type.
-  - Idiomatic polar-bar API usage — set_theta_zero_location('N') and set_theta_direction(-1)
-    correctly orient the chart to spec (12 o'clock start, clockwise).
+  - Per-wedge alpha scaled by value (0.55–0.95) creates an intuitive “single color
+    with varying saturation” effect exactly as the spec calls for, drawing the eye
+    to the wettest months without leaving brand green
+  - 'Peak-month callout (“Peak: Jul 180mm”) is placed cleanly outside the data ring
+    but inside the plot''s outer spine, with generous headroom (ylim × 1.32) so it
+    never collides with a wedge or clips the canvas — genuine data storytelling with
+    a clear focal point'
+  - Radial tick labels correctly relocated to the 15° gap (avoiding the default 0°
+    collision with the Jan wedge) and title fontsize dynamically scaled to the extended
+    (descriptive-title + language) string length, avoiding overflow on the square
+    canvas
+  - 'Correct polar-chart mechanics: 12 o''clock start (theta_zero_location=''N''),
+    clockwise direction, equal angular width per month, radius (not area) proportional
+    to value — matches every spec requirement'
+  - Theme-adaptive chrome fully correct on both renders — text, grid, spine, and annotation
+    colors flip appropriately between light/dark; brand green data color stays pixel-identical
+    across themes
   weaknesses:
-  - 'Title is missing the required ''python'' language token: code sets title = "Monthly
-    Rainfall (mm) · rose-basic · matplotlib · anyplot.ai" but the mandated format
-    is `{spec-id} · {language} · {library} · anyplot.ai` (optionally prefixed by a
-    descriptive title). Fix: change the string to "Monthly Rainfall (mm) · rose-basic
-    · python · matplotlib · anyplot.ai".'
-  - Radial tick labels '25' and '50' sit directly on top of the green Jan wedge in
-    both renders, reducing their contrast versus the other tick labels that sit on
-    the plain background — nudge the tick label radius/angle (or increase ax.set_ylim
-    padding) so they clear the data area.
-  - 'Design Excellence is default-level: a single flat brand-green fill with no saturation/value
-    variation and no callouts leaves the chart visually correct but generic — consider
-    highlighting the peak month (Jul) or a subtle radial gradient for stronger visual
-    hierarchy.'
-  - Library Mastery only partially leveraged — beyond the standard polar-bar recipe
-    (theta_zero_location, theta_direction), no matplotlib-distinctive touch (custom
-    Wedge patches, per-wedge alpha variation, annotate() peak callout) is used.
+  - 'PIPELINE ISSUE: the plot_images/plot-light.png and plot-dark.png supplied for
+    this review are stale — they predate the latest commit ab49e4c9a ("fix(matplotlib):
+    address review feedback for rose-basic") and are missing “python” from the title,
+    the peak-month annotation, and the per-wedge alpha gradient that are present in
+    the current matplotlib.py. Scoring against those images would have graded a superseded
+    artifact (and wrongly flagged SC-04 for a missing language token). This review
+    was conducted against renders regenerated locally from the current implementation
+    file so the score reflects the code that will actually merge; the render/promotion
+    step should be checked to make sure the images it ships always match the final
+    commit.'
+  - Radial tick label ‘50’ (rlabel_position=15°) sits just inside the Feb wedge's
+    angular start and overlaps its fill instead of landing cleanly in the inter-wedge
+    gap — nudge rlabel_position a degree or two further from 15°, or reduce it, so
+    all radial labels clear the wedge fills the way 100/150/200 already do.
+  - Grid uses linestyle="--" (dashed); the style guide's Grid Guidelines call for
+    solid thin lines at 15–25% opacity — switch to linestyle="-" for closer compliance.
+  - 'LM-02: the per-wedge alpha loop and annotate() callout are nice touches but not
+    features unique to matplotlib — could push further with a matplotlib-specific
+    technique (e.g. a colormap-driven radial gradient or PolyCollection) to earn a
+    higher distinctiveness score next time.'
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white — correct.
-      Chrome: Bold dark title "Monthly Rainfall (mm) · rose-basic · matplotlib · anyplot.ai" at top, clearly readable. Twelve bold dark-gray month labels (Jan-Dec) ring the circumference, correctly starting at Jan (12 o'clock) and running clockwise. Radial gridline labels (25-200) in muted gray are readable against the cream background; the "25" and "50" labels specifically fall inside the green Jan wedge, which softens their contrast slightly but they remain legible.
-      Data: Twelve green (#009E73) wedges with radius proportional to monthly rainfall value, thin cream gaps between each wedge for separation, subtle dashed radial gridlines. Clear seasonal peak around Jun-Aug, dip around Feb.
-      Legibility verdict: PASS (all text readable; minor contrast softening where "25"/"50" tick labels cross the data wedge, not a failure).
+    NOTE: The pipeline-supplied plot_images/plot-light.png and plot-dark.png were stale (pre-date commit ab49e4c9a and are missing "python" in the title, the peak annotation, and the alpha gradient). The descriptions below are from renders regenerated locally from the current plots/rose-basic/implementations/python/matplotlib.py, i.e. what the merged code actually produces.
 
-    Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black — correct.
-      Chrome: Title and month labels render in light tones (white/light-gray), fully readable against the dark background. Gaps between wedges appear as near-black slivers matching the page background (expected, not a defect) rather than the grid lines. Radial gridline labels are light gray and readable; "25"/"50" again cross the data wedge with a similar minor contrast softening as in the light render.
-      Data: Identical brand-green (#009E73) wedges, same shapes/values as the light render — confirmed data colors unchanged across themes.
-      Legibility verdict: PASS (no dark-on-dark failures; all title/label/tick text is clearly visible on the dark surface).
+    Light render (plot-light.png, regenerated from current code):
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Bold dark title "Monthly Rainfall (mm) · rose-basic · python · matplotlib · anyplot.ai" at top, clearly readable, dynamically shrunk to fit the square canvas without overflow. Month labels (Jan-Dec) bold dark text around the circumference, radial value ticks (25/50/75.../200) in muted gray positioned in the 15° gap between Jan and Feb. Bold dark "Peak: Jul 180mm" annotation with a thin connector line sits just inside the outer spine below the Jul wedge.
+      Data: 12 equal-angle wedges in Imprint brand green #009E73, radius proportional to monthly rainfall (72mm Feb to 180mm Jul), with per-wedge alpha (0.55-0.95) scaling by value so wetter months read visually "deeper" green — a legitimate single-hue saturation effect, not a second color.
+      Legibility verdict: PASS — all text readable; one minor issue: the "50" radial tick label overlaps the Feb wedge fill (still legible, gray text with unbroken cream-side too, but not fully in the clear gap like the other tick labels).
+
+    Dark render (plot-dark.png, regenerated from current code):
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same title/month-label/tick-label/annotation layout as light, all rendered in light-colored ink (title/annotation in near-white INK, tick labels in muted light gray INK_MUTED) — fully readable against the dark surface, no dark-on-dark failures anywhere.
+      Data: Identical brand-green wedges and identical per-wedge alpha gradient as the light render — confirms data colors are theme-independent, only chrome flipped.
+      Legibility verdict: PASS — same minor "50" tick label / Feb wedge overlap as light render, otherwise clean.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -66,76 +77,83 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (length-scaled title, 9pt bold month
-          labels, 8pt radial ticks); fully readable in both themes.
+        comment: All font sizes explicitly set (title dynamically scaled, 9pt month
+          labels, 8pt ticks/annotation); readable in both themes; title fits without
+          overflow despite the extended descriptive+language string
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Radial tick labels '25' and '50' overlap the green Jan wedge in both
-          renders, softening their contrast versus the other tick labels.
+        comment: 'Minor: the ''50'' radial tick label overlaps the Feb wedge fill
+          instead of sitting cleanly in the inter-wedge gap; everything else (title,
+          month labels, peak annotation) is clear'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Twelve equal-angle wedges with clear angular gaps are optimally visible;
-          no overplotting for this category count.
+        comment: 12 sparse categories with wide, prominent wedges and a clear alpha
+          gradient for emphasis — well adapted to the data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single CVD-safe brand green used; no red-green reliance.
+        comment: Single-hue encoding with radius as the primary (accessible) value
+          signal; alpha is a redundant, non-essential emphasis layer, not the sole
+          distinguishing feature
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Circular chart is well-balanced within the square canvas, no cutoff,
-          generous margins.
+        comment: Circular chart fills a good, balanced portion of the square canvas
+          with generous, even margins; peak annotation sits cleanly in the outer margin
+          without crowding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes units (mm); radial values are self-explanatory as
-          rainfall amounts.
+        comment: Title states units ('Monthly Rainfall (mm)'); radial ticks are numeric
+          magnitude values consistent with rose-chart convention
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 in both renders; backgrounds are #FAF8F1/#1A1A17;
-          all chrome is theme-correct.'
+        comment: 'First (only) series is #009E73 in both renders; backgrounds and
+          all chrome are theme-correct (#FAF8F1 light / #1A1A17 dark)'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured default: single flat brand color, no gradient or
-          per-category variation.'
+        passed: true
+        comment: Value-scaled alpha and deliberate tick repositioning show intentional
+          hierarchy clearly above library defaults, though palette stays single-hue
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid is subtle, spines colored/thinned, wedge gaps aid separation
-          — some refinement beyond bare defaults.
+        comment: Subtle grid (alpha 0.2), thoughtfully placed radial ticks, generous
+          whitespace; docked a point for dashed grid (style guide prefers solid) and
+          the tick/wedge overlap
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data is displayed with no explicit emphasis or annotation on the
-          seasonal peak; viewer must find the story unaided.
+        passed: true
+        comment: 'Alpha gradient plus an explicit ''Peak: Jul 180mm'' callout give
+          the chart a clear, immediate focal point — the viewer doesn''t have to find
+          the story themselves'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,28 +161,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rose/coxcomb chart implemented via polar bar plot.
+        comment: Correct rose/coxcomb chart with equal-angle wedges and radius proportional
+          to value
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Radius proportional to value, natural circular month ordering, 12
-          o'clock start, radial gridlines all present.
+        comment: 12 o'clock start, clockwise direction, radial gridlines, single-color-with-varying-saturation
+          scheme all present per spec
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle=month, radius=value correctly mapped; full year visible.
+        comment: Months correctly mapped to angle, rainfall correctly mapped to radius
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title omits the required 'python' language token (reads '... rose-basic
-          · matplotlib · anyplot.ai' instead of '... rose-basic · python · matplotlib
-          · anyplot.ai'); legend appropriately omitted for single series.
+        passed: true
+        comment: Title is 'Monthly Rainfall (mm) · rose-basic · python · matplotlib
+          · anyplot.ai' — correct format; legend correctly omitted for single-series
+          chart
     data_quality:
       score: 15
       max: 15
@@ -174,21 +193,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full seasonal cycle (72mm to 180mm) clearly demonstrates the radius-encodes-value
-          mechanic.
+        comment: Full annual cycle shown with realistic seasonal variation (72mm-180mm),
+          clear low/high months
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral monthly rainfall / monsoon-pattern scenario.
+        comment: Neutral, comprehensible real-world scenario (monthly rainfall / climate
+          data)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and seasonal proportions are physically plausible for a monsoon-influenced
-          climate.
+        comment: Values and the summer-peak seasonal shape are physically plausible
+          for a wet-summer climate
     code_quality:
       score: 10
       max: 10
@@ -198,31 +218,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → plot → save, no functions/classes.
+        comment: Linear imports → data → plot → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness to seed.
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, matplotlib.pyplot, os — all used.
+        comment: Only matplotlib.pyplot, numpy, os — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately simple, no fake functionality.
+        comment: Clean, appropriately complex, well-commented on non-obvious choices
+          (fontsize formula, rlabel gap, headroom math), no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with default bbox_inches (no bbox_inches='tight').
+        comment: Saves as plot-{THEME}.png via current savefig API, no deprecated
+          calls
     library_mastery:
       score: 7
       max: 10
@@ -232,23 +254,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic polar-bar recipe with correct theta_zero_location/theta_direction
-          orientation.
+        comment: Proper polar-projection subplot_kw, theta_zero_location/theta_direction,
+          set_rlabel_position — idiomatic polar API usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses polar-projection distinctly but no further matplotlib-unique
-          flourish beyond the standard recipe.
-  verdict: REJECTED
+        passed: true
+        comment: Per-bar alpha mutation loop and annotate()-with-arrow callout are
+          matplotlib-specific touches, but not features unreplicable in other libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - manual-ticks
+  - annotations
   patterns:
-  - data-generation
   - explicit-figure
   dataprep: []
   styling:
