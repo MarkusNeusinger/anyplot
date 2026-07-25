@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-07-25
@@ -234,7 +234,7 @@ plot = (
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_labels[df_labels["side"] == "left"],
-        size=16,
+        size=5.5,
         hjust=1,
         color=INK_SOFT,
         family="sans-serif",
@@ -242,12 +242,12 @@ plot = (
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_labels[df_labels["side"] == "right"],
-        size=16,
+        size=5.5,
         hjust=0,
         color=INK_SOFT,
         family="sans-serif",
     )
-    + scale_fill_manual(values=[source_color_map[s] for s in sources], name="Energy Source")
+    + scale_fill_manual(values=[source_color_map[s] for s in sources], name="Energy Source   ")
     + labs(
         title="sankey-basic · python · letsplot · anyplot.ai",
         subtitle=f"Largest flow: {dominant_source} → {dominant_target} ({dominant_value} TWh)",
