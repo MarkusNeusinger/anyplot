@@ -9,14 +9,18 @@
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-07-24
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 // @mui/x-charts 7.x community has no polar/radial chart component (a PolarProvider
 // exists internally but isn't part of the public export surface), so the polar
 // plot is composed on MUI X's own charting surface: ChartContainer sizes the
-// <svg> + theme, and useDrawingArea() gives the plot rect the polar geometry is
-// mapped onto. Every ring, spoke and data point below is computed from real
-// values — nothing is faked chrome.
+// <svg> + theme, and useDrawingArea() gives the plot rect the custom ring/spoke/
+// polygon geometry is mapped onto. The 24 hourly points are ALSO registered as a
+// genuine `scatter` series (mapped through a matching linear xAxis/yAxis so the
+// pixels line up exactly with the hand-drawn geometry) so ChartsTooltip and MUI's
+// own hover-highlight are real, not decorative — nothing here is faked chrome.
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
@@ -41,9 +45,46 @@ const MAX_KWH = 5;
 const RINGS = [1, 2, 3, 4, 5];
 const LABELED_HOURS = [0, 6, 12, 18];
 const HOUR_LABELS = { 0: "12 AM", 6: "6 AM", 12: "12 PM", 18: "6 PM" };
+// The two daily bulges the circular layout is meant to reveal (morning commute,
+// evening peak) — called out explicitly with an accent ring + leader label below.
+const PEAKS = [
+  { hour: 8, label: "Morning peak" },
+  { hour: 19, label: "Evening peak" },
+];
+const MARKER_R = 6.5;
 
 // Hour 0 points to the top (-90°); angle grows clockwise as the day progresses.
 const angleOf = (hour) => (-90 + (hour / HOURS) * 360) * (Math.PI / 180);
+const hourLabel = (hour) => {
+  const period = hour < 12 ? "AM" : "PM";
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${h12}:00 ${period}`;
+};
+
+// --- Real MUI X scatter series for the hourly points ----------------------------
+// A linear xAxis/yAxis pair whose domain is sized so that value 1 (frac = 1, i.e.
+// MAX_KWH) lands exactly `DATA_R` px from centre — the same radius the hand-drawn
+// rings/polygon below use (both derive from the same MARGIN/size constants) — so
+// the real MUI scatter dots register precisely on top of the custom SVG geometry.
+const MARGIN = 90;
+const HALF = Math.min(size.width, size.height) / 2 - MARGIN;
+const DATA_R = HALF - 60;
+const DOMAIN = HALF / DATA_R;
+const SERIES_DATA = kwh.map((v, hour) => {
+  const a = angleOf(hour);
+  const frac = v / MAX_KWH;
+  return { x: frac * Math.cos(a), y: -frac * Math.sin(a), id: hour, hour, kwh: v };
+});
+const SERIES = [
+  {
+    type: "scatter",
+    data: SERIES_DATA,
+    color: BRAND,
+    markerSize: MARKER_R,
+    label: "Electricity draw",
+    valueFormatter: (v) => `${hourLabel(v.hour)} · ${v.kwh.toFixed(1)} kWh`,
+  },
+];
 
 // --- Polar layer: rendered as children inside MUI X's ChartsSurface ------------
 function PolarLayer() {
@@ -108,7 +149,10 @@ function PolarLayer() {
         );
       })}
 
-      {/* Closed polygon: translucent fill + solid outline + hourly markers */}
+      {/* Closed polygon: translucent fill + solid outline. The hourly markers
+          themselves are a real <ScatterPlot> series (sibling of this layer,
+          registered on a matching xAxis/yAxis) — this halo ring just gives each
+          dot a light separation from the polygon fill/stroke underneath it. */}
       <polygon
         points={linePoints}
         fill={BRAND}
@@ -119,16 +163,54 @@ function PolarLayer() {
       />
       {kwh.map((v, hour) => {
         const [px, py] = point(v / MAX_KWH, hour);
+        const isPeak = PEAKS.some((p) => p.hour === hour);
         return (
           <circle
-            key={`pt-${hour}`}
+            key={`halo-${hour}`}
             cx={px}
             cy={py}
-            r={5}
-            fill={BRAND}
-            stroke={PAGE_BG}
-            strokeWidth={1.5}
+            r={isPeak ? MARKER_R + 3 : MARKER_R + 1}
+            fill="none"
+            stroke={isPeak ? BRAND : PAGE_BG}
+            strokeWidth={isPeak ? 2 : 1.2}
           />
+        );
+      })}
+
+      {/* Explicit callouts for the two daily peaks — a dashed leader from the
+          peak point to an italic label, so the story reads immediately instead
+          of only being implicit in the polygon's shape. */}
+      {PEAKS.map(({ hour, label }) => {
+        const a = angleOf(hour);
+        const [peakX, peakY] = point(kwh[hour] / MAX_KWH, hour);
+        const lx = cx + 0.5 * R * Math.cos(a);
+        const ly = cy + 0.5 * R * Math.sin(a);
+        const cos = Math.cos(a);
+        const anchor = cos > 0.15 ? "start" : cos < -0.15 ? "end" : "middle";
+        return (
+          <g key={`peak-${hour}`}>
+            <line
+              x1={peakX}
+              y1={peakY}
+              x2={lx}
+              y2={ly}
+              stroke={INK_SOFT}
+              strokeWidth={1}
+              strokeDasharray="2,3"
+            />
+            <text
+              x={lx}
+              y={ly}
+              fill={INK}
+              fontSize={14}
+              fontWeight={600}
+              fontStyle="italic"
+              textAnchor={anchor}
+              dominantBaseline="central"
+            >
+              {label}
+            </text>
+          </g>
         );
       })}
 
@@ -181,12 +263,16 @@ export default function Chart() {
     <ChartContainer
       width={size.width}
       height={size.height}
-      series={[]}
-      margin={{ top: 84, bottom: 84, left: 96, right: 96 }}
+      series={SERIES}
+      xAxis={[{ scaleType: "linear", min: -DOMAIN, max: DOMAIN }]}
+      yAxis={[{ scaleType: "linear", min: -DOMAIN, max: DOMAIN }]}
+      margin={{ top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN }}
       skipAnimation
     >
       <Chrome />
       <PolarLayer />
+      <ScatterPlot />
+      <ChartsTooltip trigger="item" />
     </ChartContainer>
   );
 }
