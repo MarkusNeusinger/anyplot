@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 rug-basic: Basic Rug Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-25
@@ -58,12 +58,13 @@ df_rug = pd.DataFrame(
 plot = (
     ggplot(df, aes(x="response_time"))
     + geom_density(fill=BRAND, alpha=0.25, size=1.5, color=BRAND)
-    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend"), data=df_rug, color=BRAND, alpha=0.7, size=1.5)
-    + labs(x="Response Time (ms)", y="Density", title="rug-basic · letsplot · anyplot.ai")
+    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend"), data=df_rug, color=BRAND, alpha=0.55, size=1.0)
+    + labs(x="Response Time (ms)", y="Density", title="rug-basic · python · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_blank(),
         axis_title=element_text(size=20, color=INK),
         axis_text=element_text(size=16, color=INK_SOFT),
         plot_title=element_text(size=24, color=INK),
