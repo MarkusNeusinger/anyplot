@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: span-basic
 created: '2025-12-23T20:45:43Z'
-updated: '2026-07-25T14:27:09Z'
+updated: '2026-07-25T14:36:16Z'
 generated_by: claude-sonnet
 workflow_run: 30161373410
 issue: 980
@@ -12,60 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 88
 review:
   strengths:
-  - 'Correctly covers both categorical values of the spec''s `direction` field: a
-    vertical span (Recession Period, geom_rect over full y-range) and a horizontal
-    span (Risk Zone, geom_rect over full x-range) in the same plot'
-  - 'Idiomatic plotnine layering: separate per-layer `data=` dataframes for the rects
-    vs. the line (ggplot() + geom_rect(data=spans) + geom_line(data=df)) is a clean
-    use of the grammar-of-graphics architecture'
+  - 'Fixed the prior review''s core weakness: the Risk Zone horizontal span moved
+    from ymin=60/ymax=80 (disconnected, below all data) to 145-165, which now directly
+    overlaps the price line''s settled post-recession trading range — the threshold
+    reads as meaningful rather than decorative'
+  - Added a 'Risk Threshold' geom_text annotation reinforcing the highlighted zone,
+    exactly the optional enhancement the spec allows and the prior review suggested
+  - 'Correctly demonstrates both categorical values of the spec''s ''direction'' field
+    in one plot: a vertical span (Recession Period, full y-range) and a horizontal
+    span (Risk Zone, full x-range)'
+  - 'Idiomatic plotnine layering: ggplot() + geom_rect(data=spans) + geom_line(data=df)
+    + geom_text(data=annotation) each with their own per-layer dataframe — clean grammar-of-graphics
+    composition'
   - Semi-transparent fill at alpha=0.25 matches the spec's 0.2-0.3 guidance and keeps
-    the underlying line visible through both span regions
+    the underlying line visible through both span regions in both themes
   - 'First data series (price line) correctly uses Imprint #009E73; span fill legend
-    uses the next two canonical positions (#C475FD, #4467A3) in order'
-  - Explicit font sizes set for every text role (title 12pt, axis_title 10pt, axis_text
-    8pt, legend 8-9pt) and all text reads clearly in both light and dark renders
-  - Theme-adaptive chrome correctly threaded through backgrounds, grid, and legend
-    box for both PAGE_BG/INK/INK_SOFT tokens
-  - 'Clean, KISS-structured code: imports -> data -> plot -> save, explicit np.random.seed(42),
-    no unused imports'
+    uses the next two canonical positions (#C475FD, #4467A3) in order; theme-adaptive
+    chrome (backgrounds, text, grid, legend box) correctly threaded through both renders'
+  - 'Clean KISS-structured code: imports -> data -> plot -> save, explicit np.random.seed(42),
+    all imports used, no fake functionality'
   weaknesses:
-  - The 'Risk Zone' horizontal span (ymin=60, ymax=80) sits entirely below the actual
-    price data range (line spans roughly 150-220 in both renders) — it never intersects
-    or comes close to the price series, leaving a large disconnected empty gap between
-    the data and the highlighted band and wasting roughly 40% of the vertical canvas
-    as dead space. Reposition the Risk Zone's ymin/ymax to overlap or sit adjacent
-    to a realistic price threshold (e.g. 145-165, just under the post-recession trading
-    range) so the highlighted zone visually interacts with the line and reads as a
-    meaningful threshold rather than a floating decorative bar.
-  - Because the Risk Zone doesn't relate to the visible data, the storytelling reads
-    as two unrelated annotations rather than one coherent narrative about risk/recession
-    — once the y-range issue above is fixed, consider adding a short text label or
-    edge line inside one span (spec explicitly allows this as an optional enhancement)
-    to reinforce which period/threshold is being called out.
-  - Design Excellence is solid but not exceptional (well-configured custom theme,
-    not yet publication-grade) — the wasted vertical space from the Risk Zone placement
-    is the main drag on both DE-02 (whitespace balance) and DE-03 (visual hierarchy);
-    fixing the placement should lift both.
+  - Only 2 of the spec's allowed 1-5 span regions are used, and no overlapping spans
+    are demonstrated — an additional short span (or an overlapping pair) would show
+    more of the feature's range without much added complexity
+  - geom_text(size=7) for the annotation is well above the library guide's recommended
+    ~2.5-4 annotation scale (geom_text size is in mm, so 7 ≈ 20pt, larger than even
+    the 12pt title) — it happens to render legibly here, but tightening it to ~3-4
+    would keep the annotation visually subordinate to the title/axis hierarchy and
+    match library conventions
+  - 'Design Excellence is solid but not yet publication-grade (DE-01): the custom
+    theme and palette are thoughtful but the overall look still reads as a well-configured
+    default rather than a distinctive, FiveThirtyEight-level composition'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "span-basic · plotnine · anyplot.ai" centered at top in dark ink, clearly legible. Axis titles "Year" (x) and "Price ($)" (y) in dark ink, tick labels ("2006"..."2016", "100"..."200") in a softer grey. Subtle horizontal + vertical gridlines barely visible against the cream background. Legend box "Highlighted Region" sits to the right of the plot area with a thin border and two swatches ("Recession Period", "Risk Zone").
-      Data: Green (#009E73) line tracing a stock price from ~200 in 2006 down to ~155 by 2010, then flat/noisy through 2016. A light lavender vertical band (#C475FD at alpha 0.25) covers 2008-2009 across the full plot height, overlapping the price decline. A light blue-grey horizontal band (#4467A3 at alpha 0.25) spans the full x-axis width near the bottom of the plot (y ≈ 60-80), well below the price line, which never dips near that range.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "span-basic · plotnine · anyplot.ai" centered at top in dark ink, clearly legible. Axis titles "Year" (x) and "Price ($)" (y) in dark ink; tick labels ("2006"..."2016", "160"..."200") in a softer grey. Subtle gridlines barely visible against the cream background. Legend box "Highlighted Region" sits to the right of the plot area with a thin border and two swatches ("Recession Period", "Risk Zone").
+      Data: Green (#009E73) line tracing a stock price from ~205 in 2006, peaking ~225 in 2007, declining sharply through the 2008-2009 recession band to ~155 by 2010, then oscillating 145-165 through 2016. A lavender vertical band (#C475FD, alpha 0.25) covers 2008-2009 across the full plot height, overlapping the steep price decline. A blue-grey horizontal band (#4467A3, alpha 0.25) spans the full x-axis width at y≈145-165, now directly overlapping the price line's post-recession trading range, with a "Risk Threshold" text label sitting just above the band near 2014. The overlap of the two bands near 2008-2009 blends into a darker purple patch, which is expected alpha compositing, not a defect.
       Legibility verdict: PASS — all text is dark-on-light and fully readable; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
       Chrome: Same title, axis titles, and tick labels now rendered in light ink/soft-grey, clearly visible against the dark background. Gridlines are faint light lines, still subtle. Legend box uses the elevated dark surface with light text and a soft border, fully legible.
-      Data: Same green (#009E73) line, identical shape/values to the light render, confirming data-color consistency across themes. The recession band appears as a muted dark-purple wash (same #C475FD hex, alpha-blended over the dark background) and the risk-zone band as a muted dark navy wash (same #4467A3 hex) — again positioned well below the price line with no overlap.
-      Legibility verdict: PASS — no dark-on-dark text; title, axes, ticks, and legend all read clearly against the near-black surface.
+      Data: Same green (#009E73) line, identical shape/values to the light render, confirming data-color consistency across themes. The recession band appears as a muted dark-purple wash (same #C475FD hex, alpha-blended over the dark background) and the risk-zone band as a muted dark navy wash (same #4467A3 hex), both now correctly overlapping the visible price data. The "Risk Threshold" annotation renders in soft grey, clearly legible against the dark band.
+      Legibility verdict: PASS — no dark-on-dark text; title, axes, ticks, legend, and annotation all read clearly against the near-black surface.
 
-    Cross-theme check: Data colors (green line, lavender band, blue-grey band) are identical hex values in both renders; only background/text/grid/legend chrome flipped, as required. The Risk Zone's disconnection from the actual data range is a data-placement issue present identically in both renders, not a theme problem.
+    Cross-theme check: Data colors (green line, lavender band, blue-grey band) are identical hex values in both renders; only background/text/grid/legend chrome flipped, as required.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -80,7 +77,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render
+        comment: No overlapping text or elements in either render; new annotation
+          sits clear of the legend
       - id: VQ-03
         name: Element Visibility
         score: 5
@@ -96,11 +94,11 @@ review:
         comment: Good contrast, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Risk Zone band placed far below the data line creates a large empty
-          vertical gap, wasting canvas space
+        passed: true
+        comment: Risk Zone now overlaps the price line's trading range, resolving
+          the prior review's wasted vertical-space issue
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -115,27 +113,31 @@ review:
         comment: 'Line uses Imprint #009E73 first; spans use canonical positions 2-3;
           theme-correct chrome and backgrounds in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
+        passed: true
         comment: Custom theme tokens and palette applied thoughtfully, above a plain
           default but not publication-grade
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Subtle grid, no visible spines, but whitespace unbalanced due to
-          disconnected Risk Zone band
+        passed: true
+        comment: Subtle grid, no visible spines, whitespace now balanced since the
+          Risk Zone connects to the data
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        comment: Recession band ties well to the price decline; Risk Zone band reads
-          as an unrelated floating element, diluting the narrative
+        passed: true
+        comment: Both bands now interact meaningfully with the price line and the
+          new annotation reinforces the threshold, creating a coherent risk/recession
+          narrative
     spec_compliance:
       score: 15
       max: 15
@@ -144,44 +146,51 @@ review:
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: Line chart with shaded span overlays matches span-basic spec
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
+        passed: true
         comment: Both vertical and horizontal directions present, semi-transparent
-          fill within 0.2-0.3 alpha range
+          fill within 0.2-0.3 alpha range, plus optional text label
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
+        passed: true
         comment: X=year, Y=price, all points visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
+        passed: true
         comment: Title matches mandated format exactly; legend labels match span data
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 5
         max: 6
+        passed: true
         comment: Both direction types shown; only 2 of the allowed 1-5 regions used,
           no overlapping spans demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Neutral, realistic stock-price-with-recession scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        comment: Risk Zone y-range (60-80) is placed where the price series never
-          trades, making the threshold factually disconnected from the plotted data
+        passed: true
+        comment: Risk Zone (145-165) now sits exactly where the price series trades
+          post-recession, making the threshold factually grounded in the plotted data
     code_quality:
       score: 10
       max: 10
@@ -190,26 +199,31 @@ review:
         name: KISS Structure
         score: 3
         max: 3
+        passed: true
         comment: Imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: All imported names are used
+        passed: true
+        comment: All imported names are used, including the newly added geom_text
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
+        passed: true
         comment: Clean, appropriately concise, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
+        passed: true
         comment: Saves plot-{THEME}.png at correct dims via plot.save()
     library_mastery:
       score: 7
@@ -219,19 +233,22 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
+        passed: true
         comment: Layered geoms with per-layer data, scale_fill_manual, theme() overrides
           — solid idiomatic plotnine
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        comment: Per-layer data override (ggplot() + geom_rect(data=spans) + geom_line(data=df))
-          leverages plotnine's grammar-of-graphics layering
-  verdict: REJECTED
+        passed: true
+        comment: Per-layer data override (ggplot() + geom_rect(data=spans) + geom_line(data=df)
+          + geom_text(data=annotation)) leverages plotnine's grammar-of-graphics layering
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
