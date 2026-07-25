@@ -16,6 +16,7 @@ const t = window.ANYPLOT_TOKENS;
 // avoids that split.
 const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const frequencyPct = [8, 11, 9, 6, 15, 19, 24, 8];
+const dominantDirection = "W";
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -31,7 +32,10 @@ new Chart(canvas, {
         data: frequencyPct,
         backgroundColor: t.palette,
         borderColor: t.pageBg,
-        borderWidth: 2,
+        // Scriptable width: give the prevailing direction (W, 24%) a heavier
+        // outline so the "prevailing wind" takeaway reads at a glance.
+        borderWidth: (ctx) =>
+          directions[ctx.dataIndex] === dominantDirection ? 5 : 2,
       },
     ],
   },
@@ -40,12 +44,21 @@ new Chart(canvas, {
     maintainAspectRatio: false,
     animation: false,
     startAngle: 0,
+    layout: { padding: 24 },
     plugins: {
       title: {
         display: true,
         text: "rose-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22 },
+        font: { size: 24, weight: "bold" },
+        padding: { bottom: 4 },
+      },
+      subtitle: {
+        display: true,
+        text: "Prevailing wind: W (24%) → SW (19%) → S (15%)",
+        color: t.inkSoft,
+        font: { size: 15, style: "italic" },
+        padding: { bottom: 16 },
       },
       legend: { display: false },
     },
@@ -58,12 +71,16 @@ new Chart(canvas, {
           font: { size: 14 },
           callback: (value) => `${value}%`,
         },
-        grid: { color: t.grid },
-        angleLines: { color: t.grid },
+        grid: { color: t.grid, lineWidth: 1, circular: true },
+        angleLines: { color: t.grid, lineWidth: 1 },
         pointLabels: {
           display: true,
           color: t.ink,
-          font: { size: 16 },
+          font: (ctx) => ({
+            size: 16,
+            weight:
+              directions[ctx.index] === dominantDirection ? "bold" : "normal",
+          }),
         },
       },
     },
