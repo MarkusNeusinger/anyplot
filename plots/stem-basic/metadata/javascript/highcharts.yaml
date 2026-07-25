@@ -1,0 +1,257 @@
+library: highcharts
+language: javascript
+specification_id: stem-basic
+created: '2026-07-25T17:47:13Z'
+updated: '2026-07-25T18:04:10Z'
+generated_by: claude-sonnet
+workflow_run: 30168162571
+issue: 972
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Peak sample now carries a `dataLabels` callout ("Peak"), giving the eye a clear
+    entry point into the decay story that attempt 1 lacked
+  - '`negativeColor: t.div[2]` splits every stem/marker by sign using the Imprint
+    diverging colormap''s endpoints (green above zero, blue below) — a distinctive
+    core-Highcharts zone feature that adds real data storytelling (positive vs. negative
+    lobes of the impulse response) without a legend, since position relative to the
+    zero baseline already disambiguates sign'
+  - Marker radius raised 6→8 CSS px, appropriately prominent for this sparse 40-point
+    dataset per the data-density heuristic
+  - 'xAxis padding tightened (`min: -0.5, max: sampleCount - 0.5`) removes the previous
+    half-sample-width empty margins on both ends'
+  - 'Correct core-only stem construction: thin zero-padded column series (`pointWidth:
+    3`, no group/point padding) paired with a scatter marker series, using only the
+    core Highcharts bundle (no `highcharts-more`/modules)'
+  - First series (positive lobe) is exactly Imprint brand green `#009E73`, identical
+    color between light and dark renders — only chrome flips
+  - Explicit `yAxis.plotLines` zero-baseline rule anchors the stems
+  - Realistic, neutral dataset (damped discrete-time impulse response, 40 samples)
+    is a textbook signal-processing example within the spec's 10-100 point range
+  - 'Deterministic data generation, clean imports, `animation: false` on both chart
+    and series levels, no fake interactivity'
+  weaknesses:
+  - 'DE-02 still generic: no explicit spine/frame customization beyond the default
+    axis lines (e.g., no further whitespace/frame refinement) — mostly unaddressed
+    since attempt 1'
+  - LM-01 remains workaround-only at its core (column+scatter combo for the missing
+    native stem/lollipop series) — acceptable given core-bundle constraints, but there
+    is no additional idiomatic Highcharts touch (e.g., `dataLabels` verticalAlign
+    tuning, `xAxis.crosshair`) beyond what's already present
+  - 'Header block is missing the mandatory `// License: Highcharts — commercial license,
+    free for non-commercial use (highcharts.com/license)` line that was present in
+    the original implementation commit — it appears to have been dropped by the automated
+    header/quality-score rewrite between commits, not by this fix; flagging so the
+    pipeline step that rewrites the header can be checked, since repair on this PR
+    cannot fix a metadata-update step from a later run'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark-ink title "stem-basic · javascript · highcharts · anyplot.ai" centered at top, clearly legible. Axis titles "Sample Index (n)" and "Amplitude" in medium-gray ink, tick labels (0-40 on x, -0.8 to 1.2 on y) small and gray - all clearly readable. Subtle horizontal-only gridlines; a thin y=0 baseline rule. "Peak" annotation in dark ink directly above the first (n=0) marker, fully legible against the light background.
+      Data: Two-tone sign-split stems - Imprint brand green (#009E73) for positive-amplitude samples (n=0-3, n=11-18, n=25-31, n=39), Imprint diverging blue (t.div[2]) for negative-amplitude samples (n=4-10, n=19-24, n=32-38) - tracing a damped oscillating impulse response (large spike at n=0, decaying oscillation settling toward 0 by n≈39). Markers are filled circles (radius 8) with a thin page-colored stroke. No legend (correctly omitted; the sign split is self-explanatory relative to the zero baseline).
+      Legibility verdict: PASS - all text (title, axis titles, tick labels, "Peak" label) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same title now rendered in off-white ink, fully legible. Axis titles/tick labels in light gray, clearly visible. Gridlines faint but present; zero-baseline rule visible in light ink. "Peak" annotation in light ink above the first marker, clearly legible against the dark background - no dark-on-dark failure.
+      Data: Identical two-tone green/blue sign split and marker styling as the light render, confirming only chrome (background, text, grid) flipped - data colors are unchanged between themes.
+      Legibility verdict: PASS - all text is clearly readable against the dark background; no dark-on-dark failures anywhere.
+
+    Both renders pass the theme-readability checklist.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text (title, axis titles, tick labels, Peak callout) explicitly
+          sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between Peak label, axis titles, ticks, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radius raised to 8px, appropriately prominent for 40 sparse
+          points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green vs. diverging blue, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: xAxis padding tightened, no overflow or clipping, good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (Sample Index (n), Amplitude)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; negative lobe uses Imprint imprint_div endpoint;
+          theme-correct backgrounds both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Sign-based diverging color split plus peak callout show intentional
+          polish beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid and generous whitespace, but still no explicit spine/frame
+          refinement beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak dataLabel and green/blue sign split now actively guide the eye
+          into the decay story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine stem plot: baseline-to-value stems with tip markers'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin stems, clear circular markers, y=0 baseline, consistent sizing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = sample index, y = amplitude, all 40 samples shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend correctly omitted for
+          single logical series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers stem/marker/baseline mechanics well; unchanged from attempt
+          1
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Damped discrete-time impulse response is a realistic, neutral signal-processing
+          example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 40 samples within spec's 10-100 range, amplitude scale sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic formula-based generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only window.ANYPLOT_TOKENS and Highcharts global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled on chart and series
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic core-only column+scatter combo, the documented workaround
+          for the missing native stem series
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: negativeColor zone-based sign coloring plus a dataLabels callout
+          are genuine core-Highcharts-distinctive features, addressing attempt 1's
+          weakness
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
