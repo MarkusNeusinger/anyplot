@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 step-basic: Basic Step Plot
-Library: plotly 6.9.0 | Python 3.13.12
-Quality: 89/100 | Updated: 2026-07-25
+Library: plotly 6.9.0 | Python 3.13.14
+Quality: 87/100 | Created: 2026-07-25
 """
 
 import os
