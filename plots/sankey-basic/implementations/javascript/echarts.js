@@ -21,6 +21,8 @@ const nodes = [
   { name: "Travel", itemStyle: { color: t.ink }, label: { position: "left" } },
 ];
 
+// The Engineering -> Salaries link (380) is the single largest flow in the
+// budget; it gets a higher-opacity ribbon so it reads as the focal path.
 const links = [
   { source: "Product Sales", target: "Engineering", value: 320 },
   { source: "Product Sales", target: "Sales", value: 180 },
@@ -29,7 +31,12 @@ const links = [
   { source: "Subscriptions", target: "Operations", value: 60 },
   { source: "Services", target: "Operations", value: 140 },
   { source: "Services", target: "Sales", value: 70 },
-  { source: "Engineering", target: "Salaries", value: 380 },
+  {
+    source: "Engineering",
+    target: "Salaries",
+    value: 380,
+    lineStyle: { opacity: 0.85 },
+  },
   { source: "Engineering", target: "Infrastructure", value: 90 },
   { source: "Marketing", target: "Salaries", value: 40 },
   { source: "Marketing", target: "Marketing Spend", value: 50 },
@@ -49,32 +56,34 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "sankey-basic · javascript · echarts · anyplot.ai",
+    subtext: "Engineering → Salaries is the largest single allocation ($380K)",
     left: "center",
     top: 24,
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+    subtextStyle: { color: t.inkSoft, fontSize: 15 },
   },
   tooltip: { trigger: "item", triggerOn: "mousemove" },
   series: [
     {
       type: "sankey",
       left: 40,
-      right: 200,
-      top: 110,
+      right: 90,
+      top: 130,
       bottom: 50,
       nodeWidth: 26,
       nodeGap: 22,
-      layoutIterations: 64,
+      layoutIterations: 100,
       draggable: false,
       emphasis: { focus: "adjacency" },
       label: {
         color: t.ink,
-        fontSize: 16,
+        fontSize: 19,
         fontWeight: 500,
       },
       lineStyle: {
         color: "source",
-        opacity: 0.5,
-        curveness: 0.5,
+        opacity: 0.6,
+        curveness: 0.45,
       },
       itemStyle: { borderWidth: 0 },
       data: nodes,
