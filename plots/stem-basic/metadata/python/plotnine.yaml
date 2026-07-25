@@ -2,45 +2,54 @@ library: plotnine
 language: python
 specification_id: stem-basic
 created: '2026-04-30T15:18:15Z'
-updated: '2026-04-30T15:34:36Z'
+updated: '2026-07-25T17:47:52Z'
 generated_by: claude-sonnet
-workflow_run: 25172265081
+workflow_run: 30167832613
 issue: 972
-python_version: 3.13.13
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: all stem plot features (stems, markers, baseline) implemented
-    correctly using plotnine''s grammar of graphics (geom_segment + geom_point + geom_hline)'
-  - 'Excellent theme adaptation: both light and dark renders are fully legible with
-    correct backgrounds (#FAF8F1 / #1A1A17), text colors, and adaptive grid tokens'
-  - 'Compelling realistic data: damped sinusoidal signal is a natural fit for a stem
-    plot and demonstrates positive/negative values, oscillation, and amplitude decay'
-  - 'Refined grid design: y-axis-only grid at 10% opacity with x-axis grid suppressed
-    — an intentional and excellent visual choice'
+  - 'Title correctly includes the mandated language token now: "stem-basic · python
+    · plotnine · anyplot.ai" (fixes the SC-04 rejection from attempt 1).'
+  - Redundant left axis_line spine override removed as suggested — cleaner, more minimal
+    chrome without losing the y=0 baseline anchor from geom_hline.
+  - Idiomatic grammar-of-graphics stem construction via geom_segment (stems) + geom_point
+    (markers) + geom_hline (baseline), the correct approach since plotnine has no
+    native stem geom.
+  - Decay-envelope reference curve (dashed, alpha=0.5) adds genuine data-storytelling
+    value by making the amplitude decay visually explicit without competing with the
+    brand-green data series.
+  - 'Both renders are fully theme-correct: correct backgrounds, correct ink tokens,
+    identical brand-green (#009E73) data color and identical data positions in both
+    themes.'
+  - 'Clean, deterministic, single-series code: np.random.seed(42), no unused imports,
+    no fake interactivity, consistent marker/stem sizing across all 30 points.'
   weaknesses:
-  - Y-axis label 'Amplitude' lacks units/context — 'Amplitude (normalized)' would
-    be more informative and score full points on VQ-06
-  - No visual storytelling or hierarchy — the decay pattern in the damped sinusoidal
-    signal is not visually emphasized through size variation, alpha, or a reference
-    envelope curve, leaving DE-03 at default level
+  - Design excellence is solid but still fairly restrained — a subtle peak/decay-rate
+    annotation or slightly more distinctive typography would push DE-01/DE-03 further.
+  - Library mastery is good (layered geom composition) but doesn't yet showcase a
+    feature that's hard to replicate in another library — consider e.g. faceting a
+    second decay-rate comparison or a plotnine-specific scale/coord trick.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "stem-basic · plotnine · anyplot.ai" in dark #1A1A17, clearly readable. X-axis label "Sample Index" and y-axis label "Amplitude" in dark ink. Tick labels in muted #4A4A44. All text readable against light background.
-      Data: 30 stems in brand green #009E73 — thin vertical lines from y=0 baseline to filled circle markers. Baseline at y=0 as a darker horizontal reference line. Y-axis-only subtle grid at ~10% opacity. No legend (single series).
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Title "stem-basic · python · plotnine · anyplot.ai" and axis titles ("Sample Index" / "Amplitude (normalized)") in dark ink (#1A1A17); tick labels in soft dark gray (#4A4A44). All clearly legible.
+      Data: 30 brand-green (#009E73) stems (vertical segments from y=0) topped with filled circle markers, tracing a damped cosine signal. A dashed gray reference envelope (±exp(-t/12)) makes the amplitude decay visually explicit. Subtle horizontal-only gridlines and a solid y=0 baseline frame the data.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light #F0EFE8, clearly readable against dark background. Axis labels in light ink. Tick labels in muted #B8B7B0. No dark-on-dark failures — all text is light-colored and fully legible. Axis lines in muted light gray.
-      Data: Colors identical to light render — stems and markers remain #009E73. Baseline visible in lighter gray tone. Same data representation as light render.
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Same title and axis titles now in light off-white ink (#F0EFE8), tick labels in light gray (#B8B7B0). All clearly legible against the dark background — no dark-on-dark issues.
+      Data: The 30 green stems and markers are pixel-identical in color and position to the light render — only chrome (background, text, grid, baseline, envelope-line gray) flipped, as required.
       Legibility verdict: PASS
+
+    Process note: the plot_images/plot-light.png and plot-dark.png artifacts initially staged for this review still showed the pre-repair title ("stem-basic · plotnine · anyplot.ai", missing the "python" token) even though the checked-out implementation source already contained the fix from commit a8d598688. I independently re-executed the current plots/stem-basic/implementations/python/plotnine.py (both ANYPLOT_THEME=light and =dark) in an isolated venv (plotnine/pandas/numpy) and confirmed the freshly rendered output matches the descriptions above — title fix present and correct, data/layout otherwise identical to the staged artifacts. This review's scoring is based on that verified, correct output. Flagging as a pipeline observation (stale render artifact for this attempt), not a code weakness — no action needed from the repair loop.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -48,75 +57,71 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt — all explicitly set
-          and readable in both themes
+        comment: Explicit font sizes throughout; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 30 well-spaced stems, no text collisions
+        comment: No collisions between text, stems, markers, or envelope
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stems (size=0.9) and markers (size=4) appropriately sized for 30
-          points; baseline clearly visible
+        comment: Markers/stems prominent and appropriately sized for 30 sparse points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single brand green #009E73, CVD-safe, good contrast in both themes'
+        comment: Single categorical data color, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas, balanced margins, plot fills canvas well
+        comment: 3200x1800 canvas, no clipping, good proportions
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis 'Amplitude' is descriptive but lacks units/context; 'Amplitude
-          (normalized)' would be better
+        passed: true
+        comment: Descriptive axis labels with units (normalized amplitude)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds #FAF8F1 (light) and #1A1A17
-          (dark); theme chrome adapts correctly'
+        comment: 'First series #009E73; correct light/dark backgrounds; identical
+          data color across themes'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Clean, well-configured with brand color and baseline; above generic
-          defaults but not publication-ready
+        comment: Restrained minimal theme with decay-envelope overlay; polished but
+          not maximal
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Redundant axis_line spine removed this attempt; subtle grid, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Y-axis-only grid at 10% opacity is excellent; x-axis grid suppressed;
-          theme_minimal removes top/right spines
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Data displayed but decay pattern not visually emphasized; no visual
-          hierarchy or storytelling
+        comment: Envelope curve gives a clear visual narrative of the amplitude decay
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stem plot via geom_segment + geom_point + geom_hline
+        comment: Correct stem-plot grammar via segment+point+hline
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thin stems, visible circular markers, y=0 baseline, consistent sizing
+        comment: Thin stems from baseline, visible markers, consistent sizing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sample index on x, amplitude on y; all 30 points visible
+        comment: x=sample index, y=amplitude, all 30 points visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'stem-basic · plotnine · anyplot.ai' correct; no legend appropriate
-          for single series
+        comment: Title now correctly reads 'stem-basic · python · plotnine · anyplot.ai';
+          single series, no legend needed
     data_quality:
       score: 15
       max: 15
@@ -155,22 +160,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows positive AND negative values, oscillation, and decay envelope
-          — all stem plot characteristics
+        comment: Positive/negative stems, varying amplitude, decay envelope all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Damped sinusoidal signal is a textbook signal processing example;
-          neutral and scientific
+        comment: Plausible damped-sinusoid signal-processing example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 samples, normalized amplitude range, physically plausible decay
-          constant and frequency
+        comment: Normalized amplitude -1..1, 30 samples fits spec's 10-100 point range
     code_quality:
       score: 10
       max: 10
@@ -180,50 +182,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save; no functions or classes
+        comment: Imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 11 plotnine imports are used
+        comment: Only used plotnine/numpy/pandas/os imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, current API throughout
+        comment: Saves plot-{THEME}.png via plot.save(), current plotnine API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Fully idiomatic grammar of graphics: layered geoms, aes() mappings,
-          theme() customization'
+        comment: Correct ggplot-grammar stem construction via layered geoms
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Composing stem plot from primitive geoms (geom_segment + geom_point
-          + geom_hline) demonstrates grammar-of-graphics thinking; somewhat library-specific
-          but not exceptional
+        comment: Layered envelope-curve composition goes beyond a generic single-geom
+          plot
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -233,4 +233,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
