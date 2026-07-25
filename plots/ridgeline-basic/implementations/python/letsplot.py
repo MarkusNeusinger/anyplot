@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-25
@@ -18,6 +18,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.2)" if THEME == "light" else "rgba(240,239,232,0.2)"
 
 # Data - Monthly temperature distributions (realistic weather data)
 np.random.seed(42)
@@ -66,15 +67,23 @@ df = pd.DataFrame(data)
 # Convert month to categorical with correct order (reversed for ridgeline bottom-to-top)
 df["Month"] = pd.Categorical(df["Month"], categories=months[::-1], ordered=True)
 
-# Imprint sequential gradient per month (single-polarity: chronological Jan -> Dec),
-# interpolated as discrete per-group fills since geom_area_ridges renders one solid
-# fill per ridge (a continuous scale collapses to a single blended color here).
-n_months = len(months)
+# Imprint imprint_seq gradient (brand green -> blue), keyed by each month's mean
+# temperature rather than calendar order: single-polarity intensity encoding, per
+# the style guide's "Continuous Data" rule, so hue reads as a temperature story
+# (coldest months green, warmest months blue) instead of an arbitrary sequence.
+# Intentional exception to the 8-slot categorical palette: this chart type needs
+# all 12 groups visible at once, so small multiples (the 9+ series guidance) would
+# defeat the point of a ridgeline; every group still stays within the Imprint family.
+means = [temp_params[month][0] for month in months]
+mean_lo, mean_hi = min(means), max(means)
 month_colors = {
     month: "#{:02X}{:02X}{:02X}".format(
-        *(round(a + (b - a) * i / (n_months - 1)) for a, b in zip((0x00, 0x9E, 0x73), (0x44, 0x67, 0xA3), strict=True))
+        *(
+            round(a + (b - a) * (temp_params[month][0] - mean_lo) / (mean_hi - mean_lo))
+            for a, b in zip((0x00, 0x9E, 0x73), (0x44, 0x67, 0xA3), strict=True)
+        )
     )
-    for i, month in enumerate(months)
+    for month in months
 }
 
 plot = (
@@ -100,9 +109,10 @@ plot = (
         axis_text_y=element_text(size=10, color=INK_SOFT),  # noqa: F405
         axis_line=element_line(color=INK_SOFT),  # noqa: F405
         plot_title=element_text(size=13, color=INK),  # noqa: F405
-        legend_position="none",  # Y-axis labels are sufficient; fill is chronological, not a separate metric
+        legend_position="none",  # Y-axis labels are sufficient; fill encodes temperature intensity
+        panel_border=element_blank(),  # noqa: F405 — L-shaped frame via axis_line only, no full rectangle
         panel_grid_major_y=element_blank(),  # noqa: F405
-        panel_grid_major_x=element_line(color=INK, size=0.3),  # noqa: F405
+        panel_grid_major_x=element_line(color=RULE, size=0.5),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
     )
     + ggsize(800, 450)  # noqa: F405
