@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-07-25
@@ -15,6 +15,7 @@ from plotnine import (
     element_line,
     element_rect,
     element_text,
+    geom_line,
     geom_ribbon,
     geom_text,
     ggplot,
@@ -40,18 +41,18 @@ np.random.seed(42)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 temp_params = {
-    "Jan": (2, 4),
-    "Feb": (4, 4),
+    "Jan": (2, 3),
+    "Feb": (4, 3),
     "Mar": (8, 5),
     "Apr": (13, 4),
     "May": (18, 4),
     "Jun": (22, 3),
     "Jul": (25, 3),
     "Aug": (24, 3),
-    "Sep": (20, 4),
+    "Sep": (20, 4.5),
     "Oct": (14, 4),
     "Nov": (8, 4),
-    "Dec": (4, 4),
+    "Dec": (4, 3),
 }
 
 # Generate raw samples for KDE
@@ -68,6 +69,9 @@ df = pd.DataFrame(data)
 x_range = np.linspace(-10, 40, 300)
 ridge_scale = 2.5
 
+# Trim each month's near-zero-density tails before building ridge_df so the
+# ribbon fill (and the top-edge line drawn separately below) only cover the
+# visible bump, instead of a sliver extending across the full x_range.
 density_data = []
 for i, month in enumerate(months):
     month_data = df[df["month"] == month]["temp"]
@@ -75,7 +79,11 @@ for i, month in enumerate(months):
     density = kde(x_range)
     density_scaled = density / density.max() * ridge_scale
 
-    for x, d in zip(x_range, density_scaled, strict=True):
+    visible = density_scaled > 0.05 * ridge_scale
+    x_visible = x_range[visible]
+    density_visible = density_scaled[visible]
+
+    for x, d in zip(x_visible, density_visible, strict=True):
         density_data.append(
             {"x": x, "ymin": float(i), "ymax": float(i) + d, "group": month, "month_idx": float(i) / 11.0}
         )
@@ -93,7 +101,11 @@ peak_df = pd.DataFrame([{"x": 34.5, "y": float(jul_idx) + 0.5, "label": "Peak: J
 # a categorical palette; this keeps January anchored at #009E73.
 plot = (
     ggplot(ridge_df, aes(x="x", ymin="ymin", ymax="ymax", fill="month_idx", group="group"))
-    + geom_ribbon(alpha=0.85, color=INK_SOFT, size=0.5)
+    # No ribbon outline: the ymin edge would stroke a flat line across each
+    # ridge's full visible x-span, cutting through neighboring ridges. Instead
+    # only the top density curve (ymax) is stroked, drawn as a separate line.
+    + geom_ribbon(alpha=0.85, color=None)
+    + geom_line(aes(y="ymax"), color=INK_SOFT, size=0.5)
     + scale_fill_gradient(low="#009E73", high="#4467A3")
     # geom_text from a separate dataframe anchored to July's y-band (showcases multi-layer grammar)
     + geom_text(
