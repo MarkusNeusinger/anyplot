@@ -1,0 +1,248 @@
+library: ggplot2
+language: r
+specification_id: span-basic
+created: '2026-07-25T14:31:21Z'
+updated: '2026-07-25T14:45:18Z'
+generated_by: claude-sonnet
+workflow_run: 30161632440
+issue: 980
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Horizontal span (baseline_zone) now added alongside the vertical recession spans,
+    fully demonstrating both values of the spec's 'direction' field — directly resolves
+    the attempt-1 weakness about only showing the vertical case
+  - Gridlines now use mix_color(PAGE_BG, INK, 0.18) to blend a faint tint instead
+    of full-opacity INK, matching the style guide's subtle 15-25%-opacity target —
+    a genuine, theme-adaptive ggplot2-specific fix since panel.grid has no alpha channel
+  - In-span text labels (recession year labels '2001'/'2008' plus the 'Below baseline'
+    annotation) add direct-label storytelling without needing a legend, resolving
+    the attempt-1 note about missing in-span labels
+  - 'Correct semantic-anchor usage: theme-adaptive neutral for the recession reference
+    bands, Imprint amber for the below-baseline warning/caution zone — exactly matches
+    the style guide''s semantic-anchor guidance rather than borrowing categorical
+    palette slots'
+  - Both themes remain fully legible with data colors (green line, gray/amber bands)
+    unchanged across light/dark; canvas gate passed with no clipping
+  weaknesses:
+  - Library Mastery is still fairly generic overall — the mix_color grid-blending
+    workaround is a nice ggplot2-specific touch, but the core geom_rect/geom_line/geom_text
+    layering could be replicated with minor syntax changes in almost any grammar-of-graphics
+    library
+  - Tick label size (8pt) sits at the style-guide floor default — a touch larger would
+    strengthen legibility at mobile widths without crowding the axis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: dark-ink title "Market Index · span-basic · r · ggplot2 · anyplot.ai" (~55% of plot width), dark axis titles ("Year", "Market Index Value"), softer-gray tick labels. Horizontal gridlines only, now a faint blended tint (mix of ink and page background) rather than full-opacity ink — subtle and non-competing. Ticks removed, top/right spines removed. All chrome elements clearly readable.
+      Data: single green (#009E73) line tracing a monthly market index from 2000-2013; two gray semi-transparent vertical bands (alpha 0.25, full plot height) mark the 2001 and 2007-2009 recessions, each labeled directly above the band ("2001", "2008") in soft-ink text; a semi-transparent amber horizontal band spans the full x-range from the plot floor up to the y=100 baseline, labeled "Below baseline" in the lower-right in soft-ink text. Where the amber and gray bands overlap, the combined tint reads slightly darker/olive — an intentional, legible layering artifact, not a defect.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: title, axis titles, and tick labels rendered in light ink / soft-gray tones, fully legible against the dark surface. No dark-on-dark failures. Gridlines present as a faint light tint (same blending technique, flipped direction), ticks/spines removed same as light theme.
+      Data: same green (#009E73) line, same-positioned gray recession bands, and same amber baseline zone as the light render — data colors unchanged between themes, only chrome flipped. The "2001"/"2008" and "Below baseline" labels remain legible against the band tints in this theme too.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; tick labels
+          (8pt) sit at the style-guide floor, slightly small for mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, axis text, in-span labels, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Single continuous line appropriate for dense monthly series; span
+          fills use appropriate 0.2-0.25 alpha
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast, CVD-safe, no red/green-as-sole-signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, title ~55% width, no overflow or clipping, balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Year' / 'Market Index Value' labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct neutral/amber semantic anchors for
+          reference and warning bands, theme-correct backgrounds in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional semantic color hierarchy (data green, neutral reference
+          bands, amber warning zone) — clearly above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid now blended to a subtle tint (fixed from attempt 1), spines/ticks
+          removed, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Two-layered narrative — recession bands correlated with downturns,
+          plus a directly labeled 'Below baseline' warning zone — clear, immediate
+          insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Matches spec's span-plot definition
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Both 'vertical' (recession spans) and 'horizontal' (baseline threshold
+          zone) directions from the spec are now demonstrated
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x, index value on y, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; no legend needed given
+          direct in-span labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Now covers vertical recession spans, horizontal baseline zone, and
+          optional in-span labels — full feature coverage per spec notes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral market index scenario with generic recession periods
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Index values ~94-135 around a sensible baseline of 100
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script; the small mix_color helper is a color-math utility,
+          not a plot-building abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg loaded
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately simple, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png to plot-{THEME}.png
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_rect() + inherit.aes = FALSE, annotate(), and geom_text() layered
+          idiomatically for the span pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: The mix_color grid-tint workaround is a genuine ggplot2-specific
+          fix for the missing per-element grid alpha, but the rest of the plot remains
+          generic layer composition
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
+  - theme-adaptive

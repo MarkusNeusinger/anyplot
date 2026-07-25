@@ -1,0 +1,257 @@
+library: chartjs
+language: javascript
+specification_id: span-basic
+created: '2026-07-25T14:37:10Z'
+updated: '2026-07-25T14:54:14Z'
+generated_by: claude-sonnet
+workflow_run: 30161762204
+issue: 980
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Both span directions from the spec — vertical time-period spans AND a horizontal
+    value-threshold span — are now demonstrated in a single coherent narrative, directly
+    addressing the attempt-1 gap (SC-02/DQ-01).
+  - 'Differentiated styling: solid edge lines for the vertical crisis spans vs. dashed
+    amber edges for the horizontal risk-zone band gives each span type its own visual
+    identity — a genuine refinement over the plain fills in attempt 1.'
+  - 'Deliberate compositional choice: the horizontal risk-zone band''s upper bound
+    (95) sits just above the deepest crisis dip, so the line visibly crosses into
+    the threshold zone during the Financial Crisis, tying the two span directions
+    into one narrative.'
+  - 'Correct Imprint semantic-exception usage: brand green (#009E73) for the primary
+    line, matte red (palette position 5, #AE3030) for the ''bad'' crisis periods,
+    amber for the risk-threshold warning band — textbook semantic mappings, not arbitrary
+    colors.'
+  - Title grown from 22px to 27px (title text is under the 67-char scale-down threshold)
+    improves the visual anchor per attempt-1 feedback, without approaching the overflow
+    ceiling.
+  - 'Theme-adaptive chrome remains fully correct in both renders; clean, deterministic,
+    single-pass code (fixed-seed LCG, KISS structure, animation: false, correct mount-node
+    contract).'
+  weaknesses:
+  - Title still occupies only ~45% of canvas width even at the new 27px size — some
+    headroom remains toward the ~50-70% sweet spot for a descriptive-prefixed title,
+    though this is a minor soft-check issue with no hard threshold.
+  - The horizontal and vertical spans both use the same core plugin technique (fillRect
+    + ctx text in beforeDatasetsDraw); differentiating them by dash style is a nice
+    touch but it's one technique applied twice rather than a genuinely new library-distinctive
+    feature, keeping Library Mastery just short of full marks.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white — correct.
+      Chrome: Bold dark title "Equity Index · span-basic · javascript · chartjs · anyplot.ai" at top-center, now rendered at the larger 27px size. X-axis title "Date", Y-axis title "Index Value (Jan 2006 = 100)", subtle horizontal-only gridlines. All text — title, axis titles, ticks, rotated in-band labels ("Financial Crisis", "Debt-Ceiling Crisis"), and the "Elevated Risk Zone (Index < 95)" label — is clearly readable against the light background. No dark-on-light or missing text.
+      Data: Single teal-green (#009E73) line tracing a monthly equity index Jan '06-Dec '12. Two vertical reddish-pink spans (matte red #AE3030 at low alpha, solid edge lines) mark the Financial Crisis (2008-2009) and Debt-Ceiling Crisis (2011); a new horizontal amber band with dashed edges marks an "Elevated Risk Zone" (Index < 95) near the bottom of the chart. The line visibly dips into the amber zone during the Financial Crisis, connecting the two span types narratively.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black — correct.
+      Chrome: Same title/axis titles rendered in light off-white ink, tick labels in light gray, gridlines faint but visible. All labels including the rotated crisis-period labels and the "Elevated Risk Zone" label are light-colored and clearly legible against the dark surface — no dark-on-dark failures observed.
+      Data: The data line is confirmed identical in color and shape to the light render (#009E73, same values). The vertical crisis-span fill shifts to a deep maroon appropriate for the dark surface; the horizontal risk-zone band shifts to a darker olive/amber tone, both still clearly distinguishable from the background and from each other. Overlap regions (where vertical and horizontal spans intersect) blend to a distinct darker tone without becoming illegible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; title grown
+          to 27px per attempt-1 feedback but still ~45% of canvas width, short of
+          the 50-70% ideal for a descriptive-prefixed title
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between labels, line, or legend text in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3px line weight appropriate for the ~84-point monthly series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Line shape + solid/dashed edge lines distinguish span types beyond
+          hue alone; good contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills the large majority of the canvas, balanced margins,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (Index Value, Date)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green primary series, Imprint palette position 5 (#AE3030)
+          for crisis spans, amber semantic anchor for risk band; theme-correct backgrounds
+          in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color use plus differentiated solid/dashed edge treatment
+          is clearly above a configured default, short of full publication polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Edge lines added at span boundaries as requested in attempt-1 feedback;
+          subtle y-only grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Two-layer narrative: time-period crisis shading plus a value-threshold
+          band the line visibly crosses during the crisis, connecting both dimensions'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Line chart with shaded span regions, correct chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Both 'vertical' and 'horizontal' direction values from the spec are
+          now demonstrated
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dates on x-axis, index value on y-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format with descriptive prefix; legend intentionally
+          hidden for single-series line, span labels serve as inline legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Vertical spans (two, different durations) and a horizontal span are
+          all shown with edge lines and labels
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Historically-grounded equity index with plausible 2008-2009 and 2011
+          drawdowns, neutral finance topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Index values and drawdown magnitudes are realistic for the depicted
+          crises
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single-pass script; plugin object and small helpers are idiomatic
+          for the Chart.js/browser environment
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (20260725)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, no manual canvas
+          sizing'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: beforeDatasetsDraw plugin hook is the correct, recommended Chart.js
+          extension pattern for annotations Chart.js lacks natively
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom plugin registration + canvas-context drawing (fillRect, dashed
+          strokes, rotated text) is Chart.js-specific, but the same core technique
+          is reused for both span types rather than showcasing a second distinct capability
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
