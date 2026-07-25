@@ -1,11 +1,12 @@
 """ anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-04-30
+Quality: pending | Updated: 2026-07-25
 """
 
 import os
 
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -19,9 +20,11 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-BRAND = "#009E73"  # Okabe-Ito position 1 — always first series
-SPAN_RECESSION = "#C475FD"  # Okabe-Ito position 2
-SPAN_TARGET = "#4467A3"  # Okabe-Ito position 3
+# Imprint palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
+SPAN_RECESSION = IMPRINT_PALETTE[4]  # matte red — semantic anchor for a "bad" economic period
+SPAN_TARGET = IMPRINT_PALETTE[2]  # blue — neutral threshold band
 
 sns.set_theme(
     style="ticks",
@@ -34,49 +37,64 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Data - Monthly sales revenue with recession period and target threshold
+# Data - monthly sales revenue with the 2007-2009 recession and a target sales zone
 np.random.seed(42)
-months = pd.date_range(start="2006-01", periods=60, freq="ME")
-base_trend = np.linspace(100, 150, 60)
-recession_effect = np.where((months >= "2008-01") & (months <= "2009-12"), -30 * np.sin(np.linspace(0, np.pi, 60)), 0)
-sales = base_trend + recession_effect + np.random.randn(60) * 8
+months = pd.date_range(start="2005-01", periods=84, freq="ME")
+recession_start, recession_end = pd.Timestamp("2007-12-01"), pd.Timestamp("2009-06-30")
+in_recession = (months >= recession_start) & (months <= recession_end)
+base_trend = np.linspace(95, 155, 84)
+recession_effect = np.zeros(84)
+recession_effect[in_recession] = -32 * np.sin(np.linspace(0, np.pi, in_recession.sum()))
+sales = base_trend + recession_effect + np.random.randn(84) * 7
 df = pd.DataFrame({"Month": months, "Sales": sales})
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot — see default-style-guide.md "Visual Sizing Defaults" for the canvas + sizing values
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Vertical span — recession period (2008–2009)
-ax.axvspan(
-    pd.Timestamp("2008-01-01"),
-    pd.Timestamp("2009-12-31"),
-    alpha=0.25,
+# Vertical span — recession period, dashed edges mark the boundary precisely
+ax.axvspan(recession_start, recession_end, alpha=0.22, color=SPAN_RECESSION, zorder=0)
+ax.axvline(recession_start, color=SPAN_RECESSION, alpha=0.5, linewidth=1, linestyle="--")
+ax.axvline(recession_end, color=SPAN_RECESSION, alpha=0.5, linewidth=1, linestyle="--")
+
+# Horizontal span — target sales zone
+ax.axhspan(120, 140, alpha=0.16, color=SPAN_TARGET, zorder=0)
+ax.axhline(120, color=SPAN_TARGET, alpha=0.4, linewidth=1, linestyle="--")
+ax.axhline(140, color=SPAN_TARGET, alpha=0.4, linewidth=1, linestyle="--")
+
+# Line — semi-transparent spans keep it visible underneath
+sns.lineplot(data=df, x="Month", y="Sales", ax=ax, linewidth=2.5, color=BRAND)
+
+# Direct in-plot labels replace a legend — keeps the chart uncluttered
+ax.set_xlim(months[0], months[-1])
+y_min, y_max = ax.get_ylim()
+ax.text(
+    recession_start + (recession_end - recession_start) / 2,
+    y_max - 0.05 * (y_max - y_min),
+    "Recession",
+    rotation=90,
+    va="top",
+    ha="center",
+    fontsize=8,
+    fontweight="medium",
     color=SPAN_RECESSION,
-    label="Recession (2008–2009)",
 )
-
-# Horizontal span — target sales zone (120–140)
-ax.axhspan(120, 140, alpha=0.20, color=SPAN_TARGET, label="Target Zone (120–140)")
-
-# Line plot
-sns.lineplot(data=df, x="Month", y="Sales", ax=ax, linewidth=3, color=BRAND)
+ax.text(months[2], 130, "Target Zone", va="center", ha="left", fontsize=8, fontweight="medium", color=SPAN_TARGET)
 
 # Style
-ax.set_title("span-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.set_xlabel("Month", fontsize=20, color=INK)
-ax.set_ylabel("Sales (thousands $)", fontsize=20, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
-ax.legend(fontsize=16, loc="upper left")
+ax.set_title("span-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel("Date", fontsize=10, color=INK)
+ax.set_ylabel("Sales (thousands $)", fontsize=10, color=INK)
+ax.xaxis.set_major_locator(mdates.YearLocator())
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+sns.despine(ax=ax)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.10, right=0.97, top=0.88, bottom=0.14)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
