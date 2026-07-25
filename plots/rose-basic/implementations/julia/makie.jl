@@ -53,7 +53,7 @@ ax = PolarAxis(
     rticks              = 0:20:100,
     rtickformat         = vs -> ["$(round(Int, v)) mm" for v in vs],
     rtickangle          = 13pi / 12,  # Jul–Aug gap — the driest wedges, keeps labels off the tall bars
-    rticklabelsize      = 12,
+    rticklabelsize      = 15,
     rticklabelcolor     = INK_SOFT,
     rgridvisible        = true,
     rgridcolor          = RGBAf(INK.r, INK.g, INK.b, 0.15),
@@ -66,16 +66,29 @@ ax = PolarAxis(
 # Equal-angle wedges, radius proportional to value — filled with `band!`
 # since it (unlike `poly!`) respects the PolarAxis per-vertex transform
 # and traces a true curved arc rather than a straight-edged rectangle.
+# Fill alpha is ramped by value (spec's "varying saturation" option) so the
+# wettest months read as the visual focal point; the peak/trough wedges also
+# get a heavier outline as an explicit callout for the seasonal story.
 theta = range(0, 2pi, length = n_months + 1)[1:n_months]
 half_width = (2pi / n_months) * 0.9 / 2
 n_arc_samples = 40
+rmin, rmax = extrema(rainfall_mm)
+peak_idx, trough_idx = argmax(rainfall_mm), argmin(rainfall_mm)
 
-for (t, rv) in zip(theta, rainfall_mm)
+for (i, (t, rv)) in enumerate(zip(theta, rainfall_mm))
     ts = collect(range(t - half_width, t + half_width, length = n_arc_samples))
+    alpha = 0.55 + 0.45 * (rv - rmin) / (rmax - rmin)
+    wedge_color = RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b, alpha)
     band!(
         ax, ts, zeros(n_arc_samples), fill(rv, n_arc_samples);
-        color = IMPRINT_PALETTE[1],
+        color = wedge_color,
     )
+
+    if i == peak_idx || i == trough_idx
+        outline_theta = vcat(t - half_width, ts, t + half_width)
+        outline_r     = vcat(0.0, fill(rv, n_arc_samples), 0.0)
+        lines!(ax, outline_theta, outline_r; color = INK, linewidth = 2.5)
+    end
 end
 
 # --- Save -------------------------------------------------------------------
