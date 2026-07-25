@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-07-25
@@ -15,44 +15,52 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint palette for source nodes (positions 1-4)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
-SOURCE_RGBA = [
-    "rgba(0, 158, 115, 0.4)",
-    "rgba(196, 117, 253, 0.4)",
-    "rgba(68, 103, 163, 0.4)",
-    "rgba(189, 130, 51, 0.4)",
-]
+# Imprint palette keyed by source name (canonical order, position 1 = Coal)
+SOURCE_COLOR = {"Coal": "#009E73", "Natural Gas": "#C475FD", "Nuclear": "#4467A3", "Renewables": "#BD8233"}
+SOURCE_RGBA = {
+    "Coal": "rgba(0, 158, 115, 0.4)",
+    "Natural Gas": "rgba(196, 117, 253, 0.4)",
+    "Nuclear": "rgba(68, 103, 163, 0.4)",
+    "Renewables": "rgba(189, 130, 51, 0.4)",
+}
 
-# Data - Energy flow from sources to sectors (TWh)
-sources = ["Coal", "Natural Gas", "Nuclear", "Renewables"]
-targets = ["Residential", "Commercial", "Industrial", "Transportation"]
+# Node order chosen via barycenter heuristic (avg. position of connected flows,
+# weighted by value) to reduce link crossings versus the default/alphabetical order.
+sources = ["Coal", "Nuclear", "Natural Gas", "Renewables"]
+targets = ["Industrial", "Commercial", "Residential", "Transportation"]
 labels = sources + targets
+label_index = {name: i for i, name in enumerate(labels)}
 
 flows = [
-    (0, 4, 2),
-    (0, 5, 8),
-    (0, 6, 25),
-    (1, 4, 22),
-    (1, 5, 18),
-    (1, 6, 15),
-    (1, 7, 3),
-    (2, 4, 12),
-    (2, 5, 10),
-    (2, 6, 8),
-    (3, 4, 18),
-    (3, 5, 4),
-    (3, 6, 2),
-    (3, 7, 10),
+    ("Coal", "Residential", 2),
+    ("Coal", "Commercial", 8),
+    ("Coal", "Industrial", 25),
+    ("Natural Gas", "Residential", 22),
+    ("Natural Gas", "Commercial", 18),
+    ("Natural Gas", "Industrial", 15),
+    ("Natural Gas", "Transportation", 3),
+    ("Nuclear", "Residential", 12),
+    ("Nuclear", "Commercial", 10),
+    ("Nuclear", "Industrial", 8),
+    ("Renewables", "Residential", 18),
+    ("Renewables", "Commercial", 4),
+    ("Renewables", "Industrial", 2),
+    ("Renewables", "Transportation", 10),
 ]
 
-source_indices = [f[0] for f in flows]
-target_indices = [f[1] for f in flows]
+source_indices = [label_index[f[0]] for f in flows]
+target_indices = [label_index[f[1]] for f in flows]
 values = [f[2] for f in flows]
 
 # Source nodes use Imprint colors; target nodes use INK_SOFT
-node_colors = IMPRINT + [INK_SOFT] * 4
-link_colors = [SOURCE_RGBA[s] for s in source_indices]
+node_colors = [SOURCE_COLOR[name] for name in sources] + [INK_SOFT] * len(targets)
+link_colors = [SOURCE_RGBA[f[0]] for f in flows]
+
+# Rank-ordered y hints (per column) nudge the layout toward the low-crossing
+# order above instead of Plotly's default alphabetical placement.
+RANK_Y = [0.001, 0.34, 0.67, 0.999]
+node_x = [0.001] * len(sources) + [0.999] * len(targets)
+node_y = RANK_Y + RANK_Y
 
 # Plot
 fig = go.Figure(
@@ -64,8 +72,17 @@ fig = go.Figure(
                 "line": {"color": PAGE_BG, "width": 1},
                 "label": labels,
                 "color": node_colors,
+                "x": node_x,
+                "y": node_y,
+                "hovertemplate": "%{label}: %{value} TWh<extra></extra>",
             },
-            link={"source": source_indices, "target": target_indices, "value": values, "color": link_colors},
+            link={
+                "source": source_indices,
+                "target": target_indices,
+                "value": values,
+                "color": link_colors,
+                "hovertemplate": "%{source.label} → %{target.label}: %{value} TWh<extra></extra>",
+            },
         )
     ]
 )
