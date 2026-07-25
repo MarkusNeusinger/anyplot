@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-04-30
+Quality: 90/100 | Updated: 2026-07-25
 """
 
 import os
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -18,10 +19,18 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito data colors
-BRAND = "#009E73"  # position 1 — main price line
-SPAN1_COLOR = "#AE3030"  # position 5 — recession vertical span
-SPAN2_COLOR = "#DDCC77"  # imprint amber — threshold horizontal span (warning)
+# Imprint categorical palette — 8 hues, theme-independent, hybrid-v3 sort
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+ANYPLOT_AMBER = "#DDCC77"  # semantic anchor — warning / caution (outside the categorical pool)
+
+BRAND = IMPRINT_PALETTE[0]  # position 1 — always the primary series (price line)
+# Semantic exception (see default-style-guide.md "Color Philosophy"): the recession
+# is a bad/loss period, so it uses the deferred red anchor (position 5) rather than
+# the next ordinal slot; the warning threshold band uses the dedicated amber anchor.
+# Both spans carry an explicit text label ("Recession Period" / "Warning Zone") so
+# the semantic mapping is unambiguous, per the style guide's requirement.
+RECESSION_COLOR = IMPRINT_PALETTE[4]  # matte red — bad/loss semantic anchor
+WARNING_COLOR = ANYPLOT_AMBER  # amber — warning semantic anchor
 
 # Data — stock price with recession dip and warning threshold zone
 np.random.seed(42)
@@ -44,23 +53,22 @@ recession_end = pd.Timestamp("2009-12-01")
 threshold_low = 85
 threshold_high = 95
 
+price_scale = alt.Scale(domain=[60, 130])
+
 # Base line chart
 line = (
     alt.Chart(df)
-    .mark_line(strokeWidth=4, color=BRAND)
+    .mark_line(strokeWidth=3, color=BRAND)
     .encode(
         x=alt.X(
             "Date:T",
             title="Date",
             axis=alt.Axis(
-                labelFontSize=18, titleFontSize=22, tickCount={"interval": "month", "step": 3}, format="%b %Y"
+                labelFontSize=10, titleFontSize=12, tickCount={"interval": "month", "step": 6}, format="%b %Y"
             ),
         ),
         y=alt.Y(
-            "Price:Q",
-            title="Stock Price ($)",
-            scale=alt.Scale(domain=[60, 130]),
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22),
+            "Price:Q", title="Stock Price ($)", scale=price_scale, axis=alt.Axis(labelFontSize=10, titleFontSize=12)
         ),
         tooltip=[alt.Tooltip("Date:T", format="%b %Y"), alt.Tooltip("Price:Q", format=".2f", title="Price ($)")],
     )
@@ -68,10 +76,10 @@ line = (
 
 points = (
     alt.Chart(df)
-    .mark_point(size=150, color=BRAND, filled=True)
+    .mark_point(size=90, color=BRAND, filled=True)
     .encode(
         x="Date:T",
-        y=alt.Y("Price:Q", scale=alt.Scale(domain=[60, 130])),
+        y=alt.Y("Price:Q", scale=price_scale),
         tooltip=[alt.Tooltip("Date:T", format="%b %Y"), alt.Tooltip("Price:Q", format=".2f", title="Price ($)")],
     )
 )
@@ -80,19 +88,19 @@ points = (
 recession_span_data = pd.DataFrame({"start": [recession_start], "end": [recession_end]})
 vertical_span = (
     alt.Chart(recession_span_data)
-    .mark_rect(opacity=0.25, color=SPAN1_COLOR)
+    .mark_rect(opacity=0.30, color=RECESSION_COLOR)
     .encode(x=alt.X("start:T"), x2=alt.X2("end:T"))
 )
 
 left_edge = (
     alt.Chart(pd.DataFrame({"x": [recession_start]}))
-    .mark_rule(strokeWidth=2, strokeDash=[6, 4], color=SPAN1_COLOR)
+    .mark_rule(strokeWidth=2, strokeDash=[6, 4], color=RECESSION_COLOR)
     .encode(x="x:T")
 )
 
 right_edge = (
     alt.Chart(pd.DataFrame({"x": [recession_end]}))
-    .mark_rule(strokeWidth=2, strokeDash=[6, 4], color=SPAN1_COLOR)
+    .mark_rule(strokeWidth=2, strokeDash=[6, 4], color=RECESSION_COLOR)
     .encode(x="x:T")
 )
 
@@ -100,33 +108,33 @@ right_edge = (
 threshold_span_data = pd.DataFrame({"y": [threshold_low], "y2": [threshold_high]})
 horizontal_span = (
     alt.Chart(threshold_span_data)
-    .mark_rect(opacity=0.2, color=SPAN2_COLOR)
-    .encode(y=alt.Y("y:Q", scale=alt.Scale(domain=[60, 130])), y2=alt.Y2("y2:Q"))
+    .mark_rect(opacity=0.2, color=WARNING_COLOR)
+    .encode(y=alt.Y("y:Q", scale=price_scale), y2=alt.Y2("y2:Q"))
 )
 
 bottom_edge = (
     alt.Chart(pd.DataFrame({"y": [threshold_low]}))
-    .mark_rule(strokeWidth=2, strokeDash=[6, 4], color=SPAN2_COLOR)
-    .encode(y=alt.Y("y:Q", scale=alt.Scale(domain=[60, 130])))
+    .mark_rule(strokeWidth=2, strokeDash=[6, 4], color=WARNING_COLOR)
+    .encode(y=alt.Y("y:Q", scale=price_scale))
 )
 
 top_edge = (
     alt.Chart(pd.DataFrame({"y": [threshold_high]}))
-    .mark_rule(strokeWidth=2, strokeDash=[6, 4], color=SPAN2_COLOR)
-    .encode(y=alt.Y("y:Q", scale=alt.Scale(domain=[60, 130])))
+    .mark_rule(strokeWidth=2, strokeDash=[6, 4], color=WARNING_COLOR)
+    .encode(y=alt.Y("y:Q", scale=price_scale))
 )
 
 # Text labels for span regions
 recession_label = (
     alt.Chart(pd.DataFrame({"x": [pd.Timestamp("2008-07-01")], "y": [125], "text": ["Recession Period"]}))
-    .mark_text(fontSize=18, fontWeight="bold", color=SPAN1_COLOR)
-    .encode(x="x:T", y=alt.Y("y:Q", scale=alt.Scale(domain=[60, 130])), text="text:N")
+    .mark_text(fontSize=12, fontWeight="bold", color=RECESSION_COLOR)
+    .encode(x="x:T", y=alt.Y("y:Q", scale=price_scale), text="text:N")
 )
 
 threshold_label = (
     alt.Chart(pd.DataFrame({"x": [pd.Timestamp("2007-06-01")], "y": [90], "text": ["Warning Zone"]}))
-    .mark_text(fontSize=16, fontWeight="bold", color=SPAN2_COLOR)
-    .encode(x="x:T", y=alt.Y("y:Q", scale=alt.Scale(domain=[60, 130])), text="text:N")
+    .mark_text(fontSize=11, fontWeight="bold", color=WARNING_COLOR)
+    .encode(x="x:T", y=alt.Y("y:Q", scale=price_scale), text="text:N")
 )
 
 # Combine all layers with theme-adaptive chrome
@@ -144,11 +152,12 @@ chart = (
         threshold_label,
     )
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
         background=PAGE_BG,
-        title=alt.Title("span-basic · altair · anyplot.ai", fontSize=28, color=INK),
+        title=alt.Title("span-basic · altair · anyplot.ai", fontSize=16, color=INK),
     )
+    .configure_view(fill=PAGE_BG, continuousWidth=620, continuousHeight=320, strokeWidth=0)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -157,11 +166,32 @@ chart = (
         labelColor=INK_SOFT,
         titleColor=INK,
     )
-    .configure_view(fill=PAGE_BG, strokeWidth=0)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
-    .configure_title(color=INK, fontSize=28)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+    )
+    .configure_title(color=INK, fontSize=16)
 )
 
-# Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save — hard target: 3200 x 1800 (landscape). See prompts/library/altair.md "Canvas".
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# PAD-only to the exact canonical canvas — vl-convert's title/axis/legend padding
+# means the saved PNG rarely lands exactly on target. Never crop (would clip text).
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
