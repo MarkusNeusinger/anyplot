@@ -2,48 +2,70 @@ library: altair
 language: python
 specification_id: slope-basic
 created: 2025-12-17 02:32:26+00:00
-updated: '2026-04-30T17:06:43Z'
+updated: '2026-07-25T23:51:59Z'
 generated_by: claude-sonnet
-workflow_run: 25177483606
+workflow_run: 30179400333
 issue: 981
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Semantic directional color encoding (green=increase, orange=decrease) creates
-    immediate visual clarity and meaningful hierarchy
-  - Full spec compliance — all required features present and correctly implemented
-  - Excellent data quality with realistic business context and visible rank changes
-  - Clean, idiomatic Altair code using layer composition and detail encoding correctly
-  - Correct Okabe-Ito palette with proper theme adaptation in both light and dark
-    renders
+  - 'Correctly addressed all three attempt-1 weaknesses: grid is now solid (no more
+    gridDash), x-axis tick fontSize brought down to 11 (near-balanced with the y-axis''s
+    10), and a dark-mode halo/stroke technique was added to lift the matte-red ''Decrease''
+    contrast on the near-black background.'
+  - Idiomatic layered Altair slopegraph (line + circle + two direct-label text layers)
+    with a full rank-shuffle across 10 entities and deliberately spaced values (~90-unit
+    minimum gap) so all 20 endpoint labels stay collision-free in both renders.
+  - 'Exact theme-token compliance for backgrounds, axis chrome, and legend box; first
+    series is exactly #009E73 and the legend swatches correctly show green/red for
+    Increase/Decrease in both themes.'
+  - Canvas padding logic lands both PNGs exactly at 3200x1800 with no drift; spec
+    data (entity + two time points), realistic product-sales scenario, and clean KISS
+    code structure are all still excellent.
   weaknesses:
-  - Label crowding on left side around the 390-440 sales range (Charger/Tablet/Headphones
-    too close together); consider adjusting dx offsets or filtering to reduce cluster
-    density
-  - Canvas dimensions 1400x850 are below the recommended 1600x900 target
-  - Full rectangular view border instead of recommended L-shaped frame (remove top/right
-    spines via configure_view stroke removal or configure_axis settings)
+  - 'Regression from the attempt-1 fix: applying `stroke=alt.value(INK)` with `strokeWidth=1`
+    directly to the `mark_text` layers (labels_left/labels_right) for the ''Decrease''
+    direction in dark mode does not just add a thin outline -- at fontSize=11 the
+    1px ink stroke fully overwhelms the thin matte-red fill, so ''Phone'', ''Mouse'',
+    ''Keyboard'', ''Charger'', and ''Speaker'' render as solid ink-white/bold text
+    in plot-dark.png with essentially zero red visible (pixel-sampled: dominant colors
+    are exactly (26,26,23) background and (240,239,232) INK, no AE3030 present). The
+    circle markers and connecting lines are unaffected (they keep a correctly-colored
+    red fill with a thin visible ink ring) because they use a separate wider ink halo
+    layer underneath rather than a stroke on the mark itself -- only the text marks
+    have this problem.'
+  - Because of the above, the legend swatch correctly shows red for 'Decrease' but
+    half of the direct-label text in dark mode no longer matches that legend color,
+    and the two direction categories end up with visibly different font weights in
+    dark mode (thin green 'Increase' labels vs. bold-looking white 'Decrease' labels)
+    even though both use the same fontSize=11 -- an unintended typographic inconsistency,
+    not a deliberate hierarchy choice.
+  - 'Fix: do not apply a stroke to the text marks. Either drop `stroke`/`strokeWidth`
+    entirely from labels_left/labels_right (contrast for red-on-dark can be handled
+    by using a wider outline **halo** approach like the one already used for lines_decrease_halo,
+    or a much thinner stroke e.g. 0.3-0.4px, or by making the label font slightly
+    heavier without an outline).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "slope-basic · altair · anyplot.ai" in dark ink, clearly readable. Y-axis label "Sales (units)" in dark ink, readable. Tick labels in soft dark (#4A4A44), readable. X-axis period labels "Q1 Sales" / "Q4 Sales" in soft dark, readable. Legend box with elevated background (#FFFDF6) and soft border.
-      Data: Ten slope lines — green (#009E73) for increases, orange (#D55E00) for decreases. Circle markers at endpoints. Entity labels on both sides in matching directional colors. Left-side cluster around 390-440 (Charger/Tablet/Headphones) shows some crowding.
-      Legibility verdict: PASS (minor label crowding but no unreadable text)
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, correct.
+      Chrome: Title "slope-basic · python · altair · anyplot.ai" bold dark ink, centered, clearly visible. Y-axis title "Sales (units)" and tick labels (100-1,200) dark/soft-dark ink, readable. X-axis categorical ticks "Q1 Sales"/"Q4 Sales" now close in size to the y ticks (fontSize 11 vs 10), a big improvement over attempt 1's 14 vs 10 mismatch. Grid is now solid, thin, subtle (attempt-1's dashed grid was fixed). Legend "Direction" sits top-right in a bordered cream box with no overlap against the "Laptop" data point beside it.
+      Data: 10 sloped lines/markers colored brand green #009E73 (Increase) or matte red #AE3030 (Decrease), with circular endpoint markers (white ring) and direct product-name labels colored to match direction at both ends. All labels are cleanly spaced with no collisions.
+      Legibility verdict: PASS -- all text is dark-on-light and fully readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in light grey (#B8B7B0), all readable. No dark-on-dark failures detected. Legend box uses elevated dark (#242420).
-      Data: Colors are identical to light render — same green (#009E73) for increases, same orange (#D55E00) for decreases. Data identity maintained across themes.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 -- not pure black, correct.
+      Chrome: Title, axis title, and tick labels correctly use light ink and are all clearly readable; grid is solid and subtle; legend box correctly flips to a dark-elevated fill with light border/text and does not overlap data.
+      Data: Circle markers and connecting lines are pixel-identical in hue to the light render (#009E73 / #AE3030) -- confirmed by pixel sampling, the matte-red circle/line for "Phone" is still (174,48,48). However, the direct-label TEXT for every 'Decrease' entity ("Phone", "Mouse", "Keyboard", "Charger", "Speaker") renders as solid ink-white/bold instead of red -- pixel sampling over the "Phone" label found only background (26,26,23) and INK (240,239,232), zero red pixels. This is caused by the new `stroke=INK, strokeWidth=1` fix applied directly to the text marks: at fontSize=11 the ink stroke completely overwhelms the thin red glyph fill. The legend swatch still correctly shows red for "Decrease", so there is a real mismatch between the legend's red indicator and the white-rendered direct labels for that category.
+      Legibility verdict: PASS for reading the words themselves (high contrast, no dark-on-dark), but FAIL for color-identity: the 'Decrease' category's text color is not preserved between themes, unlike every other data-encoded element in the chart.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -51,45 +73,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout; data labels at fontSize=16
-          slightly small
+        comment: Explicit font sizes throughout; x-tick vs y-tick balance fixed (11
+          vs 10, was 14 vs 10). All text reads clearly in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Label crowding on left side at 390-440 range (Charger/Tablet/Headphones)
+        passed: true
+        comment: All 20 direct end-labels stay collision-free in both renders; legend
+          does not overlap data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines strokeWidth=3 and markers size=200 well-sized
+        comment: Line width 3, circle size 200, well-adapted for 10 sparse entities.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Green vs orange CVD-safe contrast
+        passed: false
+        comment: The dark-mode ink stroke fix for red-on-dark contrast overcorrects
+          on text marks, fully erasing the red fill instead of tastefully outlining
+          it.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas 1400x850 slightly undersized vs recommended 1600x900
+        comment: Balanced margins, no cut-off content, canvas lands exactly on 3200x1800
+          target.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis Sales (units) with units; period names descriptive
+        comment: Y-axis labeled 'Sales (units)' with units.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Correct Okabe-Ito #009E73 first, #D55E00 second; correct backgrounds
-          both themes'
+        passed: false
+        comment: 'Line/marker/legend colors are pixel-identical across themes as required,
+          but the ''Decrease'' direct-label text renders ink-white instead of #AE3030
+          in dark mode -- a data color that is not identical between themes.'
     design_excellence:
       score: 13
       max: 20
@@ -98,22 +125,23 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Semantic directional coloring above defaults; thoughtful design not
-          publication-ready
+        comment: Semantic direction coloring, direct end-labels, and a deliberate
+          halo technique show real design intent, but the dark-mode text bug is a
+          visible flaw that keeps this below 'strong design' tier.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Subtle dashed grid at 10% opacity; full view border instead of L-frame
+        comment: Grid is now solid and subtle (attempt-1's dashed grid fixed), spines
+          L-shaped, generous whitespace -- offset by the unintended font-weight inconsistency
+          between direction categories in dark mode.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Directional colors create immediate visual hierarchy; viewer instantly
-          sees decliners vs growers
+        comment: Color + direct labels give an immediate focal point in light mode
+          and via lines/legend in dark mode, but the broken text-color identity for
+          'Decrease' weakens the at-a-glance read in dark mode specifically.
     spec_compliance:
       score: 15
       max: 15
@@ -122,26 +150,24 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct slopegraph
+        comment: Correct slopegraph with two time-point vertical axes.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: All spec features present
+        comment: Labels at both endpoints, color-coded lines by direction, time-point
+          axis labels -- all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: Correct X/Y/color/detail mapping
+        comment: X = period, Y = sales, all 10 entities visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title format correct; legend labels match
+        comment: Title format exact; legend labels 'Increase'/'Decrease' match the
+          data.
     data_quality:
       score: 15
       max: 15
@@ -150,20 +176,17 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: Both increases and decreases with rank changes visible
+        comment: Full rank shuffle with both increases and decreases across 10 entities.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Tech product sales Q1 vs Q4 — neutral business scenario
+        comment: Neutral, comprehensible product-sales scenario (Q1 vs Q4).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Values 180-1200 units with factually plausible variation
+        comment: Sales values (190-1150 units) are plausible and internally consistent.
     code_quality:
       score: 10
       max: 10
@@ -172,59 +195,53 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Clean Imports->Data->Plot->Save, no functions or classes
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Hardcoded deterministic data
+        comment: Fully deterministic hard-coded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Only os, sys, pandas, altair — all used
+        comment: Only altair, pandas, PIL (for the mandatory pad-to-canvas step),
+          os.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: Clean Altair layer composition with pd.melt for reshaping
+        comment: Clean, appropriately complex for a layered slopegraph.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves plot-{THEME}.png and .html with current API
+        comment: Saves plot-{THEME}.png and .html via current API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Expert use of layer composition, detail encoding, alt.Scale, configure_*
-          system
+        comment: Correct declarative encoding, alt.condition, alt.layer usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: detail encoding for per-product lines grouped by color is distinctly
-          Altair; layer composition strength used well
+        comment: Layered mark composition with conditional per-datum styling is Altair-flavored,
+          though a generic-enough pattern that other declarative-grammar libraries
+          could replicate.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - wide-to-long
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
