@@ -2,45 +2,50 @@ library: bokeh
 language: python
 specification_id: stem-basic
 created: '2025-12-23T20:45:11Z'
-updated: '2026-04-30T15:10:52Z'
+updated: '2026-07-25T17:41:15Z'
 generated_by: claude-sonnet
-workflow_run: 25172053900
+workflow_run: 30167693162
 issue: 972
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - Full spec compliance — stem plot, markers, baseline all correct and consistent
-  - 'Comprehensive theme-adaptive chrome: background, text, grid, axis lines all flip
-    correctly between light and dark'
-  - 'Excellent data choice: damped oscillation is a textbook signal processing example
-    that showcases stem plots naturally'
-  - p.segment() is the correct, idiomatic Bokeh approach for stem lines
-  - 'Perfect code quality: seed, clean imports, KISS structure, correct output naming'
+  - 'Title now correctly includes the {language} segment: "stem-basic · python · bokeh
+    · anyplot.ai" — fixes the previous attempt''s SC-04 weakness'
+  - HoverTool added on the marker renderer (Sample index / Amplitude tooltip) — fixes
+    the previous attempt's "no bokeh-distinctive interactivity" weakness; well-configured
+    and doesn't hurt the static PNG
+  - Canvas is exactly 3200x1800 and both light and dark renders are fully readable
+    with no dark-on-dark/light-on-light issues
+  - Peak-amplitude sample is highlighted with an amber marker + label, giving the
+    plot a clear focal point on top of a plain stem plot
+  - 'Correct Imprint palette usage — first series #009E73, amber reserved for the
+    highlight (not a second categorical series), theme-adaptive chrome (backgrounds,
+    ink, grid alpha) all correctly threaded through both themes'
+  - 'Realistic, neutral example: a damped-oscillation discrete signal is a textbook,
+    plausible use case for a stem plot in signal processing'
   weaknesses:
-  - No spine/border refinement — Bokeh full border outline retained; removing outline_line_color
-    would improve visual refinement (DE-02)
-  - 'No visual hierarchy or emphasis: the decaying signal has a natural story but
-    no focal point guides the viewer (DE-03)'
-  - Y-axis auto-range extends well below actual data creating some wasted canvas space
-    (VQ-05)
+  - Design stays fairly conventional beyond the single peak highlight — no secondary
+    annotation calling out the negative-undershoot cluster (samples 8-10) or other
+    structural feature of the signal, so overall visual sophistication and data storytelling
+    remain solid-but-standard rather than distinctive (DE-01, DE-03)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — correct light theme surface
-      Chrome: Title "stem-basic · bokeh · anyplot.ai" in dark ink (top-left), x-axis label "Sample Index" and y-axis label "Amplitude" in dark text, tick labels in muted dark tone — all clearly readable against the light background
-      Data: 30 stems in #009E73 (brand green), vertical segments from y=0 baseline to each discrete sample; solid circle markers at top of each stem; horizontal grey baseline; amplitude decays from ~1.6 (index 3-4) to ~±0.1 (index 25+)
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "stem-basic · python · bokeh · anyplot.ai" top-left, fully visible with generous top margin (the {language} segment missing in the previous attempt is now present). Italic axis labels "Sample Index" (x) and "Amplitude" (y) in dark ink, clearly legible. Tick labels in a softer grey, legible against the light background. Faint gridlines visible but unobtrusive. Thin dark horizontal baseline at y=0.
+      Data: Green (#009E73) stems with matching green circle markers at 30 sample points (x=0..29) tracing a damped oscillation. The peak-amplitude sample (x=3) is highlighted with a larger amber marker with a dark outline, labeled "Peak amplitude" in soft grey text.
+      Legibility verdict: PASS — no light-on-light text, no clipped elements, title/labels/ticks all readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — correct dark theme surface
-      Chrome: Title and axis labels flip to light-colored text; tick labels in muted light tone — all clearly readable against the dark background; no dark-on-dark failures observed
-      Data: Stems and markers retain identical #009E73 green (same as light render); baseline is light-grey; data pattern identical to light render
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title renders in light/white bold text, fully legible against the dark background. Axis labels flip to light ink, tick labels flip to a lighter grey — both clearly readable. Gridlines remain faint but visible. Baseline line is now a light grey, still visible against the dark background.
+      Data: Stems, markers, and the amber peak highlight are pixel-identical in color and position to the light render — only the chrome (background, text, grid, baseline) flipped, confirming correct theme-adaptive implementation.
+      Legibility verdict: PASS — no dark-on-dark text anywhere; title, axis labels, tick labels, and the "Peak amplitude" annotation are all clearly readable against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -48,76 +53,76 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, tick
-          labels 22pt; readable in both themes'
+        comment: All text explicitly sized and readable in both themes; the 24pt annotation
+          label is intentionally smaller/secondary and still clearly legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; 30 stems are well-spaced
+        comment: No collisions between text, markers, or the peak annotation
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stems (line_width=4), markers (size=25), and baseline clearly visible
+        comment: 30 sparse points with size=25 markers and line_width=4 stems — appropriately
+          prominent for the density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series in brand green with strong contrast on both surfaces;
-          CVD-safe
+        comment: Green data + amber highlight give good contrast in both themes; no
+          red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas use overall; slight wasted space below baseline (auto
-          y-range extends to ±2 while actual data stays within ±0.6 past index ~12)
+        comment: Exact 3200x1800 canvas, no overflow/clipping, balanced axis label
+          sizes, generous margins from min_border_* reservations
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (Sample Index, Amplitude); units not applicable
-          for normalized signal
+        comment: Descriptive axis labels ('Sample Index', 'Amplitude')
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series uses #009E73; backgrounds #FAF8F1 / #1A1A17; full
-          theme-adaptive chrome'
+        comment: 'First series is #009E73, amber used correctly as a non-categorical
+          highlight, both renders use the correct #FAF8F1/#1A1A17 backgrounds'
     design_excellence:
-      score: 8
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default; no standout design sophistication
-          or intentional hierarchy beyond correct palette
+        passed: true
+        comment: Amber peak highlight and clean chrome show intentional polish, but
+          the rest of the plot stays fairly standard
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid (10% alpha) is good; no spine removal — Bokeh full border
-          outline retained
+        passed: true
+        comment: outline_line_color removed, grid alpha kept subtle (0.10), generous
+          whitespace via min_border reservations
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed correctly but without deliberate visual hierarchy
-          or emphasis to guide the viewer
+        passed: true
+        comment: Peak-amplitude highlight creates one clear focal point, but the negative-undershoot
+          cluster (samples 8-10) is not called out
     spec_compliance:
       score: 15
       max: 15
@@ -127,52 +132,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stem plot with vertical segments, circle markers, horizontal
-          baseline at y=0
+        comment: 'Correct stem plot: segments from baseline plus markers at the data
+          points'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stems, markers, and baseline all present; consistent sizing throughout
+        comment: Thin stems, clearly visible circular markers, baseline at y=0, consistent
+          sizing throughout
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = sample index (0-29), Y = amplitude; all 30 points visible
+        comment: x=sample index, y=amplitude; all 30 points shown across the full
+          axis range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'stem-basic · bokeh · anyplot.ai' correct; no legend
-          (single series — appropriate)
+        comment: Title now correctly reads 'stem-basic · python · bokeh · anyplot.ai';
+          no legend needed (single series)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows positive and negative values, demonstrates amplitude decay,
-          covers full range of stem plot behavior
+        comment: Damped oscillation covers positive/negative stems, varying amplitude,
+          and a clear peak
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Damped oscillation is a canonical signal processing scenario; neutral,
-          science-based
+        comment: Discrete signal samples (damped oscillation) is a plausible, neutral
+          signal-processing example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitude in ±1.6 range decaying to ±0.1; realistic for normalized
-          discrete signal
+        comment: Amplitude values (~-0.8 to 1.6) are sensible for a normalized signal
     code_quality:
       score: 10
       max: 10
@@ -182,34 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: tokens → data → figure → glyphs → styling → save'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used
+        comment: All imports (os, sys, time, Path, numpy, bokeh, selenium) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; sys.path filter is acceptable project-specific
-          workaround
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh 3.9 API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current bokeh API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -217,24 +222,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure(), segment(), scatter(), line() idiomatically;
-          HTML export included
+        comment: ColumnDataSource, figure(), segment()/scatter() combo matches the
+          library guide's recommended patterns closely
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: p.segment() is the idiomatic Bokeh primitive for discrete line segments
-          with separate start/end coordinates; HTML export is Bokeh-native
+        comment: HoverTool now added on the marker renderer (Sample/Amplitude tooltip),
+          addressing the previous attempt's weakness — genuine showcase of bokeh's
+          HTML-output interactivity
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
+  - annotations
   - html-export
+  - hover-tooltips
   patterns:
-  - data-generation
   - columndatasource
+  - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
