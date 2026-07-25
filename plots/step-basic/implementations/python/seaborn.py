@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 step-basic: Basic Step Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-25
@@ -77,20 +77,29 @@ sns.lineplot(
     zorder=3,
 )
 
-# Restock annotation - the defining moment a step plot exists to show
+# Restock annotation - the single largest jump (Wireless Earbuds week 3->4, +240 units)
+# is the defining moment a step plot exists to show
 ax.annotate(
-    "Restock",
+    "Restock: +240 units",
     xy=(4, 650),
     xytext=(5.4, 745),
     fontsize=9,
-    color=INK_SOFT,
+    fontweight="medium",
+    color=INK,
     ha="left",
     arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 1},
 )
 
 # Style - title and subtitle anchored to the figure (not the axes) to avoid overlap
 fig.text(
-    0.5, 0.965, "step-basic · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, ha="center", va="top"
+    0.5,
+    0.965,
+    "step-basic · python · seaborn · anyplot.ai",
+    fontsize=12,
+    fontweight="medium",
+    color=INK,
+    ha="center",
+    va="top",
 )
 fig.text(
     0.5,
@@ -114,7 +123,8 @@ for spine in ("left", "bottom"):
 
 legend = ax.legend(fontsize=8, title=None, loc="lower left", frameon=True, handlelength=2.2, markerscale=0.8)
 legend.get_frame().set_facecolor(ELEVATED_BG)
-legend.get_frame().set_edgecolor(INK_SOFT)
+legend.get_frame().set_edgecolor("none")
+legend.get_frame().set_alpha(0.85)
 
 fig.subplots_adjust(top=0.80, bottom=0.14, left=0.09, right=0.97)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
