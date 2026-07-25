@@ -1,7 +1,7 @@
 // anyplot.ai
 // step-basic: Basic Step Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 84/100 | Created: 2026-07-25
+// Quality: 89/100 | Created: 2026-07-25
 
 const t = window.ANYPLOT_TOKENS;
 

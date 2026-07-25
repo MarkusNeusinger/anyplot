@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: step-basic
 created: '2026-07-25T15:43:50Z'
-updated: '2026-07-25T15:47:35Z'
+updated: '2026-07-25T15:55:15Z'
 generated_by: claude-sonnet
 workflow_run: 30164055575
 issue: 956
@@ -12,44 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'Correct idiomatic Highcharts step implementation (type: "line" + plotOptions.line.step:
-    "right") matching the spec''s ''post'' step semantics, with an accurate in-code
-    comment explaining the choice'
+  - 'Repair directly resolved attempt-1 weaknesses: a plotBand with ''Peak scaling
+    window'' label now calls out the 10-instance plateau (hours 11-13), and a light
+    Imprint-green area fill under the step line adds visual hierarchy beyond a bare
+    line'
+  - 'Correct idiomatic step semantics: `area` + `step: "right"` matches the spec''s
+    ''post'' style (value holds from the current point until the next), with an accurate
+    in-code comment explaining the choice'
   - 'Both renders are theme-correct: canvas exactly 3200x1800, backgrounds match #FAF8F1/#1A1A17,
-    and the #009E73 series color is identical across light/dark while chrome (ink/inkSoft/grid
-    tokens) flips correctly'
+    and the #009E73 series/fill color is identical across light and dark while chrome
+    (ink/inkSoft/grid tokens) flips correctly'
   - Realistic, neutral dataset (auto-scaling web service instance count over 24h)
-    clearly demonstrates step-plot semantics with both rising and falling steps and
-    a flat plateau
-  - Markers at every data point highlight the exact change moments per the spec's
-    guidance, without cluttering the sparse 24-point series
-  - 'Clean, deterministic, KISS code: no imports needed, hard-coded in-memory arrays,
-    animation disabled on both chart and series per the harness contract'
+    clearly demonstrates step-plot semantics with rising, plateau, and falling segments
+  - Markers at every hour highlight exact change moments per the spec's guidance,
+    without cluttering the sparse 24-point series
+  - 'Clean, deterministic, KISS code: no imports, hard-coded in-memory arrays, animation
+    disabled on both chart and series per the harness contract'
+  - 'Prior redundant per-series color declaration was removed — colors are now set
+    once via the top-level `colors: t.palette`'
   weaknesses:
-  - 'Design Excellence is generic: relies entirely on the library-guide token mapping
-    with no additional refinement (e.g. no annotation calling out the 10-instance
-    plateau, no subtle area fill or accent to add visual hierarchy beyond the single
-    green line)'
-  - No Highcharts-distinctive features used beyond core step/line/marker options (no
-    plotBands to mark scaling windows, no custom dataLabels, no tooltip customization)
-    — a missed opportunity to showcase library-specific capabilities
-  - 'Redundant color declaration: both top-level colors: t.palette and per-series
-    color: t.palette[0] are set for the same single series — harmless but unnecessary'
+  - 'Design Excellence is improved but still moderate: the plotBand + area fill are
+    the only distinctive touches — no dataLabels at the transition points, no tooltip
+    customization, no secondary accent to further sharpen hierarchy'
+  - '''Peak scaling window'' plotBand label renders at 12px, notably smaller than
+    the 14px tick labels — legible but slightly under-weighted relative to the rest
+    of the chrome scale; consider 13-14px for better visual balance'
+  - 'Library Mastery still has headroom: only one Highcharts-distinctive feature (plotBands)
+    is showcased — dataLabels, a custom tooltip formatter, or plotLines at key hours
+    would demonstrate more of the library''s toolkit'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "step-basic · javascript · highcharts · anyplot.ai" in bold dark ink, centered near top, occupying roughly 30% of plot width (well within safe bounds, no overflow). "Hour of Day" x-axis title and "Active Instances" y-axis title in medium-grey ink-soft, both legible. Tick labels (0-22 on x, 0-11 on y) in matching grey, all readable. Horizontal gridlines are faint and subtle, aiding value tracing without dominating.
-      Data: Single step-line series in Imprint green (#009E73) with circular markers (radius 5) at every hour. Step direction is "right" (post-style): the line holds flat from each point until the next, rising from 2 instances overnight to a plateau of 10 around hours 11-13, then stepping back down to 2 by hour 21. Line and markers are clearly distinguishable against the light background.
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1), not pure white and not dark — matches Imprint light chrome.
+      Chrome: Bold dark-ink title "step-basic · javascript · highcharts · anyplot.ai" centered near the top, occupying roughly 35% of plot width (short mandated title, no deduction). "Hour of Day" / "Active Instances" axis titles and 0-22 / 0-11 tick labels render in medium-grey ink-soft, all clearly legible against the light background. A vertical plotBand (hours 10.5-13.5) in a slightly darker green tint carries a "Peak scaling window" label in ink-soft, positioned above the plateau line without colliding with markers or gridlines. Faint horizontal gridlines aid value tracing without dominating.
+      Data: Single Imprint-green (#009E73) step line (step: "right" / post-style) with circular markers at every hour, plus a light semi-transparent green area fill beneath it. The step rises from 2 instances overnight to a plateau of 10 around hours 11-13 (inside the highlighted band), then steps back down to 2 by hour 21 — a clean, legible "post" step pattern.
+      Legibility verdict: PASS — all text is dark-on-light and readable, including the smaller plotBand label.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, and tick labels now rendered in light grey/white ink, clearly legible against the dark background. Gridlines are faint light-grey, subtle but visible.
-      Data: Same #009E73 green step-line with matching markers — confirmed identical data color to the light render, only chrome (background, text, grid) flipped. The green reads with strong contrast on the near-black surface.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick text is clearly visible against the dark background.
+      Background: Warm near-black (#1A1A17), not pure black and not light — matches Imprint dark chrome.
+      Chrome: Same title/axis titles/tick labels now render in light grey/white, clearly legible against the dark surface. Gridlines are faint light-grey, still visible. The plotBand tint and "Peak scaling window" label remain legible on the dark surface (label in light ink-soft grey, readable against both the plain background and the darker in-band tint).
+      Data: The step line, markers, and area fill are the identical #009E73 green — confirming only chrome flipped, not data color — reading with strong contrast against the near-black background. No dark-on-dark issues anywhere; no near-black text on the near-black surface.
+      Legibility verdict: PASS — all text and data elements are clearly readable, no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,70 +65,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (22/16/14px), fully readable in both themes
+        comment: All chrome text readable in both themes; plotBand label at 12px is
+          legible but smaller than the 14px tick-label scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, markers, or line
+        comment: No collisions between title, axes, plotBand label, markers, or fill
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker radius 5 / lineWidth 2.5 appropriate for 24-point sparse series
+        comment: radius-5 markers and 2.5px step line clearly visible for sparse 24-point
+          series; area fill at low opacity does not obscure the line
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High-contrast Imprint green on both surfaces; single series so no
-          red-green risk
+        comment: Strong contrast in both themes, single-hue signal, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, title ~30% width, no overflow or clipping
+        comment: Canvas 3200x1800, no overflow or clipping, balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Hour of Day" / "Active Instances" are descriptive'
+        comment: Descriptive 'Hour of Day' / 'Active Instances' axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds match #FAF8F1/#1A1A17, identical
-          data color across themes'
+        comment: 'First series #009E73, Imprint-correct backgrounds in both themes,
+          data color identical across themes'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Standard token-mapped styling, no custom polish beyond the library
-          defaults
+        comment: Improved from attempt 1 with area fill + plotBand, but still a fairly
+          simple single-series composition
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Subtle grid and generous whitespace, but standard axis lines and
-          no extra refinement
+        comment: Subtle grid, generous whitespace, low-opacity area fill adds polish
+          beyond attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: The rise-plateau-fall shape naturally tells a clear story, but no
-          added emphasis (annotation, fill) to sharpen the focal point
+        comment: plotBand + label now explicitly calls out the peak plateau as a focal
+          point, directly addressing the prior weakness
     spec_compliance:
       score: 15
       max: 15
@@ -133,27 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct step chart via line + step: "right"'
+        comment: 'Correct step chart via area + step: ''right'''
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Markers at change points, grid lines, deliberate step-style choice
-          with rationale comment
+        comment: Post-style step, markers at data points, grid lines all present per
+          spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = hour of day, Y = active instances, full 0-23 range shown
+        comment: X=hour, Y=instances, full 0-23 range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact required format; legend correctly disabled for
-          single series
+        comment: Title matches mandated format exactly; legend correctly disabled
+          for single series
     data_quality:
       score: 15
       max: 15
@@ -163,20 +169,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both rising and falling steps plus a flat plateau fully demonstrate
-          step-plot behavior
+        comment: Rise, plateau, and fall segments all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Auto-scaling instance count over 24h is plausible and neutral
+        comment: Auto-scaling instance count is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2-10 instance range is sensible for the domain
+        comment: 2-10 instances is a sensible range for the domain
     code_quality:
       score: 10
       max: 10
@@ -192,28 +197,28 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic arrays
+        comment: Deterministic hard-coded arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports required; only globals used
+        comment: No imports needed
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI
+        comment: Appropriate complexity, no fake UI, redundant color declaration from
+          attempt 1 removed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct Highcharts.chart("container", ...) call, no explicit width/height,
-          animation disabled
+        comment: Mount-node contract respected, animation disabled on chart and series
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -221,20 +226,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of plotOptions.line.step, the idiomatic Highcharts pattern
-          for step charts
+        comment: Correct use of plotOptions.area.step, Highcharts.color().setOpacity()
+          for the band tint
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: No Highcharts-distinctive features (plotBands, custom dataLabels,
-          tooltip config) beyond core step/marker options
+        comment: plotBands now showcased (new this attempt), but no dataLabels/tooltip
+          customization yet
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
