@@ -2,12 +2,12 @@ library: plotnine
 language: python
 specification_id: step-basic
 created: '2025-12-23T20:49:34Z'
-updated: '2026-04-30T13:05:15Z'
+updated: '2026-07-25T15:42:57Z'
 generated_by: claude-sonnet
-workflow_run: 25165770566
+workflow_run: 30163921557
 issue: 956
-python_version: 3.13.13
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/plotnine/plot-dark.png
 preview_html_light: null
@@ -15,109 +15,120 @@ preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - 'Perfect visual quality across all 7 subcriteria: all font sizes explicitly set,
-    clean Okabe-Ito palette compliance, and both renders pass the theme-readability
-    check without dark-on-dark or light-on-light failures'
-  - 'The ''Annual target: 100k'' reference line elevates the chart from a data display
-    to a data story — viewer immediately grasps performance vs. target'
-  - Dual Okabe-Ito color assignment (green step line + orange data points) is an intentional,
-    CVD-safe design choice that aids interpretability
+  - Correct post-style step (direction="hv") matches the cumulative-sales semantics
+    — value holds until the next month then jumps
+  - 'Target reference line (geom_hline) + annotation gives the plot an immediate story:
+    sales cross the 100k target in November'
+  - 'Distinct colors for the step line (Imprint #009E73) vs. the change-point markers
+    (#C475FD) plus a muted dashed target line create clear visual hierarchy without
+    breaking palette rules'
+  - Clean theme_minimal() base with subtle major-only gridlines (alpha=0.15) and only
+    left/bottom axis lines — no clutter
+  - Explicit font sizes for every text role (title 12pt, axis titles 10pt, axis text
+    8pt, annotation) and both themes are fully readable
+  - Fully deterministic, realistic monotonic cumulative-sales data with varied step
+    sizes and flat plateaus
   weaknesses:
-  - DE-01 limited by absence of truly distinctive typographic polish — no bold title
-    weight, no explicit spine removal beyond theme_minimal defaults
-  - Minor grid lines (alpha=0.05) add negligible value and could be removed to reduce
-    visual noise with element_blank()
-  - LM-02 could be pushed higher by using scale_x_continuous with month labels or
-    a date-based axis with scale_x_date to demonstrate plotnine-specific features
+  - Data is monotonic non-decreasing throughout (only flat or up steps) — a small
+    down-tick (e.g. an inventory-style correction) would demonstrate more of the step
+    plot's range of behavior, though it is not required for this sales scenario
+  - Layered composition (step + point + hline + annotate) is idiomatic ggplot2/plotnine
+    grammar but not a feature that is difficult to replicate in another library —
+    a more distinctive plotnine-only touch (e.g. faceting, a custom scale, or geom_step's
+    direction parameter called out more deliberately) would raise Library Mastery
+    further
+  - Visual refinement is good but stops at a subtle grid tweak — no further polish
+    such as a lighter/removed axis line or a secondary label near the target line's
+    right edge to reinforce the story
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "step-basic · plotnine · anyplot.ai" in dark ink (readable); Y-axis label "Cumulative Sales (thousands)" and X-axis label "Month" in dark ink (readable); tick labels (Jan-Dec, 25/50/75/100/125) in slightly softer dark ink (readable); "Annual target: 100k" annotation in gray (readable)
-      Data: Step line in #009E73 (brand green, Okabe-Ito position 1); data points in #D55E00 (vermillion, Okabe-Ito position 2); dashed reference line at y=100; very subtle grid lines
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "step-basic · python · plotnine · anyplot.ai" centered at top; y-axis title "Cumulative Sales (thousands)" rotated on the left; x-axis title "Month" below; Jan-Dec tick labels along the bottom in dark gray; subtle horizontal gridlines at 25-unit intervals; only left and bottom axis lines drawn (no full box). Dashed gray horizontal line at y=100 with "Annual target: 100k" label in muted gray text near the top-left.
+      Data: Green (#009E73) step line running post-style (horizontal-then-vertical) through 12 monthly points, with purple (#C475FD) circular markers at every data point marking the exact month-to-month values. Steps rise from 12k in January to 120k in December, crossing the 100k target line in November.
+      Legibility verdict: PASS — all title, axis, and tick text is clearly dark-on-light and easily readable; annotation text has sufficient contrast against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light ink (readable); axis labels in light ink (readable); tick labels in lighter secondary ink (readable); "Annual target: 100k" annotation in light gray (readable); no dark-on-dark failures detected
-      Data: Step line in #009E73 (identical to light render); data points in #D55E00 (identical to light render); dashed reference line and subtle grid visible
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as light — title, axis titles, and tick labels all rendered in light off-white/gray tones; gridlines and dashed target line rendered in light gray, still subtle but visible against the dark background; annotation text in a slightly dimmer light-gray tone.
+      Data: Step line and markers use the identical #009E73 green and #C475FD purple as the light render — confirmed unchanged across themes.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every text element (title, axis labels, ticks, annotation) is light-colored and clearly legible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt;
-          perfectly readable in both themes'
+        comment: All font sizes explicitly set (title 12pt, axis titles 10pt, axis
+          text 8pt); readable in both themes, well-proportioned title width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month labels cleanly spaced, no collision anywhere
+        comment: No overlap between title, axes, target annotation, or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line (size=1.5) and data points (size=4) perfectly adapted to
-          12-point dataset
+        comment: 12 sparse data points with prominent markers (size=2.5) and a 1.0-width
+          step line, both clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Both Okabe-Ito colors provide strong contrast against both backgrounds;
-          CVD-safe
+        comment: Green line vs. purple markers vs. gray dashed target line are all
+          distinguishable, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot occupies ~70% of canvas with balanced margins; nothing cut off
+        comment: Plot area fills a healthy majority of the 3200x1800 canvas with balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: ''Cumulative Sales (thousands)'' with units; X: ''Month'' appropriate
-          for discrete axis'
+        comment: Y-axis states units ("thousands"); x-axis month labels are self-descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Step line #009E73 (position 1); points #D55E00 (position 2); backgrounds
-          #FAF8F1/#1A1A17 correct; adaptive chrome verified in both renders'
+        comment: 'First series #009E73, marker color is a valid Imprint palette member,
+          backgrounds #FAF8F1/#1A1A17, chrome theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: dual Okabe-Ito color scheme, reference line annotation,
-          month names on x-axis. Not yet publication-ready FiveThirtyEight level'
+        comment: Thoughtful, intentional color roles for line/marker/reference line
+          — clearly above default styling
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Explicit grid alpha (0.10/0.05), L-shaped spines via theme_minimal,
-          dashed reference line adds polish
+        comment: Subtle major-only grid, minimal axis chrome, generous whitespace;
+          stops short of full polish
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: '''Annual target: 100k'' reference line creates genuine focal point;
-          viewer immediately sees when target was exceeded'
+        comment: Target line + annotation creates a clear focal narrative (sales cross
+          target in November)
     spec_compliance:
       score: 15
       max: 15
@@ -127,52 +138,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: geom_step() is the correct chart type
+        comment: Correct step plot via geom_step
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step direction (direction='hv'), markers at data points (geom_point),
-          grid lines present; reference annotation exceeds spec requirements
+        comment: Post-style step direction, markers at data points, gridlines for
+          tracing values — all spec notes addressed
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=month (sequential), Y=cumulative sales; all 12 data points visible
+        comment: Month on x, cumulative sales on y, all 12 points visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'step-basic · plotnine · anyplot.ai' uses correct middle-dot
-          format; no legend needed for single-series
+        comment: Title matches mandated format exactly; no legend needed for single
+          series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Data shows both flat periods and discrete jumps, fully demonstrating
-          step chart characteristics
+        comment: Shows varied step sizes and flat plateaus; lacks any decrease which
+          would show more range of step-plot behavior
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly cumulative sales scenario is neutral, real-world plausible,
-          business-domain
+        comment: Neutral, comprehensible business scenario (monthly cumulative sales
+          vs. annual target)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 12k-120k over 12 months with annual target of 100k are factually
-          coherent and realistic
+        comment: Monotonic non-decreasing cumulative values, plausible magnitudes,
+          target crossed near year-end
     code_quality:
       score: 10
       max: 10
@@ -182,56 +193,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions or classes
+        comment: Imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data; no random seed needed
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used
+        comment: Every imported symbol is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; appropriate complexity for the visualization
+        comment: Clean, appropriately concise, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using current plotnine API
+        comment: Saves plot-{THEME}.png via current plot.save() API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Proper ggplot grammar: ggplot() + geom_step() + geom_point() + labs()
-          + theme_minimal() + theme(); direction parameter used correctly'
+        comment: Idiomatic grammar-of-graphics layering (geom_step + geom_point +
+          geom_hline + annotate), high-level theme() API
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_step() with direction='hv' is ggplot2-heritage; layered grammar
-          composition and element_* theme system demonstrate library-specific knowledge
+        comment: Declarative multi-layer composition is a plotnine/ggplot2 strength,
+          but geom_step itself is not unique to this library
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
-  patterns: []
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
   dataprep: []
   styling:
   - grid-styling
