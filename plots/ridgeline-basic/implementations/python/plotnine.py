@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 79/100 | Updated: 2026-07-25
@@ -71,7 +71,11 @@ ridge_scale = 2.5
 
 # Trim each month's near-zero-density tails before building ridge_df so the
 # ribbon fill (and the top-edge line drawn separately below) only cover the
-# visible bump, instead of a sliver extending across the full x_range.
+# visible bump, instead of a sliver extending across the full x_range. The
+# threshold mask alone isn't guaranteed contiguous -- gaussian_kde's tail
+# estimate can ripple back above a lenient threshold far from the mode -- so
+# walk outward from the density peak and stop at the first drop below
+# threshold, keeping only that single contiguous run for geom_line to trace.
 density_data = []
 for i, month in enumerate(months):
     month_data = df[df["month"] == month]["temp"]
@@ -79,9 +83,17 @@ for i, month in enumerate(months):
     density = kde(x_range)
     density_scaled = density / density.max() * ridge_scale
 
-    visible = density_scaled > 0.05 * ridge_scale
-    x_visible = x_range[visible]
-    density_visible = density_scaled[visible]
+    threshold = 0.05 * ridge_scale
+    peak_idx = int(np.argmax(density_scaled))
+    left = peak_idx
+    while left > 0 and density_scaled[left - 1] > threshold:
+        left -= 1
+    right = peak_idx
+    while right < len(density_scaled) - 1 and density_scaled[right + 1] > threshold:
+        right += 1
+
+    x_visible = x_range[left : right + 1]
+    density_visible = density_scaled[left : right + 1]
 
     for x, d in zip(x_visible, density_visible, strict=True):
         density_data.append(
