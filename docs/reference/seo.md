@@ -260,22 +260,29 @@ regardless of what Cloudflare does or does not prepend (see
 [AI crawler policy](#ai-crawler-policy)):
 
 ```txt
+… welcomed AI agents (Claude*, OAI-SearchBot, ChatGPT-User, Perplexity*)
+      + Content-Signal, Allow: /, Disallow: /debug, /interactive
+… declined training collectors (GPTBot, CCBot, Bytespider, Amazonbot, meta-externalagent)
+… opt-out tokens (Google-Extended, Applebot-Extended)
+
 User-agent: *
 Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
 Allow: /
 Disallow: /debug
 Disallow: /interactive
-… welcomed AI agents (Claude*, OAI-SearchBot, ChatGPT-User, Perplexity*)
-… declined training collectors (GPTBot, CCBot, Bytespider, Amazonbot, meta-externalagent)
-… opt-out tokens (Google-Extended, Applebot-Extended)
 
 Sitemap: https://anyplot.ai/sitemap.xml
 ```
 
-The `Content-Signal` line is repeated inside the welcomed-AI group: a crawler
-obeys the single group that matches it most specifically, so an agent named in
-its own group never sees the signal declared under `User-agent: *` — and that
-group is precisely where the training reservation has to land.
+Two properties of that file are deliberate:
+
+- The `Content-Signal` line is **repeated** in the welcomed-AI group. A crawler
+  obeys the single group that matches it, so an agent named in its own group
+  never sees the signal declared under `User-agent: *` — and that group is
+  precisely where the training reservation has to land.
+- The named groups come **before** the wildcard group. A spec-compliant crawler
+  picks the most specific match regardless of order, but simpler parsers take
+  the first match and would read `Allow: /` and stop.
 
 ### Backend (api.anyplot.ai)
 

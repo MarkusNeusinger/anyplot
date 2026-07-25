@@ -9,25 +9,23 @@
 # content signals Cloudflare would otherwise supply — so it survives with the
 # managed block turned off. Rationale, dashboard steps and how to verify:
 # docs/reference/seo.md ("AI crawler policy").
+#
+# Named groups come FIRST and the `User-agent: *` group last: a compliant
+# crawler picks the most specific matching group regardless of order, but
+# simpler parsers take the first match — and with the wildcard on top those
+# would read `Allow: /` and never reach the declining groups below.
 
 # Content signals per contentsignals.org. ANY RESTRICTION EXPRESSED HERE IS AN
 # EXPRESS RESERVATION OF RIGHTS UNDER ARTICLE 4 OF EU DIRECTIVE 2019/790.
 # search:   indexing and returning links/excerpts — yes
 # ai-input: retrieval for AI answers, grounding, citation — yes
 # ai-train: training or fine-tuning models — no
-User-agent: *
-Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
-Allow: /
-Disallow: /debug
-Disallow: /interactive
-
+#
 # AI assistants, AI search and citation crawlers. These send readers back and
 # are the reason /llms.txt exists; the *-User agents fetch only because a human
-# asked their assistant to open the page.
-# The Content-Signal line is REPEATED here on purpose: a crawler obeys the one
-# group that matches it most specifically, so an agent named below would never
-# see the signal declared in the `User-agent: *` group above — and this is
-# exactly the group the training reservation has to reach.
+# asked their assistant to open the page. The signal is declared per group
+# because a crawler obeys only the group that matches it — the agents named
+# here are precisely the ones the training reservation has to reach.
 User-agent: ClaudeBot
 User-agent: Claude-User
 User-agent: Claude-SearchBot
@@ -41,8 +39,8 @@ Disallow: /debug
 Disallow: /interactive
 
 # Training-only collectors: they take the catalogue without ever returning a
-# reader, which is what ai-train=no above says in prose. GPTBot sits here
-# because it is OpenAI's TRAINING crawler — ChatGPT's retrieval path is
+# reader, which is what ai-train=no says in prose. GPTBot sits here because it
+# is OpenAI's TRAINING crawler — ChatGPT's retrieval path is
 # OAI-SearchBot/ChatGPT-User above and stays open. Flip this one group if the
 # training stance ever changes.
 User-agent: GPTBot
@@ -53,9 +51,16 @@ User-agent: meta-externalagent
 Disallow: /
 
 # Opt-out tokens for vendors that crawl under a different user agent
-# (Googlebot / Applebot fetch for search and stay allowed above).
+# (Googlebot / Applebot fetch for search and stay allowed).
 User-agent: Google-Extended
 User-agent: Applebot-Extended
 Disallow: /
+
+# Everyone else: search engines, social/link previews, feed readers.
+User-agent: *
+Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
+Allow: /
+Disallow: /debug
+Disallow: /interactive
 
 Sitemap: https://anyplot.ai/sitemap.xml
