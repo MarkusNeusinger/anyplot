@@ -14,15 +14,29 @@ const directions = [
   "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
 ];
 const prevailingIndex = directions.indexOf("SW");
-const frequencies = directions.map((_, i) => {
+const rawWeights = directions.map((_, i) => {
   const steps = directions.length;
   const angularDist = Math.min(
     Math.abs(i - prevailingIndex),
     steps - Math.abs(i - prevailingIndex),
   );
   const gaussian = 27 * Math.exp(-(angularDist ** 2) / (2 * 3.2 ** 2));
-  return Math.round((gaussian + 2.5) * 10) / 10;
+  return gaussian + 2.5;
 });
+const weightSum = rawWeights.reduce((sum, w) => sum + w, 0);
+const frequencies = rawWeights.map(
+  (w) => Math.round((w / weightSum) * 1000) / 10,
+);
+
+// Fill opacity ramps with value (deeper toward the prevailing direction); the
+// stroke stays at full brand-green opacity as a light outline on every petal.
+function withAlpha(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+const maxFrequency = Math.max(...frequencies);
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -53,6 +67,8 @@ chart.setOption({
   },
   radiusAxis: {
     type: "value",
+    name: "Frequency (%)",
+    nameTextStyle: { color: t.inkSoft, fontSize: 13 },
     min: 0,
     axisLine: { show: false },
     axisLabel: { color: t.inkSoft, fontSize: 13 },
@@ -63,10 +79,16 @@ chart.setOption({
     {
       type: "bar",
       coordinateSystem: "polar",
-      data: frequencies,
+      data: frequencies.map((value) => ({
+        value,
+        itemStyle: {
+          color: withAlpha(t.palette[0], 0.55 + 0.45 * (value / maxFrequency)),
+          borderColor: t.palette[0],
+          borderWidth: 1,
+        },
+      })),
       name: "Wind frequency",
       barCategoryGap: "20%",
-      itemStyle: { color: t.palette[0] },
     },
   ],
 });
