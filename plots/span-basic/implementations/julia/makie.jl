@@ -1,7 +1,7 @@
 # anyplot.ai
 # span-basic: Basic Span Plot (Highlighted Region)
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 86/100 | Created: 2026-07-25
+# Quality: 91/100 | Created: 2026-07-25
 
 using CairoMakie
 using Colors

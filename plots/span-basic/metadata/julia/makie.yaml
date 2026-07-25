@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: span-basic
 created: '2026-07-25T14:34:44Z'
-updated: '2026-07-25T14:39:13Z'
+updated: '2026-07-25T14:50:27Z'
 generated_by: claude-sonnet
 workflow_run: 30161695652
 issue: 980
@@ -12,48 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Correct use of vspan! for both the incident and maintenance highlight regions
-    with alpha (0.25, 0.2) inside the spec's suggested 0.2-0.3 range, keeping the
-    underlying latency line fully visible.
-  - 'Thoughtful semantic color choice: the amber anchor is used for ''Incident: Database
-    Failover'' (warning) and the muted anchor for ''Scheduled Maintenance'' (neutral/planned)
-    instead of pulling from the categorical pool — correctly follows the style guide''s
-    semantic-anchor guidance rather than defaulting to ordinal palette slots.'
-  - 'Clean theme-adaptive chrome: title/axis/tick colors, grid opacity via RGBAf(INK...,
-    0.15), and a transparent frameless legend all flip correctly between renders while
-    the data green (#009E73) stays identical.'
-  - Realistic, well-scaled synthetic data (90-day API latency monitoring window in
-    ms) with narratively-connected events (incident spike, maintenance bump) tied
-    directly to the legend labels — solid data storytelling for a 'basic' spec.
-  - Clean KISS script structure, seeded RNG (Random.seed!(42)), single file handles
-    both themes via ANYPLOT_THEME, canonical title format matches exactly.
+  - Successfully added a horizontal span (hspan! for the SLA threshold breach zone)
+    alongside the existing vertical spans, fully exercising both "vertical" and "horizontal"
+    values of the spec's categorical direction field — the exact gap flagged in attempt
+    1.
+  - Added dashed edge-stroke boundaries (vlines!/hlines!) on all three spans, giving
+    each highlighted region a crisper border against the grid — directly addresses
+    the attempt 1 feedback about flat, unbordered span edges.
+  - Thoughtful ylims!(ax, 95, 195) choice keeps the SLA hspan's intentionally-oversized
+    upper bound (200) out of the autolimits, so the "breach zone" reads as extending
+    to the top of the chart without distorting the y-axis scale — a subtle but correct
+    fix.
+  - 'Richer data storytelling: three distinct, narratively-connected events (incident
+    spike, scheduled maintenance, SLA threshold breach) instead of two, each using
+    the correct semantic color anchor (amber = warning, muted gray = neutral/planned,
+    matte red = alert/breach) rather than pulling from the categorical pool.'
+  - 'All attempt-1 strengths carry over cleanly: theme-adaptive chrome, brand-green
+    (#009E73) data line identical across themes, canonical title format, seeded RNG,
+    clean KISS single-file structure.'
   weaknesses:
-  - Only vertical spans are demonstrated; the spec's categorical 'direction' field
-    (vertical vs horizontal) is never exercised as horizontal, so the plot never shows
-    the 'threshold visualization' use case called out in the spec notes. Not a required
-    feature, but a missed opportunity for fuller feature coverage.
-  - Beyond the span coloring and theme-token cleanup, the design stays fairly plain
-    — no in-span text label or edge line (spec lists these as optional enhancements)
-    to give the highlighted regions a bit more visual distinction from each other
-    and from the grid.
-  - Legend swatches for the two spans are flat, unbordered color patches — a thin
-    edge stroke on the swatches (or a subtle span border matching the fill hue) would
-    help the muted 'Scheduled Maintenance' gray read more distinctly against the plot's
-    own light grid lines.
+  - The new hspan! SLA-threshold fill uses alpha=0.09, below the spec's suggested
+    0.2-0.3 range — visually justified here since the region covers nearly half the
+    plot height, but worth noting as a deviation from the literal guidance.
+  - Legend swatches still render as flat color patches without the dashed edge-stroke
+    styling that the plot itself now uses for span boundaries — a minor inconsistency
+    between the legend and the visual encoding it represents.
+  - No in-span text label is used (spec lists this as an optional enhancement); the
+    events are identified only via the legend, not directly inside the highlighted
+    regions.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1-consistent), not pure white.
-      Chrome: Bold dark title "span-basic · julia · makie · anyplot.ai" centered at top; dark axis titles "Day of Monitoring Window" (x) and "API Response Latency (ms)" (y, rotated); soft gray tick labels on both axes; subtle horizontal-only gridlines; left/bottom spines only (top/right removed); frameless top-left legend listing "Incident: Database Failover" (amber swatch), "Scheduled Maintenance" (gray swatch), "Response Latency" (green line swatch).
-      Data: Single green (#009E73) latency line zig-zagging between ~103-180ms across 90 days, with two semi-transparent vertical bands — a pale amber/olive band around days 34.5-41.5 coinciding with a sharp spike to ~180ms, and a light gray band around days 64.5-70.5 coinciding with a smaller bump to ~144ms.
+      Chrome: Bold dark title "span-basic · julia · makie · anyplot.ai" centered at top; dark axis titles "Day of Monitoring Window" (x) and "API Response Latency (ms)" (y); soft gray tick labels on both axes; subtle horizontal-only gridlines; left/bottom spines only (top/right removed). Frameless top-left legend lists "Incident: Database Failover" (amber swatch), "Scheduled Maintenance" (gray swatch), "SLA Threshold (>160ms)" (muted rose/pink swatch), and "Response Latency" (green line swatch).
+      Data: Single green (#009E73) latency line zig-zagging between ~103-180ms across 90 days. Two semi-transparent vertical bands mark the incident (days ~34.5-41.5, pale amber/olive, coinciding with a spike to ~180ms) and maintenance (days ~64.5-70.5, light gray, coinciding with a bump to ~144ms) windows, each bounded by thin dashed edge lines in the matching hue. A large semi-transparent rose-pink horizontal band covers the region above y=160 (the SLA threshold), bounded by a dashed red horizontal line at y=160; the data line visibly crosses into this breach zone during the incident window.
       Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17-consistent), not pure black.
-      Chrome: Same layout as light — white/near-white title and axis titles, lighter gray tick labels, subtle horizontal gridlines, left/bottom spines only, frameless legend with light text.
-      Data: Same green (#009E73) latency line and same data shape/values as the light render, confirming data colors are identical across themes. The amber span now reads as a dark olive-brown band and the muted span as a dark charcoal band — both still visibly distinct from the near-black page background and from each other.
+      Chrome: Same layout as light — white/near-white title and axis titles, lighter gray tick labels, subtle horizontal gridlines, left/bottom spines only, frameless legend with light text, all four legend entries present and readable.
+      Data: Same green (#009E73) latency line and same data shape/values as the light render, confirming data colors are identical across themes. The amber span now reads as a dark olive-brown band, the muted span as dark charcoal, and the SLA band as a dark maroon wash — all three remain visibly distinct from the near-black page background and from each other, with dashed boundary lines still legible.
       Legibility verdict: PASS — all text (title, axis labels, tick labels, legend) is clearly readable against the dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
@@ -66,34 +66,36 @@ review:
         max: 8
         passed: true
         comment: Explicit font sizes throughout (titlesize=20, labelsize=14, ticklabelsize=12);
-          readable in both themes with correct INK/INK_SOFT tokens.
+          readable in both themes via INK/INK_SOFT tokens.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits clear of the data line; no text/data collisions in either
-          render.
+        comment: Legend, title, axis text, and the new SLA dashed line/band do not
+          collide with the data line or each other in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: linewidth=3 for a single line over 90 points is prominent and appropriate
-          for the density.
+        comment: linewidth=3 for a single 90-point line is prominent and appropriate
+          for the density; dashed span edges (1.5) are visible without competing with
+          the data line.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green line vs. amber/muted spans is not a red-green pairing; spans
-          are also distinguished by legend label.
+        comment: Amber/muted-gray/matte-red spans plus green line are distinguished
+          by hue and by legend text, not by red-green pairing alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No clipping or overflow; canvas gate passed (3200x1800); good proportions.
+        comment: No clipping or overflow; canvas gate passed (3200x1800); good proportions,
+          title well within bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,35 +107,34 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; spans use the amber/muted semantic anchors
-          correctly rather than categorical pool slots; both backgrounds match exact
+        comment: 'First series #009E73; spans correctly use amber/muted/alert semantic
+          anchors rather than categorical-pool slots; both backgrounds match exact
           theme hexes.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Deliberate semantic color choice for the two spans raises it above
-          generic defaults, but overall polish is modest.
+        passed: true
+        comment: Three semantically-colored spans with dashed edge strokes read as
+          an intentional, polished system rather than default styling.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Spines removed (L-shape), subtle single-axis grid, frameless transparent
-          legend — solid but standard refinement.
+        passed: true
+        comment: New dashed edge-stroke boundaries give each span a crisper border
+          against the grid, directly fixing the attempt 1 'flat, unbordered' feedback.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Highlighted regions with descriptive legend labels create a clear
-          focal point tied to a real incident/maintenance narrative, though no in-span
-          annotation elevates it further.
+        passed: true
+        comment: Three distinct real-world events (incident, maintenance, SLA breach)
+          create a richer, clearer narrative than the two-event attempt 1 version.
     spec_compliance:
       score: 15
       max: 15
@@ -143,53 +144,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct span-over-line-chart implementation via vspan!.
+        comment: Correct span-over-line-chart implementation via vspan!/hspan!.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill within 0.2-0.3 alpha range, two span regions
-          overlaid on existing data, both labeled.
+        comment: Three labeled span regions overlaid on existing data, covering both
+          direction values; vspan alphas within the suggested 0.2-0.3 range (the hspan's
+          0.09 is a deliberate, visually-justified exception for a full-height region,
+          not a required-feature miss).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=day, Y=latency; spans correctly mapped along the x-axis for the
-          vertical direction case.
+        comment: X=day, Y=latency; vertical spans mapped along x, horizontal span
+          mapped along y — both direction cases correctly represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches canonical format exactly; legend labels are descriptive
-          and match the data narrative.
+        comment: Title matches canonical format exactly; all four legend labels are
+          descriptive and match the data narrative.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers alpha fill, multiple regions, labeled overlay; doesn't demonstrate
-          the horizontal-span (threshold) use case mentioned in the spec notes.
+        comment: Now demonstrates alpha fill, multiple regions, labeled overlay, AND
+          both vertical and horizontal span directions plus edge lines — closes the
+          attempt 1 gap fully.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: API latency monitoring with incident/maintenance events is plausible
+        comment: API latency monitoring with incident/maintenance/SLA events is plausible
           and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Latency values (~103-180ms) are realistic for an API response-time
-          domain.
+        comment: Latency values (~103-180ms) and a 160ms SLA threshold are realistic
+          for an API response-time domain.
     code_quality:
       score: 10
       max: 10
@@ -217,7 +221,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity.
+        comment: Appropriate complexity, no fake UI or simulated interactivity; new
+          hspan!/vlines!/hlines! additions are minimal and purposeful.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -226,7 +231,7 @@ review:
         comment: Saves plot-$(THEME).png with px_per_unit=2, matching the library
           convention.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -234,16 +239,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Figure/Axis/vspan!/lines!/axislegend used idiomatically; colorant
-          string literals and RGBAf grid color computation match Makie conventions.
+        comment: Figure/Axis/vspan!/hspan!/vlines!/hlines!/lines!/axislegend/ylims!
+          all used idiomatically.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: vspan! with tuple-based (color, alpha) styling is the defining feature
-          for this spec and is used correctly, though nothing beyond that is especially
-          distinctive.
+        comment: Combining vspan!, hspan!, vlines!, and hlines! with tuple-based (color,
+          alpha) styling to build a layered span system is a solid, library-idiomatic
+          showcase of Makie's span primitives.
   verdict: APPROVED
 impl_tags:
   dependencies: []
