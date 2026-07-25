@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 step-basic: Basic Step Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-25
@@ -71,7 +71,7 @@ plot = (
     + geom_step(color=BRAND, size=2, direction="hv")
     + geom_point(color=BRAND, size=6, alpha=0.9, tooltips=point_tooltips)
     + geom_text(
-        data=label_df, mapping=aes(x="month", y="cumulative_sales", label="label"), color=INK_SOFT, size=13, hjust=1
+        data=label_df, mapping=aes(x="month", y="cumulative_sales", label="label"), color=INK_SOFT, size=4.5, hjust=1
     )
     + labs(x="Month", y="Cumulative Sales ($K)", title="step-basic · letsplot · anyplot.ai")
     + scale_x_continuous(breaks=list(range(1, 13)))
@@ -79,13 +79,15 @@ plot = (
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid_major_x=element_blank(),
         panel_grid_major_y=element_line(color=RULE, size=0.3),
         panel_grid_minor=element_blank(),
+        panel_border=element_blank(),
         axis_title=element_text(color=INK, size=12),
         axis_text=element_text(color=INK_SOFT, size=10),
-        axis_line=element_line(color=INK_SOFT),
+        axis_line_x=element_line(color=INK_SOFT),
+        axis_line_y=element_line(color=INK_SOFT),
         plot_title=element_text(color=INK, size=16),
     )
 )
