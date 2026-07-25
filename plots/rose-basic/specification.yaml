@@ -6,14 +6,13 @@ title: Basic Rose Chart
 
 # Specification tracking
 created: 2025-12-15T20:44:57Z
-updated: 2025-12-15T20:44:57Z
+updated: 2026-07-25T10:02:46Z
 issue: 1003
 suggested: MarkusNeusinger
 
 # Classification tags (applies to all library implementations)
 tags:
   plot_type:
-    - rose
     - polar
   data_type:
     - categorical
