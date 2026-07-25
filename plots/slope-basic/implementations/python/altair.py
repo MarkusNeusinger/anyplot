@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
-Library: altair 6.2.2 | Python 3.13.12
-Quality: 86/100 | Updated: 2026-07-25
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 89/100 | Created: 2026-07-25
 """
 
 import os
