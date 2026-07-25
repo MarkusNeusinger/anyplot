@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: span-basic
 created: '2026-07-25T14:36:23Z'
-updated: '2026-07-25T14:42:52Z'
+updated: '2026-07-25T14:54:48Z'
 generated_by: claude-sonnet
 workflow_run: 30161831345
 issue: 980
@@ -12,51 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/d3/plot-dark.html
-quality_score: 80
+quality_score: 91
 review:
   strengths:
-  - 'Correct Imprint palette usage: brand green (#009E73) for the line and the semantically-fitting
-    matte-red (#AE3030) anchor for the recession/slowdown spans, identical across
-    both themes'
-  - Span opacity (0.22) sits squarely in the spec's recommended 0.2-0.3 range, keeping
-    the underlying line data fully visible through the shaded regions
+  - 'Both attempt-1 weaknesses are fully fixed: a horizontal "Correction zone (index
+    < 97)" span now demonstrates the spec''s second direction, and the x-domain now
+    uses d3.extent() across both the series dates and every span''s start/end so the
+    ''2011 slowdown'' span no longer bleeds through the right margin — confirmed by
+    pixel probe: the span fill and axis domain line both stop exactly at x=3080px
+    (= 3200 canvas width − 120px right margin), with clean off-white margin beyond
+    that point.'
+  - 'Correct Imprint palette usage: brand green (#009E73) for the line, matte-red
+    semantic anchor for the recession/slowdown spans, and amber semantic anchor for
+    the value-threshold band — identical data colors across both themes, only chrome
+    flips.'
   - Direct in-span text labels avoid the need for a legend on this single-series chart,
-    a clean minimal design choice per the style guide
-  - Deterministic seeded data generation, explicit font sizing on every text element,
-    and theme-correct chrome in both renders
+    a clean minimal design choice, and the technique of unioning series + span dates
+    into one scale domain is a thoughtful, non-obvious D3 pattern.
+  - Deterministic seeded (LCG) data generation, explicit font sizing on every text
+    element, and theme-correct chrome in both renders with no dark-on-dark or light-on-light
+    legibility failures.
   weaknesses:
-  - Only a "vertical" span direction is shown. The spec's direction field defines
-    both "vertical" and "horizontal" as valid categorical values, and the matplotlib/seaborn/plotly
-    implementations of this same spec-id all include a horizontal span (e.g. a value-threshold
-    "risk zone" band via axhspan/add_hrect). Add at least one horizontal span so the
-    plot demonstrates both direction variants.
-  - 'The second span ("2011 slowdown", 2011-07-01 to 2011-12-01) extends past the
-    x-scale''s domain max (last data point is quarterly, dated 2011-10-01), so x(d.end)
-    extrapolates beyond the inner chart width iw. Confirmed by pixel probe on plot-light.png:
-    the chart''s own axis/domain line ends at x=3079px, but the pink span fill continues
-    unbroken from x=2955px all the way to x=3199px, bleeding through the entire right
-    margin to the canvas edge. This leaves the right margin with zero whitespace while
-    the other three margins remain intact, and visually implies the highlighted region
-    continues past what the x-axis actually represents. Fix by extending the x-domain
-    to cover the full span range, or clamp the rect''s right edge to iw (e.g. Math.min(x(d.end),
-    iw) - x(d.start)).'
+  - Title occupies only ~30% of canvas width (measured via pixel scan) — well under
+    the 50-70% comfortable range; a slightly larger title fontsize would strengthen
+    the typographic hierarchy without risking overflow.
+  - The 24-point quarterly line series has no per-point markers; per the data-density
+    heuristic, sparse series (< 50 points) should get prominent markers in addition
+    to the line to make individual quarters distinguishable.
+  - Where the vertical recession span and the horizontal correction-zone span overlap
+    (e.g. 2008-2009 inside the < 97 band), the two semi-transparent fills blend into
+    an unlabeled third color — consider a slightly different compositing approach
+    or a note so the blended region doesn't read as an unexplained third category.
+  - Design polish is still fairly minimal beyond the span highlighting itself (no
+    additional refinement like an end-point marker on the line, subtle drop-shadow/separation
+    for the span labels, etc.) — DE-01 stays mid-range.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1 target.
-      Chrome: bold centered title "span-basic · javascript · d3 · anyplot.ai" in dark ink; axis titles "Year" / "Market Index" in dark ink; tick labels in softer ink; y-axis-only subtle gridlines. All clearly readable.
-      Data: brand-green (#009E73) line tracing a quarterly market index 2006-2011 (peak ~117, trough ~96); two matte-red (#AE3030) semi-transparent vertical bands ("2007-09 recession", "2011 slowdown") with centered in-band labels, alpha ~0.22.
+      Background: warm off-white, matches #FAF8F1 target (verified pixel value 250,248,241).
+      Chrome: bold centered title "span-basic · javascript · d3 · anyplot.ai" in dark ink; axis titles "Year" / "Market Index" in dark ink; tick labels in softer ink; y-axis-only subtle gridlines. All clearly readable, no overflow or clipping at any edge (pixel-probed right edge: span fill and axis line both terminate at x=3080px, leaving a clean 120px off-white margin to the canvas edge).
+      Data: brand-green (#009E73) line tracing a quarterly market index 2006-2011 (peak ~117, trough ~96); two matte-red (#AE3030) semi-transparent vertical bands ("2007-09 recession", "2011 slowdown") with centered in-band labels; one amber semi-transparent horizontal band ("Correction zone (index < 97)") spanning the full plot width near the bottom. Alpha ~0.22 throughout, underlying line stays visible through all spans.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black, matches #1A1A17 target.
-      Chrome: title and axis titles switch to light ink, tick labels to softer light ink, gridlines to a low-opacity light color. No dark-on-dark failures observed anywhere.
-      Data: identical brand-green line and identical matte-red span fill hue (rendered as a darker translucent maroon against the dark surface, as expected — only chrome flips, not data color).
+      Chrome: title and axis titles switch to light ink, tick labels to softer light ink, gridlines to a low-opacity light color. No dark-on-dark failures observed anywhere — all text (including the "Correction zone" label sitting on the olive-toned amber band) remains clearly legible.
+      Data: identical brand-green line and identical span fill hues (rendered as darker translucent maroon/olive against the dark surface, as expected — only chrome flips, not data color).
       Legibility verdict: PASS
-
-    Additional check performed: pixel-probed the right edge of plot-light.png at y=1200. The chart's own axis/domain line ends at x=3079px (matches iw + margin.left), but the "2011 slowdown" span's pink fill continues unbroken from x=2955px to x=3199px (the canvas edge) — an unintended ~120px bleed through the entire right margin caused by the span's end date (2011-12-01) falling outside the x-scale's domain (max data point 2011-10-01), which the linear/time scale then extrapolates past the inner chart width.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -64,34 +68,36 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, fully readable in both themes, no
-          overflow/clipping
+        comment: All font sizes explicitly set, fully readable in both themes; title
+          could be slightly larger for stronger hierarchy but nothing is illegible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions
+        comment: No text/element collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line weight and span alpha well-adapted
+        comment: 3px line weight and 0.22 span alpha keep both the line and the underlying
+          data visible through the highlighted regions
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green line vs red span differ by hue and visual channel, not hue
-          alone
+        comment: Green line vs red/amber spans differ by hue and role, not hue alone;
+          spans are background context not competing data series
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Second span rectangle overflows inner chart width, bleeding through
-          the entire right margin to the canvas edge
+        passed: true
+        comment: Attempt-1 margin-bleed bug fixed — pixel probe confirms span fill
+          and axis line both stop exactly at x=3080px, clean 120px right margin restored;
+          correct 3200×1800 canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -103,10 +109,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; span uses semantic-anchor red; theme-correct
+        comment: 'First series #009E73; spans use semantic-anchor red and amber; theme-correct
           chrome in both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -114,23 +120,24 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Intentional semantic color choice lifts it above generic default,
-          but modest overall polish
+        comment: Intentional semantic color choices lift it above generic default,
+          but overall polish beyond the span highlighting is still modest
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: L-shaped spine and y-only gridlines per style guide, held back by
-          margin-bleed issue
+        passed: true
+        comment: L-shaped spine, y-only gridlines, generous margins; no longer held
+          back by the fixed margin-bleed issue
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Highlighted recession bands create a clear focal point and narrative
+        passed: true
+        comment: Both recession bands and the threshold band create a clear, labeled
+          narrative guiding the viewer through the market's downturns
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,17 +148,18 @@ review:
         comment: Correct span-over-line-chart pattern
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Only vertical span direction demonstrated; horizontal direction from
-          spec is missing
+        passed: true
+        comment: Both vertical and horizontal span directions now demonstrated, semi-transparent
+          fill in spec's 0.2-0.3 range, optional labels included
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Second span's end date falls outside the x-axis domain
+        passed: true
+        comment: x-domain now unions series and span dates, so no span end extrapolates
+          past the axis
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -160,22 +168,23 @@ review:
         comment: Title format matches exactly; legend appropriately omitted in favor
           of direct labels
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Vertical/recession use case covered well, horizontal/threshold use
-          case missing
+        passed: true
+        comment: Both direction/use-cases from the spec (recession periods, threshold
+          zone) are now covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral finance scenario
+        comment: Plausible, neutral finance scenario matching real 2007-09 / 2011
+          downturns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -191,7 +200,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes
+        comment: No classes; single tiny LCG helper
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -217,7 +226,7 @@ review:
         passed: true
         comment: Correct mount-node contract, no animations
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,11 +237,12 @@ review:
         comment: Idiomatic scales/axes and .data().join() patterns throughout
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Basic data-join usage, nothing beyond baseline expectation
-  verdict: REJECTED
+        comment: Union-domain-across-spans technique and in-place span labeling are
+          distinctive; nothing beyond that
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
