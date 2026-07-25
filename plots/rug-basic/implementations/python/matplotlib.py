@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 rug-basic: Basic Rug Plot
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-25
@@ -8,7 +8,6 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.collections import EventCollection
 
 
 # Theme tokens
@@ -35,15 +34,15 @@ values = np.concatenate([core_values, outliers])
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Rug plot using EventCollection — idiomatic matplotlib for 1D event distributions
-# Kept small (linelength=0.3) so marks read as ticks, not bars
-events = EventCollection(
-    values, orientation="horizontal", lineoffset=0.5, linelength=0.3, linewidth=2.5, color=BRAND, alpha=0.7
+# Rug plot using ax.eventplot() — matplotlib's top-level API for 1D event distributions
+# Kept small (linelengths=0.3) so marks read as ticks, not bars; alpha lowered so
+# individual ticks stay distinguishable even in the densest cluster
+ax.eventplot(
+    values, orientation="horizontal", lineoffsets=0.5, linelengths=0.3, linewidths=2.0, colors=BRAND, alpha=0.55
 )
-ax.add_collection(events)
 
 ax.set_xlim(-2, 107)
-ax.set_ylim(0, 1)
+ax.set_ylim(0.25, 1.0)  # trims the dead space below the ticks down to the x-axis
 
 # Hide y-axis — rug plots focus on the x-distribution only
 ax.set_yticks([])
