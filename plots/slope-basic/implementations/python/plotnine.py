@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-25
@@ -36,9 +36,10 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 COLOR_INCREASE = "#009E73"
 COLOR_DECREASE = "#AE3030"
 
-# Data: national coal share of electricity generation, 2014 vs 2024.
-# Advanced economies phased coal out under climate policy while several
-# emerging economies leaned on it for energy security -- a clean mix of
+# Data: national coal share of electricity generation, 2014 vs 2024
+# (approximate figures consistent with IEA/Ember energy-mix statistics).
+# Most advanced economies phased coal out under climate policy while a
+# few emerging economies leaned on it for energy security -- a mix of
 # increases, decreases and rank reversals for a slopegraph to tell.
 entities = [
     "Germany",
@@ -52,8 +53,8 @@ entities = [
     "Vietnam",
     "Turkey",
 ]
-share_2014 = [90, 81, 74, 63, 54, 47, 38, 27, 20, 9]
-share_2024 = [18, 8, 54, 75, 26, 36, 65, 83, 92, 45]
+share_2014 = [44, 30, 84, 92, 39, 63, 74, 66, 19, 27]
+share_2024 = [23, 1, 57, 84, 15, 42, 76, 59, 34, 36]
 
 changes = ["Increase" if end >= start else "Decrease" for start, end in zip(share_2014, share_2024, strict=True)]
 
@@ -88,14 +89,14 @@ df_labels_right = pd.DataFrame(
 
 plot = (
     ggplot(df_long, aes(x="x", y="value", group="entity", color="change"))
-    + geom_line(size=1.0, alpha=0.85)
-    + geom_point(size=2.5)
+    + geom_line(size=1.4, alpha=0.85)
+    + geom_point(size=3.2)
     # Left labels: entity name + starting value
     + geom_text(aes(label="label"), data=df_labels_left, ha="right", nudge_x=-0.06, size=3.2, color=INK)
     # Right labels: ending value only
     + geom_text(aes(label="label"), data=df_labels_right, ha="left", nudge_x=0.06, size=3.2, color=INK)
     + scale_color_manual(values={"Increase": COLOR_INCREASE, "Decrease": COLOR_DECREASE})
-    + scale_x_continuous(breaks=[1, 2], labels=["2014", "2024"], limits=(0.55, 2.45))
+    + scale_x_continuous(breaks=[1, 2], labels=["2014", "2024"], limits=(0.55, 2.3))
     + labs(
         x="",
         y="Coal Share of Electricity Generation (%)",
@@ -115,7 +116,8 @@ plot = (
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=9, color=INK),
         legend_position="right",
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_box_spacing=0.015,
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_border=element_blank(),
