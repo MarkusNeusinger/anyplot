@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: polar-basic
 created: '2026-07-24T23:49:51Z'
-updated: '2026-07-24T23:56:45Z'
+updated: '2026-07-25T00:17:53Z'
 generated_by: claude-sonnet
 workflow_run: 30134367385
 issue: 800
@@ -12,49 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Clean coord_polar wind-rose implementation with correctly ordered 16-point compass
-    and a clear, realistic prevailing-wind (SW) focal point
-  - Clever, well-commented workaround for the known ggplot2 coord_polar label-placement
-    quirk (manual geom_text compass labels instead of default axis.text.x colliding
-    with the boundary circle)
-  - 'Correct Imprint palette usage (brand green #009E73 for the single series) and
-    fully theme-adaptive chrome — both renders pass the light/dark legibility check'
-  - Title format exactly matches the mandated spec, KISS code structure, reproducible
-    via set.seed(42), no fake interactivity
+  - 'Both flagged issues from Attempt 1 are correctly fixed: wind_frequency is now
+    normalized (base_frequency / sum(base_frequency) * 100) so the 16 compass directions
+    sum to ~100%, and the radial gridlines now use scales::alpha(INK, 0.2) instead
+    of full-strength ink'
+  - Verified via pixel-level analysis (ray-casting from the true polar origin through
+    each compass label) that all 16 wedges render at the correct angle for their label
+    and with radii proportional to the underlying data — the SW prevailing-wind peak
+    and the new, subtler NE land-breeze counter-bump both read correctly
+  - Clean coord_polar + geom_col wind-rose implementation with a well-commented workaround
+    for the ggplot2 quirk where default theta-axis text collides with the polar boundary
+    circle (manual geom_text compass labels at a radius just inside grid_max)
+  - 'Fully theme-adaptive chrome verified in both renders: identical #009E73 data
+    color, warm off-white / near-black backgrounds, all text readable, no dark-on-dark
+    or light-on-light failures'
+  - KISS code structure, set.seed(42) reproducibility, correct title format, clean
+    imports, no fake interactivity
   weaknesses:
-  - Wind frequency values sum to ~115% across the 16 compass directions (before noise)
-    — a distribution explicitly labeled 'Wind frequency (%)' must sum to ≤100% since
-    it represents share of occurrences across all directions. Normalize wind_frequency
-    (e.g. divide the pre-noise base_frequency vector by its total and multiply by
-    100, or rescale by a smaller peak amplitude) so the values form a true percentage
-    distribution.
-  - panel.grid.major.y uses full-strength INK color (effectively 100% opacity) for
-    the concentric radial gridlines instead of a faint tint — the style guide calls
-    for 'very subtle, opacity 15-25%' grid lines. Wrap the grid color in scales::alpha(INK,
-    0.15) (or similar) so the circles recede behind the data instead of competing
-    with it.
-  - Data shows a single smooth, unimodal falloff around the prevailing SW direction
-    — realistic but doesn't showcase a secondary pattern (e.g. a light land-breeze
-    counter-peak) that would demonstrate more of the wind-rose plot type's feature
-    range.
-  - The manual compass-direction labels (~9.1pt via geom_text size=3.2) sit close
-    in size to the y-axis title (10pt), slightly blurring the type hierarchy between
-    primary and tick-level text — consider shrinking by 1-2pt for a cleaner hierarchy.
+  - The new land_breeze_bump (secondary NE counter-peak) is data-model-correct but
+    visually imperceptible — in the rendered wedge radii, NE (~4.5%) is barely distinguishable
+    from its neighbors N/NNE/ENE (~3.7-4.3%) and is actually smaller than SE (~4.5%)
+    on the unrelated far side of the SW peak, so the intended 'dominant onshore wind
+    + secondary land-breeze' story does not read as two distinct peaks to a viewer
+  - Single hue throughout (brand green only) with no secondary emphasis technique
+    (e.g. a subtly different fill/outline on the peak SW wedge) — Design Excellence
+    is solid but still short of publication-level polish
+  - Compass labels (~8pt) and the y-axis title 'Wind frequency (%)' (10pt) remain
+    fairly close in visual weight; a slightly larger gap in the type scale would sharpen
+    the hierarchy further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "polar-basic · r · ggplot2 · anyplot.ai" in dark ink, centered top. A large circular polar grid dominates the canvas with 4 concentric radial gridlines labeled 0/5/10/15/20 stacked vertically along a line on the left, and the rotated axis title "Wind frequency (%)" further left. 16 compass-direction labels (N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW) ring the outside of the circle in dark ink. All chrome text is dark and clearly readable against the light cream background.
-      Data: Green (#009E73) wedges radiate from the center — tallest toward SW/WSW/SSW (bottom-left), shrinking to near-zero toward NE/ENE (right side), clearly showing a single prevailing wind direction. Single series, correct brand green.
-      Legibility verdict: PASS — no light-on-light or unreadable text found.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "polar-basic · r · ggplot2 · anyplot.ai" centered at top in dark ink, comfortably sized (no overflow/clipping). A circular polar grid fills most of the square canvas with concentric radial gridlines at 5/10/15 plus an outer boundary at 20, all rendered as a faint ~20%-opacity ink tint (fixed from Attempt 1's full-strength lines). Radial tick labels (0/5/10/15) and the rotated axis title "Wind frequency (%)" sit outside the circle on the left in dark ink. 16 compass-direction labels (N, NNE, NE, ... NNW) ring the circle at even 22.5° intervals, placed just inside the outer boundary via manual geom_text (avoiding the known coord_polar label/boundary-circle collision).
+      Data: Green (#009E73) wedges radiate from the true polar center. Verified via pixel ray-casting through each label's exact angle (not an assumed geometric center) that every one of the 16 wedges renders at the correct compass position: the tallest wedges cluster around S/SSW/SW/WSW (prevailing onshore wind), tapering smoothly to a low, fairly uniform band across N/NNE/NE/ENE/E/ESE, with a very slight (barely perceptible) uptick at NE from the new land-breeze term.
+      Legibility verdict: PASS — all text is clearly dark-on-light and readable; no overlaps between labels, title, or data.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as the light render. Title, gridline circles, compass labels, tick numbers, and the rotated axis title are all rendered in light ink (off-white/light grey), clearly legible against the dark background.
-      Data: Green wedges are pixel-identical in hue to the light render (#009E73) — only the chrome (background, text, gridlines) flipped, confirming theme-adaptive tokens were threaded through correctly.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and gridlines stand out clearly against the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical layout to the light render. Title, gridlines (same faint alpha treatment), tick numbers, axis title, and all 16 compass labels are rendered in light ink (consistent with INK/INK_SOFT tokens flipped for the dark theme) and are clearly legible against the dark background. No dark-on-dark failures anywhere.
+      Data: Confirmed pixel-identical #009E73 wedge colors and shape to the light render (only chrome flipped, as required) — same wedge radii verified via the same ray-cast method.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light issues; brand green reads clearly on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,49 +65,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; compass labels
-          (~9.1pt) sit close in size to the 10pt axis title, slightly muddying hierarchy
+        comment: All font sizes explicit and readable in both themes; compass labels
+          (~8pt, geom_text size=2.8mm) sit fairly close to the 10pt axis title, slightly
+          blurring hierarchy
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, compass labels, tick numbers, or data
+        comment: No overlap between title, compass labels, tick labels, or wedges
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible and appropriately sized for 16 categories; small
-          near-zero slices are a data feature, not a sizing flaw
+        comment: All 16 wedges clearly visible with appropriate width (0.85 fill ratio)
+          and gaps
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green has strong contrast against both backgrounds
+        comment: Single-hue series, no red-green reliance, good contrast against both
+          backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Circular grid fills ~70-75% of the 2400x2400 canvas, well-centered
-          with balanced margins, nothing cut off
+        comment: Circular grid fills ~70-80% of the 2400x2400 canvas, well-centered,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Wind frequency (%)'' is descriptive with units'
+        comment: '"Wind frequency (%)" descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds match Imprint light/dark tokens,
-          chrome theme-correct in both renders'
+        comment: 'First series #009E73, theme-correct chrome verified in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -115,25 +116,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Clean single-hue wind rose with a thoughtful manual label workaround,
-          above a plain default, but no additional color/emphasis hierarchy beyond
-          the data shape itself
+        comment: Clean single-hue wind rose with a thoughtful manual-label workaround,
+          above a plain default, but no additional color/emphasis hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Generous whitespace and clean minimal theme, but radial gridlines
-          are full-strength INK rather than the mandated 'very subtle, 15-25% opacity'
-          look
+        passed: true
+        comment: 'Fixed: radial gridlines now use scales::alpha(INK, 0.2) instead
+          of full-strength ink; generous whitespace, minimal theme'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: The skewed bar pattern itself creates a clear focal point (prevailing
-          SW wind) — visual hierarchy via data choice, though no additional annotation/emphasis
-          was added
+        comment: SW focal point still reads clearly via data choice, but the new NE
+          land-breeze counter-peak is too subtle to register visually as a second
+          story beat
     spec_compliance:
       score: 15
       max: 15
@@ -149,47 +148,47 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Radial gridlines present, angular labels at standard compass intervals,
-          sensible starting angle, uncompressed linear radial scale
+        comment: Radial gridlines, standard-interval compass labels, sensible starting
+          angle, linear radial scale
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: theta = direction, radius = frequency; all 16 directions shown
+        comment: theta=direction, radius=frequency; verified via pixel ray-cast that
+          all 16 directions map to the correct angle
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed for single
-          series
+        comment: Title matches mandated format exactly; legend correctly omitted for
+          single series
     data_quality:
-      score: 11
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Shows a clean unimodal prevailing-wind pattern but not additional
-          real-world wind-rose features like a secondary counter-peak
+        passed: true
+        comment: Now includes a secondary land-breeze counter-peak in the data model,
+          though its visual impact is minor
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Coastal weather-station wind rose is neutral, real-world, and directly
-          matches the spec's suggested application
+        comment: Coastal weather-station wind rose, neutral and matches the spec's
+          suggested application
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Values labeled as 'Wind frequency (%)' sum to ~115% across the 16
-          directions (verified analytically) — a percentage distribution cannot exceed
-          100%
+        passed: true
+        comment: 'Fixed: base_frequency is normalized to sum to 100% before noise
+          is added, resolving the ~115% overshoot from Attempt 1'
     code_quality:
       score: 10
       max: 10
@@ -199,7 +198,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear imports -> data -> plot -> save
+        comment: Imports -> data -> plot -> save; small angular_distance() helper
+          is a reasonable, well-justified exception
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -211,20 +211,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg loaded; tibble used via namespace
+        comment: ggplot2, ragg, scales all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; the manual label workaround is well-commented
-          and justified
+        comment: No fake UI; coord_polar label workaround is well-commented and justified
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png, no deprecated calls
+        comment: plot-{THEME}.png via ragg::agg_png, correct dimensions
     library_mastery:
       score: 7
       max: 10
@@ -241,16 +240,18 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: coord_polar as a coordinate-system transform on a categorical bar
-          geom is a distinctive grammar-of-graphics technique, plus a library-specific
-          quirk workaround
-  verdict: REJECTED
+        comment: coord_polar as a coordinate-transform on a categorical bar geom,
+          plus a genuine documented library-quirk workaround
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scales
   techniques:
   - polar-projection
-  - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  dataprep:
+  - normalization
+  styling:
+  - grid-styling
+  - alpha-blending
