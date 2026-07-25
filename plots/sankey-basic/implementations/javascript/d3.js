@@ -1,7 +1,7 @@
 // anyplot.ai
 // sankey-basic: Basic Sankey Diagram
 // Library: d3 7.9.0 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-07-25
+// Quality: 88/100 | Created: 2026-07-25
 //# anyplot-orientation: landscape
 
 // NOTE: the pinned bundle exposes only core d3 (d3-selection, d3-scale,
