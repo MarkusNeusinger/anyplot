@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stem-basic: Basic Stem Plot
-Library: plotnine 0.15.7 | Python 3.13.12
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-07-25
 """
 
 import os
