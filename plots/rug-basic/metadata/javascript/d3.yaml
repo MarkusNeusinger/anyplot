@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: rug-basic
 created: '2026-07-25T07:03:40Z'
-updated: '2026-07-25T07:08:03Z'
+updated: '2026-07-25T07:18:33Z'
 generated_by: claude-sonnet
 workflow_run: 30148453111
 issue: 978
@@ -12,60 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 96
 review:
   strengths:
-  - Combines a histogram and a rug strip sharing one x-scale — exactly the 'complement
-    to a histogram' use case called out in the spec notes, so the rug's gap/cluster/outlier
-    value is visible immediately rather than in isolation
-  - 'Data is a realistic, neutral scenario (API response-time lognormal cluster plus
-    a small retry/timeout cluster) that genuinely exercises the rug plot''s purpose:
-    the ~250-450ms gap and the ~460-550ms secondary cluster are only visible because
-    of the individual tick marks, not the binned histogram'
-  - Semi-transparency (stroke-opacity 0.35) is applied to the rug ticks per the spec's
-    explicit 'use alpha when observations overlap' guidance
-  - Deterministic in-memory data generation via a small seeded LCG, idiomatic d3.bin()/scaleLinear()/axisBottom()/axisLeft()
-    usage with the modern .join() data-binding pattern
-  - 'Both renders are fully theme-correct: identical #009E73 data color in light and
-    dark, correct #FAF8F1/#1A1A17 backgrounds, all text readable in both themes with
-    explicit font sizes'
+  - 'Fully addresses attempt 1''s feedback: rug-tick opacity is now derived from local
+    pixel density (d3.scaleLinear over a neighbor-count density measure), so individual
+    observations stay distinguishable even in the densest cluster instead of merging
+    into a solid band'
+  - A tinted lane band + 'Individual requests' caption now visually and textually
+    links the rug strip to the histogram above it, closing the previous DE-02 gap
+  - Explicit storytelling callouts ('gap', 'slow retries') with dashed guide lines
+    name the exact insight the rug reveals that the histogram bins hide -- direct
+    visual hierarchy and a clear focal point
+  - 'Realistic, neutral, deterministic data (seeded LCG): a lognormal API response-time
+    cluster plus a small retry/timeout cluster, genuinely exercising the rug plot''s
+    purpose of showing gaps and outliers'
+  - 'Idiomatic modern d3: d3.bin(), d3.scaleLinear, d3.axisBottom/Left, d3.max/mean/extent,
+    and the .join() selection pattern throughout'
+  - 'Both renders are fully theme-correct: identical #009E73 data color, correct #FAF8F1/#1A1A17
+    backgrounds, all text legible in both themes, no dark-on-dark or light-on-light
+    failures'
   weaknesses:
-  - 'Design Excellence is still close to a well-configured default: single flat green
-    fill for both the histogram bars and the rug ticks, no secondary visual cue (e.g.
-    a subtle divider/background band or small caption like ''Individual observations'')
-    separating the rug lane from the histogram, so a first-time viewer has to infer
-    what the bottom strip represents'
-  - In the dense core cluster (~100-240ms) the overlapping rug ticks merge into a
-    near-solid band at stroke-opacity 0.35 — individual observations in that region
-    are no longer distinguishable, which undercuts the rug plot's core promise of
-    showing 'the exact location of every observation'; consider a lower opacity (~0.2)
-    or a small vertical jitter within the rug lane specifically for the dense region
-    so density still reads as density without becoming a solid block
-  - No visual link (matching color intensity, connecting guide, or label) between
-    the histogram panel and the rug panel beyond proximity and a shared x-axis; a
-    thin lane background tint or axis-title like 'Individual requests' under the rug
-    strip would reinforce the two-panel story and lift Data Storytelling
-  - 'Library Mastery is generic-idiomatic: d3.bin() + axis generators are correct
-    but not distinctive to D3 — the same histogram+rug combination is equally easy
-    in seaborn (sns.histplot + sns.rugplot) or similar libraries; leaning into something
-    D3-specific (e.g., a custom density-based opacity scale for the rug ticks, or
-    a brush/zoom-style layout even if not interactive) would better showcase D3''s
-    low-level flexibility'
+  - Design Excellence is still built on a single flat accent color with no broader
+    typographic hierarchy (callout labels and axis labels share the same weight/style
+    family) -- minor, since the Imprint single-series rule limits palette options
+  - The 'gap' and 'slow retries' dashed guide lines run through empty histogram space,
+    which works but is a fairly plain annotation style -- a small marker or shaded
+    band at the callout x-position would read even more polished
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "rug-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. Y-axis label "Number of Requests" (rotated) and x-axis label "Response Time (ms)" both dark ink, 16px, legible. Tick labels on both axes are dark, legible, similar size. Subtle horizontal-only gridlines behind the histogram bars, faint but visible.
-      Data: Green (#009E73) histogram of ~180 response times with a main lognormal peak around 100-240ms and a small secondary cluster around 460-550ms, separated by an empty gap (~250-450ms). Below the histogram, a matching-green semi-transparent rug strip shows every individual observation as a short vertical tick, sharing the same x-scale. Ticks are dense/near-solid in the main cluster region and clearly individually distinguishable in the sparse regions (the gap edges and the 460-550ms cluster).
-      Legibility verdict: PASS — all text is dark-on-light and fully readable, no overlap.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark title "rug-basic · javascript · d3 · anyplot.ai" centered at top. Axis labels "Response Time (ms)" (x) and "Number of Requests" (y) in dark ink, 16px. Tick labels on both axes dark and legible. Subtle horizontal-only gridlines behind the histogram. Two dashed vertical guide lines labeled "gap" and "slow retries" in soft ink point at the empty region (~380-460ms) and the retry cluster (~500ms). A light-green tinted lane sits below the histogram holding the rug strip, captioned "Individual requests" in the top-right of the lane.
+      Data: Green (#009E73) histogram bars show a main lognormal peak (~100-240ms) and a small secondary cluster (~460-550ms) separated by a visible gap. Below, the rug strip renders one thin green tick per observation, with per-tick opacity driven by local density -- ticks in the dense core are still individually distinguishable (not a merged solid band), while isolated ticks in sparse regions are strongly visible.
+      Legibility verdict: PASS -- all text (title, axis labels, tick labels, callout labels, caption) is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, both axis labels, and tick labels all render in light/off-white ink, clearly readable against the dark background. Gridlines are faint light lines, still subtle. No dark-on-dark text anywhere.
-      Data: Same #009E73 green for both the histogram bars and the rug ticks — identical to the light render, confirming only chrome (not data color) flips between themes. Same cluster/gap/outlier structure visible.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; all chrome is theme-correct.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title, axis labels, tick labels, callout labels, and caption now render in light/off-white ink -- fully legible, no dark-on-dark failures anywhere. Gridlines and guide lines remain subtle but visible. The rug lane's tint is a darker green wash appropriate for the dark surface.
+      Data: Histogram bars and rug ticks are the identical #009E73 green as the light render, confirming only chrome flipped. Same cluster/gap/outlier structure and same density-driven rug-tick opacity behavior are visible.
+      Legibility verdict: PASS -- no dark-on-dark or unreadable text; brand green reads clearly on the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -73,49 +61,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (14px ticks, 16px axis labels, 22px
-          bold title), readable in both themes, no overflow/clipping
+        comment: Explicit px font sizes; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or data
+        comment: No collisions between text, callouts, and data elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars and rug ticks are well-sized, but the dense core cluster of
-          rug ticks merges into a near-solid band, losing individual-observation distinguishability
-          there
+        comment: Density-derived opacity scale fixes the prior merged-band issue --
+          ticks stay distinguishable even in the dense core
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single high-contrast green on both surfaces, no red-green reliance
+        comment: Single-hue accent, adequate contrast, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the canvas well, balanced margins, nothing cut off
+        comment: Canvas gate passed; balanced proportions; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Response Time (ms)'' has units; ''Number of Requests'' is descriptive'
+        comment: Descriptive labels with units (ms, count)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 in both renders, identical across themes;
-          backgrounds are theme-correct #FAF8F1/#1A1A17'
+        comment: 'First series #009E73; correct light/dark backgrounds; identical
+          data color across themes'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -123,24 +109,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Thoughtful two-panel composition (histogram + rug sharing scale)
-          above a plain default, but still a single flat color and no broader color/typography
-          harmony
+        comment: Tinted lane, storytelling callouts, and density encoding show intentional
+          polish, but still one flat accent color with no broader typographic hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Y-axis-only subtle gridlines and bar separator strokes are refinements,
-          but no divider/label distinguishing the rug lane from the histogram panel
+        passed: true
+        comment: Spines minimal, grid subtle, generous whitespace; tinted band + caption
+          now link the two panels (fixes attempt-1 gap)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: The histogram+rug pairing does create hierarchy (aggregate view above,
-          precise/individual view below) revealing the gap and outlier cluster, but
-          nothing explicitly calls the insight out
+        passed: true
+        comment: Explicit 'gap' and 'slow retries' callouts with guide lines name
+          the exact insight the rug reveals -- clear focal points and hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -150,26 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rug plot, used as intended complement to a histogram
+        comment: Genuine rug strip (one tick per observation) used as the spec-recommended
+          complement to a histogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Alpha transparency for overlap, consistent small tick height, default
-          x-axis position — all present
+        comment: Semi-transparency for overlap, consistent small tick height, x-axis
+          position
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Single continuous variable correctly mapped to x, all data visible
+        comment: X = response time shared across panels; Y = request count
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed for single series
+        comment: Title matches required format exactly; no legend needed for single
+          series
     data_quality:
       score: 15
       max: 15
@@ -179,21 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clustering (main peak), a clear gap, and an outlier/secondary
-          cluster — all the phenomena a rug plot is meant to reveal
+        comment: Shows clustering, a gap, and outliers -- all aspects the spec calls
+          out
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: API response-time scenario is realistic, comprehensible, and neutral
+        comment: API response-time data with a retry cluster is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times (40-550ms) and cluster proportions are factually plausible
-          for an API with occasional slow retries
+        comment: 0-550ms range is sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -203,55 +188,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single top-to-bottom script, no functions/classes
+        comment: No classes; only small helper closures for the seeded RNG
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG, fully deterministic
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global is used, no extraneous imports
+        comment: Only the global d3, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake UI
+        comment: No fake UI/interactivity; appropriate complexity for the density
+          calc
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly follows the #container mount-node contract, no animation'
+        comment: 'Builds one svg into #container per the mount-node contract; no animation'
     library_mastery:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct idiomatic use of d3.bin(), scales, axis generators, and the
-          modern .join() pattern
+        comment: d3.bin, scaleLinear, axisBottom/Left, extent/mean/max, modern .join()
+          pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: d3.bin() plus manual dual-panel layout is solid D3 usage, but the
-          same histogram+rug combination is equally achievable in other libraries
-          (e.g. seaborn histplot+rugplot) — nothing here is uniquely D3
-  verdict: REJECTED
+        passed: true
+        comment: Local-density-driven opacity scale for rug ticks is a genuine D3-specific
+          technique, directly answering attempt-1's LM-02 feedback
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
