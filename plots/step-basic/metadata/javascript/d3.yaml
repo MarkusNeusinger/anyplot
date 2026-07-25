@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: step-basic
 created: '2026-07-25T15:54:09Z'
-updated: '2026-07-25T15:58:25Z'
+updated: '2026-07-25T16:07:45Z'
 generated_by: claude-sonnet
 workflow_run: 30164394574
 issue: 956
@@ -12,48 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/d3/plot-dark.html
-quality_score: 84
+quality_score: 90
 review:
   strengths:
+  - 'Directly and precisely addressed all three Attempt-1 weaknesses: added a soft
+    halo (stroke-opacity 0.16, stroke-width 12) behind the two restock jump segments,
+    differentiated restock-hour markers (solid fill, radius 9) from regular readings
+    (hollow, radius 7) via d3.scaleOrdinal, and lightened the axis domain lines (stroke-opacity
+    0.4, stroke-width 1) for a more minimal L-shaped frame.'
   - Correct use of d3.curveStepAfter to implement the spec's 'post' step style (value
     holds from the current reading until the next), matching the specification's guidance
     precisely.
-  - 'Both renders are theme-correct: warm off-white (#FAF8F1) and warm near-black
-    (#1A1A17) backgrounds, all text legible, and the data color (#009E73) is identical
-    between light and dark — only chrome flips.'
-  - Hollow-marker technique (circle fill = t.pageBg, stroke = palette color) creates
-    a clean, non-cluttered highlight at each of the 24 hourly readings without obscuring
-    the step line.
-  - Y-axis-only gridlines with the axis domain removed on the grid group, per the
-    style guide.
-  - Realistic, neutral dataset (hourly warehouse inventory with two restock events
-    at hour 8 and 16) that clearly exercises the step-plot form — the abrupt vertical
-    jumps read unambiguously as restocking events.
+  - 'Both renders remain theme-correct: warm off-white (#FAF8F1) and warm near-black
+    (#1A1A17) backgrounds, all text legible in both themes, and the data color (#009E73)
+    is identical between light and dark — only chrome flips.'
+  - 'The restock emphasis now creates a genuine visual focal point: the eye is drawn
+    to the two jump events (hour 8 and hour 16) via the glow + solid-marker treatment,
+    reinforcing the data''s actual story (two daily restocking events).'
+  - Realistic, neutral dataset (hourly warehouse inventory with two restock events)
+    that clearly exercises the step-plot form — abrupt vertical jumps read unambiguously.
   - 'Clean KISS structure: no functions/classes, deterministic hardcoded data, only
-    the required d3 global — nothing to flag on reproducibility or imports.'
+    the required d3 global, y-axis-only gridlines per the style guide.'
   weaknesses:
-  - Design excellence is largely generic beyond the token-driven baseline — the two
-    restock events (the most narratively interesting feature of the data) get no visual
-    emphasis (e.g. a subtle annotation or callout), so the story of 'inventory resets
-    twice a day' isn't reinforced beyond what the raw step shape already shows.
-  - Axis domain (baseline) lines are kept on both axes at full inkSoft weight rather
-    than lightened/removed, which is a common refinement at this design tier for a
-    more minimal, spine-free look.
-  - Distinctive-feature usage is modest — relies on standard d3-shape/d3-axis primitives
-    (scaleLinear, axisBottom/Left, curveStepAfter) required by the spec itself; no
-    additional d3-specific flourish beyond the hollow-marker treatment.
+  - The restock emphasis (solid vs. hollow markers, glow) has no accompanying label,
+    legend, or annotation — a first-time viewer can infer 'these two points differ'
+    but not *why* without reading the code; a small text callout ('Restock') would
+    close that gap.
+  - 'Library Mastery is still modest: the new marker/glow treatment leans on d3.scaleOrdinal
+    keyed by a boolean plus stroke-opacity, which is a nice touch but still close
+    to standard d3-shape/d3-scale primitives rather than a more distinctive d3-specific
+    capability (e.g. d3.interpolate-driven transitions between states, a d3-format
+    tick refinement, or a computed marker-size scale tied to the magnitude of each
+    jump).'
+  - Aesthetic sophistication, while improved, is still centered on a single-color
+    step line with a halo — there is no secondary encoding (e.g. size/opacity scaled
+    to jump magnitude) that would push the storytelling further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — clearly not pure white, not dark.
-      Chrome: Title "step-basic · javascript · d3 · anyplot.ai" in bold dark text, centered top. Y-axis label "Warehouse Inventory (units)" rotated at left, X-axis label "Hour of Day" centered below. Tick labels (0:00, 4:00, 8:00... and 300-650 in steps of 50) in a soft dark gray. Subtle horizontal gridlines only. All chrome text is dark-on-light and clearly legible.
-      Data: Single teal/green (#009E73) step line using post-style steps (curveStepAfter) tracing 24 hourly inventory readings, with two sharp upward jumps (restocks) at hour 8 (365→600) and hour 16 (425→620), then gradual declines between restocks. Hollow circular markers (fill matches page background, teal stroke) mark each of the 24 readings.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "step-basic · javascript · d3 · anyplot.ai" is bold, dark, centered at top — clearly legible. Y-axis label "Warehouse Inventory (units)" and X-axis label "Hour of Day" are dark and legible. Tick labels are soft dark gray, legible. Subtle horizontal-only gridlines. Axis domain (baseline) lines are now visibly lightened (reduced opacity) compared to Attempt 1, giving a more minimal L-shaped frame.
+      Data: Single teal (#009E73) step line using curveStepAfter (post-style), tracing 24 hourly warehouse-inventory readings with two sharp upward jumps at hour 8 (365→600) and hour 16 (425→620) representing restocking events. NEW in this attempt: a soft glow (halo) sits behind each restock jump segment, and the markers at hour 8 and hour 16 are now solid-filled (larger, radius 9) while all other hourly readings use hollow markers (radius 7, page-background fill, teal stroke) — this creates a clear focal point on the two restock events. First series correctly uses Imprint #009E73.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — clearly not pure black, not light.
-      Chrome: Same title, axis labels, and tick labels now rendered in light/white text against the dark background — all clearly legible, no dark-on-dark issues observed anywhere (title, axis labels, tick labels, axis domain lines all use a light ink token). Gridlines remain subtle but visible.
-      Data: Identical teal (#009E73) step line and hollow markers as the light render — confirms data colors are unchanged between themes, only chrome (background/text/grid) flips as required.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels render in light/white ink, clearly legible against the dark background. Gridlines remain subtle but visible. Axis domain lines are lightened here too, matching the light render's refinement.
+      Data: Identical teal (#009E73) step line, halo, and solid/hollow marker treatment — confirms data colors and the new restock-emphasis technique are unchanged from the light render; only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark issues found on any text element (title, axis labels, ticks, domain lines all use light ink tokens).
+
+    Both renders pass the theme-readability check, and both are visually consistent with each other apart from the expected chrome flip.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -64,73 +71,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (14/17/22px); all text clearly readable in both
-          themes.
+        comment: All text explicitly sized (14px ticks, 17px axis labels, 22px title
+          bold), readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, markers, or the step line.
+        comment: No collisions between text, markers, or the glow effect
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line stroke-width 4 and r=7 hollow markers are appropriately prominent
-          for 24 data points.
+        comment: Markers (r=7/9) and 4px line appropriately sized for 24 sparse data
+          points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single high-contrast Imprint series, CVD-safe, no red/green-as-sole-signal
-          issue.
+        comment: Single-series green, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped, canvas gate passed.
+        comment: Good proportions, nothing clipped, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units ('Warehouse Inventory (units)').
+        comment: Descriptive labels with units (Hour of Day, Warehouse Inventory (units))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds #FAF8F1/#1A1A17; both themes
-          correct.'
+        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; identical
+          data color across themes'
     design_excellence:
-      score: 9
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above generic default via the hollow-marker technique, but overall
-          polish is modest.
+        passed: true
+        comment: Halo + differentiated markers add real polish beyond Attempt 1's
+          plain hollow-marker baseline
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Y-only gridlines follow the style guide baseline, but axis domain
-          lines are kept at full weight — no extra refinement beyond the mandatory
-          minimum.
+        passed: true
+        comment: Axis domain lines lightened (opacity 0.4, width 1) per feedback;
+          y-only gridlines retained
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No annotation or emphasis calls out the two restock events; hierarchy
-          comes only from the inherent step shape.
+        passed: true
+        comment: Glow + solid markers on the two restock events create a real focal
+          point, though no text label explains the encoding
     spec_compliance:
       score: 15
       max: 15
@@ -140,27 +145,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step plot using curveStepAfter.
+        comment: Correct step/stair plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Post-style steps, markers at readings, gridlines all present per
-          spec notes.
+        comment: Post-step style, markers at data points, gridlines all present per
+          spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = hour, Y = units, full data range shown.
+        comment: Hour on X, units on Y, all 24 points shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title matches required format exactly; no legend needed for single
-          series.
+          series
     data_quality:
       score: 15
       max: 15
@@ -170,19 +175,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows post-style steps, discrete jumps, and per-reading markers.
+        comment: Demonstrates the step-plot form clearly with realistic restock jumps
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral hourly warehouse inventory scenario with restocks.
+        comment: Warehouse inventory with restocking events is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300-650 unit range is sensible for warehouse inventory.
+        comment: 300-650 unit range is sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -192,34 +197,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear top-to-bottom script.
+        comment: No functions/classes, flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data array.
+        comment: Deterministic hardcoded data array
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the provided d3 global is used, no extras.
+        comment: Only the d3 global used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity.
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, no manual save calls, current d3 7.9
-          API.
+        comment: 'Mounts to #container via ANYPLOT_SIZE; no animation; current d3
+          API'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -227,21 +232,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic scaleLinear/axisBottom/axisLeft/curveStepAfter usage.
+        comment: Idiomatic scales/axes/join pattern and curveStepAfter
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Hollow-marker treatment is a nice touch, but otherwise relies on
-          the primitives required by the spec itself.
-  verdict: REJECTED
+        passed: true
+        comment: d3.scaleOrdinal-driven marker categorization and layered glow path
+          are a step up from Attempt 1, still close to standard primitives
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - step-interpolation
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
+  - edge-highlighting
