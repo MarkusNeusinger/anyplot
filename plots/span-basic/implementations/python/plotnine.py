@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: plotnine 0.15.3 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-04-30
 """
 
 import os
@@ -62,19 +61,20 @@ spans = pd.DataFrame(
 plot = (
     ggplot()
     + geom_rect(data=spans, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="label"), alpha=0.25)
-    + geom_line(data=df, mapping=aes(x="year", y="price"), color=IMPRINT[0], size=1.5)
-    + scale_fill_manual(values={"Recession Period": IMPRINT[1], "Risk Zone": IMPRINT[4]}, name="Highlighted Region")
+    + geom_line(data=df, mapping=aes(x="year", y="price"), color=IMPRINT[0], size=1.2)
+    + scale_fill_manual(values={"Recession Period": IMPRINT[1], "Risk Zone": IMPRINT[2]}, name="Highlighted Region")
     + labs(x="Year", y="Price ($)", title="span-basic · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
+        text=element_text(size=7),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
+        plot_title=element_text(size=12, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=9, color=INK),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
@@ -82,4 +82,4 @@ plot = (
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
