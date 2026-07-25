@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: rose-basic
 created: '2025-12-23T19:43:56Z'
-updated: '2026-07-25T10:20:37Z'
+updated: '2026-07-25T10:28:40Z'
 generated_by: claude-sonnet
 workflow_run: 30153919346
 issue: 1003
@@ -12,70 +12,66 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 87
 review:
   strengths:
   - Rose/coxcomb chart correctly built on a polar projection with radius (not area)
     proportional to value, matching the spec's core requirement
-  - 'Bars colored via sns.blend_palette(#009E73 -> #4467A3) assigned by rainfall rank,
-    so color depth reinforces magnitude in addition to radius — a genuine Imprint-compliant
+  - 'Bars colored via an Imprint sequential gradient (#009E73 -> #4467A3) assigned
+    by rainfall rank, so color depth reinforces magnitude alongside radius — a genuine
     continuous encoding, not a decorative gradient'
-  - Handles the seaborn axisbelow tick-label z-order quirk with a manually drawn,
-    halo-boxed '50 mm' label instead of letting it render invisibly behind the bars
-  - 'Both renders are theme-correct: FAF8F1/1A1A17 backgrounds, all chrome (title,
-    month labels, radial tick labels, value labels) clearly legible in both themes,
-    data colors identical across themes'
+  - 'Attempt-1 fix confirmed: title now reads ''Monthly Rainfall (mm) · rose-basic
+    · python · seaborn · anyplot.ai'', restoring the required language token'
+  - 'Attempt-1 fix confirmed: the halo-boxed ''50 mm'' radial tick label was moved
+    into the angular gap between the Jun/Jul bars and no longer overlaps bar fill'
+  - 'Both renders are theme-correct: #FAF8F1/#1A1A17 backgrounds, all chrome (title,
+    month labels, radial ticks, value labels) clearly legible in both themes, data
+    colors identical across themes'
   - Clean square 2400x2400 canvas, all 12 months and their value labels fit without
     clipping or overflow
   - Realistic, neutral monthly rainfall dataset with a plausible seasonal curve (72-168
     mm)
   weaknesses:
-  - 'Title is missing the required language token: current title is ''Monthly Rainfall
-    (mm) · rose-basic · seaborn · anyplot.ai'' but the mandated format is ''{Descriptive
-    Title} · {spec-id} · {language} · {library} · anyplot.ai'' — insert ''python''
-    between ''rose-basic'' and ''seaborn'''
-  - The manually drawn '50 mm' halo-boxed radial tick label sits directly on top of
-    the Dec/Jan bar boundary at zorder=5, partially overlapping the bar fill beneath
-    it (halo box keeps it legible, but it's placed over data rather than in clear
-    space) — consider nudging its angular position a few degrees into the gap wedge
-    between bars, or placing it just outside the bar radius instead of on top of it
-  - Core bar rendering uses raw matplotlib ax.bar() on a polar Axes rather than any
-    seaborn plotting function — acceptable since seaborn has no native polar/rose
-    chart support, but library-mastery credit is limited to the theming (sns.set_theme)
-    and sns.blend_palette usage
+  - Core petal rendering still uses raw matplotlib ax.bar() on a polar Axes rather
+    than any seaborn plotting function — seaborn has no native polar/rose chart API,
+    so this is a real library limitation, but it continues to cap Library Mastery
+    credit (sns.set_theme + sns.blend_palette are the only idiomatic seaborn touches)
+  - Data storytelling still relies mainly on the chart type's inherent bar-length
+    encoding; the color-by-magnitude gradient is a nice secondary cue but there is
+    no explicit focal-point treatment (e.g. a callout or emphasis on the June peak)
+    to create a stronger visual hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent with the light theme spec, applied to both figure and polar axes background.
-      Chrome: Bold dark title "Monthly Rainfall (mm) · rose-basic · seaborn · anyplot.ai" at top-left, fully visible and not clipped. Twelve bold month labels (Jan-Dec) ring the plot in dark ink. Radial tick labels "100 mm" and "150 mm" in soft gray sit near the upper-right spoke; the "50 mm" tick is instead drawn as a halo-boxed text label near the plot center (workaround for the hidden default tick). Per-bar value labels (89, 72, 95, 112, 135, 168, 142, 125, 98, 76, 82, 91) are placed just outside each bar tip in soft dark gray, bold.
-      Data: 12 polar bars ("petals"), one per month, radius proportional to rainfall value, starting at 12 o'clock (Jan) and proceeding clockwise. Bar fill follows an Imprint sequential gradient from brand green (#009E73) to blue (#4467A3) assigned by rainfall rank (driest months greenest, wettest months bluest), each bar outlined with a thin dark edge and separated by white gaps.
+      Background: Warm off-white (#FAF8F1), applied consistently to both the figure and the polar axes background.
+      Chrome: Bold dark title "Monthly Rainfall (mm) · rose-basic · python · seaborn · anyplot.ai" at top-left, fully visible and not clipped (language token "python" now present, fixing the attempt-1 finding). Twelve bold dark month labels (Jan-Dec) ring the plot, starting at 12 o'clock (Jan) and proceeding clockwise. Radial tick labels "100 mm" and "150 mm" sit in soft gray near the upper-right spoke; the "50 mm" tick is a manually drawn, halo-boxed label now placed in the open angular gap between the Jun and Jul bars (moved off the bar fill per attempt-1 feedback). Per-bar value labels (89, 72, 95, 112, 135, 168, 142, 125, 98, 76, 82, 91) sit just outside each bar tip in bold soft-dark gray.
+      Data: 12 polar bars ("petals"), one per month, radius proportional to rainfall value. Bar fill follows an Imprint sequential gradient from brand green (#009E73) to blue (#4467A3) assigned by rainfall rank (driest months greenest, wettest bluest), each bar outlined with a thin dark edge and separated by clear gaps.
       Legibility verdict: PASS — all title, tick, and value text reads cleanly against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent with the dark theme spec, applied to both figure and polar axes background.
-      Chrome: Same title text now rendered in light ink, fully visible. Month labels switch to light-colored bold text, radial "100 mm"/"150 mm" labels and the halo-boxed "50 mm" label render in light gray with a dark halo box, all legible. Value labels per bar remain in a light-gray tone consistent with the dark theme's INK_SOFT token.
+      Background: Warm near-black (#1A1A17), applied consistently to both the figure and the polar axes background.
+      Chrome: Same title text (including the "python" token) now rendered in light ink, fully visible. Month labels switch to light-colored bold text; the "100 mm"/"150 mm" radial labels and the repositioned halo-boxed "50 mm" label render in light gray with a dark halo box, all legible and clear of bar fill. Value labels per bar remain in the dark-theme INK_SOFT tone.
       Data: Same 12 bars in the identical green-to-blue gradient and radial proportions as the light render — only the chrome (background, text, grid, halo box) flipped to dark-theme colors, confirming the data-color identity requirement.
       Legibility verdict: PASS — no dark-on-dark failures observed; all tick labels, month labels, title, and value labels are clearly readable against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
         comment: All text (title, month labels, radial ticks, value labels) reads
-          clearly in both themes at explicit font sizes; minor deduction only for
-          the cramped '50 mm' halo label near center
+          clearly in both themes at explicit font sizes; the previously cramped '50
+          mm' halo label is now in clear space, resolving the attempt-1 deduction
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: The manually placed '50 mm' halo-boxed label sits on top of the Dec/Jan
-          bar boundary rather than in clear space; halo keeps it legible but it overlaps
-          data fill
+        comment: The '50 mm' halo label was moved into the Jun/Jul angular gap and
+          no longer overlaps bar fill; no other text/data collisions found
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -95,8 +91,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas gate passed; balanced proportions, no overflow
-          or clipping
+        comment: Square 2400x2400 canvas gate passed; balanced proportions, title
+          within bounds, no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -137,9 +133,9 @@ review:
         passed: false
         comment: Color-by-magnitude adds a secondary read of the seasonal pattern,
           but the dominant visual driver is bar length inherent to the chart type,
-          not added emphasis
+          not added emphasis on a focal point
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -165,12 +161,11 @@ review:
           shown
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is missing the required 'python' language token between spec-id
-          and library — reads '... rose-basic · seaborn · anyplot.ai' instead of '...
-          rose-basic · python · seaborn · anyplot.ai'
+        passed: true
+        comment: Title now reads 'Monthly Rainfall (mm) · rose-basic · python · seaborn
+          · anyplot.ai', matching the mandated format with the language token restored
     data_quality:
       score: 15
       max: 15
