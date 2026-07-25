@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: rug-basic
 created: '2026-07-25T07:09:44Z'
-updated: '2026-07-25T07:14:47Z'
+updated: '2026-07-25T07:22:56Z'
 generated_by: claude-sonnet
 workflow_run: 30148587765
 issue: 978
@@ -12,54 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - 'Correct plot type: two-lane rug plot with one thin, alpha-blended tick per individual
-    observation, matching the spec''s core requirement'
-  - Deterministic seeded LCG data generation with a realistic reaction-time domain
-    (~250-750ms) and a plausible morning-vs-evening fatigue shift plus tail outliers
+  - 'Attempt-1 contrast fix applied correctly: the light-theme lavender "Evening session"
+    label now carries a thin ink-colored stroke (paintOrder="stroke"), resolving the
+    WCAG 3:1 shortfall on the cream background while leaving the data ticks untouched'
+  - Outlier "attention lapse" trials are now visually distinguished — taller tick
+    height (92% vs 72% of lane band), higher stroke opacity (0.85 vs 0.42), and thicker
+    stroke (2.5px vs 2px) make the tail read at a glance in both renders
+  - New per-lane tinted background bands (5% opacity fill in each series' own hue)
+    add a subtle design layer that replaces the earlier "mid-chart baseline rule"
+    clutter noted in the attempt-1 review
   - 'Correct Imprint palette: first series brand green (#009E73), second series lavender
-    (#C475FD), identical across light/dark; all chrome (background, ink, grid, axis)
+    (#C475FD), identical across light/dark; all chrome (title, axis, ticks, grid)
     is theme-correct in both renders'
-  - Overlapping ticks use strokeOpacity 0.42 so density clusters darken naturally,
-    an appropriate alpha choice for ~140 points per lane
-  - Direct in-chart lane labels avoid a redundant floating legend for a 2-series comparison
-  - Custom composition via ChartContainer + useXScale/useDrawingArea is a legitimate,
-    idiomatic MUI X pattern for a chart type the community package has no built-in
-    series for
+  - Deterministic seeded LCG data generation with a realistic, neutral reaction-time
+    domain and a plausible morning-vs-evening fatigue shift plus tail outliers
+  - Direct in-chart lane labels avoid a redundant floating legend for a 2-series comparison,
+    keeping the layout clean
   weaknesses:
-  - '''Evening session'' label is rendered directly in lavender (#C475FD) on the light-theme
-    cream background (#FAF8F1) - this hue falls below the WCAG 3:1 contrast floor
-    per the style guide''s palette-contrast table; add a thin ink stroke or increase
-    weight/size on that specific label text (data ticks can stay as-is) so it holds
-    up as legible text, not just a decorative mark'
-  - Design Excellence is competent but still reads as a standard two-lane chart -
-    consider a subtle per-lane background band or tightened tick-to-label spacing
-    to lift the polish further
-  - The tail outliers (636ms morning; 688/706/727ms evening) that the code comment
-    calls out as 'attention lapses' are not visually distinguished from the rest of
-    the distribution - no annotation, size bump, or color emphasis flags them, so
-    the intended story only emerges on close reading rather than at a glance
-  - Implementation bypasses every built-in MUI X chart type (LineChart/ScatterChart/BarChart)
-    in favor of a fully custom SVG composition - legitimate given no native rug series
-    exists, but it means Library Mastery only shows the low-level composition hooks
-    rather than any built-in chart-type feature
+  - Data distribution per lane is still single-mode (unimodal + outliers) rather than
+    showing a secondary cluster or multimodal shape — a more varied distribution would
+    round out DQ-01 feature coverage
+  - Implementation still bypasses every built-in MUI X chart type (LineChart/ScatterChart/BarChart)
+    in favor of a fully custom SVG composition via ChartContainer + useXScale/useDrawingArea
+    — legitimate since no native rug series exists, but Library Mastery is capped
+    by the low-level composition rather than a distinctive built-in feature
+  - The ink-stroke halo around the "Evening session" label is a touch heavier than
+    needed in the dark render (light-on-light-ish stroke vs. lavender fill) — still
+    fully legible, just not as crisp as the unstroked "Morning session" label
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "Reaction Times by Session · rug-basic · javascript · muix · anyplot.ai" in bold dark ink at top-left, comfortably fits without clipping. X-axis "Reaction Time (ms)" with numeric ticks 250-750 in dark/grey ink, clearly legible. Subtle vertical grid lines at low opacity. A thin horizontal baseline rule sits beneath the "Morning session" tick cluster.
-      Data: Two horizontal rug lanes. "Morning session" label and ticks in brand green (#009E73); "Evening session" label and ticks in lavender (#C475FD) - matches Imprint palette positions 1 and 2. Ticks are thin, semi-transparent vertical lines that darken where observations overlap (dense cluster ~400-500ms), with a few isolated outlier ticks further right (up to ~730ms).
-      Legibility verdict: PASS overall, with one caveat - the lavender "Evening session" label text sits on the light cream background at a contrast level below the WCAG 3:1 floor per the style guide's own palette-contrast table (lavender is one of the five hues flagged as sub-3:1 on cream). It is still readable in the render due to bold weight/size, but this is a borderline case worth a stroke or weight bump.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Bold dark-ink title "Reaction Times by Session · rug-basic · javascript · muix · anyplot.ai" fully visible, no clipping. X-axis "Reaction Time (ms)" with numeric ticks 250-750 in legible dark/grey ink. Subtle vertical gridlines at ~15% opacity. Two lane labels: "Morning session" in solid brand green, "Evening session" in lavender now with a thin dark ink stroke outline (paintOrder="stroke") — this is the attempt-1 fix for the WCAG contrast shortfall, and it reads clearly against the cream background.
+      Data: Two horizontal rug lanes on a shared x-axis, each with its own faint tinted background band (5% opacity in the lane's series color). "Morning session" ticks are brand green (#009E73); "Evening session" ticks are lavender (#C475FD) — matches Imprint palette positions 1 and 2. Dense clusters of thin, semi-transparent ticks darken naturally where reaction times overlap (~400-500ms for both sessions). One clearly taller, more opaque green tick near 636ms (morning outlier) and three taller, more opaque purple ticks near 688/707/727ms (evening outliers) now stand out distinctly from the rest of the distribution — this is the attempt-1 fix for unemphasized "attention lapse" trials.
+      Legibility verdict: PASS — all text (title, axis label, tick labels, both lane labels) is clearly readable against the light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Title in bold light/off-white ink, fully legible. X-axis tick labels and axis line in light grey, clearly visible against the dark background. Grid lines subtle. No dark-on-dark text anywhere.
-      Data: Same green (#009E73) and lavender (#C475FD) tick colors as the light render, confirming data colors are identical across themes - only chrome flipped as required.
-      Legibility verdict: PASS - unlike the light render, saturated hues like lavender read with good contrast against the near-black background (consistent with the style guide's note that most palette hues clear WCAG on dark bg), so no dark-on-dark or light-on-light failures observed.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Title and axis chrome render in light/off-white ink, fully legible, no dark-on-dark failures. Gridlines remain subtle. "Morning session" label in green with no stroke reads crisply; "Evening session" label in lavender with the ink stroke (now light-ink colored in dark theme) reads with a slightly heavier/bolder outline than its light-theme counterpart, but remains fully legible — not dark-on-dark, just a touch less crisp than the unstroked label.
+      Data: Tick colors are identical to the light render (#009E73 / #C475FD), confirming only chrome flipped as required. The same outlier ticks (green ~636ms, purple ~688/707/727ms) are taller and more opaque than the surrounding distribution, clearly visible against the dark surface.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -67,78 +64,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 21px, axis label 16px, tick labels
-          14px, lane labels 16px); readable at full size in both themes; title fits
-          without clipping
+        comment: All font sizes explicit (title 21px, axis label 16px, tick labels
+          14px, lane labels 16px); readable in both themes, title fits without clipping
+          at ~49% width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Lane labels sit clear of tick clusters and axis; no text collisions
+        comment: No collisions between text, ticks, or lane bands
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Tick strokeWidth 2 with 0.42 alpha is a reasonable density-appropriate
-          choice for ~140 points per lane; dense central cluster is legible but very
-          saturated
+        comment: Tick strokeWidth/opacity well adapted to ~140 points per lane; overlapping
+          ticks darken naturally, outliers now visually distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Lavender (#C475FD) lane-label text on the light cream background
-          falls below WCAG 3:1 contrast per the style guide's own contrast table;
-          readable but borderline for text (not just decorative marks)
+        passed: true
+        comment: Attempt-1 lavender-label contrast issue fixed with ink stroke; no
+          red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills a large majority of the canvas with balanced margins;
-          the mid-chart baseline rule for the morning lane is a minor asymmetric touch
-          versus the evening lane's flush axis line
+        comment: Plot area fills most of the canvas, balanced margins, no cut-off
+          content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Reaction Time (ms)'' includes units'
+        comment: '"Reaction Time (ms)" descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series #C475FD (Imprint canonical order);
-          backgrounds and chrome theme-correct in both renders'
+        comment: 'First series #009E73, second #C475FD, identical across themes, theme-correct
+          chrome and backgrounds'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom two-lane composition and thoughtful color use go above a stock
-          chart default, but stops short of publication-level polish
+        comment: Per-lane tinted bands, outlier emphasis, and stroke-corrected labels
+          clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, but the mid-chart baseline rule
-          adds a small amount of visual clutter
+        comment: Subtle grid, no spines to remove (custom SVG), earlier mid-chart
+          baseline clutter replaced by tinted bands
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Two-lane comparison with visible outlier tails creates some hierarchy,
-          but the 'attention lapse' outliers described in code comments are not visually
-          emphasized
+        comment: Outlier "attention lapse" trials now visually pop via height + opacity,
+          guiding the viewer to the insight at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -148,29 +141,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct rug plot: individual tick marks per observation along the
-          x-axis'
+        comment: 'Correct rug plot: individual tick marks per observation'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparency for overlaps, consistent tick height, x-axis positioning
-          by default - all present
+        comment: Alpha-blending for overlaps, consistent small tick height, clustering/gap
+          visibility all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly maps reaction time; all data visible within axis
-          range
+        comment: X-axis correctly maps reaction time; both lanes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; direct lane
-          labels correctly identify each series
+        comment: Title format correct with descriptive prefix; in-chart lane labels
+          replace legend correctly
     data_quality:
       score: 14
       max: 15
@@ -180,21 +171,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows clustering, gaps, and outliers as called for by the spec; single-mode
-          distribution rather than multimodal
+        comment: Clustering, gaps, and outliers all shown; distribution is single-mode
+          rather than multimodal
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction-time cognitive task is a real, neutral scientific scenario
+        comment: Cognitive-task reaction times, morning vs evening session, neutral
+          and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 250-750ms range and morning/evening means are plausible human reaction-time
-          values
+        comment: 250-750ms range and outlier magnitudes plausible for human reaction-time
+          tasks
     code_quality:
       score: 10
       max: 10
@@ -204,33 +196,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Appropriately factored React components for the custom composition,
-          no over-engineering
+        comment: Minimal, focused component structure appropriate for the React/MUI
+          X harness contract
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG
+        comment: Deterministic seeded LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used MUI X imports
+        comment: Only ChartContainer, ChartsXAxis, ChartsGrid, and the two hooks used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI or interactivity
+        comment: Clean, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation, sized from
-          window.ANYPLOT_SIZE'
+        comment: Sizes to ANYPLOT_SIZE, skipAnimation set, default-exported component
+          per harness contract
     library_mastery:
       score: 7
       max: 10
@@ -240,20 +232,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartContainer + useXScale/useDrawingArea composition is the documented
-          MUI X pattern for custom marks beyond built-in chart types
+        comment: ChartContainer + useXScale/useDrawingArea is the documented composition
+          pattern for chart types with no built-in series
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses MUI X-specific low-level scale/drawing-area hooks rather than
-          any built-in chart type, since no native rug series exists
-  verdict: REJECTED
+        comment: Uses MUI X-specific low-level hooks meaningfully, but no built-in
+          chart type is leveraged since none fits a rug plot
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - faceting
   patterns:
   - data-generation
   - iteration-over-groups
