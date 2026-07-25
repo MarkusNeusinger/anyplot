@@ -2,120 +2,138 @@ library: letsplot
 language: python
 specification_id: stem-basic
 created: '2025-12-23T20:47:53Z'
-updated: '2026-04-30T15:23:56Z'
+updated: '2026-07-25T17:58:38Z'
 generated_by: claude-sonnet
-workflow_run: 25172580885
+workflow_run: 30168036854
 issue: 972
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 94
 review:
   strengths:
-  - Excellent data choice (damped oscillation) demonstrating both positive and negative
-    stems with a clear signal processing narrative
-  - Decay envelope curves add genuine visual storytelling — viewer immediately grasps
-    the exponential decay pattern without annotations
-  - 'Correct Okabe-Ito #009E73 color with fully theme-adaptive chrome (backgrounds,
-    text, grid, baseline) in both renders'
-  - 'Complete spec compliance: correct title format, descriptive axis labels with
-    units, all spec features present'
-  - Clean KISS code structure, reproducible seed, correct output filenames
+  - 'Both attempt-1 findings are cleanly resolved: title is now the mandated `stem-basic
+    · python · letsplot · anyplot.ai`, and the panel border is blanked with only axis_line_x/axis_line_y
+    kept for an open L-shaped frame instead of the previous closed box'
+  - New alpha fade (1.0 while |envelope| >= 0.1, 0.4 after) applied to both the stems
+    and markers via scale_alpha_identity() creates a genuine focal point on the early
+    high-amplitude samples and sharpens the data-storytelling read of the decay
+  - 'Imprint brand green #009E73 is the only categorical color, pixel-identical between
+    renders; all chrome (background, title, axis text, grid, baseline) correctly flips
+    between #FAF8F1/#1A1A17 light/dark tokens with no dark-on-dark or light-on-light
+    failures'
+  - 'Uses lets-plot-distinctive grammar: layer_tooltips() with a custom title/formatted
+    amplitude line for the HTML detail view, plus scale_alpha_identity() to pass a
+    precomputed alpha column straight through'
+  - Baseline (y=0), consistent stem width (size=1.2) and consistent marker size (size=3.5)
+    across all 30 points match the specification's notes exactly; code is clean, seeded,
+    and free of unused imports
   weaknesses:
-  - Grid still uses dashed style rather than solid subtle lines with opacity RULE
-    token — replace panel_grid linetype with solid and use RULE color token
-  - 'LM-02 opportunity missed: letsplot''s interactive HTML output could configure
-    tooltips showing sample index and amplitude value on hover'
+  - The two dashed envelope curves (the exp(-x/10) bounds) are not labeled anywhere
+    on the chart — a reader unfamiliar with damped-oscillation plots has to infer
+    what the gray dashed lines represent; a small annotation or legend entry would
+    remove the ambiguity
+  - Grid is major-only on both axes; the style guide's default preference for line-like
+    plots is a y-axis-only grid, which would reduce visual noise around the dense
+    stem cluster near x=0-9
+  - Library Mastery still leans on two lets-plot-specific features (tooltips, alpha
+    identity scale) — there is room to lean further into the grammar (e.g. geom_ribbon
+    for the envelope band instead of two separate dashed geom_line layers) to push
+    LM-02 higher
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct, not pure white
-      Chrome: Title "stem-basic · letsplot · anyplot.ai" in dark text (top-left), x-axis "Sample Index" and y-axis "Amplitude (a.u.)" labels in dark text, dark tick labels — all clearly readable
-      Data: 30 teal-green stems (#009E73) as thin vertical lines from y=0 baseline to data points, with filled circular markers at tips; dark horizontal baseline at y=0; two dashed decay-envelope curves bracket the oscillation
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "stem-basic · python · letsplot · anyplot.ai" and axis titles ("Sample Index", "Amplitude (a.u.)") render in dark ink (#1A1A17), tick labels in a softer gray-ink tone (#4A4A44) — all clearly readable. Subtle light-gray gridlines (major only) don't compete with the data. Only left + bottom axis lines are drawn (no top/right border box) — correct L-shaped frame. A solid dark baseline marks y=0.
+      Data: 30 green (#009E73) lollipop stems rise/fall from the y=0 baseline to filled circular markers (white-stroked, size 3.5), forming a visibly damped oscillation. Two dashed muted-gray envelope lines bound the positive/negative decay trend. Stems/markers past sample ~24 (where the envelope decays below 0.1) render at reduced alpha (0.4) to fade the noise-dominated tail and sharpen focus on the early, high-amplitude samples.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black consistent with #1A1A17 — correct dark theme
-      Chrome: Title, axis labels, and tick labels appear in light near-white text — all clearly readable against dark background; no dark-on-dark text failures observed; baseline adapts to lighter tone; grid lines visible in lighter tone
-      Data: Teal-green stems and markers identical in color to light render (#009E73) — only chrome flipped, data colors unchanged; envelope curves also identical in color
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Title and axis titles flip to near-white ink (#F0EFE8), tick labels to a lighter soft gray (#B8B7B0), gridlines flip to a faint light-on-dark rule — all clearly readable, no dark-on-dark failures anywhere (title, axis labels, and ticks are all light text on the dark surface). Only left + bottom axis lines are drawn, matching the light render's L-shaped frame. Baseline flips to a light line, still clearly visible.
+      Data: The 30 green stems and markers are pixel-identical in color, position, and alpha-fade pattern to the light render — only chrome flipped, confirming palette compliance. Envelope dashed lines remain muted gray and legible against the dark surface.
       Legibility verdict: PASS
+
+    Both renders pass legibility; only background/text/grid chrome changes between themes, data colors and the alpha-fade focal-point treatment are identical.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes set (title 24, axis 20, tick 16); readable in both themes;
-          slight concern about title size relative to 4800x2700 canvas
+        comment: Explicit font sizes (title 16pt, axis_title 12pt, axis_text 10pt);
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean separation, no overlapping elements in either render
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Stems and markers clearly visible; near-zero stems are very short
-          but distinguishable
+        comment: Sparse data (n=30) gets prominent markers (size=3.5, stroke=1.2);
+          alpha fade adapts prominence to signal-vs-noise regions
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, good contrast against both light and dark surfaces
+        comment: Green on warm cream/near-black passes contrast; no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well, no cut-off elements
+        comment: 3200x1800 canvas, no clipping, generous margins, title well within
+          bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Amplitude (a.u.) with units and Sample Index are descriptive
+        comment: '"Sample Index" / "Amplitude (a.u.)" descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; light background ~#FAF8F1; dark background
-          ~#1A1A17; chrome is theme-adaptive in both renders'
+        comment: 'Brand green #009E73 first/only series, backgrounds match #FAF8F1/#1A1A17,
+          both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Correct Okabe-Ito brand color, theme-adaptive chrome, decay envelope
-          curves elevate above plain default; not yet publication-ready
+        comment: Envelope overlay plus new alpha-fade focal point show real design
+          intent beyond a bare stem plot
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Grid remains dashed rather than solid subtle lines with opacity token;
-          improved over attempt 1 but still not fully refined
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Decay envelope curves actively guide the viewer to understand the
-          damped oscillation; signal processing story is clear
+        comment: Closed box border removed in favor of L-shaped left+bottom axis lines;
+          grid subtle; could go further with y-axis-only grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Envelope bounds plus alpha fade on the decayed tail create a clear
+          focal point guiding the eye to the high-amplitude early samples
     spec_compliance:
       score: 15
       max: 15
@@ -125,51 +143,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stem plot via geom_segment + geom_point + geom_hline baseline
+        comment: Correct stem plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thin stems, clear circular markers, y=0 baseline, consistent styling
-          throughout
+        comment: Thin stems, clear circular markers, y=0 baseline, consistent stem
+          width/marker size
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=Sample Index, y=Amplitude, all 30 data points shown
+        comment: x = sample index, y = amplitude, all 30 points shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title stem-basic · letsplot · anyplot.ai correct; no legend appropriate
-          for single series
+        comment: Title now correctly `stem-basic · python · letsplot · anyplot.ai`;
+          legend correctly omitted for single series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Stems both above and below baseline; decay pattern demonstrates temporal
-          variation; 30 points show full range
+        comment: Shows positive/negative stems, baseline, decay envelope; core stem-plot
+          aspects fully covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Damped oscillation is canonical signal processing scenario; neutral,
-          scientific
+        comment: Damped-oscillation impulse response is a realistic, neutral signal-processing
+          example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in ~[-0.7, 1.0] normalized amplitude range; physically plausible
+        comment: Amplitude range (-1..1) sensible for a normalized a.u. signal
     code_quality:
       score: 10
       max: 10
@@ -179,7 +197,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, clean linear script
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -191,44 +209,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; noqa for star import is acceptable for letsplot
+        comment: numpy, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, envelope curves are a clean addition
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Output files plot-light.png/plot-dark.png and plot-light.html/plot-dark.html
-          confirmed present
+        comment: ggsave to plot-{THEME}.png (scale=4) and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic ggplot-style layer composition (geom_line, geom_hline,
+          geom_segment, geom_point)
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar, geom_segment+geom_point for stems is idiomatic,
-          ANYPLOT_THEME pattern applied
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML export present (letsplot distinctive); envelope curves via geom_line
-          layer; interactive tooltips not configured
+        comment: layer_tooltips() with custom title/line, and scale_alpha_identity()
+          to pass a precomputed alpha column through
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
