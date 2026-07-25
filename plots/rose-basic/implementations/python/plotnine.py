@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 rose-basic: Basic Rose Chart
-Library: plotnine 0.15.3 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-04-30
+Library: plotnine 0.15.7 | Python 3.13.13
 """
 
 import math
@@ -16,31 +15,30 @@ sys.path = [p for p in sys.path if os.path.realpath(p) != os.path.realpath(_scri
 
 import numpy as np
 import pandas as pd
-from matplotlib import colormaps
-from matplotlib.colors import Normalize, to_hex
 from plotnine import (
     aes,
     element_blank,
     element_rect,
     element_text,
-    geom_line,
+    geom_path,
     geom_polygon,
     geom_text,
     ggplot,
     labs,
-    scale_fill_manual,
+    scale_alpha_continuous,
     scale_x_continuous,
     scale_y_continuous,
     theme,
 )
 
 
-# Theme tokens
+# Theme tokens (Imprint palette)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Imprint palette position 1 — always first series
 
 # Data - Monthly rainfall (mm) for a temperate climate
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -48,12 +46,10 @@ rainfall = [78, 62, 55, 48, 52, 68, 82, 85, 72, 88, 95, 82]
 
 n = len(months)
 
-# Viridis colors per month based on rainfall value (continuous colormap for value-encoded data)
-_norm = Normalize(vmin=min(rainfall), vmax=max(rainfall))
-_cmap = colormaps["viridis"]
-month_colors = {month: to_hex(_cmap(_norm(val))) for month, val in zip(months, rainfall, strict=True)}
-
-# Create wedge polygons for each month
+# Create wedge polygons for each month. Radius is proportional to rainfall
+# (not area), and fill alpha also scales with rainfall so a single Imprint
+# hue (rainfall -> water -> brand green) carries the value redundantly
+# without a second, competing colormap.
 n_arc_points = 30
 wedge_rows = []
 for i, (month, value) in enumerate(zip(months, rainfall, strict=True)):
@@ -62,10 +58,18 @@ for i, (month, value) in enumerate(zip(months, rainfall, strict=True)):
     gap = 0.02
     start_angle += gap
     end_angle -= gap
-    wedge_rows.append({"x": 0, "y": 0, "month": month, "order": 0})
+    wedge_rows.append({"x": 0, "y": 0, "month": month, "rainfall": value, "order": 0})
     for j, angle in enumerate(np.linspace(start_angle, end_angle, n_arc_points)):
-        wedge_rows.append({"x": value * math.cos(angle), "y": value * math.sin(angle), "month": month, "order": j + 1})
-    wedge_rows.append({"x": 0, "y": 0, "month": month, "order": n_arc_points + 1})
+        wedge_rows.append(
+            {
+                "x": value * math.cos(angle),
+                "y": value * math.sin(angle),
+                "month": month,
+                "rainfall": value,
+                "order": j + 1,
+            }
+        )
+    wedge_rows.append({"x": 0, "y": 0, "month": month, "rainfall": value, "order": n_arc_points + 1})
 
 df = pd.DataFrame(wedge_rows)
 df["month"] = pd.Categorical(df["month"], categories=months, ordered=True)
@@ -90,7 +94,7 @@ spoke_df = pd.DataFrame(spoke_rows)
 label_rows = []
 for i, month in enumerate(months):
     center_angle = math.pi / 2 - ((i + 0.5) * 2 * math.pi / n)
-    label_rows.append({"label": month, "x": 120 * math.cos(center_angle), "y": 120 * math.sin(center_angle)})
+    label_rows.append({"label": month, "x": 122 * math.cos(center_angle), "y": 122 * math.sin(center_angle)})
 label_df = pd.DataFrame(label_rows)
 
 # Value labels positioned along the top-right spoke
@@ -100,22 +104,22 @@ value_label_df = pd.DataFrame(value_label_rows)
 # Plot
 plot = (
     ggplot()
-    + geom_line(
+    + geom_path(
         aes(x="x", y="y", group="radius"), data=grid_df, color=INK_SOFT, size=0.4, alpha=0.15, linetype="dashed"
     )
-    + geom_line(aes(x="x", y="y", group="spoke_id"), data=spoke_df, color=INK_SOFT, size=0.3, alpha=0.12)
-    + geom_polygon(aes(x="x", y="y", fill="month", group="month"), data=df, color=PAGE_BG, size=0.3, alpha=0.88)
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=14, fontweight="bold", color=INK)
+    + geom_path(aes(x="x", y="y", group="spoke_id"), data=spoke_df, color=INK_SOFT, size=0.3, alpha=0.12)
+    + geom_polygon(aes(x="x", y="y", alpha="rainfall", group="month"), data=df, fill=BRAND, color=PAGE_BG, size=0.3)
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=16, fontweight="bold", color=INK)
     + geom_text(aes(x="x", y="y", label="label"), data=value_label_df, size=10, color=INK_MUTED)
-    + scale_fill_manual(values=month_colors)
-    + scale_x_continuous(limits=(-142, 142))
-    + scale_y_continuous(limits=(-142, 142))
-    + labs(title="Monthly Rainfall (mm) · rose-basic · plotnine · anyplot.ai")
+    + scale_alpha_continuous(range=(0.35, 1.0), guide=None)
+    + scale_x_continuous(limits=(-144, 144))
+    + scale_y_continuous(limits=(-144, 144))
+    + labs(title="Monthly Rainfall (mm) · rose-basic · python · plotnine · anyplot.ai")
     + theme(
-        figure_size=(12, 12),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=22, ha="center", color=INK),
+        plot_title=element_text(size=10, ha="center", color=INK),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -128,4 +132,4 @@ plot = (
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
