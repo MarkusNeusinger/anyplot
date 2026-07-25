@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: stem-basic
 created: '2026-07-25T17:49:59Z'
-updated: '2026-07-25T17:54:39Z'
+updated: '2026-07-25T18:02:33Z'
 generated_by: claude-sonnet
 workflow_run: 30168239599
 issue: 972
@@ -12,50 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - 'Correctly implements a stem plot in Chart.js using an idiomatic mixed-dataset
-    technique: a thin bar dataset (barThickness=5) as the stems plus a point-only
-    line dataset (showLine=false, pointRadius=9) for the markers — a real, documented
-    Chart.js pattern (mixed chart types), not a fake/simulated stem.'
-  - 'Markers use pointBorderColor: t.pageBg with a 2px border, creating a subtle halo
-    that visually separates each marker from its stem and from neighboring stems —
-    a thoughtful refinement beyond the library defaults.'
-  - Data is a genuine, deterministic closed-form Poisson PMF (lambda=6 emails/hour,
-    k=0..19) — fully reproducible with no RNG, realistic and neutral context, and
-    a great domain fit for the spec's called-out application of 'discrete probability
-    distributions.'
-  - Redundant single-series legend correctly suppressed (legend.display=false) since
-    both datasets share the same 'Probability' label.
-  - Y-axis correctly starts at zero (beginAtZero) establishing the baseline the spec
-    requires, with a clean 2-decimal tick formatter.
-  - 'Theme-adaptive chrome fully threaded through: title/axis titles use t.ink, tick
-    labels use t.inkSoft, grid uses t.grid, only y-axis grid shown (x grid off) per
-    the style guide''s ''y-axis grid only for bar/line'' rule.'
-  - Canvas renders at the exact required 3200×1800 landscape size with no edge clipping
-    in either theme.
+  - 'Clever mixed-chart-type solution: a thin `bar` dataset (barThickness=5) draws
+    the stems while a `showLine: false` line dataset draws the markers — a genuinely
+    idiomatic Chart.js workaround since the library has no native stem/lollipop type.'
+  - Marker size (pointRadius=9) is well-proportioned for the 20-point sparse dataset,
+    clearly visible on both renders.
+  - 'Realistic, neutral data: a Poisson PMF (lambda=6, k=0..19) framed as ''emails
+    received per hour'', computed deterministically in-memory with no RNG — factually
+    correct probabilities that sum sensibly and show the full rise-and-decay shape
+    of the distribution.'
+  - 'Theme tokens correctly threaded through title, axis titles, tick labels, and
+    grid; both renders are legible with matching data color (#009E73) and correct
+    theme-adaptive chrome (#FAF8F1 light / #1A1A17 dark backgrounds).'
+  - Legend correctly hidden since there is only one series and the label would be
+    redundant with the axis titles.
+  - Clean KISS structure — no functions/classes, only used tokens/globals, no stray
+    imports.
   weaknesses:
-  - Both the bar dataset and the point-only line dataset are labeled 'Probability'
-    — harmless with the legend hidden, but in the interactive HTML detail view, hovering
-    a stem would show two stacked 'Probability' tooltip rows for the same value; consider
-    giving the point dataset an empty/omitted label or merging tooltip callbacks to
-    avoid the duplicate.
-  - Data storytelling is minimal beyond the shape of the distribution itself — no
-    emphasis (e.g. a subtle highlight or annotation) draws attention to the twin-peak
-    mode at k=5/6, though this is a minor nice-to-have rather than a spec requirement.
+  - 'Design Excellence is generic: only the default single-green palette and library-default
+    typography are used — no intentional color/hierarchy choice beyond the required
+    brand green, and DE-01/DE-02 read as ''well-configured default'' rather than distinctive.'
+  - No visual storytelling or emphasis — the peak values (k=5, k=6, both ~0.161) aren't
+    called out in any way (e.g., a subtle annotation or focal-point styling), so the
+    viewer has to find the story themselves.
+  - Title occupies only ~28% of the plot width at fontsize 22 — noticeably smaller
+    than the ~70-85% expected for the mandated title string; growing it slightly would
+    improve visual hierarchy and canvas utilization without risking overflow.
+  - Y-axis tick label callback formats every value to 2 decimals (e.g. '0.00'), which
+    is fine, but the axis title 'P(X = k)' is mathematical notation rather than a
+    plain-language description with units — a short clarifying word (e.g. 'Probability')
+    would raise clarity further.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "stem-basic · javascript · chartjs · anyplot.ai" in bold dark ink at top, comfortably clear of the top edge. X-axis title "Emails Received per Hour (k)" and Y-axis title "P(X = k)" in dark ink, both readable. Tick labels (0-19 on x, 0.00-0.18 on y) in a softer gray, fully legible. Subtle horizontal gridlines only (no vertical gridlines) that don't compete with the data.
-      Data: 20 discrete stems in brand green (#009E73) — thin vertical lines from the y=0 baseline up to a circular marker with a light halo border matching the page background. Distribution is a Poisson PMF with a twin peak at k=5 and k=6 (~0.161), tapering off toward k=19.
-      Legibility verdict: PASS — no light-on-light text, all chrome elements clearly readable.
+      Chrome: Bold dark title "stem-basic · javascript · chartjs · anyplot.ai" centered at top, clearly readable. X-axis title "Emails Received per Hour (k)" and Y-axis title "P(X = k)" in dark ink, both legible. Tick labels (0-19 on x, 0.00-0.18 on y) in a softer gray, all readable. Horizontal grid lines subtle and visible; vertical grid disabled (clean look).
+      Data: 20 thin green (#009E73) stems from baseline y=0 rising to green circular markers with a light-colored border ring, forming the classic Poisson PMF shape peaking at k=5 and k=6 (~0.161) and decaying toward k=19. First (only) series correctly uses the brand green.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, same axis titles now in light/off-white ink, tick labels in a lighter gray — all clearly legible against the dark surface. Gridlines remain subtle and visible without dominating.
-      Data: Same brand green (#009E73) stems and markers, identical values and positions to the light render — only chrome (background, text, grid) flipped, confirming palette consistency between themes. Marker halo border now matches the dark page background.
-      Legibility verdict: PASS — no dark-on-dark text, no illegible elements; green data reads clearly on the near-black surface.
+      Chrome: Title, axis titles, and tick labels all rendered in light/white tones, clearly legible against the dark background — no dark-on-dark failures observed. Grid lines subtle but visible.
+      Data: Stems and markers are the identical #009E73 green as the light render (only the marker border ring, drawn in the page background color, flips from light to dark) — confirms data-color consistency across themes.
+      Legibility verdict: PASS — no dark-on-dark text, no unreadable elements.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -66,72 +67,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at explicit font sizes (title 22px,
-          axis titles 16px, ticks 14px)
+        comment: Font sizes explicitly set (title 22, axis titles 16, ticks 14); readable
+          in both themes; title slightly under-sized relative to canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, stems, or markers
+        comment: No overlap between stems, markers, ticks, or titles
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse data (20 points) given prominent pointRadius=9 markers and
-          thin barThickness=5 stems
+        comment: pointRadius=9 markers are prominent and well-suited to the 20-point
+          sparse dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series green with adequate contrast, no red-green reliance
+        comment: Single high-contrast green against warm backgrounds in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, no overflow or clipping, well-proportioned
+        comment: Plot area fills the canvas well, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive axis titles: ''Emails Received per Hour (k)'' and ''P(X
-          = k)'''
+        comment: Descriptive axis titles, though Y-axis uses mathematical notation
+          P(X = k)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes, correct light/dark
-          backgrounds'
+        comment: 'First series is #009E73, identical across themes; backgrounds theme-correct'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Halo marker borders, hidden redundant legend, formatted tick labels
-          — thoughtful but not exceptional
+        passed: false
+        comment: Well-configured default — only the required brand green, no additional
+          palette/hierarchy thought
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Only left/bottom axis borders (Chart.js default), y-only subtle grid,
-          generous whitespace
+        passed: false
+        comment: X-axis grid disabled, only subtle Y grid shown, generous whitespace
+          — some refinement above bare defaults
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Distribution shape naturally reveals the twin-peak mode but no explicit
-          emphasis/annotation added
+        comment: Data displayed but the dual-peak insight (k=5,6) isn't emphasized
+          in any way
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +141,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine stem/lollipop construction via bar+point mixed datasets
+        comment: 'Correct stem plot: thin stems from baseline to markers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thin stems from y=0 baseline, circular markers at top, consistent
-          sizing throughout
+        comment: Thin stems, clear circular markers, baseline at y=0, consistent sizing
+          throughout
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=k index, y=probability, all 20 points shown
+        comment: X = k (0-19), Y = P(X=k), all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend correctly omitted for
-          single series
+        comment: Title format correct; legend correctly hidden for the single series
     data_quality:
       score: 15
       max: 15
@@ -171,19 +170,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows markers, stems, and baseline as required by spec
+        comment: Full 20-point PMF shape shown, rise and decay both visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Poisson email-arrival PMF, real-world plausible and neutral
+        comment: 'Neutral, comprehensible scenario: emails received per hour (Poisson)'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Probabilities 0-0.16 over k=0-19, sensible for lambda=6
+        comment: Values computed via the actual Poisson PMF formula — factually correct
     code_quality:
       score: 10
       max: 10
@@ -193,31 +192,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: Linear data -> mount -> chart, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Closed-form Poisson recurrence, fully deterministic, no RNG
+        comment: Fully deterministic PMF computation, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided globals
+        comment: No imports, only used globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the mixed-dataset technique, no fake UI
+        comment: Clean mixed-dataset trick, no over-engineering, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false set
+        comment: Follows mount-node contract correctly, animation disabled
     library_mastery:
       score: 7
       max: 10
@@ -227,22 +226,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Mixed bar+line dataset types is a documented, first-class Chart.js
-          pattern
+        comment: Correct use of mixed dataset types and standard options config
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Combo chart type plus themed marker halo border and tick formatter
+        comment: Combines bar + point-only line datasets in one chart — a Chart.js-specific
+          mixed-chart-type technique not trivially replicated in other libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - mixed-chart-types
   patterns:
   - data-generation
   dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling
