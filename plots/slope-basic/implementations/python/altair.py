@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 89/100 | Created: 2026-07-25
@@ -53,12 +53,19 @@ color_scale = alt.Scale(domain=["Increase", "Decrease"], range=[COLOR_INCREASE, 
 title = "slope-basic · python · altair · anyplot.ai"
 title_fontsize = 16
 
+# Matte-red "Decrease" measures ~2.7:1 against #1A1A17 (below the 3:1 AA floor for
+# meaningful status info); per the style guide's stroke recommendation, outline
+# Decrease elements with a 1px ink halo in dark mode only (fine on the light bg).
+decrease_stroke_width = alt.condition(
+    alt.datum.Direction == "Decrease", alt.value(1 if THEME == "dark" else 0), alt.value(0)
+)
+
 # Plot
 lines = (
     alt.Chart(df_long)
     .mark_line(strokeWidth=3, opacity=0.8)
     .encode(
-        x=alt.X("Period:N", axis=alt.Axis(labelFontSize=14, title=None, labelAngle=0)),
+        x=alt.X("Period:N", axis=alt.Axis(labelFontSize=11, title=None, labelAngle=0)),
         y=alt.Y(
             "Sales:Q",
             axis=alt.Axis(labelFontSize=10, titleFontSize=12, title="Sales (units)"),
@@ -71,27 +78,57 @@ lines = (
     )
 )
 
+lines_decrease_halo = (
+    alt.Chart(df_long[df_long["Direction"] == "Decrease"])
+    .mark_line(strokeWidth=5, opacity=0.9, color=INK)
+    .encode(x="Period:N", y="Sales:Q", detail="Product:N")
+)
+
 points = (
     alt.Chart(df_long)
     .mark_circle(size=200, opacity=0.9)
-    .encode(x="Period:N", y="Sales:Q", color=alt.Color("Direction:N", scale=color_scale, legend=None))
+    .encode(
+        x="Period:N",
+        y="Sales:Q",
+        color=alt.Color("Direction:N", scale=color_scale, legend=None),
+        stroke=alt.value(INK),
+        strokeWidth=decrease_stroke_width,
+    )
 )
 
 labels_left = (
     alt.Chart(df_long[df_long["Period"] == "Q1 Sales"])
     .mark_text(align="right", dx=-12, fontSize=11)
-    .encode(x="Period:N", y="Sales:Q", text="Product:N", color=alt.Color("Direction:N", scale=color_scale, legend=None))
+    .encode(
+        x="Period:N",
+        y="Sales:Q",
+        text="Product:N",
+        color=alt.Color("Direction:N", scale=color_scale, legend=None),
+        stroke=alt.value(INK),
+        strokeWidth=decrease_stroke_width,
+    )
 )
 
 labels_right = (
     alt.Chart(df_long[df_long["Period"] == "Q4 Sales"])
     .mark_text(align="left", dx=12, fontSize=11)
-    .encode(x="Period:N", y="Sales:Q", text="Product:N", color=alt.Color("Direction:N", scale=color_scale, legend=None))
+    .encode(
+        x="Period:N",
+        y="Sales:Q",
+        text="Product:N",
+        color=alt.Color("Direction:N", scale=color_scale, legend=None),
+        stroke=alt.value(INK),
+        strokeWidth=decrease_stroke_width,
+    )
 )
+
+# Layer order: dark-mode Decrease halo sits beneath everything else; empty in light mode.
+layers = [lines_decrease_halo] if THEME == "dark" else []
+layers += [lines, points, labels_left, labels_right]
 
 # Style — L-shaped frame: no view stroke, axis domain lines (bottom + left) stay visible
 chart = (
-    (lines + points + labels_left + labels_right)
+    alt.layer(*layers)
     .properties(
         width=620,
         height=320,
@@ -105,7 +142,6 @@ chart = (
         grid=True,
         gridColor=INK,
         gridOpacity=0.12,
-        gridDash=[4, 4],
         labelColor=INK_SOFT,
         titleColor=INK,
     )
