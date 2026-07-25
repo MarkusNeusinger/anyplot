@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-07-25
@@ -38,14 +38,20 @@ ax.set_facecolor(PAGE_BG)
 
 ax.plot(dates, price, linewidth=3, color=BRAND, label="Stock Price Index")
 
-# Vertical span — recession period (2008–2009)
+# Vertical span — recession period (2008–2009), with subtle edge lines to
+# mark its boundaries and set it apart from the horizontal span below
 ax.axvspan(2008, 2010, alpha=0.22, color=C2, label="Recession Period")
+ax.axvline(2008, color=C2, alpha=0.6, linewidth=1.2)
+ax.axvline(2010, color=C2, alpha=0.6, linewidth=1.2)
 
 # Horizontal span — risk zone (low values)
-ax.axhspan(70, 95, alpha=0.18, color=C3, label="Risk Zone")
+ax.axhspan(70, 95, alpha=0.22, color=C3, label="Risk Zone")
 
 # Text labels inside each span (blended transforms keep them anchored to the
-# span regardless of the data range, avoiding overlap with the price line)
+# span regardless of the data range, avoiding overlap with the price line).
+# Styling is deliberately differentiated between the two span types: the
+# time-based span reads as italic prose, the threshold span as a bold
+# small-caps tag.
 ax.text(
     2009,
     0.92,
@@ -62,12 +68,12 @@ ax.text(
 ax.text(
     0.02,
     82.5,
-    "Risk Zone",
+    "RISK ZONE",
     transform=ax.get_yaxis_transform(),
     ha="left",
     va="center",
     fontsize=8,
-    style="italic",
+    fontweight="bold",
     color=INK,
     alpha=0.85,
 )
@@ -88,6 +94,7 @@ ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, color=INK)
 leg = ax.legend(fontsize=8, loc="upper left")
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_frame().set_alpha(1.0)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
