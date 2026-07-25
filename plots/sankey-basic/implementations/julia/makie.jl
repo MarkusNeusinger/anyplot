@@ -34,14 +34,30 @@ flows = [
 
 source_color = Dict(name => IMPRINT_PALETTE[i] for (i, name) in enumerate(sources))
 
+# --- Barycenter node ordering: minimizes ribbon crossings independently of the
+# palette-assignment order above (which stays fixed so Coal keeps the brand green).
+function barycenter_order(names, other_order, edges; as_source::Bool)
+    rank = Dict(n => i for (i, n) in enumerate(other_order))
+    score(name) = begin
+        pairs = as_source ? [(t, v) for (s, t, v) in edges if s == name] :
+                             [(s, v) for (s, t, v) in edges if t == name]
+        sum(rank[p] * v for (p, v) in pairs) / sum(v for (_, v) in pairs)
+    end
+    return sort(names; by = score)
+end
+
+source_order = barycenter_order(sources, targets, flows; as_source = true)
+target_order = barycenter_order(targets, source_order, flows; as_source = false)
+source_order = barycenter_order(sources, target_order, flows; as_source = true)
+
 # --- Node column layout: stacked bars, gap proportional to total flow -------
 gap = sum(v for (_, _, v) in flows) * 0.025
 
-source_totals = [sum(v for (s, _, v) in flows if s == name) for name in sources]
-target_totals = [sum(v for (_, t, v) in flows if t == name) for name in targets]
+source_totals = [sum(v for (s, _, v) in flows if s == name) for name in source_order]
+target_totals = [sum(v for (_, t, v) in flows if t == name) for name in target_order]
 
-source_col_h = sum(source_totals) + gap * (length(sources) - 1)
-target_col_h = sum(target_totals) + gap * (length(targets) - 1)
+source_col_h = sum(source_totals) + gap * (length(source_order) - 1)
+target_col_h = sum(target_totals) + gap * (length(target_order) - 1)
 col_h = max(source_col_h, target_col_h)
 
 source_offsets = cumsum(vcat(0.0, (source_totals .+ gap)[1:end-1]))
@@ -50,14 +66,14 @@ target_offsets = cumsum(vcat(0.0, (target_totals .+ gap)[1:end-1]))
 source_top = (col_h - source_col_h) / 2 .+ (source_col_h .- source_offsets)
 target_top = (col_h - target_col_h) / 2 .+ (target_col_h .- target_offsets)
 
-source_pos = Dict(name => (top - h, top) for (name, top, h) in zip(sources, source_top, source_totals))
-target_pos = Dict(name => (top - h, top) for (name, top, h) in zip(targets, target_top, target_totals))
+source_pos = Dict(name => (top - h, top) for (name, top, h) in zip(source_order, source_top, source_totals))
+target_pos = Dict(name => (top - h, top) for (name, top, h) in zip(target_order, target_top, target_totals))
 
 # --- Per-node link segment allocation (stacked in the order of the other column)
 source_seg = Dict{Tuple{String,String},Tuple{Float64,Float64}}()
-for name in sources
+for name in source_order
     outgoing = sort([(t, v) for (s, t, v) in flows if s == name],
-                     by = pair -> findfirst(==(pair[1]), targets))
+                     by = pair -> findfirst(==(pair[1]), target_order))
     cur = source_pos[name][2]
     for (t, v) in outgoing
         source_seg[(name, t)] = (cur - v, cur)
@@ -66,9 +82,9 @@ for name in sources
 end
 
 target_seg = Dict{Tuple{String,String},Tuple{Float64,Float64}}()
-for name in targets
+for name in target_order
     incoming = sort([(s, v) for (s, t, v) in flows if t == name],
-                     by = pair -> findfirst(==(pair[1]), sources))
+                     by = pair -> findfirst(==(pair[1]), source_order))
     cur = target_pos[name][2]
     for (s, v) in incoming
         target_seg[(s, name)] = (cur - v, cur)
@@ -84,7 +100,7 @@ fig = Figure(resolution = (1600, 900), fontsize = 14, backgroundcolor = PAGE_BG)
 ax = Axis(
     fig[1, 1];
     title           = title_str,
-    titlesize       = 20,
+    titlesize       = 52,
     titlecolor      = INK,
     backgroundcolor = PAGE_BG,
 )
@@ -114,7 +130,7 @@ for (s, t, v) in flows
 end
 
 # --- Nodes: rectangles + direct labels ---------------------------------------
-for name in sources
+for name in source_order
     b, t = source_pos[name]
     rect = Point2f[(0.0, b), (node_width, b), (node_width, t), (0.0, t)]
     poly!(ax, rect; color = source_color[name], strokewidth = 1.5, strokecolor = PAGE_BG)
@@ -122,7 +138,7 @@ for name in sources
           color = INK, fontsize = 15)
 end
 
-for name in targets
+for name in target_order
     b, t = target_pos[name]
     rect = Point2f[(x_right - node_width, b), (x_right, b), (x_right, t), (x_right - node_width, t)]
     poly!(ax, rect; color = ANYPLOT_MUTED, strokewidth = 1.5, strokecolor = PAGE_BG)
