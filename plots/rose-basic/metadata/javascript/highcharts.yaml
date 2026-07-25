@@ -1,0 +1,258 @@
+library: highcharts
+language: javascript
+specification_id: rose-basic
+created: '2026-07-25T10:26:42Z'
+updated: '2026-07-25T10:31:24Z'
+generated_by: claude-sonnet
+workflow_run: 30154267538
+issue: 1003
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Radius correctly proportional to value (not area) per spec — verified via outerR
+    * (value/max) scaling, satisfying the spec's explicit accuracy note
+  - 'Clever, honest workaround for the core-bundle-only constraint: custom SVG-renderer
+    wedges/rings paired with a genuine data-bound scatter series at each wedge tip,
+    so hover tooltips are real Highcharts interactivity rather than a static image
+    with no interactive layer'
+  - 'Canonical Imprint palette applied in correct order across all 8 directions, first
+    series (N) is #009E73, and data colors are pixel-identical between light and dark
+    renders'
+  - Radial scale is clearly labeled with gridline rings, tick values (200/400/600/800),
+    and an explicit 'hrs/yr' unit label placed in a spoke-free gap so it never collides
+    with a wedge
+  - 'Theme chrome fully correct: transparent chart background over the themed page
+    background, credits disabled, text/grid tokens threaded through consistently in
+    both renders'
+  - Title matches the mandated '{spec-id} · {language} · {library} · anyplot.ai' format
+    exactly, and animation is disabled on the chart, series, and all three addSeries
+    calls per the Highcharts screenshot gotcha
+  weaknesses:
+  - Radial scale labels (200/400/600/800, hrs/yr) are set at 11-12px — noticeably
+    smaller than the other chrome text; bumping to ~13-14px would improve balance
+    and mobile-scale legibility without other changes
+  - 'Design storytelling is competent but conservative: wedge sizes and color naturally
+    differentiate directions, but there is no additional emphasis (e.g. subtle highlight
+    or annotation) calling out the dominant direction (W, 710 hrs/yr) to sharpen the
+    focal point'
+  - Wedge-tip markers are small plain circles with a thin page-colored stroke — functional
+    for the hover affordance but visually utilitarian; a touch more refinement (e.g.
+    slightly larger radius or a subtle shadow) would lift Design Excellence further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "rose-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top, subtitle "Wind frequency by compass direction" in softer gray beneath it — both clearly readable. Eight compass letters (N, NE, E, SE, S, SW, W, NW) ring the outer edge in bold dark text. Radial gridline rings labeled 200/400/600/800 plus an italic "hrs/yr" unit label sit in the gap between N and NW, fully legible against the light background.
+      Data: Eight wedges radiate from center, radius proportional to value, separated by thin gaps. N (top) is #009E73 green; the remaining seven directions cycle through the canonical Imprint palette (violet, blue, ochre, red, cyan, wine, olive) in index order. A small circular marker sits at each wedge tip (real Highcharts scatter points for hover tooltips).
+      Legibility verdict: PASS — all title, subtitle, compass, and scale text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and subtitle now rendered in light/white text, fully legible. Compass letters and radial scale labels also flipped to light-colored text against the dark background. Grid rings and spokes are subtle light-gray strokes, visible but not dominant.
+      Data: All eight wedge colors are pixel-identical to the light render (green N, violet NE, blue E, ochre SE, red S, cyan SW, wine W, olive NW) — only the chrome (background, text, grid) flipped as expected.
+      Legibility verdict: PASS — no dark-on-dark failures found; every text element (title, subtitle, compass letters, ring labels, unit label) is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; radial scale
+          labels (11-12px) are slightly small relative to the rest of the chrome
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, markers, or wedges in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 wedges with sparse-appropriate marker sizing, clearly distinguishable
+          from each other and the background
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 8 distinct hues plus direct compass-letter labeling, not reliant
+          on color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills ~70-80% of the square canvas with balanced margins; canvas
+          dimension gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Radial scale carries an explicit 'hrs/yr' unit label plus a descriptive
+          subtitle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'N = #009E73, remaining 7 directions follow canonical Imprint order,
+          data colors identical across themes, theme-correct backgrounds'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom radial rendering with wedge gaps, spoke-avoiding label placement,
+          and genuine tooltip markers shows real design effort beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No default axes/spines (fully custom chrome), subtle grid rings,
+          generous whitespace; tip markers are functional but plain
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Wedge size variation naturally creates hierarchy, but nothing additionally
+          emphasizes the dominant direction
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct rose/wind chart with radius (not area) proportional to value
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Radial gridlines, equal-angle wedges, natural circular ordering,
+          consistent distinct color scheme, N at top
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: category -> angular position, value -> radius, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; direction letters substitute
+          for a legend appropriately (single-series-per-category chart)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows radius encoding, angular categories, and radial scale; could
+          add finer-grained gridlines
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Wind-observation-hours-by-direction is plausible, neutral, real-world
+          data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 290-710 sit well within the 0-800 ring range chosen
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script with small one-line geometry helpers, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided browser globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the constraint; tooltip is genuine, not
+          faked
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled everywhere, credits
+          disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of the SVG renderer and series API given the core-bundle-only
+          constraint (no highcharts-more polar type)
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Distinctive technique: real data-bound scatter series overlaid on
+          custom-drawn shapes to get genuine tooltips without add-on modules'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - patches
+  - manual-ticks
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - grid-styling
