@@ -1,0 +1,241 @@
+library: makie
+language: julia
+specification_id: rug-basic
+created: '2026-07-25T07:00:10Z'
+updated: '2026-07-25T07:18:19Z'
+generated_by: claude-sonnet
+workflow_run: 30148327909
+issue: 978
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Rug-tick overplotting from attempt 1 is fixed — individual ticks stay distinguishable
+    even in the densest 14-22 min cluster (confirmed via zoomed crop), fully addressing
+    the prior VQ-03 weakness
+  - New light-traffic/heavy-traffic callouts, positioned at each cluster's actual
+    mean via computed relative coordinates, give the bimodal shape an explicit narrative
+    without cluttering the plot
+  - Bin count reduced from 25 to 16, producing a visibly cleaner bimodal silhouette
+    instead of the previous noisy single-count bins
+  - 'Clean theme-adaptive chrome: correct backgrounds, ink tokens threaded through
+    both axes in both renders, data color identical across themes'
+  - Idiomatic, distinctive Makie layout usage (rowsize!, hideydecorations!, linkxaxes!)
+    for a marginal rug panel beneath a histogram
+  - Correct title format, realistic bimodal commute data, reproducible via seeded
+    RNG
+  weaknesses:
+  - Aesthetic sophistication is still a single-color (brand green) composition without
+    an additional refinement flourish (e.g., subtle two-tone distinction between the
+    light/heavy clusters) that would push Design Excellence further
+  - Y-axis label 'Number of Days' has no explicit unit annotation beyond the implied
+    count, though this is a minor/optional nit given the label is already self-explanatory
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "Daily Commute Duration · rug-basic · julia · makie · anyplot.ai" clearly legible at top. Y-axis label "Number of Days" and x-axis label "Commute Duration (minutes)" both dark and fully readable. Subtle horizontal gridlines only on the histogram panel. Two small gray callout labels ("light traffic", "heavy traffic") sit above each histogram cluster with clear whitespace separating them from the bars below (verified via zoomed crop — no overlap).
+      Data: Histogram of commute durations in Imprint brand green (#009E73) with thin cream strokes between bins shows a clean bimodal shape (light-traffic cluster ~14-22 min, heavy-traffic cluster ~28-36 min) using 16 bins (reduced from 25 in attempt 1, producing a cleaner silhouette). Below it, sharing the x-axis via linkxaxes!, a rug strip of thin green tick marks (alpha=0.25, linewidth=1.5) marks every individual observation — a zoomed crop of the densest region (14-22 min) confirms individual ticks remain visually distinguishable rather than merging into a solid band, which was the main VQ-03 weakness in attempt 1.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, now in light ink, clearly legible against the dark surface. Axis labels and tick labels render in light/soft-ink tones with clear contrast. Callout labels remain legible and correctly positioned. No dark-on-dark failures observed.
+      Data: Same green histogram bars and rug ticks — data colors are pixel-identical to the light render (confirmed only chrome flipped). Densest rug region again shows individually distinguishable ticks in the zoomed crop, matching the light render's improvement.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions in either render; callout labels have clear whitespace
+          above the tallest bar
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed from attempt 1: rug ticks in the densest region (14-22 min)
+          now stay individually distinguishable at alpha=0.25/linewidth=1.5 instead
+          of merging into a solid band'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, single-hue design avoids CVD issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800), no overflow/clipping, balanced two-panel
+          layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive, with units on x-axis
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme backgrounds in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional histogram+rug composition with intentional hierarchy,
+          but a fairly standard single-color combo
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle single-axis grid, cream stroke between bins,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New light-traffic/heavy-traffic callouts, positioned at each cluster's
+          mean, now explicitly guide the viewer to the bimodal insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct rug plot, paired with a histogram per the spec's suggested
+          application
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Tick marks per observation, alpha for overlap, consistent small height,
+          x-axis positioning
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = commute duration, y = day count; rug shares x mapping via linkxaxes!
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed (single series)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Clustering, gaps, and edge sparsity all visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral commute-duration data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10-40 minute range is sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/plot/save, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie, Colors, Random used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: New callout-position math is simple and appropriate, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: hist!, linesegments!, text!(space=:relative), grid-layout Axis usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: linkxaxes!, rowsize!(..., Relative(0.14)), hideydecorations! — genuine
+          Makie-specific layout technique for a marginal rug panel
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - subplots
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - minimal-chrome
