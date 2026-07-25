@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: rug-basic
 created: '2025-12-23T19:49:08Z'
-updated: '2026-07-25T06:58:30Z'
+updated: '2026-07-25T07:10:59Z'
 generated_by: claude-sonnet
 workflow_run: 30148204719
 issue: 978
@@ -12,44 +12,63 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 84
 review:
   strengths:
-  - Combines geom_density with a correctly-implemented geom_segment rug (idiomatic
-    substitute since lets-plot 4.11.0 has no native geom_rug), documented clearly
-    in a code comment
-  - 'Data tells a strong story: three distinct response-time clusters plus four isolated
-    outliers, exactly matching the spec''s ''reveal clustering patterns, gaps, and
-    outliers'' application'
-  - 'Both renders use exact Imprint background hexes (#FAF8F1 light / #1A1A17 dark)
-    with full theme-adaptive chrome (title, axis, ticks, grid all correctly recolored);
-    brand green #009E73 stays identical between themes'
-  - Reproducible with explicit np.random.seed(42); clean imports; correct dual PNG
-    (scale=4) + HTML output via ggsave
+  - Density curve + rug marks combined exactly as the spec notes recommend, clearly
+    revealing the trimodal clustering (~80/180/300ms) and the sparse outlier tail
+    (420-610ms) with minimal visual footprint
+  - 'All font sizes explicitly set (title 24pt, axis title 20pt, axis text 16pt) producing
+    a well-proportioned layout: title occupies ~51% of plot width, no overflow or
+    overlap in either render'
+  - Correct Imprint brand green (#009E73) used consistently for density fill/line
+    and rug ticks, identical across light and dark renders; both theme backgrounds
+    and text tokens match the style guide exactly
+  - Realistic, neutral data scenario (API/service response-time distribution) with
+    well-chosen alpha (0.55) on rug marks so overlapping observations in the dense
+    cluster still read as density rather than a solid smear
+  - Clean, reproducible KISS-structured code (np.random.seed(42), no functions/classes)
+    with a helpful comment documenting why geom_segment substitutes for the still-missing
+    geom_rug() in lets-plot 4.11.0
   weaknesses:
-  - Title omits the required {language} token — should read 'rug-basic · python ·
-    letsplot · anyplot.ai' (currently 'rug-basic · letsplot · anyplot.ai')
-  - All four panel spines are visible (full rectangular frame around the plot area)
-    instead of the style guide's default L-shaped (bottom+left only) frame — drop
-    the top/right/panel border for a cleaner look
-  - The densest cluster (~45 points in the 60-100ms range) blends into a near-solid
-    green block under the current alpha=0.7 — consider a slightly lower alpha or thinner
-    segment stroke so extreme-density regions stay legible as individual ticks
+  - 'Rendered title is missing the mandated language segment in BOTH renders: it reads
+    ''rug-basic · letsplot · anyplot.ai'' instead of ''rug-basic · python · letsplot
+    · anyplot.ai'' -- the word ''python'' is silently dropped even though the source
+    string in labs(title=...) includes it. Likely cause: plot_title is sized at 24pt
+    while the library default is 16pt (prompts/library/letsplot.md), and lets-plot
+    renders/wraps the title at the base 800x450 canvas before the 4x scale is applied
+    -- at 24pt the 44-char title probably overflows the 800px base width and lets-plot
+    drops a token instead of wrapping. Fix: reduce plot_title fontsize toward the
+    ~16-18pt range (or otherwise verify the full title fits the 800px base canvas)
+    so all four title components render.'
+  - Panel border renders as a full 4-sided box in both themes (top/right/bottom/left
+    all visible) even though panel_border=element_blank() was set -- contrary to the
+    style guide's default L-shaped frame (top/right spines removed). Investigate whether
+    axis_line=element_line() is producing all four sides, or drop axis_line entirely
+    and rely on panel_grid only for a cleaner look.
+  - Right-side margin is nearly zero (panel border sits ~22px from the 3200px canvas
+    edge) while the left margin is roughly 290px -- noticeably unbalanced whitespace.
+    Nothing is clipped, but tightening the x-axis range padding or adding symmetric
+    panel margin would improve balance.
+  - Design is fairly minimal/single-hue (only the brand green is used); could gain
+    more Design Excellence polish from a secondary muted-neutral accent (e.g. a subtle
+    reference line or annotation calling out the outlier cluster) to strengthen the
+    storytelling beyond just color+shape.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, sampled pixel (250,248,241) = #FAF8F1, matches spec exactly.
-      Chrome: Title "rug-basic · letsplot · anyplot.ai" in dark ink (#1A1A17), clearly readable. X-axis label "Response Time (ms)" and Y-axis label "Density" in dark ink, readable. Tick labels in softer grey-brown, readable. Subtle horizontal (y-axis-only) gridlines visible but not competing with data. A thin rectangular frame (all four spines) surrounds the panel.
-      Data: Single-series brand green (#009E73) density curve with a light translucent fill (alpha≈0.25) and a band of vertical rug tick marks at the bottom (alpha≈0.7) showing every observation. Three visible density humps (~80ms, ~180ms, ~300ms) plus four isolated tick marks out past 400ms for the outliers, with a visible gap in the rug between ~360ms and ~420ms.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1-consistent), not pure white -- correct.
+      Chrome: Title "rug-basic · letsplot · anyplot.ai" in dark ink, top-left, ~51% of plot width -- readable, but missing the mandated "python" language segment (should read "rug-basic · python · letsplot · anyplot.ai"). Axis titles "Response Time (ms)" (x) and "Density" (y, rotated) in dark ink, clearly readable. Tick labels in a softer gray, legible. Horizontal Y-axis gridlines only, subtle. Full 4-sided panel border visible (not the default L-shape).
+      Data: Brand green (#009E73) KDE curve with a light translucent green fill showing a trimodal shape (peaks near ~80ms, ~180ms, and a smaller bump near ~300ms), plus green rug tick marks along the x-axis baseline showing individual observations -- dense clustering in 60-220ms, sparser marks 270-350ms, and four isolated outlier ticks from 420-610ms.
+      Legibility verdict: PASS (all rendered text is clearly readable against the light background; the title's missing word is a content/spec-compliance defect, not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, sampled pixel (26,26,23) = #1A1A17, matches spec exactly (not pure black).
-      Chrome: Title and axis labels rendered in light ink (#F0EFE8), tick labels in a softer light grey (#B8B7B0) — both clearly legible against the dark background. Gridlines subtle and visible. Same four-sided thin frame as the light render.
-      Data: Data colors are pixel-identical to the light render — same brand green #009E73 for both the density curve/fill and the rug ticks, same cluster/gap/outlier shape.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements are clearly distinguishable from the near-black surface.
+      Background: Warm near-black (#1A1A17-consistent), not pure black -- correct.
+      Chrome: Same title text and same missing "python" segment issue. Title and axis titles render in light off-white ink, tick labels in a lighter gray -- both clearly legible against the dark background, no dark-on-dark failures observed. Gridlines and the 4-sided panel border are visible at low contrast, matching the light render's structure.
+      Data: Identical brand green (#009E73) curve, fill, and rug tick colors/positions as the light render -- confirms only chrome (background/text/grid) flipped, data colors held constant as required.
+      Legibility verdict: PASS (all text readable in the dark theme; no dark-on-dark or light-on-light failures; same title defect as light render).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -57,71 +76,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (24/20/16pt), fully readable in both themes
+        comment: All sizes explicit (title 24pt, axis title 20pt, tick 16pt); title
+          fits ~51% of plot width, no overflow, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Rug alpha=0.7 works well overall, but the densest cluster (~45 pts)
-          blends into a near-solid block
+        comment: Density curve and rug ticks clearly visible; densest cluster (60-100ms)
+          merges into a solid block, alpha=0.55 helps but individual ticks are hard
+          to distinguish there
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green, good contrast on both surfaces, no red-green
-          reliance
+        comment: Single-hue brand green, strong contrast on both cream and near-black
+          backgrounds, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed at exactly 3200x1800, good proportions, nothing
-          clipped
+        comment: Plot fills ~75% of canvas (good), but right margin (~22px) is far
+          tighter than left margin (~290px) -- unbalanced whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Response Time (ms)'' and ''Density'' are descriptive with units'
+        comment: '''Response Time (ms)'' has units, ''Density'' is descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Exact Imprint backgrounds and brand green in both themes
+        comment: 'Brand green #009E73 identical across themes, backgrounds and chrome
+          tokens match Imprint style guide exactly'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Competent single-color density+rug composition, no additional polish
-          elements
+        comment: Thoughtful density+rug composition and graduated typography, but
+          a single-hue design that stops short of 'strong design' tier
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Full four-sided panel frame retained instead of the default L-shaped
-          spine treatment; grid otherwise subtle and whitespace generous
+        comment: Grid pared down to subtle y-only major lines, but a full 4-sided
+          panel border remains contrary to the style guide's default L-shaped frame
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Clusters, gaps, and outliers are all clearly legible, effective combination
-          of density + rug
+        comment: The density shape plus rug ticks together clearly surface clustering
+          and outliers without needing annotations -- decent visual hierarchy
     spec_compliance:
       score: 13
       max: 15
@@ -130,29 +149,27 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct rug plot, paired with density per spec's recommended use
-          case
+        comment: Correct rug plot, paired with a density curve exactly as the spec's
+          Notes/Applications recommend
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Tick marks, alpha transparency, consistent small tick height, x-axis
-          position all present
+        comment: Semi-transparency for overlap, small/consistent tick height, x-axis
+          position by default, complements a density curve -- all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: X = response_time, Y = density, full data range shown
+        comment: response_time correctly on x, density on y, rug at y=0..small; full
+          data range visible
       - id: SC-04
         name: Title & Legend
         score: 1
         max: 3
-        passed: false
-        comment: Title missing the required {language} token ('python') between spec-id
-          and library
+        comment: Rendered title is missing the mandated 'python' language segment
+          in both renders (reads 'rug-basic · letsplot · anyplot.ai' instead of the
+          required 4-part format); no legend needed for single series
     data_quality:
       score: 15
       max: 15
@@ -161,20 +178,18 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: Shows clustering, gaps, and outliers — all key rug-plot aspects
+        comment: Trimodal clustering, gaps between clusters, and isolated outliers
+          all present -- covers the full feature set a rug plot should demonstrate
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Plausible, neutral response-time data
+        comment: Plausible, neutral API/service response-time scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: 60-610ms range is sensible for response-time measurements
+        comment: Response-time values (80-610ms) are realistic for the domain
     code_quality:
       score: 10
       max: 10
@@ -183,60 +198,54 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: No functions/classes, flat script
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
         comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Only used imports
+        comment: Only numpy/pandas/os/lets_plot symbols actually used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Clean, appropriately simple; comment documents the geom_segment-for-geom_rug
+          workaround
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html via current
+          ggsave API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Correctly worked around the absence of geom_rug in lets-plot 4.11.0
-          with the idiomatic geom_segment substitute
+        comment: Idiomatic ggplot-grammar layering (geom_density + geom_segment +
+          theme); geom_segment is the documented correct workaround given lets-plot
+          has no native geom_rug()
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Layered composition is reasonable but doesn't showcase distinctive
-          lets-plot features beyond the workaround
+        comment: Emits both a static PNG and an interactive HTML export, leveraging
+          lets-plot's built-in interactivity beyond what static-only libraries offer
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - data-generation
   dataprep:
   - kde
   styling:
   - alpha-blending
-  - grid-styling
