@@ -34,16 +34,40 @@ const ih = height - margin.top - margin.bottom;
 const cx = margin.left + iw / 2;
 const cy = margin.top + ih / 2;
 const outerRadius = Math.min(iw, ih) / 2 - 50;
+const innerRadius = outerRadius * 0.13;
 
-// Scales — angle 0 at top (12 o'clock), increasing clockwise through the day
+// Scales — angle 0 at top (12 o'clock), increasing clockwise through the day.
+// A small inner-radius offset (donut-style start) keeps low overnight values
+// from compressing into the exact center.
 const angle = (hour) => (hour / 24) * 2 * Math.PI;
 const radiusScale = d3
   .scaleLinear()
   .domain([0, d3.max(data, (d) => d.value) * 1.1])
-  .range([0, outerRadius]);
+  .range([innerRadius, outerRadius]);
+const pointAt = (rad, r) => [r * Math.sin(rad), -r * Math.cos(rad)];
+const anchorFor = (rad) => {
+  const s = Math.sin(rad);
+  return Math.abs(s) < 0.01 ? "middle" : s > 0 ? "start" : "end";
+};
+const baselineFor = (rad) => {
+  const c = Math.cos(rad);
+  return Math.abs(c) < 0.01 ? "middle" : c > 0 ? "hanging" : "auto";
+};
 
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const plot = svg.append("g").attr("transform", `translate(${cx},${cy})`);
+
+// Radial gradient — subtle depth cue, fill grows denser toward the outer edge
+const gradient = svg
+  .append("defs")
+  .append("radialGradient")
+  .attr("id", "areaFill")
+  .attr("gradientUnits", "userSpaceOnUse")
+  .attr("cx", cx)
+  .attr("cy", cy)
+  .attr("r", outerRadius);
+gradient.append("stop").attr("offset", "0%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.05);
+gradient.append("stop").attr("offset", "100%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.28);
 
 // Radial gridlines (concentric circles) with value labels along the top spoke
 const radiusTicks = radiusScale.ticks(4).filter((v) => v > 0);
@@ -68,17 +92,18 @@ plot
   .style("font-size", "13px")
   .text((d, i) => (i === radiusTicks.length - 1 ? `${d.toFixed(1)} kWh` : d.toFixed(1)));
 
-// Angular gridlines (spokes) every 3 hours, with hour labels ringed outside
+// Angular gridlines (spokes) every 3 hours, drawn from the inner-radius hole
+// out to the rim, with hour labels ringed outside
 const spokeHours = Object.keys(hourLabels).map(Number);
 plot
   .selectAll(".angular-grid")
   .data(spokeHours)
   .join("line")
   .attr("class", "angular-grid")
-  .attr("x1", 0)
-  .attr("y1", 0)
-  .attr("x2", (h) => outerRadius * Math.sin(angle(h)))
-  .attr("y2", (h) => -outerRadius * Math.cos(angle(h)))
+  .attr("x1", (h) => pointAt(angle(h), innerRadius)[0])
+  .attr("y1", (h) => pointAt(angle(h), innerRadius)[1])
+  .attr("x2", (h) => pointAt(angle(h), outerRadius)[0])
+  .attr("y2", (h) => pointAt(angle(h), outerRadius)[1])
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
@@ -87,21 +112,15 @@ plot
   .data(spokeHours)
   .join("text")
   .attr("class", "angular-label")
-  .attr("x", (h) => (outerRadius + 28) * Math.sin(angle(h)))
-  .attr("y", (h) => -(outerRadius + 28) * Math.cos(angle(h)))
-  .attr("text-anchor", (h) => {
-    const s = Math.sin(angle(h));
-    return Math.abs(s) < 0.01 ? "middle" : s > 0 ? "start" : "end";
-  })
-  .attr("dominant-baseline", (h) => {
-    const c = Math.cos(angle(h));
-    return Math.abs(c) < 0.01 ? "middle" : c > 0 ? "hanging" : "auto";
-  })
+  .attr("x", (h) => pointAt(angle(h), outerRadius + 28)[0])
+  .attr("y", (h) => pointAt(angle(h), outerRadius + 28)[1])
+  .attr("text-anchor", (h) => anchorFor(angle(h)))
+  .attr("dominant-baseline", (h) => baselineFor(angle(h)))
   .attr("fill", t.inkSoft)
   .style("font-size", "15px")
   .text((h) => hourLabels[h]);
 
-// Data — closed radial line with a soft fill and marker dots
+// Data — closed radial line with a gradient fill (denser toward the rim) and marker dots
 const radialLine = d3
   .lineRadial()
   .angle((d) => angle(d.hour))
@@ -112,8 +131,7 @@ plot
   .append("path")
   .datum(data)
   .attr("d", radialLine)
-  .attr("fill", t.palette[0])
-  .attr("fill-opacity", 0.15)
+  .attr("fill", "url(#areaFill)")
   .attr("stroke", t.palette[0])
   .attr("stroke-width", 3);
 
@@ -122,12 +140,47 @@ plot
   .data(data)
   .join("circle")
   .attr("class", "data-point")
-  .attr("cx", (d) => radiusScale(d.value) * Math.sin(angle(d.hour)))
-  .attr("cy", (d) => -radiusScale(d.value) * Math.cos(angle(d.hour)))
+  .attr("cx", (d) => pointAt(angle(d.hour), radiusScale(d.value))[0])
+  .attr("cy", (d) => pointAt(angle(d.hour), radiusScale(d.value))[1])
   .attr("r", 6)
   .attr("fill", t.palette[0])
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5);
+
+// Highlight the evening peak — a soft halo behind a larger marker, plus a callout label
+const peak = data.reduce((a, b) => (b.value > a.value ? b : a));
+const peakAngle = angle(peak.hour);
+const peakRadius = radiusScale(peak.value);
+const [peakX, peakY] = pointAt(peakAngle, peakRadius);
+
+plot
+  .append("circle")
+  .attr("cx", peakX)
+  .attr("cy", peakY)
+  .attr("r", 15)
+  .attr("fill", t.palette[0])
+  .attr("fill-opacity", 0.18);
+
+plot
+  .append("circle")
+  .attr("cx", peakX)
+  .attr("cy", peakY)
+  .attr("r", 7.5)
+  .attr("fill", t.palette[0])
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 2);
+
+const [peakLabelX, peakLabelY] = pointAt(peakAngle, peakRadius + 36);
+plot
+  .append("text")
+  .attr("x", peakLabelX)
+  .attr("y", peakLabelY)
+  .attr("text-anchor", anchorFor(peakAngle))
+  .attr("dominant-baseline", baselineFor(peakAngle))
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text(`Peak · ${peak.value.toFixed(2)} kWh`);
 
 // Title
 svg
