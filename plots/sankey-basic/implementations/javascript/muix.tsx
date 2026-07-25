@@ -15,13 +15,15 @@ const FONT =
 
 // --- Data: national energy flow, sources → carriers → end-use sectors (TWh) --
 // Deterministic, in-memory. No link has source === target, and the graph is a
-// strict left-to-right DAG (3 stages), so there are no circular flows.
+// strict left-to-right DAG (3 stages), so there are no circular flows. Wind
+// and Solar are combined into one "Renewables" source so the 4 source
+// categories stay within canonical palette positions 1-4 — position 5
+// (#AE3030) is the reserved bad/loss/error anchor, not a free ordinal slot.
 const NODES_RAW = [
   { id: "coal", label: "Coal", col: 0, color: t.palette[0] },
   { id: "gas", label: "Gas", col: 0, color: t.palette[1] },
   { id: "nuclear", label: "Nuclear", col: 0, color: t.palette[2] },
-  { id: "wind", label: "Wind", col: 0, color: t.palette[3] },
-  { id: "solar", label: "Solar", col: 0, color: t.palette[4] },
+  { id: "renewables", label: "Renewables", col: 0, color: t.palette[3] },
   { id: "electricity", label: "Electricity", col: 1, color: t.palette[5] },
   { id: "heat", label: "Heat", col: 1, color: t.palette[6] },
   { id: "residential", label: "Residential", col: 2, color: MUTED },
@@ -35,9 +37,8 @@ const LINKS_RAW = [
   { source: "gas", target: "electricity", value: 28 },
   { source: "gas", target: "heat", value: 18 },
   { source: "nuclear", target: "electricity", value: 22 },
-  { source: "wind", target: "electricity", value: 15 },
-  { source: "solar", target: "electricity", value: 9 },
-  { source: "solar", target: "heat", value: 3 },
+  { source: "renewables", target: "electricity", value: 24 }, // wind 15 + solar 9
+  { source: "renewables", target: "heat", value: 3 }, // solar 3
   { source: "electricity", target: "residential", value: 34 },
   { source: "electricity", target: "industrial", value: 40 },
   { source: "electricity", target: "commercial", value: 30 },
@@ -47,7 +48,7 @@ const LINKS_RAW = [
 ];
 
 const COL_HEADERS = ["PRIMARY SOURCES", "ENERGY CARRIERS", "END-USE SECTORS"];
-const COL_X = [90, 760, 1440]; // left edge of the node bar per column
+const COL_X = [170, 760, 1440]; // left edge of the node bar per column; left-most gives "Renewables" room to the left
 const NODE_W = 26;
 const GAP = 18; // vertical gap between stacked nodes in the same column
 const PLOT_TOP = 150;
@@ -69,6 +70,38 @@ for (const n of nodes) {
 }
 
 const columns = [0, 1, 2].map((c) => nodes.filter((n) => n.col === c));
+
+// Reorder nodes within each column by the value-weighted average rank of
+// their linked counterparts (Sugiyama-style barycenter heuristic), sweeping
+// left-to-right then right-to-left until it converges. This keeps nodes with
+// shared flow paths adjacent, which cuts down ribbon crossings between
+// columns instead of relying on the arbitrary NODES_RAW order.
+const assignRanks = (col) => col.forEach((n, i) => (n.rank = i));
+const barycenter = (links, counterpartId) => {
+  const total = links.reduce((s, l) => s + l.value, 0);
+  if (!total) return null;
+  return links.reduce((s, l) => s + byId[counterpartId(l)].rank * l.value, 0) / total;
+};
+const reorder = (col, links, counterpartId) =>
+  col
+    .map((n, i) => ({ n, key: barycenter(links(n), counterpartId) ?? n.rank ?? i }))
+    .sort((a, b) => a.key - b.key)
+    .map((s) => s.n);
+
+assignRanks(columns[0]);
+for (let pass = 0; pass < 4; pass++) {
+  if (pass % 2 === 0) {
+    for (let c = 1; c < columns.length; c++) {
+      columns[c] = reorder(columns[c], (n) => n.in, (l) => l.source);
+      assignRanks(columns[c]);
+    }
+  } else {
+    for (let c = columns.length - 2; c >= 0; c--) {
+      columns[c] = reorder(columns[c], (n) => n.out, (l) => l.target);
+      assignRanks(columns[c]);
+    }
+  }
+}
 
 // One shared px/unit scale (from the tightest-fitting column) keeps a given
 // flow value the same thickness everywhere it appears in the diagram.
