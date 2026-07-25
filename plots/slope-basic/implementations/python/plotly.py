@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-04-30
+Quality: pending | Updated: 2026-07-25
 """
 
 import os
@@ -12,115 +12,168 @@ import plotly.graph_objects as go
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito: increase = brand green, decrease = vermillion, flat = adaptive neutral
+# Imprint palette: brand green = growth, matte red = decline (finance/industrial
+# gain-loss semantic exception — see default-style-guide.md "Semantic exception")
 COLOR_UP = "#009E73"
-COLOR_DOWN = "#AE3030"  # imprint red — decrease
-COLOR_FLAT = INK_MUTED
+COLOR_DOWN = "#AE3030"
 
-# Data - Product sales Q1 vs Q4 comparison (10 products showing various patterns)
-products = [
-    "Laptop Pro",
-    "Wireless Earbuds",
-    "Smart Watch",
-    "Tablet Ultra",
-    "Gaming Mouse",
-    "Mechanical Keyboard",
-    "Webcam HD",
-    "USB Hub",
-    "Portable SSD",
-    "Monitor Stand",
+# Data - US manufacturing sector output ($M), 2023 vs 2024
+sectors = [
+    "Aerospace",
+    "Electronics",
+    "Pharmaceuticals",
+    "Machinery",
+    "Food Processing",
+    "Plastics",
+    "Chemicals",
+    "Metals",
+    "Automotive",
+    "Textiles",
 ]
 
-sales_q1 = [245, 180, 120, 195, 85, 110, 45, 30, 75, 55]
-sales_q4 = [310, 220, 195, 160, 145, 130, 95, 85, 70, 40]
+output_2023 = [145, 260, 190, 130, 275, 80, 205, 155, 320, 95]
+output_2024 = [210, 310, 225, 175, 290, 100, 195, 140, 285, 70]
 
-colors = []
-for q1, q4 in zip(sales_q1, sales_q4, strict=True):
-    if q4 > q1:
-        colors.append(COLOR_UP)
-    elif q4 < q1:
-        colors.append(COLOR_DOWN)
-    else:
-        colors.append(COLOR_FLAT)
+colors = [COLOR_UP if end > start else COLOR_DOWN for start, end in zip(output_2023, output_2024, strict=True)]
+
+# Emphasize the biggest movers with bolder lines/markers (data-driven, not decorative)
+pct_changes = [abs(end - start) / start for start, end in zip(output_2023, output_2024, strict=True)]
+lo, hi = min(pct_changes), max(pct_changes)
+spread = hi - lo
+emphasis = [(c - lo) / spread if spread else 0.5 for c in pct_changes]
+line_widths = [2.0 + e * 2.0 for e in emphasis]
+marker_sizes = [9 + e * 6 for e in emphasis]
+
+
+def declutter(values, min_gap):
+    """Push overlapping label positions apart while keeping the stack centered."""
+    order = sorted(range(len(values)), key=lambda i: values[i])
+    stacked = [values[i] for i in order]
+    for i in range(1, len(stacked)):
+        if stacked[i] - stacked[i - 1] < min_gap:
+            stacked[i] = stacked[i - 1] + min_gap
+    for i in range(len(stacked) - 2, -1, -1):
+        if stacked[i + 1] - stacked[i] < min_gap:
+            stacked[i] = stacked[i + 1] - min_gap
+    adjusted = [0.0] * len(values)
+    for position, i in enumerate(order):
+        adjusted[i] = stacked[position]
+    return adjusted
+
+
+all_values = output_2023 + output_2024
+y_min, y_max = min(all_values), max(all_values)
+y_pad = (y_max - y_min) * 0.18
+y_axis_range = [y_min - y_pad, y_max + y_pad]
+min_label_gap = (y_axis_range[1] - y_axis_range[0]) * 0.052
+
+left_label_y = declutter(output_2023, min_label_gap)
+right_label_y = declutter(output_2024, min_label_gap)
 
 # Plot
 fig = go.Figure()
 
-for i, product in enumerate(products):
+for i, sector in enumerate(sectors):
     fig.add_trace(
         go.Scatter(
             x=[0, 1],
-            y=[sales_q1[i], sales_q4[i]],
+            y=[output_2023[i], output_2024[i]],
             mode="lines+markers",
-            line={"color": colors[i], "width": 3},
-            marker={"size": 14, "color": colors[i]},
-            name=product,
+            line={"color": colors[i], "width": line_widths[i]},
+            marker={"size": marker_sizes[i], "color": colors[i]},
+            name=sector,
             showlegend=False,
-            hovertemplate=f"{product}<br>Q1: ${sales_q1[i]}K<br>Q4: ${sales_q4[i]}K<extra></extra>",
+            hovertemplate=(f"{sector}<br>2023: ${output_2023[i]}M<br>2024: ${output_2024[i]}M<extra></extra>"),
         )
     )
 
-# Labels at Q1 (left side)
-for i, product in enumerate(products):
+# Labels at 2023 (left side) — leader line points from the (possibly nudged)
+# label position back to the true data value, so decluttering never disconnects
+# a label from the entity it describes.
+for i, sector in enumerate(sectors):
     fig.add_annotation(
-        x=-0.05,
-        y=sales_q1[i],
-        text=f"{product}: ${sales_q1[i]}K",
-        showarrow=False,
+        x=0,
+        y=output_2023[i],
+        ax=-0.12,
+        ay=left_label_y[i],
+        axref="x",
+        ayref="y",
+        xref="x",
+        yref="y",
+        text=f"{sector}: ${output_2023[i]}M",
+        showarrow=True,
+        arrowhead=0,
+        arrowwidth=1,
+        arrowcolor=colors[i],
         xanchor="right",
-        font={"size": 16, "color": colors[i]},
+        yanchor="middle",
+        align="right",
+        font={"size": 11, "color": colors[i]},
     )
 
-# Labels at Q4 (right side)
-for i, product in enumerate(products):
+# Labels at 2024 (right side)
+for i, sector in enumerate(sectors):
     fig.add_annotation(
-        x=1.05,
-        y=sales_q4[i],
-        text=f"${sales_q4[i]}K: {product}",
-        showarrow=False,
+        x=1,
+        y=output_2024[i],
+        ax=1.12,
+        ay=right_label_y[i],
+        axref="x",
+        ayref="y",
+        xref="x",
+        yref="y",
+        text=f"${output_2024[i]}M: {sector}",
+        showarrow=True,
+        arrowhead=0,
+        arrowwidth=1,
+        arrowcolor=colors[i],
         xanchor="left",
-        font={"size": 16, "color": colors[i]},
+        yanchor="middle",
+        align="left",
+        font={"size": 11, "color": colors[i]},
     )
 
 # Style
+title_text = "Manufacturing Output by Sector · slope-basic · python · plotly · anyplot.ai"
+title_fontsize = round(14 * min(1.0, 67 / len(title_text)))
+
 fig.update_layout(
+    autosize=False,
+    width=800,
+    height=450,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    title={
-        "text": "Product Sales Q1 vs Q4 · slope-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    title={"text": title_text, "font": {"size": title_fontsize, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
         "tickmode": "array",
         "tickvals": [0, 1],
-        "ticktext": ["Q1 2024", "Q4 2024"],
-        "tickfont": {"size": 22, "color": INK_SOFT},
+        "ticktext": ["2023", "2024"],
+        "tickfont": {"size": 13, "color": INK_SOFT},
         "range": [-0.5, 1.5],
         "showgrid": False,
         "zeroline": False,
         "linecolor": INK_SOFT,
+        "mirror": False,
     },
     yaxis={
-        "title": {"text": "Sales ($K)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Output ($M)", "font": {"size": 13, "color": INK}},
+        "tickfont": {"size": 11, "color": INK_SOFT},
+        "range": y_axis_range,
         "showgrid": True,
         "gridwidth": 1,
         "gridcolor": GRID,
         "zeroline": False,
         "linecolor": INK_SOFT,
+        "mirror": False,
     },
-    margin={"l": 220, "r": 220, "t": 80, "b": 60},
+    margin={"l": 140, "r": 140, "t": 45, "b": 35},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
