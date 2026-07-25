@@ -4,6 +4,7 @@
 // Quality: 86/100 | Created: 2026-07-25
 
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -20,6 +21,26 @@ const unitsInStock = [
   500, 500, 460, 460, 460, 410, 410, 410, 680, 680, 680, 630, 630, 580, 580,
   580, 820, 820, 760, 760, 760, 700, 700, 650,
 ];
+const REORDER_POINT = 500;
+
+// The two largest restock jumps (day 9: 410 -> 680, day 17: 580 -> 820) get a
+// bigger, filled marker so the chart's story reads at a glance instead of a
+// uniform row of small dots.
+const EVENT_INDICES = [8, 16];
+
+function EventMark({ x, y, color, dataIndex }) {
+  const isEvent = EVENT_INDICES.includes(dataIndex);
+  return (
+    <circle
+      cx={x}
+      cy={y}
+      r={isEvent ? 9 : 6}
+      fill={isEvent ? color : t.pageBg}
+      stroke={color}
+      strokeWidth={isEvent ? 3 : 2}
+    />
+  );
+}
 
 const margin = { top: 90, bottom: 80, left: 110, right: 60 };
 
@@ -73,6 +94,10 @@ export default function Chart() {
         margin={margin}
         colors={[t.palette[0]]}
         grid={{ horizontal: true }}
+        sx={{
+          "& .MuiLineElement-root": { strokeWidth: 3 },
+          "& .MuiAreaElement-root": { fillOpacity: 0.12 },
+        }}
         xAxis={[
           {
             data: days,
@@ -95,11 +120,20 @@ export default function Chart() {
             label: "Warehouse Inventory",
             curve: "stepAfter",
             showMark: true,
-            area: false,
+            area: true,
           },
         ]}
+        slots={{ mark: EventMark }}
         slotProps={{ legend: { hidden: true } }}
-      />
+      >
+        <ChartsReferenceLine
+          y={REORDER_POINT}
+          label="Reorder Point"
+          labelAlign="end"
+          lineStyle={{ stroke: t.amber, strokeDasharray: "6 4", strokeWidth: 2 }}
+          labelStyle={{ fontSize: 13, fontWeight: 600, fill: t.amber }}
+        />
+      </LineChart>
     </Box>
   );
 }
