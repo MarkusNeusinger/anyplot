@@ -35,7 +35,10 @@ const angleStep = (2 * Math.PI) / monthlyRainfall.length;
 const wedgeAngle = angleStep * 0.82;
 const maxRainfall = d3.max(monthlyRainfall, (d) => d.mm);
 const radius = d3.scaleLinear().domain([0, maxRainfall]).nice().range([0, maxRadius]);
-const wedgeOpacity = d3.scaleLinear().domain([0, maxRainfall]).range([0.45, 1]);
+// Explicit lightness-scaled hex per value (not `fill-opacity`) so equal rainfall
+// values read as the same color in both themes — opacity would otherwise blend
+// against the theme-dependent page background and shift hue between renders.
+const wedgeColor = d3.scaleLinear().domain([0, maxRainfall]).range(["#BFE9DB", t.palette[0]]);
 
 monthlyRainfall.forEach((d, i) => {
   d.centerAngle = i * angleStep;
@@ -70,7 +73,7 @@ plot
   .attr("x", 8)
   .attr("y", (d) => radius(d) + 4)
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "16px")
   .text((d) => `${d} mm`);
 
 // --- Wedges (radius proportional to value) --------------------------------------------
@@ -87,8 +90,7 @@ plot
   .join("path")
   .attr("class", "wedge")
   .attr("d", wedge)
-  .attr("fill", t.palette[0])
-  .attr("fill-opacity", (d) => wedgeOpacity(d.mm))
+  .attr("fill", (d) => wedgeColor(d.mm))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2);
 
