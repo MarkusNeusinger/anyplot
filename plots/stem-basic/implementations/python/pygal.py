@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stem-basic: Basic Stem Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-04-30
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 71/100 | Updated: 2026-07-25
 """
 
 import os
