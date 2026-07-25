@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-25
@@ -49,30 +49,45 @@ line_widths = [2.0 + e * 2.0 for e in emphasis]
 marker_sizes = [9 + e * 6 for e in emphasis]
 
 
-def declutter(values, min_gap):
-    """Push overlapping label positions apart while keeping the stack centered."""
-    order = sorted(range(len(values)), key=lambda i: values[i])
-    stacked = [values[i] for i in order]
-    for i in range(1, len(stacked)):
-        if stacked[i] - stacked[i - 1] < min_gap:
-            stacked[i] = stacked[i - 1] + min_gap
-    for i in range(len(stacked) - 2, -1, -1):
-        if stacked[i + 1] - stacked[i] < min_gap:
-            stacked[i] = stacked[i + 1] - min_gap
-    adjusted = [0.0] * len(values)
-    for position, i in enumerate(order):
-        adjusted[i] = stacked[position]
-    return adjusted
-
-
 all_values = output_2023 + output_2024
 y_min, y_max = min(all_values), max(all_values)
 y_pad = (y_max - y_min) * 0.18
 y_axis_range = [y_min - y_pad, y_max + y_pad]
 min_label_gap = (y_axis_range[1] - y_axis_range[0]) * 0.052
 
-left_label_y = declutter(output_2023, min_label_gap)
-right_label_y = declutter(output_2024, min_label_gap)
+# Anti-overlap label placement: push stacked label positions apart while
+# keeping the stack centered on the original values (left/right run the same
+# pass independently, since the two label columns never interact).
+left_label_y = []
+for values in (output_2023, output_2024):
+    order = sorted(range(len(values)), key=lambda i: values[i])
+    stacked = [values[i] for i in order]
+    for i in range(1, len(stacked)):
+        if stacked[i] - stacked[i - 1] < min_label_gap:
+            stacked[i] = stacked[i - 1] + min_label_gap
+    for i in range(len(stacked) - 2, -1, -1):
+        if stacked[i + 1] - stacked[i] < min_label_gap:
+            stacked[i] = stacked[i + 1] - min_label_gap
+    adjusted = [0.0] * len(values)
+    for position, i in enumerate(order):
+        adjusted[i] = stacked[position]
+    left_label_y.append(adjusted)
+left_label_y, right_label_y = left_label_y
+
+# Label columns: leader-line anchors sit exactly at the xaxis range bounds (the
+# same x position as the axis spine), so label text - regardless of how long a
+# sector name is - always renders into the margin whitespace and never crosses
+# back over the spine into the plot area. Margins are sized from the longest
+# label string in each column so no text clips the canvas edge either.
+x_axis_range = [-0.5, 1.5]
+left_label_text = [f"{sector}: ${value}M" for sector, value in zip(sectors, output_2023, strict=True)]
+right_label_text = [f"${value}M: {sector}" for sector, value in zip(sectors, output_2024, strict=True)]
+label_fontsize = 11
+char_width = 0.62 * label_fontsize
+left_margin = round(24 + char_width * max(len(t) for t in left_label_text))
+right_margin = round(24 + char_width * max(len(t) for t in right_label_text))
+left_anchor_x = x_axis_range[0] - 0.02
+right_anchor_x = x_axis_range[1] + 0.02
 
 # Plot
 fig = go.Figure()
@@ -94,17 +109,17 @@ for i, sector in enumerate(sectors):
 # Labels at 2023 (left side) — leader line points from the (possibly nudged)
 # label position back to the true data value, so decluttering never disconnects
 # a label from the entity it describes.
-for i, sector in enumerate(sectors):
+for i in range(len(sectors)):
     fig.add_annotation(
         x=0,
         y=output_2023[i],
-        ax=-0.12,
+        ax=left_anchor_x,
         ay=left_label_y[i],
         axref="x",
         ayref="y",
         xref="x",
         yref="y",
-        text=f"{sector}: ${output_2023[i]}M",
+        text=left_label_text[i],
         showarrow=True,
         arrowhead=0,
         arrowwidth=1,
@@ -112,21 +127,21 @@ for i, sector in enumerate(sectors):
         xanchor="right",
         yanchor="middle",
         align="right",
-        font={"size": 11, "color": colors[i]},
+        font={"size": label_fontsize, "color": colors[i]},
     )
 
 # Labels at 2024 (right side)
-for i, sector in enumerate(sectors):
+for i in range(len(sectors)):
     fig.add_annotation(
         x=1,
         y=output_2024[i],
-        ax=1.12,
+        ax=right_anchor_x,
         ay=right_label_y[i],
         axref="x",
         ayref="y",
         xref="x",
         yref="y",
-        text=f"${output_2024[i]}M: {sector}",
+        text=right_label_text[i],
         showarrow=True,
         arrowhead=0,
         arrowwidth=1,
@@ -134,7 +149,7 @@ for i, sector in enumerate(sectors):
         xanchor="left",
         yanchor="middle",
         align="left",
-        font={"size": 11, "color": colors[i]},
+        font={"size": label_fontsize, "color": colors[i]},
     )
 
 # Style
@@ -154,15 +169,17 @@ fig.update_layout(
         "tickvals": [0, 1],
         "ticktext": ["2023", "2024"],
         "tickfont": {"size": 13, "color": INK_SOFT},
-        "range": [-0.5, 1.5],
+        "range": x_axis_range,
         "showgrid": False,
         "zeroline": False,
         "linecolor": INK_SOFT,
         "mirror": False,
     },
     yaxis={
-        "title": {"text": "Output ($M)", "font": {"size": 13, "color": INK}},
-        "tickfont": {"size": 11, "color": INK_SOFT},
+        # Numeric ticks are hidden: every entity is already directly labeled with
+        # its exact value at both endpoints, and the tick-number column would sit
+        # in the same margin band as those labels and collide with them.
+        "showticklabels": False,
         "range": y_axis_range,
         "showgrid": True,
         "gridwidth": 1,
@@ -171,7 +188,21 @@ fig.update_layout(
         "linecolor": INK_SOFT,
         "mirror": False,
     },
-    margin={"l": 140, "r": 140, "t": 45, "b": 35},
+    margin={"l": left_margin, "r": right_margin, "t": 45, "b": 35},
+)
+
+# Units label placed above the plot instead of a rotated axis title, so it
+# never competes with the wide left-side entity label column for margin space.
+fig.add_annotation(
+    x=0,
+    y=1,
+    xref="paper",
+    yref="paper",
+    xanchor="left",
+    yanchor="bottom",
+    text="Output ($M)",
+    showarrow=False,
+    font={"size": 13, "color": INK},
 )
 
 # Save
