@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-04-30
+Library: plotly 6.9.0 | Python 3.13.12
+Quality: 86/100 | Updated: 2026-07-25
 """
 
 import os
@@ -17,7 +17,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 LINE_EDGE = "rgba(26,26,23,0.35)" if THEME == "light" else "rgba(240,239,232,0.35)"
 
 # Data - Monthly temperature distributions (Northern hemisphere)
@@ -47,8 +47,9 @@ for i, month in enumerate(months):
 # X range for density evaluation
 x_range = np.linspace(-15, 40, 300)
 
-# Viridis sequential colormap - 12 evenly spaced samples (CVD-safe, perceptually uniform)
-colors = plotly.colors.sample_colorscale("viridis", [i / 11 for i in range(12)])
+# Imprint sequential colormap (brand green -> blue) sampled across the chronological ridges
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+colors = plotly.colors.sample_colorscale(imprint_seq, [i / 11 for i in range(12)])
 
 # Plot
 fig = go.Figure()
@@ -87,15 +88,16 @@ y_ticks = [(len(months) - 1 - i) * (1 - overlap) * ridge_scale + ridge_scale * 0
 
 # Style
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "ridgeline-basic · plotly · anyplot.ai",
-        "font": {"size": 48, "color": INK},
+        "text": "ridgeline-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Temperature (°C)", "font": {"size": 36, "color": INK}},
-        "tickfont": {"size": 28, "color": INK_SOFT},
+        "title": {"text": "Temperature (°C)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "range": [-15, 40],
         "gridcolor": GRID,
         "showgrid": True,
@@ -103,8 +105,8 @@ fig.update_layout(
         "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "", "font": {"size": 36}},
-        "tickfont": {"size": 28, "color": INK_SOFT},
+        "title": {"text": "", "font": {"size": 12}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickvals": y_ticks,
         "ticktext": list(reversed(months)),
         "showgrid": False,
@@ -114,21 +116,9 @@ fig.update_layout(
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    margin={"l": 180, "r": 60, "t": 120, "b": 160},
-    annotations=[
-        {
-            "x": 0.5,
-            "y": -0.08,
-            "xref": "paper",
-            "yref": "paper",
-            "text": "Sequential viridis colormap differentiates all 12 monthly ridges (perceptually uniform, CVD-safe)",
-            "showarrow": False,
-            "font": {"size": 20, "color": INK_SOFT},
-            "align": "center",
-        }
-    ],
+    margin={"l": 90, "r": 40, "t": 70, "b": 55},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
