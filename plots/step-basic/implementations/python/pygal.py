@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 step-basic: Basic Step Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-04-30
+Quality: pending | Updated: 2026-07-25
 """
 
 import os
@@ -49,7 +49,7 @@ for i, (month, val) in enumerate(zip(months, cumulative_sales, strict=True)):
         label = f"★ Peak growth — {month}: +${increment}K → ${val}K cumulative"
     else:
         label = f"{month}: ${val}K cumulative (+${increment}K)"
-    step_data.append({"value": (i, val), "node": {"r": 22 if is_peak else 14}, "label": label})
+    step_data.append({"value": (i, val), "node": {"r": 20 if is_peak else 10}, "label": label})
 
     if i < len(months) - 1:
         # Horizontal hold: extend current value to the next x position
@@ -63,32 +63,33 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
-    title_font_size=72,
-    label_font_size=48,
+    title_font_size=66,
+    label_font_size=56,
     major_label_font_size=44,
-    legend_font_size=56,
-    value_font_size=40,
+    legend_font_size=44,
+    value_font_size=36,
     stroke_width=3,
-    opacity="0.18",
+    opacity="0.28",
     opacity_hover="0.9",
 )
 
 # Chart — XY mode gives full control over x coordinates for true vertical step transitions
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     title="step-basic · pygal · anyplot.ai",
     x_title="Month",
     y_title="Cumulative Sales ($K)",
     style=custom_style,
     show_dots=True,
-    dots_size=14,
-    stroke_style={"width": 8},
+    dots_size=10,
+    stroke_style={"width": 6},
     show_y_guides=True,
     show_x_guides=False,
     show_legend=False,
     fill=True,
-    margin=120,
+    margin=80,
+    range=(0, 700),  # headroom above the Dec peak (635) so the top dot isn't flush with the frame
     x_value_formatter=lambda x: months[round(x)] if 0 <= round(x) <= 11 else "",
 )
 
