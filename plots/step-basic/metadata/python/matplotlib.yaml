@@ -2,141 +2,127 @@ library: matplotlib
 language: python
 specification_id: step-basic
 created: '2025-12-23T20:45:06Z'
-updated: '2026-04-30T12:47:49Z'
+updated: '2026-07-25T15:41:07Z'
 generated_by: claude-sonnet
-workflow_run: 25165322245
+workflow_run: 30163574395
 issue: 956
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Perfect theme adaptation: all chrome tokens (INK, INK_SOFT, ELEVATED_BG, PAGE_BG)
-    are wired through correctly — no dark-on-dark failures in either render'
-  - Excellent use of ax.step() with fill_between(step='post') — the fill area provides
-    visual depth and emphasizes cumulative growth without chartjunk
-  - Hollow circle markers with brand-green edges cleanly mark discrete monthly change
-    events as the spec recommends
-  - 'Complete spec compliance: post-style step, markers at data points, grid lines,
-    and correct title format all present'
-  - 'Perfect code quality: KISS structure, reproducible seed, clean imports, correct
-    output filename'
+  - Unused np.random.seed(42) dead code from Attempt 1 has been removed — data generation
+    is now honestly hardcoded with no misleading seed call
+  - Monthly Totals markers now use a semi-opaque brand-green fill (to_rgba(BRAND,
+    0.35)) instead of a page-background cutout, staying prominent against the filled
+    stairs area in both themes
+  - Correct, idiomatic use of ax.stairs (matplotlib >=3.4) for both the filled area
+    and the outline, rather than the older ax.step
+  - Milestone annotation adds a genuine data-storytelling focal point tied to the
+    actual data (cumulative sales first cross 500 in September)
+  - Theme-adaptive chrome is fully correct in both renders — identical data colors,
+    properly flipped background/text/grid/legend/annotation colors, no dark-on-dark
+    or light-on-light failures
+  - Clean spec-compliant title/legend, correct 3200x1800 canvas, no clipping
   weaknesses:
-  - 'DE-01 moderate: Design is correct but not distinctive — the filled step area
-    is a nice touch but there is no typographic hierarchy, no emphasis on notable
-    months, and no visual focal point that elevates it above a competent-but-stock
-    implementation'
-  - 'DE-02 slight: Grid alpha=0.10 is at the very low end (nearly invisible in dark
-    render); a touch more (0.12-0.15) would provide tracing utility without competing
-    with data'
-  - 'DE-03 low storytelling: The filled area gestures at narrative but nothing highlights
-    the strongest growth period or annotates a cumulative milestone — no viewer guidance
-    beyond the shape itself'
-  - 'LM-02 moderate: fill_between(step=''post'') is a genuine matplotlib distinctive
-    feature, but the implementation stops there — no use of drawstyle, no mlines,
-    no custom step visualization beyond the standard ax.step() call'
+  - Milestone-annotation text is still the same 8pt size as tick labels — consider
+    verifying it stays legible when the card scales down for gallery thumbnails
+  - Only one storytelling annotation; a secondary callout (e.g., largest single-month
+    jump) could strengthen the narrative further, though not required by spec
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "step-basic · matplotlib · anyplot.ai" in dark ink at 24pt, clearly readable. Y-axis label "Cumulative Sales (thousands $)" and X-axis label "Month" both in dark ink at 20pt, clearly readable. Tick labels (Jan–Dec, 0–800) in muted dark ink at 16pt, fully legible.
-      Data: Brand green #009E73 step line (linewidth=3) with a light green semi-transparent fill (alpha=0.12) below the steps. Hollow circle markers at each of the 12 monthly data points with green edges on an off-white interior — cleanly distinguishable from background.
-      Grid: Very subtle horizontal gridlines (alpha=0.10) — visible but not dominant. Top/right spines removed.
-      Legend: "Cumulative Sales" and "Monthly Totals" in upper left, text in muted dark ink, frame in ELEVATED_BG (#FFFDF6) with INK_SOFT border — readable and unobtrusive.
-      Legibility verdict: PASS — all text clearly readable against the light background
+      Background: Warm off-white (~#FAF8F1), not pure white, not dark.
+      Chrome: Title "step-basic · matplotlib · anyplot.ai" centered top in dark ink; axis titles "Month" / "Cumulative Sales (thousands $)" and tick labels dark/soft-grey; legend box (top-left) with grey border and dark text; annotation callout box ("500k milestone reached in Sep") with grey border and dark text. All clearly readable against the light background.
+      Data: Single-series brand-green (#009E73) stairs (step) plot with a semi-opaque green fill under the curve (alpha ~0.12), an outlined green step line, and green-ringed semi-opaque-fill circular "Monthly Totals" markers at each step start. A dashed grey milestone reference line crosses at 500.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light off-white (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in secondary light ink (#B8B7B0) — all fully legible. No dark-on-dark failures observed.
-      Data: Brand green #009E73 step line identical to light render, same hollow circle markers — data colors unchanged as required. The fill area renders as a very dark green shadow visible against the near-black background.
-      Grid: Subtle horizontal gridlines visible — same faint alpha; slightly harder to see on dark surface but not absent.
-      Legend: ELEVATED_BG (#242420) frame with light-ink text — readable and distinct from page background.
-      Legibility verdict: PASS — all text clearly readable against the dark background; no dark-on-dark failures
+      Background: Warm near-black (~#1A1A17), not pure black, not light.
+      Chrome: Title and axis labels render in light off-white; tick labels in soft light-grey; legend box and annotation box use the dark elevated fill with light borders/text. All clearly readable against the dark background — no dark-on-dark failures observed.
+      Data: Identical brand-green (#009E73) line, fill, and markers as the light render — only chrome flipped. Markers (semi-opaque green fill with green ring) remain prominent against the dark-green filled area, an improvement over Attempt 1's background-cutout markers.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt; all text readable in both
-          light and dark renders with correct INK/INK_SOFT tokens applied
+        comment: All text readable in both themes at full size; the 8pt milestone-annotation
+          text matches tick-label size and may get tight at ~400px thumbnail scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month tick labels evenly spaced, no collisions; legend in upper left
-          does not overlap the low-value data in Jan
+        comment: Legend, annotation box, and data never collide.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line linewidth=3 is clearly visible; hollow markers with green
-          edge stand out in both themes; fill area adds visual mass without obscuring
-          the line
+        comment: Monthly Totals markers now use a semi-opaque brand-green fill instead
+          of a background cutout, staying prominent against the filled area in both
+          themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series using #009E73 Okabe-Ito position 1 — CVD-safe; no
-          red-green conflict'
+        comment: Single brand-green series, good contrast, no red/green-as-sole-signal
+          issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figsize with tight_layout; generous whitespace; nothing cut
-          off; full 12-month range displayed
+        comment: Correct 3200x1800 canvas, no clipping, well-balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (thousands $); X-axis 'Month' is clear; title
-          follows spec-id · library · anyplot.ai format
+        comment: Descriptive axis labels with units ("Cumulative Sales (thousands
+          $)").
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73; PAGE_BG is #FAF8F1 light / #1A1A17
-          dark; both renders theme-correct'
+        comment: 'First (only) series is #009E73; identical data color between renders;
+          correct light/dark chrome backgrounds.'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Fill area and hollow marker treatment show intentional design decisions,
-          but overall presentation is competent rather than distinctive — no typographic
-          hierarchy beyond size, no focal emphasis
+        comment: Layered stairs fill + outline + markers + milestone annotation shows
+          real design intent beyond defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, legend frame styled with theme tokens,
-          tight_layout applied — follows guidelines but grid at alpha=0.10 is barely
-          visible in dark render
+        comment: Spines removed, subtle y-axis grid, refined legend/annotation box
+          styling.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Fill area gestures at cumulative growth narrative but no annotations,
-          milestone callouts, or period emphasis to guide the viewer to an insight
+        passed: true
+        comment: Milestone callout gives one clear focal point, but it's the only
+          storytelling device.
     spec_compliance:
       score: 15
       max: 15
@@ -146,54 +132,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step chart using ax.step() — horizontal lines connected by
-          vertical transitions
+        comment: Genuine ax.stairs step plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: '''post'' step style per spec notes; markers at data points per spec
-          notes; grid lines per spec notes; fill_between as bonus enhancement'
+        comment: Post-style step, markers at data points, gridlines all present per
+          spec's Notes section.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=months (sequential), Y=cumulative sales; all 12 months shown on
-          x-axis
+        comment: X=month, Y=cumulative sales, edges correctly bin each month-wide
+          step.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'step-basic · matplotlib · anyplot.ai'; legend entries 'Cumulative
-          Sales' and 'Monthly Totals' match data
+        comment: Title matches mandated format exactly; legend labels match the series.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Demonstrates horizontal steps, vertical transitions at change events,
-          markers at each data point, and the fill_between technique
+        comment: Covers step styling, markers, fill, and an annotated milestone; doesn't
+          demonstrate pre/mid alternatives (not required).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly cumulative sales is a canonical real-world use case for step
-          plots; values (45–105k/month) are plausible; neutral business context
+        comment: Monthly sales figures (45-105k) and cumulative total are plausible
+          and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Monthly sales of 45–105 thousand dollars cumulating to ~850k is a
-          realistic business scale
+        comment: Sensible magnitudes and axis range for a monthly cumulative-sales
+          scenario.
     code_quality:
       score: 10
       max: 10
@@ -203,33 +187,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear top-to-bottom structure
+        comment: Flat script, no functions/classes; the dead np.random.seed(42) from
+          Attempt 1 has been removed.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data
+        comment: Deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy — all three are actually used
+        comment: Only numpy, matplotlib.pyplot, matplotlib.colors.to_rgba, os — all
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a step chart; no fake UI elements
+        comment: Appropriate complexity, no fake UI/interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300 and facecolor=PAGE_BG
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight'.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -237,23 +223,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ax.step() (the dedicated step API) and fill_between(step='post')
-          — idiomatic matplotlib; all Axes methods not pyplot
+        comment: Uses Axes methods throughout (ax.stairs, ax.scatter, ax.annotate),
+          current matplotlib API.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: fill_between with step= parameter is genuinely matplotlib-specific;
-          ax.step() is correct but standard; no use of drawstyle, StepPatch, or other
-          distinctive matplotlib step features
+        passed: true
+        comment: ax.stairs used twice (filled + outline-only) — the library's distinctive
+          step-plot mechanism rather than the older ax.step.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
+  - layer-composition
   patterns:
-  - data-generation
   - explicit-figure
   dataprep:
   - cumulative-sum
