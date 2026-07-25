@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-basic: Basic Polar Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 76/100 | Updated: 2026-07-25
@@ -102,7 +102,10 @@ label_df = pd.DataFrame(label_rows)
 # Radius labels (activity level scale), placed off to the upper-left between
 # the 12:00 and 15:00 spokes — away from the 06:00/18:00 valleys on the
 # horizontal axis where low-activity points would otherwise crowd the labels.
-radius_label_angle = math.radians(100)
+# Angle is kept roughly midway between the 12:00 (90°) and 15:00 (135°) spokes
+# so the outermost "Activity Level" title clears the "12:00" hour label instead
+# of sitting at nearly the same radius only 10° away from it.
+radius_label_angle = math.radians(114)
 radius_labels = [
     {"label": str(int(r)), "x": r * math.cos(radius_label_angle) - 6, "y": r * math.sin(radius_label_angle)}
     for r in grid_radii
