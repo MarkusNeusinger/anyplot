@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 rug-basic: Basic Rug Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-25
@@ -40,6 +40,11 @@ values = np.concatenate(
 values = np.clip(values, 30, 500)
 values = np.sort(values)
 
+# Small vertical jitter (tick length stays fixed, only the baseline shifts) so
+# overlapping ticks in the densest cluster stay visually separable instead of
+# fusing into one solid block, while adding a subtle non-default texture.
+jitter = np.random.uniform(-0.003, 0.003, size=len(values))
+
 # Style - each rug tick is added as its own series (pygal has no native rug
 # mark), so the color tuple must repeat brand green once per point. Pygal
 # auto-darkens colors when the list runs out (`Style.get_colors`), which would
@@ -56,7 +61,7 @@ custom_style = Style(
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
-    stroke_width=6,
+    stroke_width=5,
     opacity=0.7,
 )
 
@@ -77,28 +82,32 @@ chart = pygal.XY(
     print_values=False,
     explicit_size=True,
     margin=60,
-    margin_top=140,
+    margin_top=100,
     margin_bottom=200,
     xrange=(30, 520),
-    range=(0, 0.12),
+    range=(0, 0.1),
 )
 
-# Rug ticks - short vertical marks along the x-axis, filling most of the range
-tick_bottom = 0.0
-tick_top = 0.09
+# Rug ticks - short vertical marks along the x-axis, filling most of the range.
+# Tick length stays fixed (0.09); only the baseline is jittered per point.
+tick_length = 0.09
 
-for val in values:
+for val, dy in zip(values, jitter, strict=True):
     chart.add(
-        f"{val:.1f} ms", [(float(val), tick_bottom), (float(val), tick_top)], stroke_style={"width": 6}, show_dots=False
+        f"{val:.1f} ms", [(float(val), dy), (float(val), dy + tick_length)], stroke_style={"width": 5}, show_dots=False
     )
 
 # Post-process SVG: pygal draws a full border rect around the plot area with no
 # built-in option to suppress it, so hide the rect stroke via CSS injection.
+# It also draws a full-height axis baseline (`.axis.x path.line`) at the plot's
+# left edge regardless of the data range, which floats above the jittered tick
+# band - suppress every path in the x-axis group the same way.
 _svg = chart.render()
 _frame_css = (
     b'<style type="text/css">'
     b".graph .plot .background{stroke:none!important}"
     b".graph .plot rect.background{stroke:none!important}"
+    b".graph .axis.x path{stroke:none!important}"
     b"</style>"
 )
 _svg_patched = (
