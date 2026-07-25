@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: rug-basic
 created: '2025-12-23T19:42:50Z'
-updated: '2026-07-25T06:43:34Z'
+updated: '2026-07-25T06:49:48Z'
 generated_by: claude-sonnet
 workflow_run: 30147780215
 issue: 978
@@ -12,43 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - 'Correct plot-type choice: pairs the rug plot with a KDE exactly as the spec notes
-    recommend, rather than shipping a bare/underwhelming rug-only chart'
-  - Theme-adaptive chrome is implemented correctly and passes the light/dark legibility
-    check with no readability issues in either render
-  - Realistic, well-chosen synthetic data (bimodal fast/slow response times plus deliberate
-    outliers) that lets the rug plot demonstrate clustering, gaps, and outlier detection
-    all at once
-  - Clean, minimal, reproducible code that follows the canvas and save-call rules
-    precisely
+  - 'Directly addressed both attempt-1 weaknesses: rug ticks now use height=0.08/alpha=0.85
+    (up from 0.06/0.6) so they read distinctly against the KDE fill, and outlier ticks
+    (50, 520, 550ms) are highlighted in amber (#DDCC77) as a deliberate focal point'
+  - Correct plot-type choice pairing rug with KDE exactly as the spec recommends,
+    rather than shipping a bare rug-only chart
+  - Theme-adaptive chrome implemented correctly with no readability issues in either
+    render, and the amber highlight color is unaffected by theme (identical position/hue
+    in both)
+  - Realistic bimodal response-time data with explicit tail outliers gives the rug
+    plot real work to do (clustering, gap, outlier detection)
+  - Clean, minimal, reproducible code with explanatory comments on the two-tier rugplot
+    design choice
   weaknesses:
-  - Rug tick marks are somewhat low-contrast against the KDE fill since both share
-    the same green hue at low alpha — consider a slightly taller/more opaque rug or
-    a subtly different alpha to make the individual ticks pop more distinctly from
-    the density fill
-  - Design excellence is close to the standard boilerplate; consider adding one deliberate
-    visual-hierarchy touch (e.g., a lighter callout or color distinction on the outlier
-    ticks) to give the plot a stronger focal point
-  - sns.rugplot/sns.kdeplot are used with mostly default statistical parameters —
-    no exploration of library-distinctive options beyond height/alpha tuning
+  - Aesthetic sophistication is still fairly close to the standard theme-token template
+    overall — the amber outlier accent is a good touch but the composition as a whole
+    (single KDE + rug) remains a modest design elaboration rather than a distinctive
+    visual treatment
+  - rugplot/kdeplot are still used with largely default statistical parameters (bw_adjust,
+    cut, etc. untouched) — the two-tier height/alpha/color split is a genuine improvement
+    but leaves other distinctive rugplot options unexplored
+  - Title width is comparatively narrow (~40% of plot width) leaving significant unused
+    horizontal space in the title band; not a deduction per the proportional-sizing
+    rules but a minor missed opportunity for balance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "rug-basic · python · seaborn · anyplot.ai" in dark ink, fully readable. Axis labels "Response Time (ms)" / "Density" dark and legible. Tick labels softer gray but legible. Subtle horizontal gridlines. Top/right spines removed, left/bottom spines in ink-soft tone.
-      Data: Brand green (#009E73) KDE curve with semi-transparent fill (~0.28 alpha) showing a bimodal distribution (peaks ~150ms, ~350ms). Rug plot of ~123 thin green tick marks along x-axis baseline, including isolated ticks near 520/550ms reading as outliers beyond the KDE's fade.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "rug-basic · python · seaborn · anyplot.ai" in dark ink, clearly legible and centered. X-axis label "Response Time (ms)" and y-axis label "Density" are dark and legible. Tick labels are a softer gray but still clearly readable. A subtle horizontal y-axis gridline is visible behind the curve, not dominant.
+      Data: Single brand-green (#009E73) KDE curve with semi-transparent fill (alpha≈0.28) showing a clearly bimodal response-time distribution (peaks near 150ms and 350ms). A dense rug of green tick marks (height=0.08, alpha=0.85) sits along the x-axis baseline for the main cluster of observations, now noticeably more opaque/taller than the previous attempt so it reads distinctly against the fill. Three isolated ticks near 50, 520, and 550ms are rendered in amber (#DDCC77, height=0.11), clearly calling out the tail outliers as a deliberate focal point. First series is #009E73 as required.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and axis labels in light off-white ink, tick labels in softer light gray, all clearly legible against the dark background. No dark-on-dark issues. Spines and gridlines theme-flipped correctly.
-      Data: Same brand green KDE curve, same fill, same rug tick positions and colors as the light render — confirms only chrome changed, not data colors.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and axis labels rendered in light off-white ink, clearly legible. Tick labels in a softer light gray, still legible. Grid subtle and unobtrusive.
+      Data: Same brand-green KDE curve, fill, and rug tick positions as the light render — data colors (green and amber) are identical between renders, confirming only chrome flipped. The amber outlier ticks remain clearly visible and distinguishable against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every text element has strong contrast against the near-black background.
+
+    Both renders are theme-correct, legible, and the two-tier rug tick treatment (main cluster vs. amber-highlighted outliers) is consistent and identical in both.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,65 +62,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes
+        comment: Explicit font sizes (title 12pt, axis labels 10pt, ticks 8pt), all
+          readable in both themes at full size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text/data
+        comment: No collisions between text, title, or data elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Rug ticks legible but low-contrast against same-hue KDE fill
+        comment: Rug ticks now taller/more opaque (height=0.08, alpha=0.85) and clearly
+          pop against the KDE fill; amber outlier ticks are unmistakable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, no red/green sole-signal issue
+        comment: Green + amber reads fine on both surfaces, no red/green sole-signal
+          issue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, nothing clipped
+        comment: Canvas gate passed (3200x1800), good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: '"Response Time (ms)" and "Density" are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, correct theme backgrounds'
+        comment: 'First series #009E73, amber used correctly as caution/highlight
+          accent outside categorical pool, backgrounds theme-correct in both renders'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Standard theme-token boilerplate, no extra flourish
+        comment: Amber outlier accent is a deliberate design touch beyond boilerplate,
+          but overall composition remains a modest elaboration on the standard theme-token
+          template
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: L-shaped spines, subtle grid, good whitespace
+        comment: Spines reduced to L-shape, subtle y-grid, generous whitespace, and
+          now a differentiated two-tier tick treatment — solid but not exceptional
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Bimodal shape + tail outliers readable but not emphasized
+        comment: Amber-highlighted outliers now give the plot a clear, explicit focal
+          point directly addressing the prior attempt's feedback
     spec_compliance:
       score: 15
       max: 15
@@ -124,47 +138,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: KDE+rug matches spec guidance
+        comment: KDE + rug combination matches the spec's guidance
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Alpha, consistent tick height, x-axis default
+        comment: Alpha transparency for overlaps, consistent small tick heights within
+          each group, default x-axis placement
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct x mapping
+        comment: X = response time values; rug marks correctly positioned along x-axis
+          at y=0
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format, legend correctly omitted
+        comment: Title exactly matches mandated format; legend correctly omitted for
+          single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Clustering, gaps, and outliers all shown
+        comment: Shows clustering, gap between modes, and edge outliers (50, 520,
+          550ms), now explicitly emphasized
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible response-time data
+        comment: Response-time data is plausible and domain-neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 50-550ms sensible range
+        comment: 50-550ms range is sensible for response-time measurements
     code_quality:
       score: 10
       max: 10
@@ -174,47 +192,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes
+        comment: No functions/classes, flat top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed 42
+        comment: np.random.seed(42) fixes the data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only os, matplotlib.pyplot, numpy, seaborn - all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Appropriate complexity, no fake interactivity, clear comments explaining
+          design intent
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct save call, no bbox_inches=tight
+        comment: Saves plot-{THEME}.png at dpi=400 with explicit facecolor, no bbox_inches='tight'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Axes-level kdeplot+rugplot composition
+        comment: Axes-level sns.kdeplot + two sns.rugplot layers composed cleanly
+          on a shared ax
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Default statistical params, no extra distinctive options explored
+        comment: Two-tier rugplot calls (differing height/lw/alpha/color for cluster
+          vs. outliers) show more deliberate use of rugplot's parameters than attempt
+          1, though other distinctive options remain unexplored
   verdict: APPROVED
 impl_tags:
   dependencies: []
