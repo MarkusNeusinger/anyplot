@@ -17,6 +17,7 @@ const maintenanceWindows = [
   { from: 14, to: 18 },
   { from: 39, to: 43 },
 ];
+const normalRange = { from: 100, to: 150 };
 const inWindow = (day) => maintenanceWindows.some((w) => day >= w.from && day <= w.to);
 
 const latencyMs = [];
@@ -58,6 +59,8 @@ Highcharts.chart("container", {
       from: w.from,
       to: w.to,
       color: `${t.amber}40`,
+      borderColor: t.amber,
+      borderWidth: 1,
       label: {
         text: `Maintenance ${i + 1}`,
         style: { color: t.inkSoft, fontSize: "13px" },
@@ -72,13 +75,35 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: [
+      {
+        from: normalRange.from,
+        to: normalRange.to,
+        color: `${t.amber}26`,
+        borderColor: t.amber,
+        borderWidth: 1,
+        label: {
+          text: "Normal range",
+          align: "right",
+          style: { color: t.inkSoft, fontSize: "13px" },
+          x: -8,
+          y: 14,
+        },
+      },
+    ],
   },
   legend: { enabled: false },
   plotOptions: {
     series: { animation: false },
     line: { marker: { enabled: false }, lineWidth: 2.5 },
   },
-  tooltip: { enabled: false },
+  tooltip: {
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    style: { color: t.ink, fontSize: "13px" },
+    headerFormat: "Day {point.x}<br/>",
+    pointFormat: "{point.y} ms",
+  },
   series: [
     {
       name: "Latency",
