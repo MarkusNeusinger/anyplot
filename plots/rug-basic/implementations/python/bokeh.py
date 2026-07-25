@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 rug-basic: Basic Rug Plot
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-25
@@ -16,7 +16,7 @@ sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != os.path.
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Range1d
+from bokeh.models import ColumnDataSource, HoverTool, Label, Range1d
 from bokeh.plotting import figure
 from PIL import Image
 from scipy import stats
@@ -58,7 +58,7 @@ rug_hover_source = ColumnDataSource(data={"x": values, "y_mid": np.full(len(valu
 p = figure(
     width=3200,
     height=1800,
-    title="rug-basic · bokeh · anyplot.ai",
+    title="rug-basic · python · bokeh · anyplot.ai",
     x_axis_label="Response Time (ms)",
     y_axis_label="Density",
     toolbar_location=None,
@@ -72,8 +72,9 @@ p = figure(
 p.varea(x="x", y1=0, y2="y", source=kde_source, fill_color=BRAND, fill_alpha=0.25)
 p.line("x", "y", source=kde_source, line_color=BRAND, line_width=4.5)
 
-# Rug ticks along the x-axis
-p.segment(x0="x", y0="y0", x1="x", y1="y1", source=rug_source, line_color=BRAND, line_width=4, line_alpha=0.5)
+# Rug ticks along the x-axis — thin line_width keeps individual ticks
+# distinguishable even where the fast-response cluster packs densely
+p.segment(x0="x", y0="y0", x1="x", y1="y1", source=rug_source, line_color=BRAND, line_width=2.5, line_alpha=0.5)
 
 # Invisible scatter over the rug ticks — hit target for hover, showcasing
 # Bokeh's interactive strength (exact response time per observation)
@@ -83,7 +84,22 @@ p.add_tools(hover)
 
 # Axis ranges
 p.x_range = Range1d(values.min() - 20, values.max() + 20)
-p.y_range = Range1d(rug_bottom * 2.0, kde_y.max() * 1.15)
+p.y_range = Range1d(rug_bottom * 2.0, kde_y.max() * 1.35)
+
+# Cluster call-outs — guide the viewer through the bimodal story
+for mode_x, mode_label in ((85, "cache hits"), (180, "cache misses")):
+    mode_y = float(kde(mode_x)[0])
+    p.add_layout(
+        Label(
+            x=mode_x,
+            y=mode_y + kde_y.max() * 0.08,
+            text=mode_label,
+            text_align="center",
+            text_font_size="28pt",
+            text_font_style="italic",
+            text_color=INK_SOFT,
+        )
+    )
 
 # Text sizing — canonical bokeh values for 3200×1800
 p.title.text_font_size = "50pt"
