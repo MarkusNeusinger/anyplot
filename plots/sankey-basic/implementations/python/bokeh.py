@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-07-25
@@ -56,12 +56,37 @@ for f in flows:
     if f["target"] not in targets:
         targets.append(f["target"])
 
-# Source colors: Imprint palette in canonical order
+# Source colors: Imprint palette in canonical order (encounter order, independent
+# of the crossing-minimized visual stacking order computed below)
 source_colors = {s: IMPRINT_PALETTE[i] for i, s in enumerate(sources)}
 
 # Calculate totals for node sizing
 source_totals = {s: sum(f["value"] for f in flows if f["source"] == s) for s in sources}
 target_totals = {t: sum(f["value"] for f in flows if f["target"] == t) for t in targets}
+
+
+# Crossing-minimization: reorder the vertical stacking of source/target nodes via
+# a barycenter heuristic (each node's position converges toward the weighted-average
+# position of the nodes it connects to) so ribbons cross less and the flow reads
+# with a clearer focal point.
+def _barycenter_reorder(this_side, other_order, connections):
+    other_index = {name: i for i, name in enumerate(other_order)}
+    scores = {}
+    for name in this_side:
+        conns = connections[name]
+        total = sum(v for _, v in conns)
+        scores[name] = sum(other_index[o] * v for o, v in conns) / total if total else other_index.get(name, 0)
+    return sorted(this_side, key=lambda n: scores[n])
+
+
+source_to_targets = {s: [(f["target"], f["value"]) for f in flows if f["source"] == s] for s in sources}
+target_to_sources = {t: [(f["source"], f["value"]) for f in flows if f["target"] == t] for t in targets}
+
+ordered_sources = list(sources)
+ordered_targets = list(targets)
+for _ in range(4):
+    ordered_targets = _barycenter_reorder(ordered_targets, ordered_sources, target_to_sources)
+    ordered_sources = _barycenter_reorder(ordered_sources, ordered_targets, source_to_targets)
 
 # Layout parameters (data-space percent units, independent of canvas pixels)
 left_x = 0
@@ -77,7 +102,7 @@ scale_src = (total_height - 2 * padding_y - (len(sources) - 1) * node_gap) / sou
 
 source_nodes = {}
 current_y = padding_y
-for s in sources:
+for s in ordered_sources:
     height = source_totals[s] * scale_src
     source_nodes[s] = {"x": left_x, "y": current_y, "height": height, "value": source_totals[s]}
     current_y += height + node_gap
@@ -88,7 +113,7 @@ scale_tgt = (total_height - 2 * padding_y - (len(targets) - 1) * node_gap) / tar
 
 target_nodes = {}
 current_y = padding_y
-for t in targets:
+for t in ordered_targets:
     height = target_totals[t] * scale_tgt
     target_nodes[t] = {"x": right_x - node_width, "y": current_y, "height": height, "value": target_totals[t]}
     current_y += height + node_gap
@@ -149,16 +174,18 @@ flow_cds = ColumnDataSource(
 )
 
 # Nodes (sources + sectors) as a single ColumnDataSource for hover + rendering
-node_name = list(sources) + list(targets)
-node_role = ["Source"] * len(sources) + ["Sector"] * len(targets)
-node_left = [source_nodes[s]["x"] for s in sources] + [target_nodes[t]["x"] for t in targets]
-node_right = [source_nodes[s]["x"] + node_width for s in sources] + [target_nodes[t]["x"] + node_width for t in targets]
-node_bottom = [source_nodes[s]["y"] for s in sources] + [target_nodes[t]["y"] for t in targets]
-node_top = [source_nodes[s]["y"] + source_nodes[s]["height"] for s in sources] + [
-    target_nodes[t]["y"] + target_nodes[t]["height"] for t in targets
+node_name = list(ordered_sources) + list(ordered_targets)
+node_role = ["Source"] * len(ordered_sources) + ["Sector"] * len(ordered_targets)
+node_left = [source_nodes[s]["x"] for s in ordered_sources] + [target_nodes[t]["x"] for t in ordered_targets]
+node_right = [source_nodes[s]["x"] + node_width for s in ordered_sources] + [
+    target_nodes[t]["x"] + node_width for t in ordered_targets
 ]
-node_value = [source_nodes[s]["value"] for s in sources] + [target_nodes[t]["value"] for t in targets]
-node_color = [source_colors[s] for s in sources] + [NEUTRAL] * len(targets)
+node_bottom = [source_nodes[s]["y"] for s in ordered_sources] + [target_nodes[t]["y"] for t in ordered_targets]
+node_top = [source_nodes[s]["y"] + source_nodes[s]["height"] for s in ordered_sources] + [
+    target_nodes[t]["y"] + target_nodes[t]["height"] for t in ordered_targets
+]
+node_value = [source_nodes[s]["value"] for s in ordered_sources] + [target_nodes[t]["value"] for t in ordered_targets]
+node_color = [source_colors[s] for s in ordered_sources] + [NEUTRAL] * len(ordered_targets)
 
 nodes_cds = ColumnDataSource(
     data={
@@ -197,8 +224,11 @@ flow_renderer = p.patches(
     fill_color="flow_color",
     fill_alpha=FLOW_ALPHA,
     line_color="flow_color",
-    line_alpha=0.6,
-    line_width=1,
+    # More opaque, slightly thicker stroke than the fill so a ribbon's own edge
+    # stays traceable through alpha-blended crossings instead of dissolving into
+    # a blended hue.
+    line_alpha=0.9,
+    line_width=1.5,
 )
 
 node_renderer = p.quad(
@@ -221,7 +251,7 @@ p.add_tools(
 p.add_tools(HoverTool(renderers=[node_renderer], tooltips=[("Node", "@name (@role)"), ("Total", "@value TWh")]))
 
 # Node labels — source nodes left-aligned outward, target nodes right-aligned outward
-for s in sources:
+for s in ordered_sources:
     node = source_nodes[s]
     label = Label(
         x=node["x"] - 1.5,
@@ -235,7 +265,7 @@ for s in sources:
     )
     p.add_layout(label)
 
-for t in targets:
+for t in ordered_targets:
     node = target_nodes[t]
     label = Label(
         x=node["x"] + node_width + 1.5,
@@ -286,6 +316,14 @@ driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
 driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+# Zero out the default page margin/background so no stray edge pixel of the
+# browser's default white page bleeds through around the themed canvas.
+driver.execute_script(
+    f"document.documentElement.style.background='{PAGE_BG}';"
+    f"document.body.style.background='{PAGE_BG}';"
+    "document.body.style.margin='0';"
+    "document.body.style.overflow='hidden';"
 )
 time.sleep(3)  # let bokeh's JS render the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
