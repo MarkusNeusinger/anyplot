@@ -127,6 +127,12 @@ exclude = [
     "temp",
     "plots",
     "scripts",
+    # ruff 0.16 formats Python code blocks inside Markdown. Twenty tracked .md
+    # files change under it — including prompts/library/*.md, whose snippets
+    # steer code generation, so a quote-style rewrite there would be a pipeline
+    # change disguised as formatting. Ruff owns this repo's Python, not its
+    # prose; formatting the docs stays a deliberate, separate decision.
+    "*.md",
 ]
 
 [tool.ruff.lint]
