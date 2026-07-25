@@ -6,7 +6,7 @@ title: Basic Stem Plot
 
 # Specification tracking
 created: 2025-12-15T20:41:27Z
-updated: 2025-12-15T20:41:27Z
+updated: 2026-07-25T17:18:56Z
 issue: 972
 suggested: MarkusNeusinger
 
@@ -22,4 +22,3 @@ tags:
     - engineering
   features:
     - basic
-    - discrete

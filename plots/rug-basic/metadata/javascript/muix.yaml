@@ -1,0 +1,255 @@
+library: muix
+language: javascript
+specification_id: rug-basic
+created: '2026-07-25T07:09:44Z'
+updated: '2026-07-25T07:22:56Z'
+generated_by: claude-sonnet
+workflow_run: 30148587765
+issue: 978
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Attempt-1 contrast fix applied correctly: the light-theme lavender "Evening session"
+    label now carries a thin ink-colored stroke (paintOrder="stroke"), resolving the
+    WCAG 3:1 shortfall on the cream background while leaving the data ticks untouched'
+  - Outlier "attention lapse" trials are now visually distinguished — taller tick
+    height (92% vs 72% of lane band), higher stroke opacity (0.85 vs 0.42), and thicker
+    stroke (2.5px vs 2px) make the tail read at a glance in both renders
+  - New per-lane tinted background bands (5% opacity fill in each series' own hue)
+    add a subtle design layer that replaces the earlier "mid-chart baseline rule"
+    clutter noted in the attempt-1 review
+  - 'Correct Imprint palette: first series brand green (#009E73), second series lavender
+    (#C475FD), identical across light/dark; all chrome (title, axis, ticks, grid)
+    is theme-correct in both renders'
+  - Deterministic seeded LCG data generation with a realistic, neutral reaction-time
+    domain and a plausible morning-vs-evening fatigue shift plus tail outliers
+  - Direct in-chart lane labels avoid a redundant floating legend for a 2-series comparison,
+    keeping the layout clean
+  weaknesses:
+  - Data distribution per lane is still single-mode (unimodal + outliers) rather than
+    showing a secondary cluster or multimodal shape — a more varied distribution would
+    round out DQ-01 feature coverage
+  - Implementation still bypasses every built-in MUI X chart type (LineChart/ScatterChart/BarChart)
+    in favor of a fully custom SVG composition via ChartContainer + useXScale/useDrawingArea
+    — legitimate since no native rug series exists, but Library Mastery is capped
+    by the low-level composition rather than a distinctive built-in feature
+  - The ink-stroke halo around the "Evening session" label is a touch heavier than
+    needed in the dark render (light-on-light-ish stroke vs. lavender fill) — still
+    fully legible, just not as crisp as the unstroked "Morning session" label
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Bold dark-ink title "Reaction Times by Session · rug-basic · javascript · muix · anyplot.ai" fully visible, no clipping. X-axis "Reaction Time (ms)" with numeric ticks 250-750 in legible dark/grey ink. Subtle vertical gridlines at ~15% opacity. Two lane labels: "Morning session" in solid brand green, "Evening session" in lavender now with a thin dark ink stroke outline (paintOrder="stroke") — this is the attempt-1 fix for the WCAG contrast shortfall, and it reads clearly against the cream background.
+      Data: Two horizontal rug lanes on a shared x-axis, each with its own faint tinted background band (5% opacity in the lane's series color). "Morning session" ticks are brand green (#009E73); "Evening session" ticks are lavender (#C475FD) — matches Imprint palette positions 1 and 2. Dense clusters of thin, semi-transparent ticks darken naturally where reaction times overlap (~400-500ms for both sessions). One clearly taller, more opaque green tick near 636ms (morning outlier) and three taller, more opaque purple ticks near 688/707/727ms (evening outliers) now stand out distinctly from the rest of the distribution — this is the attempt-1 fix for unemphasized "attention lapse" trials.
+      Legibility verdict: PASS — all text (title, axis label, tick labels, both lane labels) is clearly readable against the light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Title and axis chrome render in light/off-white ink, fully legible, no dark-on-dark failures. Gridlines remain subtle. "Morning session" label in green with no stroke reads crisply; "Evening session" label in lavender with the ink stroke (now light-ink colored in dark theme) reads with a slightly heavier/bolder outline than its light-theme counterpart, but remains fully legible — not dark-on-dark, just a touch less crisp than the unstroked label.
+      Data: Tick colors are identical to the light render (#009E73 / #C475FD), confirming only chrome flipped as required. The same outlier ticks (green ~636ms, purple ~688/707/727ms) are taller and more opaque than the surrounding distribution, clearly visible against the dark surface.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 21px, axis label 16px, tick labels
+          14px, lane labels 16px); readable in both themes, title fits without clipping
+          at ~49% width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, ticks, or lane bands
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tick strokeWidth/opacity well adapted to ~140 points per lane; overlapping
+          ticks darken naturally, outliers now visually distinct
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Attempt-1 lavender-label contrast issue fixed with ink stroke; no
+          red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills most of the canvas, balanced margins, no cut-off
+          content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Reaction Time (ms)" descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD, identical across themes, theme-correct
+          chrome and backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Per-lane tinted bands, outlier emphasis, and stroke-corrected labels
+          clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, no spines to remove (custom SVG), earlier mid-chart
+          baseline clutter replaced by tinted bands
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Outlier "attention lapse" trials now visually pop via height + opacity,
+          guiding the viewer to the insight at a glance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct rug plot: individual tick marks per observation'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Alpha-blending for overlaps, consistent small tick height, clustering/gap
+          visibility all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis correctly maps reaction time; both lanes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; in-chart lane labels
+          replace legend correctly
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Clustering, gaps, and outliers all shown; distribution is single-mode
+          rather than multimodal
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Cognitive-task reaction times, morning vs evening session, neutral
+          and realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 250-750ms range and outlier magnitudes plausible for human reaction-time
+          tasks
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Minimal, focused component structure appropriate for the React/MUI
+          X harness contract
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer, ChartsXAxis, ChartsGrid, and the two hooks used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Sizes to ANYPLOT_SIZE, skipAnimation set, default-exported component
+          per harness contract
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ChartContainer + useXScale/useDrawingArea is the documented composition
+          pattern for chart types with no built-in series
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses MUI X-specific low-level hooks meaningfully, but no built-in
+          chart type is leveraged since none fits a rug plot
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

@@ -138,6 +138,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **CI lint went red on every PR after a ruff minor bump** — `pyproject.toml` pins
+  `ruff>=0.15.21` without an upper bound, CI resolved **0.16.0**, and that version started
+  formatting Python code blocks inside Markdown: 20 tracked `.md` files suddenly "would be
+  reformatted", none of them touched by the PR that hit it. Ruff's exclude list now carries
+  `*.md`. Deliberately not fixed by reformatting those files — nine of them are
+  `prompts/library/*.md`, whose snippets steer code generation, so rewriting quote style there
+  is a pipeline change wearing a formatting costume. Verified against both 0.15.21 and 0.16.0
+  (`format --check` + `check` clean on 148 files) (#9899).
 - **A GitHub API brown-out could strand implementation PRs permanently — the hand-off calls
   are now retried** — on 2026-07-24 (~16:05–16:26 UTC) GitHub returned HTTP 502 on the
   workflow-dispatch endpoint and HTTP 504 on GraphQL, and four `radar-basic` PRs fell out of

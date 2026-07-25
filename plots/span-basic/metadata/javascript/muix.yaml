@@ -1,0 +1,246 @@
+library: muix
+language: javascript
+specification_id: span-basic
+created: '2026-07-25T14:43:08Z'
+updated: '2026-07-25T15:03:44Z'
+generated_by: claude-sonnet
+workflow_run: 30161964236
+issue: 980
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct Imprint palette usage: brand green (#009E73) for the data line, semantic
+    amber for both span regions — an intentional ''warning/caution'' role fit, not
+    a decorative color pick'
+  - Demonstrates both span directions from the spec in one chart (vertical maintenance
+    window across x, horizontal degraded-latency threshold across y) — full feature
+    coverage of the 'direction' field rather than only one case
+  - Clever hooks-based workaround (useXScale/useYScale/useDrawingArea) to reproduce
+    a reference-area fill since no ChartsReferenceArea ships in the @mui/x-charts
+    community package — solid distinctive library mastery within the allowed community
+    surface
+  - Theme-adaptive chrome is correct and consistent in both renders; realistic, plausible
+    dataset (24h API latency with a maintenance-driven spike)
+  - Single-series legend correctly hidden per style guide; dashed ChartsReferenceLine
+    boundaries mark the span edges cleanly without clutter
+  weaknesses:
+  - Horizontal threshold span uses fillOpacity 0.12, below the spec's suggested 0.2-0.3
+    alpha range for span fills — bump toward 0.2 for consistency with the maintenance
+    span (0.25) and the spec's own guidance
+  - Span annotation text (fontSize 13) is smaller than the axis tick labels (14) and
+    axis labels (16) — bump to at least 14px so annotation text doesn't become the
+    weakest-legibility element at mobile/thumbnail scale
+  - 'Header comment block omits the license line (e.g. ''// License: @mui/x-charts
+    — MIT (community). Pro/Premium are out of scope.'') present in the library''s
+    header-style template — add for consistency with other muix implementations'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "span-basic · javascript · muix · anyplot.ai" in dark ink, clearly visible top-left. Y-axis label "Latency (ms)" and x-axis label "Hour of Day (UTC)" both dark and legible. Tick labels (100-340 on y, 0:00-24:00 on x, every 2h) are dark gray and readable. Horizontal grid lines are thin and subtle, do not compete with the data line.
+      Data: Single green (#009E73) line with circular markers tracing 24 hourly latency values, sharp spike from ~2:00-5:00 up to ~338ms. Two amber-tinted overlay regions: a vertical band from 2:00-5:00 (the "Maintenance window", labeled in the band) bounded by dashed amber vertical lines, and a horizontal band above the 200ms line (the "Degraded (>200ms)" zone) bounded by a dotted amber horizontal line. Where the two bands overlap (top-left) the fill reads visibly darker/more saturated, which correctly signals the double condition.
+      Legibility verdict: PASS — all title/axis/tick/annotation text is clearly readable against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title in light/off-white ink, clearly visible. Axis labels and tick labels rendered in light gray, legible against the dark background. Grid lines are thin, low-contrast light lines, subtle but present.
+      Data: The data line is the identical #009E73 green as the light render — confirmed no shift in data color between themes. The two amber overlay bands render as a warm olive/brown tint against the dark surface, with the same dashed/dotted amber boundary lines as the light render. Annotation text ("Maintenance window", "Degraded (>200ms)") uses the light ink-soft token and reads clearly against the olive-tinted overlay — no dark-on-dark failure.
+      Legibility verdict: PASS — all chrome and annotation text is legible in the dark theme; only the chrome (background/text colors) changed between renders, data colors are identical as required.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All title/axis/tick text readable in both themes; span annotation
+          fontSize (13) slightly smaller than tick labels (14), a minor mobile-legibility
+          risk
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, data, or span annotations
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circular markers prominent for 24 sparse points; line thickness appropriate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast; no red-green sole-signal reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, balanced axis labels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (Latency (ms), Hour of Day (UTC))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; amber used correctly as the semantic warning
+          anchor for spans; both backgrounds theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic amber usage and dashed boundary lines beyond
+          generic defaults, though the chart itself is a simple single-series line
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped axes, subtle horizontal grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The two annotated spans build a clear narrative (maintenance window
+          driving the SLA breach) with an obvious focal point
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Line chart with span overlays matches the span-basic spec exactly
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Both direction variants (vertical + horizontal) and edge lines/labels
+          present; horizontal span alpha (0.12) is below the spec's suggested 0.2-0.3
+          range
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = hour of day, Y = latency ms, full 24h range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; single-series legend correctly
+          hidden
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both span directions plus edge lines and text labels — full
+          coverage of the plot type's optional features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: API latency over 24h with a maintenance-driven spike and SLA threshold
+          — plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Latency values (100-340ms) are sensible for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small helper components (MaintenanceSpan, ThresholdSpan) are
+          required to access chart hooks (useXScale/useYScale) — justified by the
+          React/MUI X API, not gratuitous abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the needed @mui/x-charts imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; complexity matches what the workaround requires
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, skipAnimation set, sizes from window.ANYPLOT_SIZE
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: High-level LineChart/ChartsReferenceLine API used correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hooks-based custom reference-area overlay is a genuinely distinctive
+          technique for working within the community-only surface
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

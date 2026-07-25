@@ -1,0 +1,228 @@
+library: ggplot2
+language: r
+specification_id: stem-basic
+created: '2026-07-25T17:44:20Z'
+updated: '2026-07-25T17:55:00Z'
+generated_by: claude-sonnet
+workflow_run: 30168106632
+issue: 972
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses fixed: gridlines faded to ~15% alpha, unused library(dplyr)
+    removed, stem linewidth bumped 0.9->1.2 for prominence'
+  - 'Faithful stem-plot construction: geom_hline baseline + geom_segment stems + geom_point
+    markers exactly matches the spec''s structural notes'
+  - 'Realistic, neutral data: damped decaying oscillator (exp(-0.09n)*cos(0.55n) +
+    noise), the canonical signal-processing example named in the spec'
+  - 'Theme handling correct end-to-end: identical brand-green data color across themes,
+    chrome flips via INK/INK_SOFT/PAGE_BG tokens, canvas matches landscape target
+    exactly (3200x1800), title format and legend omission both correct'
+  weaknesses:
+  - 'Design Excellence remains the weakest category: relies entirely on theme_minimal()
+    + standard chrome tokens with no additional design device to actively guide the
+    eye beyond the raw decay pattern'
+  - shape=21 marker and explicit x breaks are solid but not library-distinctive; a
+    ggplot2-specific technique (e.g. annotate() marking the decay envelope) would
+    lift Library Mastery
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - PASS (not pure white, not dark)
+      Chrome: Bold dark title "stem-basic · r · ggplot2 · anyplot.ai" top-left; "Sample index n" / "Amplitude" axis titles in dark ink; softer-grey tick labels. Major gridlines faded (~15% alpha), receding behind data. All clearly visible.
+      Data: 40 brand-green (#009E73) stems from a y=0 baseline to circular markers with a light stroke, tracing a damped decaying oscillation. First (and only) series confirmed #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - PASS (not pure black, not light)
+      Chrome: Title and axis labels flip to light off-white ink; tick labels to lighter grey. Gridlines flip to faint light tone at same reduced opacity. No dark-on-dark failures found anywhere.
+      Data: Stems/markers use identical #009E73 green as the light render - confirmed pixel-identical hue and pattern; only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes, sized per style guide defaults
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stem linewidth bumped to 1.2, appropriately prominent for sparse
+          40-point series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High-contrast single-series green, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, good margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme-adaptive backgrounds in both
+          renders'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Standard anyplot theme boilerplate, little extra polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Fixed: gridlines now faded to ~15% alpha per style guide'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Focal point comes from data shape, not an intentional design device
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stem plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Stems, markers, baseline all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: n on x, amplitude on y, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend correctly omitted
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows decay, sign changes, oscillation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical damped-oscillator signal-processing example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible normalized amplitude range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed: unused library(dplyr) removed'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png at correct dims
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_hline + geom_segment + geom_point is the idiomatic ggplot2 stem-plot
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: shape=21 stroke and explicit breaks are modest, not exceptional
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting

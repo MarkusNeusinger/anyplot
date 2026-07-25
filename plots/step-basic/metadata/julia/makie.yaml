@@ -1,0 +1,250 @@
+library: makie
+language: julia
+specification_id: step-basic
+created: '2026-07-25T15:56:47Z'
+updated: '2026-07-25T16:14:02Z'
+generated_by: claude-sonnet
+workflow_run: 30164261024
+issue: 956
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Correct 'post' step style matching the spec's semantics ('value applies from current
+    point until next'), explained in a clear code comment
+  - Distinctive band!() area fill under the step curve gives the data visual weight,
+    a Makie-idiomatic compositional technique
+  - Peak staffing level highlighted with a larger marker, creating a subtle focal
+    point without extra chrome
+  - Both themes correctly implement the Imprint palette and theme-adaptive chrome;
+    all text legible in both light and dark renders
+  - Realistic, neutral retail-staffing scenario with sensible values across a full
+    day cycle, including both increasing and decreasing steps
+  - Clean KISS structure, explicit font sizes throughout, correct plot-$(THEME).png
+    output naming
+  weaknesses:
+  - Data storytelling relies only on a subtle marker-size difference (16 vs 24) to
+    flag the daily peak — an explicit annotation would make the focal point unmistakable
+  - band!() + stairs!() is a nice combination but not deeply distinctive to Makie;
+    a more library-unique feature would raise Library Mastery further
+  - Grid is limited to horizontal lines at major ticks only — fine per spec, but gridlines
+    at each step boundary would make value-tracing marginally easier
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Checkout Lanes Open · step-basic · julia · makie · anyplot.ai" in dark ink,
+        clearly visible; xlabel "Time of Day" and ylabel "Open Checkout Lanes" dark and legible;
+        tick labels (HH:00 time format on x, 0/5/10 on y) in a slightly softer dark tone, easily
+        readable; subtle light-gray horizontal gridlines at y=5 and y=10; top/right spines removed.
+      Data: Single green (#009E73) step series drawn with stairs!() using 'post' step style, a
+        translucent green band!() fill under the stairs, circular markers at each of the 10 data
+        points, and one enlarged marker highlighting the 18:00 peak (12 lanes open).
+      Legibility verdict: PASS — no light-on-light text, everything readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, xlabel, and ylabel now rendered in light/off-white ink, fully legible
+        against the dark surface; tick labels in a softer light-gray tone, readable; gridlines
+        subtle but visible; spines and layout identical to the light render otherwise.
+      Data: Same #009E73 green for the stairs, band fill, markers, and peak highlight — identical
+        to the light render; no hue shift.
+      Legibility verdict: PASS — no dark-on-dark text, no unreadable elements.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes, title fits
+          without overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers well-sized for 10 sparse points; peak marker enlarged appropriately
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue series, strong contrast against both surfaces, no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, good canvas utilization, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels ('Time of Day', 'Open Checkout Lanes')
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds are theme-correct #FAF8F1/#1A1A17,
+          chrome flips correctly'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom band fill, peak emphasis, and time-formatted ticks read as
+          thoughtful, above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, minimal grid, generous whitespace, stroked markers
+          for separation from the fill
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Peak highlighted via marker-size contrast provides a focal point,
+          though it is subtle without an annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct step/stair plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 'post' step style with rationale, markers at data points,
+          gridlines to trace values
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=time of day, y=open lanes, full data range visible within axis
+          limits
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · step-basic · julia · makie ·
+          anyplot.ai'; single series, no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both increasing and decreasing steps of varying magnitude across
+          a full day
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible retail checkout-lane staffing scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Lane counts (0-12) and daily pattern (low overnight, peak evening)
+          are realistic for a retail store
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data, no randomness involved
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie and Colors both used (colorant"#..." requires Colors)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via px_per_unit=2, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: stairs!() with step=:post, band!() and scatter!() composed idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band!() area fill under a step curve is a Makie-flavored technique,
+          though replicable elsewhere with more effort
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - publication-ready

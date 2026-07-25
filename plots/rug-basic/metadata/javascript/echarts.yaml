@@ -1,0 +1,261 @@
+library: echarts
+language: javascript
+specification_id: rug-basic
+created: '2026-07-25T07:08:17Z'
+updated: '2026-07-25T07:27:40Z'
+generated_by: claude-sonnet
+workflow_run: 30148517591
+issue: 978
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Directly addressed both Attempt 1 weaknesses: added a per-group median markPoint
+    (triangle marker + "median Xms" label) that gives DE-03 a clear visual focal point
+    and LM-02 a distinctive ECharts feature.'
+  - Imprint palette applied in canonical order (green -> lavender -> blue), pixel-identical
+    between light and dark renders.
+  - 'Realistic, well-differentiated data across the three latency tiers: tight cluster
+    (Edge Cache Hit), bimodal distribution with a visible gap (Regional Cache), and
+    wide dispersion with tail outliers (Cold Start) - directly demonstrates the spec''s
+    clustering/gap/outlier notes.'
+  - Fully theme-adaptive chrome; both renders are legible with no dark-on-dark or
+    light-on-light failures.
+  - 'Clean, deterministic, idiomatic ECharts snippet respecting the mount-node contract
+    (no explicit size/DPR, animation: false); median computed inline without over-engineering.'
+  - Semi-transparency (opacity 0.5) correctly applied per the spec's overlap-handling
+    note; y-axis category labels make a legend unnecessary.
+  weaknesses:
+  - Edge Cache Hit row still renders as a near-solid block due to the tight std=3
+    clustering; even after narrowing symbolSize from 4px to 3px, individual-tick texture
+    is largely lost in the densest region.
+  - Mandated title still occupies only ~28% of plot width even at fontSize 24 - within
+    tolerance but on the small side; a modest further increase would give it more
+    visual presence.
+  - DE-01/DE-02 still read as a tastefully configured default rather than a fully
+    distinctive aesthetic treatment - further typographic hierarchy or spine/grid
+    refinement could push this into publication-ready territory.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: Title "rug-basic · javascript · echarts · anyplot.ai" centered in dark ink at top (fontSize 24). X-axis "Response Time (ms)" labeled with units, ticks at 0/100/200/300/400 with subtle vertical gridlines. Y-axis shows three category labels (Cold Start, Regional Cache, Edge Cache Hit) in dark ink. New this attempt: each group now has a small triangle marker above its row with a "median Xms" label (median 18ms / 65ms / 231ms) in dark ink.
+      Data: Edge Cache Hit is a tight, near-solid brand-green (#009E73) block around 10-30ms; Regional Cache shows two distinct lavender (#C475FD) clusters (~30-50ms and ~75-105ms) with a visible gap; Cold Start shows sparse-to-dense blue (#4467A3) ticks spread from ~60ms to ~380ms with visible tail outliers. First series is confirmed #009E73.
+      Legibility verdict: PASS - all title, axis-label, tick-label, and new median-label text is clearly readable against the light background, no light-on-light issues, no overlap with the rug ticks below.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black.
+      Chrome: Same layout; title, axis labels, tick labels, and median-marker labels all flip to light tones (ink/inkSoft tokens). Gridlines are faint light strokes.
+      Data: Green, lavender, and blue tick colors and the three median-marker colors are pixel-identical to the light render - only chrome flipped, confirming data-color consistency across themes.
+      Legibility verdict: PASS - all text including the new median labels is clearly readable against the dark background; no dark-on-dark failures observed anywhere (title, "Response Time (ms)" label, category labels, tick labels, and median-marker labels are all legible).
+
+    Canvas dimension gate: /tmp/anyplot-canvas-gate.txt not present - gate passed, 3200x1800 landscape confirmed visually (wide aspect ratio, no cropping).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24px, axis name 16px, ticks
+          14px, median labels 12px) and fully readable in both themes; no overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or tick collisions; new median-marker labels sit clear of
+          neighboring rows in both renders.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha 0.5 correctly signals overlap density and tick width was narrowed
+          from 4px to 3px, but the tightly-clustered Edge Cache Hit group still renders
+          as a near-solid block, losing individual-tick character.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe palette, no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot area uses a healthy share of the canvas, nothing
+          cut off, canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Response Time (ms)" includes units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical positions 2-3 (#C475FD, #4467A3),
+          identical across themes; correct #FAF8F1/#1A1A17 backgrounds.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Adding the median markPoint moves this above a plain well-configured
+          default, but it still reads as a tasteful default rather than a fully distinctive
+          aesthetic treatment.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid limited to subtle x-axis lines, minimal axis lines, generous
+          whitespace - unchanged from Attempt 1, some refinement but nothing beyond
+          standard cleanup.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The new per-group median markPoint (triangle + label) creates a clear
+          focal point via visual hierarchy, letting the viewer immediately compare
+          central tendency across groups - directly resolves the Attempt 1 weakness.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct rug-plot representation via scatter + rect symbols positioned
+          by category.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparency for overlap, consistent tick height, x-axis positioning
+          by default, all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned; category order matches data order; all data
+          visible within axis bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; no legend needed since y-axis category labels
+          already identify each group.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates tight clustering, a bimodal distribution with a visible
+          gap, and wide dispersion with tail outliers.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral system-latency scenario (CDN/cache tiers) with
+          plausible values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Latency magnitudes are realistic and internally consistent for the
+          described caching tiers.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports->data->init->option flow; inline median calc within
+          the series map is concise, not over-engineered.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed = 42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the echarts global and window.ANYPLOT_TOKENS
+          are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set, no explicit size/devicePixelRatio
+          passed to echarts.init.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: High-level setOption usage with category/value axes plus markPoint
+          for annotations - idiomatic ECharts patterns throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markPoint with custom triangle symbol, symbolOffset, and formatted
+          per-group median label is a genuine ECharts-distinctive feature that resolves
+          the Attempt 1 feedback.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

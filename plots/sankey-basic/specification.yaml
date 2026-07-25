@@ -6,7 +6,7 @@ title: Basic Sankey Diagram
 
 # Specification tracking
 created: 2025-12-14T18:16:04Z
-updated: 2025-12-14T18:16:04Z
+updated: 2026-07-25T11:37:13Z
 issue: 810
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - sankey
-    - flow
   data_type:
     - categorical
     - numeric

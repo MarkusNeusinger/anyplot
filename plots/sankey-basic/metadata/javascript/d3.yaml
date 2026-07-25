@@ -1,0 +1,259 @@
+library: d3
+language: javascript
+specification_id: sankey-basic
+created: '2026-07-25T12:10:49Z'
+updated: '2026-07-25T12:33:16Z'
+generated_by: claude-sonnet
+workflow_run: 30157346030
+issue: 810
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Fixed the modulo color collision from attempt 1: destination-column nodes (Residential,
+    Commercial, Industrial, Transport) now use a distinct theme-adaptive muted gray
+    instead of continuing the 8-color palette cycle, so unrelated end-use categories
+    no longer share hues with unrelated sources'
+  - Added a barycenter crossing-minimization pass (4 alternating forward/backward
+    sweeps) that reorders nodes within each column by weighted neighbor rank, directly
+    addressing the prior 'no crossing-minimization pass' weakness
+  - 'Node labels now render with a page-background stroke halo (paint-order: stroke),
+    keeping text legible where translucent link ribbons sweep behind labels'
+  - Exact flow conservation at every node (inflows == outflows == node value), giving
+    the diagram real analytical credibility
+  - 'Correct Imprint palette: first series (#009E73) on Coal, canonical palette order
+    for the remaining source/carrier nodes, theme-adaptive chrome verified correct
+    on both light and dark renders'
+  weaknesses:
+  - 'The source-to-carrier crossing zone (Coal/Gas -> Electricity/Direct Heat) is
+    still visually dense: several translucent ribbons overlap and blend into muddier
+    secondary colors where they cross, making it harder to trace a single flow through
+    that region despite the new barycenter reordering pass'
+  - Secondary '{value} TWh' node labels were bumped from 13px to 14px + bold as suggested
+    last round, but remain small and start to blur when the PNG is scaled to mobile
+    width (~400px) -- consider 15-16px or a stronger weight/halo contrast for that
+    specific label tier
+  - Data storytelling relies solely on ribbon width and node value labels; there's
+    no explicit visual emphasis (e.g. color/weight highlight) calling out the dominant
+    pathway (Gas+Coal -> Electricity -> Residential), so the viewer has to compare
+    all flows themselves rather than being guided to the main insight
+  - 'Minor style note (not scored down, since the mandated string is present verbatim):
+    the mandated ''sankey-basic · javascript · d3 · anyplot.ai'' title lives in a
+    small 13px footer, separate from the large 28px descriptive headline -- most other
+    d3 implementations in the catalog combine both into a single title string (e.g.
+    ''Quarterly Revenue by Category · bar-basic · javascript · d3 · anyplot.ai'');
+    consider aligning with that convention for consistency'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1, not pure white
+      Chrome: large bold title "National Energy Flow: Sources to End Use" in dark ink, subtitle in secondary ink, node name labels (bold, halo-outlined) and "{value} TWh" sub-labels in dark/secondary ink, small footer "sankey-basic · javascript · d3 · anyplot.ai" in tertiary ink -- all clearly readable at full size
+      Data: 11 nodes across 3 columns (5 sources, 2 carriers, 4 end uses); Coal (first source) renders in #009E73 as mandated; remaining source/carrier nodes cycle through the canonical Imprint order; the 4 end-use nodes (Residential, Commercial, Industrial, Transport) all render in a consistent theme-adaptive muted gray instead of recycled palette hues; link ribbons colored by source node at ~42% opacity, creating some color blending where multiple ribbons cross between the source and carrier columns
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17, not pure black
+      Chrome: same title/subtitle/node labels/footer, all switched to light ink tokens -- clearly legible against the dark surface, no dark-on-dark failures observed
+      Data: node and link colors identical to the light render (Coal still #009E73, Gas still lavender, Electricity still teal, muted end-use gray still theme-appropriate at its darker value) -- only background/text/chrome flipped
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicit and readable in both themes at full size; secondary
+          TWh labels bumped 13->14px+bold per last review but still blur slightly
+          at ~400px mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions in either render; page-bg halo keeps labels legible
+          over ribbons
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Link widths scale correctly with value, but the source-to-carrier
+          crossing zone has several overlapping translucent ribbons that blend into
+          muddier colors, making individual flows harder to trace there
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe, no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-balanced canvas utilization and even margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Node value labels carry units (TWh)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Modulo collision from attempt 1 fixed: end-use nodes now use a distinct
+          muted gray instead of recycled palette hues; first series is #009E73; chrome
+          theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Rounded nodes, halo-outlined typography, restrained palette, bespoke
+          hand-rolled layout -- clearly above a generic default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Generous whitespace and a new crossing-minimization pass improve
+          on attempt 1, but the source-carrier region remains visually tangled
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Width and value labels make relative magnitudes clear, but there's
+          no explicit emphasis (color/weight) on the dominant pathway
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Sankey diagram with value-proportional link widths
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: No circular flows, distinct source colors, link opacity used for
+          crossing readability
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: source/target/value mapped correctly; flow conservation exact at
+          every node
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title string present verbatim in the footer, paired with
+          a descriptive headline; node labels serve as the legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple sources, carriers, and end uses with varied magnitudes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible national energy-flow scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact flow conservation verified at every node; proportions plausible
+          for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script; the small barycenter arrow-function helper is a justified
+          layout-math utility, not an over-engineered abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity given the d3-sankey plugin is unavailable
+          in the pinned bundle
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct core D3 primitives plus a hand-rolled barycenter relaxation
+          pass mirroring idiomatic Sankey layout algorithms
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.linkHorizontal + bespoke value-proportional/barycenter layout
+          are genuinely D3-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
