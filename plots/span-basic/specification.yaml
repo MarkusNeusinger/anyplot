@@ -6,7 +6,7 @@ title: Basic Span Plot (Highlighted Region)
 
 # Specification tracking
 created: 2025-12-15T20:42:41Z
-updated: 2025-12-15T20:42:41Z
+updated: 2026-07-25T14:04:42Z
 issue: 980
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - span
-    - annotation
   data_type:
     - numeric
     - datetime
