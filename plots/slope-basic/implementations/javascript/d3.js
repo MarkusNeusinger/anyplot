@@ -6,7 +6,7 @@
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
 
-const margin = { top: 150, right: 260, bottom: 50, left: 260 };
+const margin = { top: 175, right: 260, bottom: 50, left: 260 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -36,6 +36,9 @@ const increaseColor = t.palette[0]; // brand green — always first series, doub
 const decreaseColor = t.palette[4]; // matte red — Imprint semantic anchor for decline
 const colorOf = (d) => (d.year2024 >= d.year2019 ? increaseColor : decreaseColor);
 
+// --- Storytelling focal point: call out the single largest mover ---------------
+const standout = d3.greatest(data, (d) => Math.abs(d.year2024 - d.year2019));
+
 // --- Label decluttering: keep the true data point, nudge stacked labels apart --
 // Slope charts pack many labels along two narrow columns; a plain scaleLinear
 // position collides whenever two entities share a close value. Sort by position,
@@ -56,7 +59,7 @@ function declutter(points, minGap) {
   return sorted;
 }
 
-const minGap = 30;
+const minGap = 34;
 const leftLabels = declutter(
   data.map((d) => ({ d, trueY: y(d.year2019), y: y(d.year2019) })),
   minGap
@@ -79,11 +82,11 @@ g.append("line")
   .attr("stroke", t.inkSoft).attr("stroke-width", 1.5);
 
 g.append("text")
-  .attr("x", 0).attr("y", -30).attr("text-anchor", "middle")
+  .attr("x", 0).attr("y", -20).attr("text-anchor", "middle")
   .attr("fill", t.ink).style("font-size", "20px").style("font-weight", "600")
   .text("2019 Survey");
 g.append("text")
-  .attr("x", iw).attr("y", -30).attr("text-anchor", "middle")
+  .attr("x", iw).attr("y", -20).attr("text-anchor", "middle")
   .attr("fill", t.ink).style("font-size", "20px").style("font-weight", "600")
   .text("2024 Survey");
 
@@ -95,22 +98,31 @@ g.selectAll(".slope-line")
   .attr("x1", 0).attr("y1", (d) => y(d.year2019))
   .attr("x2", iw).attr("y2", (d) => y(d.year2024))
   .attr("stroke", colorOf)
-  .attr("stroke-width", 3)
-  .attr("opacity", 0.85);
+  .attr("stroke-width", (d) => (d === standout ? 5 : 3))
+  .attr("opacity", (d) => (d === standout ? 1 : 0.85));
 
 g.selectAll(".start-point")
   .data(data)
   .join("circle")
   .attr("class", "start-point")
   .attr("cx", 0).attr("cy", (d) => y(d.year2019))
-  .attr("r", 6).attr("fill", colorOf);
+  .attr("r", (d) => (d === standout ? 8 : 6)).attr("fill", colorOf);
 
 g.selectAll(".end-point")
   .data(data)
   .join("circle")
   .attr("class", "end-point")
   .attr("cx", iw).attr("cy", (d) => y(d.year2024))
-  .attr("r", 6).attr("fill", colorOf);
+  .attr("r", (d) => (d === standout ? 8 : 6)).attr("fill", colorOf);
+
+// --- Focal-point annotation: label the standout mover at its line midpoint -----
+const standoutDelta = standout.year2024 - standout.year2019;
+g.append("text")
+  .attr("x", iw / 2)
+  .attr("y", (y(standout.year2019) + y(standout.year2024)) / 2 - 14)
+  .attr("text-anchor", "middle")
+  .attr("fill", colorOf(standout)).style("font-size", "16px").style("font-weight", "700")
+  .text(`${standout.department}: ${standoutDelta > 0 ? "+" : ""}${standoutDelta} (largest ${standoutDelta > 0 ? "gain" : "decline"})`);
 
 // --- Leader ticks where a label was nudged off its true position -----------------
 g.selectAll(".leader-left")
@@ -136,7 +148,7 @@ g.selectAll(".label-left")
   .attr("class", "label-left")
   .attr("x", -20).attr("y", (p) => p.y)
   .attr("dy", "0.35em").attr("text-anchor", "end")
-  .attr("fill", t.inkSoft).style("font-size", "15px")
+  .attr("fill", t.inkSoft).style("font-size", "17px")
   .text((p) => `${p.d.department} · ${p.d.year2019}`);
 
 g.selectAll(".label-right")
@@ -145,11 +157,11 @@ g.selectAll(".label-right")
   .attr("class", "label-right")
   .attr("x", iw + 20).attr("y", (p) => p.y)
   .attr("dy", "0.35em").attr("text-anchor", "start")
-  .attr("fill", t.inkSoft).style("font-size", "15px")
+  .attr("fill", t.inkSoft).style("font-size", "17px")
   .text((p) => `${p.d.year2024} · ${p.d.department}`);
 
 // --- Legend: line direction -----------------------------------------------------
-const legend = svg.append("g").attr("transform", `translate(${width / 2 - 110}, 95)`);
+const legend = svg.append("g").attr("transform", `translate(${width / 2 - 110}, 118)`);
 legend.append("line")
   .attr("x1", 0).attr("x2", 26).attr("y1", 0).attr("y2", 0)
   .attr("stroke", increaseColor).attr("stroke-width", 3);
@@ -165,8 +177,12 @@ legend.append("text")
   .attr("fill", t.inkSoft).style("font-size", "14px")
   .text("Declined");
 
-// --- Title ---------------------------------------------------------------------
+// --- Title + subtitle ------------------------------------------------------------
 svg.append("text")
   .attr("x", width / 2).attr("y", 60).attr("text-anchor", "middle")
   .attr("fill", t.ink).style("font-size", "22px").style("font-weight", "600")
   .text("slope-basic · javascript · d3 · anyplot.ai");
+svg.append("text")
+  .attr("x", width / 2).attr("y", 88).attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft).style("font-size", "16px")
+  .text("Employee Satisfaction Score (0-100 scale)");
