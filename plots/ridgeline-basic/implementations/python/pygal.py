@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-07-25
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 84/100 | Updated: 2026-07-25
 """
 
 import os
