@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sankey-basic: Basic Sankey Diagram
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: pending | Updated: 2026-07-25
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-07-25
 """
 
 import os
