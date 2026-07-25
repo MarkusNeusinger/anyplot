@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 78/100 | Updated: 2026-07-25
@@ -114,6 +114,16 @@ LABEL_OFFSETS = {
     # Commercial's straight horizontal flow passes directly through the
     # label at the same height — lift the label clear of the arrow tip
     "Commercial": (0.2, 0.35),
+    # Natural Gas's "90 TWh" line sits on the Nuclear/Renewables ribbons'
+    # downward bend into the hub — lift it into the gap between its own
+    # flow-start arrow and that bend (kept within the label's existing
+    # leftward extent so it doesn't push the figure's bounding box further
+    # left and reflow every other label)
+    "Natural Gas": (0.0, 0.3),
+    # Industrial's "80 TWh" line touches Transport's label with no gap —
+    # drop Transport down and slightly left to clear Industrial without
+    # crowding into Commercial's label further right
+    "Transport": (-0.3, -0.25),
 }
 for diagram in diagrams:
     for text in diagram.texts:
