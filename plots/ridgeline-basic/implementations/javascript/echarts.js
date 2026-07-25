@@ -42,7 +42,7 @@ const groupSamples = REGIONS.map((region) => {
 
 // --- Gaussian KDE over a shared support --------------------------------------
 const X_MIN = 0;
-const X_MAX = 17;
+const X_MAX = 18; // multiple of the 3-unit tick interval so ticks land evenly
 const GRID_POINTS = 120;
 const xGrid = Array.from(
   { length: GRID_POINTS },
@@ -100,7 +100,10 @@ REGIONS.forEach((region, i) => {
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     axisLabel: { color: t.inkSoft, fontSize: 15 },
-    splitLine: { show: false },
+    splitLine: {
+      show: i === N - 1,
+      lineStyle: { color: t.grid, opacity: 0.5 },
+    },
     name: i === N - 1 ? "Wait Time (minutes)" : undefined,
     nameLocation: "middle",
     nameGap: 38,
@@ -133,7 +136,7 @@ REGIONS.forEach((region, i) => {
     smooth: true,
     symbol: "none",
     lineStyle: { width: 2, color: t.palette[i] },
-    areaStyle: { color: t.palette[i], opacity: 0.78 },
+    areaStyle: { color: t.palette[i], opacity: 0.68 },
     z: i + 2,
   });
 });
