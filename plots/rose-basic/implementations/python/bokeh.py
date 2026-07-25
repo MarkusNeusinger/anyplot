@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 rose-basic: Basic Rose Chart
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-25
@@ -37,8 +37,8 @@ max_val = max(values)
 n = len(months)
 angle_width = 2 * np.pi / n
 
-# Calculate wedge angles (equal slices, starting from top/north)
-start_angles = np.array([np.pi / 2 - angle_width / 2 - i * angle_width for i in range(n)])
+# Calculate wedge angles (equal slices, January centered at top/north)
+start_angles = np.array([np.pi / 2 + angle_width / 2 - i * angle_width for i in range(n)])
 end_angles = start_angles - angle_width
 center_angles = (start_angles + end_angles) / 2
 
@@ -68,7 +68,7 @@ W = H = 2400
 p = figure(
     width=W,
     height=H,
-    title="rose-basic · bokeh · anyplot.ai",
+    title="rose-basic · python · bokeh · anyplot.ai",
     x_range=(-1.6, 1.6),
     y_range=(-1.6, 1.6),
     tools="",
