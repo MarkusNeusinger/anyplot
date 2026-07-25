@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: stem-basic
 created: '2026-07-25T17:53:36Z'
-updated: '2026-07-25T17:58:51Z'
+updated: '2026-07-25T18:07:59Z'
 generated_by: claude-sonnet
 workflow_run: 30168375316
 issue: 972
@@ -12,71 +12,60 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Clever workaround for ECharts'' lack of a native stem/lollipop type: a narrow
-    bar (barWidth: 3) as the stem plus a scatter marker on top, tied together with
-    z-ordering so the marker sits above the stem.'
-  - Explicit theme-adaptive markLine at y=0 gives a real baseline reference instead
-    of relying on the axis line, which correctly sits at the data minimum, not zero,
-    for a value axis with negative data.
-  - Data is a genuinely on-spec signal-processing example (damped second-order impulse
-    response, y[n] = exp(-decay*n) * cos(omega*n)), fully deterministic with no RNG,
-    and shows the discrete/individual-measurement character stem plots are meant for.
-  - Consistent marker size (16px) and stem width (3px) across all 40 points, matching
-    the spec's explicit consistency requirement.
-  - 'First (only) series correctly uses Imprint brand green #009E73 in both bar and
-    scatter series, identical across light and dark renders; chrome (background, ink,
-    grid) correctly flips per theme.'
-  - Title exactly matches the mandated `stem-basic · javascript · echarts · anyplot.ai`
-    format; x/y axis titles and tick labels are explicitly sized and balanced (18px
-    / 14px respectively) in both axes.
-  - 'x-axis tick interval (interval: 4) keeps 40 category labels from crowding, and
-    animation: false / no explicit init size or devicePixelRatio correctly follow
-    the ECharts mount-node contract.'
+  - Peak-sample halo (soft glow + page-colored border ring) gives the chart a genuine
+    visual-hierarchy focal point, directly fixing the previous review's flagged Design
+    Excellence gap, while keeping the marker at the same 16px size as every other
+    point (spec's consistent marker size requirement still holds).
+  - Custom tooltip formatter surfaces 'Sample n = ...' / 'Amplitude = ...' from the
+    axis-triggered pointer -- a real ECharts-specific tooltip pattern rather than
+    a default field dump.
+  - Bar (barWidth 3, barGap -100%) + scatter + markLine combo remains a clean, idiomatic
+    workaround for ECharts' lack of a native stem/lollipop chart type.
+  - Data is a genuinely on-spec damped second-order impulse response (signal-processing
+    example straight from the spec's own Applications list), fully deterministic (closed-form,
+    no RNG), 40 points within the 10-100 range.
+  - Theme-adaptive tokens (t.ink, t.inkSoft, t.grid, t.palette[0], t.pageBg) are threaded
+    through every chrome element; both renders are fully legible with pixel-identical
+    data color.
+  - Title fontSize increased from 22px to 26px versus the previous attempt, tightening
+    the previously-flagged width headroom without overflowing.
   weaknesses:
-  - 'Design excellence is competent but plain: single-hue palette with no additional
-    visual hierarchy device (e.g. highlighting the peak stem, an envelope curve, or
-    subtle emphasis on the largest-amplitude samples) to give the chart a clear focal
-    point beyond the data''s natural decay shape.'
-  - No legend is shown for the two series ('stem' and 'sample value'), which is fine
-    for a single conceptual series, but the series names are otherwise unused anywhere
-    in the chart (not even in the tooltip formatter) — a small missed opportunity
-    for polish.
-  - The bar+scatter+markLine combination, while a valid and idiomatic workaround,
-    is a fairly standard ECharts pattern rather than a showcase of a truly distinctive
-    ECharts-only feature (e.g. custom symbol paths, graphic elements, or a tailored
-    tooltip formatter for sample index/amplitude).
-  - Title occupies only ~28% of canvas width at the default 22px fontSize — well under
-    the ~50-70% comfortable range (not a defect per the style guide's overflow/squeeze
-    rule, but there is visual headroom to grow the title slightly and better balance
-    the top of the composition).
+  - Title still occupies only ~30-35% of canvas width -- below the 50-70% comfortable
+    target (not a deduction per the style guide's overflow/squeeze rule, but still
+    headroom for a stronger visual anchor).
+  - The two series names ('stem', 'sample value') remain unused in the UI (no legend,
+    not referenced in the tooltip text) -- acceptable for a single conceptual series,
+    but a small missed polish opportunity.
+  - 'LM-02 remains fairly standard: the itemStyle glow and markLine are competent
+    but not a showcase of a truly ECharts-exclusive capability (e.g. custom graphic
+    elements, dataZoom, or a bespoke symbol path).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "stem-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Sample Index (n)" and Y-axis title "Amplitude" both in dark ink, matched font sizes. Tick labels (0, 5, 10, ... 35 on x; -0.6 to 1.2 on y) in a softer gray-ink tone, all readable. Horizontal gridlines are subtle light gray, evenly spaced; no vertical gridlines. A thin horizontal baseline line sits exactly at y=0, distinguishing positive from negative stems.
-      Data: 40 stems in brand green (#009E73) — thin vertical bars from the y=0 baseline to each sample value, each topped with a solid green circular marker (16px). Clear damped-oscillation shape: largest positive stem at n=0 (~1.0), decaying with sign alternation (visible troughs around n=5-8, smaller ripples continuing to ~n=25) before flattening near zero.
-      Legibility verdict: PASS — all title/axis/tick text is clearly dark-on-light and readable at full size.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "stem-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible (26px). X-axis title "Sample Index (n)" and Y-axis title "Amplitude" both in dark ink, matched font sizes (18px). Tick labels (0, 5, 10 ... 35 on x; -0.6 to 1.2 on y) in a softer gray-ink tone, all readable (14px). Horizontal-only gridlines are subtle. A thin horizontal baseline line sits exactly at y=0.
+      Data: 40 stems in brand green (#009E73) -- thin vertical bars from the y=0 baseline to each sample value, each topped with a solid green circular marker (16px). The n=0 peak sample carries an added soft glow halo and page-colored border ring, creating a deliberate focal point while remaining the same 16px marker size as every other point. Clear damped-oscillation shape decaying toward zero.
+      Legibility verdict: PASS -- all title/axis/tick text is clearly dark-on-light and readable at full size.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title and axis titles now rendered in light/off-white ink, clearly visible against the dark surface. Tick labels in a lighter soft-gray tone, all legible. Gridlines are a faint light gray, visible but unobtrusive. The y=0 baseline line is visible in the same soft-ink tone as the dark theme's chrome.
-      Data: Same 40 green (#009E73) stems and markers, pixel-identical in color and position to the light render — only the chrome (background, text, gridlines) has flipped; the data colors did not change.
-      Legibility verdict: PASS — no dark-on-dark issues; all text (title, axis titles, tick labels) is light-on-dark and clearly readable. Brand green data markers read strongly against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title and axis titles now rendered in light/off-white ink, clearly visible against the dark surface. Tick labels in a lighter soft-gray tone, all legible. Gridlines are a faint light gray, visible but unobtrusive. The y=0 baseline line is visible in the dark theme's chrome tone.
+      Data: Same 40 green (#009E73) stems and markers, pixel-identical in color and position to the light render, including the peak-sample glow halo -- only the chrome (background, text, gridlines) has flipped; the data colors did not change.
+      Legibility verdict: PASS -- no dark-on-dark issues; all text is light-on-dark and clearly readable. Brand green data markers and the peak halo read strongly against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit (title 22px, axis titles 18px, ticks 14px),
-          fully readable in both themes; title occupies only ~28% of width, which
-          is on the conservative side but does not overflow or squeeze
+        comment: All font sizes explicit (title 26px, axis titles 18px, ticks 14px),
+          fully readable in both themes, no overflow or squeeze
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -89,14 +78,15 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 16px markers and 3px stems are clearly visible and appropriately
-          sized for 40 sparse-to-medium density points
+        comment: 16px markers and 3px stems clearly visible and appropriately sized
+          for 40 sparse-to-medium density points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single high-contrast brand green, no red-green reliance
+        comment: Single high-contrast brand green, glow does not hurt contrast, no
+          red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -119,31 +109,30 @@ review:
         comment: 'First series is #009E73 in both bar and scatter; identical data
           color across themes; correct theme-adaptive chrome backgrounds'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Solid, competent styling but single-hue and no additional visual
-          hierarchy device beyond the data's natural shape
+        passed: true
+        comment: Peak-sample halo adds a thoughtful hierarchy device beyond the prior
+          single-hue-only look, clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
         comment: Spines effectively removed, grid subtle and y-only, generous whitespace,
-          theme-adaptive baseline line is a nice touch
+          theme-adaptive baseline line
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: The decaying-oscillation data shape provides a natural focal point
-          at n=0, but there is no deliberate emphasis (annotation, color, size) drawing
-          the eye there
+        passed: true
+        comment: Deliberate glow/border emphasis on the peak sample now guides the
+          viewer to a clear focal point via visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -198,8 +187,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 40 points within spec's 10-100 range; amplitude range (-0.5 to 1.0)
-          is sensible for a normalized impulse response
+        comment: 40 points within spec's 10-100 range; amplitude range is sensible
+          for a normalized impulse response
     code_quality:
       score: 10
       max: 10
@@ -236,7 +225,7 @@ review:
         comment: 'Correct mount-node contract: echarts.init with no explicit size/devicePixelRatio,
           setOption with animation:false'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -244,16 +233,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic option-based configuration, correct use of grid/axis/series
+        comment: Idiomatic option-based configuration, correct use of grid/axis/series/markLine
           structure
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: markLine baseline and layered bar+scatter series show some library-specific
-          technique, but nothing beyond a fairly standard ECharts combo-chart workaround
-  verdict: REJECTED
+        comment: Per-point itemStyle glow (shadowBlur/shadowColor) and custom axis-tooltip
+          formatter add some library-specific technique beyond the standard bar+scatter
+          combo
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -263,3 +253,4 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
+  - edge-highlighting
