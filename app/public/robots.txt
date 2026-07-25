@@ -10,10 +10,14 @@
 # managed block turned off. Rationale, dashboard steps and how to verify:
 # docs/reference/seo.md ("AI crawler policy").
 #
-# Named groups come FIRST and the `User-agent: *` group last: a compliant
-# crawler picks the most specific matching group regardless of order, but
-# simpler parsers take the first match — and with the wildcard on top those
-# would read `Allow: /` and never reach the declining groups below.
+# Two ordering rules in here are load-bearing, both for the same reason —
+# a compliant crawler resolves by specificity, simpler parsers by first match:
+#   1. Named groups come FIRST, `User-agent: *` last. With the wildcard on top,
+#      a first-match parser would read `Allow: /` and never reach the declining
+#      groups below.
+#   2. Inside a group, `Disallow:` lines come BEFORE `Allow: /` — otherwise a
+#      first-match parser lets /debug and /interactive through (verified with
+#      Python's urllib.robotparser, which is exactly such a parser).
 
 # Content signals per contentsignals.org. ANY RESTRICTION EXPRESSED HERE IS AN
 # EXPRESS RESERVATION OF RIGHTS UNDER ARTICLE 4 OF EU DIRECTIVE 2019/790.
@@ -34,9 +38,9 @@ User-agent: ChatGPT-User
 User-agent: PerplexityBot
 User-agent: Perplexity-User
 Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
-Allow: /
 Disallow: /debug
 Disallow: /interactive
+Allow: /
 
 # Training-only collectors: they take the catalogue without ever returning a
 # reader, which is what ai-train=no says in prose. GPTBot sits here because it
@@ -59,8 +63,8 @@ Disallow: /
 # Everyone else: search engines, social/link previews, feed readers.
 User-agent: *
 Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
-Allow: /
 Disallow: /debug
 Disallow: /interactive
+Allow: /
 
 Sitemap: https://anyplot.ai/sitemap.xml

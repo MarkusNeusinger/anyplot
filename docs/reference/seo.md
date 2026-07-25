@@ -283,6 +283,9 @@ Two properties of that file are deliberate:
 - The named groups come **before** the wildcard group. A spec-compliant crawler
   picks the most specific match regardless of order, but simpler parsers take
   the first match and would read `Allow: /` and stop.
+- Inside each group, `Disallow:` comes **before** `Allow: /` — same reason: with
+  the broad allow first, a first-match parser (Python's `urllib.robotparser`,
+  for one) hands out `/debug` and `/interactive`.
 
 ### Backend (api.anyplot.ai)
 
