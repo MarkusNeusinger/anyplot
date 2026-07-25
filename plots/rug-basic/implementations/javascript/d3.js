@@ -23,21 +23,25 @@ const gaussian = () => {
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 };
 
-const responseTimes = [];
+const mainCluster = [];
 for (let i = 0; i < 170; i++) {
-  responseTimes.push(Math.exp(Math.log(140) + 0.35 * gaussian()));
+  mainCluster.push(Math.exp(Math.log(140) + 0.35 * gaussian()));
 }
+const retryCluster = [];
 for (let i = 0; i < 10; i++) {
-  responseTimes.push(500 + gaussian() * 18);
+  retryCluster.push(500 + gaussian() * 18);
 }
+const responseTimes = mainCluster.concat(retryCluster);
 
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
 // --- Layout: histogram on top, rug strip below, sharing the x scale ----------
+// rugGap holds a tinted "lane" band (drawn below) that visually ties the rug
+// strip to the histogram above it, plus its caption.
 const rugHeight = 34;
-const rugGap = 16;
+const rugGap = 30;
 const histHeight = ih - rugHeight - rugGap;
 const rugTop = histHeight + rugGap;
 
@@ -70,12 +74,79 @@ g.selectAll("rect.bar")
   .attr("y", (b) => y(b.length))
   .attr("width", (b) => Math.max(0, x(b.x1) - x(b.x0) - 2))
   .attr("height", (b) => histHeight - y(b.length))
+  .attr("rx", 2)
   .attr("fill", t.palette[0])
   .attr("fill-opacity", 0.85)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
 
-// --- Rug strip: one tick per observation, semi-transparent for overlap -------
+// --- Storytelling callouts: name the gap and the retry cluster the rug ------
+// reveals but the histogram bins hide.
+const mainMax = d3.max(mainCluster);
+const retryMin = d3.min(retryCluster);
+const gapMidX = x((mainMax + retryMin) / 2);
+const retryMidX = x(d3.mean(retryCluster));
+
+g.append("text")
+  .attr("x", gapMidX)
+  .attr("y", 16)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "12px")
+  .text("gap");
+g.append("line")
+  .attr("x1", gapMidX)
+  .attr("x2", gapMidX)
+  .attr("y1", 22)
+  .attr("y2", histHeight)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-dasharray", "2,3")
+  .attr("stroke-opacity", 0.5);
+
+g.append("text")
+  .attr("x", retryMidX)
+  .attr("y", 16)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "12px")
+  .text("slow retries");
+g.append("line")
+  .attr("x1", retryMidX)
+  .attr("x2", retryMidX)
+  .attr("y1", 22)
+  .attr("y2", rugTop - 10)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-dasharray", "2,3")
+  .attr("stroke-opacity", 0.5);
+
+// --- Rug lane: tinted band (same hue as the data) links it to the histogram --
+g.append("rect")
+  .attr("x", 0)
+  .attr("y", rugTop - 10)
+  .attr("width", iw)
+  .attr("height", rugHeight + 20)
+  .attr("rx", 6)
+  .attr("fill", t.palette[0])
+  .attr("fill-opacity", 0.07);
+
+g.append("text")
+  .attr("x", iw)
+  .attr("y", rugTop - 14)
+  .attr("text-anchor", "end")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "11px")
+  .text("Individual requests");
+
+// --- Rug strip: one tick per observation ------------------------------------
+// D3-specific touch: opacity is derived per-tick from local pixel density (a
+// fixed-radius neighbor count), so the crowded core fades enough to stay
+// readable as density rather than merging into a solid band, while isolated
+// ticks in the sparse regions stay strongly visible.
+const rugRadiusPx = 3.5;
+const px = responseTimes.map((d) => x(d));
+const density = px.map((xi) => px.reduce((n, xj) => n + (Math.abs(xi - xj) <= rugRadiusPx ? 1 : 0), 0));
+const tickOpacity = d3.scaleLinear().domain(d3.extent(density)).range([0.55, 0.16]).clamp(true);
+
 g.selectAll("line.rug")
   .data(responseTimes)
   .join("line")
@@ -86,7 +157,7 @@ g.selectAll("line.rug")
   .attr("y2", rugTop + rugHeight)
   .attr("stroke", t.palette[0])
   .attr("stroke-width", 1.5)
-  .attr("stroke-opacity", 0.35);
+  .attr("stroke-opacity", (d, i) => tickOpacity(density[i]));
 
 // --- Axes ------------------------------------------------------------------
 const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6));
