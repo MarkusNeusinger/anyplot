@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stem-basic: Basic Stem Plot
-Library: letsplot 4.9.0 | Python 3.13.13
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-07-25
 """
 # ruff: noqa: F405
 
