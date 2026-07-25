@@ -2,124 +2,128 @@ library: pygal
 language: python
 specification_id: step-basic
 created: '2025-12-23T20:47:58Z'
-updated: '2026-04-30T13:03:53Z'
+updated: '2026-07-25T15:55:53Z'
 generated_by: claude-sonnet
-workflow_run: 25165861633
+workflow_run: 30163989326
 issue: 956
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - True step chart geometry via pygal XY coordinates — no diagonal approximation
-  - Font sizes explicitly set and well-scaled for 4800x2700px canvas
-  - 'Perfect spec compliance: correct title format, axis labels with units, all 12
-    steps visible'
-  - Per-point dot size variation highlights peak growth month (Nov larger dot)
-  - Rich interactive tooltip labels with contextual data per point
-  - 'Complete theme adaptation: both light and dark backgrounds correct with adaptive
-    text tokens'
+  - 'Genuine step-chart semantics: true vertical/horizontal segments via pygal.XY
+    coordinate injection, correctly implementing "post" step style per the spec Notes
+    rather than faking it with a diagonal line.'
+  - 'Correct theme-adaptive chrome and Imprint palette in both renders: first series
+    #009E73 in both, backgrounds #FAF8F1/#1A1A17 exactly, all text readable in both
+    themes.'
+  - The peak-growth insight (November, +$73K) now reads directly off the static PNG
+    via an enlarged, ring-stroked marker plus a visible text label — fixes the exact
+    weakness flagged in attempt 1.
+  - Rich per-point tooltip labels via pygal's node label dict add real value to the
+    interactive HTML export.
+  - Clean, deterministic data; all font sizes explicitly set; correct current API
+    usage; sparse-data markers appropriately sized up (r=14, peak r=26).
   weaknesses:
-  - Area fill opacity (0.18) becomes nearly invisible in dark mode — raise to 0.25-0.30
-    for better dark-theme visibility
-  - Dec data point (635) extends to very top edge with no headroom — add Y-axis range
-    or extra tick to give breathing room above peak value
-  - Peak-month dot size differential (r=22 vs r=14) is subtle in static PNG — amplify
-    to r=30+ for more pronounced visual focal point
+  - Title is missing the required {language} token — currently 'step-basic · pygal
+    · anyplot.ai', should be 'step-basic · python · pygal · anyplot.ai' per SC-04's
+    mandated format.
+  - Design Excellence still reads as "well-configured" rather than fully publication-ready
+    — a touch more typographic hierarchy would push DE-01 further.
+  - The _blank() helper is a function purely for a formatter callback; a lambda inline
+    (matching the pattern already used for the peak's formatter) would keep the script's
+    flat KISS structure.
+  - Tick labels remain on the smaller side at ~400px mobile thumbnail scale.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "step-basic · pygal · anyplot.ai" in dark text — readable. Y-axis label "Cumulative Sales ($K)" and x-axis label "Month" clearly visible. Tick labels (Jan-Dec, 100-600) all readable.
-      Data: Single step series in brand green (#009E73) with subtle mint-green filled area (~18% opacity). Data dots at each monthly value; Nov dot visibly larger (peak highlight). Step pattern clearly shows staircase shape rising from 45 to 635 ($K).
+      Background: Warm off-white matching the mandated #FAF8F1 surface, not pure white.
+      Chrome: Title "step-basic · pygal · anyplot.ai" centered top in dark ink; x-axis title "Month" and y-axis title "Cumulative Sales ($K)" both dark and clearly readable; Jan-Dec tick labels and 0-700 y-tick labels dark and legible; subtle dashed Y-axis-only gridlines in a muted tone.
+      Data: Single Imprint-green (#009E73) series forming a genuine step line (vertical rises + horizontal holds) with a light-green fill under the curve; small dots at each of the 12 monthly points; one clearly larger dot at November with a defined stroke ring plus a static "★ Nov +$73K" label — the peak-growth story reads directly off the PNG.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and all axis/tick labels in light-colored text — all readable against dark background. No dark-on-dark failures.
-      Data: Same brand green (#009E73) step line and dots — colors identical to light render. Filled area is nearly invisible (very subtle dark greenish tint) due to 0.18 opacity on dark surface, but step line and dots provide clear data readability.
-      Legibility verdict: PASS
+      Background: Warm near-black matching the mandated #1A1A17 surface, not pure black.
+      Chrome: Identical title/axis/tick layout, rendered in light-toned text that reads clearly against the dark background; gridlines are a subtle light dashed line at low opacity.
+      Data: Step line, fill, and dots are the identical #009E73 green as the light render; the peak marker's stroke ring correctly flips to the dark-theme ink color. Data colors are theme-invariant, only chrome flipped.
+      Legibility verdict: PASS (no dark-on-dark failures found)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=72, label=48, major_label=44);
-          readable in both themes
+        comment: All text readable in both themes; tick labels slightly small at ~400px
+          mobile thumbnail
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month labels evenly spaced, no collisions
+        comment: No text/data collisions, peak label sits cleanly beside the dot
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line and dots clearly visible; filled area nearly invisible in dark
-          mode at 0.18 opacity
+        comment: Sparse 12-point data given prominent markers (r=14, peak r=26)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single Okabe-Ito series with good contrast in both themes
+        comment: Single-hue green, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization; Dec value (635) slightly above the 600 gridline
-          with no top headroom
+        comment: Correct 3200x1800 canvas, no overflow/clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Cumulative Sales ($K) and Month with units
+        comment: Both axis titles descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 light / #1A1A17 dark;
-          text theme-adaptive'
+        comment: 'First series #009E73, backgrounds exactly #FAF8F1/#1A1A17'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Clean brand green with subtle area fill; above library defaults but
-          not publication-exceptional
+        comment: Filled step area, ring-stroked peak marker; above bare defaults,
+          not fully publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-only dashed grid, generous margins, no legend; pygal frame spines
-          present but overall refined
+        comment: Y-only subtle grid, generous margin, restrained styling
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Peak month highlighted via larger dot; filled area reinforces cumulative
-          narrative; rich interactive tooltips
+        comment: Peak-growth month now has a static visual focal point AND a visible
+          label, closing the attempt-1 gap
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -127,25 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine step chart via pygal XY coordinate manipulation
+        comment: Genuine step-chart semantics via pygal.XY, true vertical/horizontal
+          segments
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step pattern, data markers, grid lines, post-style step all present
+        comment: Step style + markers at data points per spec Notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=months, Y=cumulative sales ($K); all 12 points visible
+        comment: X/Y correctly assigned, all 12 points visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct; legend omitted (appropriate for single series)
+        passed: false
+        comment: Title missing required {language} token — should be 'step-basic ·
+          python · pygal · anyplot.ai'
     data_quality:
       score: 15
       max: 15
@@ -155,37 +161,37 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clear stair-steps, variable increments, cumulative growth pattern,
-          data markers
+        comment: Discrete monthly jumps, constant-until-next-change semantics, data-driven
+          peak emphasis
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly cumulative sales in $K — real-world neutral business scenario
+        comment: Monthly cumulative sales $45K-$635K, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 45-635$K realistic for a growing mid-size business
+        comment: Sensible values and axis range with headroom above the December peak
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Imports -> tokens -> data -> step_data -> style -> chart -> save;
-          no functions/classes
+        comment: Mostly linear script but introduces a def _blank() helper where a
+          lambda would fit the existing pattern
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data; no randomness
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -197,16 +203,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Step data construction verbosity is justified for true pygal XY step
-          rendering
+        comment: Appropriate complexity for constructing a step chart via XY coordinate
+          injection
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API
+        comment: Saves plot-{theme}.png and plot-{theme}.html correctly
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -214,23 +220,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY with per-point node dict, x_value_formatter, custom Style
-          — clearly idiomatic
+        comment: Correctly reaches for pygal.XY + Style since pygal has no native
+          step-chart type
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Per-point node r values, per-point label for tooltips, x_value_formatter,
-          HTML output alongside PNG
+        comment: Per-node dict overrides, inline style stroke ring, opacity_hover,
+          per-node formatter callbacks
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - annotations
   - html-export
+  - hover-tooltips
   patterns:
-  - iteration-over-groups
+  - data-generation
   dataprep: []
   styling:
-  - alpha-blending
+  - publication-ready
+  - theme-adaptive

@@ -1,7 +1,7 @@
 """ anyplot.ai
 step-basic: Basic Step Plot
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-04-30
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-07-25
 """
 
 import os
@@ -23,6 +23,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    layer_tooltips,
     scale_x_continuous,
     theme,
     theme_minimal,
@@ -47,38 +48,52 @@ cumulative_sales = np.cumsum(monthly_sales)
 
 df = pd.DataFrame({"month": months, "cumulative_sales": cumulative_sales})
 
+# Step-interpolated points (matching geom_step's direction="hv") so the area
+# fill hugs the stair shape instead of cutting a straight diagonal across it
+step_months = [months[0]]
+step_sales = [cumulative_sales[0]]
+for m, s in zip(months[1:], cumulative_sales[1:], strict=True):
+    step_months += [m, m]
+    step_sales += [step_sales[-1], s]
+area_df = pd.DataFrame({"month": step_months, "cumulative_sales": step_sales})
+
 # Annotation: label the year-end total near the final data point
 total = int(cumulative_sales[-1])
 label_df = pd.DataFrame({"month": [11.4], "cumulative_sales": [total + 52], "label": [f"Year-end total: ${total}K"]})
 
+# Tooltip shown in the interactive HTML export — a lets-plot-distinctive feature
+point_tooltips = layer_tooltips().line("Month|@month").line("Cumulative sales|$@cumulative_sales K").anchor("top_right")
+
 # Plot
 plot = (
     ggplot(df, aes(x="month", y="cumulative_sales"))
-    + geom_area(fill=BRAND, alpha=0.15)
+    + geom_area(data=area_df, fill=BRAND, color="transparent", alpha=0.15)
     + geom_step(color=BRAND, size=2, direction="hv")
-    + geom_point(color=BRAND, size=6, alpha=0.9)
+    + geom_point(color=BRAND, size=6, alpha=0.9, tooltips=point_tooltips)
     + geom_text(
-        data=label_df, mapping=aes(x="month", y="cumulative_sales", label="label"), color=INK_SOFT, size=13, hjust=1
+        data=label_df, mapping=aes(x="month", y="cumulative_sales", label="label"), color=INK_SOFT, size=4.5, hjust=1
     )
     + labs(x="Month", y="Cumulative Sales ($K)", title="step-basic · letsplot · anyplot.ai")
     + scale_x_continuous(breaks=list(range(1, 13)))
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid_major_x=element_blank(),
         panel_grid_major_y=element_line(color=RULE, size=0.3),
         panel_grid_minor=element_blank(),
-        axis_title=element_text(color=INK, size=20),
-        axis_text=element_text(color=INK_SOFT, size=16),
-        axis_line=element_line(color=INK_SOFT),
-        plot_title=element_text(color=INK, size=24),
+        panel_border=element_blank(),
+        axis_title=element_text(color=INK, size=12),
+        axis_text=element_text(color=INK_SOFT, size=10),
+        axis_line_x=element_line(color=INK_SOFT),
+        axis_line_y=element_line(color=INK_SOFT),
+        plot_title=element_text(color=INK, size=16),
     )
 )
 
-# Save PNG (scale 3x to get 4800 x 2700 px)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# Save PNG (scale 4x to get 3200 x 1800 px)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 
 # Save HTML for interactive version
 ggsave(plot, f"plot-{THEME}.html", path=".")

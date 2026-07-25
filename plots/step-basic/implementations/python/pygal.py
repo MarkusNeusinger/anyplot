@@ -1,7 +1,7 @@
 """ anyplot.ai
 step-basic: Basic Step Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-04-30
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-07-25
 """
 
 import os
@@ -33,6 +33,15 @@ cumulative_sales = [45, 92, 128, 165, 198, 256, 312, 378, 425, 489, 562, 635]
 monthly_growth = [cumulative_sales[i] - cumulative_sales[i - 1] for i in range(1, len(cumulative_sales))]
 peak_idx = monthly_growth.index(max(monthly_growth)) + 1  # Nov (index 10) — +$73K
 
+NODE_R = 14  # standard dot radius — bumped for stronger visibility on sparse 12-point data
+PEAK_R = 26  # peak dot radius — clearly emphasized vs. the standard dots
+
+
+def _blank(value, **_kwargs):
+    """Suppress the static print-value for every node except the peak (avoids clutter)."""
+    return ""
+
+
 # Build true step-chart data using pygal.XY coordinates.
 # Pattern per data point i: (i, prev_val)[no dot] → (i, val)[dot] → (i+1, val)[no dot]
 # This creates genuine vertical rises and horizontal holds — no diagonal approximation.
@@ -40,20 +49,30 @@ step_data = []
 for i, (month, val) in enumerate(zip(months, cumulative_sales, strict=True)):
     if i > 0:
         # Bottom of vertical step: hold previous value up to this x position
-        step_data.append({"value": (i, cumulative_sales[i - 1]), "node": {"r": 0}})
+        step_data.append({"value": (i, cumulative_sales[i - 1]), "node": {"r": 0}, "formatter": _blank})
 
     # Actual data point — larger dot + rich tooltip label for interactivity
     increment = val - (cumulative_sales[i - 1] if i > 0 else 0)
     is_peak = i == peak_idx
     if is_peak:
         label = f"★ Peak growth — {month}: +${increment}K → ${val}K cumulative"
+        point = {
+            "value": (i, val),
+            "node": {"r": PEAK_R},
+            "label": label,
+            # Defined stroke ring makes the peak marker read as a deliberate accent,
+            # not just a bigger version of the same dot.
+            "style": f"fill: {IMPRINT[0]}; stroke: {INK}; stroke-width: 4",
+            "formatter": lambda v, _text=f"★ {month} +${increment}K": _text,
+        }
     else:
         label = f"{month}: ${val}K cumulative (+${increment}K)"
-    step_data.append({"value": (i, val), "node": {"r": 22 if is_peak else 14}, "label": label})
+        point = {"value": (i, val), "node": {"r": NODE_R}, "label": label, "formatter": _blank}
+    step_data.append(point)
 
     if i < len(months) - 1:
         # Horizontal hold: extend current value to the next x position
-        step_data.append({"value": (i + 1, val), "node": {"r": 0}})
+        step_data.append({"value": (i + 1, val), "node": {"r": 0}, "formatter": _blank})
 
 # Custom style
 custom_style = Style(
@@ -63,32 +82,35 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=44,
-    legend_font_size=56,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=50,
+    legend_font_size=44,
     value_font_size=40,
     stroke_width=3,
-    opacity="0.18",
+    opacity="0.28",
     opacity_hover="0.9",
 )
 
 # Chart — XY mode gives full control over x coordinates for true vertical step transitions
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     title="step-basic · pygal · anyplot.ai",
     x_title="Month",
     y_title="Cumulative Sales ($K)",
     style=custom_style,
     show_dots=True,
-    dots_size=14,
-    stroke_style={"width": 8},
+    dots_size=NODE_R,
+    stroke_style={"width": 6},
     show_y_guides=True,
     show_x_guides=False,
     show_legend=False,
     fill=True,
-    margin=120,
+    print_values=True,  # static peak-growth label on the PNG (per-node formatter suppresses the rest)
+    print_zeroes=False,
+    margin=80,
+    range=(0, 700),  # headroom above the Dec peak (635) so the top dot isn't flush with the frame
     x_value_formatter=lambda x: months[round(x)] if 0 <= round(x) <= 11 else "",
 )
 
