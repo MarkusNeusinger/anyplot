@@ -14,8 +14,12 @@ const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const BRAND    = colorant"#009E73"  # Imprint palette position 1 — ALWAYS first series
 
 # Data — impulse response of a damped second-order system (classic DSP stem example)
-n = 0:39
-amplitude = exp.(-0.15 .* n) .* sin.(0.8 .* n)
+# Faster decay + a trimmed sample count keep every stem visually meaningful
+# (no long near-zero tail eating half the canvas)
+n = 0:29
+decay = exp.(-0.18 .* n)
+amplitude = decay .* sin.(0.8 .* n)
+peak_idx = argmax(abs.(amplitude))
 
 # Plot
 fig = Figure(
@@ -27,7 +31,8 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = "stem-basic · julia · makie · anyplot.ai",
-    titlesize          = 20,
+    titlesize          = 22,
+    titlefont          = :bold,
     titlecolor         = INK,
     xlabel             = "Sample Index (n)",
     ylabel             = "Amplitude",
@@ -46,9 +51,14 @@ ax = Axis(
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12),
     xgridvisible       = false,
 )
+
+# Decay envelope — theme-neutral reference curves (Imprint "neutral" anchor) that make
+# the damped-oscillation shape explicit and give the plot a deliberate focal structure
+lines!(ax, n, decay; color = RGBAf(INK.r, INK.g, INK.b, 0.35), linewidth = 1.5, linestyle = :dash)
+lines!(ax, n, -decay; color = RGBAf(INK.r, INK.g, INK.b, 0.35), linewidth = 1.5, linestyle = :dash)
 
 stem!(ax, n, amplitude;
     color       = BRAND,
@@ -56,8 +66,24 @@ stem!(ax, n, amplitude;
     stemwidth   = 2.5,
     marker      = :circle,
     markersize  = 16,
+    strokewidth = 1.5,
+    strokecolor = PAGE_BG,
     trunkcolor  = INK_SOFT,
     trunkwidth  = 1.5,
+)
+
+# Halo + label on the largest-magnitude stem — a clear, intentional focal point
+scatter!(ax, [n[peak_idx]], [amplitude[peak_idx]];
+    color       = (BRAND, 0.25),
+    markersize  = 34,
+    strokewidth = 0,
+)
+text!(ax, n[peak_idx], amplitude[peak_idx];
+    text     = "peak: $(round(amplitude[peak_idx]; digits = 2))",
+    align    = (:left, :bottom),
+    offset   = (10, 10),
+    fontsize = 13,
+    color    = INK_SOFT,
 )
 
 # Save
