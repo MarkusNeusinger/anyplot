@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 rose-basic: Basic Rose Chart
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-07-25
@@ -76,9 +76,11 @@ max_val = max(rainfall)
 ax.set_ylim(0, max_val * 1.15)
 ax.set_yticks([50, 100, 150])
 ax.set_yticklabels(["", "100 mm", "150 mm"], fontsize=9, color=INK_SOFT)
-label_angle = np.deg2rad(ax.get_rlabel_position())
+# Placed in the angular gap between the Jun/Jul bars (bottom of the chart, away from
+# the title and the Dec/Jan boundary) so the halo box no longer sits on top of bar fill.
+gap_angle = angles[5] + (2 * np.pi / n_categories) / 2
 ax.text(
-    label_angle,
+    gap_angle,
     50,
     "50 mm",
     ha="center",
@@ -95,7 +97,11 @@ ax.spines["polar"].set_visible(False)
 
 # Title (extra pad keeps it clear of the 12 o'clock "Jan" tick label)
 ax.set_title(
-    "Monthly Rainfall (mm) · rose-basic · seaborn · anyplot.ai", fontsize=13, fontweight="bold", pad=30, color=INK
+    "Monthly Rainfall (mm) · rose-basic · python · seaborn · anyplot.ai",
+    fontsize=11,
+    fontweight="bold",
+    pad=30,
+    color=INK,
 )
 
 # Value labels on each bar
