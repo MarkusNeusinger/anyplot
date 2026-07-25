@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stem-basic: Basic Stem Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-25
@@ -92,7 +92,9 @@ chart = (
         width=620,
         height=320,
         background=PAGE_BG,
-        title=alt.Title("stem-basic · altair · anyplot.ai", fontSize=18, fontWeight="bold", anchor="middle", color=INK),
+        title=alt.Title(
+            "stem-basic · python · altair · anyplot.ai", fontSize=18, fontWeight="bold", anchor="middle", color=INK
+        ),
     )
     .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
