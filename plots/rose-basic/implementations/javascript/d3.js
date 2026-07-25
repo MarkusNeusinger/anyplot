@@ -1,7 +1,7 @@
 // anyplot.ai
 // rose-basic: Basic Rose Chart
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-07-25
+// Library: d3 7.9.0 | JavaScript 22.23.1
+// Quality: 89/100 | Created: 2026-07-25
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
