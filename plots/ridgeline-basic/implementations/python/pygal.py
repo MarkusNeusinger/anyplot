@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-07-25
@@ -90,16 +90,24 @@ custom_style = Style(
     # seam line; opaque fills simply occlude what's behind with no blending.
     opacity=1,
     opacity_hover=1,
+    # A pure `stroke-width: 0` CSS override is dropped by pygal's
+    # get_strokes() (falsy check), and even a near-zero width still
+    # rasterizes as a visible hairline in cairosvg — stroke_opacity=0 kills
+    # the outline unambiguously so each ridge's flat polygon-bottom edge
+    # doesn't read as a stray horizontal line.
+    stroke_opacity=0,
 )
 
 # Ridge parameters — height/spacing ratio tuned for ~60% vertical overlap
 ridge_height = 3.0
 ridge_spacing = 1.2
 
-# Y-axis labels positioned at each ridge baseline
+# Y-axis labels positioned just above each ridge's own baseline (offset is a
+# small fraction of ridge_spacing, not ridge_height, so the label hugs its
+# own baseline instead of drifting toward the ridge above)
 y_label_values = []
 for i, month in enumerate(reversed(months)):
-    y_label_values.append((i * ridge_spacing + ridge_height * 0.3, month))
+    y_label_values.append((i * ridge_spacing + ridge_spacing * 0.15, month))
 
 chart = pygal.XY(
     width=3200,
@@ -116,11 +124,7 @@ chart = pygal.XY(
     show_y_guides=False,
     range=(-0.5, len(months) * ridge_spacing + ridge_height * 1.15),
     xrange=(-10, 36),
-    # pygal's CSS `get_strokes()` treats width=0 as falsy and skips emitting
-    # the override, leaving the base template's `.reactive{stroke-width:1}`
-    # rule in place — use a near-zero width to actually suppress the ridge
-    # outline (the flat polygon-bottom edge otherwise reads as a stray line).
-    stroke_style={"width": 0.01},
+    margin_bottom=40,
 )
 
 chart.y_labels = [{"value": v, "label": lbl} for v, lbl in y_label_values]
