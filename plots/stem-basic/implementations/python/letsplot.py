@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 stem-basic: Basic Stem Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-25
@@ -32,8 +32,10 @@ n = 30
 x = np.arange(n)
 envelope = np.exp(-x / 10)
 y = envelope * np.cos(x * 0.8) + np.random.randn(n) * 0.05
+# Fade the stems once the envelope decays past ~0.1 to sharpen the visual hierarchy
+alpha = np.where(envelope >= 0.1, 1.0, 0.4)
 
-df = pd.DataFrame({"x": x, "y": y, "y_base": 0.0})
+df = pd.DataFrame({"x": x, "y": y, "y_base": 0.0, "alpha": alpha})
 envelope_df = pd.DataFrame({"x": x, "upper": envelope, "lower": -envelope})
 
 plot = (
@@ -41,9 +43,9 @@ plot = (
     + geom_line(aes(x="x", y="upper"), data=envelope_df, color=MUTED, size=1.0, linetype="dashed", alpha=0.7)
     + geom_line(aes(x="x", y="lower"), data=envelope_df, color=MUTED, size=1.0, linetype="dashed", alpha=0.7)
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.5)
-    + geom_segment(aes(x="x", y="y_base", xend="x", yend="y"), color=BRAND, size=1.2)
+    + geom_segment(aes(x="x", y="y_base", xend="x", yend="y", alpha="alpha"), color=BRAND, size=1.2)
     + geom_point(
-        aes(x="x", y="y"),
+        aes(x="x", y="y", alpha="alpha"),
         color=BRAND,
         fill=BRAND,
         size=3.5,
@@ -51,16 +53,19 @@ plot = (
         shape=21,
         tooltips=layer_tooltips().title("Sample @x").line("Amplitude|@y"),
     )
-    + labs(x="Sample Index", y="Amplitude (a.u.)", title="stem-basic · letsplot · anyplot.ai")
+    + scale_alpha_identity()
+    + labs(x="Sample Index", y="Amplitude (a.u.)", title="stem-basic · python · letsplot · anyplot.ai")
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
         panel_grid_major=element_line(color=RULE, size=0.3),
         panel_grid_minor=element_blank(),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
         axis_ticks=element_line(color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT, size=0.4),
+        axis_line_x=element_line(color=INK_SOFT, size=0.4),
+        axis_line_y=element_line(color=INK_SOFT, size=0.4),
         plot_title=element_text(size=16, color=INK),
     )
     + ggsize(800, 450)
