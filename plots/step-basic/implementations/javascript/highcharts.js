@@ -19,10 +19,15 @@ const instances = [
 ];
 const data = hours.map((h, i) => [h, instances[i]]);
 
+// Peak scaling window (hours 11-13, where capacity plateaus at 10 instances) —
+// called out with a plotBand so the step's flat top reads as a deliberate
+// signal rather than just "the highest bar".
+const peakBandColor = Highcharts.color(t.palette[0]).setOpacity(0.12).get();
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
-    type: "line",
+    type: "area",
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
@@ -40,6 +45,18 @@ Highcharts.chart("container", {
     tickInterval: 2,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: [
+      {
+        from: 10.5,
+        to: 13.5,
+        color: peakBandColor,
+        label: {
+          text: "Peak scaling window",
+          style: { color: t.inkSoft, fontSize: "12px" },
+          y: 16,
+        },
+      },
+    ],
   },
   yAxis: {
     title: {
@@ -53,17 +70,17 @@ Highcharts.chart("container", {
   legend: { enabled: false },
   plotOptions: {
     series: { animation: false },
-    line: {
+    area: {
       step: "right",
       lineWidth: 2.5,
-      marker: { enabled: true, radius: 5, fillColor: t.palette[0] },
+      fillOpacity: 0.15,
+      marker: { enabled: true, radius: 5 },
     },
   },
   series: [
     {
       name: "Active instances",
       data,
-      color: t.palette[0],
     },
   ],
 });
