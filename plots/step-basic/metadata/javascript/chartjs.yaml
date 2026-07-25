@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: step-basic
 created: '2026-07-25T15:52:46Z'
-updated: '2026-07-25T15:57:16Z'
+updated: '2026-07-25T16:07:28Z'
 generated_by: claude-sonnet
 workflow_run: 30164328220
 issue: 956
@@ -12,53 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/chartjs/plot-dark.html
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - 'Correct Imprint palette compliance: brand green #009E73 is identical across light
-    and dark renders, and theme-adaptive chrome (title, ticks, grid, marker halo)
-    is correctly sourced from ANYPLOT_TOKENS in both themes.'
-  - 'Correct step semantics: stepped: "after" matches the spec''s ''post'' style (value
-    holds from the current point until the next), and markers are placed exactly at
-    each scaling event.'
-  - 'Realistic, plausible dataset: 11-point auto-scaling timeline (4-30 instances)
-    with a full mix of up and down transitions, clean deterministic in-memory data,
-    no RNG needed.'
-  - 'Clean, minimal code: KISS structure, only the mount-node contract + Chart.js
-    global, animation disabled, no fake interactivity or over-engineering.'
-  - 'Nice refinement touch: pointBorderColor set to the page background creates a
-    halo around markers so they stay legible against the step line in both themes.'
-  - No overlapping or clipped text in either render; title format exactly matches
-    the required 'step-basic · javascript · chartjs · anyplot.ai' convention.
+  - 'Directly resolves all three attempt-1 weaknesses: added area fill + emphasis
+    for design polish, a peak callout for data storytelling, and a custom plugin +
+    scriptable styling for library mastery'
+  - 'Correct Imprint palette compliance: brand green #009E73 identical across light/dark,
+    theme-adaptive chrome correctly sourced from ANYPLOT_TOKENS'
+  - 'Correct step semantics: stepped: "after" matches the spec''s ''post'' style,
+    markers placed exactly at each scaling event'
+  - Realistic, plausible auto-scaling dataset with a full mix of up/down transitions
+  - Fixed the attempt-1 minor layout note (tight rightmost tick) via explicit layout.padding
   weaknesses:
-  - 'Design Excellence is generic: a competently theme-mapped default, but nothing
-    elevates it beyond that — e.g. no subtle area fill under the step line, no gradient,
-    no emphasis technique.'
-  - 'No data storytelling / visual hierarchy: every step segment has equal visual
-    weight. Consider a subtle callout or color/size emphasis on the daily peak (30
-    instances around 09:30) or the overnight trough to give the viewer a focal point.'
-  - 'Library Mastery is only moderate: stepped: "after" is the standard, expected
-    way to build a Chart.js step chart — nothing distinctive to Chart.js is used beyond
-    the base line config (e.g. segment-level styling, scriptable colors/gradients,
-    or a fill).'
-  - 'Minor layout tightness: the rightmost x-axis tick (00:00 at hour 24) sits close
-    to the canvas edge — not clipped, but could use a touch more right padding for
-    breathing room.'
+  - Design Excellence still reads as a well-executed default rather than a distinctive
+    visual system - the area fill and callout are effective but common techniques
+  - Peak callout text is fairly small (14px) relative to the chart's overall scale;
+    a touch larger or with a subtle background chip would improve its role as the
+    storytelling focal point
+  - Only one focal point (the peak) is highlighted - the overnight trough is arguably
+    an equally interesting event that goes unmarked
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "step-basic · javascript · chartjs · anyplot.ai" in dark ink, centered top. X-axis title "Time of Day" and Y-axis title "Active Instances" in dark ink. Tick labels (00:00-21:00 on x, 0-30 on y) in softer grey. Subtle horizontal grid lines (y-axis only), no vertical grid, thin L-shaped left/bottom axis lines. All chrome clearly readable against the light background.
-      Data: Single step-line series in brand green (#009E73), stepped "after" style with a circular marker (thin light halo matching the page background) at each of the 11 scaling events. Line/markers are clearly distinguishable from the cream background.
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "step-basic · javascript · chartjs · anyplot.ai" in dark ink, centered top. Axis titles "Time of Day" / "Active Instances" in dark ink; tick labels in softer grey. Subtle horizontal-only grid, thin L-shaped axis lines. All readable.
+      Data: Single step-line series in brand green (#009E73), stepped "after", with a light-alpha area fill beneath, circular markers with light halo at each of 11 scaling events, and an enlarged marker + bold "Daily peak" text callout at the 09:30/30-instance peak.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title and axis titles now rendered in light/off-white ink; tick labels in a lighter soft grey; grid lines still subtle but visible against the dark surface. No dark-on-dark text anywhere — all title, axis titles, and tick labels are clearly legible.
-      Data: Same brand green (#009E73) step line and markers, pixel-identical color to the light render — only the chrome (background, text, grid) flipped, confirming palette compliance across themes.
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Same title and axis titles now in light/off-white ink; tick labels in lighter soft grey; grid lines still subtle but visible. No dark-on-dark failures.
+      Data: Step line, area fill, markers, and "Daily peak" callout colors identical to the light render - only chrome flipped between themes.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,75 +54,68 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (22px), axis titles (16px), and ticks (14px) are all explicitly
-          sized and readable in both themes; well proportioned given the short library/language
-          name pairing.
+        comment: Title/axis titles/ticks/callout all explicitly sized and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: Daily peak callout sits clear of gridline and other elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: pointRadius 5 / borderWidth 3.5 are well-suited to the sparse 11-point
-          dataset.
+        comment: Sparse dataset with prominent markers, peak marker enlarged for emphasis
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series green reads with strong contrast on both cream and
-          near-black surfaces.
+        comment: Strong contrast on both surfaces, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas with balanced margins; rightmost tick
-          sits a little close to the edge.
+        comment: layout.padding.right fixed attempt-1's tight rightmost tick
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Time of Day'' and ''Active Instances'' are descriptive; instance
-          count is inherently unitless.'
+        comment: Descriptive labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds are
-          theme-correct #FAF8F1 / #1A1A17.'
+        comment: 'First series #009E73, identical across themes, theme-correct backgrounds'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured theme mapping but reads as a competent default, not
-          publication-level design.
+        comment: Area fill and peak emphasis add polish but are common techniques,
+          not distinctive
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Y-only subtle grid, L-shaped spines, and a marker halo (pointBorderColor:
-          pageBg) show some refinement.'
+        comment: Y-only grid, L-shaped spines, marker halo, area fill read as refined
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data is displayed but not interpreted — no emphasis on the daily
-          peak/trough or other focal point.
+        passed: true
+        comment: Enlarged marker + callout gives a clear focal point, resolves attempt-1
+          weakness
     spec_compliance:
       score: 15
       max: 15
@@ -144,26 +125,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct step plot via stepped: "after".'
+        comment: 'Correct step plot via stepped: "after"'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Markers at data points, grid lines to trace values, appropriate step
-          style all present.
+        comment: Markers, grid lines, appropriate step style
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = hour (linear 0-24), Y = instance count, all data visible.
+        comment: X=hour linear 0-24, Y=instance count, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; legend correctly omitted for single series.
+        comment: Title format exact match, legend correctly omitted
     data_quality:
       score: 14
       max: 15
@@ -173,21 +153,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Good mix of up/down transitions across 11 events, though the shape
-          is somewhat evenly spaced.
+        comment: Good mix of up/down transitions across 11 events
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Auto-scaling web-service instance count over 24h — realistic, neutral,
-          comprehensible.
+        comment: Auto-scaling web-service scenario, realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 4-30 instance range with a plausible daytime-heavy scaling pattern.
+        comment: 4-30 instance range, plausible daytime-heavy pattern
     code_quality:
       score: 10
       max: 10
@@ -197,34 +175,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data -> mount -> chart, only a tiny tick-formatting helper.
+        comment: Data -> mount -> chart plus small helpers and one draw plugin
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data array.
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided globals.
+        comment: No imports beyond provided globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI or over-engineering.
+        comment: Peak plugin is a real Chart.js technique, not fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows the mount-node contract, animation: false, current Chart.js
-          API.'
+        comment: 'Correct mount-node contract, animation: false'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -232,22 +209,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of stepped line config and the mount-node/token contract.
+        comment: 'fill: origin, scriptable callbacks, correct token contract'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: 'stepped: "after" is the expected way to build a Chart.js step chart;
-          no further Chart.js-distinctive feature (segment styling, gradients, scriptable
-          options) is used.'
-  verdict: REJECTED
+        passed: true
+        comment: Custom afterDatasetsDraw plugin and scriptable per-point styling
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - edge-highlighting
+  - alpha-blending
