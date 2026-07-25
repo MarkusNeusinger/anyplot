@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: sankey-basic
 created: '2026-07-25T12:13:15Z'
-updated: '2026-07-25T12:18:22Z'
+updated: '2026-07-25T12:26:47Z'
 generated_by: claude-sonnet
 workflow_run: 30157405988
 issue: 810
@@ -12,143 +12,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Correct Imprint palette assignment: Product Sales is #009E73 (brand green, always
-    first), Subscriptions/Services follow canonical order 2-3, and the matte-red semantic
-    anchor (palette[4]) is deliberately skipped since none of the categories represent
-    bad/loss/error — exactly per the style guide''s semantic-exception rule.'
-  - 'Flow values are internally consistent: every intermediate node''s inbound total
-    exactly equals its outbound total (Engineering 320+150=470 in, 380+90=470 out;
-    Sales 180+70=250 in, 180+70=250 out; Operations 60+140=200 in, 120+60+20=200 out;
-    Marketing 90 in, 40+50=90 out) — a real budget-flow Sankey would balance like
-    this, so DQ-03 is excellent.'
-  - 'Clean idiomatic echarts sankey series usage: nodeWidth/nodeGap/layoutIterations
-    for layout quality, emphasis.focus:''adjacency'' for meaningful hover interactivity,
-    curveness for smooth ribbons, borderWidth:0 for a refined flat look, animation:false
-    correctly set to avoid mid-animation screenshots.'
-  - 'Both renders are theme-correct: warm off-white / near-black backgrounds, all
-    chrome (title, node labels) legible in both themes, terminal expense nodes (Salaries,
-    Infrastructure, Travel, Marketing Spend) use the theme-adaptive ink/neutral token
-    rather than a categorical color — an appropriate semantic choice for aggregation
-    endpoints.'
-  - No circular flows, no edge clipping, no text overlap in either render; title format
-    matches the mandated `sankey-basic · javascript · echarts · anyplot.ai` pattern
-    exactly.
-  - 'Clean, minimal code: no functions/classes, deterministic hardcoded data, no fake
-    interactivity, correct mount-node contract usage.'
+  - 'The repair addressed the DE-03 storytelling gap directly: the subtitle "Engineering
+    → Salaries is the largest single allocation ($380K)" plus a bumped-up lineStyle.opacity
+    (0.85 vs. 0.6 baseline) on that one link now gives the diagram a clear, legible
+    focal point instead of a flat default coloring.'
+  - Node label fontSize raised from 16px to 19px in direct response to the prior mobile-legibility
+    note, with title/subtitle sizes also explicitly set.
+  - Right margin tightened from 200px to 90px (vs. left=40px), giving a much more
+    balanced canvas utilization than the previous asymmetric layout.
+  - 'Correct Imprint palette assignment carried over: first series is #009E73, canonical
+    positions used elsewhere, and the matte-red semantic slot is correctly skipped
+    since no category represents bad/loss/error.'
+  - Flow values remain internally consistent — every intermediate node's inbound total
+    exactly equals its outbound total, a real budget flow would balance exactly like
+    this.
+  - Both renders are theme-correct with no clipping, no text overlap, and identical
+    data colors between light and dark — only chrome flips as required.
   weaknesses:
-  - Node label fontSize is 16px within the 1600px-wide CSS mount (~1% of width) —
-    legible at full 3200px resolution but likely to become hard to read once scaled
-    to the ~400px mobile preview width; consider bumping to ~18-20px for more mobile
-    headroom.
-  - In the crossing region between the middle department column and the right-hand
-    expense column, several 50%-opacity ribbons overlap (e.g. ochre Engineering flow
-    crossing the lime Sales flow), producing blended colors that are harder to trace
-    and reduce CVD distinguishability at the crossing points — consider slightly higher
-    lineStyle.opacity for the source-linked color or nudging node order/curveness
-    to reduce the amount of crossing.
-  - Design Excellence is only at the 'well-configured, thoughtfully tuned default'
-    tier (curveness, opacity, borderWidth:0, layoutIterations) — there is no visual
-    emphasis or storytelling device (e.g. highlighting the single largest flow, a
-    subtitle calling out the dominant expense category) that would lift this toward
-    a clear focal point.
-  - 'The right-side margin (right: 200) leaves a visibly wider empty strip after the
-    black terminal-node bars than the left margin (left: 40) before the source bars
-    — asymmetric enough to be noticeable; could be tightened slightly now that sink
-    labels are short.'
+  - Ribbon color-blending at the busiest crossing region (department → expense columns)
+    is still only marginally addressed — general opacity went from 0.5 to 0.6 and
+    curveness from 0.5 to 0.45, but overlapping flows still mix into ambiguous colors
+    there, reducing traceability and CVD distinguishability (VQ-04).
+  - Design Excellence is still at 'well-tuned default plus one storytelling device'
+    rather than genuinely publication-tier — no additional refinement (e.g. subtler
+    grid-like guide lines, tighter typography hierarchy between title/subtitle) was
+    introduced this round (DE-01, DE-02).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "sankey-basic · javascript · echarts · anyplot.ai" is centered top in dark ink, clearly legible. All 11 node labels (Product Sales, Subscriptions, Services, Engineering, Sales, Operations, Marketing, Salaries, Infrastructure, Travel, Marketing Spend) render in dark ink text, positioned outside their node bars (right side for source/mid nodes, left side for the four terminal expense nodes), all fully readable with no overlap.
-      Data: Three source nodes (Product Sales = brand green #009E73, Subscriptions = lavender, Services = blue) flow through four department nodes (Engineering = ochre, Sales = lime, Operations = rose, Marketing = cyan — the semantic-red palette slot is correctly skipped since no category is an error/loss state) into four terminal expense nodes rendered as dark ink bars. Ribbon widths are clearly proportional to flow value; ribbons take their source node's color at 50% opacity, producing visible color blending where multiple flows cross en route to the expense column.
-      Legibility verdict: PASS.
+      Background: warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "sankey-basic · javascript · echarts · anyplot.ai" centered top in dark ink (fontSize 22, weight 500), fully legible. New subtitle "Engineering → Salaries is the largest single allocation ($380K)" directly below in secondary ink-soft gray (fontSize 15), also fully legible. All 11 node labels are dark ink, positioned outside/beside their bars, readable with no collisions.
+      Data: Three source nodes (Product Sales = brand green #009E73, Subscriptions = lavender, Services = blue) flow through four department nodes (Engineering = ochre, Sales = lime, Operations = rose, Marketing = cyan) into four terminal expense bars (Salaries, Infrastructure, Travel, Marketing Spend) rendered in the theme-adaptive ink token. The Engineering → Salaries ribbon (largest flow, $380K) is visibly more solid/opaque (0.85) than the other ribbons (0.6), creating a clear focal path that matches the subtitle's callout.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and all node labels render in light/cream ink, clearly legible against the dark surface; no dark-on-dark failures observed. The terminal expense-node bars flip from black (light theme) to near-white/cream (dark theme), correctly using the theme-adaptive ink token rather than a static color.
-      Data: All eight categorical node colors (green, lavender, blue, ochre, lime, rose, cyan) are pixel-identical to the light render — only the chrome (background, text, terminal-node ink) flipped, as required. Ribbon color-blending pattern in the crossing region is the same as the light render.
-      Legibility verdict: PASS.
+      Background: warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and subtitle flip to light/cream ink, both fully legible against the dark background — no dark-on-dark failures. Terminal expense-node bars flip from black to near-white/cream (theme-adaptive ink token, not a static color). All node labels are light-colored and readable.
+      Data: All eight categorical data colors (green, lavender, blue, ochre, lime, rose, cyan) are pixel-identical to the light render — only chrome flipped, as required. The highlighted Engineering → Salaries ribbon is still visibly more opaque/solid than the rest, preserving the focal-path emphasis in this theme too.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title (22px) and node labels (16px) explicitly sized and fully readable
-          at full resolution in both themes; 16px labels within the 1600px mount are
-          on the small side for the ~400px mobile preview
+        comment: Node label fontSize raised 16→19px directly addressing the prior
+          mobile-legibility note; title/subtitle explicitly sized and readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No node-label collisions in either render; vertical spacing (nodeGap:22)
-          keeps all labels clear
+        comment: No label collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 16 flows, ribbon widths clearly proportional to value, no overplotting
+        comment: Ribbon widths clearly proportional across 16 flows, no overplotting
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
-        passed: true
-        comment: Base palette is CVD-safe, but 50%-opacity ribbon crossings blend
-          into ambiguous colors in the busiest region of the diagram, reducing traceability
-          at those crossing points
+        passed: false
+        comment: Opacity bump 0.5→0.6 and curveness 0.5→0.45 only marginally reduce
+          color-blending ambiguity at the busiest ribbon crossings
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills most of the canvas with balanced use of space; right
-          margin (200px) is a bit larger than the left (40px) but not severe, no cut-off
-          content
+        comment: Right margin tightened 200→90px, now balanced against left=40px;
+          no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a Sankey; node labels are descriptive category
-          names
+        comment: No axes needed; node labels are descriptive category names
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; remaining nodes use canonical Imprint order,
-          correctly skipping the semantic-red slot; theme chrome correct in both renders;
-          data colors identical across themes'
+        comment: 'First series #009E73; canonical Imprint order elsewhere, semantic-red
+          slot correctly skipped; theme chrome correct in both renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Thoughtful tuning beyond bare defaults (curveness, opacity, borderWidth:0,
-          layoutIterations) but not yet publication-tier custom hierarchy
+        passed: true
+        comment: Thoughtful tuning (curveness, opacity, borderWidth:0, layoutIterations)
+          but not yet publication-tier
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Borders removed, generous margins, smooth curved ribbons; still a
-          fairly standard sankey composition
+        passed: true
+        comment: Borders removed, generous and now better-balanced margins, smooth
+          curves
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        comment: Data is displayed clearly but with no emphasis device (e.g. highlighting
-          the dominant flow) to guide the viewer to a specific insight
+        passed: true
+        comment: New subtitle callout plus higher-opacity highlight on the Engineering→Salaries
+          link now creates a clear focal point guiding the viewer
     spec_compliance:
       score: 15
       max: 15
@@ -157,25 +137,28 @@ review:
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: Genuine ECharts sankey series with nodes and links
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: No circular flows, node labels visible and non-overlapping, distinct
-          source colors, link opacity used for crossing flows — all spec notes satisfied
+        passed: true
+        comment: No circular flows, distinct source colors, link opacity for crossings
+          — all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: source/target/value correctly mapped through a 3-tier flow structure,
-          all data represented
+        passed: true
+        comment: source/target/value correctly mapped through a 3-tier structure
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches mandated format exactly; no legend needed since node
-          labels self-identify categories
+        passed: true
+        comment: Title matches mandated format exactly; subtitle is an additive callout,
+          not a title-format deviation; no legend needed
     data_quality:
       score: 14
       max: 15
@@ -184,19 +167,21 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: 16 flows show branching (one source to multiple departments) and
-          merging (multiple departments to one expense) well; not a highly complex
-          network but solid coverage
+        passed: true
+        comment: 16 flows show branching and merging well; solid but not a highly
+          complex network
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Neutral, comprehensible business budget-allocation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Every intermediate node's inbound flow total exactly equals its outbound
+        passed: true
+        comment: Every intermediate node's inbound total exactly equals its outbound
           total — factually consistent budget conservation
     code_quality:
       score: 10
@@ -206,28 +191,34 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Data, init, option — no functions/classes
+        passed: true
+        comment: Imports → data → init → option, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully deterministic hardcoded data
+        passed: true
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No unused imports; echarts global used directly
+        passed: true
+        comment: No extraneous imports; uses only the echarts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity, no fake UI/functionality
+        passed: true
+        comment: Appropriate complexity; new comment explains the non-obvious highlight
+          choice
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio
-          passed to init
+        passed: true
+        comment: Mount-node contract respected; animation:false set; current ECharts
+          sankey API
     library_mastery:
       score: 8
       max: 10
@@ -236,21 +227,22 @@ review:
         name: Idiomatic Usage
         score: 5
         max: 5
-        comment: 'Expert use of echarts sankey series config: nodeWidth, nodeGap,
-          layoutIterations, draggable:false'
+        passed: true
+        comment: Expert use of nodeWidth, nodeGap, layoutIterations, draggable:false
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        comment: Uses emphasis.focus:'adjacency' for adjacency highlighting and layoutIterations
-          for crossing-minimization — echarts-specific features beyond generic sankey
-          rendering
-  verdict: REJECTED
+        passed: true
+        comment: emphasis.focus:"adjacency" and per-link lineStyle.opacity override
+          are echarts-specific beyond a generic sankey render
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
   styling:
   - alpha-blending

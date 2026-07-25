@@ -1,7 +1,7 @@
 // anyplot.ai
 // sankey-basic: Basic Sankey Diagram
 // Library: echarts 6.1.0 | JavaScript 22.23.1
-// Quality: 85/100 | Created: 2026-07-25
+// Quality: 88/100 | Created: 2026-07-25
 
 const t = window.ANYPLOT_TOKENS;
 
