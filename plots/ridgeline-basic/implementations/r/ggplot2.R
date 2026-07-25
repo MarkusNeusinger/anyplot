@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' ridgeline-basic: Basic Ridgeline Plot
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: pending | Created: 2026-07-25
+#' Quality: 91/100 | Created: 2026-07-25
 
 library(ggplot2)
 library(dplyr)
