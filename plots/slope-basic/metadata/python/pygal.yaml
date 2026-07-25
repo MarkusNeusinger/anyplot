@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: slope-basic
 created: '2025-12-23T20:44:50Z'
-updated: '2026-07-25T23:42:36Z'
+updated: '2026-07-25T23:52:32Z'
 generated_by: claude-sonnet
 workflow_run: 30179521392
 issue: 981
@@ -12,106 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Clever repurposing of pygal's Line chart (no interpolation, only two x-ticks)
+  - Point/category labels now render at value_label_font_size=44, matching the tick-label
+    size — entity names read with the same prominence as the numeric axis (fixed from
+    attempt 1's VQ-01 weakness)
+  - Q1-column labels no longer collide with the vertical y-axis guideline — the value_font_size
+    bump to 40 widened the dot-to-label offset enough to clear the axis line
+  - Y-axis re-labeled 'Sales (thousands of units)' with data left as-is, so the same
+    40-114 range now reads as a plausible 40,000-114,000 unit quarterly total instead
+    of an implausibly tiny company-wide figure (fixed DQ-03)
+  - Clever repurposing of pygal's Line chart (no interpolation, exactly two x-ticks)
     into a genuine slopegraph, with print_labels carrying entity names at both endpoints
     so the legend can be safely omitted
   - 'Correct, well-reasoned semantic color exception: brand green for increases and
     matte red (#AE3030, Imprint position 5) for decreases, redundantly encoded by
-    slope direction as well as color — CVD-safe'
+    slope direction as well as color'
   - 'Clean, fully deterministic code: no randomness needed, only os/sys/pygal imports
-    (all used), comments clearly explain the legend-omission and color-direction rationale'
-  - 10 entities (within the spec's 5-15 sweet spot), plausible Q1-vs-Q4 product-category
-    sales data, with values deliberately spaced so same-column labels don't collide
-  - Canvas is exactly 3200x1800 and theme chrome (background, title, ticks, axis labels)
-    is correctly threaded through the Style object for both light and dark renders
+    (all used), comments explain the legend-omission, color-direction, and value_font_size-offset
+    rationale'
+  - 10 entities (within the spec's 5-15 sweet spot), values deliberately spaced so
+    same-column labels don't collide, canvas exactly 3200×1800, theme chrome correctly
+    threaded through the Style object for both light and dark renders
   weaknesses:
-  - Point/category labels (print_labels) render at value_label_font_size=36 — smaller
-    than the tick labels (44) and axis title — bump to ~44-48 so entity names read
-    as prominently as the numeric ticks, especially at mobile scale
-  - On the Q1 (left) column, each entity's label starts right at the vertical Q1 gridline,
-    so the dotted guide line runs through the first characters of every label (e.g.
-    'Furniture', 'Beauty') — nudge left-column labels a few px right of the line,
-    or don't extend the guide through the label text
-  - Sales scale of 40-114 'units' reads as unrealistically small for whole product-category
-    totals (e.g. company-wide 'Electronics' sales) — scale the data up (thousands
-    of units) or relabel the axis to reflect a smaller reporting unit
-  - The two time points are only labeled via the shared x-axis ticks ('Q1 2024' /
-    'Q4 2024') rather than as a header directly above each column the way classic
-    slopegraphs do — consider whether this reads clearly enough at a glance
-  - Visual refinement is fairly standard (single y-axis grid, no marker edge/stroke
-    treatment) — a subtle ink/white outline on the dots would add definition, especially
-    in the busy mid-chart zone where several lines cross
+  - The two time points are still only labeled via the shared x-axis ticks rather
+    than as a header directly above each column the way classic slopegraphs do — consider
+    whether this reads clearly enough at a glance
+  - 'Visual refinement is still fairly standard: single y-axis grid, no marker edge/stroke
+    treatment — a subtle ink/white outline on the dots would add definition in the
+    busy mid-chart crossing zone'
+  - Mid-chart crossing zone (where increasing and decreasing lines intersect around
+    Q1/Q4 midpoint) remains visually busy — a slight curve/bezier easing or staggered
+    label leaders could reduce clutter
+  - 'Design excellence is still close to a well-configured default: deliberate semantic
+    color choice is a plus, but typography/whitespace treatment hasn''t moved beyond
+    the library-default look'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "slope-basic · python · pygal · anyplot.ai" centered in dark ink at top, clearly readable. Y-axis title "Sales (units)" rotated on the left, x-axis title "Time Period" below the x tick labels "Q1 2024" / "Q4 2024". Y tick labels (30-120) in dark ink, subtle dotted horizontal grid at each 10-unit step.
-      Data: 10 lines connect a Q1 dot to a Q4 dot per product category. First series added (Furniture) is Imprint brand green #009E73; rising entities (Furniture, Beauty, Home Decor, Electronics, Sporting Goods, Automotive) are green, falling entities (Apparel, Food & Bev, Office Supplies, Toys) are matte red #AE3030. Each dot carries its category name directly beside it at both endpoints; no legend (correctly omitted since labels + slope direction already carry the series identity).
-      Legibility verdict: PASS — all title/axis/tick/category text is clearly readable against the light background.
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "slope-basic · python · pygal · anyplot.ai" centered in dark ink, clearly visible and not clipped. Y-axis title "Sales (thousands of units)" rotated on the left; x-axis title "Time Period" below the "Q1 2024" / "Q4 2024" tick labels. Numeric y-tick labels (30-120) and category endpoint labels all render in dark ink at font sizes matching the tick-label scale (44). Subtle dotted y-only grid, no x-guides.
+      Data: 10 lines connect a Q1 dot to a Q4 dot per product category. Rising entities (Furniture, Beauty, Home Decor, Electronics, Sporting Goods, Automotive) render in Imprint brand green #009E73; falling entities (Apparel, Food & Bev, Office Supplies, Toys) render in matte red #AE3030 (Imprint position 5, valid semantic anchor for decline). Each dot carries its category name directly beside it at both endpoints; legend correctly omitted since color+labels are redundant. Q1-side labels now clear the vertical axis guideline (no overlap), and Q4-side labels sit comfortably within the right margin, none clipped at the canvas edge.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, y-axis title, x-axis title, and numeric tick labels all render in light ink, clearly legible against the dark surface. Grid lines remain subtle.
-      Data: Colors are identical hexes to the light render (#009E73 green / #AE3030 red) — only chrome flipped, as required. Category point-labels appear in a muted grayish tone; still clearly distinguishable from the near-black background (no dark-on-dark failure — this is a legitimate secondary/tertiary text tone, not a legibility failure).
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all chrome and data-adjacent text hold sufficient contrast in both renders.
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Title, axis titles, and numeric tick labels all render in light ink (#F0EFE8-equivalent), clearly legible. Category point-labels render in a lighter muted tone, still clearly distinguishable from the near-black background — no dark-on-dark failure observed.
+      Data: Data colors are identical hexes to the light render (#009E73 green / #AE3030 red) — only chrome (background, text) flipped, as required. Line/marker geometry identical between renders.
+      Legibility verdict: PASS — all text clearly readable against the dark background, no dark-on-dark failures found.
+
+    Both renders pass the theme-readability check (5c); no legibility failures in either theme. No canvas-dimension gate file present, so the 3200×1800 landscape canvas passed the post-render size check.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Readable in both themes, but point/category labels (36) sit smaller
-          than tick labels (44) and axis title — should be closer in weight to the
-          ticks.
+        comment: value_label_font_size raised to 44, now matching tick-label size
+          (44) — entity names read as prominently as the numeric ticks; readable in
+          both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text overlap, but Q1-column labels start right on top
-          of the vertical gridline, which runs through the first characters of each
-          label.
+        comment: Q1-column labels no longer collide with the vertical guideline; no
+          other text/data collisions observed
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: dots_size=18 and stroke_width=6 are appropriately prominent for this
-          sparse (10-point) dataset.
+        comment: dots_size=18 and stroke_width=6 appropriately prominent for this
+          sparse 10-line dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red direction coding is redundantly backed by slope direction,
-          so color isn't the sole signal; Imprint hues are CVD-tuned.
+        comment: direction color is redundantly backed by slope geometry, not a sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, no clipping/overflow; mid-chart line crossings
-          create a somewhat busy convergence zone.
+        comment: correct 3200x1800 canvas, no clipping, but the mid-chart convergence
+          zone where increasing/decreasing lines cross remains visually busy
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches mandated format; axis labels have units ('Sales (units)')
-          and are descriptive ('Time Period').
+        comment: descriptive with units — 'Sales (thousands of units)', 'Time Period'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; red used is the Imprint semantic anchor
-          #AE3030 (valid loss/decline exception); both bg colors are theme-correct.'
+        comment: 'first series #009E73; red is the valid semantic-anchor exception
+          for decline; both theme backgrounds and chrome correct'
     design_excellence:
       score: 12
       max: 20
@@ -121,22 +125,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Style with a deliberate semantic-direction palette and a documented
-          legend-omission rationale — above generic defaults but not exceptional polish.
+        comment: Deliberate semantic-direction palette and documented rationale, above
+          generic defaults, but not publication-level polish
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Y-axis-only grid and generous margins, but no marker edge/stroke
-          treatment or other refinement beyond the basics.
+        comment: Y-axis-only grid, generous margins, but still no marker edge/stroke
+          treatment
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-by-direction plus direct labels gives an immediate up/down
-          read, though the busy mid-chart crossings dilute the focal point somewhat.
+        comment: Color-by-direction + direct labels give an immediate read, diluted
+          somewhat by busy mid-chart crossings
     spec_compliance:
       score: 14
       max: 15
@@ -146,31 +150,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements a 2-point slopegraph via pygal.Line with interpolate=None.
+        comment: correct slopegraph adaptation
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Endpoint labels and direction color-coding present; time-point labeling
-          is via shared x-ticks rather than a per-column header as classic slopegraphs
-          use.
+        comment: time points still labeled only via shared x-ticks rather than a per-column
+          header
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: value_start/value_end map correctly to Q1/Q4 positions; y-range (30-120)
-          shows all data with padding.
+        comment: correct mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend omission is a reasoned,
-          valid design choice given direct labeling.
+        comment: title format correct, legend correctly omitted
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -178,22 +179,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 10 entities with a mix of increases and decreases, covering the core
-          slopegraph use case well.
+        comment: shows both increase and decrease directions across 10 categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Q1-vs-Q4 product category sales is a plausible, neutral business
-          scenario.
+        comment: plausible, neutral Q1-vs-Q4 product-category sales scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 40-114 'units' reads small for company-wide product-category totals
-          — scale or relabel the unit.
+        comment: re-labeling the axis 'thousands of units' fixes the previously-flagged
+          implausibly small scale
     code_quality:
       score: 10
       max: 10
@@ -203,32 +202,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script.
+        comment: flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness to seed.
+        comment: fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, pygal — all used.
+        comment: only os/sys/pygal, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, clear rationale comments.
+        comment: clean, no fake functionality, comments explain non-obvious offset
+          behavior
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html via current render_to_png/render()
-          API.
+        comment: saves plot-{THEME}.png and .html via current API
     library_mastery:
       score: 7
       max: 10
@@ -238,22 +237,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic Style object usage with sensible show_dots/print_labels/show_y_guides
-          configuration.
+        comment: idiomatic Style/Line usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Creative use of print_labels + interpolate=None to build a slopegraph
-          pygal has no native chart type for.
-  verdict: REJECTED
+        comment: creative print_labels + interpolate=None workaround for a chart type
+          pygal has no native support for
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - direct-labeling
+  - manual-ticks
+  - html-export
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - publication-ready
+  styling: []
