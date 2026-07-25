@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
-Library: plotly 6.9.0 | Python 3.13.12
-Quality: 86/100 | Updated: 2026-07-25
+Library: plotly 6.9.0 | Python 3.13.14
+Quality: 84/100 | Updated: 2026-07-25
 """
 
 import os
