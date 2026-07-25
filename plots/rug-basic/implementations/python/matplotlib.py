@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 rug-basic: Basic Rug Plot
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-04-30
+Library: matplotlib 3.11.1 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-07-25
 """
 
 import os
