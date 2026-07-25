@@ -38,6 +38,7 @@ const randNormal = () => {
 
 const groupsRaw = MONTHS.map((m) => ({
   name: m.name,
+  mean: m.mean,
   samples: Array.from({ length: OBS_PER_GROUP }, () => m.mean + m.std * randNormal()),
 }));
 
@@ -70,7 +71,11 @@ const xGrid = d3.range(GRID_POINTS).map((i) => xMin + (i / (GRID_POINTS - 1)) * 
 const groups = groupsRaw.map((g) => {
   const bandwidth = silvermanBandwidth(g.samples);
   const density = kde(g.samples, xGrid, bandwidth);
-  return { name: g.name, density };
+  // Clip near-zero tails below 0.8% of this group's own peak so the Gaussian
+  // KDE's asymptotic tails taper to a clean point instead of a flat sliver.
+  const peak = d3.max(density);
+  const clipped = density.map((d) => (d < peak * 0.008 ? 0 : d));
+  return { name: g.name, mean: g.mean, density: clipped };
 });
 const globalMaxDensity = d3.max(groups, (g) => d3.max(g.density));
 
@@ -84,7 +89,14 @@ const axisY = baselineY(groups.length - 1) + 40;
 
 // --- Scales ---------------------------------------------------------------
 const x = d3.scaleLinear().domain([xMin, xMax]).range([0, iw]);
-const color = d3.scaleSequential(d3.interpolateRgbBasis(t.seq)).domain([0, groups.length - 1]);
+// imprint_seq is reserved for genuinely continuous data, so key the gradient
+// to each group's mean temperature (a real continuous quantity) rather than
+// its ordinal position — coldest month anchors to brand green, hottest to blue,
+// making ridge color a redundant encoding of the same seasonal signal as the
+// x-position of each hump.
+const color = d3
+  .scaleSequential(d3.interpolateRgbBasis(t.seq))
+  .domain(d3.extent(groups, (g) => g.mean));
 
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -104,7 +116,7 @@ groups.forEach((grp, i) => {
   g.append("path")
     .datum(points)
     .attr("d", area)
-    .attr("fill", color(i))
+    .attr("fill", color(grp.mean))
     .attr("fill-opacity", 0.92)
     .attr("stroke", t.pageBg)
     .attr("stroke-width", 2);
