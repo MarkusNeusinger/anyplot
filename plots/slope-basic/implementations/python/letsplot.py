@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-25
@@ -23,6 +23,7 @@ from lets_plot import (
     labs,
     layer_tooltips,
     scale_color_manual,
+    scale_linetype_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -130,9 +131,9 @@ plot = (
     # Background lines: dimmed to let top movers stand out
     + geom_segment(
         data=seg_normal,
-        mapping=aes(x="x_start", y="y_start", xend="x_end", yend="y_end", color="direction"),
+        mapping=aes(x="x_start", y="y_start", xend="x_end", yend="y_end", color="direction", linetype="direction"),
         size=1.8,
-        alpha=0.40,
+        alpha=0.55,
         tooltips=_tooltip_normal,
     )
     # Top-mover lines: bold, fully opaque — emphasises the biggest Q1→Q4 changes
@@ -151,13 +152,16 @@ plot = (
         data=df_right, mapping=aes(x="x", y="value", label="label"), hjust=0, nudge_x=0.07, size=4.2, color=INK_SOFT
     )
     + scale_color_manual(values={"Increase": COLOR_INCREASE, "Decrease": COLOR_DECREASE})
+    + scale_linetype_manual(values={"Increase": "solid", "Decrease": "dashed"}, guide="none")
     + scale_x_continuous(breaks=[0, 1], labels=["Q1 Sales ($K)", "Q4 Sales ($K)"], limits=[-1.05, 2.05])
     + scale_y_continuous(limits=[20, 300])
     + labs(title="slope-basic · python · letsplot · anyplot.ai", x="", y="Sales ($K)", color="Change")
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        # color matches fill so the rect draws no border (theme_minimal has no
+        # spines by default — the "remove all spines" clean-look alternative)
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid_major_y=element_line(color=GRID_COLOR, size=0.3),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
