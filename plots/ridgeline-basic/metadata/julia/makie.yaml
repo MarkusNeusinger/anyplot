@@ -1,0 +1,255 @@
+library: makie
+language: julia
+specification_id: ridgeline-basic
+created: '2026-07-25T04:12:30Z'
+updated: '2026-07-25T04:26:49Z'
+generated_by: claude-sonnet
+workflow_run: 30143347973
+issue: 923
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
+review:
+  strengths:
+  - 'Ridge fill color is now keyed to actual mean temperature (min-max normalized
+    `temp_norm`), not month index — the gradient itself visually reinforces the warm/cold
+    seasonal story instead of duplicating the Y-axis''s chronological ordering; Jan
+    (coldest) renders brand green #009E73, Jul (warmest) renders the gradient''s blue
+    endpoint'
+  - Jan and Jul now include a secondary minority component (a cold-snap and a heat-spike
+    bump respectively) layered onto the base Gaussian, producing genuinely asymmetric/bimodal
+    KDE shapes — the ridgeline now demonstrates distribution *shape* differences,
+    not just shift/spread differences, directly answering the attempt-1 DQ-01 note
+  - Unused `using ColorSchemes` import removed; all four imports (CairoMakie, Colors,
+    Random, Statistics) are actually used
+  - 'Correct ridgeline construction preserved: per-month Gaussian KDE (Silverman bandwidth)
+    normalized to a shared ridge height, drawn back-to-front (Dec first, Jan last)
+    so nearer ridges correctly occlude farther ones'
+  - Y-axis uses month labels via `yticks = (baselines, months)` instead of numeric
+    offsets, exactly as the spec requires
+  - 'Full theme-adaptive chrome: PAGE_BG/INK/INK_SOFT tokens correctly flip between
+    light/dark saves, including the ridge-crest outline stroke color (dark ink in
+    light theme, light ink in dark theme) — confirmed visually in both renders'
+  - Canvas saved at the exact canonical 3200x1800 landscape target via size=(1600,900)
+    + px_per_unit=2
+  - 'Data is realistic and appropriately scaled: monthly mean/std pairs plausibly
+    match a temperate (Berlin-like) climate, and the cold-snap/heat-spike bumps are
+    physically plausible magnitudes'
+  weaknesses:
+  - Ridge overlap remains aggressive (ridge_height=2.3 vs. row step=1.0, i.e. well
+    beyond the spec's suggested 'typically 50-70% overlap') — still fully readable
+    thanks to the ink outlines and back-to-front z-ordering, so this is a minor polish
+    note rather than a defect
+  - LM-01/LM-02 usage stays close to the library-prompt skeleton (manual band!+lines!
+    loop, cgrad/get gradient sampling) rather than reaching for a more distinctive
+    Makie-specific mechanism; not a deduction-worthy issue on its own but the ceiling
+    for Library Mastery
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "ridgeline-basic · julia · makie · anyplot.ai" reads clearly at the top. X-axis label "Temperature (°C)" and tick labels (-10, 0, 10, 20, 30) render in dark ink and are fully legible. Y-axis shows month labels Jan-Dec (bottom to top) instead of numeric ticks, per spec. Only the bottom spine is kept; subtle ~15%-alpha vertical gridlines. Ink-colored (dark) outline strokes trace every ridge crest for edge definition.
+      Data: 12 overlapping KDE ridges stack bottom (Jan) to top (Dec). Fill color is a green-to-blue gradient keyed to each month's actual mean temperature (not month index): Jan (coldest, bottom) is Imprint brand green #009E73, Jul (warmest, middle) is the gradient's blue endpoint, and intermediate months interpolate smoothly by temperature rather than by chronological position. Jan's ridge shows a distinct extra shoulder/bump toward the cold end (~-10 to -15°C) and Jul's ridge shows an extra shoulder toward the hot end (~27-30°C) — both are visibly asymmetric/bimodal versus the other ten symmetric ridges, demonstrating genuine shape variation.
+      Legibility verdict: PASS — all text (title, axis label, tick labels, month labels) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis label, and tick/month labels now render in light ink (#F0EFE8 / #B8B7B0), clearly legible against the dark surface — no dark-on-dark text anywhere. Ridge-crest outline strokes now render in light ink (flipped from dark in the light render), correctly following the theme-adaptive INK token, and remain visible against the saturated ridge fills.
+      Data: The 12 ridge fill colors are pixel-identical to the light render (Jan still #009E73 brand green, Jul still the gradient's blue endpoint, same temperature-keyed gradient) — only chrome (background, text, grid, spine, outline stroke) flipped. The Jan cold-snap bump and Jul heat-spike bump are equally visible in this render.
+      Legibility verdict: PASS — no unreadable or dark-on-dark elements found; both renders pass the theme-readability check.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; all text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 1.3px ink outline keeps overlapping ridges distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq gradient is CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800 canonical canvas; good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis label with units (°C); mandated title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (coldest) series is #009E73; imprint_seq used for the single-polarity
+          continuous mapping; theme-correct backgrounds in both renders'
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Data-driven sequential gradient, clean typography, clearly above
+          library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Bottom-only spine, subtle grid, generous whitespace, theme-adaptive
+          ink-stroke outlines
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Color now keyed to mean temperature (fixed from attempt 1), and asymmetric
+          Jan/Jul bumps reveal shape differences beyond shift/spread
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct overlapping KDE ridgeline
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Partial vertical overlap, categorical Y-axis, meaningful (chronological)
+          group order all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = temperature, Y = group identity via offset baselines, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches 'ridgeline-basic · julia · makie · anyplot.ai'; no
+          legend needed (Y labels identify groups)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Mean, spread, AND shape (bimodality via cold-snap/heat-spike bumps)
+          now vary across the 12 ridges
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible temperate-climate monthly temperature distributions
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible °C range and sample sizes (250 obs/month)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Unused `using ColorSchemes` removed; all remaining imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic band!/lines! loop, tuple-based custom yticks, theme-adaptive
+          Axis kwargs
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: band! area-fill + cgrad/get gradient sampling driven by real data
+          (temperature), going beyond the library-prompt skeleton's index-based coloring
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - normalization
+  styling:
+  - custom-colormap
+  - edge-highlighting
