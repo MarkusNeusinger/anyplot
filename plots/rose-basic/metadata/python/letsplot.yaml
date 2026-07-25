@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: rose-basic
 created: '2025-12-23T19:44:36Z'
-updated: '2026-07-25T10:32:55Z'
+updated: '2026-07-25T10:53:15Z'
 generated_by: claude-sonnet
 workflow_run: 30154325317
 issue: 1003
@@ -12,63 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/letsplot/plot-dark.html
-quality_score: 79
+quality_score: 86
 review:
   strengths:
-  - 'Correct rose/coxcomb geometry via coord_polar() + geom_bar(stat=''identity''):
-    radius is proportional to value, not area, matching the spec''s explicit requirement'
-  - Natural circular ordering with Jan placed at 12 o'clock and months proceeding
-    clockwise, exactly as the spec recommends for time-cyclical data
-  - Radial gridlines (0/50/100/150) are kept for value estimation while the code intentionally
-    simplifies the design; single consistent Imprint brand hue (#009E73) used across
-    all 12 wedges per the spec's 'consistent color scheme' option
-  - Realistic, neutral seasonal rainfall dataset (65-170mm) with a plausible monsoon-like
-    summer peak that gives the chart a clear visual focal point
+  - 'Border artifact from Attempt 1 fully resolved: verified corner pixels at (5,5)
+    and (w-5,h-5) exactly equal PAGE_BG in both renders (250,248,241 light / 26,26,23
+    dark), no residual olive-green frame'
+  - Angular spoke gridlines removed via panel_grid_minor=element_blank(); only clean
+    concentric radial gridlines remain, aiding value estimation without clutter
+  - 'Correct rose/coxcomb geometry: coord_polar() + geom_bar(stat=''identity''), radius
+    (not area) proportional to value, matching the spec exactly'
+  - Jan placed at 12 o'clock with natural clockwise month ordering; realistic, neutral
+    seasonal rainfall dataset with a clear Jul peak giving a strong visual focal point
   - Theme-adaptive chrome correctly threads INK/INK_SOFT/PAGE_BG tokens through title,
-    axis text and grid for the interior plot area; data color is pixel-identical between
-    the light and dark renders
-  - Clean, deterministic, single-block script with no unused imports and correct plot-{theme}.png/.html
-    output via ggsave(scale=4)
+    axis text, and grid; brand-green (#009E73) data color is pixel-identical between
+    light and dark renders
+  - Clean, deterministic, single-block script with no unused imports; correct plot-{theme}.png/.html
+    output pair for this interactive library
   weaknesses:
-  - 'Unwanted ~25px solid border/frame (RGB 71,112,76 / #476E4C, an olive-green not
-    in the Imprint palette or style guide) runs around all four edges of the canvas
-    in BOTH plot-light.png and plot-dark.png, at the identical color in both renders.
-    This fails the theme-adaptive chrome rule (chrome must flip between light/dark;
-    this frame does not) and reads as an unintended rendering artifact rather than
-    a design choice. Likely cause: theme_minimal() applies a default plot/panel border
-    that the custom theme() override does not fully clear -- plot_background=element_rect(fill=PAGE_BG,
-    color=PAGE_BG) sets fill and color to match, but a residual border stroke with
-    a different default color is still being drawn. Fix: explicitly zero out the border
-    (e.g. element_rect(..., size=0) or the lets-plot equivalent for suppressing panel/plot
-    border stroke) and re-render both themes, then sample corner pixels to confirm
-    they exactly equal PAGE_BG.'
-  - Code comment says panel_grid_major_x=element_blank() should 'drop angular spokes,
-    keep radial rings', but both renders still show angular spoke gridlines running
-    from the center through each wedge boundary out to the outer ring -- the intended
-    visual simplification was not achieved (not a hard failure since the spokes aid
-    reading wedge boundaries, but the code's stated intent and the actual render disagree;
-    either restyle to truly remove them or update the comment/design decision).
-  - Aesthetic polish (DE-01/DE-02) is held back mainly by the border artifact above;
-    once removed, the theme-adaptive minimalism would read as considerably more refined.
-  - 'Library Mastery: only baseline lets-plot/ggplot grammar is used (coord_polar
-    + geom_bar); no interactive tooltip customization or other lets-plot-distinctive
-    feature is highlighted despite the interactive HTML export being one of the library''s
-    main differentiators versus static plotnine/ggplot2.'
+  - 'Title omits the mandated {language} token: current title is ''Monthly Rainfall
+    Distribution · rose-basic · letsplot · anyplot.ai'' but the required format is
+    ''{Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai'' with
+    language ∈ {python, r, julia, javascript} — fix: ''Monthly Rainfall Distribution
+    · rose-basic · python · letsplot · anyplot.ai'''
+  - Library Mastery still relies on baseline ggplot grammar shared with plotnine;
+    no lets-plot-distinctive feature (e.g. custom tooltip content in the HTML export)
+    is exercised despite interactivity being a signature differentiator of this library
+  - 'Design Excellence is competent but not exceptional: single flat-alpha fill with
+    no saturation/value variation (the spec explicitly offers ''single color with
+    varying saturation'' as an option); theme_minimal() base still shows through in
+    overall polish'
   image_description: |-
     Light render (plot-light.png):
-      Background: Interior plot/panel area is a warm off-white matching the required #FAF8F1. However, a ~25px solid olive-green border (measured RGB 71,112,76 / #476E4C) runs around all four outer edges of the 2400x2400 canvas -- this color is not part of the Imprint palette or style guide and does not belong.
-      Chrome: Title "Monthly Rainfall Distribution · rose-basic · letsplot · anyplot.ai" is bold, dark, and fully legible at the top-left. Month labels (Jan-Dec) ring the outside of the polar plot in medium-gray, all legible. Radial axis ticks (0/50/100/150) and the "Rainfall (mm)" axis title on the left are legible dark/soft-ink text against the light background. Radial gridlines and angular spokes are thin and subtle, visible but not dominant.
-      Data: All 12 wedges are filled with a single Imprint brand green (#009E73, alpha 0.9), radius proportional to monthly rainfall value, tallest at Jul (~168mm) tapering to shortest around Feb (~65mm). Thin white gaps separate adjacent wedges.
-      Legibility verdict: PASS for all text; FAIL for the border frame color, which is off-palette and not theme-neutral chrome.
+      Background: Warm off-white, confirmed by direct pixel sampling at (250,248,241) — exactly PAGE_BG (#FAF8F1). No border artifact: corner pixels flush with the interior background on all four edges.
+      Chrome: Title "Monthly Rainfall Distribution · rose-basic · letsplot · anyplot.ai" bold and dark, fully legible, spans ~70% of canvas width. Month labels (Jan-Dec) ring the outside of the polar plot in medium-gray (INK_SOFT), all legible with no overlap. Radial ticks (0/50/100/150) and the "Rainfall (mm)" axis title are legible in dark/soft-ink text. Only concentric radial gridlines are visible (no angular spokes cutting through wedges).
+      Data: All 12 wedges use a single Imprint brand green (#009E73, alpha 0.9), radius proportional to monthly rainfall, tallest at Jul (~168mm), shortest at Feb (~65mm).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Interior plot/panel area is a warm near-black matching the required #1A1A17. The same ~25px olive-green border (identical RGB 71,112,76, unchanged from the light render) still rings all four canvas edges -- since it does not flip with the theme, it fails the "only chrome adapts" rule.
-      Chrome: Title and axis text switch to light ink (#F0EFE8/#B8B7B0-ish) and remain fully legible against the dark background; no dark-on-dark or light-on-light failures for any title/axis/tick text. Grid rings and spokes are still subtly visible in light gray against the dark panel.
-      Data: Wedge colors are pixel-identical to the light render (#009E73), confirming the brand hue is theme-invariant as required. Same radius pattern, same relative sizing, same focal peak at Jul.
-      Legibility verdict: PASS for all title/axis/tick text; FAIL for the border frame, which is the same non-adaptive off-palette color as the light render.
+      Background: Warm near-black, confirmed by direct pixel sampling at (26,26,23) — exactly PAGE_BG (#1A1A17). No border artifact: corner pixels flush with the interior background on all four edges.
+      Chrome: Title and axis text correctly switch to light ink (INK/INK_SOFT) and remain fully legible against the dark background — no dark-on-dark failures anywhere. Same clean concentric radial gridlines as the light render, no angular spokes.
+      Data: Wedge colors are pixel-identical to the light render (#009E73), confirming the brand hue is theme-invariant as required.
+      Legibility verdict: PASS
+
+    Both Attempt 1 defects (stray olive-green border frame, residual angular spoke gridlines) are confirmed fixed in both renders. Remaining gap found this attempt: the title string omits the mandated {language} token ("python") required by the title-format spec — see Weaknesses.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -76,80 +66,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis titles, tick labels, and month labels are all clearly
-          legible in both themes with no dark-on-dark or light-on-light failures
+        comment: All font sizes explicitly set, readable in both themes; title fontsize
+          (12pt) intentionally reduced for the long descriptive+mandated title
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/text or text/data collisions; month labels evenly spaced
-          around the perimeter
+        comment: No overlap between month labels, ticks, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Solid, high-contrast wedges clearly visible against both backgrounds;
-          sparse 12-category data appropriately rendered at full opacity-adjacent
-          alpha=0.9
+        comment: 12 wedges clearly visible, alpha=0.9 appropriate for sparse categorical
+          data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue design, no reliance on red-green discrimination, good
-          contrast against both backgrounds
+        comment: Single brand-green series, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas dimensions correct (2400x2400) and nothing is clipped, but
-          an unintended ~25px olive-green border frames the entire canvas on all sides
+        passed: true
+        comment: Border artifact fixed (verified via corner-pixel sampling); plot
+          well-proportioned within the square canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with units on the radial axis ('Rainfall (mm)');
-          x-axis left unlabeled since month names are self-explanatory tick labels
+        comment: Rainfall (mm) axis title includes units; months are self-explanatory
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First/only series correctly uses Imprint #009E73 and interior background
-          matches #FAF8F1/#1A1A17, but the canvas border color (#476E4C) is off-palette
-          and identical (non-adaptive) between light and dark renders'
+        passed: true
+        comment: 'Brand green #009E73, correct theme-adaptive backgrounds confirmed
+          by pixel sampling, both renders theme-correct'
     design_excellence:
-      score: 8
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 5
         max: 8
         passed: false
-        comment: Theme-adaptive minimalism is a good idea but the stray border frame
-          undercuts the intended polish
+        comment: Clean minimal polar chart, professional but not exceptional; single
+          flat color fill
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Subtle grid and generous whitespace inside the panel, but the unremoved
-          border and the angular spokes that the code comment says should be gone
-          keep this at baseline
+        comment: Panel border and angular spokes removed this attempt; grid subtle,
+          generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: Radius-based sizing naturally creates a clear visual focal point
-          at the Jun-Aug rainfall peak
+        passed: false
+        comment: Clear focal point at Jul peak via radius encoding and natural month
+          ordering
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -157,50 +141,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar bar / rose chart via coord_polar() + geom_bar(stat='identity')
+        comment: Correct rose/coxcomb via coord_polar()+geom_bar(stat='identity')
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Radius proportional to value, natural circular ordering, consistent
-          single hue, 12 o'clock start, radial gridlines all present
+        comment: Radius-proportional segments, circular month ordering, radial gridlines,
+          consistent single color
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=month (angular), y=rainfall (radius); all 12 categories shown
+        comment: x=month, y=rainfall correct, all 12 months shown
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title matches the repo-wide convention used by all sibling rose-basic
-          implementations; no legend needed for a single series
+        passed: false
+        comment: Title omits the mandated {language} token ('python') required by
+          the '{spec-id} · {language} · {library} · anyplot.ai' format; structure
+          otherwise correct, no legend needed (single series)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers the core rose-chart features for the basic tier; does not
-          demonstrate the alternate distinct-colors-per-category option (not required)
+        comment: Radius encoding, circular time ordering, and radial gridlines for
+          estimation all present and uncluttered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral monthly rainfall scenario
+        comment: Plausible seasonal rainfall pattern, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 65-170mm monthly rainfall values are realistic
+        comment: 65-168mm monthly rainfall values are realistic
     code_quality:
       score: 10
       max: 10
@@ -210,31 +195,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes, single script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic fixed data, no randomness
+        comment: Fixed data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: All imports (including PIL.Image) used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: PIL compositing step is a justified, well-commented workaround for
+          coord_polar()'s transparent margin
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png and .html via current ggsave(scale=4) API
+        comment: Saves plot-{theme}.png and plot-{theme}.html correctly
     library_mastery:
       score: 6
       max: 10
@@ -244,23 +230,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic grammar-of-graphics composition (coord_polar + geom_bar
-          + theme_minimal)
+        comment: Idiomatic ggplot-grammar usage via coord_polar, geom_bar, theme()
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Relies on baseline ggplot-style grammar shared with plotnine; does
-          not showcase lets-plot-distinctive interactivity beyond the default HTML
-          export
-  verdict: REJECTED
+        comment: No lets-plot-distinctive interactive feature (e.g. tooltip customization
+          in HTML export) exercised; baseline grammar shared with plotnine
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - polar-projection
-  patterns:
-  - data-generation
+  - html-export
+  patterns: []
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
