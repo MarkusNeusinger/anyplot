@@ -2,129 +2,137 @@ library: bokeh
 language: python
 specification_id: rose-basic
 created: '2025-12-23T19:43:12Z'
-updated: '2026-04-30T07:26:13Z'
+updated: '2026-07-25T10:27:05Z'
 generated_by: claude-sonnet
-workflow_run: 25151817338
+workflow_run: 30154035019
 issue: 1003
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 92
 review:
   strengths:
-  - Alpha-based data encoding elegantly communicates rainfall intensity while preserving
-    a single cohesive color story
-  - 'Excellent data quality: realistic monthly rainfall values with full seasonal
-    variation, 15/15'
-  - 'Perfect code quality: clean, deterministic, idiomatic structure with no functions
-    or classes'
-  - Radial gridlines with dashed style at low alpha are aesthetically refined and
-    functional
-  - Theme-adaptive chrome correctly flips between light and dark renders with no dark-on-dark
-    failures
+  - Correct radius-proportional (not area-proportional) wedge encoding via bokeh's
+    native radius= parameter, matching the spec's explicit 'radius proportional to
+    value, not area' requirement.
+  - Single-hue Imprint green fill with fill_alpha graded by value creates a genuine
+    redundant encoding (radius + opacity both track magnitude), giving the chart a
+    clear focal point on the wet winter months.
+  - Circular ordering now correctly places January at 12 o'clock with the months proceeding
+    clockwise, matching the spec's 'start position typically at top for time data'
+    note.
+  - 'Title now matches the mandated format exactly: ''rose-basic · python · bokeh
+    · anyplot.ai''.'
+  - Genuine HoverTool interactivity (Month/Rainfall tooltip) rather than simulated
+    hover states, well-scoped to the HTML artifact per the fairness rules for interactive
+    libraries.
+  - 'Theme-adaptive chrome correctly wired: exact PAGE_BG/INK/INK_SOFT hexes for both
+    themes, subtle dashed radial gridlines, default axes fully hidden.'
+  - Square 2400×2400 canvas is the right format choice for a radially symmetric chart
+    and passes the canvas dimension gate exactly.
   weaknesses:
-  - Scale labels at 15pt are below the 18pt minimum for pixel-based libraries — increase
-    to 18pt
-  - Non-standard title format 'Monthly Rainfall · rose-basic · bokeh · anyplot.ai'
-    instead of the required 'rose-basic · bokeh · anyplot.ai'
-  - Summer months produce very small petals leaving bottom canvas underutilized —
-    3600x3600 square canvas would better suit this symmetric polar layout
-  - 'Limited LM-02: no Bokeh-distinctive interactive features (HoverTool would add
-    genuine value)'
+  - Design excellence is solid but not exceptional — the alpha-graded fill is a nice
+    touch but the overall composition (concentric dashed rings, thin spoke dividers,
+    plain month/value labels) still reads as a fairly standard rose-chart treatment
+    rather than a highly distinctive one.
+  - Library Mastery is good but not maximal — the implementation uses figure/wedge/ColumnDataSource/HoverTool
+    idiomatically, but doesn't reach for any further bokeh-distinctive capability
+    (e.g. CustomJS interactivity, linked panning/selection, or a colorbar-driven continuous
+    encoding) beyond the single HoverTool.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "Monthly Rainfall · rose-basic · bokeh · anyplot.ai" in dark INK (#1A1A17) at 28pt, clearly readable; month labels at 20pt in dark INK, readable; scale labels at 15pt in INK_SOFT (#4A4A44), readable but below 18pt minimum
-      Data: 12 rose chart wedges in brand green #009E73 with alpha varying from ~0.35 (Jul, lowest rainfall) to ~1.0 (Jan, highest rainfall); dashed concentric gridlines at 22% alpha; radial dividers at 18% alpha; winter months (Nov-Feb) dominate visually
-      Legibility verdict: PASS (all text readable, though scale labels could be larger)
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "rose-basic · python · bokeh · anyplot.ai" centered at top in dark ink (#1A1A17), clearly legible and fully within canvas bounds. 12 month labels (Jan at 12 o'clock, proceeding clockwise through Feb, Mar, ... to Dec) ring the perimeter at 42pt, all readable and none clipped. Radial scale labels ("23 mm"/"45 mm"/"68 mm"/"90 mm") stacked vertically on the right in soft gray ink (#4A4A44), legible against the light background and not overlapping the "Mar"/"Feb" month labels. Subtle dashed concentric gridlines (alpha 0.22) and faint spoke dividers (alpha 0.18) are visible but not distracting.
+      Data: All 12 wedges filled with brand green #009E73, with fill_alpha graded by rainfall value — winter months (Dec/Jan/Nov, ~75-90mm) render fully saturated and largest, low-rainfall summer months (Jun/Jul, ~15-20mm) render pale and small. White (page-background-colored) borders cleanly separate adjacent wedges.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title, month labels, and scale labels all render in light tone (INK = #F0EFE8 / INK_SOFT = #B8B7B0); no dark-on-dark failures; gridlines subtle on dark surface
-      Data: Green wedges identical to light render — same #009E73 base color with same alpha gradation; data colors are theme-invariant as required
-      Legibility verdict: PASS (all chrome flips correctly; no elements lost in the dark background)
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Title and month labels render in light cream (#F0EFE8), clearly visible against the dark background — no dark-on-dark failures. Radial mm-scale labels use lighter gray (#B8B7B0), also legible. Gridlines and spoke dividers use the same light-ink color at the same low alpha values as the light render's dark-ink equivalents.
+      Data: Colors are visually identical to the light render — same brand green #009E73 with the same alpha gradation per month. Only chrome (background, text, gridline color) flips between themes, confirming theme-adaptive tokens are threaded through correctly.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title 28pt and month labels 20pt explicitly set; scale labels only
-          15pt (below 18pt minimum for pixel-based libs)
+        comment: All font sizes explicit (50pt title, 42pt month labels, 34pt value
+          labels); readable in both themes, no clipping
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Jan label tight against large Jan wedge at top; no full overlaps
+        comment: Value-scale labels sit clear of month labels; no text/data collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wedges clearly visible across full alpha range; gridlines appropriately
-          subtle
+        comment: Wedges clearly visible and well-differentiated via radius + alpha
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue with luminance variation; CVD-safe; no red-green conflict
+        comment: Good contrast against both surfaces, single-hue encoding avoids red-green
+          issues
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Chart centered but summer petals leave bottom third of landscape
-          canvas underutilized; scale labels float far right
+        comment: 2400x2400 square canvas gate passed; good proportions, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Scale labels include mm units; title descriptive; no traditional
-          axes needed
+        comment: Radial mm-scale labels serve as the descriptive value axis; title
+          correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Primary series #009E73; backgrounds #FAF8F1/#1A1A17; chrome tokens
-          flip correctly in both themes'
+        comment: 'First series #009E73; correct theme-adaptive #FAF8F1/#1A1A17 backgrounds,
+          both renders theme-correct'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Alpha-based data encoding is elegant and intentional; single-color
-          depth creates professional polish above defaults
+        comment: Alpha-graded single-hue fill deliberately ties visual weight to data
+          value
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Dashed concentric gridlines at 22% alpha, radial dividers at 18%
-          alpha, axes hidden; PAGE_BG line_color for clean wedge separation
+        comment: Default axes hidden, custom low-alpha gridlines/dividers, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Alpha gradient directly encodes magnitude creating clear visual hierarchy;
-          seasonal story immediately legible
+        comment: Clear winter-rainfall focal point via alpha gradation, now correctly
+          anchored with January at 12 o'clock
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,55 +140,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rose/Nightingale chart; equal-angle wedges with radius proportional
-          to value; starting from north
+        comment: Correct rose/coxcomb chart, radius-proportional not area-proportional
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Radial gridlines, 12 monthly categories, consistent color scheme,
-          top start position all present
+        comment: January now starts at 12 o'clock, consistent single-color scheme,
+          radial gridlines present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angular positions = months, radius = rainfall values; all 12 months
-          visible
+        comment: Categorical months on angle, values on radius, all 12 categories
+          shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title includes required components but uses non-standard format 'Monthly
-          Rainfall · rose-basic · bokeh · anyplot.ai' instead of 'rose-basic · bokeh
-          · anyplot.ai'; no legend appropriate for single series
+        comment: Title now includes the python language segment matching the mandated
+          format
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full range from 90mm winter peak to 15mm summer trough; cyclical
-          pattern fully demonstrated
+        comment: Shows all 12 months, radial gridlines, and value-scale labels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly rainfall in mm is genuine, neutral, comprehensible; Mediterranean-type
-          climate is plausible
+        comment: Plausible seasonal rainfall pattern, neutral subject matter
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15-90mm monthly range realistic; seasonal gradient consistent with
-          temperate climates
+        comment: 15-90mm monthly rainfall values are realistic
     code_quality:
       score: 10
       max: 10
@@ -190,34 +193,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save; no functions or classes'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data; no seed needed
+        comment: Deterministic fixed data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; os, sys, numpy, bokeh.* all needed
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; sys.path manipulation is legitimate fix for
-          bokeh.py shadowing; no fake UI
+        comment: Appropriate complexity, genuine (not fake) interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, current bokeh API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -225,22 +227,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of figure(), ColumnDataSource, p.wedge() glyph, export_png
-          + output_file + save pattern
+        comment: figure/wedge/ColumnDataSource used idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Vectorized fill_alpha via ColumnDataSource is Bokeh-characteristic,
-          but no HoverTool, callbacks, or other truly Bokeh-distinctive features
+        passed: true
+        comment: Genuine HoverTool tooltip, well-scoped to the HTML artifact
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
+  - polar-projection
+  - hover-tooltips
   - html-export
   patterns:
+  - data-generation
   - columndatasource
   - iteration-over-groups
   dataprep:

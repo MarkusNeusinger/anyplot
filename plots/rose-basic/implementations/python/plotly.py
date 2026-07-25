@@ -1,7 +1,7 @@
 """ anyplot.ai
 rose-basic: Basic Rose Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-04-30
+Library: plotly 6.9.0 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-07-25
 """
 
 import os
@@ -17,6 +17,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
+# Imprint sequential colormap — brand green -> blue, single-polarity continuous data
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+
 # Data - Monthly rainfall (mm) showing pronounced seasonal pattern
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 rainfall = [92, 74, 60, 45, 32, 18, 12, 22, 48, 75, 98, 105]
@@ -31,7 +34,7 @@ fig.add_trace(
         width=0.9,
         marker={
             "color": rainfall,
-            "colorscale": "viridis",
+            "colorscale": imprint_seq,
             "line": {"color": PAGE_BG, "width": 2},
             "cmin": 0,
             "cmax": max(rainfall),
@@ -41,35 +44,40 @@ fig.add_trace(
 )
 
 fig.update_layout(
+    autosize=False,
+    width=600,
+    height=600,
     title={
-        "text": "rose-basic · plotly · anyplot.ai",
-        "font": {"size": 48, "color": INK},
+        "text": "rose-basic · python · plotly · anyplot.ai",
+        "font": {"size": 34, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     paper_bgcolor=PAGE_BG,
     polar={
         "bgcolor": PAGE_BG,
+        "hole": 0.08,
         "angularaxis": {
-            "tickfont": {"size": 28, "color": INK_SOFT},
+            "tickfont": {"size": 20, "color": INK_SOFT},
             "direction": "clockwise",
             "rotation": 90,
             "gridcolor": GRID,
             "linecolor": INK_SOFT,
         },
         "radialaxis": {
-            "tickfont": {"size": 22, "color": INK_SOFT},
+            "tickfont": {"size": 15, "color": INK_SOFT},
             "gridcolor": GRID,
             "linecolor": INK_SOFT,
-            "ticksuffix": " mm",
-            "angle": 45,
-            "dtick": 25,
+            "angle": 285,
+            "tickmode": "array",
+            "tickvals": [25, 50, 75, 100],
+            "ticktext": ["25 mm", "50 mm", "75 mm", "100 mm"],
         },
     },
     showlegend=False,
-    margin={"l": 100, "r": 100, "t": 150, "b": 100},
+    margin={"l": 60, "r": 60, "t": 90, "b": 60},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
