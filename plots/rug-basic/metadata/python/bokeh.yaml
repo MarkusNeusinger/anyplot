@@ -2,12 +2,12 @@ library: bokeh
 language: python
 specification_id: rug-basic
 created: '2025-12-23T19:43:13Z'
-updated: '2026-04-30T05:34:39Z'
+updated: '2026-07-25T06:54:20Z'
 generated_by: claude-sonnet
-workflow_run: 25148592261
+workflow_run: 30147897179
 issue: 978
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/bokeh/plot-light.html
@@ -15,117 +15,124 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic
 quality_score: 89
 review:
   strengths:
-  - 'Perfect Visual Quality: all font sizes explicitly set, both themes fully readable
-    with no dark-on-dark or light-on-light failures'
-  - 'Excellent Spec Compliance: rug ticks correctly placed below the KDE along the
-    x-axis with semi-transparency (alpha=0.5) per spec'
-  - Compelling bimodal data showing fast (~85 ms) vs slow (~180 ms) API response time
-    clusters with a clear gap — tells a real story
-  - 'Perfect Code Quality: KISS structure, seed set, clean imports, idiomatic ColumnDataSource
-    + Range1d + segment() pattern throughout'
-  - 'Both themes correctly adapted: warm off-white (#FAF8F1) light background and
-    near-black (#1A1A17) dark background, all chrome tokens applied'
+  - 'All three attempt-1 weaknesses addressed: title now reads ''rug-basic · python
+    · bokeh · anyplot.ai'' (SC-04 fixed), cluster call-out annotations (''cache hits''
+    / ''cache misses'') now guide the viewer through the bimodal story, and rug segment
+    line_width was thinned from 4 to 2.5 to preserve per-tick granularity in the dense
+    cache-hits cluster'
+  - Canvas is exactly 3200×1800 with toolbar_location=None and generous min_border_*
+    reservations — no clipping in either render
+  - 'Genuine, non-fake interactivity: an invisible 24px hit-target scatter drives
+    a real HoverTool with per-observation tooltips in the HTML, a real showcase of
+    bokeh''s interactive strength rather than a simulated tooltip'
+  - Theme chrome (background, ink, ink-soft, grid) is threaded correctly through title/axis/tick/annotation
+    colors — both PNGs fully readable, no dark-on-dark or light-on-light failures
+  - Rug ticks use alpha=0.5 transparency exactly per the spec's 'semi-transparency
+    when observations overlap' note, sitting at a small consistent height below the
+    KDE baseline
+  - 'Data is realistic and neutral (bimodal API response-time distribution: cache
+    hits vs. cache misses) and the new mode-labeling annotations make the story immediately
+    legible'
+  - 'Clean, deterministic, KISS-structured code: seeded RNG, ColumnDataSource used
+    idiomatically, no unused imports, no functions/classes'
   weaknesses:
-  - 'Library Mastery underutilised: toolbar_location=None removes all Bokeh interactivity;
-    adding a HoverTool showing exact response time per rug tick would showcase Bokeh''s
-    distinctive strength without adding complexity'
-  - No varea() fill in the code for the KDE curve — the rendered images appear to
-    show a shaded area under the KDE but the implementation uses only p.line(); if
-    the fill is absent from the actual generated plots, the visual depth is lost
-  - 'DE-01 ceiling: plot looks like a well-configured default rather than publication-ready;
-    removing the outline_line_color border frame and tightening min_border padding
-    would improve polish'
+  - In the densest part of the fast-response cluster (~75-95ms) the rug ticks still
+    read as a near-solid green band rather than fully distinguishable individual ticks,
+    even after the line_width reduction — a further nudge (e.g. line_width 1.5-2,
+    or dropping line_alpha to ~0.35) would preserve granularity in the tightest region
+    without hurting the sparser cache-misses cluster
+  - Design is solid but still fairly standard for this catalog beyond the new annotations
+    — no additional refinement (e.g. a subtle marginal tick-density gradient, or differentiating
+    the two clusters visually) pushes it into distinctive territory
+  - The invisible-hit-target + HoverTool pattern is effective but recurs across this
+    catalog's bokeh implementations, so Library Mastery distinctiveness remains only
+    moderate
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — matches spec exactly, not pure white.
-      Chrome: Title "rug-basic · bokeh · anyplot.ai" in dark ink at top-left, clearly readable. Y-axis label "Density" rotated on left, dark ink, readable. X-axis label "Response Time (ms)" at bottom center, dark ink, readable. Tick labels in muted dark grey (INK_SOFT), readable at all axis positions.
-      Data: Bimodal KDE curve in brand green (#009E73) with a light mint-green filled area beneath it (from roughly x=30 to x=235 ms). Two distinct density peaks at ~85 ms (taller) and ~180 ms (shorter), separated by a clear valley. Rug ticks appear as short vertical green segments at the bottom of the plot below y=0, semi-transparent (alpha=0.5). Dense cluster of ticks around 70–110 ms and a sparser cluster around 160–230 ms.
-      Legibility verdict: PASS — all text clearly readable against the warm light background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "rug-basic · python · bokeh · anyplot.ai" top-left (language segment now present); italic "Response Time (ms)" x-axis label and italic "Density" y-axis label; dark-gray tick labels; subtle y-axis-only horizontal gridlines. Italic gray "cache hits" / "cache misses" annotations sit above each KDE mode. All chrome clearly readable against the light background.
+      Data: Single Imprint-brand-green (#009E73) KDE line with light semi-transparent fill shows a clear bimodal shape (peak ~85ms, smaller peak ~180ms). Below the y=0 baseline, green rug tick marks at ~50% alpha mark every individual observation, correctly clustering under the two KDE peaks and thinning in the gap between them; ticks are thinner (line_width 2.5) than the previous attempt, improving per-observation distinguishability, though the densest part of the cache-hits cluster still reads as a near-solid band.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — matches spec exactly, not pure black.
-      Chrome: Title in light off-white text, readable. Y-axis and X-axis labels in light ink, readable. Tick labels in light muted grey (INK_SOFT for dark = #B8B7B0), readable. No dark-on-dark failures observed.
-      Data: Same brand green (#009E73) KDE line with a dark teal filled area beneath it — data colors are identical to the light render. Rug ticks visible as green segments at the bottom against the dark background. Bimodal shape identical: peaks at ~85 ms and ~180 ms.
-      Legibility verdict: PASS — all text clearly readable against the near-black background; no dark-on-dark issues.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and axis labels now rendered in light ink / soft-gray, same subtle y-axis-only gridlines, cluster annotations in light-gray italic. No dark-on-dark failures — all text clearly legible against the dark background.
+      Data: KDE line, fill, and rug ticks use the identical #009E73 green as the light render — only chrome (background, text, grid) flips, confirming theme-adaptive color handling is correct.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
-          labels 18pt. Readable in both themes.'
+        comment: All text readable in both themes at appropriate sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No collisions between annotations, title, axes, or data
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: KDE line (width=5) and rug ticks (width=4, alpha=0.5) both clearly
-          visible in light and dark themes.
+        comment: Rug line_width thinned 4->2.5 (improved vs attempt 1) but densest
+          cache-hits region still reads as a near-solid band
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series in Okabe-Ito brand green; CVD-safe with alpha contrast.
+        comment: Good contrast, single-hue CVD-safe green, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, rug zone separated cleanly
-          below y=0.
+        comment: Exact 3200x1800 canvas, no clipping, balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Response Time (ms)'' with units; Y: ''Density''. Both descriptive.'
+        comment: Descriptive labels with units (Response Time (ms), Density)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series uses #009E73 (BRAND). Light background #FAF8F1, dark
-          #1A1A17. All chrome tokens theme-adaptive. Data colors identical across
-          renders.'
+        comment: 'First series #009E73, correct theme-adaptive backgrounds in both
+          renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above a generic default: filled KDE area, clean composition, restrained
-          color. Not quite publication-ready — no spine removal, no typography weight
-          variation.'
+        comment: New cluster annotations add polish over the previous generic KDE+rug
+          composition, though still a fairly standard treatment overall
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed, Y-grid at 10% alpha (very subtle), outline set to
-          INK_SOFT. Above library defaults but outline_line_color frame still present.
+        comment: Outline removed, toolbar disabled, subtle single-axis grid, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Bimodal distribution clearly tells the story of two API performance
-          tiers with a visible gap. Rug ticks reinforce the clustering pattern. Visual
-          hierarchy is clear.
+        comment: New 'cache hits' / 'cache misses' labels now explicitly guide the
+          viewer through the bimodal story, directly fixing the attempt-1 weakness
     spec_compliance:
       score: 15
       max: 15
@@ -135,52 +142,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rug plot with ticks along x-axis, complemented by KDE as
-          spec suggests.
+        comment: Correct rug plot paired with KDE for context
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Rug ticks present, semi-transparency applied, x-axis positioning,
-          shown alongside density estimate.
+        comment: Individual tick marks, semi-transparency, small consistent height,
+          x-axis placement
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Continuous variable on x-axis, density on y-axis, all data visible.
+        comment: X=response time, Y=density, full data range covered
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'rug-basic · bokeh · anyplot.ai' correct. No legend needed
-          for single series.
+        comment: Title now correctly reads 'rug-basic · python · bokeh · anyplot.ai'
+          — attempt-1 gap fixed
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows clustering, gaps in data, and individual observation positions
-          — all key rug plot features.
+        comment: Shows clustering, gaps, and individual observations; bimodal shape
+          well demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: API response times (ms) — real, neutral, business-relevant scenario.
+        comment: Plausible, neutral API response-time scenario (cache hits vs misses)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 85 ms and 180 ms response times are factually plausible for a bimodal
-          API performance profile.
+        comment: Realistic ms-scale response times, sensible sample size (n=100)
     code_quality:
       score: 10
       max: 10
@@ -190,35 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save. No functions or classes.
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used. os/sys for path fix, numpy, bokeh modules,
-          scipy.stats for KDE.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. sys.path manipulation is a valid boilerplate guard,
-          not over-engineering.
+        comment: No fake UI, real HoverTool interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh API used.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, no bare plot.png
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,21 +229,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource for all data, Range1d for explicit axis control,
-          segment() for rug ticks — all idiomatic Bokeh patterns.
+        comment: ColumnDataSource, figure(), varea/line/segment/scatter all idiomatic
+          high-level bokeh API
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses segment() for rug ticks (Bokeh-specific approach) and saves
-          HTML. However, toolbar_location=None removes all interactivity — no HoverTool
-          to showcase Bokeh's primary differentiator.
+        passed: true
+        comment: Invisible hit-target + HoverTool is a genuine bokeh-specific touch
+          but recurs across this catalog
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - selenium
+  - pillow
   techniques:
+  - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation
