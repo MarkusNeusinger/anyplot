@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-07-25
@@ -15,6 +15,7 @@ from plotnine import (
     element_text,
     geom_line,
     geom_rect,
+    geom_text,
     ggplot,
     labs,
     scale_fill_manual,
@@ -52,17 +53,20 @@ spans = pd.DataFrame(
     {
         "xmin": [2008, x_min],
         "xmax": [2009, x_max],
-        "ymin": [y_min, 60],
-        "ymax": [y_max, 80],
+        "ymin": [y_min, 145],
+        "ymax": [y_max, 165],
         "label": ["Recession Period", "Risk Zone"],
     }
 )
+
+annotation = pd.DataFrame({"x": [x_max - 0.3], "y": [167], "text": ["Risk Threshold"]})
 
 # Plot
 plot = (
     ggplot()
     + geom_rect(data=spans, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="label"), alpha=0.25)
     + geom_line(data=df, mapping=aes(x="year", y="price"), color=IMPRINT[0], size=1.2)
+    + geom_text(data=annotation, mapping=aes(x="x", y="y", label="text"), ha="right", size=7, color=INK_SOFT)
     + scale_fill_manual(values={"Recession Period": IMPRINT[1], "Risk Zone": IMPRINT[2]}, name="Highlighted Region")
     + labs(x="Year", y="Price ($)", title="span-basic · plotnine · anyplot.ai")
     + theme_minimal()
