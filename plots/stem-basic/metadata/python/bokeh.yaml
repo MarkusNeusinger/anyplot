@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: stem-basic
 created: '2025-12-23T20:45:11Z'
-updated: '2026-07-25T17:35:18Z'
+updated: '2026-07-25T17:41:15Z'
 generated_by: claude-sonnet
 workflow_run: 30167693162
 issue: 972
@@ -12,39 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
+  - 'Title now correctly includes the {language} segment: "stem-basic · python · bokeh
+    · anyplot.ai" — fixes the previous attempt''s SC-04 weakness'
+  - HoverTool added on the marker renderer (Sample index / Amplitude tooltip) — fixes
+    the previous attempt's "no bokeh-distinctive interactivity" weakness; well-configured
+    and doesn't hurt the static PNG
   - Canvas is exactly 3200x1800 and both light and dark renders are fully readable
     with no dark-on-dark/light-on-light issues
   - Peak-amplitude sample is highlighted with an amber marker + label, giving the
-    plot a clear focal point and a bit of data storytelling on top of a plain stem
-    plot
-  - 'Idiomatic bokeh: ColumnDataSource + segment()/scatter() combo, min_border_* values
-    matched to the library guide''s recommended reservations, toolbar_location=None
-    respected so nothing shrinks the canvas'
+    plot a clear focal point on top of a plain stem plot
   - 'Correct Imprint palette usage — first series #009E73, amber reserved for the
     highlight (not a second categorical series), theme-adaptive chrome (backgrounds,
     ink, grid alpha) all correctly threaded through both themes'
   - 'Realistic, neutral example: a damped-oscillation discrete signal is a textbook,
     plausible use case for a stem plot in signal processing'
   weaknesses:
-  - Title omits the required {language} segment — renders as 'stem-basic · bokeh ·
-    anyplot.ai' but the spec format is '{spec-id} · {language} · {library} · anyplot.ai',
-    i.e. should be 'stem-basic · python · bokeh · anyplot.ai'
-  - No bokeh-distinctive interactive feature is used in the HTML output (e.g. HoverTool
-    showing sample index/amplitude on hover) — the peak highlight relies purely on
-    a static Label, so the implementation doesn't showcase what sets bokeh apart from
-    a static library
   - Design stays fairly conventional beyond the single peak highlight — no secondary
     annotation calling out the negative-undershoot cluster (samples 8-10) or other
-    structural feature of the signal, so overall visual sophistication is solid-but-standard
-    rather than distinctive
+    structural feature of the signal, so overall visual sophistication and data storytelling
+    remain solid-but-standard rather than distinctive (DE-01, DE-03)
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "stem-basic · bokeh · anyplot.ai" top-left, fully visible with generous top margin. Italic axis labels "Sample Index" (x) and "Amplitude" (y) in dark ink, clearly legible. Tick labels in a softer grey, legible against the light background. Faint vertical/horizontal gridlines visible but unobtrusive. Thin dark horizontal baseline at y=0.
-      Data: Green (#009E73) stems with matching green circle markers at 30 sample points (x=0..29) tracing a damped oscillation. The peak-amplitude sample (x=3) is highlighted with a larger amber marker with a dark outline, labeled "Peak amplitude" in soft grey text — clearly distinguishable from the rest.
+      Chrome: Bold dark title "stem-basic · python · bokeh · anyplot.ai" top-left, fully visible with generous top margin (the {language} segment missing in the previous attempt is now present). Italic axis labels "Sample Index" (x) and "Amplitude" (y) in dark ink, clearly legible. Tick labels in a softer grey, legible against the light background. Faint gridlines visible but unobtrusive. Thin dark horizontal baseline at y=0.
+      Data: Green (#009E73) stems with matching green circle markers at 30 sample points (x=0..29) tracing a damped oscillation. The peak-amplitude sample (x=3) is highlighted with a larger amber marker with a dark outline, labeled "Peak amplitude" in soft grey text.
       Legibility verdict: PASS — no light-on-light text, no clipped elements, title/labels/ticks all readable.
 
     Dark render (plot-dark.png):
@@ -62,9 +56,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; annotation
-          label at 24pt is smaller than tick labels but intentionally secondary and
-          still clearly legible
+        comment: All text explicitly sized and readable in both themes; the 24pt annotation
+          label is intentionally smaller/secondary and still clearly legible
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -91,7 +84,7 @@ review:
         max: 4
         passed: true
         comment: Exact 3200x1800 canvas, no overflow/clipping, balanced axis label
-          sizes, generous margins from min_border_* settings
+          sizes, generous margins from min_border_* reservations
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -115,7 +108,7 @@ review:
         max: 8
         passed: true
         comment: Amber peak highlight and clean chrome show intentional polish, but
-          the rest of the plot is fairly standard
+          the rest of the plot stays fairly standard
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -128,11 +121,10 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Peak-amplitude highlight creates a clear focal point, though no other
-          structural features of the signal (e.g. the negative-undershoot cluster)
-          are called out
+        comment: Peak-amplitude highlight creates one clear focal point, but the negative-undershoot
+          cluster (samples 8-10) is not called out
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -158,12 +150,11 @@ review:
           axis range
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title omits the {language} segment — is 'stem-basic · bokeh · anyplot.ai',
-          spec format requires 'stem-basic · python · bokeh · anyplot.ai'; no legend
-          needed (single series)
+        passed: true
+        comment: Title now correctly reads 'stem-basic · python · bokeh · anyplot.ai';
+          no legend needed (single series)
     data_quality:
       score: 14
       max: 15
@@ -174,7 +165,7 @@ review:
         max: 6
         passed: true
         comment: Damped oscillation covers positive/negative stems, varying amplitude,
-          and a clear peak — good coverage of the plot type's key aspects
+          and a clear peak
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -223,7 +214,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html via current bokeh API
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -235,11 +226,12 @@ review:
           library guide's recommended patterns closely
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: No bokeh-distinctive interactive feature (e.g. HoverTool) is used
-          to leverage the HTML output beyond a static Label annotation
+        passed: true
+        comment: HoverTool now added on the marker renderer (Sample/Amplitude tooltip),
+          addressing the previous attempt's weakness — genuine showcase of bokeh's
+          HTML-output interactivity
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -247,6 +239,7 @@ impl_tags:
   techniques:
   - annotations
   - html-export
+  - hover-tooltips
   patterns:
   - columndatasource
   - data-generation
