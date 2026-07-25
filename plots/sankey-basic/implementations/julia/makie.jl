@@ -1,7 +1,7 @@
 # anyplot.ai
 # sankey-basic: Basic Sankey Diagram
-# Library: Makie.jl 0.22 | Julia 1.11
-# Quality: pending | Created: 2026-07-25
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 78/100 | Created: 2026-07-25
 
 using CairoMakie
 using Colors
