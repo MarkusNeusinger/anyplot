@@ -29,9 +29,25 @@ for (let i = 0; i < 130; i++) screenTimeHours.push(Math.max(0.1, gaussian(6.4, 0
 
 const rugData = screenTimeHours.map((v) => [v, 1]);
 
+// --- KDE (simple Gaussian kernel density estimate) --------------------------
+// Pairs the rug with a density trace: a technique genuinely distinctive to a
+// dual-pane Highcharts layout, and a much better use of the vertical canvas
+// than the rug ticks alone.
+const kdeBandwidth = 0.55;
+const kdeCurve = [];
+for (let x = 0; x <= 13.5; x += 0.1) {
+  let sum = 0;
+  for (const v of screenTimeHours) {
+    const u = (x - v) / kdeBandwidth;
+    sum += Math.exp(-0.5 * u * u);
+  }
+  const density = sum / (screenTimeHours.length * kdeBandwidth * Math.sqrt(2 * Math.PI));
+  kdeCurve.push([Number(x.toFixed(2)), density]);
+}
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
-  chart: { type: "column", backgroundColor: "transparent", animation: false,
+  chart: { backgroundColor: "transparent", animation: false,
            style: { fontFamily: "inherit" } },
   credits: { enabled: false },
   colors: t.palette,
@@ -45,11 +61,29 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft, tickColor: t.inkSoft, gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     min: 0, tickInterval: 2, minPadding: 0.02, maxPadding: 0.04,
+    plotBands: [{
+      from: 3.48, to: 4.59,
+      color: Highcharts.color(t.inkSoft).setOpacity(0.08).get("rgba"),
+      label: { text: "Gap", align: "center", y: 16,
+               style: { color: t.inkSoft, fontSize: "12px" } },
+    }, {
+      from: 9.4, to: 13.4,
+      color: Highcharts.color(t.palette[0]).setOpacity(0.1).get("rgba"),
+      label: { text: "Outliers", align: "center", y: 16,
+               style: { color: t.inkSoft, fontSize: "12px" } },
+    }],
   },
-  yAxis: {
+  // Two stacked panes on one xAxis: the density curve fills the top ~72% of
+  // the canvas, the rug strip owns the bottom ~22% — no more blank dead zone.
+  yAxis: [{
     visible: false,
-    min: 0, max: 4,
-  },
+    top: "0%", height: "72%",
+    min: 0,
+  }, {
+    visible: false,
+    top: "78%", height: "22%",
+    min: 0, max: 1.2,
+  }],
   legend: { enabled: false },
   tooltip: {
     backgroundColor: t.elevatedBg, borderWidth: 0,
@@ -62,13 +96,22 @@ Highcharts.chart("container", {
   plotOptions: {
     series: { animation: false },
     column: {
-      pointWidth: 3,
+      pointWidth: 4,
       pointPadding: 0,
       groupPadding: 0,
       borderWidth: 0,
       color: Highcharts.color(t.palette[0]).setOpacity(0.55).get("rgba"),
       states: { hover: { brightness: 0.1 } },
     },
+    areaspline: {
+      lineWidth: 2,
+      fillOpacity: 0.18,
+      marker: { enabled: false },
+      enableMouseTracking: false,
+    },
   },
-  series: [{ name: "Respondent", data: rugData }],
+  series: [
+    { name: "Density", type: "areaspline", yAxis: 0, color: t.palette[0], data: kdeCurve },
+    { name: "Respondent", type: "column", yAxis: 1, data: rugData },
+  ],
 });
