@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-25
@@ -31,6 +31,10 @@ BRAND = IMPRINT_PALETTE[0]  # position 1 — always the primary series (price li
 # the semantic mapping is unambiguous, per the style guide's requirement.
 RECESSION_COLOR = IMPRINT_PALETTE[4]  # matte red — bad/loss semantic anchor
 WARNING_COLOR = ANYPLOT_AMBER  # amber — warning semantic anchor
+# Amber text on the pale-cream light bg falls below WCAG 3:1 (documented amber/light
+# tension in the style guide); darken the "Warning Zone" label text only in light mode
+# — the span fill/edge rules keep the true amber anchor in both themes.
+WARNING_LABEL_COLOR = "#6B5518" if THEME == "light" else WARNING_COLOR
 
 # Data — stock price with recession dip and warning threshold zone
 np.random.seed(42)
@@ -133,7 +137,7 @@ recession_label = (
 
 threshold_label = (
     alt.Chart(pd.DataFrame({"x": [pd.Timestamp("2007-06-01")], "y": [90], "text": ["Warning Zone"]}))
-    .mark_text(fontSize=11, fontWeight="bold", color=WARNING_COLOR)
+    .mark_text(fontSize=11, fontWeight="bold", color=WARNING_LABEL_COLOR)
     .encode(x="x:T", y=alt.Y("y:Q", scale=price_scale), text="text:N")
 )
 
@@ -155,7 +159,7 @@ chart = (
         width=620,
         height=320,
         background=PAGE_BG,
-        title=alt.Title("span-basic · altair · anyplot.ai", fontSize=16, color=INK),
+        title=alt.Title("span-basic · python · altair · anyplot.ai", fontSize=16, color=INK),
     )
     .configure_view(fill=PAGE_BG, continuousWidth=620, continuousHeight=320, strokeWidth=0)
     .configure_axis(
