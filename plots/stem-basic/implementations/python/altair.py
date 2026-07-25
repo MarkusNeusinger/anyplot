@@ -1,7 +1,7 @@
 """ anyplot.ai
 stem-basic: Basic Stem Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-04-30
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-07-25
 """
 
 import os
@@ -9,15 +9,15 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
+BRAND = "#009E73"  # Imprint palette position 1
 
 # Data — acoustic impulse response samples
 np.random.seed(42)
@@ -41,68 +41,88 @@ envelope_area = (
 # Dashed bounds of the decay envelope
 envelope_upper = (
     alt.Chart(env_df)
-    .mark_line(color=INK_SOFT, strokeWidth=1.5, strokeDash=[5, 4], opacity=0.45)
+    .mark_line(color=INK_SOFT, strokeWidth=1.2, strokeDash=[4, 3], opacity=0.45)
     .encode(x=alt.X("n:Q"), y=alt.Y("upper:Q"))
 )
 
 envelope_lower = (
     alt.Chart(env_df)
-    .mark_line(color=INK_SOFT, strokeWidth=1.5, strokeDash=[5, 4], opacity=0.45)
+    .mark_line(color=INK_SOFT, strokeWidth=1.2, strokeDash=[4, 3], opacity=0.45)
     .encode(x=alt.X("n:Q"), y=alt.Y("lower:Q"))
 )
 
 # Baseline rule at y=0
-baseline_rule = alt.Chart(pd.DataFrame({"y": [0]})).mark_rule(color=INK_SOFT, strokeWidth=1.5).encode(y=alt.Y("y:Q"))
+baseline_rule = alt.Chart(pd.DataFrame({"y": [0]})).mark_rule(color=INK_SOFT, strokeWidth=1.2).encode(y=alt.Y("y:Q"))
 
 # Stems: vertical rules from baseline to each data point
 stems = (
     alt.Chart(df)
-    .mark_rule(color=BRAND, strokeWidth=2.5, opacity=0.85)
+    .mark_rule(color=BRAND, strokeWidth=1.6, opacity=0.85)
     .encode(
-        x=alt.X("n:Q", title="Sample Index (n)", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
+        x=alt.X("n:Q", title="Sample Index (n)", axis=alt.Axis(labelFontSize=11, titleFontSize=14)),
         y=alt.Y("baseline:Q"),
         y2=alt.Y2("amplitude:Q"),
     )
 )
 
+# Hover selection — nearest-point highlight, an Altair-distinctive interactive param
+# that has no static-PNG equivalent (default state == static render, unaffected).
+hover = alt.selection_point(fields=["n"], on="pointerover", nearest=True, empty=False)
+
 # Markers at the tip of each stem
 markers = (
     alt.Chart(df)
-    .mark_circle(color=BRAND, size=300, stroke=PAGE_BG, strokeWidth=2)
+    .mark_circle(color=BRAND, stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
         x=alt.X("n:Q"),
-        y=alt.Y("amplitude:Q", title="Amplitude (a.u.)", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
+        y=alt.Y("amplitude:Q", title="Amplitude (a.u.)", axis=alt.Axis(labelFontSize=11, titleFontSize=14)),
+        size=alt.condition(hover, alt.value(160), alt.value(70)),
         tooltip=[
             alt.Tooltip("n:Q", title="Sample (n)"),
             alt.Tooltip("amplitude:Q", title="Amplitude (a.u.)", format=".3f"),
         ],
     )
+    .add_params(hover)
 )
 
 # Compose and apply theme-adaptive chrome
 chart = (
     (envelope_area + envelope_upper + envelope_lower + baseline_rule + stems + markers)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
         background=PAGE_BG,
-        title=alt.Title("stem-basic · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
+        title=alt.Title(
+            "stem-basic · python · altair · anyplot.ai", fontSize=18, fontWeight="bold", anchor="middle", color=INK
+        ),
     )
     .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
-        gridColor=INK,
-        gridOpacity=0.10,
+        grid=False,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=11,
+        titleFontSize=14,
     )
-    .configure_axisX(grid=False)
-    .configure_title(color=INK, fontSize=28)
+    .configure_title(color=INK, fontSize=18, fontWeight="bold")
 )
 
-# Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save — hard target: 3200 x 1800 (landscape). See prompts/library/altair.md "Canvas".
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
