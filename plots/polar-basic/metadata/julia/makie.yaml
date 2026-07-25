@@ -1,0 +1,250 @@
+library: makie
+language: julia
+specification_id: polar-basic
+created: '2026-07-24T23:54:04Z'
+updated: '2026-07-25T00:01:15Z'
+generated_by: claude-sonnet
+workflow_run: 30134458647
+issue: 800
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Correct theme-adaptive chrome: background, ink, ink_soft, and grid colors are
+    pixel-exact (#FAF8F1 light / #1A1A17 dark) and fully readable in both themes.'
+  - 'Imprint palette compliance: first (only) series is exactly #009E73, identical
+    across both renders.'
+  - Thoughtful clock-face orientation (theta_0 = -pi/2, direction = -1) matching the
+    real-world time-of-day convention, with a deliberate rtickangle offset to avoid
+    radial-tick/data clash.
+  - 'Clean layered composition: translucent band fill + line + white-stroked markers
+    gives visual depth without clutter.'
+  - Realistic, well-scaled household energy consumption data with a clear bimodal
+    morning/evening pattern and plausible noise.
+  - Idiomatic, KISS-structured Makie code using PolarAxis, band!, lines!, scatter!
+    with explicit reproducibility (Random.seed!(42)).
+  weaknesses:
+  - Title occupies only ~27% of the canvas width, notably below the ~50-70% guideline
+    for a custom-length title — a slightly larger titlesize (e.g. 24) would improve
+    visual balance without risking overflow.
+  - The outer polar spine (full circle frame) stays fully visible at default weight;
+    softening it further or trimming tick marks would push Visual Refinement higher.
+  - No direct annotation calls out the morning/evening peaks — the story relies entirely
+    on the bimodal silhouette, which reads clearly but a small peak label would strengthen
+    the storytelling.
+  - Single-series only (the spec's optional 'category' field is unused) — a second
+    labeled series (e.g. weekday vs weekend) would round out feature coverage for
+    a 'basic' polar chart.
+  - PolarAxis usage is solid but generic beyond the tick/orientation customization
+    — leaning further into distinctive PolarAxis features (e.g. rlimits, a reference
+    band) would raise Library Mastery.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-sampled at RGB(250,248,241) — exact match for #FAF8F1.
+      Chrome: Title "polar-basic · julia · makie · anyplot.ai" in dark ink at top, clearly visible. Angular hour labels (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00) sit outside the outer spine in medium-gray ink, all legible with generous margin to the canvas edge (checked all four edges via pixel crop — no clipping). Radial labels ("0.0 kWh" through "3.0 kWh") sit along a spoke offset from 00:00, also legible and non-overlapping with data or angular labels. Grid lines (radial rings + angular spokes) are subtle, low-contrast.
+      Data: Single green (#009E73) series — translucent band fill, solid line, and white-stroked circular markers — tracing a 24-hour bimodal curve with a small morning bump (~06:00-09:00) and a larger evening peak (~18:00-21:00), consistent with a household energy-consumption story.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-light or overlap issues found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-sampled at RGB(26,26,23) — exact match for #1A1A17.
+      Chrome: Same title and axis label content, now rendered in light ink/gray tones, fully legible against the dark surface. Grid lines and spine flip to a light, low-opacity tone. No dark-on-dark text found anywhere (checked title, angular labels, radial labels, all edges).
+      Data: Identical green (#009E73) band/line/markers as the light render — data colors unchanged between themes, only chrome flipped, confirming theme-adaptive token usage.
+      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicit (titlesize=20, thetaticklabelsize=14, rticklabelsize=12),
+          readable in both themes; title proportion is conservative (~27% of canvas
+          width) relative to guideline
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, angular labels, radial labels, or data
+          — verified via pixel crops
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 24-point sparse series with markersize=16, linewidth=3 — well-adapted
+          to data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: White-stroked markers provide definition; single-hue series avoids
+          any red-green ambiguity
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Polar chart fills ~90% of the square canvas with balanced margins
+          on all sides; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Radial ticks carry explicit 'kWh' units; angular ticks use HH:MM
+          time labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is exactly #009E73 in both renders; backgrounds pixel-match
+          #FAF8F1/#1A1A17; chrome fully theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Clock-face orientation, custom unit-formatted radial ticks, and offset
+          tick angle show clear design thought beyond library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Subtle low-alpha grid, soft translucent band fill, generous whitespace;
+          spine/frame remains at default weight
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Bimodal morning/evening shape is immediately visible and tells a
+          clear story without needing annotations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine PolarAxis-based polar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Angular labels at standard intervals, radial gridlines visible but
+          subtle, radial scale doesn't compress data near center
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: theta = hour-of-day angle, radius = consumption; full 24h cycle visible
+          via closed loop
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'polar-basic · julia · makie · anyplot.ai'; single-series
+          legend correctly omitted
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Full 24h bimodal cycle with realistic noise; optional 'category'
+          dimension from spec left unused
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Hourly household energy consumption — real, neutral, comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0.8-2.9 kWh range is plausible for hourly household consumption
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: PolarAxis, band!, lines!, scatter! used exactly as the library recommends
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: theta_0/direction clock convention, closure-based rtickformat, and
+          rtickangle offset are meaningfully PolarAxis-specific
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

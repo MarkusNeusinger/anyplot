@@ -1,0 +1,247 @@
+library: echarts
+language: javascript
+specification_id: polar-basic
+created: '2026-07-24T23:52:39Z'
+updated: '2026-07-25T00:06:23Z'
+generated_by: claude-sonnet
+workflow_run: 30134726319
+issue: 800
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses are cleanly fixed: frequencies now sum to ~99.9%
+    (valid percentage-of-observations semantic), radiusAxis has a proper ''Frequency
+    (%)'' name label styled with inkSoft, and a per-bar opacity ramp was added.'
+  - The new value-based alpha ramp (0.55 -> 1.0 scaled by value/maxFrequency) plus
+    a full-opacity brand-green outline stroke gives each wedge a subtle depth cue
+    that reinforces the Gaussian falloff toward the prevailing SW wind without introducing
+    any new hue.
+  - Idiomatic ECharts polar setup (startAngle=90, clockwise=true, barCategoryGap)
+    renders a proper compass-style wind rose with N at top, matching the spec's guidance
+    for directional data.
+  - 16-point compass data with realistic Gaussian falloff peaking at SW gives an immediate,
+    uncluttered focal point; theme tokens are threaded correctly through title, axis
+    labels, axis lines and split lines with identical data color in both renders.
+  - Deterministic, dependency-free data generation; clean KISS structure, no fake
+    interactivity, correct animation:false and mount-node usage.
+  weaknesses:
+  - The radiusAxis 'Frequency (%)' name label sits very close to the '12' max tick
+    label near the top of the circle (visible in both renders) — not overlapping,
+    but tight; a few extra px of nameGap would give it more breathing room.
+  - 'Design is polished but still short of publication-tier: a single flat hue with
+    an opacity ramp is a solid refinement, but there''s still room for e.g. a subtle
+    radial reference line at the mean or a callout on the prevailing direction to
+    push Design Excellence further.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface.
+      Chrome: Title "polar-basic · javascript · echarts · anyplot.ai" is bold dark text, centered at top, fully visible. 16 compass-direction labels (N, NNE, NE ... NNW) ring the circle in secondary dark-gray text, all readable and non-overlapping. Radial tick labels (3/6/9/12) sit along the top-center radius in lighter gray, with a "Frequency (%)" axis name just above the "12" tick — close together but not overlapping. All chrome text is clearly readable against the light background.
+      Data: A single green (#009E73) polar bar series forms an asymmetric wind-rose "flower" of 16 wedges with visible gaps between them. Wedge fill opacity ramps from ~0.55 (short petals near NE/ENE) to full brand-green (longest petals at SW/SSW), each with a thin full-opacity green outline stroke. Longest petals point toward SW/SSW/WSW (prevailing wind), shortest toward NE/ENE/E.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface.
+      Chrome: Title and all compass/tick labels flip to light tones (ink/inkSoft tokens) and remain fully legible — no dark-on-dark failures anywhere. Grid lines remain subtle but visible.
+      Data: The green wedges are pixel-identical in color, opacity ramp, and shape to the light render, confirming only chrome (background/text/grid) flipped between themes and the Imprint data color stayed constant.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, readable in both themes; radiusAxis
+          name sits a little tight against the '12' tick
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions found in close crops of top, west, and southwest
+          regions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 16 wedges clearly distinguishable, alpha ramp adds extra differentiation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue brand green with alpha variation, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 2400x2400 square canvas, no clipping or overflow at edges
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: radiusAxis now has 'Frequency (%)' name label (fixed from attempt
+          1)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical between light and dark; backgrounds
+          match FAF8F1/1A1A17'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: New value-based opacity ramp + outline stroke is a genuine polish
+          beyond flat fill, above default but not top-tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: radiusAxis line hidden, subtle split lines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Opacity ramp reinforces the Gaussian falloff, strengthening the focal
+          point on the prevailing wind direction
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar/wind-rose bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Radial gridlines visible but subtle, compass-direction angular labels
+          at standard intervals, compass-appropriate starting angle, non-compressed
+          linear radial scale
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: theta=16 compass directions, radius=frequency, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required 'polar-basic · javascript · echarts · anyplot.ai'
+          format exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 16-point compass coverage with continuous angular/radial variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Wind-direction frequency distribution with a prevailing SW wind is
+          a plausible, neutral real-world scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed from attempt 1: values now sum to ~99.9%, a valid percentage-of-observations
+          distribution'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes, one small helper function
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic formula-based data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed beyond the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Gaussian-based derivation, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation:false set, mounts to #container, current setOption API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct polar coordinateSystem bar series with category angleAxis
+          + value radiusAxis
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-datum itemStyle color function driving a value-based opacity
+          ramp with matching outline stroke is a distinctive touch beyond a basic
+          default polar bar
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - edge-highlighting
