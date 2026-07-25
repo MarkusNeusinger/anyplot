@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: slope-basic
 created: '2025-12-23T20:45:26Z'
-updated: '2026-07-25T23:38:11Z'
+updated: '2026-07-25T23:55:55Z'
 generated_by: claude-sonnet
 workflow_run: 30179281969
 issue: 981
@@ -12,109 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - Direct at-a-glance value labels at both endpoints for every entity, connected
-    to their true data point via a thin leader line, decluttered vertically so labels
-    never overlap each other
+  - 'Fixed both blockers from the attempt-1 review: the left-side leader labels ("Food
+    Processing", "Pharmaceuticals") no longer collide with the y-axis spine in either
+    theme (verified via pixel-level crop), and the anti-overlap declutter logic is
+    now fully inlined in the main script body with no helper function, satisfying
+    strict KISS single-script-flow.'
+  - 'Direct bilateral value labels ("Entity: $XM" / "$XM: Entity") at both endpoints
+    for all 10 sectors, each connected to its true data point via a thin leader line,
+    decluttered vertically so labels never overlap while never disconnecting from
+    their entity.'
   - 'Data-driven visual emphasis: line width and marker size scale with each sector''s
-    percentage change magnitude, drawing the eye to the biggest movers (Automotive''s
-    decline, Machinery''s rise) without decorative chartjunk'
-  - 'Correct semantic color mapping (brand green #009E73 for gains, matte-red Imprint
-    anchor #AE3030 for losses) matching the style guide''s finance gain/loss exception,
-    with a code comment documenting the rationale'
+    percentage-change magnitude, drawing the eye to the biggest movers (Automotive''s
+    decline, Machinery''s rise) without decorative chartjunk.'
+  - 'Correct semantic finance color mapping (brand green #009E73 for gains, Imprint
+    matte-red anchor #AE3030 for losses), identical across both themes as required.'
   - Theme-adaptive chrome (background, ink, grid) correctly threaded through both
-    renders; palette data colors identical across light and dark
-  - Rich hovertemplate for the interactive HTML export exposing exact sector/year
-    values, a genuine plotly-specific interactivity win
+    renders; rich hovertemplate exposes exact sector/year values in the interactive
+    HTML export.
   weaknesses:
-  - 'Label/axis-spine overlap: the two longest left-side entity labels, ''Food Processing:
-    $275M'' and ''Pharmaceuticals: $190M'', are visually cut through by the y-axis
-    spine line in BOTH light and dark renders. Pixel check on plot-light.png: leftmost
-    text pixel of ''Food Processing'' starts at x=464 while the y-axis spine sits
-    at x=556-559 (3200px-wide render) - the fixed `ax=-0.12` annotation anchor doesn''t
-    scale with label string length, so the two longest labels overflow past the xaxis
-    range''s left bound (-0.5) and the spine draws directly over the letters. Fix:
-    scale the `ax` offset (or the xaxis range''s left bound / left margin) by the
-    longest label''s character count so no label text ever crosses the spine.'
-  - 'CQ-01 KISS structure: a custom `declutter()` helper function is defined mid-script
-    for anti-overlap label placement; it is short and purposeful, but the code-quality
-    rubric expects a flat imports -> data -> plot -> save script with no functions/classes.'
-  - No explicit key/caption stating that green = increase and red = decrease; the
-    mapping is inferable from slope direction and the numeric labels at both ends,
-    but an explicit note would remove any ambiguity for a first-time viewer.
+  - Matte-red (#AE3030) label text has a low luminance-contrast ratio (~2.7:1) against
+    the dark-theme background (#1A1A17) — still legible thanks to hue separation and
+    generous font size, but below the general 4.5:1 text-contrast guideline. A thin
+    ink-colored micro-stroke on the red text/leader-lines in dark theme (per the style
+    guide's 'Optional outline pattern'), applied to text only while keeping the canonical
+    hex on the connecting line/marker, would tighten this.
+  - The 'Output ($M)' units annotation sits immediately beneath the title with very
+    little vertical gap, reading almost like an unlabeled second title line rather
+    than a clearly separated axis-unit caption. A bit more top margin or a lighter/smaller
+    treatment would clarify the hierarchy.
+  - No explicit caption states 'green = increase, red = decrease' — inferable from
+    slope direction and the endpoint values, but an explicit note would remove any
+    residual ambiguity for a first-time viewer (minor, optional).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "Manufacturing Output by Sector · slope-basic · python · plotly · anyplot.ai" is dark ink, centered, ~70% of plot width, fully readable. Y-axis title "Output ($M)" rotated, dark ink, readable. X-axis ticks "2023"/"2024" in soft ink, readable. Y-axis numeric ticks (50-350) readable. Ten entity labels (e.g. "Automotive: $320M", "$310M: Electronics") flank the plot on left (2023 values) and right (2024 values), colored to match their line (green = increase, matte red = decrease).
-      Data: Ten slope lines connecting 2023 -> 2024 output values per sector. First-glance colors are Imprint brand green (#009E73, 6 increasing sectors) and Imprint matte red (#AE3030, 4 declining sectors) - correct semantic gain/loss mapping. Line width and marker size scale with % change magnitude (e.g. Machinery's steep rise and Automotive's steep drop get visibly thicker lines/larger markers than smaller moves like Chemicals).
-      Legibility verdict: FAIL (partial) - all text is high-contrast and readable in isolation, but the y-axis spine line visibly cuts through the "Food Processing: $275M" and "Pharmaceuticals: $190M" labels (confirmed via pixel crop: label text starts at x=464, spine sits at x=556-559 on the 3200px-wide render), because those two labels are longer than the fixed annotation anchor accounts for.
+      Background: warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: dark-ink title "Manufacturing Output by Sector · slope-basic · python · plotly · anyplot.ai" centered at top, ~50% of plot width, fully readable. "Output ($M)" units annotation sits directly below the title (soft-ink but slightly under-spaced from the title line). "2023"/"2024" x-axis tick labels in soft ink, clearly readable. Y-axis numeric ticks intentionally hidden since every entity is directly labeled with its exact value.
+      Data: Ten slope lines connect 2023 -> 2024 values for manufacturing sectors, colored Imprint brand green (#009E73, 6 increasing sectors) or Imprint matte red (#AE3030, 4 declining sectors) — correct gain/loss semantic mapping. Line width and marker size scale with each sector's percentage-change magnitude, emphasizing the biggest movers (Automotive's decline, Machinery's rise). Bilateral value+entity labels ("Entity: $XM" left, "$XM: Entity" right) flank the chart, each linked to its true data point via a thin leader line; a prior spine-through-label collision (on "Food Processing" and "Pharmaceuticals") is fixed — verified via pixel-level crop that no label text touches the y-axis spine.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Same title, now in light ink (#F0EFE8), fully readable against the dark surface. Axis ticks and "Output ($M)" label rendered in light ink tones, readable. Gridlines subtle and visible without competing with data. No dark-on-dark failures observed elsewhere.
-      Data: Identical brand green (#009E73) and matte red (#AE3030) data colors to the light render, confirming only chrome flips between themes - data colors unchanged as required.
-      Legibility verdict: FAIL (partial) - same spine-through-label defect reproduces identically in the dark render ("Food Processing" and "Pharmaceuticals" labels cut by the axis spine at the same pixel coordinates); every other text element is clearly readable in light-on-dark contrast, with no dark-on-dark failures.
+      Background: warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: title and "Output ($M)" annotation now render in light ink (#F0EFE8-equivalent), x-axis tick labels in soft light tone — both fully readable against the dark surface, no dark-on-dark failures on the primary chrome.
+      Data: identical Imprint colors to the light render (#009E73 / #AE3030), confirming only chrome flips between themes as required. Same fixed leader-line/label layout, no spine collisions reproduced.
+      Legibility verdict: PASS with a minor caveat — the matte-red (#AE3030) label text carries a low luminance-contrast ratio (~2.7:1 by WCAG relative-luminance calculation) against the near-black background. It remains legible (verified via direct crop inspection: text is clearly distinguishable, not "invisible" or truly dark-on-dark) but is noticeably softer/dimmer than the green counterpart. Flagged as a weakness for a future micro-polish, not a legibility failure.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title scales with title length via
-          formula, ticks/labels sized); readable in both themes, but the spine-overlap
-          defect on two labels keeps this below perfect.
+        comment: All text readable in both themes; matte-red dark-theme labels (~2.7:1
+          contrast) are legible but softer than the green counterpart
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: y-axis spine visibly cuts through 'Food Processing' and 'Pharmaceuticals'
-          labels in both renders (confirmed via pixel inspection); the other 8 of
-          10 labels are clean.
+        passed: true
+        comment: Prior spine-through-label collision fixed and verified via pixel
+          crop; no overlaps anywhere
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers/lines well-sized for 10 sparse entities, with density-aware
-          emphasis scaling by % change magnitude.
+        comment: Sparse data (10 entities) given prominent markers/lines, sized by
+          % change magnitude
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red direction coding is redundantly backed by slope direction
-          and explicit numeric labels at both ends, so hue is not the sole signal.
+        comment: CVD-safe Imprint hues; correct finance semantic exception (green=gain,
+          red=loss)
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800 (gate passed); balanced margins for direct
-          labeling either side; minor deduction for the label/spine miscalculation.
+        comment: Canvas gate passed (3200x1800); title/units-annotation vertical spacing
+          is a bit tight
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Output ($M)' has units; X-axis ticks show the two time points
-          ('2023'/'2024') as required by spec.
+        comment: Units label 'Output ($M)' present; x-axis time points labeled
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint brand green (#009E73) and matte red (#AE3030) correctly used
-          for the finance gain/loss semantic exception; backgrounds and chrome theme-correct
-          in both renders.
+        comment: Brand green + matte-red anchor, identical across themes; backgrounds
+          theme-correct
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -122,23 +120,20 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color, direct labeling instead of a legend, and
-          magnitude-driven emphasis are clearly above a configured default.
+        comment: Thoughtful semantic color, direct labeling, magnitude-driven emphasis
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle single-axis grid, L-shaped frame (no top/right spine), generous
-          margins; the spine-overlap defect costs points on attention to detail.
+        comment: Spine-overlap defect resolved; subtle grid, L-shaped frame; minor
+          title/subtitle crowding remains
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Direct labeling plus width/size emphasis on the biggest movers gives
-          the viewer an immediate read on which sectors changed most and in which
-          direction.
+        comment: Emphasis on biggest movers gives an immediate read on direction/magnitude
     spec_compliance:
       score: 15
       max: 15
@@ -148,28 +143,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct slopegraph connecting two vertical time-point axes.
+        comment: Correct slopegraph
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Endpoint labels, direction color coding, time-point axis labels,
-          and entity count (10, within the 5-15 range) all present.
+        comment: Bilateral labels, direction color-coding, labeled time-point axes
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = time point (2023/2024), Y = output value; all ten entities visible.
+        comment: x=time point, y=value, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · slope-basic · python · plotly
-          · anyplot.ai' format exactly; no traditional legend needed since labels
-          are direct.
+        comment: Title matches mandated format; direct labels substitute for a 10-entry
+          legend appropriately
     data_quality:
       score: 15
       max: 15
@@ -179,58 +173,54 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Mix of 6 increasing and 4 declining sectors, with varying magnitudes
-          of change.
+        comment: 10 sectors (within 5-15 spec range), two time points, direction coding
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Neutral, plausible business scenario: US manufacturing sector output
-          2023 vs 2024.'
+        comment: Plausible, neutral US manufacturing output data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Output values ($70M-$320M) and year-over-year deltas are plausible
-          for the domain.
+        comment: Sensible $M values (70-320) for manufacturing sector output
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: One small `declutter()` helper function breaks the strict flat imports->data->plot->save
-          structure, though it is short and single-purpose.
+        comment: Helper function removed; anti-overlap logic now fully inlined in
+          a flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded/deterministic; no randomness.
+        comment: Fully deterministic, hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only `os` and `plotly.graph_objects` imported, both used.
+        comment: Only os + plotly.graph_objects
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and purposeful; no fake UI or over-engineering.
+        comment: No fake UI, appropriate complexity for the declutter algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png and plot-{theme}.html via current write_image/write_html
-          API with width/height/scale=4 per the canvas rule.
+        comment: write_image + write_html to plot-{THEME}.png/.html
     library_mastery:
       score: 7
       max: 10
@@ -240,24 +230,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Solid graph_objects usage with per-trace styling and layout config.
+        comment: Correct low-level go.Figure/go.Scatter/add_annotation usage, appropriate
+          for this custom layout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses annotation-based leader lines (axref/ayref-anchored) for decluttered
-          direct labeling and a rich per-sector hovertemplate for the interactive
-          HTML export - both genuinely plotly-specific.
-  verdict: REJECTED
+        comment: Annotation-anchored leader lines + rich hovertemplate for HTML interactivity
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
   - iteration-over-groups
   dataprep:
   - normalization
-  styling:
-  - grid-styling
+  styling: []
