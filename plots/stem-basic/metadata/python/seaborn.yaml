@@ -2,44 +2,53 @@ library: seaborn
 language: python
 specification_id: stem-basic
 created: '2025-12-23T20:45:35Z'
-updated: '2026-04-30T15:04:36Z'
+updated: '2026-07-25T17:38:43Z'
 generated_by: claude-sonnet
-workflow_run: 25171839176
+workflow_run: 30167558369
 issue: 972
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Perfect visual quality in both light and dark themes with correct font sizing
-    and readable text throughout
-  - 'Textbook data choice: damped sinusoidal impulse response is the canonical signal
-    processing example for stem plots'
-  - Background-edged scatter markers (edgecolor=PAGE_BG) create clean visual separation
-    from stems
-  - 'All spec requirements met: thin stems, visible circular markers, baseline at
-    y=0, consistent sizing'
+  - Title now conforms exactly to the mandated format 'stem-basic · python · seaborn
+    · anyplot.ai' — the missing language token flagged in attempt 1 is fixed.
+  - Marker size is now uniform (s=200) across all 30 samples, satisfying the spec's
+    explicit 'consistent marker size and stem width' requirement and landing well
+    within the VQ-03 sparse-data guideline.
+  - 'Theme-adaptive chrome remains correct and consistent across both renders — correct
+    #FAF8F1/#1A1A17 backgrounds, correct ink/ink-soft tokens, and brand green #009E73
+    stays identical across themes.'
+  - The dashed decay-envelope traces and 'Peak amplitude' annotation still provide
+    genuine signal-processing storytelling context beyond a bare stem plot.
+  - Clean KISS code structure, explicit font sizes throughout, reproducible via np.random.seed(42),
+    and correct plot-{THEME}.png output with facecolor set.
   weaknesses:
-  - No visual storytelling or annotations to guide the viewer through the decay narrative
-    — an envelope curve or peak annotation would earn DE-03 points
-  - Seaborn is used only for scatterplot markers and sns.set_theme() theming; no seaborn-distinctive
-    techniques are leveraged (LM-02 low)
+  - 'LM-02 (Distinctive Features) drops from the previous review''s 4/5 to 2/5: fixing
+    the spec-mandated uniform marker size removed the sns.scatterplot statistical
+    size-mapping (size=''Magnitude'') that was previously credited as the library''s
+    distinctive feature. Consider a different seaborn-specific technique (e.g. hue-mapped
+    envelope band, native CI shading) to recover Library Mastery points without reintroducing
+    the marker-size violation — not blocking.'
+  - Y-axis label 'Amplitude' has no explicit unit; acceptable since this is a dimensionless
+    synthetic DSP signal with no natural physical unit, but an optional '(a.u.)' suffix
+    would make VQ-06 airtight.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "stem-basic · seaborn · anyplot.ai" in dark text — readable; axis labels "Sample Index (n)" and "Amplitude" clearly visible; tick labels at correct size and dark color
-      Data: 30 stems in brand green #009E73 from y=0 baseline to data values; large circular markers with PAGE_BG edge color; both positive and negative stems; subtle y-axis horizontal grid
-      Legibility verdict: PASS — all text elements clearly readable against warm off-white background
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "stem-basic · python · seaborn · anyplot.ai" in dark ink, centered top, fully visible and not clipped (correctly includes the "python" language token this time). X-axis label "Sample Index (n)" and Y-axis label "Amplitude" in dark ink, both clearly readable and similarly sized. Tick labels on both axes are soft dark gray, similarly sized, no overlap. A subtle horizontal-only grid (light gray, low alpha) is visible behind the data. The "Peak amplitude" annotation with a thin gray leader line points at the largest sample without overlapping any other element.
+      Data: All 30 stems and markers render in brand green (#009E73) with a single, uniform marker size (s=200) — no more magnitude-scaled sizing. A dashed gray decay-envelope traces the theoretical |exp(-0.1n)*2.5| bound above and below the data. Baseline at y=0 is a thin gray horizontal line.
+      Legibility verdict: PASS — all title, axis labels, tick labels, and the annotation are clearly legible against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light/cream text — readable; axis labels in light text clearly visible; tick labels light-colored and legible; no dark-on-dark issues detected
-      Data: Colors identical to light render — brand green #009E73 stems and markers unchanged; only chrome elements flipped; grid still subtle and visible
-      Legibility verdict: PASS — all text elements clearly readable against near-black background; no dark-on-dark failures
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, tick labels, and grid layout as the light render, now rendered in light ink/soft-light-gray tokens. The "Peak amplitude" annotation and its leader line render in a light gray that stays readable against the dark background.
+      Data: Data colors (stems and markers) are identical brand green (#009E73) to the light render — confirmed unchanged across themes, still uniform marker size. The dashed envelope and baseline render in the same light-gray token used for tick labels.
+      Legibility verdict: PASS — no dark-on-dark failures observed; title, axis labels, tick labels, and annotation are all clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,71 +59,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt; both themes fully legible
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks/annotation
+          8pt); readable in both themes; short mandated title fits comfortably without
+          overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 30 stems evenly spaced, no element collisions
+        comment: No overlap between title, labels, ticks, annotation, or data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Large markers (s=300) and 2.5px stems clearly visible; background-edged
-          markers pop off stems
+        comment: Uniform s=200 markers are prominent for the 30-sample sparse plot,
+          within the VQ-03 sizing guideline; fixes the prior undersized-marker issue.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single CVD-safe brand green, no red-green reliance
+        comment: Single brand-green series, high contrast against both surfaces, no
+          red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 proportions appropriate; nothing cut off; tight_layout used
+        comment: Canvas dimension gate passed; balanced margins, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sample Index (n) with units, Amplitude descriptive; title format
-          correct
+        comment: Descriptive axis labels ('Sample Index (n)', 'Amplitude').
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73; backgrounds #FAF8F1 / #1A1A17; both
-          renders theme-correct'
+        comment: 'First series #009E73, correct theme-adaptive backgrounds and chrome
+          in both renders.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Professional polish; background-edged markers are a nice design touch;
-          single-color simplicity is appropriate but limited
+        comment: Thoughtful decay-envelope guide and annotation, clearly above library
+          defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed; y-axis-only grid at low opacity; generous
-          whitespace
+        comment: Spines removed, subtle y-grid, generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Damped sinusoidal has a natural decay narrative but no annotations
-          or emphasis guide the viewer
+        passed: true
+        comment: Peak annotation and envelope bounds create a clear visual hierarchy
+          and focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -124,53 +134,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct stem plot: vertical lines from baseline to data values with
-          circular markers'
+        comment: Correct stem plot (vlines + markers to baseline).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thin stems, visible circular markers, baseline at y=0, consistent
-          sizing throughout
+        comment: 'Fixed: markers now use a single uniform size (s=200), matching the
+          spec''s ''consistent marker size and stem width'' requirement.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=sample index, Y=amplitude; all 30 data points visible
+        comment: X = sample index, Y = amplitude, all 30 samples shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: stem-basic · seaborn · anyplot.ai correct; no legend needed for single
-          series
+        comment: 'Fixed: title now reads ''stem-basic · python · seaborn · anyplot.ai'',
+          the full mandated format including the language token.'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Both positive and negative stems; decaying oscillation demonstrates
-          plot type comprehensively
+        comment: Shows decay, oscillation, and both positive/negative amplitudes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Damped sinusoidal impulse response is canonical signal processing
-          example; neutral and plausible
+        comment: Damped sinusoidal impulse response is a realistic, neutral DSP scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitude -1.0 to 1.85, sample indices 0-29; realistic engineering
-          values
+        comment: Decay constant and oscillation frequency produce physically sensible
+          values.
     code_quality:
       score: 10
       max: 10
@@ -180,32 +187,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: No functions/classes, linear script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports (os, matplotlib, numpy, pandas, seaborn) are used
+        comment: Only used imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Clean hybrid: seaborn scatterplot for markers, matplotlib vlines
-          for stems — correct approach'
+        comment: Clean, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct facecolor and bbox_inches
+        comment: Saves plot-{THEME}.png with facecolor set, no bbox_inches='tight'.
     library_mastery:
       score: 6
       max: 10
@@ -215,24 +221,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme() with full rc dict is idiomatic; axes-level scatterplot
-          used correctly; hybrid with matplotlib vlines is right approach
+        comment: Correct mix of sns.lineplot/scatterplot with matplotlib vlines/annotate
+          (seaborn has no native stem function).
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Seaborn contribution limited to scatterplot markers and theming;
-          no seaborn-distinctive features used (FacetGrid, statistical transforms,
-          etc.)
+        comment: 'Dropped from 4/5: removing the size=''Magnitude'' statistical mapping
+          (to fix SC-02) also removed the plot''s only seaborn-distinctive feature;
+          remaining usage (set_theme, despine) is largely generic.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
