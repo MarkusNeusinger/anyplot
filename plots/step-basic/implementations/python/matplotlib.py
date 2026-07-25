@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 step-basic: Basic Step Plot
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-25
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import to_rgba
 
 
 # Theme tokens
@@ -19,7 +20,6 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Imprint palette position 1
 
 # Data - monthly cumulative sales figures
-np.random.seed(42)
 month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 monthly_sales = np.array([45, 52, 48, 61, 55, 72, 68, 85, 78, 92, 88, 105])
@@ -41,8 +41,17 @@ ax.stairs(cumulative_sales, edges, baseline=0, fill=True, color=BRAND, alpha=0.1
 ax.stairs(cumulative_sales, edges, baseline=None, color=BRAND, linewidth=2.5, label="Cumulative Sales")
 
 # Markers at the start of each step ('post' style: value holds from this point until the next)
+# Semi-opaque brand fill (rather than a raw page-background cutout) keeps markers
+# prominent against the filled area at small/thumbnail scale in both themes.
 ax.scatter(
-    edges[:-1], cumulative_sales, s=140, color=PAGE_BG, edgecolors=BRAND, linewidth=2, zorder=5, label="Monthly Totals"
+    edges[:-1],
+    cumulative_sales,
+    s=140,
+    facecolors=to_rgba(BRAND, 0.35),
+    edgecolors=BRAND,
+    linewidth=2,
+    zorder=5,
+    label="Monthly Totals",
 )
 
 # Milestone callout
