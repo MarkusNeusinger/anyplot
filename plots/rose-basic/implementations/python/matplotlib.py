@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 rose-basic: Basic Rose Chart
-Library: matplotlib | Python
+Library: matplotlib 3.11.1 | Python 3.13.14
+Quality: 82/100 | Updated: 2026-07-25
 """
 
 import os
