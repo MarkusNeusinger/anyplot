@@ -1,0 +1,268 @@
+library: highcharts
+language: javascript
+specification_id: sunburst-basic
+created: '2026-07-26T04:26:38Z'
+updated: '2026-07-26T04:46:20Z'
+generated_by: claude-sonnet
+workflow_run: 30187538643
+issue: 821
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Fixed the attempt-1 label-fit miss: ''Analytics Warehouse'' ($175K, the largest
+    Databases leaf) is now labeled alongside every other major segment.'
+  - 'Now exercises all 3 hierarchy levels the spec allows: Compute''s 4 services each
+    split into a 3rd environment ring (Prod/Staging, Scheduled/Ad-hoc, Training/Inference,
+    Linux/Windows), demonstrating uneven-depth sunburst structure while the other
+    3 branches correctly terminate at ring 2.'
+  - Ring 3 arcs are angularly nested exactly under their ring-2 parent's span (verified
+    by pixel inspection) — inner segments visually encompass their children's angular
+    range as the spec requires.
+  - 'Branch-consistent coloring across all 3 rings: every leaf/grandchild inherits
+    its root branch''s hue (progressively lightened via `mix()`), keeping the radial
+    hierarchy visually legible.'
+  - Canonical Imprint palette order (Compute=`#009E73` brand green first, then Storage/Networking/Databases),
+    with data colors pixel-identical between light and dark renders — only chrome
+    flips.
+  - 'Genuine (non-faked) interactivity for the HTML view: native SVG `<title>` hover
+    tooltips and a real mouseover/mouseout branch-highlight, correctly not penalized
+    for being invisible in the static PNG.'
+  - Per-wedge label color computed from wedge luminance, guaranteeing contrast regardless
+    of theme or branch lightness.
+  - Center KPI callout ($2,385K total spend / year) plus bold/regular label-weight
+    hierarchy creates a clear macro-to-micro focal point.
+  weaknesses:
+  - Ring-3 labels shrink as low as 8px (ring-2 as low as 9px) in the 2400px source
+    canvas — legible at full resolution but will read as near-invisible once scaled
+    to a ~400px mobile width. Consider raising the minFontSize floor slightly or omitting
+    labels below a fixed size rather than letting them shrink that far.
+  - Several helper functions (`mix`, `luma`, `labelColorFor`, `money`, `drawWedge`)
+    deviate from a flat KISS script structure — reasonably justified by the hand-rolled
+    renderer-based rendering required since the sunburst module isn't loaded, but
+    not the minimal-code path.
+  - Top margin (title/subtitle to first ring) remains larger than the bottom margin,
+    a very slightly top-heavy composition — not severe enough to affect the canvas-utilization
+    score.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "sunburst-basic · javascript · highcharts · anyplot.ai" and a grey subtitle explaining all three rings, units (USD thousands/year), and the angle-value mapping — both fully readable against the light background. Thin off-white/cream separator strokes divide every wedge.
+      Data: Three concentric rings. Ring 1 (4 root categories): Compute #009E73 brand green (first, canonical), Storage lavender #C475FD, Networking blue #4467A3, Databases ochre #BD8233 — all bold-labeled in-wedge. Ring 2 (14 services): lightened tint of parent branch color, labeled where the estimated text width fits the arc (including "Analytics Warehouse", now shown after the attempt-1 fix); smallest services like "CI/CD Runners" and "VPN Gateways" go unlabeled but keep their native <title> hover tooltip. Ring 3 (Compute's 4 services only, new in this attempt): a further-lightened tint split into Prod/Staging, Scheduled/Ad-hoc, Training/Inference, Linux/Windows — angularly nested exactly under their ring-2 parent, confirmed by close pixel inspection near the Linux/Windows boundary. Center shows "$2,385K / total spend per year" in bold dark ink.
+      Legibility verdict: PASS — all title, subtitle, ring-1/ring-2 labels, and center KPI text are clearly readable; ring-3 labels (down to 8px) are readable at full resolution though small.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title/subtitle now rendered in light ink, fully legible. Separator strokes use the dark-theme page background color, so wedge boundaries stay crisp. No dark-on-dark failures anywhere — checked ring 1 (light labels on saturated branch colors), ring 2/3 (dark labels on lightened tints, unchanged from light theme since label color is luminance-derived per wedge, not theme-derived), and center KPI (light ink on dark page).
+      Data: All wedge fill colors are pixel-identical to the light render across all 3 rings — only the page background, title/subtitle ink, separator-stroke color, and center-label ink flipped, exactly as required.
+      Legibility verdict: PASS — no unreadable text in either theme; brand green Compute wedge remains vivid on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicit, well-proportioned, label-fit miss from attempt
+          1 fixed (Analytics Warehouse now labeled); ring-3 labels down to 8px will
+          be near-invisible at mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or wedge overlap across all 3 rings in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Wedges clearly visible and sized to their angular value across all
+          rings
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint palette, pageBg-colored separator
+          strokes give clear definition between adjacent wedges
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart circle fills ~77% of the 2400x2400 canvas width, centered with
+          balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (sunburst); subtitle is descriptive with units
+          (USD thousands/year) and explains the ring/angle mapping
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, #009E73 first, data colors identical across
+          light/dark, both backgrounds theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom branch-consistent palette across 3 rings, clear typographic
+          hierarchy, clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No axis clutter, generous whitespace, subtle separator strokes, polished
+          center callout
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center KPI focal point + bold/regular label-weight hierarchy + branch-to-leaf
+          color progression create visual hierarchy, though no explicit narrative
+          annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine hand-drawn sunburst with correctly nested angular spans across
+          3 rings
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: level_1/level_2/level_3/value all mapped; major segments labeled,
+          minor on native hover tooltip; branch-consistent color; clear ring separation
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angles correctly proportional to value at every ring, grand total
+          correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title format; in-wedge labels serve as the legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Now exercises the full 2-4 level range the spec allows: uneven-depth
+          sunburst with Compute going 3 levels deep, others terminating at 2'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Cloud infrastructure spend by category/service/environment — real,
+          comprehensible, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sum correctly ($2,385K), realistic cloud-spend proportions
+          across categories
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions, justified by hand-rolled 3-ring rendering
+          but not the flattest path
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Real (not faked) tooltips and hover isolation, appropriate complexity
+          for a hand-drawn chart type
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Renders into #container via Highcharts.chart(), no explicit width/height,
+          animation disabled'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly falls back to chart.renderer.arc()/.text() (the same SVGRenderer
+          method the core pie series uses) since the sunburst module isn't loaded
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hand-builds an unsupported chart type via the low-level renderer
+          across 3 rings, plus native SVG <title> tooltips and per-branch hover isolation
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
+  - alpha-blending
