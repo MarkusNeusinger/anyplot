@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' swarm-basic: Basic Swarm Plot
-#' Library: ggplot2 | R 4.4
-#' Quality: pending | Created: 2026-07-26
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 87/100 | Created: 2026-07-26
 
 library(ggplot2)
 library(dplyr)
