@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:55:33Z'
-updated: '2026-07-26T07:12:34Z'
+updated: '2026-07-26T07:25:33Z'
 generated_by: claude-sonnet
 workflow_run: 30192131037
 issue: 974
@@ -12,82 +12,87 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Deterministic custom beeswarm-packing algorithm (bin + alternate offsets) gives
-    reproducible, collision-aware point placement instead of random jitter
-  - Median diamond markers connected by a dashed trend line make the dose-response
-    relationship immediately visible — strong data storytelling for an ordered categorical
-    axis
-  - 'Full theme-adaptive chrome: median markers, connecting line, grid, and text all
-    correctly re-derive from INK/INK_SOFT/PAGE_BG tokens so both renders are legible'
+  - 'Overlap fully resolved: the rewritten deterministic slot-based beeswarm packing
+    (ascending-value sweep with min-gap-gated alternating offsets) eliminates the
+    near-concentric point stacking that was flagged in attempt 1, even in the densest
+    Medium Dose (n=55) and High Dose (n=40) columns'
+  - Median diamond markers connected by a dashed trend line remain a strong, clear
+    focal point that makes the dose-response relationship immediately visible
+  - 'Full theme-adaptive chrome preserved: median markers, trend line, grid, and text
+    all correctly re-derive from INK/INK_SOFT/PAGE_BG tokens, so both renders are
+    legible with no dark-on-dark or light-on-light failures'
   - 'Correct Imprint categorical palette in canonical order with Placebo mapped to
-    #009E73'
+    #009E73, identical data colors across both renders'
   - Realistic clinical-trial biomarker scenario with decreasing variance at higher
-    doses — biologically plausible and includes a genuine low outlier in the Low Dose
-    group
+    doses and a genuine low outlier in Low Dose — biologically plausible and appropriately
+    scaled
   weaknesses:
-  - Points visibly overlap/stack in the two densest groups (Medium Dose n=55, High
-    Dose n=40) — the fixed bin/spacing offsets produce two tight columns where several
-    circles sit almost concentrically instead of spreading outward; tighten n_bins
-    or reduce point size/spacing so the swarm avoids excessive overlap as the spec's
-    notes require
-  - beeswarm_offsets() introduces a helper function, breaking the KISS Imports→Data→Plot→Save
-    structure — acceptable given plotnine has no native swarm geom, but consider inlining
-    or simplifying if the offset logic can be shortened
-  - The custom offset/median-line logic is generic pandas/numpy rather than a plotnine-distinctive
-    feature — LM-02 stays low; consider layering a subtle geom_violin or density hint
-    behind the points to lean further into plotnine's grammar-of-graphics strengths
+  - 'The new packing algorithm swaps the overlap problem for a different visual artifact:
+    points in the denser groups (especially Medium Dose and High Dose) form a rigid,
+    radially-symmetric ''starburst''/concentric-ring pattern instead of an organic
+    beeswarm silhouette. It reads as a mechanical, quantized grid rather than a natural
+    density-following spread, which slightly undercuts the polish of an otherwise
+    clean, restrained design — consider adding a small random jitter within each slot,
+    or a finer/variable spacing step, to break the perfect radial symmetry while keeping
+    points non-overlapping'
+  - beeswarm_offsets() is still a helper function, which is a necessary but acknowledged
+    deviation from the strict KISS Imports->Data->Plot->Save structure (unavoidable
+    since plotnine has no native swarm geom)
+  - The swarm-packing logic itself remains generic pandas/numpy rather than a plotnine-distinctive
+    technique — LM-02 stays low
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "swarm-basic · plotnine · anyplot.ai" centered at top in dark ink, fully within the canvas with comfortable margin (no clipping). X-axis shows "Treatment Group" with category labels (Placebo, Low Dose, Medium Dose, High Dose); Y-axis shows "Biomarker Level (ng/mL)" with numeric ticks. Grid lines are faint horizontal guides, barely visible. All text renders in dark ink (#1A1A17) or soft grey (#4A4A44) and is clearly legible against the light background.
-      Data: Four beeswarm columns, one per treatment group, colored green (#009E73, Placebo), purple (#C475FD, Low Dose), blue (#4467A3, Medium Dose), amber (#BD8233, High Dose) — matches Imprint canonical order with Placebo as the primary #009E73 series. Each group shows a spread of individual points (some visible overlap in the denser Medium/High Dose columns), a black diamond median marker per group, and a dashed grey line connecting the medians left to right, visually tracing the increasing dose-response trend.
-      Legibility verdict: PASS — all title, axis, and tick text is clearly readable against the light background.
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "swarm-basic · plotnine · anyplot.ai" centered at top in dark ink, comfortably within canvas bounds. X-axis "Treatment Group" with four category ticks (Placebo, Low Dose, Medium Dose, High Dose); Y-axis "Biomarker Level (ng/mL)" with numeric ticks (20-80). Faint horizontal/vertical grid lines. All title/axis/tick text clearly readable against the light background.
+      Data: Four beeswarm columns colored green/purple/blue/amber (Imprint canonical order, Placebo = #009E73), each with individual points, a black diamond median marker, and a dashed dark-grey line tracing the medians left-to-right to show the dose-response trend. Zoomed inspection of the Medium Dose and High Dose columns (the densest groups) confirms no point-on-point overlap remains — points are cleanly separated, arranged in a radially symmetric ring/starburst pattern around each group's center.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, and tick labels, now rendered in light ink (#F0EFE8) / light grey (#B8B7B0), fully legible against the dark background. Grid lines remain faint but visible. No dark-on-dark text detected anywhere.
-      Data: Identical data colors to the light render (green/purple/blue/amber) — confirms only chrome flipped between themes. Median diamond markers switch from black to off-white so they remain visible against the dark panel; the dashed median-trend line is a lighter grey, still legible.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed.
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same layout and text content, rendered in light ink/light grey — fully legible, no dark-on-dark issues found anywhere (title, axis titles, tick labels all readable).
+      Data: Colors (green/purple/blue/amber) identical to the light render — only chrome flipped. Median diamond markers flip from black to off-white/cream and the trend line becomes light grey, both still clearly visible against the dark panel. Zoomed inspection of the Medium Dose column confirms the same clean, overlap-free point separation as the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); readable at full size
-          in both themes; title well-proportioned and not clipped
+        comment: All font sizes explicitly set via element_text(); readable in both
+          themes; title well within bounds
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text or data elements
+        comment: No text overlap
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Points visible but several overlap/stack near-concentrically in the
-          dense Medium/High Dose columns — not optimally adapted to density
+        comment: Overlap between points fully resolved (fixed from attempt 1), but
+          the deterministic slot packing produces a quantized ring pattern rather
+          than optimally organic density-following spread
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues, CVD-safe Imprint palette, no red-green sole signal
+        comment: Good contrast, CVD-safe, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; nothing cut off
+        comment: Good proportions, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -99,19 +104,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
-          in both renders'
+        comment: 'Correct Imprint canonical order, Placebo = #009E73, theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Custom palette, intentional hierarchy via median markers + trend
-          line, clearly above defaults
+        passed: false
+        comment: Custom palette and intentional median/trend hierarchy above defaults,
+          but the mechanical starburst point pattern reads as an algorithmic artifact
+          rather than elegant/organic
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -123,10 +129,10 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Dashed median-trend line and diamond markers create a clear focal
-          point showing the dose-response relationship
+        comment: Dashed median-trend line creates a clear focal point showing the
+          dose-response relationship
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,28 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct beeswarm/swarm plot type via custom deterministic packing
+        comment: Correct swarm/beeswarm plot
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Consistent point size, median markers, color-by-category, clear group
-          spacing present; spec's 'without excessive overlap' note is only partially
-          met given dense-column overlap
+        comment: Overlap-avoidance requirement from spec now satisfied after the packing
+          rewrite
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x-axis, numeric value on y-axis, all data visible
+        comment: X/Y correctly assigned, axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed since categories are already
-          labeled on the x-axis
+        comment: Title format correct; no separate legend needed since color is redundant
+          with labeled x-axis categories
     data_quality:
       score: 14
       max: 15
@@ -165,21 +170,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows varying spread/mean across groups plus a genuine low outlier
-          in Low Dose
+        comment: Varying spread/mean per group plus a genuine low outlier in Low Dose
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible clinical-trial biomarker scenario
+        comment: Neutral, plausible clinical-trial biomarker scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible biomarker values; variance shrinking with dose is biologically
-          sensible
+        comment: Sensible biomarker values and decreasing variance with dose
     code_quality:
       score: 9
       max: 10
@@ -189,14 +192,14 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses a helper function (beeswarm_offsets) — justified by plotnine
-          lacking a native swarm geom, but deviates from strict Imports→Data→Plot→Save
+        comment: Helper function beeswarm_offsets() needed since plotnine lacks a
+          native swarm geom, deviates from strict Imports->Data->Plot->Save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -208,13 +211,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the technique, no fake functionality
+        comment: Clean, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at correct dpi/size, current API
+        comment: Saves plot-{THEME}.png via current API
     library_mastery:
       score: 7
       max: 10
@@ -230,10 +233,10 @@ review:
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Layered grammar-of-graphics composition is somewhat plotnine-flavored,
-          but the swarm-packing logic itself is generic pandas/numpy, not library-distinctive
-  verdict: REJECTED
+        passed: false
+        comment: Layered grammar-of-graphics composition is plotnine-flavored, but
+          the swarm-packing logic itself remains generic pandas/numpy
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -243,8 +246,8 @@ impl_tags:
   - data-generation
   - groupby-aggregation
   - iteration-over-groups
-  dataprep:
-  - binning
+  dataprep: []
   styling:
   - alpha-blending
   - grid-styling
+  - minimal-chrome
