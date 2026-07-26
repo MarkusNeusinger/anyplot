@@ -1,0 +1,233 @@
+library: makie
+language: julia
+specification_id: swarm-basic
+created: '2026-07-26T07:19:24Z'
+updated: '2026-07-26T07:33:48Z'
+generated_by: claude-sonnet
+workflow_run: 30192426062
+issue: 974
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Correct Imprint palette with brand green first series, verified identical across
+    both themes
+  - Theme-adaptive chrome fully correct in both light and dark renders — no legibility
+    failures
+  - 'Sound engineering for a library gap: Makie has no native swarm/beeswarm geom,
+    so the greedy nearest-free-slot collision algorithm is a legitimate, well-commented
+    solution rather than a workaround'
+  - Subtitle explicitly ties the data story to the visual (bolded median line for
+    the leading department)
+  - Realistic, well-varied data across all four departments (different means, spreads,
+    and outliers)
+  weaknesses:
+  - LM-02 is low — the implementation doesn't lean on anything distinctive to Makie
+    beyond colorant/RGBAf tokens; consider a Makie-specific touch (e.g. a Legend block,
+    a custom recipe, or GeometryBasics-based marker shapes) to raise library mastery
+  - Busiest swarm bands (Sales ~76-81, Marketing ~74-79) read slightly dense — a marginal
+    reduction in markersize or increase in step_x/min_dist_y would improve point-level
+    visibility without changing the overall shape
+  - DE-01/DE-02 are solid but not yet publication-tier — a touch more restraint on
+    y-axis padding and a slightly stronger visual differentiator for the winning department
+    (beyond line-width) would push this further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold centered title "swarm-basic · julia · makie · anyplot.ai" in dark ink; soft-ink subtitle "Support leads with the highest median score (83)"; axis titles "Department" / "Performance Score (0-100)" and tick labels all in dark/soft-ink tones, fully readable. Subtle horizontal-only gridlines every 10 units.
+      Data: Four beeswarm columns — Engineering=#009E73 (first series, brand green confirmed), Sales=#C475FD lavender, Support=#4467A3 blue, Marketing=#BD8233 ochre. Solid median line per department, bolder for Support (the leader).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, subtitle, axis titles, and tick labels flip to light/soft-light ink and remain fully legible; gridlines and median lines switch to light tone appropriate for dark surface. No dark-on-dark failures found.
+      Data: Colors identical to light render (#009E73/#C475FD/#4467A3/#BD8233) — only chrome flipped, confirmed by direct comparison.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Collision-avoidance layout works, but busiest bands read visually
+          dense
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four hues, good luminance separation, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills majority of canvas, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with scale range
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, theme-correct chrome in both
+          renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, intentional hierarchy, above defaults, short of publication-tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtitle callout + bolder median line create a clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine hand-rolled beeswarm layout
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent sizes, median marker, color-coded categories, clear spacing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, value on y, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; no separate legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Distinct means/spreads/outliers across departments
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 scale, plausible department differences
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-scoped custom collision algorithm, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct save call, current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Clean high-level Figure/Axis/scatter! usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Generic hand-rolled swarm algorithm, no Makie-distinctive features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling
