@@ -1,11 +1,13 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 79/100 | Updated: 2026-07-26
 """
 
 import os
+import re
 
+import cairosvg
 import pygal
 from pygal.style import Style
 
@@ -14,6 +16,16 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# All 4 Imprint wedge hues are dark enough that pygal auto-picks BLACK
+# print_labels text (contrast-matched against the wedge fill it normally
+# sits on). But a few team labels land past the disk's outer edge on the
+# plain page background instead of on a wedge; there pygal's per-series
+# fill has no way to know it's off-wedge, so in dark theme black text goes
+# invisible on the near-black canvas. A thin light halo (independent of
+# THEME, since the black fill itself is theme-independent) keeps every
+# label legible everywhere it can land, without touching on-wedge contrast.
+LABEL_HALO = "#F0EFE8"
 
 IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
 
@@ -92,6 +104,19 @@ for dept_name, teams in departments:
     points.append({"value": carrier_value, "color": carrier_color, "label": dept_name, "tooltip": carrier_name})
     chart.add(dept_name, points)
 
-chart.render_to_png(f"plot-{THEME}.png")
-with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+svg = chart.render(is_unicode=True)
+chart_id = re.search(r'id="(chart-[^"]+)"', svg).group(1)
+# pygal's base stylesheet ships `#chart-id text, #chart-id tspan
+# {stroke:none!important}`, which would otherwise strip the halo above -
+# match its id-scoped specificity (plus !important) to win the cascade.
+svg = svg.replace(
+    '<style type="text/css">',
+    f'<style type="text/css">#{chart_id} .text-overlay text.label '
+    f"{{stroke:{LABEL_HALO} !important;stroke-width:2px !important;"
+    f"stroke-linejoin:round !important;}}",
+    1,
+)
+
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png", dpi=72)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(svg)
