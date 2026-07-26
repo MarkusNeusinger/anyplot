@@ -1,0 +1,249 @@
+library: d3
+language: javascript
+specification_id: slope-basic
+created: '2026-07-25T23:48:50Z'
+updated: '2026-07-26T00:03:19Z'
+generated_by: claude-sonnet
+workflow_run: 30179881795
+issue: 981
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'All four prior weaknesses fixed: added the ''Employee Satisfaction Score (0-100
+    scale)'' subtitle (VQ-06 units), bumped endpoint-label font from 15px to 17px
+    for better hierarchy against the 22px title (VQ-01), and added a standout annotation
+    (''Engineering: +9 (largest gain)'') with a thickened/darker highlighted line
+    giving the chart a clear DE-03 focal point'
+  - Custom label-decluttering algorithm (declutter()) still cleanly resolves overlaps
+    across 10 densely-packed entities on both label columns, with subtle leader ticks
+    connecting nudged labels back to their true value position
+  - 'Correct semantic color exception per the Imprint style guide (green = improved,
+    matte red #AE3030 = declined), redundantly reinforced by the slope direction itself
+    so the encoding is never red-green-only'
+  - Theme-adaptive chrome verified correct in both renders — warm off-white / near-black
+    backgrounds, no dark-on-dark or light-on-light text failures, data colors identical
+    between themes
+  - Canvas is exactly 3200x1800, title format and legend labels match spec exactly,
+    data is fully deterministic and in-memory (no fetch/csv)
+  weaknesses:
+  - The declutter() helper function still deviates from the KISS 'no functions' default
+    (CQ-01) — justified by the genuine label-collision problem across 10 entities,
+    but keep an eye on it if further complexity is added
+  - DE-01 aesthetic sophistication is solid and professional but not yet at the 'FiveThirtyEight-level'
+    distinctive-palette tier — mostly restrained typography and semantic color rather
+    than a truly bespoke visual signature
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "slope-basic · javascript · d3 · anyplot.ai" in bold dark ink at top-center, clearly legible, with a new subtitle "Employee Satisfaction Score (0-100 scale)" directly beneath it giving the values units/context. "Improved"/"Declined" legend centered below the subtitle with matching colored line swatches. "2019 Survey" and "2024 Survey" bold headers above each vertical axis line. Left labels read "Department · Value", right labels read "Value · Department", both in soft dark-gray ink at 17px, all legible against the light background with no overlap between adjacent labels (the decluttering algorithm keeps a minimum vertical gap even where raw values are close, e.g. Legal/HR at 82/80 or Finance/IT at 70/69, using thin leader ticks to reconnect nudged labels to their true value position).
+      Data: Ten department slope lines running left (2019) to right (2024), each with a filled circle endpoint marker. Lines colored brand green (#009E73) for departments whose 2024 score rose (e.g. Product 77→83, Engineering 72→81) and matte red (#AE3030) for departments that declined (e.g. Legal 82→80, Sales 68→61, Customer Support 58→52). Direction is reinforced twice — by color and by the visible slope of the line itself. Engineering's line is now visibly thicker/darker than the rest, with a bold annotation "Engineering: +9 (largest gain)" at its midpoint calling out the single largest mover — a clear storytelling focal point that was missing in the previous attempt.
+      Legibility verdict: PASS — all title, subtitle, legend, header, annotation, and endpoint-label text is clearly readable against the light surface; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, subtitle, legend, and axis-header text now rendered in light ink/off-white, clearly visible against the dark surface. Vertical axis lines and leader ticks use a soft light-gray stroke that remains visible without dominating the composition. Endpoint labels in light soft-ink are readable at the same positions as the light render.
+      Data: Same ten slope lines in the identical brand green (#009E73) and matte red (#AE3030) hues as the light render — confirmed data colors are unchanged between themes; only the chrome (background, text, axis-line, leader-tick colors) flipped. The Engineering standout annotation and thickened line are equally prominent and legible in this theme.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every title, subtitle, legend, header, annotation, and endpoint label is clearly legible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Endpoint labels bumped from 15px to 17px, now well-balanced against
+          the 22px title/20px axis headers/16px subtitle; all explicitly sized and
+          readable in both themes and at 400px mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Custom decluttering algorithm prevents any label collisions across
+          both columns
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (10 entities) with prominent 6-8px-radius markers and
+          3-5px stroke lines, standout entity emphasized further
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red direction coding is redundantly reinforced by slope direction,
+          not a sole signal; CVD-safe Imprint palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, well-proportioned margins, nothing cut
+          off, title/subtitle/legend comfortably sized
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: New subtitle 'Employee Satisfaction Score (0-100 scale)' now supplies
+          the units/context that was missing in attempt 1
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, semantic-exception matte red for decline per
+          style guide, correct light/dark backgrounds, identical data colors across
+          themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional, restrained styling with custom typography hierarchy;
+          solid but not yet a fully distinctive bespoke design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No unnecessary chrome, subtle leader ticks, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New standout annotation + thickened/darkened line for Engineering
+          (+9, largest gain) gives the chart a clear focal point on top of the existing
+          color/slope hierarchy — the prior 'no emphasis' weakness is resolved
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct slopegraph structure
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Endpoint labels, direction color-coding, labeled vertical axes, 10
+          entities (within recommended 5-15)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: value_start/value_end correctly mapped to left/right axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; legend labels Improved/Declined match direction
+          semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers all spec-listed features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee satisfaction survey by department, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores 52-83 on an implied 0-100 scale, sensible spread
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses a declutter() helper function, deviating from the strict no-functions
+          default, though functionally justified by genuine label-collision handling
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used, no import statements
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality or fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container per contract, no animation'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct D3 join pattern, scaleLinear, token-driven theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom decluttering algorithm, leader-tick technique, and standout-annotation
+          emphasis beyond the basic skeleton example
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
