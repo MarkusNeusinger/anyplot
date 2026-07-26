@@ -42,6 +42,7 @@ swarm_x = Float64[]
 swarm_y = Float64[]
 swarm_color = eltype(IMPRINT_PALETTE)[]
 group_medians = Float64[]
+max_offset = 0.0
 
 for (group_index, (department, n, group_mean, group_std)) in
         enumerate(zip(departments, group_sizes, group_means, group_stds))
@@ -89,7 +90,14 @@ for (group_index, (department, n, group_mean, group_std)) in
     append!(swarm_y, scores)
     append!(swarm_color, fill(IMPRINT_PALETTE[group_index], n))
     push!(group_medians, median(scores))
+    global max_offset = max(max_offset, maximum(abs, offsets))
 end
+
+# Headline comparison for the subtitle + callout: the department with the
+# highest median score drives the data story beyond the per-group medians.
+best_idx = argmax(group_medians)
+subtitle_text = "$(departments[best_idx]) leads with the highest median score " *
+                "($(round(Int, group_medians[best_idx])))"
 
 # --- Plot -----------------------------------------------------------------------
 fig = Figure(
@@ -103,8 +111,11 @@ ax = Axis(
     title             = "swarm-basic · julia · makie · anyplot.ai",
     titlesize         = 20,
     titlecolor        = INK,
+    subtitle          = subtitle_text,
+    subtitlesize      = 14,
+    subtitlecolor     = INK_SOFT,
     xlabel            = "Department",
-    ylabel            = "Performance Score",
+    ylabel            = "Performance Score (0–100)",
     xlabelsize        = 16,
     ylabelsize        = 16,
     xlabelcolor       = INK,
@@ -128,15 +139,19 @@ ax = Axis(
 
 scatter!(ax, swarm_x, swarm_y;
          color = swarm_color, markersize = 11,
-         strokewidth = 1, strokecolor = PAGE_BG)
+         strokewidth = 0.75, strokecolor = INK)
 
-# Subtle median marker per department
+# Median marker per department; the top performer gets a bolder line so the
+# subtitle's callout has a visible anchor on the chart.
 for (group_index, group_median) in enumerate(group_medians)
     lines!(ax, [group_index - 0.32, group_index + 0.32], [group_median, group_median];
-           color = INK, linewidth = 2.5)
+           color = INK, linewidth = group_index == best_idx ? 3.5 : 2.5)
 end
 
-xlims!(ax, 0.4, length(departments) + 0.6)
+# Symmetric padding derived from the widest swarm actually placed, so the
+# canvas margins stay balanced regardless of how far any one department spreads.
+pad = max_offset + 0.12
+xlims!(ax, 1 - pad, length(departments) + pad)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
