@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:54:54Z'
-updated: '2026-07-26T07:09:38Z'
+updated: '2026-07-26T07:16:38Z'
 generated_by: claude-sonnet
 workflow_run: 30192068841
 issue: 974
@@ -12,46 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - First series correctly uses Imprint brand green (#009E73), with the remaining
-    3 departments in canonical Imprint order (lavender, blue, ochre)
-  - Theme-adaptive chrome fully threaded through configure_axis/configure_view/configure_title/configure_legend
-    — both renders correctly themed with no dark-on-dark or light-on-light failures
-  - Jitter is precomputed deterministically in pandas/numpy (seeded) instead of relying
-    on Vega-Lite's in-chart random(), which would reseed on every render — a smart
-    reproducibility fix noted directly in the code comment
-  - Mean diamond markers plus dashed per-department reference lines add a clear analytical
-    layer (central tendency + comparison) beyond the spec's baseline ask
+  - First series correctly uses Imprint brand green (#009E73), remaining 3 departments
+    in canonical Imprint order (lavender, blue, ochre)
+  - 'Directly addresses the attempt-1 feedback: mark_circle now carries a theme-adaptive
+    stroke (stroke=PAGE_BG, strokeWidth=0.6) that cuts a halo around each point, visibly
+    separating individuals in the dense Sales/Engineering clusters'
+  - New outlier_rings layer (unfilled ink-stroke circles, |z|>2 from department mean)
+    adds a genuine data-storytelling hierarchy cue on top of the mean markers — directly
+    answers the attempt-1 'add an outlier emphasis cue' weakness and is clearly visible
+    on both the HR 45/92/95 and Marketing 41/48 points
+  - Theme-adaptive chrome fully threaded through configure_axis/configure_view/configure_title/configure_legend,
+    plus the new outlier-ring stroke and mean-marker color both correctly flip between
+    INK values — no dark-on-dark or light-on-light failures in either render
+  - Jitter and outlier flags are precomputed deterministically in pandas/numpy (seeded)
+    rather than relying on Vega-Lite's in-chart random(), which would reseed on every
+    render
   - Canvas lands exactly at 3200x1800 in both renders with generous margins and no
     clipping
   - 'Clean KISS script: flat structure, seeded RNG, only used imports (os, altair,
     numpy, pandas, PIL)'
   weaknesses:
-  - Dense overlapping swarm points (notably in the Sales and Engineering clusters)
-    rely only on opacity=0.75 without a white/ink edge stroke on the circles — the
-    style guide's Data Element Styling section recommends edge highlighting for overlapping
-    markers; add a subtle stroke (e.g. stroke=theme-adaptive PAGE_BG or white, strokeWidth~0.5)
-    on mark_circle to better separate individual observations at the densest clusters
-  - Visual refinement leans on Vega-Lite defaults (the L-shaped chrome comes from
-    configure_view(stroke=None) rather than deliberate additional styling) — consider
-    slightly more breathing room between swarm clusters or a refined legend frame
-    to push polish further
-  - Composition beyond the mean markers is fairly standard; an additional hierarchy
-    cue (e.g. a subtle per-category background band, or emphasizing outliers like
-    the HR 45/92/95 points) would strengthen the data storytelling further
+  - Sales cluster (52 points, the densest group) still has noticeable point-on-point
+    overlap even with the new stroke halo — the stroke helps but at 0.75 opacity +
+    size=140 several points fully merge into indistinguishable blobs around y=62-67;
+    consider a slightly narrower jitter width or smaller marker size specifically
+    for the densest department
+  - Composition still reads close to Vega-Lite defaults outside the analytical layers
+    (mean markers, reference lines, outlier rings) — grid is subtle and spines are
+    gone, but there is no additional refinement such as a per-category background
+    band or alternating row shading to further separate the four swarms
+  - Legend swatches are default-sized circles with no additional polish (e.g. no subtle
+    border matching the elevated background) — minor, but a small refinement opportunity
+    for Design Excellence
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "swarm-basic · altair · anyplot.ai" centered at top, clearly legible. "Department" (x) and "Performance Score" (y) axis titles in dark ink, tick labels in soft gray, subtle horizontal gridlines only. Legend box (top-right, off-white fill, thin border) lists Engineering/Marketing/Sales/HR swatches, all readable.
-      Data: Four jittered point clusters, one per department, colored Engineering=#009E73 (green), Marketing=lavender, Sales=blue, HR=ochre — matches canonical Imprint order with brand green first. Dark-gray diamond markers + dashed horizontal reference lines mark each department's mean. Points show full distribution shape including outliers (e.g. HR has low ~45 and high ~92/95 outliers; Marketing has a low outlier ~41).
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "swarm-basic · altair · anyplot.ai" centered at top, clearly legible. "Department" (x) and "Performance Score" (y) axis titles in dark ink, tick labels in soft gray, subtle horizontal gridlines only (no vertical gridlines). Legend box (top-right, off-white fill, thin border) lists Engineering/Marketing/Sales/HR swatches, all readable.
+      Data: Four jittered point clusters, one per department, colored Engineering=#009E73 (green), Marketing=lavender, Sales=blue, HR=ochre — matches canonical Imprint order with brand green first. Each circle now carries a subtle background-matching stroke that separates overlapping points in the dense Sales/Engineering clusters. Dark-gray diamond markers + dashed horizontal reference lines mark each department's mean. New unfilled ink-stroke rings circle the out-of-band outliers (Engineering ~93, Sales ~95, HR ~95/92, Marketing ~48/41, HR ~45), adding a clear hierarchy cue on top of the raw swarm.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
       Chrome: Title and axis titles render in light off-white ink, tick labels in light soft-gray, gridlines subtle and visible against the dark surface. Legend box uses the elevated dark fill (#242420) with light text — fully legible, no dark-on-dark failures anywhere.
-      Data: Same four department colors as the light render (green/lavender/blue/ochre) — confirmed identical hex values, only chrome flipped. Mean diamond markers and dashed reference lines switch to light ink (white/off-white) for contrast against the dark background, exactly as expected for theme-adaptive non-data chrome.
+      Data: Same four department colors as the light render (green/lavender/blue/ochre) — confirmed identical hex values, only chrome flipped. Mean diamond markers and the new outlier rings both switch to light ink (white/off-white) for contrast against the dark background, exactly as expected for theme-adaptive non-data chrome. Point-edge strokes also flip to the dark background color, preserving the same separation effect seen in the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -64,7 +70,7 @@ review:
         max: 8
         passed: true
         comment: All text readable in both themes, font sizes match style-guide scale-based
-          defaults (title 16px, axis 12px, ticks/legend 10px at scale_factor=4)
+          defaults (title 16px, axis 12px, ticks/legend 10px)
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -76,15 +82,15 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Markers sized reasonably for ~40-50 pts/group, but dense clusters
-          rely only on alpha (no edge stroke) for separation
+        comment: New stroke halo improves separation in dense clusters, but Sales
+          (52 pts) still has notable point-on-point merging around y=62-67
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; only 4 series (color alone sufficient
-          per style guide table)
+        comment: Imprint palette is CVD-safe; 4 series, color alone sufficient per
+          style guide
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -106,7 +112,7 @@ review:
         comment: 'First series #009E73, canonical Imprint order for remaining 3, correct
           theme backgrounds both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -114,22 +120,24 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Above generic default via mean markers/reference lines, but overall
-          composition close to Vega-Lite defaults
+        comment: Outlier rings + mean markers + reference lines add real analytical
+          polish above generic defaults, but overall composition still close to Vega-Lite
+          defaults outside those layers
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Subtle grid and minimal chrome achieved, but no edge stroke on overlapping
-          markers, no extra polish beyond configure_* defaults
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Mean markers + dashed lines create a clear comparison focal point
-          across departments
+        comment: Directly addresses the attempt-1 ask for edge-stroke on overlapping
+          markers; grid subtle, spines gone; no further refinement (e.g. category
+          background bands) added yet
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New outlier-ring layer gives a clear additional hierarchy cue beyond
+          the mean comparison, directly answering the prior review's weakness
     spec_compliance:
       score: 15
       max: 15
@@ -158,7 +166,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match department names
+        comment: Title format correct and consistent with sibling implementations
+          for this spec, legend labels match department names
     data_quality:
       score: 15
       max: 15
@@ -216,7 +225,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -228,11 +237,12 @@ review:
           config
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
         comment: labelExpr for custom categorical axis, transform_calculate for computed
-          fields, multi-layer composition
+          fields, multi-layer composition now including a dedicated outlier-detection
+          layer
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -249,3 +259,4 @@ impl_tags:
   styling:
   - alpha-blending
   - grid-styling
+  - edge-highlighting
