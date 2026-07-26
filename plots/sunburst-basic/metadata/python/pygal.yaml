@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: sunburst-basic
 created: '2026-05-04T22:56:10Z'
-updated: '2026-07-26T05:04:40Z'
+updated: '2026-07-26T05:24:10Z'
 generated_by: claude-sonnet
 workflow_run: 30187416978
 issue: 821
@@ -12,57 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 75
 review:
   strengths:
-  - 'Critical structural fix from attempt 1: switching to one pygal series per department
-    makes the coarse inner ring genuinely value-proportional (Technology ~42%, Business
-    ~31%, Operations ~17%, Marketing ~10% all match the underlying data), and the
-    thin outer ring correctly subdivides each department''s own arc by its teams —
-    the sunburst hierarchy now actually encodes what the spec requires'
-  - margin=380 (uniform) replaces the old margin_right=320 dead space, producing balanced
-    whitespace and a well-utilized ~68%-diameter disk on the 2400x2400 canvas
-  - Consistent branch-level color tinting (each team is a lighter tint of its parent
-    department's Imprint hue) is a thoughtful, non-default touch that reinforces the
-    hierarchy visually
-  - Deterministic, clean, KISS-structured code with correct dual outputs (plot-{theme}.png
-    + plot-{theme}.html), realistic budget data that sums exactly to department totals,
-    and clever (well-commented) use of pygal's per-datapoint label/tooltip dict switching
-  - 'First categorical series is #009E73, Imprint palette used correctly, and title
-    format is exact'
+  - 'Genuine two-level proportional sunburst: the coarse inner ring is sized by true
+    department share (Technology ~42%, Business ~31%, Operations ~17%, Marketing ~10%)
+    and the thin outer ring subdivides each department''s own angular span by its
+    teams — the structural bug from Attempt 1 remains correctly fixed'
+  - 'Balanced layout: uniform margin=380 keeps the ~68%-diameter disk well-centered
+    with even whitespace on all sides'
+  - Consistent branch-level color tinting (each team rendered as a lighter tint of
+    its parent department's Imprint hue) visually reinforces the hierarchy
+  - 'Deterministic, clean, KISS-structured code with correct dual outputs (plot-{theme}.png
+    + plot-{theme}.html), first series is the mandated #009E73, and title format is
+    exact'
+  - Realistic, internally consistent budget data — team values sum exactly to their
+    department totals, and DQ/SC categories score at or near max
   weaknesses:
-  - 'CRITICAL dark-on-dark failure (VQ-01/VQ-07): in plot-dark.png, the ''Backend
-    Engineering'' and ''Frontend Engineering'' team labels (Technology department,
-    top-right of the disk) are placed outside the pie ring directly on the plain #1A1A17
-    canvas background, but render in fixed black/near-black text -- nearly invisible.
-    The same labels work fine in plot-light.png only because dark text happens to
-    sit on the light #FAF8F1 background there; the underlying label color is not theme-adaptive
-    the way the title color (foreground_strong=INK) correctly is. Repair should make
-    sure these externally-placed print_labels pick up the theme-adaptive INK/foreground_strong
-    token (or a dedicated pygal label-fill override) instead of defaulting to a fixed
-    dark fill.'
-  - The thin outer (team-level) ring still gets a much smaller radial share of the
-    disk than the coarse (department-level) ring -- correct proportionally, but visually
-    underweights the second hierarchy level; consider whether pygal's dual-mode ring-width
-    ratio can be tuned further, or accept as an inherent library limitation.
-  - The dual multi-series Pie hack is a clever workaround but not native/idiomatic
-    pygal API (pygal has no first-class Sunburst type), so Library Mastery is capped
-    by that constraint rather than free choice of a purpose-built idiom.
+  - 'CRITICAL, UNRESOLVED from Attempt 2: ''Backend Engineering'' and ''Frontend Engineering''
+    labels sit outside the disk on the plain canvas background and render in fixed
+    black text. In plot-dark.png this is a dark-on-dark failure — measured pixel colors
+    are background #1A1A17 (RGB 26,26,23) vs. text ~#000000, a WCAG contrast ratio
+    of only ~1.2:1 (functionally invisible; passes only ~26% of the width of a readable
+    label).'
+  - 'The Attempt-2 repair added a CSS-injection ''halo'' fix (searching for ''<style
+    type="text/css">'' and inserting a stroke rule for .text-overlay text.label) intended
+    to solve exactly this bug, but the injection is dead code: grepping the actual
+    generated plot-dark.html / plot-light.html shows no ''stroke-linejoin'', no ''#F0EFE8
+    !important'' halo rule, and no trace of the injected string anywhere in the output
+    — the fix was never verified against the real rendered artifact before being shipped.'
+  - Because the halo never applies, the label text in both themes is still the same
+    flat black fill pygal auto-picks for off-wedge labels; it happens to be legible
+    in the light render purely because black-on-#FAF8F1 is fine, not because the fix
+    works.
+  - Outer team-level ring remains radially thin relative to the coarse department
+    ring (pygal dual-mode limitation, unchanged from prior attempts).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Title "sunburst-basic · python · pygal · anyplot.ai" in dark ink, ~70% canvas width, fully legible near the top with comfortable margin from the top edge. Department labels (Technology, Business, Operations, Marketing) sit inside their large coarse wedges in dark text; team labels (Backend Engineering, Frontend Engineering, Sales, IT Support) sit near/just outside the thin outer ring, also in dark text -- all fully readable against the light background, including the two labels ("Backend Engineering", "Frontend Engineering") that fall on the plain background outside the disk.
-      Data: A large disk fills ~68% of canvas diameter, split into 4 correctly-proportional coarse wedges (green #009E73 = Technology ~42%, purple = Business ~31%, blue = Operations ~17%, ochre = Marketing ~10%), each with a thin outer ring subdividing that department's own teams proportionally, using a lighter tint of the parent's hue. First series is #009E73 as required.
-      Legibility verdict: PASS.
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "sunburst-basic · python · pygal · anyplot.ai" in dark ink, ~70% canvas width, fully legible near the top. Department labels (Technology, Business, Operations, Marketing) sit inside their coarse wedges in dark ink. Team labels "Sales", "IT Support" sit inside/near colored wedges; "Backend Engineering" and "Frontend Engineering" sit outside the disk directly on the plain background, in dark/black text.
+      Data: A large disk (~68% of canvas diameter) with 4 correctly-proportional coarse department wedges (green #009E73 Technology ~42%, purple Business ~31%, blue Operations ~17%, ochre Marketing ~10%), each with a thin outer ring subdividing that department's teams proportionally in a lighter tint of the parent hue. First series is the mandated #009E73.
+      Legibility verdict: PASS (all text, including the two off-wedge labels, happens to read fine here only because dark text on the light #FAF8F1 background is inherently legible).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Title renders correctly in light ink, fully legible against the dark background (theme token correctly threaded). Department labels sitting on colored wedges (dark text on green/purple/blue/ochre) remain legible since wedge colors are unchanged from light render. However, the "Backend Engineering" and "Frontend Engineering" team labels are placed outside the disk directly on the plain dark background, and render in the SAME fixed black/near-black text as in the light render -- this is a dark-on-dark failure: the text is nearly invisible against the #1A1A17 canvas. "IT Support" and "Sales" avoid this because their label placement happens to land on a colored wedge rather than the plain background.
-      Data: Confirmed identical to light render -- same 4 department hues and team tints, only chrome (background, title) flips as expected.
-      Legibility verdict: FAIL -- "Backend Engineering" and "Frontend Engineering" labels are dark-on-dark and effectively unreadable in the dark render.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Title and on-wedge labels correctly flip to light ink (#F0EFE8) and are fully legible — no dark-on-dark failure for those elements.
+      Data: Wedge/ring colors are pixel-identical to the light render (only chrome flipped), confirming palette consistency across themes.
+      Legibility verdict: FAIL for two elements. "Backend Engineering" and "Frontend Engineering" are placed outside the disk directly on the plain #1A1A17 background but still render in fixed black (~#000000) fill. Direct pixel sampling confirms background RGB (26,26,23) vs. text RGB near (0,0,0) — a WCAG contrast ratio of ~1.2:1, i.e. functionally invisible. This is the identical failure flagged in the Attempt-2 review; the repair's attempted CSS "halo" fix does not appear anywhere in the actual rendered SVG/HTML output (verified via direct text search), so it never took effect.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 19
       max: 30
       items:
       - id: VQ-01
@@ -70,100 +69,104 @@ review:
         score: 0
         max: 8
         passed: false
-        comment: 'Dark render: ''Backend Engineering'' and ''Frontend Engineering''
-          labels are black text on the near-black #1A1A17 background outside the disk
-          -- dark-on-dark, effectively unreadable'
+        comment: 'Backend Engineering / Frontend Engineering labels are ~#000000 text
+          on the #1A1A17 dark background (measured contrast ~1.2:1) — functionally
+          invisible in plot-dark.png; identical unresolved failure from Attempt 2.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or data in either render
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Wedges and labels clearly visible; outer team-ring is proportionally
-          correct but radially thin compared to the coarse ring
+        comment: Wedges/rings appropriately sized; outer team ring is radially thin
+          relative to the coarse department ring.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues per department, no red-green-only signal, good contrast
+        comment: Data wedge colors have good contrast and are CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: margin=380 uniform now gives balanced whitespace; disk fills ~68%
-          of canvas diameter
+        comment: Uniform margin=380 gives a balanced ~68%-diameter disk with even
+          whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for this chart type; title fully descriptive per required
-          format
+        comment: Title is descriptive and exact format.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Palette and backgrounds are theme-correct, but chrome has two off-theme
-          elements in the dark render (the two dark-on-dark labels)
+        comment: Dark render has dark text on the dark page background for two label
+          elements — wrong-theme chrome.
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        comment: Branch-consistent tinting is a nice touch, but overall reads as a
-          well-configured default rather than exceptional polish
+        passed: false
+        comment: Thoughtful per-branch tinting, but overall reads as a well-configured
+          default.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        comment: Balanced margins, subtle matching strokes between rings; some refinement
-          visible
+        passed: false
+        comment: The CSS-injection 'halo' fix added this attempt is dead code (never
+          appears in the rendered output) — an unverified fix undercuts attention
+          to detail.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Now that proportions are correct, the size hierarchy itself communicates
-          department share clearly, guiding the viewer
+        passed: true
+        comment: Correct wedge-size hierarchy still clearly communicates department
+          share even where labels fail.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: 'Genuine two-level sunburst: coarse ring proportional to department
-          value, outer ring proportional to team value within each department''s own
-          angular span'
+        passed: true
+        comment: Genuine two-level proportional sunburst.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        comment: Major segments labeled, smaller segments fall back to hover tooltip,
-          clear stroke separation between hierarchy levels, inner segments encompass
-          children's angular span
+        passed: false
+        comment: '''Label major segments'' is not fully met in dark mode: two major
+          segments (weights 200 and 175) have labels present in the DOM but invisible
+          on screen.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Department and team values correctly mapped to wedge angles
+        passed: true
+        comment: Angular spans correctly map to values at both hierarchy levels.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches required format exactly; no legend needed since labels
-          are inline
+        passed: true
+        comment: Title format exact; no legend needed (labels serve that role).
     data_quality:
       score: 15
       max: 15
@@ -172,49 +175,56 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: Shows full 2-level hierarchy with varied department and team sizes
-          (12 leaf nodes across 4 departments)
+        passed: true
+        comment: 4 departments x 3 teams each, varied values, 2 hierarchy levels shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Realistic, neutral corporate department/team budget breakdown
+        passed: true
+        comment: Neutral, realistic org budget breakdown.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Values plausible for a corporate budget; Engineering dominant, Marketing
-          smallest, teams sum exactly to department totals
+        passed: true
+        comment: Team values sum exactly to department totals; plausible $K magnitudes.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        passed: true
+        comment: Imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully deterministic hardcoded data, no randomness
+        passed: true
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only os and pygal imports, both used
+        passed: true
+        comment: Only used imports (os, re, cairosvg, pygal, pygal.style.Style).
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        comment: Clean list comprehensions, well-commented rationale for the dual-series
-          trick, no fake functionality
+        passed: false
+        comment: The svg.replace()-based CSS injection is non-functional (verified
+          absent from rendered output) — added complexity that does not achieve its
+          stated purpose.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-{theme}.png and plot-{theme}.html correctly
+        passed: true
+        comment: Saves plot-{theme}.png and plot-{theme}.html correctly.
     library_mastery:
       score: 7
       max: 10
@@ -223,23 +233,24 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
+        passed: true
         comment: Correct Style/Pie API usage, but the dual multi-series mode is a
-          workaround (pygal has no native Sunburst type) rather than a documented
-          recommended pattern
+          workaround since pygal has no native Sunburst type.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: Distinctive use of pygal's per-datapoint label/tooltip dict switching
-          and dual-mode multi-series hierarchy encoding
-  verdict: REJECTED
+        passed: true
+        comment: Distinctive per-datapoint label/tooltip dict switching and dual-mode
+          hierarchy encoding.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
-  - hover-tooltips
   - html-export
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - minimal-chrome
+  styling: []

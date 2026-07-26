@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: pygal 3.1.3 | Python 3.13.14
-Quality: 79/100 | Updated: 2026-07-26
+Quality: 75/100 | Updated: 2026-07-26
 """
 
 import os
