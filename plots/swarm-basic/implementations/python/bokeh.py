@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-07-26
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -51,30 +51,58 @@ for dept, n in zip(departments, n_per_group, strict=False):
 values = np.array(values)
 categories = np.array(categories)
 
-# Calculate swarm positions (jitter to avoid overlap)
-x_jitter = np.zeros(len(values))
-jitter_width = 0.35
+# Canvas geometry (must match the figure() call below) - used to convert
+# the swarm dodge into real screen-pixel distances.
+CANVAS_W, CANVAS_H = 3200, 1800
+BORDER_L, BORDER_R, BORDER_T, BORDER_B = 180, 50, 110, 160
+X_RANGE = (-0.6, len(departments) - 0.4)
+Y_RANGE = (25, 108)
+PX_PER_X = (CANVAS_W - BORDER_L - BORDER_R) / (X_RANGE[1] - X_RANGE[0])
+PX_PER_Y = (CANVAS_H - BORDER_T - BORDER_B) / (Y_RANGE[1] - Y_RANGE[0])
 
+MARKER_SIZE = 12
+MIN_GAP_PX = MARKER_SIZE + 1  # marker diameter + a hairline so edges never touch
+MAX_OFFSET = 0.42  # stays clear of the neighboring category's column
+
+
+def swarm_dodge(dept_values, px_per_x, px_per_y, min_gap_px, max_offset):
+    """Greedy incremental beeswarm: points are placed lowest-to-highest value,
+    and each one claims the offset closest to zero whose pixel-space distance
+    clears every already-placed point in the category. Unlike a density-window
+    heuristic with a hard cap, this checks against ALL prior points, so no two
+    points ever end up within one marker-width of each other."""
+    order = np.argsort(dept_values)
+    offsets = np.zeros(len(dept_values))
+    placed = []  # (offset, value) of points already positioned
+    step = min_gap_px / px_per_x
+
+    for idx in order:
+        y = dept_values[idx]
+        k = 0
+        chosen = None
+        while chosen is None:
+            candidates = [0.0] if k == 0 else [k * step, -k * step]
+            for c in candidates:
+                if abs(c) > max_offset:
+                    continue
+                if all((c - ox) ** 2 * px_per_x**2 + (y - oy) ** 2 * px_per_y**2 >= min_gap_px**2 for ox, oy in placed):
+                    chosen = c
+                    break
+            if chosen is None:
+                k += 1
+                if k * step > max_offset:
+                    # Column is denser than min_gap_px allows within max_offset -
+                    # fall back to the farthest allowed offset, alternating sides.
+                    chosen = max_offset if len(placed) % 2 == 0 else -max_offset
+        offsets[idx] = chosen
+        placed.append((chosen, y))
+    return offsets
+
+
+x_jitter = np.zeros(len(values))
 for dept in departments:
     mask = categories == dept
-    dept_values = values[mask]
-    n_points = len(dept_values)
-
-    sorted_indices = np.argsort(dept_values)
-    sorted_values = dept_values[sorted_indices]
-
-    jitter = np.zeros(n_points)
-    bin_size = 3
-
-    for j in range(n_points):
-        nearby = np.abs(sorted_values - sorted_values[j]) < bin_size
-        nearby_count = np.sum(nearby[:j])
-        direction = 1 if nearby_count % 2 == 0 else -1
-        offset = (nearby_count // 2 + 1) * 0.08
-        jitter[j] = direction * min(offset, jitter_width)
-
-    inverse_indices = np.argsort(sorted_indices)
-    x_jitter[mask] = jitter[inverse_indices]
+    x_jitter[mask] = swarm_dodge(values[mask], PX_PER_X, PX_PER_Y, MIN_GAP_PX, MAX_OFFSET)
 
 x_positions = np.array([departments.index(cat) + x_jitter[i] for i, cat in enumerate(categories)])
 
@@ -87,28 +115,90 @@ source = ColumnDataSource(data={"x": x_positions, "y": values, "category": categ
 hover = HoverTool(tooltips=[("Department", "@category"), ("Score", "@y{0.0}")])
 
 p = figure(
-    width=3200,
-    height=1800,
+    width=CANVAS_W,
+    height=CANVAS_H,
     title="swarm-basic · python · bokeh · anyplot.ai",
     x_axis_label="Department",
     y_axis_label="Performance Score",
-    x_range=(-0.6, len(departments) - 0.4),
-    y_range=(25, 108),
+    x_range=X_RANGE,
+    y_range=Y_RANGE,
     tools=[hover],
     toolbar_location=None,
-    min_border_bottom=160,
-    min_border_left=180,
-    min_border_top=110,
-    min_border_right=50,
+    min_border_bottom=BORDER_B,
+    min_border_left=BORDER_L,
+    min_border_top=BORDER_T,
+    min_border_right=BORDER_R,
 )
 
-p.scatter(x="x", y="y", source=source, size=12, color="color", alpha=0.75, line_color=PAGE_BG, line_width=1.2)
+p.scatter(x="x", y="y", source=source, size=MARKER_SIZE, color="color", alpha=0.75, line_color=PAGE_BG, line_width=1.2)
 
 # Median markers for each category
 for i, dept in enumerate(departments):
     mask = categories == dept
     median_val = np.median(values[mask])
     p.line(x=[i - 0.32, i + 0.32], y=[median_val, median_val], line_width=4, line_color=INK, line_alpha=0.65)
+
+# Data-storytelling callouts: highlight the bimodal Sales distribution (found
+# via the largest gap between sorted values, not a hardcoded threshold) and
+# label the two HR outliers - the most visually interesting features in the
+# dataset. BoxAnnotation is a bokeh-distinctive annotation, not a generic
+# scatter/hover feature every interactive library shares.
+sales_idx = departments.index("Sales")
+sales_sorted = np.sort(values[categories == "Sales"])
+split = np.argmax(np.diff(sales_sorted))
+gap_bottom, gap_top = sales_sorted[split], sales_sorted[split + 1]
+p.add_layout(
+    BoxAnnotation(
+        left=sales_idx - 0.42,
+        right=sales_idx + 0.42,
+        bottom=gap_bottom,
+        top=gap_top,
+        fill_color=INK,
+        fill_alpha=0.06,
+        line_color=INK_SOFT,
+        line_alpha=0.4,
+        line_dash="dashed",
+    )
+)
+p.add_layout(
+    Label(
+        x=sales_idx,
+        y=105,
+        text="Bimodal distribution",
+        text_align="center",
+        text_font_size="26pt",
+        text_font_style="italic",
+        text_color=INK_SOFT,
+    )
+)
+
+hr_idx = departments.index("HR")
+hr_values = values[categories == "HR"]
+lo_val, hi_val = hr_values.min(), hr_values.max()
+p.add_layout(
+    Label(
+        x=hr_idx,
+        y=hi_val + 2.5,
+        text="outlier",
+        text_align="center",
+        text_baseline="bottom",
+        text_font_size="24pt",
+        text_font_style="italic",
+        text_color=INK_SOFT,
+    )
+)
+p.add_layout(
+    Label(
+        x=hr_idx,
+        y=lo_val - 2.5,
+        text="outlier",
+        text_align="center",
+        text_baseline="top",
+        text_font_size="24pt",
+        text_font_style="italic",
+        text_color=INK_SOFT,
+    )
+)
 
 # X-axis category labels
 p.xaxis.ticker = list(range(len(departments)))
@@ -147,7 +237,7 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome (Selenium 4 / Selenium Manager)
-W, H = 3200, 1800
+W, H = CANVAS_W, CANVAS_H
 opts = Options()
 for arg in (
     "--headless=new",
