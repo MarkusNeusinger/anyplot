@@ -88,6 +88,9 @@ ax = Axis(
     title           = title_text,
     titlesize       = 20,
     titlecolor      = INK,
+    subtitle        = "Customer Satisfaction Score (0–100)",
+    subtitlesize    = 14,
+    subtitlecolor   = INK_SOFT,
     backgroundcolor = PAGE_BG,
 )
 hidedecorations!(ax)
@@ -102,15 +105,28 @@ for i in 1:n
     rising = score_2024[i] >= score_2023[i]
     color = rising ? IMPRINT_INCREASE : IMPRINT_DECREASE
     label = rising ? "Increase" : "Decrease"
+    arrow = rising ? "▲" : "▼"
 
     lines!(ax, [0, 1], [score_2023[i], score_2024[i]];
            color=color, linewidth=2.8, label=label)
     scatter!(ax, [0, 1], [score_2023[i], score_2024[i]];
              color=color, markersize=13, strokewidth=1.5, strokecolor=PAGE_BG)
 
+    # Leader stubs: connect a nudged label back to its true marker position
+    # whenever the anti-collision loop moved it, so the label-to-line link
+    # stays traceable even when several labels cluster in a dense band.
+    if abs(label_y_left[i] - score_2023[i]) > 1e-6
+        lines!(ax, [-0.05, 0], [label_y_left[i], score_2023[i]];
+               color=INK_SOFT, linewidth=0.75, linestyle=:dot)
+    end
+    if abs(label_y_right[i] - score_2024[i]) > 1e-6
+        lines!(ax, [1, 1.05], [score_2024[i], label_y_right[i]];
+               color=INK_SOFT, linewidth=0.75, linestyle=:dot)
+    end
+
     text!(ax, -0.05, label_y_left[i]; text="$(products[i])  $(score_2023[i])",
           align=(:right, :center), color=INK, fontsize=15)
-    text!(ax, 1.05, label_y_right[i]; text="$(score_2024[i])  $(products[i])",
+    text!(ax, 1.05, label_y_right[i]; text="$(arrow) $(score_2024[i])  $(products[i])",
           align=(:left, :center), color=INK, fontsize=15)
 end
 
@@ -122,7 +138,7 @@ text!(ax, 1, ylim_hi - y_pad * 0.5; text="2024 Survey", align=(:center, :bottom)
 
 Legend(fig[1, 2], ax; merge=true, unique=true, framevisible=false,
        labelcolor=INK, labelsize=13, patchsize=(22, 3), tellheight=false, valign=:center)
-colsize!(fig.layout, 2, Fixed(150))
+colsize!(fig.layout, 2, Fixed(105))
 
 # --- Save --------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit=2)
