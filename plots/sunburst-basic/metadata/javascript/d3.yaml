@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: sunburst-basic
 created: '2026-07-26T04:29:47Z'
-updated: '2026-07-26T04:37:33Z'
+updated: '2026-07-26T04:48:37Z'
 generated_by: claude-sonnet
 workflow_run: 30187741336
 issue: 821
@@ -15,56 +15,61 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-
 quality_score: 79
 review:
   strengths:
-  - Branch-consistent color derivation (base hue per top-level branch, progressively
-    lightened by depth via d3.hsl) directly satisfies the spec's 'use consistent colors
-    within each branch' requirement and reads as a clean hierarchy in the light render.
-  - 'Idiomatic, textbook D3 sunburst pipeline: d3.hierarchy + d3.partition + d3.arc
-    with padAngle/padRadius tuning and radial label-rotation math (rotate/translate/flip)
-    — the canonical way to build this chart type in D3.'
+  - 'The dark-theme label-color fix from attempt 1 works for 9 of 13 labels: labelColorFor()
+    now derives text ink from each wedge''s own rendered HSL lightness (wedgeHsl(d).l
+    > 0.5 ? dark ink : light ink) instead of the old fixed t.ink token, and this correctly
+    restores strong contrast for the entire Data & Analytics (lavender) and Operations
+    (blue) branches in both themes (measured 4.9-8.9:1, all WCAG AA-compliant).'
+  - 'Idiomatic, textbook D3 sunburst pipeline unchanged and still clean: d3.hierarchy
+    + d3.partition + d3.arc with padAngle/padRadius tuning and radial label-rotation
+    math (rotate/translate/flip) — the canonical way to build this chart type in D3.'
   - 'Canonical Imprint palette order used correctly for the 3 top-level branches (#009E73
-    -> #C475FD -> #4467A3), and both plot backgrounds are exact matches for the spec
-    (#FAF8F1 light / #1A1A17 dark), with data hues verified pixel-identical between
-    the two renders.'
+    -> #C475FD -> #4467A3); backgrounds are pixel-exact matches for the spec (#FAF8F1
+    light / #1A1A17 dark), verified via direct pixel sampling.'
   - Realistic, neutral cloud-infrastructure-spend dataset with 13 leaf nodes spanning
-    2-3 hierarchy levels (some branches 2 levels deep, others 3), matching the spec's
-    '10-50 leaf nodes across 2-4 levels' guidance and demonstrating real structural
-    variety rather than a uniform tree.
-  - Title format is exactly correct, and direct in-wedge labeling doubles as a self-explanatory
-    legend, so omitting a separate legend is the right call for this chart type.
+    2-3 hierarchy levels, matching the spec's '10-50 leaf nodes across 2-4 levels'
+    guidance and demonstrating real structural variety across branches.
+  - Title format is exactly correct and generously clear of the canvas edge; direct
+    in-wedge labeling doubles as a self-explanatory legend, so omitting a separate
+    legend remains the right call for this chart type.
   weaknesses:
-  - 'CRITICAL dark-render legibility failure: every in-wedge label uses the fixed
-    ink token (t.ink, #F0EFE8 in dark theme) regardless of the wedge''s own fill lightness.
-    Because colorFor() intentionally lightens fills by depth (up to L~0.82 for outer
-    leaves), pairing near-white text with those already-light pastel wedges produces
-    severe low-contrast text in dark mode -- measured via WCAG relative luminance:
-    ~1.1:1 for ''Production'' (white text on the lightened mint outer ring), ~1.7:1
-    for ''Ad-hoc Queries'' / ''Dashboards'' / ''BI Tools'' (white text on the pale
-    lavender wedges), and only 2.5-4.9:1 even at the un-lightened depth-1 labels for
-    the green and purple branches (''Engineering'' ~3.0:1, ''Data & Analytics'' ~2.5:1)
-    -- all below the WCAG AA 4.5:1 minimum for normal text. This is functionally the
-    dark-theme equivalent of ''dark-on-dark'' text: most segment labels are illegible
-    in plot-dark.png even though the identical labels read perfectly in plot-light.png
-    (6-13:1 contrast there, since dark ink text works against any lightness of fill).
-    Fix: derive each label''s fill color from the actual rendered wedge lightness
-    (e.g. pick a light or dark label color per node based on colorFor(d)''s luminance,
-    similar to a ''best text color for background'' heuristic) rather than a single
-    global ink token, or add a thin ink-colored text outline/halo so labels stay legible
-    over any wedge shade in both themes.'
-  - 'Minor: two small helper functions (colorFor, labelTransform) are used for the
-    per-node color and label-transform math; justified here given the radial geometry,
-    but keep an eye on KISS as the file grows.'
+  - 'STILL-CRITICAL legibility bug for the green (Engineering) branch, in BOTH themes:
+    labelColorFor() thresholds on raw d3.hsl(...).l, but HSL lightness does not track
+    WCAG perceptual luminance across hues — green is weighted far higher (0.7152)
+    than red/blue in the WCAG relative-luminance formula, so a green wedge with HSL
+    l=0.45 is actually much brighter than a blue or purple wedge at the same l. Concretely,
+    measured via pixel sampling + WCAG contrast math on the actual rendered RGB values
+    (identical in light and dark renders since data hues don''t flip): ''Compute''/''Storage''/''Networking''
+    (depth-2 mint fill rgb(0,229,167), HSL l=0.45, so the >0.5 check picks LIGHT text
+    F0EFE8) = 1.43:1 contrast — functionally illegible, confirmed by visual crop inspection
+    where the label nearly disappears into the fill. The top-level ''Engineering''
+    label (depth-1 fill rgb(0,158,115), HSL l=0.31, light text picked) = 2.97:1 —
+    below WCAG AA 4.5:1 and even below the 3:1 large-text minimum. This affects 4
+    of 13 labels (Engineering, Compute, Storage, Networking), all in the brand-color/first-series
+    branch, in both plot-light.png and plot-dark.png (the bug is theme-independent
+    since it depends only on the wedge''s own HSL lightness, not the page theme).
+    Fix: replace the HSL-lightness threshold with an actual WCAG relative-luminance
+    calculation on the resolved wedge RGB (linearize each channel, weight 0.2126/0.7152/0.0722,
+    threshold around luminance 0.4-0.5), or use CIELAB L* (d3.lab(color).l) instead
+    of d3.hsl(...).l — Lab lightness correlates with perceptual brightness across
+    hues far better than HSL lightness does. Verify by re-checking contrast specifically
+    on the green branch''s depth-1 and depth-2 wedges after the fix, not just spot-checking
+    a couple of labels.'
+  - 'Minor: four small helper functions (wedgeHsl, colorFor, labelColorFor, labelTransform)
+    are now used for per-node color/label math; still justified given the radial geometry,
+    but keep an eye on KISS as the file grows further.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, confirmed #FAF8F1 (250,248,241) via pixel sample -- matches spec exactly, not pure white.
-      Chrome: Bold dark title "sunburst-basic · javascript · d3 · anyplot.ai" centered at top, clearly legible. All in-wedge segment labels (inner-ring branch names "Engineering"/"Data & Analytics"/"Operations" in bold 16px, outer leaf names in 13px) render in dark ink text and are clearly legible against every wedge shade, from the saturated inner-ring brand colors to the lightened pastel outer-ring tints. No overlapping text observed; radial rotation keeps every label following its wedge's angle without colliding with neighbors.
-      Data: Three top-level branches use canonical Imprint palette order -- Engineering = #009E73 (brand green, verified first series), Data & Analytics = #C475FD (lavender), Operations = #4467A3 (blue) -- with each branch's children rendered as progressively lighter tints of the same hue, giving a clear "family" grouping per branch. Segment angles are visually proportional to value (e.g. "Production" and "ML Training" occupy the largest arcs under Compute).
-      Legibility verdict: PASS -- all text is readable against the light background and against every wedge fill.
+      Chrome: Bold dark title "sunburst-basic · javascript · d3 · anyplot.ai" centered at top with generous clearance from the canvas edge (no clipping). All in-wedge segment labels use per-wedge ink selection (labelColorFor) rather than the old fixed dark ink.
+      Data: Three top-level branches use canonical Imprint palette order -- Engineering = #009E73 (brand green, verified first series), Data & Analytics = #C475FD (lavender), Operations = #4467A3 (blue) -- with each branch's children rendered as progressively lighter tints of the same hue via HSL lightening.
+      Legibility verdict: FAIL -- most labels (Data & Analytics and Operations branches, all depths) are clearly legible with strong contrast, but the Engineering (green) branch's depth-1 and depth-2 labels are not: "Compute", "Storage", and "Networking" render in near-white text on a bright mint fill (rgb(0,229,167)) at a measured WCAG contrast of only 1.43:1 -- the text visibly washes out into the background in a direct pixel crop. "Engineering" itself (depth-1, rgb(0,158,115)) measures 2.97:1, below the WCAG AA 4.5:1 minimum. This reproduces in the light render because labelColorFor() depends only on the wedge's own HSL lightness, not the page theme.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, confirmed #1A1A17 (26,26,23) via pixel sample -- matches spec exactly, not pure black.
-      Chrome: Title renders in light ink and is clearly legible against the dark page background. However, the in-wedge segment labels use the SAME fixed near-white ink token as the title, regardless of the wedge's own (lightened) fill color. Measured contrast ratios (WCAG relative luminance): "Production" white text on the lightened mint outer-ring wedge = ~1.1:1; "Ad-hoc Queries"/"Dashboards"/"BI Tools" white text on the pale lavender wedges = ~1.7:1; even the un-lightened depth-1 labels only reach ~2.5:1 (Data & Analytics) to ~4.9:1 (Operations) -- all below the WCAG AA 4.5:1 threshold for normal text except Operations, which is borderline. This is a dark-on-dark-equivalent failure (here: light-text-on-light-wedge) that makes most segment labels difficult or impossible to read in this render.
-      Data: Confirmed programmatically that wedge fill colors are pixel-identical between the light and dark renders (e.g. the "Production" wedge is exactly (46,255,198) in both PNGs) -- only chrome flipped, as required.
-      Legibility verdict: FAIL -- most in-wedge segment labels are illegible against their own wedge fill due to insufficient contrast; only the title and the darkest (Operations/depth-1) labels are reliably readable.
+      Chrome: Title renders in light ink and is clearly legible against the dark page background, well clear of the canvas edge.
+      Data: Confirmed wedge fill colors are pixel-identical between the light and dark renders (e.g. the "Compute" wedge is exactly rgb(0,229,167) in both PNGs) -- only chrome flipped, as required.
+      Legibility verdict: FAIL -- same root cause and same specific labels as the light render ("Engineering" 2.97:1, "Compute"/"Storage"/"Networking" 1.43:1), since the bug is theme-independent. All other labels (Data & Analytics and Operations branches) are legible with good contrast (4.9-8.9:1, WCAG AA compliant), confirming the attempt-1 fix direction was correct but the HSL-lightness threshold used to implement it is miscalibrated for the green hue family.
   criteria_checklist:
     visual_quality:
       score: 18
@@ -75,39 +80,41 @@ review:
         score: 0
         max: 8
         passed: false
-        comment: 'Dark render: most in-wedge labels are illegible against their own
-          lightened wedge fill (measured contrast as low as ~1.1:1, well under WCAG
-          4.5:1) because a single fixed ink token is used regardless of the wedge''s
-          actual lightness. Light render is fully legible.'
+        comment: '4 of 13 labels (Engineering, Compute, Storage, Networking -- the
+          entire green/brand-color branch at depths 1-2) are unreadable or near-unreadable
+          in BOTH renders: measured WCAG contrast 1.43:1 for Compute/Storage/Networking
+          and 2.97:1 for Engineering, well under the 4.5:1 AA minimum. Root cause:
+          labelColorFor() thresholds on raw HSL lightness, which does not track WCAG
+          perceptual luminance for green hues.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
         comment: Radial label rotation keeps text following each wedge's angle with
-          no collisions; small angular-span filter (>0.11 rad) avoids crowding tiny
-          segments.
+          no collisions; angular-span filter (>0.11 rad) avoids crowding tiny segments.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All rings and wedges are clearly visible and well-separated by stroke;
-          sizes appropriate for a 13-leaf hierarchy.
+        comment: All rings and wedges are clearly visible and well-separated by a
+          page-bg stroke; sizes appropriate for a 13-leaf hierarchy.
       - id: VQ-04
         name: Color Accessibility
         score: 0
         max: 2
         passed: false
-        comment: 'Same root cause as VQ-01: measured label-vs-fill contrast in dark
-          theme falls well below WCAG AA (as low as 1.1:1) for most labels.'
+        comment: 'Same root cause as VQ-01: measured label-vs-fill contrast for the
+          green branch falls well below WCAG AA (as low as 1.43:1) in both themes.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed (no gate file present); proportions
-          clean, no clipping or overflow observed.
+        comment: Canvas dimension gate passed (no gate file present, verified 2400x2400
+          square target); no clipping or overflow observed at any edge; title has
+          generous clearance.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -131,18 +138,22 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
+        passed: true
         comment: Thoughtful per-branch HSL lightening scheme shows real design intent,
-          but the dark-theme legibility failure undercuts overall polish.
+          but the unresolved dark/light legibility bug on the brand-color branch undercuts
+          overall polish.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
+        passed: true
         comment: Clean radial separators (stroke = page background), generous top
           margin for title, no chartjunk.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
+        passed: true
         comment: Values sorted descending within each branch, bold depth-1 labels
           create clear visual hierarchy from center outward.
     spec_compliance:
@@ -153,11 +164,13 @@ review:
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: Correct sunburst via d3.hierarchy + d3.partition + d3.arc.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
+        passed: true
         comment: Consistent per-branch coloring, direct segment labels, clear ring
           separation, inner segments structurally encompass children's angular span
           (guaranteed by d3.partition).
@@ -165,13 +178,15 @@ review:
         name: Data Mapping
         score: 3
         max: 3
+        passed: true
         comment: Segment angle proportional to value; full hierarchy represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title exactly 'sunburst-basic · javascript · d3 · anyplot.ai'; direct
-          labeling substitutes for a legend appropriately.
+        passed: true
+        comment: Title exactly matches 'sunburst-basic · javascript · d3 · anyplot.ai';
+          in-wedge labels serve as a self-explanatory legend.
     data_quality:
       score: 15
       max: 15
@@ -180,20 +195,23 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: 13 leaf nodes across 2-3 levels with mixed depths (some branches
-          terminate at level 2, others at level 3), matching spec size/level guidance.
+        passed: true
+        comment: 13 leaf nodes across 2-3 hierarchy levels with varied branch depth,
+          covering the full range of the spec's hierarchical structure.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Cloud infrastructure spend by business unit / service / workload
-          -- plausible and neutral.
+        passed: true
+        comment: Plausible, neutral cloud-infrastructure-spend dataset with sensible
+          category names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Values (7-42) are sensible relative magnitudes for a monthly spend
-          breakdown.
+        passed: true
+        comment: Values (7-42) are sensible relative magnitudes for a spend breakdown,
+          no outliers distorting the layout.
     code_quality:
       score: 9
       max: 10
@@ -202,31 +220,34 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Two small pure helper functions (colorFor, labelTransform) are used;
-          reasonable for the radial geometry but slightly beyond a pure declarative
-          snippet.
+        passed: true
+        comment: No classes; four small helper functions (wedgeHsl, colorFor, labelColorFor,
+          labelTransform) are justified by the radial geometry but add up.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully hardcoded, deterministic in-memory data.
+        passed: true
+        comment: Deterministic hardcoded data, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No extraneous imports; only the global d3.
+        passed: true
+        comment: No imports beyond the global d3 bundle.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity for the chart type, no fake UI or simulated
-          interactivity.
+        passed: true
+        comment: Appropriate complexity for the chart type; no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct mount-node contract (#container, ANYPLOT_SIZE), no manual
-          save calls, no animation to interfere with the harness screenshot.
+        passed: true
+        comment: 'Correctly mounts to #container via window.ANYPLOT_SIZE, no animation,
+          current D3 API.'
     library_mastery:
       score: 9
       max: 10
@@ -235,15 +256,17 @@ review:
         name: Idiomatic Usage
         score: 5
         max: 5
-        comment: Textbook D3 sunburst construction (hierarchy + partition + arc),
-          the library's recommended high-level pattern for this chart type.
+        passed: true
+        comment: Canonical d3.hierarchy + d3.partition + d3.arc pipeline, correct
+          high-level API usage.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: d3.hsl color manipulation for depth-based lightening and padAngle/padRadius
-          arc tuning demonstrate genuine D3-specific mastery beyond basic scaleOrdinal
-          usage.
+        passed: true
+        comment: padAngle/padRadius tuning and radial label-rotation math (rotate/translate/flip)
+          go beyond a boilerplate sunburst; the per-node HSL color derivation is distinctive
+          but its miscalibration is the core defect.
   verdict: REJECTED
 impl_tags:
   dependencies: []
