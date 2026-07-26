@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: sunburst-basic
 created: '2026-07-26T04:27:55Z'
-updated: '2026-07-26T04:34:19Z'
+updated: '2026-07-26T04:42:07Z'
 generated_by: claude-sonnet
 workflow_run: 30187580462
 issue: 821
@@ -12,96 +12,81 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 91
 review:
   strengths:
+  - 'Attempt-1 fix correctly applied: team-ring label_ink is now derived from the
+    alpha=0.55-composited color via blend_hex() (blend fill_hex with PAGE_BG before
+    the luminance test) instead of the solid base hue, so light-theme outer-ring labels
+    correctly flip to dark ink while the already-correct dark-theme white ink is untouched
+    — verified visually across all 11 outer-ring labels in both renders.'
   - Idiomatic coord_polar(theta="y") + geom_rect construction builds a true two-level
-    sunburst since ggplot2 has no native sunburst geom — department boundaries exactly
+    sunburst since ggplot2 has no native sunburst geom; department wedges exactly
     encompass their children's angular span as required by the spec.
-  - Departments sorted by descending total budget, producing a clear reading order
-    and visual hierarchy (bold inner labels vs. lighter outer labels).
-  - 'Both backgrounds are pixel-exact theme tokens (#FAF8F1 light / #1A1A17 dark),
-    and the Imprint categorical palette is applied in canonical order with Engineering
-    (the largest department) correctly taking #009E73.'
+  - 'Departments sorted by descending total budget, producing a clear reading order
+    and visual hierarchy (bold inner labels vs. lighter outer labels), with Engineering
+    (the largest department) correctly assigned #009E73.'
+  - 'Both backgrounds are pixel-exact theme tokens (#FAF8F1 light / #1A1A17 dark)
+    and data colors are confirmed identical between renders — only chrome and the
+    alpha-composite outcome differ.'
   - Small-span team labels are suppressed (span > 0.035 gate) instead of overlapping,
-    and label font size scales down for narrow department wedges to avoid overflow.
-  - Donut gap between rings (PAGE_BG-colored stroke) gives clean visual separation
-    between hierarchy levels, satisfying the spec's 'clear visual separation between
-    hierarchy levels' note.
+    and department label font size scales down for narrow wedges to avoid overflow.
   weaknesses:
-  - 'Outer (team) ring text is nearly unreadable in the LIGHT render: label_ink is
-    computed once from each department''s full-saturation base hex via relative_luminance(),
-    then reused for the team_df geom_text even though the team wedges are drawn with
-    alpha = 0.55 over the light #FAF8F1 background. That blending washes every department
-    color into a pastel tint (measured wedge pixels: SMB/Enterprise ≈ RGB(221,176,248),
-    Facilities/HR/Finance ≈ RGB(217,183,137), Platform/Infrastructure/Data Science
-    ≈ RGB(113,199,172)), so the white ink (#FFFDF6) chosen for all of them lands at
-    only ~1.7-2.0:1 contrast — well under the 3:1 WCAG floor for large text. The same
-    alpha blend over the near-black dark background instead deepens the wedge colors,
-    so the identical white ink reads at ~6.3-6.9:1 there — the bug is light-theme-only
-    and affects all 11 outer-ring team labels. Fix: compute label_ink separately for
-    team_df using the luminance of the actual alpha-composited color (blend fill_hex
-    with PAGE_BG at alpha 0.55 before the luminance test) so the ink flips to dark
-    in light mode, or raise alpha for the outer ring closer to 1.0 so the base-color
-    luminance test stays valid in both themes.'
-  - Two small helper functions (relative_luminance, wedge_label_angle) push the script
-    slightly past a strict Imports → Data → Plot → Save KISS structure; understandable
-    given the manual sunburst geometry ggplot2 doesn't provide natively, but keep
-    an eye on further growth.
-  - Only 2 hierarchy levels (department/team) are shown; the spec's optional level_3
-    (grandchild) ring is omitted, so the multi-level depth of the chart type isn't
-    fully demonstrated even though this is spec-compliant (level_3 is explicitly optional).
+  - Only 2 of the spec's allowed 2-4 hierarchy levels are shown (level_3 grandchild
+    ring omitted). This is spec-compliant since level_3 is explicitly optional, but
+    a third ring would better demonstrate the depth range the chart type supports.
+  - Three small helper functions (relative_luminance, blend_hex, wedge_label_angle)
+    push the script slightly past a strict Imports -> Data -> Plot -> Save KISS structure.
+    Understandable given the manual sunburst geometry ggplot2 doesn't provide natively,
+    but worth keeping minimal if further changes are made.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, pixel-sampled at RGB(250,248,241) which is an exact match for the #FAF8F1 token. Correct, not pure white.
-      Chrome: Title "sunburst-basic · r · ggplot2 · anyplot.ai" is bold dark text (#1A1A17), centered, comfortably readable, occupying roughly 55-60% of the canvas width. Legend on the right titled "Department" with four colored swatches (Engineering/Sales/Marketing/Operations) in dark ink on the page background — fully legible.
-      Data: Two concentric rings inside a donut, separated by a thin page-background gap. Inner ring shows four solid-color department wedges (Engineering #009E73 green — largest, Sales lavender/purple, Marketing blue-grey, Operations tan/ochre), each with a bold, high-contrast label ("Engineering", "Sales", "Marketing", "Operations") in white or dark ink depending on the wedge's luminance — these read clearly. First categorical color is confirmed as #009E73 assigned to the largest department (Engineering), matching the Imprint palette rule.
-      Outer ring shows 11 team wedges colored as their parent department at alpha≈0.55, which lightens every wedge toward pastel tones on this light background (e.g. the Sales/SMB wedge measures ~RGB(221,176,248), Operations/HR ~RGB(217,183,137), Engineering/Platform ~RGB(113,199,172)). All outer-ring labels use the same white ink as the inner ring, and pixel/contrast analysis puts these at only ~1.7-2.0:1 contrast against their pastel backgrounds — well under the WCAG 3:1 floor for large text. The letters are visible under close inspection but read as faint/washed-out at normal viewing size across all 11 team labels (Platform, Infrastructure, Data Science, Enterprise, SMB, Brand, Growth, Content, Facilities, HR, Finance).
-      Legibility verdict: FAIL — outer-ring team labels are low-contrast ("light-on-light") throughout the light render; inner-ring department labels, title, and legend are all fine.
+      Background: Warm off-white, matching the #FAF8F1 token. Correct, not pure white.
+      Chrome: Title "sunburst-basic · r · ggplot2 · anyplot.ai" is bold dark text, centered, comfortably readable. Legend on the right titled "Department" with four colored swatches (Engineering/Sales/Marketing/Operations) in dark ink — fully legible.
+      Data: Two concentric rings inside a donut, separated by a thin page-background gap. Inner ring shows four solid department wedges (Engineering #009E73 green — largest, Sales lavender, Marketing steel blue, Operations tan/ochre), each with a bold high-contrast label in white or dark ink depending on the wedge's luminance. Outer ring shows 11 team wedges at alpha=0.55 over the light background, which washes each color toward pastel — but the fix from attempt 1 is now correctly applied: all 11 team labels (Platform, Infrastructure, Data Science, Enterprise, SMB, Brand, Growth, Content, Facilities, HR, Finance) render in dark ink and are clearly legible against their pastel wedges. No light-on-light text anywhere.
+      Legibility verdict: PASS — all chrome and both rings are readable; the attempt-1 outer-ring contrast bug is resolved.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, pixel-sampled at RGB(26,26,23), an exact match for the #1A1A17 token. Correct, not pure black.
-      Chrome: Title renders in light ink (#F0EFE8), clearly legible against the dark background. Legend swatches and labels (light ink) are equally legible.
-      Data: Same four Imprint hues for the inner ring, confirmed identical to the light render (e.g. Engineering green, Sales purple) — only chrome flipped as required. Inner-ring department labels remain bold and high-contrast.
-      For the outer ring, the same alpha≈0.55 blend now composites toward the near-black page background instead of the light one, which deepens/saturates each wedge color rather than washing it out (e.g. Sales/SMB measures ~RGB(120,76,149), Operations/HR ~RGB(116,83,38)). Against these deeper wedge colors the same white team-label ink reads at ~6.3-6.9:1 contrast — comfortably legible, no dark-on-dark issue anywhere in this render.
-      Legibility verdict: PASS — all text, including the outer ring, is clearly readable in the dark render.
+      Background: Warm near-black, matching the #1A1A17 token. Correct, not pure black.
+      Chrome: Title renders in light ink, clearly legible against the dark background. Legend swatches and labels (light ink) are equally legible.
+      Data: Same four Imprint hues for the inner ring, confirmed identical to the light render (e.g. Engineering green, Sales purple) — only chrome flipped, as required. Inner-ring department labels remain bold and high-contrast. Outer ring: the same alpha=0.55 blend now deepens each wedge color against the near-black background, and all 11 team labels render in white ink, clearly legible — no dark-on-dark issue anywhere in this render.
+      Legibility verdict: PASS — all text, including the outer ring, is clearly readable in both themes; data colors confirmed identical between renders.
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 2
+        score: 7
         max: 8
-        passed: false
-        comment: All 11 outer-ring (team) labels in the LIGHT render are low-contrast
-          (~1.7-2.0:1) white-on-pastel text — label_ink is computed from the base
-          department hue, not the alpha=0.55-composited wedge color. Inner-ring labels,
-          title, and legend are fine in both themes; dark render outer ring is fine
-          (~6.3-6.9:1).
+        passed: true
+        comment: 'Attempt-1''s low-contrast outer-ring team labels are fixed: label_ink
+          is now derived from the alpha-composited color, so all 11 team labels read
+          clearly in both themes. Not a perfect 8 because a few narrow department
+          wedges (dynamic label_size clamps down to 1.8) sit close to the lower legibility
+          bound.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; small-span team labels are suppressed via
-          the span > 0.035 gate instead of overlapping.
+        comment: No text/data collisions; small-span team labels suppressed via the
+          span > 0.035 gate instead of overlapping.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
         comment: Wedge shapes and colors are all visible and distinguishable via the
-          donut gap stroke; only the low-contrast outer-ring text (see VQ-01) slightly
-          hurts perceived element visibility.
+          donut gap stroke.
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Measured contrast ratios of ~1.7-2.0:1 for outer-ring labels in the
-          light render fall well below the WCAG 3:1 floor for large text.
+        passed: true
+        comment: Outer-ring label ink now correctly flips per-theme based on the actual
+          alpha-composited color; contrast issue from attempt 1 resolved in both renders.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -123,19 +108,18 @@ review:
         passed: true
         comment: 'First categorical series (largest department, Engineering) is #009E73;
           Imprint palette used in canonical order; both backgrounds pixel-exact to
-          theme tokens.'
+          theme tokens; data colors identical across renders.'
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
         comment: Custom geom_rect + coord_polar sunburst with dynamic label angle/size
-          computation — clearly beyond default styling, docked for the light-theme
-          contrast oversight.
+          and alpha-composite-aware ink selection now working correctly in both themes.
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -214,7 +198,7 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two small helper functions (relative_luminance, wedge_label_angle)
+        comment: Three small helper functions (relative_luminance, blend_hex, wedge_label_angle)
           needed for the manual sunburst geometry; slight deviation from strict Imports->Data->Plot->Save.
       - id: CQ-02
         name: Reproducibility
@@ -243,7 +227,7 @@ review:
         comment: Saves plot-{theme}.png via ragg::agg_png; uses linewidth (current
           API), no deprecated calls.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -256,13 +240,13 @@ review:
           used correctly.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Dynamic per-wedge label angle/size computation and a WCAG-luminance-based
-          ink picker are distinctive, though the ink picker's alpha-blind logic is
-          exactly what causes the VQ-01/VQ-04 failure.
-  verdict: REJECTED
+        comment: Dynamic per-wedge label angle/size computation and an alpha-composite-aware
+          WCAG-luminance ink picker are distinctive and now demonstrably correct in
+          both themes.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
