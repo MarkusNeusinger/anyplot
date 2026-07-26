@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-05
+Quality: pending | Updated: 2026-07-26
 """
 
 import os
@@ -11,15 +11,15 @@ import pygal
 from pygal.style import Style
 
 
-# Theme tokens
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
 
-# Data - Employee performance scores by department
+# Data - employee performance scores by department
 np.random.seed(42)
 categories = ["Engineering", "Marketing", "Sales", "Operations"]
 data = {
@@ -29,40 +29,42 @@ data = {
     "Operations": np.random.normal(70, 10, 55),
 }
 
-# Style
+# Style - source-pixel sizes for a 3200x1800 canvas (see prompts/library/pygal.md)
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
-    tooltip_font_size=36,
-    opacity=0.85,
+    colors=IMPRINT_PALETTE + (INK,),  # last color reserved for the Group Mean marker
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    opacity=0.75,
     opacity_hover=1.0,
+    stroke_width=2.5,
 )
 
 # Plot
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="swarm-basic · pygal · anyplot.ai",
+    title="swarm-basic · python · pygal · anyplot.ai",
     x_title="Department",
     y_title="Performance Score",
     show_legend=True,
     legend_at_bottom=True,
     stroke=False,
-    dots_size=12,
+    dots_size=10,
     show_x_guides=False,
     show_y_guides=True,
     xrange=(0, 5),
     range=(40, 115),
-    margin=50,
+    margin=40,
+    margin_right=20,
 )
 
 # Beeswarm algorithm - spreads points horizontally to avoid overlap
@@ -104,6 +106,10 @@ for cat_idx, (category, values) in enumerate(data.items()):
         swarm_points.append((x, y))
 
     chart.add(category, swarm_points)
+
+# Group mean markers - subtle reference points per category (neutral anchor color)
+mean_points = [(cat_idx + 1, float(np.mean(values))) for cat_idx, (_, values) in enumerate(data.items())]
+chart.add("Group Mean", mean_points, dots_size=20)
 
 # x-axis category labels
 chart.x_labels = ["", "Engineering", "Marketing", "Sales", "Operations", ""]
