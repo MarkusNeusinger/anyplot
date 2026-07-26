@@ -2,154 +2,172 @@ library: plotly
 language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:55:15Z'
-updated: '2026-05-05T01:22:25Z'
+updated: '2026-07-26T07:18:08Z'
 generated_by: claude-sonnet
-workflow_run: 25351945965
+workflow_run: 30191944155
 issue: 974
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Perfect theme adaptation in both renders — chrome flips correctly, no dark-on-dark
-    failures
-  - 'Correct Okabe-Ito palette with Room A as #009E73 first across all four categories'
-  - Varied distribution shapes (bimodal, high-variance, narrow) showcase swarm-plot
-    strengths effectively
-  - Hover tooltips, boxmean markers, and HTML export demonstrate Plotly-distinctive
-    features
-  - Clean reproducible code with proper seed and linear KISS structure
+  - 'Custom greedy-beeswarm collision algorithm (swarm_offsets) properly implements
+    the spec''s ''points spread horizontally to avoid overlap'' requirement — verified
+    visually: the mid-band clusters in Room B and Room D that overlapped in Attempt
+    1 now pack cleanly with tangent, non-overlapping circles.'
+  - Title fixed to the exact mandated format 'swarm-basic · python · plotly · anyplot.ai'
+    (Attempt 1 was missing the language token).
+  - 'Well-composed multi-layer chart: de-emphasized go.Box spread guide (transparent
+    fill, faint alpha=0.35 outline) + diamond mean markers per category + an annotation
+    calling out Room C''s bimodal distribution — genuine data storytelling on top
+    of the raw swarm.'
+  - 'Theme-adaptive chrome verified pixel-correct on both renders (sampled the annotation
+    callout box: #242420/#F0EFE8-ish text on dark, #FFFDF6/#1A1A17 text on light)
+    — no dark-on-dark or light-on-light failures anywhere.'
+  - Canvas confirmed exactly 3200x1800 with no clipping at any edge (title, legend,
+    axis labels, tick labels all fully inside bounds); Imprint palette used in canonical
+    order with brand green first for Room A.
   weaknesses:
-  - Box/whisker elements are visually prominent and compete with the individual-point
-    focus that defines a swarm plot — hiding the box while keeping the mean line would
-    read more clearly as a swarm
-  - Room C bimodal distribution is not visually emphasized despite being the most
-    analytically interesting feature — add annotation or focal emphasis
-  - Random jitter (jitter=0.5) causes visible point overlap in dense groups vs. a
-    true beeswarm pack algorithm
+  - The diamond mean marker is drawn as a separate trace and isn't included in the
+    swarm_offsets() collision set, so it can partially occlude a swarm point directly
+    behind it (visible in Room C and Room D) — include the mean position in the collision
+    check, or nudge it slightly off the packed points.
+  - Legend keeps a bordered box (bordercolor/borderwidth); the style guide's decoration-removal
+    checklist recommends dropping box frames around legends for a cleaner look.
+  - The swarm_offsets() helper function is a justified exception to the flat-script
+    KISS default since plotly has no native beeswarm trace, but it does add real code
+    complexity beyond the library's basic API — acceptable trade-off, not something
+    to simplify away.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) - correct surface color, not pure white
-      Chrome: title "swarm-basic · plotly · anyplot.ai" centered, dark text (#1A1A17), clearly readable; Y-axis label "Test Score (points)" and X-axis "Classroom" in dark text at 22px; tick labels in INK_SOFT (#4A4A44) at 18px, all readable
-      Data: 4 groups (Room A-D) in Okabe-Ito order — Room A #009E73, Room B #D55E00, Room C #0072B2, Room D #CC79A7; individual points with opacity=0.8 and white edges overlaid on box/whisker elements with semi-transparent fills; mean markers visible
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), not pure white — matches the required light-theme page surface.
+      Chrome: Title "swarm-basic · python · plotly · anyplot.ai" in dark ink, centered, clearly readable (confirmed the language token is now present). Axis labels "Classroom" (x) and "Test Score (points)" (y) in dark ink. Tick labels in a softer dark gray. Subtle horizontal (y-axis-only) gridlines at low opacity. Legend box (top right) has a light elevated fill with a dark border, swatches and labels all readable. Annotation callout box ("Bimodal: two skill clusters") has a light fill with dark border and dark text, pointing an arrow at Room C's mean diamond.
+      Data: Four categories (Room A green #009E73, Room B lavender #C475FD, Room C blue #4467A3, Room D ochre #BD8233) rendered as beeswarm-packed points inside a de-emphasized, near-transparent box (faint colored outline only, no fill) that acts as a spread guide. Each category has a diamond mean marker in its series color with a light stroke. Points in the previously-overlapping mid-bands (Room B, Room D) now pack tightly but distinctly, tangent rather than overlapping — the custom swarm_offsets() collision algorithm visibly fixed the Attempt 1 overlap issue. One minor nit: the mean diamond in Room C/Room D sits close enough to a neighboring point that it partially covers it.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: near-black (#1A1A17) - correct dark surface, not pure black
-      Chrome: all text switches to light tokens (#F0EFE8 / #B8B7B0); title, axis labels, tick labels all clearly readable against dark background; no dark-on-dark failures detected
-      Data: colors identical to light render — Room A #009E73, Room B #D55E00, Room C #0072B2, Room D #CC79A7; only chrome elements flipped
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17), not pure black — matches the required dark-theme page surface.
+      Chrome: Title in light/white ink, centered, clearly readable, same corrected format. Axis labels and tick labels in light gray/white tones, clearly readable against the dark background — no dark-on-dark failures observed. Gridlines are faint light lines at low opacity, subtle but visible. Legend box has a dark elevated fill (#242420) with a light border and light text, fully legible. Pixel-sampled the annotation callout box background directly: RGB(36,36,32) ≈ #242420 (dark ELEVATED_BG) with light text — confirmed correctly theme-adaptive, not a dark-on-dark failure.
+      Data: Colors are identical to the light render (same green/lavender/blue/ochre hexes and diamond mean markers) — only the chrome (background, text, grid, legend/callout fills) flips between themes, as required. Same fixed non-overlapping swarm packing as the light render.
+      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark issues found.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, ticks 18px all explicitly set; both
-          themes fully readable
+        comment: All text legible in both themes at 16/12/10px sizes matching the
+          style-guide table exactly; no dark-on-dark or light-on-light failures.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Some point overlap in dense groups due to random jitter; all text
-          elements non-overlapping
+        comment: 'Attempt-1 overlap issue is fixed: mid-band clusters in Room B/Room
+          D now pack tangent, not overlapping, thanks to the swarm_offsets() collision
+          algorithm. Minor: the mean diamond can partially occlude one nearby point
+          in Room C/Room D.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers size=10 with opacity=0.8 and white edges are well-visible;
-          slight crowding in Room D
+        comment: Points individually distinguishable across all categories after the
+          packing fix; the diamond-occludes-point nit is the only visibility ding.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; alpha=0.8 reduces occlusion
+        comment: Imprint palette used, no red-green-only signal, adequate contrast
+          for solid data markers.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700px canvas well-utilized; balanced margins; legend not obstructing
-          data
+        comment: 3200x1800 canvas confirmed (no canvas-gate failure file), good margins,
+          nothing clipped at any edge (checked all four sides).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Test Score (points) includes units; Classroom is descriptive
+        comment: '''Classroom'' and ''Test Score (points)'' are descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 confirmed; Okabe-Ito order followed; correct
-          backgrounds; chrome fully theme-adaptive'
+        comment: 'First series #009E73, canonical Imprint order for abstract room
+          labels, correct theme backgrounds verified by pixel sampling in both renders.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Semi-transparent fills, white-edge markers, theme-adaptive tokens
-          — above generic defaults; not publication-ready
+        comment: De-emphasized box guide, diamond mean markers, and callout annotation
+          show clear design intent; overlap that previously undercut the polish is
+          now fixed.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-only grid, generous margins, edge highlighting on markers, clean
-          legend frame
+        comment: L-shaped spines, subtle y-only grid, generous whitespace; docked
+          slightly for the bordered legend box (style guide recommends removing legend
+          frames).
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Varied distribution shapes tell a story but bimodal Room C receives
-          no visual emphasis
+        passed: true
+        comment: Bimodal annotation and diamond means create a clear focal point and
+          guide the viewer to Room C's distinctive shape.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: go.Box with boxpoints=all is Plotly's best swarm approach but prominent
-          box/whisker elements compete with individual-point focus
+        comment: Genuine beeswarm behavior now confirmed — points spread to avoid
+          overlap via the custom packing algorithm.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Individual points, horizontal spread, mean markers, color by category,
-          consistent sizes, group spacing — all present
+        comment: Consistent point sizes, per-category mean marker, color-coded categories,
+          and clear spacing between groups — the 'excessive overlap' violation from
+          Attempt 1 is resolved.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X, values on Y, full range displayed
+        comment: X=Classroom, Y=Test Score, axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: swarm-basic · plotly · anyplot.ai centered; legend labels match data
+        comment: Title now reads 'swarm-basic · python · plotly · anyplot.ai', matching
+          the required format. Legend labels match category names.
     data_quality:
       score: 15
       max: 15
@@ -159,60 +177,61 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Four distinct distribution shapes: right-skewed bimodal, high-variance,
-          bimodal two-cluster, tight normal'
+        comment: Shows spread, per-category mean, and a bimodal shape callout; point-level
+          clarity is no longer limited by overlap.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Student test scores by classroom — neutral, realistic, educationally
-          relevant
+        comment: Student test scores by classroom — plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 37-95 realistic; 35-50 students per classroom plausible; means
-          68-80 credible
+        comment: Score range (~37-95, axis 30-110) is sensible for a test-score domain.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: theme tokens -> data -> figure loop -> layout -> save;
-          no functions or classes'
+        comment: Adds one helper function (swarm_offsets) to implement the collision-avoidance
+          packing — a justified exception since plotly has no native beeswarm trace,
+          but it is a deviation from the flat-script default.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: sys, os, numpy, plotly.graph_objects all used; no dead imports
+        comment: Only numpy, plotly.graph_objects, os, sys (path-shadow workaround)
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: zip() iteration clean; dict-style config idiomatic; sys.path.pop(0)
-          guard legitimate
+        comment: No fake UI/interactivity; the added complexity directly serves the
+          swarm-packing technique.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current write_image/write_html
+          API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -220,19 +239,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct go.Box usage, update_layout dict-style, write_image/write_html
-          — idiomatic; doesn't exploit advanced layout features
+        comment: Idiomatic go.Figure + go.Box/go.Scatter combo, correct theme-token
+          mapping per the library prompt.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: hovertemplate for per-point tooltips, boxmean=True for mean overlay,
-          HTML export — Plotly-distinctive capabilities
+        comment: Genuine custom beeswarm-packing algorithm (pixel-space collision
+          detection) is a strong plotly-specific workaround for the library's lack
+          of a native swarm trace — an upgrade over Attempt 1's random-jitter approach.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
