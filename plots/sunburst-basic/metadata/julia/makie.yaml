@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: sunburst-basic
 created: '2026-07-26T04:27:27Z'
-updated: '2026-07-26T04:32:54Z'
+updated: '2026-07-26T04:46:15Z'
 generated_by: claude-sonnet
 workflow_run: 30187634050
 issue: 821
@@ -12,52 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - 'Radial geometry is mathematically correct: child angular spans sum exactly to
-    their parent branch''s span, satisfying the spec''s ''inner segments should visually
-    encompass their children''s angular span'' requirement.'
-  - Branch-consistent color shading (HSL lightness step-up per child, same hue as
-    parent) directly fulfills the spec note 'use consistent colors within each branch'
-    while keeping branch base colors on the Imprint canonical order (#009E73 first).
-  - Per-wedge luminance-based text color (branch_label_color / child_label_color)
-    picks dark or light ink automatically so labels stay readable against both saturated
-    and pastel wedge fills, in both themes.
-  - Canvas lands exactly on the canonical 2400x2400 square target, theme chrome (background,
-    title, text) is correctly swapped between light and dark, and data colors are
-    pixel-identical across themes.
+  - 'Full 3-level hierarchy now exercised for the Source Code branch (grandchild ring:
+    Parser/Renderer/Optimizer, REST/GraphQL, Components/Hooks/Styles, Helpers/Validators),
+    directly addressing Attempt 1 feedback about only 2 levels being shown'
+  - Stroke width reduced from 3 to 1.5, giving noticeably more refined wedge separation
+    and addressing the prior 'thicker than ideal' critique
+  - Center TOTAL rollup (1770 MB) uses the donut hole as a natural focal point, plus
+    a star marker on the single largest second-level segment (Core Engine, 420 MB)
+    - gives the chart an explicit insight anchor, addressing prior data-storytelling
+    feedback
+  - Legend is built via Makie's GridLayout (fig[1,1] shared between Axis and Legend
+    with tellwidth=false/tellheight=false) instead of a separate legend column - a
+    Makie-idiomatic composition technique that partially addresses the prior Library
+    Mastery feedback
+  - Data colors (branch base hues plus HSL-lightness child/grandchild tints) are pixel-identical
+    between light and dark renders; only chrome (background, title, legend text, stroke
+    color) flips - confirmed via close crops of both themes
+  - Canvas lands exactly on 2400x2400 (no canvas-gate failure file present); generous
+    whitespace margins on all four edges with no clipping
   - Realistic, neutral, on-spec dataset (repository storage breakdown by directory
-    in MB) matches one of the specification's own example applications verbatim.
-  - 'Clean KISS script: no functions/classes, deterministic hardcoded data, only used
-    imports (CairoMakie, Colors).'
+    in MB) matches one of the specification's own example applications
   weaknesses:
-  - Only 2 hierarchy levels are used (level_3 grandchild ring is omitted). This is
-    spec-legal since level_3 is optional, but a 3rd ring would better exercise the
-    plot type's full multi-level capability for Data Quality/Feature Coverage.
-  - The sunburst is built from generic `poly!` polygons plus manual trigonometry rather
-    than any Makie-distinctive recipe or feature, so Library Mastery reads as fairly
-    generic/replicable in other libraries (e.g. matplotlib Wedge patches).
-  - Smallest children (e.g. 'Fixtures', ~40 of 285 in Test Suite) fall below the deg2rad(10)
-    label threshold and are left unlabeled with no fallback (e.g. no legend or value
-    callout), so a few leaf nodes have no visible identifying text at all.
-  - The strokewidth=3 background-colored separators between wedges are on the thicker
-    side relative to the ~13px-per-radius-unit scale of the chart; a thinner stroke
-    would read as more refined/polished at this quality bar.
-  - Branch label font (15pt) and child label font (12pt) are noticeably smaller than
-    the 20pt title; on a 2400px canvas that gap is fine at desktop size but the 12pt
-    child labels are the first thing to get borderline at ~400px mobile width.
+  - Grandchild-ring labels are now 10pt - the smallest text tier in the plot and one
+    step smaller than the already-borderline 12pt child labels flagged in Attempt
+    1; watch legibility at ~400px mobile width
+  - Legend only shows branch-level totals; the smallest leaf/grandchild segments below
+    the label-angle threshold (e.g. 'Fonts', unlabeled Documentation children) remain
+    entirely unlabeled with no fallback value callout
+  - 'Library Mastery remains the weakest category: aside from the GridLayout-based
+    legend overlay, the sunburst is still built from generic poly! polygons plus manual
+    trigonometry, a technique easily replicated in matplotlib or any other plotting
+    library'
+  - The star focal-point marker sits directly against the 'Core Engine' label text
+    without a visual gap, reading more like a subscript than a clearly separated annotation
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "sunburst-basic · julia · makie · anyplot.ai" bold dark text, top-center, ~49% of canvas width, fully visible with no clipping. No axis ticks/spines (correctly hidden for a radial chart). No legend — direct in-wedge labels substitute for one, which is appropriate here.
-      Data: Two concentric rings around a hollow center. Inner ring = 4 branches (Source Code #009E73 green, Test Suite #C475FD lavender, Assets #4467A3 blue, Documentation #BD8233 ochre) — matches Imprint canonical order with brand green first. Outer ring = children rendered as lighter tints of their parent's hue, preserving branch identity. Per-wedge label color auto-switches dark/light ink based on wedge luminance; all sampled labels (Core Engine, UI Components, Test Suite, Unit Tests, Assets, Images, Documentation, API Reference, Icons) are legible against their fill.
+      Background: Warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: Bold dark title "sunburst-basic · julia · makie · anyplot.ai" top-left, fully visible, no clipping. Legend top-right lists the 4 branches with color swatches and MB totals (Source Code 950 MB, Test Suite 285 MB, Assets 395 MB, Documentation 140 MB) in dark-gray text on transparent background. Center donut hole shows "TOTAL" / "1770 MB" in dark ink. All chrome text reads clearly against the light background.
+      Data: 3 concentric rings (branch -> child -> grandchild, grandchild ring present only for Source Code's children) plus a donut hole. First branch (Source Code) is Imprint brand green #009E73, followed by lavender (Test Suite), blue (Assets), and ochre (Documentation) - matching canonical Imprint order. Children and grandchildren use HSL-lightness tints of their parent's hue, per-wedge label ink auto-switches dark/light based on wedge luminance; every sampled label (branch, child, grandchild) is legible against its fill. A star marks the single largest second-level segment (Core Engine, 420 MB).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title renders in light/off-white text, clearly legible against the dark background. No dark-on-dark text observed anywhere — tick/axis chrome is hidden entirely (not applicable to this chart type) so there is no separate axis-label failure surface.
-      Data: Identical wedge colors and layout to the light render (green/lavender/blue/ochre branches with matching child tints) — only the page background and title/label ink flipped, confirming theme-adaptive chrome without touching data colors.
+      Background: Warm near-black, matches #1A1A17 - not pure black.
+      Chrome: Title renders in light/off-white text, clearly legible. Legend swatches identical in color/position to the light render, legend text now light-gray (INK_SOFT dark-theme token). Center "TOTAL" / "1770 MB" text renders in light ink, clearly visible against the near-black hole.
+      Data: Wedge colors and layout are pixel-identical to the light render (branch hues + child/grandchild tints unchanged) - confirms only chrome flipped, not data colors. Wedge stroke color also flips to near-black, giving the same clean separation as the light render's off-white strokes. No dark-on-dark failures observed anywhere - all text (title, legend, in-wedge labels, center total) stays readable against the dark background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -69,76 +70,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=20, branch labels=15, child
-          labels=12); readable in both themes; child labels at 12pt are the smallest
-          element and would be first to strain at mobile widths.
+        comment: All font sizes explicit and scale sensibly with hierarchy depth (title
+          20pt, branch 15pt, child 12-13pt, grandchild 10pt); 10pt grandchild labels
+          are the new smallest tier and the first to strain at mobile widths
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions observed in either render.
+        comment: No overlap between labels, legend, or center text at any ring level,
+          confirmed via close crops
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wedge sizes and label placements are well adapted to the 13-leaf
-          hierarchy density.
+        comment: Wedges well-sized for their data; below-threshold small wedges correctly
+          omit labels instead of overlapping
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is colorblind-safe; per-wedge luminance-based label
-          ink switching maximizes contrast beyond palette choice alone.
+        comment: Luminance-adaptive label ink maximizes contrast beyond palette alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Circle fills a large, balanced portion of the 2400x2400 canvas with
-          even margins; confirmed exact 2400x2400 output via direct pixel check.
+        comment: Exact 2400x2400 canvas (gate passed), donut uses ~85-90% of canvas,
+          balanced margins on all edges, no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axis labels (radial chart, decorations correctly hidden);
-          title itself is descriptive and spec-format-correct.
+        comment: N/A axis for radial chart; title descriptive and format-correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First branch is #009E73; remaining branches follow canonical Imprint
-          order (#C475FD, #4467A3, #BD8233); child tints are hue-preserving shades
-          of the parent, not new arbitrary colors; theme chrome correct in both renders.'
+        comment: 'First branch is #009E73, canonical Imprint order for remaining branches,
+          child/grandchild HSL tints preserve branch identity per spec''s own instruction,
+          theme chrome correct in both renders'
     design_excellence:
-      score: 15
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
-        comment: Thoughtful branch-hue shading and luminance-adaptive label ink go
-          clearly above a library default, though it stops short of publication-grade
-          polish (e.g. no additional typographic refinement or callouts).
+        passed: true
+        comment: 3rd hierarchy ring, inset legend, center rollup, and focal-point
+          marker together read as a meaningfully more polished composition than Attempt
+          1
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
-        comment: All decorations/spines hidden, generous whitespace, subtle background-colored
-          dividers between wedges; strokewidth=3 is slightly thicker than ideal for
-          the finest polish.
+        passed: true
+        comment: Stroke width reduced from 3 to 1.5 resolving the prior thickness
+          critique; spines/decorations hidden, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Segment size and consistent branch coloring create clear visual hierarchy
-          and grouping, guiding the reader to proportions at a glance, though no explicit
-          annotation calls out a specific insight.
+        passed: true
+        comment: Star marker on the largest segment plus center TOTAL rollup create
+          a clear focal point and hierarchy narrative; star sits flush against its
+          label rather than clearly separated
     spec_compliance:
       score: 15
       max: 15
@@ -147,47 +149,51 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct concentric-ring sunburst/donut geometry with a hollow center.
+        passed: true
+        comment: Correct sunburst chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Proportional angles, branch-consistent coloring, clear ring separation,
-          and children spans exactly encompassed by their parent's span are all present.
+        passed: true
+        comment: Proportional angles, branch-consistent color, clear ring separation,
+          children spans exactly encompass parent span
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Angular position correctly encodes value at both hierarchy levels;
-          all data is represented across a full circle.
+        passed: true
+        comment: Angular spans correctly proportional to value at every ring level
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title exactly matches 'sunburst-basic · julia · makie · anyplot.ai';
-          direct wedge labels substitute correctly for a legend.
+        passed: true
+        comment: Title format correct; legend labels match branch names and totals
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: Good variation in branch/child counts (4/3/3/3) and value spread
-          (15 to 420), but only 2 of the spec's up-to-3 levels are exercised.
+        passed: true
+        comment: Now exercises the full 3-level hierarchy (grandchild ring added for
+          Source Code's children) in addition to varied branch/child value distributions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Repository storage breakdown by directory is a real, neutral scenario
-          matching the specification's own example application.
+        passed: true
+        comment: Repository storage breakdown by directory matches the spec's own
+          example application
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: MB values are plausible and internally consistent for a real-world
-          repository's directory sizes.
+        passed: true
+        comment: Values and proportions are realistic for a codebase storage breakdown
     code_quality:
       score: 10
       max: 10
@@ -196,56 +202,64 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Imports -> data -> figure -> save, no functions/classes.
+        passed: true
+        comment: No functions/classes; nested loops over branches/children/grandchildren
+          are the natural structure for this data shape
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Data is fully hardcoded/deterministic, no randomness involved.
+        passed: true
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only CairoMakie and Colors, both used.
+        passed: true
+        comment: Only CairoMakie and Colors imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity for a chart type with no native Makie primitive;
-          no fake UI or interactivity.
+        passed: true
+        comment: Appropriate complexity for manual radial geometry, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves as plot-$(THEME).png via current save() API.
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: poly!()-based custom radial geometry is the correct idiomatic Makie
-          approach given no native sunburst primitive, but remains a manual/low-level
-          construction rather than a high-level chart call.
+        passed: true
+        comment: poly!-based custom radial geometry is the correct approach given
+          no native Makie sunburst primitive; remains manual/low-level rather than
+          a high-level chart call
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        comment: The technique (manual polygons + trigonometry + HSL shading) is generic
-          and easily replicated in other plotting libraries; no Makie-specific feature
-          is leveraged.
-  verdict: REJECTED
+        passed: false
+        comment: GridLayout-based legend overlay (shared fig[1,1] cell with tellwidth/tellheight=false)
+          is a modest Makie-specific touch, but the core sunburst geometry is still
+          generic polygons + trigonometry easily replicated elsewhere
+  verdict: APPROVED
 impl_tags:
-  dependencies:
-  - colors
+  dependencies: []
   techniques:
   - patches
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
-  - edge-highlighting
+  - publication-ready
