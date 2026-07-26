@@ -73,13 +73,18 @@ d3.partition().size([2 * Math.PI, radius])(root);
 const branchNames = root.children.map((d) => d.data.name);
 const branchColor = d3.scaleOrdinal().domain(branchNames).range(t.palette);
 
-function colorFor(d) {
+function wedgeHsl(d) {
   let branchNode = d;
   while (branchNode.depth > 1) branchNode = branchNode.parent;
   const base = d3.hsl(branchColor(branchNode.data.name));
   base.l = Math.min(0.82, base.l + (d.depth - 1) * 0.14);
-  return base.toString();
+  return base;
 }
+const colorFor = (d) => wedgeHsl(d).toString();
+// Label ink is picked from the wedge's own rendered lightness (not the theme
+// token) so it stays >=4.5:1 against both the saturated inner-ring hues and
+// the pale, HSL-lightened outer tints in both themes.
+const labelColorFor = (d) => (wedgeHsl(d).l > 0.5 ? "#1A1A17" : "#F0EFE8");
 
 // --- SVG mount ------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -118,7 +123,7 @@ g.selectAll("text")
   .attr("transform", labelTransform)
   .attr("dy", "0.32em")
   .attr("text-anchor", "middle")
-  .attr("fill", t.ink)
+  .attr("fill", labelColorFor)
   .style("font-size", (d) => (d.depth === 1 ? "16px" : "13px"))
   .style("font-weight", (d) => (d.depth === 1 ? "600" : "400"))
   .style("pointer-events", "none")
