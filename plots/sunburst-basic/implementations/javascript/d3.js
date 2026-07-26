@@ -1,7 +1,7 @@
 // anyplot.ai
 // sunburst-basic: Basic Sunburst Chart
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-07-26
+// Library: d3 7.9.0 | JavaScript 22.23.1
+// Quality: 79/100 | Created: 2026-07-26
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
