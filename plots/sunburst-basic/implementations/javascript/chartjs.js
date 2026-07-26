@@ -73,10 +73,18 @@ function relativeLuminance(r, g, b) {
   return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 }
 
+function contrastRatio(l1, l2) {
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 function labelColorFor(hex) {
   const n = parseInt(hex.slice(1), 16);
   const luminance = relativeLuminance((n >> 16) & 255, (n >> 8) & 255, n & 255);
-  return luminance > 0.45 ? "#1A1A17" : "#F0EFE8";
+  const darkContrast = contrastRatio(luminance, relativeLuminance(0x1a, 0x1a, 0x17));
+  const lightContrast = contrastRatio(luminance, relativeLuminance(0xf0, 0xef, 0xe8));
+  return darkContrast >= lightContrast ? "#1A1A17" : "#F0EFE8";
 }
 
 const level1Colors = level1.map((d, i) => branchColors[i]);
