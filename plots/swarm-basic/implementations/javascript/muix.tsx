@@ -1,3 +1,7 @@
+// anyplot.ai
+// swarm-basic: Basic Swarm Plot
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 90/100 | Created: 2026-07-26
 //# anyplot-orientation: landscape
 // anyplot.ai
 // swarm-basic: Basic Swarm Plot
