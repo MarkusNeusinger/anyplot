@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-05
+Quality: 86/100 | Updated: 2026-07-26
 """
 
 import sys
@@ -23,10 +23,11 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
+GRID = "rgba(26, 26, 23, 0.15)" if THEME == "light" else "rgba(240, 239, 232, 0.15)"
 
+# Imprint categorical palette — first series always #009E73
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
-FILL_COLORS = ["rgba(0, 158, 115, 0.18)", "rgba(196, 117, 253, 0.18)", "rgba(68, 103, 163, 0.18)", "rgba(189, 130, 51, 0.18)"]
+IMPRINT_RGB = [(0, 158, 115), (196, 117, 253), (68, 103, 163), (189, 130, 51)]
 
 # Data - student test scores across 4 classrooms with varied distributions
 np.random.seed(42)
@@ -39,55 +40,91 @@ scores_d = np.random.normal(78, 6, 40)
 
 all_scores = [scores_a, scores_b, scores_c, scores_d]
 
-# Plot — use Plotly's native go.Box with boxpoints='all' for a beeswarm effect:
-# individual jittered points, box/whisker statistics, and mean line overlay.
+# Plot — go.Box with boxpoints='all' gives the beeswarm effect (individual
+# jittered points). The box itself is de-emphasized (transparent fill, faint
+# outline) so it reads as a faint spread guide rather than competing with the
+# points; a dedicated diamond marker trace carries the per-group mean so it
+# stays crisp against the muted box outline.
 fig = go.Figure()
 
 for i, (classroom, scores) in enumerate(zip(classrooms, all_scores, strict=False)):
     color = IMPRINT[i]
+    r, g, b = IMPRINT_RGB[i]
     fig.add_trace(
         go.Box(
             y=scores,
             name=classroom,
             boxpoints="all",
-            jitter=0.5,
+            jitter=0.75,
             pointpos=0,
-            marker={"color": color, "size": 10, "opacity": 0.8, "line": {"width": 1.5, "color": PAGE_BG}},
-            line={"color": color, "width": 2},
-            fillcolor=FILL_COLORS[i],
-            whiskerwidth=0.5,
-            boxmean=True,
+            marker={"color": color, "size": 9, "opacity": 0.8, "line": {"width": 1.2, "color": PAGE_BG}},
+            line={"color": f"rgba({r}, {g}, {b}, 0.35)", "width": 1},
+            fillcolor="rgba(0, 0, 0, 0)",
+            whiskerwidth=0.3,
+            boxmean=False,
             hovertemplate=f"{classroom}<br>Score: %{{y:.1f}}<extra></extra>",
         )
     )
+    fig.add_trace(
+        go.Scatter(
+            x=[classroom],
+            y=[float(np.mean(scores))],
+            mode="markers",
+            marker={"symbol": "diamond", "size": 13, "color": color, "line": {"width": 1.5, "color": PAGE_BG}},
+            showlegend=False,
+            hovertemplate=f"{classroom} mean<br>Score: %{{y:.1f}}<extra></extra>",
+        )
+    )
+
+# Annotate Room C's bimodal shape — its most analytically interesting feature
+fig.add_annotation(
+    x="Room C",
+    y=71,
+    text="Bimodal: two<br>skill clusters",
+    showarrow=True,
+    arrowhead=2,
+    arrowcolor=INK_SOFT,
+    ax=55,
+    ay=-10,
+    font={"size": 10, "color": INK},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+)
 
 # Layout
 fig.update_layout(
+    autosize=False,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    title={"text": "swarm-basic · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "swarm-basic · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
-        "title": {"text": "Classroom", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Classroom", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
         "zerolinecolor": GRID,
         "showgrid": False,
     },
     yaxis={
-        "title": {"text": "Test Score (points)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Test Score (points)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
         "zerolinecolor": GRID,
         "range": [30, 110],
     },
-    legend={"bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "borderwidth": 1, "font": {"size": 16, "color": INK_SOFT}},
+    legend={"bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "borderwidth": 1, "font": {"size": 10, "color": INK_SOFT}},
     showlegend=True,
-    margin={"l": 100, "r": 120, "t": 100, "b": 80},
+    margin={"l": 70, "r": 90, "t": 70, "b": 55},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
