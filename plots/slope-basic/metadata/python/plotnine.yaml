@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: slope-basic
 created: '2025-12-23T20:46:08Z'
-updated: '2026-07-25T23:51:26Z'
+updated: '2026-07-26T00:01:08Z'
 generated_by: claude-sonnet
 workflow_run: 30179461519
 issue: 981
@@ -12,139 +12,130 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 93
 review:
   strengths:
-  - Correct slope-chart structure with two clearly labeled time-point axes (2014/2024)
-    and 10 entities, within the spec's 5-15 recommended range
-  - 'Semantic color coding (Increase = Imprint #009E73, Decrease = Imprint #AE3030)
-    is redundant with the line''s slope direction, so the encoding stays colorblind-safe'
-  - Canvas is exactly 3200x1800 (landscape) with no edge clipping in either render
-  - Both light (#FAF8F1) and dark (#1A1A17) renders are correctly themed - all chrome
-    (title, axis text, grid, legend) flips appropriately and stays legible
-  - 'Clean single-script implementation: no functions/classes, all imports used, deterministic
-    hardcoded data, correct plot-{THEME}.png output convention'
-  - Realistic, neutral, well-scaled data (national coal-share-of-electricity percentages,
-    2014 vs 2024) with a genuine mix of increases, decreases and rank reversals as
-    the spec's Notes section suggests
+  - Direct endpoint labeling (entity + start value on the left, end value on the right)
+    eliminates the need for a numeric y-axis and keeps the chart clean per Tufte-style
+    slopegraph convention.
+  - 'Semantic color coding (Increase = brand green #009E73, Decrease = matte red #AE3030)
+    is redundant with the line''s slope direction, so direction reads via two independent
+    channels, not color alone.'
+  - Previously-flagged marker overlap (Poland/Vietnam 2024 endpoints) has been resolved
+    by nudging values apart; no label or marker collisions remain in either render.
+  - Title fontsize (11pt) matches the style guide's linear scaling formula for the
+    descriptive-prefixed 73-char title almost exactly, and fits within the 70-85%
+    width band without clipping.
+  - Data is factually well-grounded (national coal-share trends 2014-2024 broadly
+    track real IEA/Ember figures, e.g. UK's collapse to ~1%, US ~39%->15%) and covers
+    both increases and decreases plus rank crossovers per the spec's data notes.
+  - 'Both renders are fully theme-correct: warm off-white/near-black backgrounds,
+    all chrome text readable, identical data colors across themes.'
   weaknesses:
-  - 'PIPELINE/PROCESS ISSUE (not a code defect): the plot_images/plot-light.png and
-    plot-dark.png supplied for this review do not match plots/slope-basic/implementations/python/plotnine.py
-    at all - the shipped artifacts show 10 different, monotonically-sorted entity
-    values (e.g. Germany 90->92, all-increase-then-all-decrease ordering) while the
-    current source code defines entirely different, non-monotonic data (Germany 44->23,
-    South Africa 92->84, etc.) with intentional rank reversals. This reviewer independently
-    re-ran the current script (both themes) to produce accurate renders for this review;
-    the workflow should be checked for why the pre-rendered PNGs were not regenerated
-    after the latest ''fix(plotnine): address review feedback for slope-basic'' commit.'
-  - 'Overlapping/merged endpoint markers on the 2024 side: China (ends at 59) and
-    Poland (ends at 57) are only 2 units apart on the value scale, so their point
-    markers visually merge into a single figure-8 blob; the same happens for Turkey
-    (36) and Vietnam (34). Fix by nudging the data values further apart, reducing
-    marker size for tightly-packed pairs, or applying a small manual vertical dodge/offset
-    to the merging markers.'
-  - Right-side (2024) labels show only the bare numeric value, not the entity name,
-    so entity identification relies solely on tracing the colored line back to the
-    left label - acceptable convention but a partial gap against the spec's 'Labels
-    should appear at both endpoints for entity identification'.
-  - 'Library mastery is fairly generic: beyond the two-layer geom_text label pattern,
-    the implementation doesn''t demonstrate plotnine-distinctive techniques (e.g.
-    position/dodge adjustments that would also fix the marker-overlap issue above).'
+  - Data storytelling is limited to color/slope encoding; no explicit visual emphasis
+    (annotation, bolder line, or callout) highlights the single most dramatic change
+    (e.g., United Kingdom's drop from 30% to ~1%), so the viewer must scan all ten
+    lines to find the standout story.
+  - The layered geom_text-with-per-layer-data pattern is idiomatic plotnine/ggplot2
+    grammar but not a feature unique to this library specifically — a generic 'distinctive
+    feature' beyond that would strengthen Library Mastery further.
   image_description: |-
-    NOTE ON ARTIFACTS: The plot_images/plot-light.png and plot-dark.png provided to this review job do NOT match the current implementation source (plots/slope-basic/implementations/python/plotnine.py) - they show different, monotonically-ordered data. This reviewer re-executed the actual current script with ANYPLOT_THEME=light and ANYPLOT_THEME=dark to obtain accurate renders, and the description below is based on those correctly-regenerated images (verified at 3200x1800, matching the canonical landscape canvas).
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), matches the required light-theme surface, not pure white.
+      Chrome: Title "National Coal Power Share · slope-basic · python · plotnine · anyplot.ai" is dark ink, fully visible, ~85% plot width, not clipped at top or sides. Y-axis title "Coal Share of Electricity Generation (%)" is dark ink, rotated, fully visible with margin from the left canvas edge. X-axis tick labels "2014"/"2024" are dark gray, clearly legible with margin above the bottom edge. Left entity labels (e.g. "China (66)", "Australia (63)", "United Kingdom (30)", "Turkey (27)") are tightly spaced in places but remain on distinct rows with no overlap. Legend "Change" with "Decrease"/"Increase" swatches sits in an elevated cream box to the right of the plot, clear of all data labels.
+      Data: First/semantic series color is brand green #009E73 for "Increase" lines, matte red #AE3030 for "Decrease" lines — both Imprint palette members, applied consistently with 10 point-pairs, prominent markers and moderate line weight appropriate for this sparse (10-line) dataset.
+      Legibility verdict: PASS
 
-    Light render (plot-light.png, regenerated from current source):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "National Coal Power Share · slope-basic · python · plotnine · anyplot.ai" spans ~55-60% of plot width, dark ink, fully visible with no clipping. Y-axis title "Coal Share of Electricity Generation (%)" is rotated and legible. X-axis shows "2014" and "2024" in large dark text under each vertical line. Legend "Change" (Decrease/Increase swatches) sits at the right, clear of the data. Left-side entity+value labels (e.g. "South Africa (92)", "Poland (84)") and right-side bare value labels (e.g. "84", "76") are dark ink on the light background.
-      Data: Lines colored Imprint #009E73 (Increase) and #AE3030 (Decrease), consistent with the spec's suggestion to color-code by direction. Markers are circular, size ~3.2. Two endpoint pairs on the 2024 side visually merge (China/Poland at 59/57, Turkey/Vietnam at 36/34) into touching blobs - see weaknesses.
-      Legibility verdict: PASS (all text readable; the only readability-adjacent issue is the merged markers, which affects shape clarity, not text legibility).
-
-    Dark render (plot-dark.png, regenerated from current source):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Title and axis text render in light ink (#F0EFE8-family), clearly visible against the dark background - no dark-on-dark failures observed. Grid lines (horizontal, y-only) are faint but present. Legend background is a slightly elevated dark panel with light text, readable.
-      Data: Colors are identical to the light render - #009E73 (Increase) and #AE3030 (Decrease) - confirming the palette does not shift between themes; only chrome flipped as required. Same marker-merge issue reproduces in the dark render (same data, same layout).
-      Legibility verdict: PASS (no dark-on-dark or light-on-light failures in either render).
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), matches the required dark-theme surface, not pure black.
+      Chrome: Title, y-axis title, tick labels, entity labels and legend text all render in light ink (white/light-gray) against the dark background — no dark-on-dark failures found anywhere, including the rotated y-axis title and the small entity-label text at the far left.
+      Data: Increase/Decrease line and marker colors are pixel-identical to the light render (#009E73 / #AE3030) — only the chrome (background, text, grid, legend box fill) flips between themes, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; sizes are modest but clear at full
-          resolution
+        comment: All sizes explicitly set via theme(); title fontsize (11pt) matches
+          the style-guide linear-scaling formula for the 73-char descriptive+mandated
+          title; readable in both themes, no overflow.
       - id: VQ-02
         name: No Overlap
-        score: 2
-        max: 6
-        passed: false
-        comment: China/Poland (59/57) and Turkey/Vietnam (36/34) endpoint markers
-          visually merge into figure-8 blobs on the 2024 side
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Marker/line sizing reasonable for 10 entities, but merged markers
-          reduce point distinguishability for the two close pairs
+        comment: Verified at pixel level around the closest label pairs (China/Australia,
+          UK/Turkey) — no text or marker collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 point-pairs (sparse); marker size=3.2 and line size=1.4 are prominent
+          and well-suited to this density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/green direction coding is redundant with slope direction, so
-          it remains colorblind-safe
+        comment: Direction is redundantly encoded by both Imprint-safe green/red color
+          AND line slope, so it does not rely on color/hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas verified at 3200x1800; title ~55-60% width; no overflow or
-          clipping
+        comment: Chart, labels, and legend fill the canvas with balanced whitespace;
+          nothing cut off; legend sits close to the plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis descriptive with units (%); x-axis conveys year via categorical
-          breaks
+        comment: 'Y-axis label includes units: ''Coal Share of Electricity Generation
+          (%)''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Increase=#009E73 (Imprint pos.1), Decrease=#AE3030 (Imprint pos.5);
-          backgrounds correct in both themes
+        comment: Increase=#009E73 (brand/position 1), Decrease=#AE3030 (semantic anchor
+          position 5) — correct semantic-exception use per the finance/status convention
+          (gain=green, loss=red); labels literally say 'Increase'/'Decrease'; backgrounds
+          and chrome are theme-correct in both renders.
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Semantic color mapping and minimalist inline-label design above generic
-          defaults, but not top-tier custom design
+        passed: true
+        comment: 'Strong, intentional design: semantic palette, direct labeling instead
+          of a numeric axis, clean typography — clearly above library defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Spines/border removed, subtle single-axis grid, generous whitespace
-          - undercut somewhat by the merged markers
+        passed: true
+        comment: Spines/borders/ticks removed, grid reduced to a subtle 15%-alpha
+          horizontal rule, generous whitespace, elevated legend box.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Color-direction story is clear, but the busy crossing-line middle
-          section dilutes a single focal point
+        passed: true
+        comment: Color contrast between Increase/Decrease creates visual hierarchy
+          and guides the reader, but no single insight (e.g. UK's near-total coal
+          exit) is explicitly called out.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,27 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine two-axis slope chart
+        comment: 'Correct slopegraph: two vertical time-point axes connected by lines
+          per entity.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Direction color-coding and time-point axis labels present; right
-          endpoint labels omit entity name
+        comment: Labels at both endpoints, color-coded direction, time-point-labeled
+          axes, 10 entities within the spec's 5-15 range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; all 10 entities shown at both time points
+        comment: x=time point (2014/2024), y=value; all 10 entities' start and end
+          values are shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive} · slope-basic · python · plotnine ·
-          anyplot.ai'; legend labels match color meaning
+        comment: Title is '{Descriptive Title} · slope-basic · python · plotnine ·
+          anyplot.ai'; legend labels 'Increase'/'Decrease' match the mapped data.
     data_quality:
       score: 15
       max: 15
@@ -182,19 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows increases, decreases, and rank reversals across 10 entities
+        comment: Shows both increases and decreases plus rank crossovers (e.g. Poland/China
+          lines cross), matching the spec's emphasis on direction and rank change.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral national coal-share statistics
+        comment: Real, neutral energy-policy scenario (national coal share 2014 vs
+          2024) — no controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1-92% range is sensible for the domain
+        comment: Values track real-world coal-transition trends closely (e.g. UK ~30%->~1%,
+          US ~39%->~15%, China ~66%->~59%).
     code_quality:
       score: 10
       max: 10
@@ -204,60 +200,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: Flat imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used
+        comment: Every imported plotnine symbol is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean, appropriately complex, no fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with correct dpi/size args
+        comment: Saves as plot-{THEME}.png via current plot.save() API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Proper grammar-of-graphics usage: aes mapping, scale_manual, layered
-          theme()'
+        comment: 'Expert grammar-of-graphics composition: layered geoms, scale_color_manual,
+          full theme() customization.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Two-layer geom_text label pattern is a nice touch, but no dodge/position-adjustment
-          or other distinctive plotnine feature is used to resolve the marker overlap
-  verdict: REJECTED
+        passed: true
+        comment: Uses per-layer data overrides (separate df_labels_left/df_labels_right
+          passed to geom_text) — a grammar-of-graphics-specific technique, though
+          not fully unique to plotnine alone.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   - layer-composition
   patterns:
   - data-generation
-  - wide-to-long
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
   - grid-styling
+  - minimal-chrome

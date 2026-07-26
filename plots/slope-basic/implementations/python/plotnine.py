@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 79/100 | Updated: 2026-07-25
+Quality: 93/100 | Updated: 2026-07-26
 """
 
 import os
