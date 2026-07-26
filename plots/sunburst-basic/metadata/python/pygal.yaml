@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: sunburst-basic
 created: '2026-05-04T22:56:10Z'
-updated: '2026-07-26T04:36:15Z'
+updated: '2026-07-26T05:04:40Z'
 generated_by: claude-sonnet
 workflow_run: 30187416978
 issue: 821
@@ -12,259 +12,226 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/pygal/plot-dark.html
-quality_score: 40
+quality_score: 79
 review:
   strengths:
-  - Title format is exactly correct (`sunburst-basic · python · pygal · anyplot.ai`)
-    and theme-adaptive chrome (background, ink, muted ink) is correctly derived from
-    ANYPLOT_THEME in both renders.
-  - 'First categorical series is the mandated #009E73 brand green, and the Imprint
-    palette is used with a thoughtful consistent-shade-per-branch technique (each
-    team is a lighter tint of its parent department''s Imprint hue) matching the spec''s
-    ''consistent colors within each branch'' requirement.'
-  - Deterministic, clean, KISS-structured code with correct outputs (plot-{theme}.png
-    via render_to_png + plot-{theme}.html via render()), and realistic, internally-consistent
-    budget data (team values sum exactly to their department totals).
-  - Thoughtful use of pygal's per-datapoint dict API to switch between `label` (printed)
-    and `tooltip` (hover-only) per data point, deliberately avoiding a cluttered ring
-    of ten overlapping team labels, with an explicit code comment reasoning about
-    a label collision at the Technology/Marketing ring seam.
+  - 'Critical structural fix from attempt 1: switching to one pygal series per department
+    makes the coarse inner ring genuinely value-proportional (Technology ~42%, Business
+    ~31%, Operations ~17%, Marketing ~10% all match the underlying data), and the
+    thin outer ring correctly subdivides each department''s own arc by its teams —
+    the sunburst hierarchy now actually encodes what the spec requires'
+  - margin=380 (uniform) replaces the old margin_right=320 dead space, producing balanced
+    whitespace and a well-utilized ~68%-diameter disk on the 2400x2400 canvas
+  - Consistent branch-level color tinting (each team is a lighter tint of its parent
+    department's Imprint hue) is a thoughtful, non-default touch that reinforces the
+    hierarchy visually
+  - Deterministic, clean, KISS-structured code with correct dual outputs (plot-{theme}.png
+    + plot-{theme}.html), realistic budget data that sums exactly to department totals,
+    and clever (well-commented) use of pygal's per-datapoint label/tooltip dict switching
+  - 'First categorical series is #009E73, Imprint palette used correctly, and title
+    format is exact'
   weaknesses:
-  - 'CRITICAL structural failure: the large inner disk (~85-90% of the canvas) does
-    NOT encode department (level_1) proportions at all. pygal''s multi-series Pie
-    in ''dual'' mode fills the coarse/inner region as ONE solid wedge PER SERIES,
-    sized by that series'' total value sum -- not per data point within the series.
-    Because the ''Departments'' series sum (1000) always equals the ''Teams'' series
-    sum (1000) for any valid parent/child hierarchy, the inner disk is mathematically
-    forced into a meaningless 50/50 green/purple split (green = the entire ''Departments''
-    series, purple = the entire ''Teams'' series) regardless of the true department
-    shares (Technology 42%, Business 31%, Operations 17%, Marketing 10%). The ''Technology'',
-    ''Business'', ''Operations'', ''Marketing'' text labels are overlaid at illustrative
-    angles but correspond to no real wedge boundary in the fill -- a reader cannot
-    see where Technology ends and Business begins, and would wrongly read the chart
-    as ''Technology and Business are each ~50% of the budget''. This directly violates
-    the spec''s ''segment angles proportional to values'' and ''inner segments should
-    visually encompass their children''s angular span'' requirements (SC-01, SC-02,
-    SC-03).'
-  - Only the thin outer ring (roughly the outer 5-10% of the radius) actually encodes
-    correct, proportional per-datum information (departments AND teams by width/angle).
-    The one genuinely informative element of the chart is squeezed into a sliver while
-    ~90% of the 2400x2400 canvas is spent on a non-representational two-color disk
-    -- a severe canvas-utilization/data-ink problem, not just an aesthetic one.
-  - '`margin_right=320` is dead space now that `show_legend=False` -- it visibly pushes
-    the circle left-of-center, producing unbalanced whitespace (large empty band on
-    the right) with nothing to justify it.'
-  - The label-vs-tooltip conditional (`rank == (1 if dept_index == 0 else 0)`) is
-    functionally clever but hard to read at a glance -- could be expressed more directly,
-    e.g. by picking the printed rank explicitly per department rather than via a nested
-    ternary embedded in a dict comprehension.
+  - 'CRITICAL dark-on-dark failure (VQ-01/VQ-07): in plot-dark.png, the ''Backend
+    Engineering'' and ''Frontend Engineering'' team labels (Technology department,
+    top-right of the disk) are placed outside the pie ring directly on the plain #1A1A17
+    canvas background, but render in fixed black/near-black text -- nearly invisible.
+    The same labels work fine in plot-light.png only because dark text happens to
+    sit on the light #FAF8F1 background there; the underlying label color is not theme-adaptive
+    the way the title color (foreground_strong=INK) correctly is. Repair should make
+    sure these externally-placed print_labels pick up the theme-adaptive INK/foreground_strong
+    token (or a dedicated pygal label-fill override) instead of defaulting to a fixed
+    dark fill.'
+  - The thin outer (team-level) ring still gets a much smaller radial share of the
+    disk than the coarse (department-level) ring -- correct proportionally, but visually
+    underweights the second hierarchy level; consider whether pygal's dual-mode ring-width
+    ratio can be tuned further, or accept as an inherent library limitation.
+  - The dual multi-series Pie hack is a clever workaround but not native/idiomatic
+    pygal API (pygal has no first-class Sunburst type), so Library Mastery is capped
+    by that constraint rather than free choice of a purpose-built idiom.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- correct, not pure white.
-      Chrome: Title "sunburst-basic · python · pygal · anyplot.ai" in dark ink, large and centered at top, fully legible. Department labels (Technology, Business, Operations, Marketing) and two team labels (Sales, Frontend Engineering) in dark ink, all clearly readable against the light background.
-      Data: A huge circular disk fills almost the entire canvas, split into an exact vertical 50/50 halves -- right half solid #009E73 green, left half solid lavender/purple (#C475FD family). A thin ring near the outer edge shows finer proportional segments in green, purple, blue, and ochre shades corresponding to the 4 departments and their teams. The 50/50 disk split does NOT match the true department proportions (Technology 42%, Business 31%, Operations 17%, Marketing 10%) -- see Weaknesses for why (pygal's dual-series Pie mode colors the coarse ring per-series-sum, not per-department-share, and the two series sums are mathematically equal).
-      Legibility verdict: PASS (all text is readable), but the chart's primary visual (the big disk) misrepresents the underlying hierarchy.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "sunburst-basic · python · pygal · anyplot.ai" in dark ink, ~70% canvas width, fully legible near the top with comfortable margin from the top edge. Department labels (Technology, Business, Operations, Marketing) sit inside their large coarse wedges in dark text; team labels (Backend Engineering, Frontend Engineering, Sales, IT Support) sit near/just outside the thin outer ring, also in dark text -- all fully readable against the light background, including the two labels ("Backend Engineering", "Frontend Engineering") that fall on the plain background outside the disk.
+      Data: A large disk fills ~68% of canvas diameter, split into 4 correctly-proportional coarse wedges (green #009E73 = Technology ~42%, purple = Business ~31%, blue = Operations ~17%, ochre = Marketing ~10%), each with a thin outer ring subdividing that department's own teams proportionally, using a lighter tint of the parent's hue. First series is #009E73 as required.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- correct, not pure black.
-      Chrome: Title and all labels rendered in light ink (#F0EFE8), clearly legible against the dark background -- no dark-on-dark failures observed. The same green/purple disk and thin proportional outer ring as the light render.
-      Data: Identical data colors to the light render (#009E73 green half, lavender/purple half, and the same outer-ring shade families) -- confirms only chrome flipped between themes, not data colors, as required.
-      Legibility verdict: PASS (all text readable, brand green clearly visible against the dark surface), same structural hierarchy misrepresentation as the light render.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title renders correctly in light ink, fully legible against the dark background (theme token correctly threaded). Department labels sitting on colored wedges (dark text on green/purple/blue/ochre) remain legible since wedge colors are unchanged from light render. However, the "Backend Engineering" and "Frontend Engineering" team labels are placed outside the disk directly on the plain dark background, and render in the SAME fixed black/near-black text as in the light render -- this is a dark-on-dark failure: the text is nearly invisible against the #1A1A17 canvas. "IT Support" and "Sales" avoid this because their label placement happens to land on a colored wedge rather than the plain background.
+      Data: Confirmed identical to light render -- same 4 department hues and team tints, only chrome (background, title) flips as expected.
+      Legibility verdict: FAIL -- "Backend Engineering" and "Frontend Engineering" labels are dark-on-dark and effectively unreadable in the dark render.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 20
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 0
         max: 8
-        passed: true
-        comment: Explicit font sizes, fully readable in both themes; not deducted
-          for the structural issue, only kept from 8 due to label placement not corresponding
-          to any visible wedge boundary in the big disk.
+        passed: false
+        comment: 'Dark render: ''Backend Engineering'' and ''Frontend Engineering''
+          labels are black text on the near-black #1A1A17 background outside the disk
+          -- dark-on-dark, effectively unreadable'
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data in either render
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: No text-on-text overlap; the 'Business' department label sits close
-          to the green/purple seam but remains fully readable.
-      - id: VQ-03
-        name: Element Visibility
-        score: 3
-        max: 6
-        passed: false
-        comment: The only proportionally-correct ring (Teams) is a very thin sliver
-          relative to the 2400x2400 canvas, making the genuinely informative elements
-          small; the dominant inner disk shows no per-department elements at all.
+        comment: Wedges and labels clearly visible; outer team-ring is proportionally
+          correct but radially thin compared to the coarse ring
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint shades, no red-green-only signal.
+        comment: Distinct hues per department, no red-green-only signal, good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Disk overfills the canvas with unbalanced margins (unused margin_right=320
-          with show_legend=False pushes the circle off-center); the meaningful data
-          is confined to a thin edge ring.
+        passed: true
+        comment: margin=380 uniform now gives balanced whitespace; disk fills ~68%
+          of canvas diameter
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Department/team names serve as descriptive segment labels; pie-style
-          chart has no traditional axes.
+        comment: No axes needed for this chart type; title fully descriptive per required
+          format
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73, Imprint palette with consistent per-branch
-          shading, correct theme-adaptive backgrounds/text in both renders.'
+        passed: false
+        comment: Palette and backgrounds are theme-correct, but chrome has two off-theme
+          elements in the dark render (the two dark-on-dark labels)
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Colors and typography are pleasant on the surface but the composition
-          (giant flat two-tone disk plus a barely-visible detail ring) reads as an
-          awkward default rather than sophisticated design.
+        comment: Branch-consistent tinting is a nice touch, but overall reads as a
+          well-configured default rather than exceptional polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: No spines/grid clutter, but the unbalanced margin and near-edge-to-edge
-          disk undercut refinement.
+        comment: Balanced margins, subtle matching strokes between rings; some refinement
+          visible
       - id: DE-03
         name: Data Storytelling
-        score: 1
+        score: 4
         max: 6
-        passed: false
-        comment: The dominant visual actively misleads about department proportions
-          rather than telling no story at all -- worse than the 'default, no interpretation'
-          baseline.
+        comment: Now that proportions are correct, the size hierarchy itself communicates
+          department share clearly, guiding the viewer
     spec_compliance:
-      score: 4
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: 'Renders as a pygal multi-series Pie, but functionally fails to be
-          a sunburst: the coarse/inner ring does not show department-proportional
-          angular spans at all.'
+        comment: 'Genuine two-level sunburst: coarse ring proportional to department
+          value, outer ring proportional to team value within each department''s own
+          angular span'
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: '''Inner segments should visually encompass their children''s angular
-          span'' is not met; only the thin outer ring shows correct proportional detail.'
+        comment: Major segments labeled, smaller segments fall back to hover tooltip,
+          clear stroke separation between hierarchy levels, inner segments encompass
+          children's angular span
       - id: SC-03
         name: Data Mapping
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Wedge angles in the primary/inner ring do not map to the department
-          values (forced 50/50 split by series-sum equality, not by department share).
+        comment: Department and team values correctly mapped to wedge angles
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title format exactly correct; no legend needed since segments are
-          directly labeled.
+        comment: Title matches required format exactly; no legend needed since labels
+          are inline
     data_quality:
-      score: 10
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 1
+        score: 6
         max: 6
-        passed: false
-        comment: Does not show the core sunburst aspect (proportional multi-level
-          hierarchy) in the dominant visual element.
+        comment: Shows full 2-level hierarchy with varied department and team sizes
+          (12 leaf nodes across 4 departments)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Neutral, realistic organizational budget breakdown by department
-          and team.
+        comment: Realistic, neutral corporate department/team budget breakdown
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Values are plausible and internally consistent -- team values sum
-          exactly to their stated department totals.
+        comment: Values plausible for a corporate budget; Engineering dominant, Marketing
+          smallest, teams sum exactly to department totals
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: No functions/classes, linear imports -> data -> plot -> save.
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Fully deterministic, no randomness.
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Only os, pygal, and Style are imported and all are used.
+        comment: Only os and pygal imports, both used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: true
-        comment: No fake functionality, but the nested ternary inside the dict comprehension
-          for label-vs-tooltip selection is harder to read than necessary.
+        comment: Clean list comprehensions, well-commented rationale for the dual-series
+          trick, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Correct plot-{theme}.png / plot-{theme}.html outputs via current
-          pygal API.
+        comment: Saves plot-{theme}.png and plot-{theme}.html correctly
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Correct Style/Pie API usage, but the multi-series 'dual' Pie mode
-          is not an idiomatic pattern for representing a value-proportional hierarchy.
+        comment: Correct Style/Pie API usage, but the dual multi-series mode is a
+          workaround (pygal has no native Sunburst type) rather than a documented
+          recommended pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: Uses pygal-specific per-datapoint dict API (label vs tooltip switching,
-          per-point color overrides) that isn't easily replicated in other libraries.
+        comment: Distinctive use of pygal's per-datapoint label/tooltip dict switching
+          and dual-mode multi-series hierarchy encoding
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -274,4 +241,5 @@ impl_tags:
   patterns:
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
