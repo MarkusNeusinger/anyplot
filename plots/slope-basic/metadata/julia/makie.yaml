@@ -1,0 +1,265 @@
+library: makie
+language: julia
+specification_id: slope-basic
+created: '2026-07-25T23:56:00Z'
+updated: '2026-07-26T00:10:51Z'
+generated_by: claude-sonnet
+workflow_run: 30179763349
+issue: 981
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'All four attempt-1 weaknesses are directly and correctly addressed: a subtitle
+    now labels the value axis ("Customer Satisfaction Score (0–100)"), dotted leader
+    stubs reconnect nudged labels to their true marker positions in the densest score
+    clusters, ▲/▼ glyphs make the increase/decrease encoding CVD-safe independent
+    of color, and the legend column was narrowed (Fixed(150) → Fixed(105)) to cut
+    unused whitespace'
+  - 'Correct slopegraph structure: two vertical time-point axes labeled "2023 Survey"/"2024
+    Survey" with endpoint labels on both sides, matching the spec notes exactly'
+  - Semantic red/green color-coding for decrease/increase follows the Imprint style
+    guide's semantic-exception rule, and the exact hex values are identical across
+    both themes
+  - Theme-adaptive chrome correctly threaded through PAGE_BG/INK/INK_SOFT tokens —
+    both renders pass the light/dark legibility check with no dark-on-dark or light-on-light
+    failures
+  - 'Clean minimalist chrome: spines and default decorations fully hidden, no gridlines,
+    generous whitespace, subtle bold survey-year headers'
+  - 'Idiomatic Makie usage: GridLayout-based legend placement (fig[1,2] + colsize!)
+    with merge=true/unique=true, hidedecorations!/hidespines!, deterministic Random.seed!(42)'
+  - Entities sorted by descending 2023 score, giving the chart a clear top-to-bottom
+    rank ordering that aids scanning
+  weaknesses:
+  - Distinctive Makie-specific features are still underused — the chart relies on
+    generic primitives (lines!, scatter!, text!) that read as library-agnostic; leaning
+    on more Makie-specific machinery (e.g. Observables-driven layout tuning, a custom
+    recipe, richer Scene/Axis composition) would raise Library Mastery
+  - In the tightest score band (Video Conferencing 61.7 / Customer Portal 61.0 / Mobile
+    App 59.3 on the left; the 54.x/52.9 cluster at the bottom), label rows sit close
+    enough together that legibility could soften further at small preview sizes (~400px)
+    even though the anti-collision nudge keeps them technically non-overlapping at
+    full resolution
+  - Aesthetic sophistication is solid but still fairly close to a standard slopegraph
+    template — an additional refinement (e.g. subtle marker-size or opacity encoding
+    for magnitude of change) would push Design Excellence higher
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white, not dark.
+      Chrome: Title "slope-basic · julia · makie · anyplot.ai" is bold, dark ink, centered at top, fully visible with no clipping. A new subtitle "Customer Satisfaction Score (0–100)" sits directly beneath it, correctly labeling what the y-values represent. "2023 Survey" / "2024 Survey" headers sit atop each vertical reference axis in medium-gray bold text. Ten product names + scores flank both axes in dark ink text, and the right-hand labels now carry ▲/▼ direction glyphs before each value. Thin dotted leader stubs connect nudged labels back to their true marker/line position wherever the anti-collision loop moved them. Legend ("Decrease" / "Increase") sits in a narrowed right-hand column, readable dark text on the light background.
+      Data: Ten diagonal lines connect 2023 to 2024 scores, colored matte red (#AE3030, decrease) or brand green (#009E73, increase), with small circular markers (cream stroke) at each endpoint.
+      Legibility verdict: PASS — all title, subtitle, header, label, and legend text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black, not light.
+      Chrome: Same title, subtitle, headers, and per-entity labels (including the ▲/▼ glyphs and leader stubs) now rendered in light ink (#F0EFE8 title / #B8B7B0 headers and subtitle), clearly legible against the dark surface. Legend text also flips to light ink.
+      Data: Same red (#AE3030) and green (#009E73) line/marker colors as the light render — confirmed identical data colors between themes, only chrome (background + text) flipped.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text (title, subtitle, headers, entity labels, legend) reads clearly against the near-black background. Brand green and matte red both remain clearly visible on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (titlesize=20, subtitlesize=14, labelsize=15,
+          legend 13, headers 15); readable in both themes. Densest score clusters
+          could soften slightly at small preview sizes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: New dotted leader stubs eliminate the ambiguity flagged in attempt
+          1 — every nudged label is now traceable back to its true marker even in
+          dense clusters
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (10 entities) given prominent markers (markersize=13)
+          and thick lines (linewidth=2.8)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: New ▲/▼ glyphs make increase/decrease fully CVD-robust independent
+          of the legend/color, fixing the attempt-1 gap
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Legend column narrowed (150px → 105px), canvas gate passed, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: New subtitle explicitly labels the value axis ("Customer Satisfaction
+          Score (0–100)"), fixing the attempt-1 gap
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Exact Imprint hexes (#009E73/#AE3030) under the documented semantic
+          exception; theme-correct chrome in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color, rank-sorted hierarchy, leader stubs and direction
+          glyphs go clearly beyond library defaults, though the overall template stays
+          close to a standard slopegraph
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/decorations fully hidden, no grid, generous whitespace, refined
+          marker strokes and subtle dotted leader lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color contrast, descending sort, and direction glyphs together create
+          a clear, legible visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct slopegraph
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Endpoint labels, direction color+glyph coding, labeled vertical axes,
+          10 entities (within 5-15 range)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match the semantic split
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Mix of increases and decreases at varied magnitudes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Customer satisfaction survey scores across product lines — real,
+          neutral, business-plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores in 48-100 range clamped sensibly for a 0-100 satisfaction
+          scale
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; linear imports→data→plot→save flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used; no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; anti-collision loop and leader stubs are proportionate
+          complexity for the problem
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) matches the required
+          pattern
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: GridLayout-based legend (fig[1,2] + colsize!), hidedecorations!/hidespines!,
+          vlines! for reference axes
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom label anti-collision + leader-stub system is a genuine Makie
+          composition, but core marks (lines!, scatter!, text!) remain generic rather
+          than showcasing library-unique features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
