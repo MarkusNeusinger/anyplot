@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 swarm-basic: Basic Swarm Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-07-26
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 75/100 | Updated: 2026-07-26
 """
 
 import os
