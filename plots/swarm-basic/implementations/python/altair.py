@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-26
@@ -54,10 +54,17 @@ df["x_jitter"] = df["x_pos"] + np.random.uniform(-0.28, 0.28, len(df))
 means = df.groupby("Department")["Performance Score"].mean().reset_index()
 means["x_pos"] = means["Department"].map(dept_positions)
 
-# Swarm points — jitter precomputed in pandas (see above) for reproducibility
+# Flag outliers (>2 std from the department mean) for a hierarchy-emphasis layer
+df["dept_mean"] = df["Department"].map(means.set_index("Department")["Performance Score"])
+df["dept_std"] = df["Department"].map(df.groupby("Department")["Performance Score"].std())
+outliers = df[(df["Performance Score"] - df["dept_mean"]).abs() > 2 * df["dept_std"]]
+
+# Swarm points — jitter precomputed in pandas (see above) for reproducibility.
+# A thin background-matching stroke cuts a halo around each circle so dense
+# clusters (Sales, Engineering) stay individually distinguishable.
 swarm = (
     alt.Chart(df)
-    .mark_circle(size=140, opacity=0.75)
+    .mark_circle(size=140, opacity=0.75, stroke=PAGE_BG, strokeWidth=0.6)
     .encode(
         x=alt.X(
             "x_jitter:Q",
@@ -97,9 +104,17 @@ mean_lines = (
     .transform_calculate(x_start="datum.x_pos - 0.35", x_end="datum.x_pos + 0.35")
 )
 
+# Outlier rings — unfilled ink-stroke circles emphasize the notable
+# out-of-band observations (e.g. the HR 45/92/95 points) as a hierarchy cue
+outlier_rings = (
+    alt.Chart(outliers)
+    .mark_point(shape="circle", size=220, filled=False, stroke=INK, strokeWidth=1.5)
+    .encode(x="x_jitter:Q", y="Performance Score:Q")
+)
+
 # Compose and apply theme-adaptive chrome
 chart = (
-    (swarm + mean_lines + mean_markers)
+    (swarm + mean_lines + outlier_rings + mean_markers)
     .properties(
         width=620,
         height=320,
