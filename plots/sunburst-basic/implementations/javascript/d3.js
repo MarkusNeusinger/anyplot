@@ -81,10 +81,31 @@ function wedgeHsl(d) {
   return base;
 }
 const colorFor = (d) => wedgeHsl(d).toString();
-// Label ink is picked from the wedge's own rendered lightness (not the theme
-// token) so it stays >=4.5:1 against both the saturated inner-ring hues and
-// the pale, HSL-lightened outer tints in both themes.
-const labelColorFor = (d) => (wedgeHsl(d).l > 0.5 ? "#1A1A17" : "#F0EFE8");
+// Label ink is picked by WCAG relative luminance (not HSL lightness, which
+// misjudges green: it's weighted 0.7152 in the WCAG formula vs. 0.0722 for
+// blue, so a green wedge is far brighter than a blue wedge at the same HSL
+// l). Comparing actual contrast ratios against both ink options keeps every
+// label >=4.5:1 regardless of hue, in both themes.
+const LABEL_DARK = "#1A1A17";
+const LABEL_LIGHT = "#F0EFE8";
+function relLuminance(color) {
+  const c = d3.rgb(color);
+  const lin = (v) => {
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+}
+function contrastRatio(l1, l2) {
+  const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
+  return (hi + 0.05) / (lo + 0.05);
+}
+function labelColorFor(d) {
+  const wedgeLum = relLuminance(colorFor(d));
+  const darkContrast = contrastRatio(wedgeLum, relLuminance(LABEL_DARK));
+  const lightContrast = contrastRatio(wedgeLum, relLuminance(LABEL_LIGHT));
+  return darkContrast >= lightContrast ? LABEL_DARK : LABEL_LIGHT;
+}
 
 // --- SVG mount ------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
