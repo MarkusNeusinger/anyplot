@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sunburst-basic: Basic Sunburst Chart
-Library: bokeh 3.9.2 | Python 3.13.12
+Library: bokeh 3.9.2 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-07-26
 """
 
 import os
