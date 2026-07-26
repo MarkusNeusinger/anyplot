@@ -1,7 +1,7 @@
 """ anyplot.ai
 waffle-basic: Basic Waffle Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-05
+Library: plotly 6.9.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-07-26
 """
 
 import os
@@ -10,113 +10,87 @@ import numpy as np
 import plotly.graph_objects as go
 
 
-# Theme tokens
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette - first series ALWAYS #009E73
-IMPRINT = [
-    "#009E73",  # bluish green (brand)
-    "#C475FD",  # vermillion
-    "#4467A3",  # blue
-    "#BD8233",  # reddish purple
-    "#AE3030",  # orange
-]
+# Imprint palette - first series ALWAYS #009E73
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
-# Data - Budget allocation across spending categories
+# Data - budget allocation across spending categories
 categories = ["Operations", "Marketing", "R&D", "HR", "Other"]
 values = [35, 25, 22, 12, 6]  # Percentages (sum to 100)
+n_categories = len(categories)
 
-# Create 10x10 waffle grid (100 squares, each = 1%)
+# Build a 10x10 waffle grid (100 squares, each = 1%), filled bottom-up, left-to-right
 grid_size = 10
 total_squares = grid_size * grid_size
-waffle_data = np.zeros(total_squares, dtype=int)
+category_idx = np.repeat(np.arange(n_categories), values)
+waffle_matrix = category_idx.reshape(grid_size, grid_size)[::-1]
 
-# Fill grid with category indices (row by row from bottom-left)
-square_idx = 0
-for cat_idx, count in enumerate(values):
-    for _ in range(count):
-        if square_idx < total_squares:
-            waffle_data[square_idx] = cat_idx
-            square_idx += 1
+# Hover metadata mirrors the grid so each square reports its own category and share
+category_names = np.array(categories)[waffle_matrix]
+category_values = np.array(values)[waffle_matrix]
 
-# Reshape to 10x10 grid
-waffle_matrix = waffle_data.reshape(grid_size, grid_size)
+# Single Heatmap trace (not 100+ scatter traces) with a hand-built discrete
+# colorscale - each category occupies an equal band so cell colors stay flat,
+# and the vertical colorbar doubles as a labeled legend (unrotated tick text,
+# one row per category, so nothing crowds or clips at the canvas edge).
+discrete_colorscale = []
+for idx, color in enumerate(IMPRINT[:n_categories]):
+    discrete_colorscale.append([idx / n_categories, color])
+    discrete_colorscale.append([(idx + 1) / n_categories, color])
 
-# Create figure
-fig = go.Figure()
-
-# Add squares using scatter plot with larger markers for visibility
-for row in range(grid_size):
-    for col in range(grid_size):
-        cat_idx = waffle_matrix[row, col]
-        fig.add_trace(
-            go.Scatter(
-                x=[col],
-                y=[row],
-                mode="markers",
-                marker={
-                    "size": 55,
-                    "symbol": "square",
-                    "color": IMPRINT[cat_idx],
-                    "line": {"color": PAGE_BG, "width": 2},
-                },
-                showlegend=False,
-                hoverinfo="skip",
-            )
-        )
-
-# Add legend traces (one per category)
-for cat_idx, (cat, val) in enumerate(zip(categories, values, strict=True)):
-    fig.add_trace(
-        go.Scatter(
-            x=[None],
-            y=[None],
-            mode="markers",
-            marker={"size": 22, "symbol": "square", "color": IMPRINT[cat_idx]},
-            name=f"{cat}: {val}%",
-            showlegend=True,
-        )
+fig = go.Figure(
+    go.Heatmap(
+        z=waffle_matrix,
+        zmin=-0.5,
+        zmax=n_categories - 0.5,
+        colorscale=discrete_colorscale,
+        xgap=6,
+        ygap=6,
+        text=category_names,
+        customdata=category_values,
+        hovertemplate="<b>%{text}</b><br>%{customdata}% of total<extra></extra>",
+        showscale=True,
+        colorbar={
+            "thickness": 26,
+            "len": 0.7,
+            "x": 1.06,
+            "xanchor": "left",
+            "y": 0.5,
+            "yanchor": "middle",
+            "tickmode": "array",
+            "tickvals": list(range(n_categories)),
+            "ticktext": [f"{cat} — {val}%" for cat, val in zip(categories, values, strict=True)],
+            "ticks": "",
+            "outlinewidth": 1,
+            "outlinecolor": INK_SOFT,
+            "tickfont": {"size": 13, "color": INK_SOFT},
+            "bgcolor": ELEVATED_BG,
+        },
     )
+)
 
 # Layout
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "waffle-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "waffle-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
-    xaxis={
-        "showgrid": False,
-        "zeroline": False,
-        "showticklabels": False,
-        "range": [-0.8, 9.8],
-        "scaleanchor": "y",
-        "scaleratio": 1,
-    },
-    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-0.8, 9.8]},
-    legend={
-        "font": {"size": 18, "color": INK_SOFT},
-        "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
-        "orientation": "h",
-        "yanchor": "top",
-        "y": -0.08,
-        "xanchor": "center",
-        "x": 0.5,
-        "itemsizing": "constant",
-    },
+    xaxis={"visible": False, "range": [-0.5, grid_size - 0.5], "scaleanchor": "y", "scaleratio": 1},
+    yaxis={"visible": False, "range": [-0.5, grid_size - 0.5]},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin={"l": 60, "r": 60, "t": 120, "b": 120},
+    margin={"l": 60, "r": 220, "t": 90, "b": 60},
 )
 
 # Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

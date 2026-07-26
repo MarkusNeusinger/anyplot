@@ -2,49 +2,65 @@ library: plotly
 language: python
 specification_id: waffle-basic
 created: '2025-12-24T09:50:53Z'
-updated: '2026-05-05T18:02:23Z'
-generated_by: claude-haiku
-workflow_run: 25393131410
+updated: '2026-07-26T10:33:41Z'
+generated_by: claude-sonnet
+workflow_run: 30198132759
 issue: 998
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 91
 review:
   strengths:
-  - Perfect legibility across both light and dark themes with no chrome conflicts
-  - Excellent implementation of Okabe-Ito palette with brand green (#009E73) as first
-    series
-  - Clean waffle grid construction with white/dark borders providing clear visual
-    separation
-  - Proper theme-adaptive styling throughout (backgrounds, text colors, borders)
-  - Correct proportional data mapping (each square = 1%)
-  - Well-structured, readable code with clear variable names and logic flow
-  - Realistic budget allocation scenario that's intuitive and plausible
+  - Correct 10x10 waffle grid built with a single go.Heatmap trace and a hand-crafted
+    discrete colorscale, avoiding 100+ individual scatter/shape traces
+  - 'First categorical series is #009E73 and the remaining 4 categories follow the
+    canonical Imprint order (#C475FD, #4467A3, #BD8233, #AE3030), identical across
+    both themes'
+  - Colorbar repurposed as an annotated legend with per-category "Category — value%"
+    tick text, avoiding a separate redundant legend element
+  - Categories are filled in descending-value order (35/25/22/12/6), producing a natural
+    size-based visual hierarchy in the grid
+  - Fully deterministic, KISS-structured script with only used imports and clean numpy
+    vectorized grid construction (np.repeat + reshape)
+  - Theme-adaptive chrome (background, ink, colorbar box/outline/tick colors) correctly
+    threaded through both light and dark renders
+  - Hover metadata (customdata + hovertemplate) mirrors the grid so every square reports
+    its own category and share in the interactive HTML export
   weaknesses:
-  - Design Excellence limited by straightforward implementation (no custom embellishments)
-  - Library Mastery limited to basic Plotly features; no advanced capabilities (callbacks,
-    subplots, secondary axes)
-  - 105+ separate traces (functional but somewhat inefficient; could use single image-based
-    approach)
+  - 'Vertical whitespace is a bit generous: the wide right margin (r=220) reserved
+    for the colorbar forces the scaleanchor-locked square grid to shrink to fit the
+    available width, leaving a ~440px empty band between the title and the grid top
+    on the 2400px canvas. Tightening the right margin or lengthening/thickening the
+    colorbar to reclaim that vertical space would improve canvas utilization.'
+  - 'Design Excellence is solid but not yet publication-grade: the grid + colorbar
+    layout is clean but visually plain (flat squares, no additional hierarchy cues
+    like a subtle border/shadow or callout on the dominant category) — consider a
+    small emphasis technique (e.g., bolding the top category''s legend row, or a subtle
+    outline on the largest segment) for a stronger focal point.'
+  - go.Heatmap-as-waffle is a sensible pattern for plotly but not the most idiomatic/discoverable
+    approach for a first-time reader; a brief code comment already explains the choice,
+    which helps, but consider whether a direct grid-of-go.Scatter-with-square-markers
+    (still single-trace via marker arrays) could read as more obviously 'plotly-native'
+    if revisited.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct theme color
-      Chrome: Title "waffle-basic · plotly · anyplot.ai" in dark text clearly readable; legend with all category labels and percentages legible
-      Data: All 100 squares visible with clear Okabe-Ito colors in correct order - Operations (35%, #009E73), Marketing (25%, #D55E00), R&D (22%, #0072B2), HR (12%, #CC79A7), Other (6%, #E69F00); white square borders provide clean separation
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "waffle-basic · python · plotly · anyplot.ai" centered at top in dark ink, clearly legible. No axis labels/ticks (hidden by design, appropriate for a waffle grid). Colorbar legend on the right with dark tick text ("Operations — 35%", "Marketing — 25%", "R&D — 22%", "HR — 12%", "Other — 6%") on a slightly lighter elevated-background swatch column with a thin dark outline — fully readable.
+      Data: 10x10 grid of squares with small gaps between them. Colors read top-to-bottom / largest-to-smallest: brand green (#009E73, Operations, 35%, 3.5 rows), lavender (#C475FD, Marketing, 25%), blue (#4467A3, R&D, 22%), ochre (#BD8233, HR, 12%), matte red (#AE3030, Other, 6%). First series is confirmed #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct theme color
-      Chrome: Title in light text clearly readable; legend text light-colored on elevated background, fully legible with no dark-on-dark conflicts
-      Data: All colors identical to light render (Okabe-Ito #1-5 unchanged); dark borders visible against background; brand green (#009E73) vibrant and readable
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, now rendered in light ink (near-white), clearly legible against the dark surface. Colorbar legend tick text now light gray on a slightly-elevated dark swatch column with a light-gray outline — no dark-on-dark issue found, fully readable.
+      Data: Identical colors and grid layout to the light render — green/lavender/blue/ochre/red bands in the same order and proportions, confirming the categorical data colors do not shift between themes (only chrome flipped).
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,65 +68,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes
+        comment: All font sizes explicitly set (title=16, colorbar tickfont=13); readable
+          in both themes; no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: White borders provide clean separation
+        comment: No text/data collisions anywhere in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 100 squares clearly visible
+        comment: 100 squares with 6px gaps read cleanly as flat, distinct color blocks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety
+        comment: Imprint palette is CVD-safe; 5 distinct hues, no red-green-only reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Excellent proportions and spacing
+        comment: Content bbox covers ~59% of the 2400x2400 canvas, but the scaleanchor-locked
+          square shrinks under the wide r=220 colorbar margin, leaving a large empty
+          band between title and grid
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format
+        comment: Legend tick text carries category + percentage (unit); axes intentionally
+          hidden for a waffle grid
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order correct, themes correct'
+        comment: 'First series #009E73, remaining 4 follow canonical Imprint order,
+          identical across themes; backgrounds theme-correct'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean professional rendering with thoughtful borders
+        comment: Thoughtful colorbar-as-legend construction and theme-adaptive chrome,
+          clearly above default plotly styling, but not yet publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Border styling and legend presentation refined
+        comment: Spines/axes hidden, subtle colorbar outline, gapped squares; docked
+          for the vertical whitespace inefficiency noted in VQ-05
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy guides focus; colors aid distinction
+        comment: Descending-value fill order creates a clear size hierarchy from green
+          (largest) to red (smallest) without needing annotations
     spec_compliance:
       score: 15
       max: 15
@@ -120,25 +144,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waffle chart
+        comment: Correct 10x10 waffle grid, one square per 1%
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: Category labels, values summing to 100, distinct colors, legend with
+          percentages, whole-square rounding all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct proportional mapping
+        comment: Grid correctly encodes each category's share bottom-up, left-to-right
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format matches specification
+        comment: Title matches mandated format exactly; legend labels match category
+          names and values
     data_quality:
       score: 15
       max: 15
@@ -148,19 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete waffle visualization
+        comment: 5 categories spanning a wide value range (35% down to 6%) exercises
+          both large and small-share rendering
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world plausible scenario
+        comment: Budget allocation across spending departments — realistic, neutral
+          business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible percentages
+        comment: Values sum to 100 and proportions (Operations largest, Other smallest)
+          are plausible for a department budget split
     code_quality:
       score: 10
       max: 10
@@ -170,33 +199,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward script
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Fully deterministic fixed data, no randomness involved
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only numpy and plotly.graph_objects, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Concise vectorized grid construction, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: write_image/write_html to plot-{THEME}.png/.html, current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -204,25 +233,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper go.Figure() and Scatter API usage
+        comment: Single go.Heatmap trace with explicit layout/colorbar config is a
+          solid, high-level Graph Objects pattern
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Limited use of advanced Plotly features
-    total:
-      score: 90
-      max: 100
-      verdict: APPROVED
+        passed: true
+        comment: Repurposing the colorbar as a labeled legend plus per-cell hovertemplate/customdata
+          leverages plotly's interactivity in a way static libraries cannot replicate
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - colorbar
+  - hover-tooltips
   patterns:
-  - data-generation
   - matrix-construction
   dataprep: []
-  styling:
-  - edge-highlighting
+  styling: []
