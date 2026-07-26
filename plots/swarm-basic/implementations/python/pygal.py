@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 75/100 | Updated: 2026-07-26
@@ -19,15 +19,19 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233")
 
-# Data - employee performance scores by department
+# Data - employee performance scores by department (clamped to a plausible 0-100 scale)
 np.random.seed(42)
 categories = ["Engineering", "Marketing", "Sales", "Operations"]
 data = {
-    "Engineering": np.random.normal(82, 8, 45),
-    "Marketing": np.random.normal(75, 12, 50),
-    "Sales": np.random.normal(78, 15, 40),
-    "Operations": np.random.normal(70, 10, 55),
+    "Engineering": np.clip(np.random.normal(82, 7, 45), 0, 100),
+    "Marketing": np.clip(np.random.normal(75, 9, 50), 0, 100),
+    "Sales": np.clip(np.random.normal(78, 10, 40), 0, 100),
+    "Operations": np.clip(np.random.normal(70, 8, 55), 0, 100),
 }
+
+all_values = np.concatenate(list(data.values()))
+Y_MIN = 10 * np.floor(all_values.min() / 10)
+Y_MAX = 10 * np.ceil(all_values.max() / 10)
 
 # Style - source-pixel sizes for a 3200x1800 canvas (see prompts/library/pygal.md)
 custom_style = Style(
@@ -62,16 +66,31 @@ chart = pygal.XY(
     show_x_guides=False,
     show_y_guides=True,
     xrange=(0, 5),
-    range=(40, 115),
+    range=(Y_MIN, Y_MAX),
     margin=40,
     margin_right=20,
 )
 
-# Beeswarm algorithm - spreads points horizontally to avoid overlap
+# Beeswarm algorithm - spreads points horizontally to avoid overlap.
+# Collision thresholds are derived per-axis from the actual rendered dot
+# footprint (dots_size in px) against each axis's own data-unit-per-pixel
+# scale, so a 10px dot compares correctly whether it's 0.03 x-units wide
+# (category axis spans 5 units over ~2900 plot px) or ~0.6 y-units tall
+# (value axis spans Y_MAX-Y_MIN over ~1270 plot px) - not one flat number
+# for both axes.
+PLOT_WIDTH_PX = 2900
+PLOT_HEIGHT_PX = 1270
+DOT_RADIUS_PX = 10
+SPACING_PX = 4
+
+x_unit_per_px = 5 / PLOT_WIDTH_PX
+y_unit_per_px = (Y_MAX - Y_MIN) / PLOT_HEIGHT_PX
+min_dist_x = 2 * DOT_RADIUS_PX * x_unit_per_px + SPACING_PX * x_unit_per_px
+min_dist_y = 2 * DOT_RADIUS_PX * y_unit_per_px + SPACING_PX * y_unit_per_px
+step_x = DOT_RADIUS_PX * x_unit_per_px + SPACING_PX * x_unit_per_px / 2
+
 for cat_idx, (category, values) in enumerate(data.items()):
     center_x = cat_idx + 1
-    point_radius = 0.1
-    spacing = 0.05
 
     sorted_indices = np.argsort(values)
     placed = []
@@ -89,8 +108,7 @@ for cat_idx, (category, values) in enumerate(data.items()):
             for px, py in placed:
                 dist_y = abs(y - py)
                 dist_x = abs(test_x - px)
-                min_dist = 2 * point_radius + spacing
-                if dist_y < min_dist and dist_x < min_dist:
+                if dist_y < min_dist_y and dist_x < min_dist_x:
                     overlap = True
                     break
             if not overlap:
@@ -100,7 +118,7 @@ for cat_idx, (category, values) in enumerate(data.items()):
                 direction = -1
             else:
                 direction = 1
-                offset += point_radius + spacing / 2
+                offset += step_x
 
         placed.append((x, y))
         swarm_points.append((x, y))
