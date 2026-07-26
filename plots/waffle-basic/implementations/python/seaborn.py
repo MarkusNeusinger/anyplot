@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 waffle-basic: Basic Waffle Chart
-Library: seaborn 0.13.2 | Python 3.13.13
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-07-26
 """
 
 import os
