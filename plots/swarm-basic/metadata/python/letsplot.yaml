@@ -2,62 +2,60 @@ library: letsplot
 language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:59:15Z'
-updated: '2026-05-05T01:35:51Z'
+updated: '2026-07-26T07:26:30Z'
 generated_by: claude-sonnet
-workflow_run: 25352309593
+workflow_run: 30192305995
 issue: 974
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/letsplot/plot-dark.html
-quality_score: 80
+quality_score: 93
 review:
   strengths:
-  - geom_sina is the correct lets-plot-native choice for a swarm/beeswarm plot — good
-    library judgment
-  - geom_crossbar for mean markers satisfies the spec requirement for summary statistics
-    elegantly
-  - Data scenario is realistic and neutral (department performance scores) with meaningful
-    distribution differences — bimodal Sales group is a nice storytelling touch
-  - Mean crossbars provide clear reference anchors that improve readability across
-    groups
-  - Correct canvas size (4800×2700 via ggsize+scale=3) with appropriate font hierarchy
-    (24pt title, 20pt axis, 16pt tick)
+  - 'Panel border fixed per prior review: panel_border=element_blank() removes the
+    four-sided box, leaving a clean L-shaped axis frame in both themes'
+  - Y-axis label now reads 'Performance Score (0-100)' with explicit unit/scale, resolving
+    the prior VQ-06 deduction
+  - Added a geom_violin backdrop (alpha=0.15) behind the sina swarm, directly addressing
+    the prior review's suggestion — the layered violin+sina+crossbar composition now
+    shows density shape, individual observations, and group mean simultaneously
+  - 'Correct Imprint palette in canonical order (#009E73 Engineering, #C475FD Marketing,
+    #4467A3 Sales, #BD8233 Support), identical data hues across light/dark renders'
+  - Theme-adaptive chrome correctly threaded through PAGE_BG/INK/INK_SOFT tokens,
+    including the crossbar mean marker flipping from black (light) to cream (dark)
+    — both renders pass the theme-readability check
+  - 'Full distribution-shape coverage: bimodal Sales, tight Support with outliers,
+    wide Marketing, moderate Engineering — clearly visible through the new violin
+    outlines'
+  - geom_sina + geom_violin + geom_crossbar is idiomatic, expert-level lets-plot grammar-of-graphics
+    composition
+  - Clean, reproducible KISS code (np.random.seed(42) + geom_sina(seed=42)), correct
+    mandated title format, correct plot-{theme}.png/.html output
   weaknesses:
-  - 'CRITICAL: Non-Okabe-Ito colors used — #306998 (Python blue), #FFD43B (yellow),
-    #2E8B57 (sea green), #DC143C (crimson). First series must be #009E73. All series
-    must follow Okabe-Ito canonical order.'
-  - 'CRITICAL: No ANYPLOT_THEME environment variable reading — code does not set theme-adaptive
-    backgrounds or chrome tokens. Dark mode theme adaptation is not explicit in the
-    code.'
-  - 'CRITICAL: Output saved as plot.png (bare filename) instead of f"plot-{THEME}.png"
-    — required by pipeline and style guide.'
-  - 'CRITICAL: Title domain is pyplots.ai instead of anyplot.ai — must be swarm-basic
-    · letsplot · anyplot.ai.'
-  - Grid color (#cccccc) and crossbar color (#333333) are hardcoded light-mode values
-    with no theme-adaptive tokens — dark render could show dark crossbars on dark
-    background.
-  - element_rect import missing — plot_background and panel_background are not set
-    to PAGE_BG, relying on library defaults rather than explicit theme tokens.
+  - Design still stops short of a fully distinctive touch — no accent on outlier points
+    (e.g. Support's 45/48/95 or Sales' bimodal tails) and no annotation calling out
+    the Sales bimodal split, both suggested in the prior review round
+  - Sina point density in Sales/Support clusters creates moderate marker touching
+    in the densest bands — a slightly lower alpha or marker size could open a touch
+    more breathing room without losing prominence
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximating #FAF8F1 — correct for light theme.
-      Chrome: Title "swarm-basic · letsplot · anyplot.ai" in bold dark text, clearly readable. Y-axis label "Performance Score", X-axis label "Department" — both readable. Tick labels in dark secondary color, readable. Subtle horizontal grid lines (y-axis only), x-axis grid removed. No legend (appropriate since x-axis labels identify groups).
-      Data: 4 department groups (Engineering, Marketing, Sales, Support) with sina-spread individual points. Colors appear consistent with Okabe-Ito palette. Mean crossbars (black horizontal bars) visible for each group. Points size=4, alpha=0.7 — well-distributed with minimal overlap.
-      Legibility verdict: PASS — all text readable against light background.
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Bold dark title top-left "swarm-basic · python · letsplot · anyplot.ai"; dark axis titles ("Department", "Performance Score (0-100)") and medium-gray tick labels all clearly legible. Only left+bottom axis lines are drawn (panel_border removed per prior review fix) — no boxed frame. Subtle horizontal y-only gridlines.
+      Data: Four violin+sina clusters (Engineering green, Marketing lavender, Sales blue, Support ochre) in canonical Imprint order, first series #009E73. Each violin shows the density silhouette behind the jittered points; a black horizontal crossbar marks each group's mean.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black approximating #1A1A17 — correct for dark theme.
-      Chrome: Title, axis labels, and tick labels appear in light/white text — clearly readable against dark background. No dark-on-dark failures detected. Mean crossbars appear lighter/white-ish in dark mode. Grid lines visible as subtle light gray.
-      Data: Colors appear identical to light render — Okabe-Ito-like palette preserved across themes (only chrome flipped).
-      Legibility verdict: PASS — all text readable against dark background.
-
-    NOTE: Significant code-image discrepancy observed. Current code defines non-Okabe-Ito colors (#306998, #FFD43B, #2E8B57, #DC143C) and title "pyplots.ai", and does not implement ANYPLOT_THEME. The rendered images appear to have been produced from a different code version (possibly the attempt-1 generation). The current code as written would produce incorrect palette colors, no theme adaptation, and save to "plot.png" rather than plot-{THEME}.png.
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Title and axis titles flip to off-white, tick labels to light gray — all clearly legible, no dark-on-dark failures. Violin outlines remain visible against the dark background. The crossbar mean markers correctly flip from black to off-white/cream.
+      Data: Data colors (green/lavender/blue/ochre) are pixel-identical to the light render — confirms only chrome flipped, not data hues. Brand green #009E73 (Engineering) reads clearly on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,86 +63,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (24pt title, 20pt axis, 16pt tick). Images
-          show readable text in both renders. Minor deduction: no INK/INK_SOFT theme
-          tokens for text color — relying on library auto-adaptation rather than explicit
-          theme compliance.'
+        comment: Explicit font sizes (title=16, axis_title=12, axis_text=10), readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: geom_sina handles point spreading correctly. Minimal visible overlap
-          in denser regions is expected and acceptable for sina plots.
+        comment: No text overlap; point-touching within swarms is inherent to the
+          sina technique, not a defect
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: size=4 with scale=3 gives effective marker size at 4800x2700. alpha=0.7
-          appropriate for ~44 points per group.
+        comment: Points sized appropriately for 38-52 obs/group; alpha=0.7 avoids
+          overplotting
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses #2E8B57 (green) and #DC143C (red) without CVD-safe consideration.
-          Non-Okabe-Ito palette not guaranteed safe for deuteranopia/protanopia. Okabe-Ito
-          would be fully safe.'
+        passed: true
+        comment: Imprint hues are CVD-safe and well distinguished
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: ggsize(1600, 900) with scale=3 = 4800x2700px. Good proportions, balanced
-          margins, nothing cut off.
+        comment: Canvas gate passed; balanced proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Clear 'Department' x-label and 'Performance Score' y-label. Performance
-          score is dimensionless (unitless appropriate).
+        comment: 'Fixed: ''Performance Score (0-100)'' now includes explicit unit/scale'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses non-Okabe-Ito colors (#306998, #FFD43B, #2E8B57, #DC143C).
-          First series must be #009E73. No ANYPLOT_THEME reading. No plot_background/panel_background
-          set with theme tokens. Grid and crossbar colors hardcoded for light mode
-          only.'
+        passed: true
+        comment: 'Canonical Imprint order, first series #009E73, identical data colors
+          across themes, theme-correct backgrounds'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: 'Above basic defaults: geom_sina is an elegant choice, mean crossbars
-          add analytical value, legend removed cleanly. But design hierarchy is limited
-          — no palette refinement, no typography emphasis beyond size.'
+        comment: Layered violin+sina+crossbar composition is a genuine step up from
+          a bare swarm, but still lacks a truly distinctive touch (outlier accent,
+          annotation)
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: 'Genuine refinements beyond defaults: x-axis major grid removed (panel_grid_major_x=element_blank),
-          y-axis only grid retained, legend removed, alpha=0.7 applied. theme_minimal
-          gives L-shaped spine set.'
+        passed: true
+        comment: 'Fixed: full panel border removed (panel_border=element_blank()),
+          now a clean L-shaped frame; subtle y-only grid, generous whitespace'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Data is intentionally designed with different distribution shapes
-          (bimodal Sales, tight Engineering, wide Marketing, outlier Support). Mean
-          crossbars give reference anchors. But all groups share equal visual weight
-          — no emphasis or focal point to guide the reader's eye.
+        passed: true
+        comment: Violin backdrop plus mean crossbar now conveys shape, spread, and
+          central tendency together; still no explicit callout of the Sales bimodal
+          split
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,31 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: geom_sina is the lets-plot-native swarm/beeswarm plot implementation.
-          Points spread to avoid overlap exactly as required.
+        comment: geom_sina is the correct swarm/beeswarm-equivalent for lets-plot's
+          grammar-of-graphics API
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Individual points shown, spreading to avoid overlap, mean marker
-          via geom_crossbar, color by category, consistent point sizes, clear spacing
-          between groups.
+        comment: Consistent point sizes, mean marker per category, clear group spacing,
+          color distinguishes categories
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Department on x-axis (categorical), Performance Score on y-axis (continuous).
-          4 groups with 38-52 observations each within spec range.
+        comment: Category on x, value on y, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Code has title 'swarm-basic · letsplot · pyplots.ai' — wrong domain
-          (should be anyplot.ai). Structure is correct (spec-id · library · domain)
-          but content fails. Image shows anyplot.ai, suggesting code-image discrepancy.
+        passed: true
+        comment: Title format correct; legend intentionally omitted since color is
+          redundant with the x-axis category
     data_quality:
       score: 15
       max: 15
@@ -186,26 +171,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all swarm plot aspects: bimodal distribution (Sales), outliers
-          (Support: 45, 48, 95), different spreads (Engineering tight vs Marketing
-          wide), different means (Engineering ~80 vs Support ~70).'
+        comment: Bimodal Sales, tight Support with outliers, wide Marketing, moderate
+          Engineering — full distribution-shape coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Department performance scores: neutral, real-world, non-controversial.
-          The 4 departments (Engineering, Marketing, Sales, Support) are generic and
-          non-divisive.'
+        comment: Employee performance scores by department, matching the spec's own
+          application example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Performance scores 0-100 (clipped), group sizes 38-52 within spec's
-          20-300 total guidance. Values and proportions are factually plausible.
+        comment: Scores clipped to a plausible 0-100 range with realistic per-department
+          spread
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -213,64 +196,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save. No functions or
-          classes.'
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. geom_sina(seed=42) for deterministic jitter.
+        comment: np.random.seed(42) + geom_sina(seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 15 imported names from lets_plot are used. numpy and pandas both
-          used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code is clean and readable but has fundamental correctness issues:
-          hardcoded non-Okabe-Ito colors, no ANYPLOT_THEME reading, no plot_background
-          setting. These are not style issues — they violate project requirements.'
+        passed: true
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: ggsave(plot, 'plot.png', ...) saves bare filename instead of f'plot-{THEME}.png'.
-          Pipeline requires plot-light.png and plot-dark.png.
+        passed: true
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Grammar of graphics composition is clean. geom_sina + geom_crossbar
-          layer combination is idiomatic for distribution + summary. scale_color/fill_manual
-          correctly applied.
+        comment: 'Expert grammar-of-graphics composition: ggplot + geom_violin + geom_sina
+          + geom_crossbar + scale_manual + theme'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: geom_sina is a lets-plot-specific geom not available in base ggplot2
-          (it's in ggforce). Using it natively is a distinctive lets-plot capability.
-          HTML export also generated.
+        passed: false
+        comment: geom_sina + geom_violin layering is lets-plot/ggplot-family-distinctive;
+          one more unique touch would earn full marks
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   - groupby-aggregation
   dataprep: []
   styling:
