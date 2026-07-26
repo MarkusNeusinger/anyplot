@@ -1,0 +1,247 @@
+library: muix
+language: javascript
+specification_id: slope-basic
+created: '2026-07-25T23:53:47Z'
+updated: '2026-07-26T00:11:42Z'
+generated_by: claude-sonnet
+workflow_run: 30179999658
+issue: 981
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/muix/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Both weaknesses from Attempt 1 are fixed: right-side endpoints now show ''{value}
+    · {department}'' for entity identification without tracing color/slope back to
+    the left, and the biggest riser/decliner get bolder strokes plus ''+8''/''-7''
+    delta chips that give the chart a genuine focal point.'
+  - 'Semantic color-coding is correct and well-reasoned: brand green (palette[0])
+    for improved, matte red (palette[4]) for declined, matching the style guide''s
+    sentiment/polarity semantic exception, with direction redundantly encoded by slope
+    and by the explicit start/end values (not color-only).'
+  - Custom endpoint-label and delta-annotation overlays built with useXScale/useYScale
+    hooks — idiomatic, distinctive MUI X usage that goes beyond basic chart configuration.
+  - The hand-built legend now uses line+circle swatches matching the actual chart
+    stroke style (fixing Attempt 1's flat-rectangle swatches), title fontsize correctly
+    follows the prescribed scaling formula for the long descriptive+mandated title,
+    and both renders are fully theme-adaptive with identical data colors.
+  - 9 entities (within spec's 5-15 guidance), deterministic hardcoded data, clean
+    minimal chrome (no axis lines/ticks/grid), no import outside community @mui/x-charts.
+  weaknesses:
+  - Endpoint markers are modest circles for a sparse 18-point dataset (9 lines × 2
+    endpoints) — per the data-density heuristic (few datapoints < 50 → larger, prominent
+    markers) they could be slightly bigger/bolder for extra visual weight.
+  - Title occupies roughly ~41% of canvas width — on the small end of the '50-70%
+    comfortable' range. This follows the prescribed length-scaling formula correctly
+    (avoiding overflow for the long descriptive+mandated title) so it's not a violation,
+    but there may be a little headroom to size it up slightly without squeezing.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Employee Satisfaction by Department · slope-basic · javascript · muix · anyplot.ai" reads clearly in dark ink, top-left. A custom "Improved"/"Declined" legend (line+circle swatches matching the chart's own stroke style) sits top-right. Left column shows "{Department} · {value}" labels; right column now shows "{value} · {Department}" (fixed from Attempt 1, which showed only the numeric value on the right). "2023"/"2025" period labels sit at the bottom. All text is dark-on-light and clearly legible.
+      Data: 9 slope lines, brand green (#009E73) for departments that improved, matte red (#AE3030) for those that declined — matches the style guide's sentiment/polarity semantic exception. The single biggest riser (Design, +8) and biggest decliner (Product, -7) get visibly bolder strokes plus a rounded delta-chip annotation near the line's midpoint, giving the chart a clear focal point.
+      Legibility verdict: PASS — no overlapping text, no clipped edges, all labels readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Identical layout to the light render, now rendered in light ink (title/labels) and soft light-gray secondary text (legend). No dark-on-dark failures anywhere — every label is clearly visible against the dark surface.
+      Data: The 9 slope lines use the identical green (#009E73) / red (#AE3030) colors as the light render — only chrome (background, text color) flipped, confirming data-color constancy. The bold-stroke + delta-chip emphasis on the biggest riser/decliner is preserved identically.
+      Legibility verdict: PASS — no dark-on-dark or illegible elements found.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; title correctly length-scaled to
+          avoid overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, lines, or annotations in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers visible but could be slightly larger given only 18 total
+          endpoints (sparse data)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Direction is redundantly encoded by slope and explicit values, not
+          color alone; palette is CVD-optimized
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing cut off, generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with mandated format; 2023/2025 period labels per
+          spec
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Green=improved/red=declined is a valid sentiment semantic exception;
+          correct theme backgrounds
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color, matching legend swatch style, bold-stroke emphasis
+          on standout movers — meaningfully improved over Attempt 1
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis lines/ticks/grid all disabled, generous whitespace, refined
+          legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Delta callouts + bold strokes on the biggest riser/decliner create
+          a clear focal point (fixes Attempt 1's 'flat' storytelling)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct slope chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Endpoint labels now on BOTH sides (department + value), direction
+          color-coding, time-point axis labels — fixes Attempt 1's right-side gap
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time point, Y=value, all 9 entities shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; direction
+          legend matches spec's color-coding suggestion
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Endpoints, connecting lines, direction encoding, dual labels, delta
+          annotations — full slope-chart feature set
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee satisfaction scores by department, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 satisfaction score with sensible 46-90 data range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Component functions are the required React/MUI-X hook contract, not
+          unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data array
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart + useXScale/useYScale, all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity for the overlay technique
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export harness contract, skipAnimation set
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper LineChart config plus sx-based per-series CSS targeting
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useXScale/useYScale-driven custom overlays are genuinely distinctive;
+          could push further (e.g. custom tooltip)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
