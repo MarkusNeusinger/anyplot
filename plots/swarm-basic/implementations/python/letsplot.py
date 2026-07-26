@@ -1,8 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-05
+Quality: pending | Updated: 2026-07-26
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,7 @@ from lets_plot import (
     aes,
     element_blank,
     element_line,
+    element_rect,
     element_text,
     geom_crossbar,
     geom_sina,
@@ -27,12 +30,20 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
+# Theme-adaptive chrome tokens (Imprint palette + surface tokens)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+
 # Data - Performance scores across departments
 np.random.seed(42)
 
 departments = ["Engineering", "Marketing", "Sales", "Support"]
 n_per_group = [45, 38, 52, 40]
-colors = ["#306998", "#FFD43B", "#2E8B57", "#DC143C"]
 
 data = []
 for dept, n in zip(departments, n_per_group, strict=True):
@@ -59,31 +70,35 @@ df = pd.DataFrame(data)
 means = df.groupby("Department")["Performance Score"].mean().reset_index()
 means.columns = ["Department", "mean"]
 
+title = "swarm-basic · python · letsplot · anyplot.ai"
+
 # Plot
 plot = (
     ggplot(df, aes(x="Department", y="Performance Score"))
     + geom_sina(aes(color="Department", fill="Department"), size=4, alpha=0.7, seed=42, scale="width")
-    + geom_crossbar(
-        aes(x="Department", y="mean", ymin="mean", ymax="mean"), data=means, width=0.5, size=1.5, color="#333333"
-    )
-    + scale_color_manual(values=colors)
-    + scale_fill_manual(values=colors)
-    + labs(x="Department", y="Performance Score", title="swarm-basic · letsplot · pyplots.ai")
+    + geom_crossbar(aes(x="Department", y="mean", ymin="mean", ymax="mean"), data=means, width=0.5, size=1.5, color=INK)
+    + scale_color_manual(values=IMPRINT_PALETTE)
+    + scale_fill_manual(values=IMPRINT_PALETTE)
+    + labs(x="Department", y="Performance Score", title=title)
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
         legend_position="none",
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#cccccc", size=0.5),
+        panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save PNG (scale=3 gives 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
+# Save PNG (scale=4 gives 3200x1800)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 
 # Save HTML for interactive version
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
