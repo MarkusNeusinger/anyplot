@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-04
@@ -14,6 +14,22 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Off-black / off-white text tokens for on-segment labels — never pure #000/#FFF
+DARK_TEXT = "#1A1A17"
+LIGHT_TEXT = "#F0EFE8"
+
+
+def _on_segment_text_color(hex_color):
+    """WCAG relative luminance -> pick the off-black or off-white text token."""
+    r, g, b = (int(hex_color.lstrip("#")[i : i + 2], 16) / 255 for i in (0, 2, 4))
+
+    def _lin(c):
+        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+    luminance = 0.2126 * _lin(r) + 0.7152 * _lin(g) + 0.0722 * _lin(b)
+    return DARK_TEXT if luminance > 0.45 else LIGHT_TEXT
+
 
 labels = [
     "Company",
@@ -86,6 +102,10 @@ colors = [
     "#BD8233",  # Finance — base ochre
 ]
 
+# Explicit per-segment text color (WCAG luminance) instead of relying on
+# Plotly's implicit auto-contrast — keeps legibility fully under our control.
+text_colors = [_on_segment_text_color(c) for c in colors]
+
 fig = go.Figure(
     go.Sunburst(
         labels=labels,
@@ -93,7 +113,7 @@ fig = go.Figure(
         values=values,
         branchvalues="total",
         marker={"colors": colors, "line": {"color": PAGE_BG, "width": 2}},
-        textfont={"size": 22},
+        textfont={"size": 13, "color": text_colors},
         insidetextorientation="radial",
         hovertemplate="<b>%{label}</b><br>Budget: $%{value}M<br>%{percentParent:.1%} of %{parent}<extra></extra>",
         leaf={"opacity": 0.88},
@@ -103,14 +123,15 @@ fig = go.Figure(
 fig.update_layout(
     title={
         "text": "sunburst-basic · plotly · anyplot.ai",
-        "font": {"size": 36, "color": INK},
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
+    autosize=False,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    margin={"t": 120, "l": 60, "r": 60, "b": 110},
+    margin={"t": 70, "l": 40, "r": 40, "b": 130},
 )
 
 # Insight annotation — surface Engineering's outsized 37.5% share
@@ -119,13 +140,13 @@ fig.add_annotation(
     xref="paper",
     yref="paper",
     x=0.5,
-    y=0.02,
+    y=-0.09,
     xanchor="center",
     yanchor="bottom",
-    font={"size": 20, "color": INK_MUTED},
+    font={"size": 11, "color": INK_MUTED},
     showarrow=False,
 )
 
-# Square format — optimal for symmetric radial charts
-fig.write_image(f"plot-{THEME}.png", width=1200, height=1200, scale=3)
+# Square format — optimal for symmetric radial charts (2400x2400 via width=600 height=600 scale=4)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
