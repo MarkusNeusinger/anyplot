@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-05
+Quality: 90/100 | Updated: 2026-07-26
 """
 
 import os
@@ -17,7 +17,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette — 4 departments
+# Imprint palette — 4 departments
 COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Employee performance scores by department
@@ -39,7 +39,7 @@ y_min, y_max = all_values.min() - 5, all_values.max() + 5
 point_radius = 0.03 * (y_max - y_min)
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 for i, dept in enumerate(departments):
@@ -60,7 +60,7 @@ for i, dept in enumerate(departments):
 
         best_offset = 0
         found = False
-        for offset in np.linspace(0, 0.35, 50):
+        for offset in np.linspace(0, 0.45, 50):
             for sign in [1, -1]:
                 test_x = sign * offset
                 collision = False
@@ -81,19 +81,20 @@ for i, dept in enumerate(departments):
     ax.scatter(i + offsets, vals, s=150, alpha=0.75, color=COLORS[i], edgecolors=PAGE_BG, linewidth=0.5, label=dept)
 
     mean_val = np.mean(vals)
-    ax.scatter(i, mean_val, s=350, color=COLORS[i], marker="D", edgecolors=INK, linewidth=2, zorder=5)
+    ax.scatter(i, mean_val, s=350, color=COLORS[i], marker="D", edgecolors=INK_SOFT, linewidth=2, zorder=5)
 
-# Add invisible mean-marker entry for legend
-ax.scatter([], [], s=350, color=INK_SOFT, marker="D", edgecolors=INK, linewidth=2, label="Mean")
+# Add invisible mean-marker entry for legend (smaller than the on-plot marker so it doesn't crowd the legend rows)
+ax.scatter([], [], s=100, color=INK_SOFT, marker="D", edgecolors=INK_SOFT, linewidth=1, label="Mean")
 
 # Style
-ax.set_xlabel("Department", fontsize=20, color=INK)
-ax.set_ylabel("Performance Score", fontsize=20, color=INK)
-ax.set_title("swarm-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.set_xlabel("Department", fontsize=10, color=INK)
+ax.set_ylabel("Performance Score", fontsize=10, color=INK)
+ax.set_title("swarm-basic · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.set_xticks(range(len(departments)))
-ax.set_xticklabels(departments, fontsize=16)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-ax.set_ylim(25, 105)
+ax.set_xticklabels(departments, fontsize=8)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.set_ylim(25, 132)
+ax.set_yticks(np.arange(30, 101, 10))
 ax.set_xlim(-0.6, 3.6)
 
 ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
@@ -102,10 +103,10 @@ ax.spines["right"].set_visible(False)
 for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 
-leg = ax.legend(fontsize=16, loc="upper right", framealpha=0.9)
+leg = ax.legend(fontsize=8, loc="upper right", framealpha=0.9)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
