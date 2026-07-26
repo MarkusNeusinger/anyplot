@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 swarm-basic: Basic Swarm Plot
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: pending | Updated: 2026-07-26
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-07-26
 """
 
 import os
