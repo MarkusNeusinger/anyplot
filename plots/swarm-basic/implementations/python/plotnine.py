@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 swarm-basic: Basic Swarm Plot
-Library: plotnine 0.15.7 | Python 3.13.13
+Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-26
 """
 
