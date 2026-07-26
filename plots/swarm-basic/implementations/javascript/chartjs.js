@@ -38,9 +38,13 @@ const valuesByCategory = conditionStats.map(({ mean, sd }) =>
 );
 
 // --- Swarm layout: bin by value, spread symmetrically within each bin -------
-function computeSwarmOffsets(values, binCount, step) {
+// binCount adapts to each group's own spread (finer bins for wider-spread groups)
+// so a group with more within-bin crowding still resolves into distinct points
+// instead of a dense clump, without touching marker size (kept uniform per spec).
+function computeSwarmOffsets(values, targetPointsPerBin, step) {
   const min = Math.min(...values);
   const max = Math.max(...values);
+  const binCount = Math.max(8, Math.round(values.length / targetPointsPerBin));
   const binSize = (max - min) / binCount || 1;
   const binCounts = new Array(binCount).fill(0);
   const sortedIdx = values.map((_, i) => i).sort((a, b) => values[a] - values[b]);
@@ -56,9 +60,11 @@ function computeSwarmOffsets(values, binCount, step) {
   return offsets;
 }
 
+const HIGHLIGHT_CATEGORY_IDX = categories.indexOf("Sleep-Deprived");
+
 const swarmDatasets = categories.map((category, catIdx) => {
   const values = valuesByCategory[catIdx];
-  const offsets = computeSwarmOffsets(values, 16, 0.045);
+  const offsets = computeSwarmOffsets(values, 2.5, 0.05);
   return {
     type: "scatter",
     label: category,
@@ -86,6 +92,10 @@ categories.forEach((_, catIdx) => {
   medianPoints.push({ x: catIdx, y: null });
 });
 
+// Median line is a single dataset, but its per-segment color/width is driven by
+// Chart.js's `segment` styling API so the standout Sleep-Deprived condition
+// (markedly slower and more variable reaction times) reads as the visual focal
+// point, without varying the swarm point size the spec asks to keep consistent.
 const medianDataset = {
   type: "line",
   label: "Median",
@@ -95,6 +105,28 @@ const medianDataset = {
   pointRadius: 0,
   spanGaps: false,
   order: 1,
+  segment: {
+    borderColor: (ctx) =>
+      Math.floor(ctx.p0DataIndex / 3) === HIGHLIGHT_CATEGORY_IDX ? t.amber : t.ink,
+    borderWidth: (ctx) => (Math.floor(ctx.p0DataIndex / 3) === HIGHLIGHT_CATEGORY_IDX ? 5 : 3),
+  },
+};
+
+// Custom plugin (native Chart.js plugin-core API, not a community plugin): draws
+// a subtle backdrop band behind the standout condition so it reads as the focal
+// point at a glance, before any dataset is drawn.
+const swarmHighlightPlugin = {
+  id: "swarmHighlight",
+  beforeDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea) return;
+    const left = scales.x.getPixelForValue(HIGHLIGHT_CATEGORY_IDX - 0.46);
+    const right = scales.x.getPixelForValue(HIGHLIGHT_CATEGORY_IDX + 0.46);
+    ctx.save();
+    ctx.fillStyle = `${t.amber}1f`;
+    ctx.fillRect(left, chartArea.top, right - left, chartArea.bottom - chartArea.top);
+    ctx.restore();
+  },
 };
 
 // --- Mount -------------------------------------------------------------------
@@ -105,6 +137,7 @@ document.getElementById("container").appendChild(canvas);
 new Chart(canvas, {
   type: "scatter",
   data: { datasets: [...swarmDatasets, medianDataset] },
+  plugins: [swarmHighlightPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
