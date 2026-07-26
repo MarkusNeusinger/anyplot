@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 swarm-basic: Basic Swarm Plot
-Library: bokeh 3.9.2 | Python 3.13.12
+Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-07-26
 """
 
