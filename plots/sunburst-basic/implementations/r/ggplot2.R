@@ -18,12 +18,20 @@ IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # WCAG relative luminance, used to pick readable ink for wedge labels
-# (the wedge fill is a fixed Imprint hue, independent of theme, so the
-# label color is computed once and stays the same in both themes)
 relative_luminance <- function(hex) {
   channel <- grDevices::col2rgb(hex) / 255
   linear <- ifelse(channel <= 0.03928, channel / 12.92, ((channel + 0.055) / 1.055)^2.4)
   sum(c(0.2126, 0.7152, 0.0722) * linear)
+}
+
+# Alpha-composite `hex` over `bg_hex` so luminance (and therefore ink choice)
+# reflects what actually renders on screen, not the undiluted wedge hue —
+# the outer ring is drawn at alpha = 0.55, which shifts it toward PAGE_BG.
+blend_hex <- function(hex, bg_hex, alpha) {
+  fg <- as.vector(grDevices::col2rgb(hex))
+  bg <- as.vector(grDevices::col2rgb(bg_hex))
+  blended <- alpha * fg + (1 - alpha) * bg
+  grDevices::rgb(blended[1], blended[2], blended[3], maxColorValue = 255)
 }
 
 # Angle (degrees) for a label sitting at mid-fraction `mid` of the circle,
@@ -87,14 +95,20 @@ dept_df <- dept_order %>%
     label_size = pmin(3.0, pmax(1.8, (span * 45) / sqrt(nchar(as.character(department)))))
   )
 
-# Ring 2 (outer) — teams within each department
+# Ring 2 (outer) — teams within each department. Wedges render at
+# alpha = 0.55 over PAGE_BG, so label_ink must be recomputed from that
+# composited color rather than reused from the solid inner-ring hue —
+# otherwise the ink stays white even where the light-theme blend washes
+# the wedge toward pastel.
 team_df <- leaves %>%
   mutate(
     xmin       = 1.05, xmax = 1.95,
     mid        = (team_start + team_end) / 2,
     angle      = wedge_label_angle(mid),
     span       = team_end - team_start,
-    show_label = span > 0.035
+    show_label = span > 0.035,
+    blended    = mapply(blend_hex, fill_hex, MoreArgs = list(bg_hex = PAGE_BG, alpha = 0.55)),
+    label_ink  = ifelse(sapply(blended, relative_luminance) > 0.4, "#1A1A17", "#FFFDF6")
   )
 
 plot_title <- "sunburst-basic · r · ggplot2 · anyplot.ai"
