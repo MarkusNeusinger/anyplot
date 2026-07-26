@@ -1,7 +1,6 @@
 #' anyplot.ai
 #' swarm-basic: Basic Swarm Plot
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Created: 2026-07-26
 
 library(ggplot2)
 library(dplyr)
@@ -59,13 +58,21 @@ condition_means <- reaction_df %>%
 
 # --- Plot ------------------------------------------------------------------
 p <- ggplot(reaction_df, aes(x = condition_x, y = reaction_time)) +
-  geom_point(aes(color = condition), size = 2.6, alpha = 0.85) +
+  geom_point(
+    aes(fill = condition), shape = 21, size = 3.1, stroke = 0.3,
+    color = PAGE_BG, alpha = 0.85
+  ) +
+  geom_line(
+    data = condition_means,
+    aes(x = x_pos, y = mean_rt),
+    color = scales::alpha(INK, 0.4), linewidth = 0.5, linetype = "dashed"
+  ) +
   geom_point(
     data = condition_means,
     aes(x = x_pos, y = mean_rt),
     shape = 18, size = 3.4, color = INK, alpha = 0.9
   ) +
-  scale_color_manual(values = IMPRINT_PALETTE[seq_along(conditions)], guide = "none") +
+  scale_fill_manual(values = IMPRINT_PALETTE[seq_along(conditions)], guide = "none") +
   scale_x_continuous(
     breaks = seq_along(conditions),
     labels = conditions,
