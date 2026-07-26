@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: swarm-basic
 created: '2026-07-26T07:17:07Z'
-updated: '2026-07-26T07:22:22Z'
+updated: '2026-07-26T07:31:37Z'
 generated_by: claude-sonnet
 workflow_run: 30192366615
 issue: 974
@@ -12,49 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 84
 review:
   strengths:
-  - Custom-built swarm/beeswarm approximation (value-binning + rank-based symmetric
-    x-offset) — a genuine technical achievement given ggplot2 has no native beeswarm
-    geom, and the code comments explain the approach clearly.
-  - Correct Imprint palette usage in canonical order across the 4 categories, with
-    theme-adaptive chrome (backgrounds, ink tokens) correctly threaded through both
-    light and dark renders.
-  - Per-category mean markers (diamond shape) directly answer the spec's suggestion
-    to add a mean/median indicator, and correctly recolor for theme (dark ink on light
-    bg, light ink on dark bg).
-  - Clean, KISS-structured single-pass code, reproducible via set.seed(42), correct
-    ragg::agg_png device and plot-{THEME}.png output naming.
-  - Realistic, neutral psychology reaction-time dataset with a clear, monotonically
-    increasing difficulty narrative across the four experimental conditions.
+  - Clever custom beeswarm layout built entirely from geom_point (bin the value axis,
+    then rank and symmetrically offset points within each bin) since ggplot2 has no
+    native beeswarm geom — a genuine library-mastery technique.
+  - 'Imprint palette applied correctly in canonical order with first series #009E73;
+    theme-adaptive chrome (background, ink, grid) flips correctly between light and
+    dark while data colors stay identical.'
+  - 'Strong spec compliance: correct title format, descriptive axis labels with units,
+    per-category mean markers, clear spacing between category groups, and a realistic
+    psychology reaction-time dataset with plausible escalating means across cognitive-load
+    conditions.'
+  - Correct 3200×1800 canvas, theme_minimal with spines/heavy grid stripped, generous
+    whitespace, and explicit font sizes throughout.
   weaknesses:
-  - Overlapping same-color points in dense clusters (e.g. Low Load ~470-500ms, High
-    Load ~508-555ms) blend into solid bands because markers have no edge/stroke. Add
-    a subtle stroke (e.g. shape=21, fill=condition color, color=PAGE_BG or 'white',
-    stroke~0.3) so individual points stay visually separated in dense regions, per
-    the style guide's overlapping-marker guidance.
-  - At n=45 points per condition (just under the 'sparse <50' threshold), marker size
-    (2.6) only matches the medium-density default. Bump to ~3.0-3.2 combined with
-    the edge stroke above for more prominence per the data-density heuristic.
-  - No visual connector or annotation makes the increasing-reaction-time trend across
-    conditions explicit beyond the diamond mean markers — a subtle mean-to-mean guide
-    line or brief callout would sharpen the data storytelling.
+  - The dashed mean-trend connector (geom_line over condition_means, color = scales::alpha(INK,
+    0.4)) does not render at all in either theme — pixel-level inspection of both
+    PNGs found zero line pixels anywhere between the four mean-diamond markers, only
+    the diamonds themselves are visible. This is dead/non-functional code; either
+    fix the rendering (verify the 8-digit alpha hex string is honoured by the ragg
+    device, check the layer isn't being clipped or dropped) or remove the geom_line
+    layer entirely since the diamond markers alone already satisfy the spec's 'subtle
+    mean marker' note.
+  - Points overlap fairly densely in the Low Load / High Load / Time Pressure clusters
+    at fill alpha 0.85, making some individual observations hard to distinguish at
+    the busiest bins — slightly smaller point_spacing increments or a touch more alpha
+    reduction would improve separation.
+  - No legend for the categorical fill (guide = "none") — acceptable here since x-axis
+    tick labels already identify each category, but worth confirming this is the intended
+    encoding rather than leftover from copying a legend-bearing pattern.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "swarm-basic · r · ggplot2 · anyplot.ai" in dark ink top-left, axis titles "Experimental Condition" (x) and "Reaction Time (ms)" (y) in dark ink, tick labels in a softer dark-grey ink, thin horizontal grid lines only, L-shaped axis line at bottom/left. All text is clearly readable against the light background.
-      Data: Four swarm clusters (Baseline, Low Load, High Load, Time Pressure) colored in Imprint order — green (#009E73), lavender (#C475FD), blue (#4467A3), ochre (#BD8233) — with a black diamond mean marker per cluster. Points are round, semi-transparent, and clearly visible against the cream background; reaction times visibly increase left to right across conditions.
+      Background: Warm off-white, matches #FAF8F1 target, not pure white.
+      Chrome: Title "swarm-basic · r · ggplot2 · anyplot.ai" top-left in dark ink; axis titles "Experimental Condition" (x) and "Reaction Time (ms)" (y) in dark ink; tick labels in soft grey-ink; subtle horizontal gridlines only. All clearly readable against the light background.
+      Data: Four category swarms (Baseline, Low Load, High Load, Time Pressure) as filled circles with light-background-colored strokes, colors #009E73 (green), #C475FD (lavender), #4467A3 (blue), #BD8233 (ochre) in canonical Imprint order, first series correctly green. A dark diamond mean-marker sits at the center of each swarm. No dashed connector line between the diamonds is visible despite being present in the code (see weaknesses).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title and axis titles now in light/near-white ink, tick labels in a lighter soft grey, grid lines subtle and still visible against the dark surface. No dark-on-dark or light-on-light failures observed — all text is legible.
-      Data: Same four cluster colors as the light render (green, lavender, blue, ochre) — confirmed identical hex data colors between themes. The mean diamond marker correctly flips from black (light theme) to white (dark theme) to stay visible against the darker background.
+      Background: Warm near-black, matches #1A1A17 target, not pure black.
+      Chrome: Same title and axis titles now in light ink (#F0EFE8), tick labels in lighter soft-ink (#B8B7B0), gridlines subtle against the dark background. No dark-on-dark text anywhere — all chrome is clearly legible.
+      Data: Identical swatch of four colors (#009E73, #C475FD, #4467A3, #BD8233) to the light render, confirming data colors are unchanged between themes; mean diamonds now render as light markers against the dark background (theme-correctly flipped from dark in light mode). Same missing connector line as in the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -62,49 +65,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; no overlap
-          with data
+        comment: Explicit font sizes throughout; all text readable in both themes,
+          no dark-on-dark or light-on-light.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: Text does not overlap, but same-color markers without an edge stroke
-          blend into solid bands in the densest value bins (e.g. High Load ~508-555ms)
+        comment: No text collisions; data points overlap noticeably in the denser
+          High Load / Time Pressure clusters.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Markers and mean diamonds clearly visible; size (2.6) is only the
-          medium-density default for n=45 per group, just under the sparse threshold
+        passed: false
+        comment: Swarm markers and mean diamonds are clearly visible, but the intended
+          dashed mean-trend connector line does not render at all (confirmed via pixel
+          inspection of both renders).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Adequate contrast, no red-green-only encoding, redundant with x-position
+        comment: Imprint palette hues are distinct and CVD-safe; no red-green as sole
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, balanced margins, nothing clipped
+        comment: Canvas gate passed (3200x1800); title and axis proportions balanced,
+          nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (ms)
+        comment: Descriptive axis labels with units (ms).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, correct theme-adaptive backgrounds in both
-          renders
+        comment: 'First series #009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds in both renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -112,22 +118,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom beeswarm-approximation layout and mean markers show above-default
-          craft
+        comment: Custom beeswarm binning algorithm and polished diamond mean markers
+          show real design effort.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Spines/grid subtle and minimal, but missing recommended white/bg
-          edge stroke on overlapping markers
+        comment: Spines removed, grid limited to subtle horizontal lines, generous
+          whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Clear increasing-difficulty trend and mean markers, but no explicit
-          connector/annotation reinforcing it
+        passed: false
+        comment: Escalating trend across conditions is visible from swarm position/color
+          alone, but the intended trend-connector guide line is invisible, weakening
+          the storytelling device.
     spec_compliance:
       score: 15
       max: 15
@@ -137,52 +144,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Faithful swarm/beeswarm approximation
+        comment: Correct swarm/beeswarm plot via custom binned-offset layout.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent point sizes, mean markers, color-coded categories, clear
-          spacing
+        comment: Per-category mean markers, color-coded categories, clear group spacing,
+          appropriately sized points.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x, reaction time on y, all points shown
+        comment: Category on x, reaction time on y, correct and complete.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title format; legend correctly omitted as redundant
-          with x-axis category labels
+        comment: Title matches mandated format; legend intentionally omitted since
+          categories are already labeled on the x-axis.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Individual points, distribution shape via swarm spread, and mean
-          markers all present
+        comment: Shows full distribution shape, density, and an outlier per condition.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral cognitive-load reaction-time experiment
+        comment: Cognitive-load reaction-time experiment is realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reaction times and spreads are realistic for the domain
+        comment: 300-700ms range and escalating means are sensible for psychology
+          RT data.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -190,31 +197,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, single linear pipeline
+        comment: No functions/classes, straightforward pipeline.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42)
+        comment: set.seed(42) used.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, ragg, scales all actually used
+        comment: ggplot2, dplyr, ragg, scales all actually used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity for a manual beeswarm layout, no fake UI
+        passed: false
+        comment: Non-functional geom_line layer that renders nothing is dead code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with ragg::agg_png and plot-{THEME}.png naming
+        comment: Saves plot-{THEME}.png via ragg::agg_png.
     library_mastery:
       score: 8
       max: 10
@@ -224,20 +231,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard dplyr/ggplot2 grammar throughout
+        comment: Idiomatic dplyr + ggplot2 grammar composition.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hand-built value-binning beeswarm approximation is a distinctive
-          workaround for ggplot2's missing native geom
+        comment: Manual bin-and-rank beeswarm approximation is a distinctive technique
+          given ggplot2 has no native beeswarm geom.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - groupby-aggregation
@@ -246,3 +253,4 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
+  - edge-highlighting
