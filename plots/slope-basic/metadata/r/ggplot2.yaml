@@ -1,0 +1,246 @@
+library: ggplot2
+language: r
+specification_id: slope-basic
+created: '2026-07-25T23:40:54Z'
+updated: '2026-07-25T23:59:59Z'
+generated_by: claude-sonnet
+workflow_run: 30179705712
+issue: 981
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Non-overlapping layout is now driven by a general-purpose enforce_min_gap() function
+    (pushes rows apart by a minimum spacing derived from the data range) rather than
+    hand-picked values that merely happened not to collide — a real robustness improvement
+    over attempt 1.
+  - 'Correct Imprint palette usage: brand green #009E73 for ''Increased'' and semantic-anchor
+    red #AE3030 for ''Decreased'', identical between light and dark renders; both
+    themes'' chrome (background, ink, legend frame) are theme-correct and fully legible.'
+  - 'Idiomatic tidyverse data prep: pivot_longer(names_pattern=...) for the wide-to-long
+    reshape, scales::dollar() for currency-formatted endpoint labels.'
+  - 'Minimal, purposeful chrome: gridlines/y-ticks removed since value labels carry
+    the numeric information directly; legible legend and axis labels in both themes
+    with no clipping.'
+  weaknesses:
+  - 'VQ-04 fix did not actually render: this repair added scale_linetype_manual(dashed
+    for ''Decreased'') and a geom_text ▲/▼ glyph layer intended to give direction
+    a second visual channel beyond hue. Neither shows up in either theme — cropped,
+    zoomed inspection of the ''Decreased'' line (both light and dark, including the
+    legend key swatch) shows a fully solid stroke with zero dash gaps over 1000+ px,
+    and no arrow glyph is visible above any point marker even at 4x zoom. Direction
+    is still communicated by hue alone (mitigated only by the adjacent numeric labels),
+    i.e. functionally unchanged from attempt 1''s flagged issue.'
+  - 'CQ-01 regression: a custom enforce_min_gap() helper function (with an explicit
+    for-loop) was introduced this round, moving away from the ''Imports -> Data ->
+    Plot -> Save, no functions/classes'' KISS structure that scored full marks in
+    attempt 1.'
+  - Title occupies roughly 35% of plot width, below the ~50-70% guideline range —
+    minor polish headroom, not a hard requirement.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "slope-basic · r · ggplot2 · anyplot.ai" in dark ink top-left; bold dark "Q1 2024" / "Q4 2024" axis labels; no gridlines or y-ticks (intentional, values carry the numeric info); bordered "Change" legend (Increased/Decreased) below the plot with dark text on an elevated off-white panel. All chrome text clearly readable against the light background.
+      Data: 8 entities connected by slope lines. 6 lines/points/labels in brand green (#009E73) for "Increased", 2 in matte red (#AE3030) for "Decreased" (Summit Pack, Peak Headlamp). Entity name + dollar-value labels sit at both endpoints, colored to match line direction, with no row overlaps. Zoomed inspection confirms: the "Decreased" lines and their legend key render as a fully solid stroke (no dash gaps despite scale_linetype_manual specifying "dashed"), and the intended ▲/▼ direction glyphs above each point are not visible in the render at all — direction is conveyed by hue only, same as attempt 1.
+      Legibility verdict: PASS (all rendered text is legible; the missing glyph/linetype channels are a content/accessibility gap, not a legibility failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title/axis-label layout, now in light ink (#F0EFE8) and soft ink (#B8B7B0) tones; legend panel flips to the dark elevated background with light text. No dark-on-dark issues — all chrome text is clearly visible against the dark background.
+      Data: Identical green/red data colors and line positions to the light render — confirmed only chrome flipped. Same as the light render, the "Decreased" line/legend-key crop shows a fully solid stroke (no dashes) and no arrow glyphs appear above any point.
+      Legibility verdict: PASS (no dark-on-dark text; missing secondary-channel elements are the same non-rendering issue observed in the light theme, not a theme-specific failure).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between any labels or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Points and lines well sized for 8-entity slope chart
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Attempted dashed-linetype + arrow-glyph secondary channels do not
+          render in either theme (confirmed via legend key and point-level crops);
+          direction is still hue-only, mitigated only by adjacent numeric labels
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Period labels 'Q1 2024'/'Q4 2024' are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: '#009E73 for Increased, semantic #AE3030 for Decreased; theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Semantic color use and deliberate non-overlapping layout; unchanged
+          from attempt 1 since the new secondary-channel elements do not visibly render
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Gridlines/ticks removed, generous whitespace, framed legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Color highlights the two decliners against six risers
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct slope chart / slopegraph
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Endpoint labels, direction color coding, labeled vertical axes all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: entity/value_start/value_end mapped correctly across both time points
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match Increased/Decreased data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 entities, both increases and decreases shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible outdoor-gear product line sales scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sales figures and quarter-over-quarter changes are realistic
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Introduces a custom enforce_min_gap() function with a loop, deviating
+          from the no-functions KISS ideal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Ships a dashed-linetype scale and glyph geom_text layer that do not
+          visibly render — dead functionality shipped without verifying output
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png, correct filename pattern
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Solid tidyverse/ggplot2 patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: enforce_min_gap() is generic R, not a ggplot2-specific technique;
+          the attempted linetype+glyph combined-legend trick is ggplot2-idiomatic
+          but does not actually render
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep: []
+  styling:
+  - minimal-chrome

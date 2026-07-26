@@ -1,13 +1,17 @@
 """ anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
-Library: plotnine 0.15.3 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-04-30
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 93/100 | Updated: 2026-07-26
 """
+
+import os
 
 import pandas as pd
 from plotnine import (
     aes,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_line,
     geom_point,
@@ -21,43 +25,57 @@ from plotnine import (
 )
 
 
-# Data: Quarterly sales figures (in thousands) comparing Q1 vs Q4
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Increase -> Imprint position 1 (also the semantic "gain" green);
+# Decrease -> Imprint position 5 (the semantic "loss" red).
+COLOR_INCREASE = "#009E73"
+COLOR_DECREASE = "#AE3030"
+
+# Data: national coal share of electricity generation, 2014 vs 2024
+# (approximate figures consistent with IEA/Ember energy-mix statistics).
+# Most advanced economies phased coal out under climate policy while a
+# few emerging economies leaned on it for energy security -- a mix of
+# increases, decreases and rank reversals for a slopegraph to tell.
 entities = [
-    "Product A",
-    "Product B",
-    "Product C",
-    "Product D",
-    "Product E",
-    "Product F",
-    "Product G",
-    "Product H",
-    "Product I",
-    "Product J",
+    "Germany",
+    "United Kingdom",
+    "Poland",
+    "South Africa",
+    "United States",
+    "Australia",
+    "India",
+    "China",
+    "Vietnam",
+    "Turkey",
 ]
-q1_sales = [120, 85, 200, 150, 95, 175, 110, 140, 65, 180]
-q4_sales = [165, 70, 230, 135, 145, 190, 85, 160, 110, 155]
+# Poland and Vietnam 2024 values nudged slightly further from their nearest
+# neighbor (China, Turkey) so the endpoint markers no longer visually merge.
+share_2014 = [44, 30, 84, 92, 39, 63, 74, 66, 19, 27]
+share_2024 = [23, 1, 52, 84, 15, 42, 76, 59, 30, 36]
 
-# Calculate change direction for color coding
-changes = ["Increase" if q4 >= q1 else "Decrease" for q1, q4 in zip(q1_sales, q4_sales, strict=True)]
+changes = ["Increase" if end >= start else "Decrease" for start, end in zip(share_2014, share_2024, strict=True)]
 
-# Create long-format DataFrame for lines
 df_long = pd.DataFrame(
     {
         "entity": entities * 2,
         "x": [1] * len(entities) + [2] * len(entities),
-        "value": q1_sales + q4_sales,
+        "value": share_2014 + share_2024,
         "change": changes * 2,
     }
 )
 
-# Create label DataFrames
 df_labels_left = pd.DataFrame(
     {
         "entity": entities,
         "x": [1] * len(entities),
-        "value": q1_sales,
+        "value": share_2014,
         "change": changes,
-        "label": [f"{e} ({v})" for e, v in zip(entities, q1_sales, strict=True)],
+        "label": [f"{e} ({v})" for e, v in zip(entities, share_2014, strict=True)],
     }
 )
 
@@ -65,41 +83,51 @@ df_labels_right = pd.DataFrame(
     {
         "entity": entities,
         "x": [2] * len(entities),
-        "value": q4_sales,
+        "value": share_2024,
         "change": changes,
-        "label": [str(v) for v in q4_sales],
+        "label": [str(v) for v in share_2024],
     }
 )
 
-# Plot
 plot = (
     ggplot(df_long, aes(x="x", y="value", group="entity", color="change"))
-    + geom_line(size=1.5, alpha=0.8)
-    + geom_point(size=5)
-    # Left labels (entity name + value)
-    + geom_text(aes(label="label"), data=df_labels_left, ha="right", nudge_x=-0.08, size=10)
-    # Right labels (value only)
-    + geom_text(aes(label="label"), data=df_labels_right, ha="left", nudge_x=0.08, size=10)
-    + scale_color_manual(values={"Increase": "#306998", "Decrease": "#FFD43B"})
-    + scale_x_continuous(breaks=[1, 2], labels=["Q1", "Q4"], limits=(0.3, 2.7))
+    + geom_line(size=1.4, alpha=0.85)
+    + geom_point(size=3.2)
+    # Left labels: entity name + starting value
+    + geom_text(aes(label="label"), data=df_labels_left, ha="right", nudge_x=-0.06, size=3.2, color=INK)
+    # Right labels: ending value only
+    + geom_text(aes(label="label"), data=df_labels_right, ha="left", nudge_x=0.06, size=3.2, color=INK)
+    + scale_color_manual(values={"Increase": COLOR_INCREASE, "Decrease": COLOR_DECREASE})
+    + scale_x_continuous(breaks=[1, 2], labels=["2014", "2024"], limits=(0.55, 2.3))
     + labs(
         x="",
-        y="Sales (thousands $)",
-        title="Product Sales Q1 vs Q4 · slope-basic · plotnine · pyplots.ai",
-        color="Change Direction",
+        y="Coal Share of Electricity Generation (%)",
+        title="National Coal Power Share · slope-basic · python · plotnine · anyplot.ai",
+        color="Change",
     )
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=18),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
+        figure_size=(8, 4.5),
+        text=element_text(size=7, color=INK_SOFT),
+        plot_title=element_text(size=11, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        axis_text_x=element_text(size=8, color=INK_SOFT),
+        axis_text_y=element_blank(),
+        axis_ticks=element_blank(),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=9, color=INK),
         legend_position="right",
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
+        legend_box_spacing=0.015,
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
         panel_grid_major_x=element_blank(),
         panel_grid_minor_x=element_blank(),
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
+        panel_grid_minor_y=element_blank(),
     )
 )
 
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
