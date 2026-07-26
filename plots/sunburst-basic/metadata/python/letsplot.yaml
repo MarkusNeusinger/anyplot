@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: sunburst-basic
 created: '2025-12-23T21:57:59Z'
-updated: '2026-07-26T04:27:31Z'
+updated: '2026-07-26T04:38:46Z'
 generated_by: claude-sonnet
 workflow_run: 30187527700
 issue: 821
@@ -12,48 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - 'Custom multi-level hierarchical palette: branch colors (green/purple/blue matching
-    Imprint canonical positions 1-3) with graduated pastel tints for child rings creates
-    clean visual grouping across all 3 levels'
-  - Precise angular math correctly aggregates values so inner segments visually encompass
-    their children's angular span (Eng/Sales/Mktg boundaries align exactly with Backend+Frontend,
-    North+South, Digital+Brand)
-  - Deliberate radial gaps between ring 1/2 (28-31) and ring 2/3 (52-55) create clear
-    visual separation between hierarchy levels using page-background color, working
-    correctly in both themes
-  - Text remains legible even at the 400px mobile thumbnail size, including the smallest
-    outer-ring labels
-  - Both PNG and HTML exported correctly with theme-adaptive background/title colors;
-    data colors are identical between light and dark renders, only chrome flips
+  - 'Precise angular hierarchy math: inner segments'' angular spans exactly encompass
+    their children''s combined span (Eng/Sales/Mktg boundaries align exactly with
+    their child wedges) across all 3 rings'
+  - Distinctive letsplot interactivity now leveraged via layer_tooltips() showing
+    category, budget in $K, and percentage share on hover in the HTML export - directly
+    addresses the review 1 LM-02 feedback
+  - Subtitle now clarifies the value unit ('Budget allocation ... ($K)'), resolving
+    the review 1 DQ-03 ambiguity about the metric's units
+  - Text remains legible in both themes because ring fill colors are hardcoded and
+    theme-invariant while only chrome (background, title/subtitle ink) flips correctly
+    - no dark-on-dark or light-on-light failures
+  - 'Clean, KISS-adjacent code: a single small helper function for polygon geometry,
+    deterministic data, no fake interactivity'
   weaknesses:
-  - 'LM-02: No distinctive letsplot features are demonstrated beyond generic polygon
-    plotting - built-in interactivity/tooltips aren''t customized to surface meaningful
-    hierarchical info (value, percentage) on hover'
-  - Only 10 leaf nodes are used (spec allows 10-50) - at the minimum end; a richer
-    hierarchy (more branches or a populated 4th level) would better showcase feature
-    coverage
-  - The 'value' field lacks explicit units/context (dollars? headcount? % of budget?)
-    - a subtitle or label clarifying the metric would strengthen data realism
-  - Title occupies only ~35% of the frame width - could be sized slightly larger for
-    more visual presence without risking overflow
-  - The create_wedge() helper, while a reasonable way to avoid duplicating the polygon-point
-    math across 3 loop blocks, is the one place the KISS 'no functions' guideline
-    is relaxed
+  - 'Sales-branch color inconsistency: the level-1 ''Sales'' wedge renders in Imprint
+    purple (#C475FD, hue ~275 deg), but its level-2 children (''North'' #E69E66, ''South''
+    #EEAF80) and level-3 grandchildren (''Enterprise'' #F0C7A6, ''SMB'' #F2CFB3, ''Retail''
+    #F5D7BF) render in orange/tan tones (hue ~26 deg) instead of lighter tints of
+    purple. This breaks the spec''s explicit ''use consistent colors within each branch
+    to show relationships'' requirement - the Eng branch (green hue ~164 deg parent
+    and children) and Mktg branch (blue hue ~202-218 deg parent and children) both
+    correctly keep one hue family, but Sales does not. Fix: recompute level2_colors/level3_colors
+    for North/South/Enterprise/SMB/Retail as lighter tints of #C475FD (~40-80% lighter
+    purple) to match the pattern already used for Eng and Mktg.'
+  - Leaf count remains at 10 (the minimum of the spec's 10-50 range), unchanged since
+    review 1 - still the least feature-rich extreme of the allowed range
+  - Title occupies only ~35-40% of the frame width at the current fontsize (13pt)
+    - could be sized modestly larger for stronger visual presence given the generous
+    surrounding whitespace on the square canvas
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
-      Chrome: Title "sunburst-basic · letsplot · anyplot.ai" centered at top in dark ink, clearly legible. No axes, no legend (by design - labels are inline on each wedge). Thin cream-colored borders separate wedges and create ring gaps between the 3 hierarchy levels.
-      Data: Three concentric rings. Ring 1 (innermost): Eng (#009E73 green), Sales (#C475FD purple), Mktg (#4467A3 navy), each with bold white text labels. Ring 2: Backend/Frontend (teal tints), North/South (orange tints), Digital/Brand (blue tints), all with dark-ink labels. Ring 3 (outermost): lightest pastel tints for each of the 10 leaf categories (API, Database, Mobile, Web App, Enterprise, SMB, Retail, SEO, Ads, Events), also with dark-ink labels. First categorical series is confirmed #009E73.
-      Legibility verdict: PASS - all title and segment-label text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "sunburst-basic · letsplot · anyplot.ai" and subtitle "Budget allocation by department, team, and project ($K)" both centered at top in dark ink - clearly legible. No axes/ticks/legend shown (intentionally removed).
+      Data: Three concentric rings. Ring 1 (innermost): Eng (#009E73 green), Sales (#C475FD purple), Mktg (#4467A3 navy blue) with bold white labels. Ring 2: Backend/Frontend (green tints), North/South (orange/tan tints), Digital/Brand (blue tints), all with dark-ink labels. Ring 3 (outermost): all 10 leaf categories in the lightest tints of their respective ring-2 color, also with dark-ink labels. Cream-colored gaps cleanly separate segments and rings.
+      Legibility verdict: PASS - all text readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
-      Chrome: Title rendered in light ink, clearly legible against the dark background. Same ring-gap structure as the light render; wedge border/gap color now reads as near-black against the dark background, which is expected since it tracks the PAGE_BG token.
-      Data: Colors are pixel-identical to the light render (Eng green, Sales purple, Mktg navy, and all tinted level-2/level-3 pastels) - only the chrome (background, title, border/gap color) flips as intended. Level-1 labels remain bold white; level-2/3 labels remain fixed dark ink (LABEL_ON_PASTEL), which stays readable in the dark theme because those wedges are pastel regardless of theme.
-      Legibility verdict: PASS - no dark-on-dark failures; all labels are readable against both the dark canvas background and their own pastel/saturated wedge backgrounds.
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Title and subtitle rendered in light ink, clearly legible against the dark background. Ring-gap dividers now render dark (tracking the background token) instead of cream, as intended.
+      Data: Ring colors are pixel-identical to the light render (Eng green, Sales purple, Mktg navy, and all tints) - only chrome flipped, confirming palette persistence across themes. Level-1 labels stay bold white; level-2/3 labels stay fixed dark ink, which still reads cleanly since those wedges are pastel-toned regardless of theme.
+      Legibility verdict: PASS - no dark-on-dark failures; all text and data remain clearly distinguishable from the near-black background.
+
+    Note: In both renders, the Sales branch shows a hue mismatch - the purple level-1 wedge does not visually connect to its orange-toned level-2/3 children, unlike the Eng (green family) and Mktg (blue family) branches which keep one consistent hue per branch across all three rings. This is a data-storytelling/spec-compliance issue, not a legibility issue.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -64,71 +68,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; readable in both themes and at 400px
-          mobile thumbnail
+        comment: All font sizes explicitly set (title 13pt, subtitle 9pt, geom_text
+          6/5.5/4.5mm), readable in both themes and at mobile scale; title is on the
+          small side (~35-40% width) given the square canvas whitespace
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions with other text or data across either render
+        comment: No overlap between any labels, rings, title, or subtitle in either
+          render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 10 leaf segments, appropriately sized wedges and labels for the data
-          density
+        comment: All 10 leaf wedges clearly visible and sized appropriately for a
+          10-leaf sunburst; none too thin to read
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette base colors are CVD-safe; not solely red-green
+        comment: Good contrast throughout; branch hues (green/purple/blue) plus tints
+          are distinguishable without relying on red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, centered composition
+        comment: Sunburst fills a large, well-centered portion of the 2400x2400 canvas
+          with balanced whitespace; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a sunburst; title matches required format
+        comment: No axes needed for this chart type; title/subtitle are descriptive
+          and subtitle states the unit ($K)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 confirmed; backgrounds match #FAF8F1/#1A1A17;
-          data colors identical across themes'
+        comment: 'First series Eng = #009E73; level-1 order (Eng/Sales/Mktg) matches
+          Imprint canonical positions 1-3; backgrounds correctly #FAF8F1/#1A1A17;
+          data colors identical across both renders'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom branch + tint palette shows real design intent beyond defaults
+        comment: Custom branch + tint hierarchy shows real design intent, but the
+          broken Sales branch hue relationship undercuts the 'intentional hierarchy'
+          claim
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: All axes/spines/legend removed, deliberate ring gaps, generous whitespace
+        comment: Axes/legend fully removed, deliberate ring gaps, generous whitespace,
+          subtle segment borders
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Center-out hierarchy is clear, but no extra emphasis technique beyond
-          standard sunburst convention
+        comment: Clear center-out hierarchy read via bold level-1 labels, but no emphasis
+          beyond standard sunburst convention
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -136,51 +149,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements a 3-level sunburst via polygon wedges
+        comment: Correct 3-level sunburst / nested-ring chart
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Consistent per-branch coloring, labeled segments, clear level separation,
-          inner segments encompass children's angular span
+        passed: false
+        comment: Spec explicitly requires 'consistent colors within each branch to
+          show relationships' - Eng and Mktg comply but Sales' children use an unrelated
+          orange hue instead of purple tints
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value correctly drives segment angle at all 3 levels
+        comment: Angular spans correctly proportional to value at all 3 levels; parent
+          spans exactly encompass children's combined span
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches 'sunburst-basic · letsplot · anyplot.ai' exactly; no
-          legend needed since labels are inline
+        comment: Title exactly matches 'sunburst-basic · letsplot · anyplot.ai'; direct
+          on-plot labels correctly substitute for a legend and match the data categories
     data_quality:
       score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Uses all 3 levels but only 10 leaves - the minimum of the spec's
-          10-50 range
+        comment: 3 hierarchy levels with varied segment sizes shown, but leaf count
+          sits at the spec's minimum of 10 (range is 10-50), unchanged from review
+          1
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Org budget breakdown by department/team/project is plausible and
-          neutral
+        comment: Organizational budget by department/team/project is a realistic,
+          neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Values 6-18 are sensible but the metric's unit is never stated
+        comment: Values are plausible for a departmental budget breakdown and now
+          explicitly labeled in $K via the subtitle and tooltip
     code_quality:
       score: 9
       max: 10
@@ -190,35 +207,35 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: One helper function (create_wedge) to avoid duplicating polygon math
-          across 3 loops
+        comment: One small helper function (create_wedge) to avoid duplicating polygon
+          math across 3 levels
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness
+        comment: Fully deterministic hand-authored data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only used imports from lets_plot, pandas, math, os
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity given letsplot has no native sunburst geom;
-          no fake UI
+        comment: Appropriate complexity for hand-rolled polygon-based sunburst given
+          letsplot has no native sunburst geom; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html via ggsave with scale=4
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -227,20 +244,22 @@ review:
         max: 5
         passed: true
         comment: geom_polygon + coord_fixed + scale_fill_manual is the idiomatic workaround
-          given no native sunburst geom
+          given letsplot has no native sunburst/treemap geom
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No letsplot-distinctive interactivity or features leveraged beyond
-          generic polygon rendering
+        passed: true
+        comment: layer_tooltips() now surfaces category, formatted budget, and percentage
+          share on hover - a letsplot-distinctive interactive feature added in response
+          to review 1
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - patches
-  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - groupby-aggregation
@@ -249,4 +268,3 @@ impl_tags:
   styling:
   - minimal-chrome
   - alpha-blending
-  - edge-highlighting
