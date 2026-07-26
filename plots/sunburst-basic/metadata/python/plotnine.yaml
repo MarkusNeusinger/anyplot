@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: sunburst-basic
 created: '2026-05-04T22:50:30Z'
-updated: '2026-07-26T04:21:04Z'
+updated: '2026-07-26T04:36:52Z'
 generated_by: claude-sonnet
 workflow_run: 30187361552
 issue: 821
@@ -12,127 +12,136 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Correct Imprint palette usage in canonical order (Engineering=#009E73, Marketing=#C475FD,
-    Operations=#4467A3, R&D=#BD8233), first series is brand green as required
-  - 'Theme-adaptive chrome is correctly threaded through both renders — no dark-on-dark
-    or light-on-light failures, backgrounds match #FAF8F1/#1A1A17 exactly'
-  - Clever two-ring sunburst built from scratch with geom_polygon (plotnine has no
-    native polar coordinate system) — inner wedges' angular span correctly encompasses
-    the sum of their children's angles
-  - Sensible label-suppression threshold (only segments >=8% share get a text label)
-    keeps the outer ring free of overlap/clutter without hiding data
-  - Percentage annotations on the inner ring add real data-storytelling value beyond
-    raw wedge geometry
-  - Realistic, neutral company-budget dataset (department -> team, $M) with plausible
-    proportions
-  - Clean, reproducible, KISS-structured code with no fake interactivity
+  - Correctly builds a true 3-level sunburst (department → team → subproject) via
+    manual arc-polygon geometry — a legitimate workaround for plotnine's lack of a
+    native polar-bar geom, with angular spans that correctly nest (each ring's arc
+    sums to its parent's span).
+  - Imprint palette applied in canonical order (Engineering=#009E73, Marketing=#C475FD,
+    Operations=#4467A3, R&D=#BD8233), identical across light/dark renders, with only
+    chrome (background, text, ring separators) flipping between themes.
+  - 'Strong data storytelling: the largest department (Engineering, 40%) gets a bold
+    ink-colored focal outline across all three rings it touches, department-level
+    percentage labels are shown, and a center KPI ($100M / Total Budget) anchors the
+    whole chart — creates a clear visual hierarchy without gimmicks.'
+  - Label-density thresholds (>=8% for team labels, >=6% for subproject labels) keep
+    the outer ring readable by omitting labels on segments too small to hold text,
+    matching the spec's guidance that smaller segments need not always be labeled.
+  - Deterministic, realistic business dataset (company budget by department/team/subproject)
+    with 22 leaf nodes across 3 levels, well within the spec's 10-50 leaf / 2-4 level
+    range, and plausible relative magnitudes.
+  - Square 2400x2400 canvas is the correct format choice for a radial/symmetric chart
+    type, and the ring geometry uses the canvas generously with balanced margins.
   weaknesses:
-  - 'DE-01: Aesthetic sophistication is solid but stops at ''strong design'' rather
-    than ''publication-ready'' — the ring styling (uniform stroke widths, flat alpha
-    blend for the outer ring) is competent but not yet distinctive enough to stand
-    out as a signature look'
-  - 'DE-03: Visual hierarchy relies mainly on wedge size + percentage labels; consider
-    a stronger focal-point technique (e.g. subtly emphasizing the largest segment,
-    or varying label weight/size by magnitude) to make the ''story'' even more immediate'
-  - 'DQ-01: Only 2 hierarchy levels are used (level_1 department, level_2 team); the
-    spec explicitly frames sunbursts as showing ''part-to-whole relationships across
-    multiple levels simultaneously'' and allows 2-4 levels — adding an optional level_3
-    (grandchild) ring would more fully demonstrate the plot type''s core strength'
-  - 'LM-02: The geom_polygon + geom_text construction is a generic radial-geometry
-    workaround necessitated by plotnine''s lack of a polar coordinate system, not
-    something that leverages a plotnine/ggplot2-specific capability — it could be
-    replicated in any library with polygon-drawing support'
+  - The focal department (Engineering) gets a bold ink-colored stroke (size=1.3) at
+    its L1 inner-radius boundary, which sits close enough to the 'Engineering' label's
+    descenders (the two 'g' letters) that the label reads as slightly crowded against
+    the ring border — the three non-focal department labels don't have this issue
+    since their edge stroke is thin and colored to blend with the background. Nudge
+    the L1 label radius (r_label) outward slightly, or reduce EDGE_SIZES['L1_focal'],
+    so the focal department's bold border doesn't crowd its own name.
+  - The single `arc_polygon()` helper function is a reasonable DRY exception, but
+    the overall script leans on a fairly involved manual-geometry approach (loops
+    building four separate row-lists) rather than a more KISS-flat script; acceptable
+    given plotnine's lack of native sunburst support, but keep an eye on this if plotnine
+    ever gains a polar-bar geom.
+  - 'LM-02: the arc-polygon-via-geom_polygon technique is essentially a grammar-of-graphics
+    workaround that would port almost unchanged to ggplot2 (R) with minimal syntax
+    changes — it doesn''t lean on anything uniquely plotnine-specific beyond its theme()/element_*
+    API.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "sunburst-basic · plotnine · anyplot.ai" centered at top in dark ink text, clearly legible. Department names ("Engineering", "Marketing", "Operations", "R&D") appear bold and dark on the inner ring; percentages ("40%", "25%", "20%", "15%") appear in a softer dark-gray directly beneath each department name. Outer-ring team labels ("Backend", "Frontend", "DevOps", "Digital", "Brand", "HR", "Product") are dark text on the lighter/alpha-blended wedge colors — all clearly readable. No axis, no grid, no spines — appropriate for a radial chart.
-      Data: Two concentric rings around a hollow donut center. Inner ring: 4 department wedges in Imprint order — Engineering (#009E73 brand green, 40%), Marketing (#C475FD lavender, 25%), Operations (#4467A3 blue, 20%), R&D (#BD8233 ochre, 15%). Outer ring: same hues at reduced alpha, split into team sub-wedges (Backend/Frontend/DevOps under Engineering; Digital/Brand/unlabeled Events under Marketing; HR/unlabeled Finance/unlabeled Legal under Operations; Product/unlabeled Data Science under R&D). Only wedges >=8% of the total get a label, which avoids clutter on the smaller slices.
-      Legibility verdict: PASS — all title, department, percentage, and team labels are clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "sunburst-basic · plotnine · anyplot.ai" in dark ink, centered at top, fully visible and not clipped. No axis labels or ticks (appropriately hidden for a radial chart). Department names (Engineering, Marketing, Operations, R&D) render in bold dark ink directly on their colored wedges; percentage labels (40%, 25%, 20%, 15%) render in a softer grey directly beneath. Team names (Frontend, Backend, DevOps, Digital, Brand, HR, Product) and subproject names (Web, Mobile, API, Data Pipeline, Infra, Paid Ads) render in dark ink on the middle/outer rings. Center of the donut hole shows "$100M" in bold dark ink with "Total Budget" beneath in grey.
+      Data: Engineering wedge is brand green (#009E73), Marketing is lavender/purple (#C475FD), Operations is blue (#4467A3), R&D is ochre (#BD8233) — matches canonical Imprint order. Alpha decreases per ring outward (1.0 -> 0.72 -> 0.48), giving each department's rings a consistent-but-lightening color family, exactly as the spec asks ("consistent colors within each branch").
+      Legibility verdict: PASS. All text is clearly readable against both the cream background and the colored wedges. Minor exception: the "Engineering" label's descenders sit close to the bold black focal-department ring border, but the text remains fully legible (not cut off, not overlapping other text) — noted as a weakness, not a legibility failure.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title renders in light cream text, clearly legible against the dark background. Department names and team labels render in light cream/white text on their respective wedge colors; percentage labels render in a lighter muted gray. Ring-boundary strokes use a slightly lighter near-black (#2E2D2B) so segment edges remain visible against the near-black canvas background.
-      Data: Colors are identical to the light render — Engineering green, Marketing lavender, Operations blue, R&D ochre — confirming the Imprint data-color contract holds across themes (only chrome flipped).
-      Legibility verdict: PASS — all text is light-on-dark and clearly readable; no dark-on-dark failures observed anywhere on either ring.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title renders in light ink, clearly visible against the dark background. Department, team, and subproject labels switch to light ink (#F0EFE8) so they remain readable against both the dark page background and the (still-saturated) colored wedges. Percentage/caption text switches to the lighter secondary tone (#B8B7B0). Ring separators use a slightly-lighter-than-background dark grey (#2E2D2B) so ring boundaries stay visible against the near-black page.
+      Data: Confirmed identical hex values to the light render — Engineering green, Marketing lavender, Operations blue, R&D ochre — only the chrome (text, background, ring-separator, edge colors) flips.
+      Legibility verdict: PASS. No dark-on-dark failures found — all text uses the theme-adaptive INK/INK_SOFT tokens and is clearly visible against both the near-black background and the colored wedges. The center "$100M" KPI and "Total Budget" caption are both legible in light ink against the dark donut-hole background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (theme() plot_title=12, geom_text sizes
-          7-8mm); readable at full size in both themes; no overflow
+        comment: All font sizes explicitly set, readable in both themes; 'Engineering'
+          label crowded slightly by the focal-department's bold ring border
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Two-line stack technique for department name + percentage avoids
-          collisions; no overlapping text anywhere
+        comment: Minor proximity between the 'Engineering' label descenders and the
+          bold focal-department inner-ring stroke; no other overlaps found
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wedge geometry well-sized, ring separators keep segments distinct
+        comment: Ring widths, gaps, and alpha layering are well-adapted to the 3-level
+          hierarchy; every visible segment is clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe hue separation, no red-green sole signal
+        comment: CVD-safe Imprint palette, plus ink-colored edge strokes for definition
+          on lighter hues
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Sunburst fills ~78-80% of the 2400x2400 canvas, balanced margins,
+        comment: Sunburst fills the square canvas generously with balanced margins;
           nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for a radial chart; title and segment
-          labels are fully descriptive
+        comment: No axes needed for a radial chart; title present and descriptive
+          per the mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for all 4 departments,
-          theme-correct chrome in both renders'
+        comment: Canonical Imprint order, identical data colors across themes, correct
+          theme-adaptive background/chrome in both renders
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful ring/alpha structure, clearly above library defaults,
-          but not yet publication-ready
+        passed: true
+        comment: Thoughtful alpha-layered rings per branch, focal-department accent
+          outline, center KPI callout — clearly above a configured default
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No grid, no spines, generous whitespace, subtle ring-separator strokes
+        comment: No axes/grid/spines, generous ring gaps, two-tier percentage labels,
+          subtle theme-adaptive ring separators
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Percentage labels and wedge-size hierarchy guide the reader, but
-          no additional focal-point emphasis
+        comment: Bold outline + percentage + center KPI immediately draw the eye to
+          Engineering as the largest department; clear hierarchy without needing annotations
     spec_compliance:
       score: 15
       max: 15
@@ -142,89 +151,89 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct concentric-ring sunburst with angle-proportional segments
+        comment: True concentric-ring sunburst, not a substitute chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent per-branch coloring, major segments labeled, clear ring
-          separation, inner segments encompass children's angular span
+        comment: Consistent per-branch coloring, major-segment labeling, clear ring
+          separation, angular nesting all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value-to-angle mapping is correct and verifiable against the labeled
-          percentages
+        comment: Angle proportional to value, radius correctly encodes hierarchy depth
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; no legend needed since
-          colors are directly labeled
+        comment: Title matches mandated format exactly; no separate legend needed
+          since labels are inline on segments
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Uses only 2 of the spec's allowed 2-4 hierarchy levels — omits the
-          optional level_3 grandchild ring that would fully showcase sunburst depth
+        comment: 3 hierarchy levels, 22 leaf nodes, varied segment sizes within the
+          spec's 10-50 leaf / 2-4 level range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible company department/team budget scenario
+        comment: Neutral, comprehensible corporate budget-allocation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions are realistic for a company budget breakdown
+        comment: Department splits (40/25/20/15) and subproject magnitudes are plausible
+          and internally consistent, summing correctly to $100M
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Imports -> data -> geometry construction -> plot -> save, no functions/classes
+        comment: One small arc_polygon() helper for DRY geometry construction; otherwise
+          linear imports -> data -> plot -> save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness
+        comment: Fully deterministic hardcoded dataset, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only used imports (numpy, pandas, plotnine components)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex given plotnine has no native polar/sunburst
-          geom; no fake functionality
+        comment: No fake functionality; complexity is appropriate given plotnine's
+          lack of a native sunburst/polar-bar geom
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with dpi=400, width=6, height=6 matching the
-          square canvas target
+        comment: Saves plot-{THEME}.png via current plot.save() API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -232,26 +241,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Proper grammar-of-graphics composition: multiple geom layers, scale_fill_identity,
-          coord_equal, theme()'
+        comment: Correct grammar-of-graphics workaround (geom_polygon + aes(group=))
+          for a chart type plotnine has no native geom for
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: The polygon-based radial construction is a workaround for plotnine's
-          missing polar coordinate, not a feature unique to plotnine — replicable
-          in any polygon-drawing library
-  verdict: REJECTED
+        comment: The manual polygon technique is a generic grammar-of-graphics workaround
+          that would port almost unchanged to ggplot2 (R)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - patches
   - annotations
+  - layer-composition
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
+  - publication-ready
