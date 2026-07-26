@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-26
@@ -73,6 +73,24 @@ df = pd.DataFrame(data)
 # Plot — figsize=(8, 4.5) @ dpi=400 → 3200×1800 (see prompts/library/seaborn.md "Canvas")
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
+# Distribution silhouette — subtle violin outline behind each swarm for density
+# context beyond the raw points (drawn first so the swarm layers on top)
+sns.violinplot(
+    data=df,
+    x="Condition",
+    y="Reaction Time",
+    hue="Condition",
+    palette=IMPRINT_PALETTE,
+    fill=False,
+    inner=None,
+    cut=0,
+    width=0.7,
+    linewidth=1.3,
+    alpha=0.35,
+    legend=False,
+    ax=ax,
+)
+
 sns.swarmplot(
     data=df,
     x="Condition",
@@ -87,21 +105,26 @@ sns.swarmplot(
     legend=False,
 )
 
-# Median markers — theme-adaptive diamond focal points
+# Median markers — hollow diamonds so the focal point reads clearly without
+# swallowing the underlying points in dense categories (Distraction, Fatigue)
 medians = df.groupby("Condition")["Reaction Time"].median()
 for i, condition in enumerate(conditions):
-    ax.scatter(i, medians[condition], marker="D", s=55, color=INK, edgecolor=PAGE_BG, linewidth=1.2, zorder=10)
-ax.scatter([], [], marker="D", s=45, color=INK, edgecolor=PAGE_BG, linewidth=1.2, label="Median")
+    ax.scatter(i, medians[condition], marker="D", s=70, facecolor="none", edgecolor=INK, linewidth=1.8, zorder=10)
+ax.scatter([], [], marker="D", s=55, facecolor="none", edgecolor=INK, linewidth=1.8, label="Median")
 
 # Style
 ax.set_xlabel("Experimental Condition", fontsize=10)
 ax.set_ylabel("Reaction Time (ms)", fontsize=10)
 ax.set_title("swarm-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium")
+# Sample size folded into each tick label — quick n context without crowding the plot area
+ax.set_xticks(range(len(conditions)))
+ax.set_xticklabels([f"{c}\n(n={n})" for c, n in zip(conditions, n_per_condition, strict=True)])
 ax.tick_params(axis="both", labelsize=8)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
 ax.set_ylim(230, 780)
 ax.legend(fontsize=8, loc="upper right")
 sns.despine(ax=ax)
+fig.tight_layout(pad=1.2)
 
 # Save
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
