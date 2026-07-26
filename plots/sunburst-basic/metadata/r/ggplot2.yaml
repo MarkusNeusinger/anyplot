@@ -1,0 +1,266 @@
+library: ggplot2
+language: r
+specification_id: sunburst-basic
+created: '2026-07-26T04:27:55Z'
+updated: '2026-07-26T04:42:07Z'
+generated_by: claude-sonnet
+workflow_run: 30187580462
+issue: 821
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Attempt-1 fix correctly applied: team-ring label_ink is now derived from the
+    alpha=0.55-composited color via blend_hex() (blend fill_hex with PAGE_BG before
+    the luminance test) instead of the solid base hue, so light-theme outer-ring labels
+    correctly flip to dark ink while the already-correct dark-theme white ink is untouched
+    — verified visually across all 11 outer-ring labels in both renders.'
+  - Idiomatic coord_polar(theta="y") + geom_rect construction builds a true two-level
+    sunburst since ggplot2 has no native sunburst geom; department wedges exactly
+    encompass their children's angular span as required by the spec.
+  - 'Departments sorted by descending total budget, producing a clear reading order
+    and visual hierarchy (bold inner labels vs. lighter outer labels), with Engineering
+    (the largest department) correctly assigned #009E73.'
+  - 'Both backgrounds are pixel-exact theme tokens (#FAF8F1 light / #1A1A17 dark)
+    and data colors are confirmed identical between renders — only chrome and the
+    alpha-composite outcome differ.'
+  - Small-span team labels are suppressed (span > 0.035 gate) instead of overlapping,
+    and department label font size scales down for narrow wedges to avoid overflow.
+  weaknesses:
+  - Only 2 of the spec's allowed 2-4 hierarchy levels are shown (level_3 grandchild
+    ring omitted). This is spec-compliant since level_3 is explicitly optional, but
+    a third ring would better demonstrate the depth range the chart type supports.
+  - Three small helper functions (relative_luminance, blend_hex, wedge_label_angle)
+    push the script slightly past a strict Imports -> Data -> Plot -> Save KISS structure.
+    Understandable given the manual sunburst geometry ggplot2 doesn't provide natively,
+    but worth keeping minimal if further changes are made.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching the #FAF8F1 token. Correct, not pure white.
+      Chrome: Title "sunburst-basic · r · ggplot2 · anyplot.ai" is bold dark text, centered, comfortably readable. Legend on the right titled "Department" with four colored swatches (Engineering/Sales/Marketing/Operations) in dark ink — fully legible.
+      Data: Two concentric rings inside a donut, separated by a thin page-background gap. Inner ring shows four solid department wedges (Engineering #009E73 green — largest, Sales lavender, Marketing steel blue, Operations tan/ochre), each with a bold high-contrast label in white or dark ink depending on the wedge's luminance. Outer ring shows 11 team wedges at alpha=0.55 over the light background, which washes each color toward pastel — but the fix from attempt 1 is now correctly applied: all 11 team labels (Platform, Infrastructure, Data Science, Enterprise, SMB, Brand, Growth, Content, Facilities, HR, Finance) render in dark ink and are clearly legible against their pastel wedges. No light-on-light text anywhere.
+      Legibility verdict: PASS — all chrome and both rings are readable; the attempt-1 outer-ring contrast bug is resolved.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching the #1A1A17 token. Correct, not pure black.
+      Chrome: Title renders in light ink, clearly legible against the dark background. Legend swatches and labels (light ink) are equally legible.
+      Data: Same four Imprint hues for the inner ring, confirmed identical to the light render (e.g. Engineering green, Sales purple) — only chrome flipped, as required. Inner-ring department labels remain bold and high-contrast. Outer ring: the same alpha=0.55 blend now deepens each wedge color against the near-black background, and all 11 team labels render in white ink, clearly legible — no dark-on-dark issue anywhere in this render.
+      Legibility verdict: PASS — all text, including the outer ring, is clearly readable in both themes; data colors confirmed identical between renders.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Attempt-1''s low-contrast outer-ring team labels are fixed: label_ink
+          is now derived from the alpha-composited color, so all 11 team labels read
+          clearly in both themes. Not a perfect 8 because a few narrow department
+          wedges (dynamic label_size clamps down to 1.8) sit close to the lower legibility
+          bound.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; small-span team labels suppressed via the
+          span > 0.035 gate instead of overlapping.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Wedge shapes and colors are all visible and distinguishable via the
+          donut gap stroke.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Outer-ring label ink now correctly flips per-theme based on the actual
+          alpha-composited color; contrast issue from attempt 1 resolved in both renders.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400 square). Title comfortably sized, legend
+          well placed, nothing clipped or overflowing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed for a sunburst; title matches the mandated
+          format exactly, legend titled 'Department'.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series (largest department, Engineering) is #009E73;
+          Imprint palette used in canonical order; both backgrounds pixel-exact to
+          theme tokens; data colors identical across renders.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom geom_rect + coord_polar sunburst with dynamic label angle/size
+          and alpha-composite-aware ink selection now working correctly in both themes.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void, subtle page-background gap rings between wedges, clean
+          legend, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Departments sorted by descending budget; bold inner labels vs. lighter
+          outer labels create clear visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct two-ring sunburst via coord_polar.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Value-proportional angles, consistent per-branch coloring, inner
+          segments exactly encompass children's angular span, small labels suppressed
+          instead of overlapping.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value correctly mapped to angle; all 11 leaves represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'sunburst-basic · r · ggplot2 · anyplot.ai'; legend
+          labels match department names.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers proportional angles, hierarchy, per-branch color consistency,
+          and inter-level separation; only the optional level_3 grandchild ring is
+          omitted.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral department/team budget scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Budget values (310-1450) are sensible for a department/team breakdown.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three small helper functions (relative_luminance, blend_hex, wedge_label_angle)
+          needed for the manual sunburst geometry; slight deviation from strict Imports->Data->Plot->Save.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data itself is deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity for a custom-built
+          sunburst.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{theme}.png via ragg::agg_png; uses linewidth (current
+          API), no deprecated calls.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_rect + coord_polar(theta='y') is the canonical ggplot2 approach
+          for a chart type it has no native geom for; scale_fill_manual/scale_color_identity/theme_void
+          used correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Dynamic per-wedge label angle/size computation and an alpha-composite-aware
+          WCAG-luminance ink picker are distinctive and now demonstrably correct in
+          both themes.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - publication-ready

@@ -1,0 +1,249 @@
+library: chartjs
+language: javascript
+specification_id: sunburst-basic
+created: '2026-07-26T04:33:36Z'
+updated: '2026-07-26T04:48:08Z'
+generated_by: claude-sonnet
+workflow_run: 30187687892
+issue: 821
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'labelColorFor() now computes WCAG contrast ratios against both candidate text
+    colors (#1A1A17 and #F0EFE8) and picks the higher-contrast one, fixing attempt
+    1''s washed-out level-2 labels — verified by re-deriving the tint math: Reports/Invoices/Contracts
+    (green tint) and Tutorials (ochre tint) now resolve to dark text at 7.9:1 and
+    8.4:1 contrast respectively, versus ~2:1 before'
+  - Three-ring layered-doughnut technique still builds a convincing sunburst with
+    no native Chart.js sunburst type, with parent-child value sums kept exact so each
+    ring's arcs stay angularly aligned with the ring inside it
+  - 'Branch-consistent hue tinting (same base hue lightened per outward ring) makes
+    hierarchical relationships instantly readable and stays pixel-identical between
+    light and dark renders — only chrome (background, borders) flips, confirmed via
+    corner-pixel sampling (#FAF8F1 light / #1A1A17 dark)'
+  - Text remains fully legible even at the 400px mobile-preview scale in both themes,
+    and the custom radialLabels plugin correctly suppresses labels on segments under
+    20° (e.g. the small Clips slice), matching the spec's "label major segments; smaller
+    on hover" requirement via breadcrumb tooltips
+  weaknesses:
+  - Design Excellence is solid but not exceptional — spacing, arc separators, and
+    typographic hierarchy are clean and intentional, but there's room for a stronger
+    focal point or more distinctive visual flourish before this reads as top-tier
+    (DE-01/DE-03 kept at defaults-plus-evidence rather than max).
+  - A few helper functions (tint, relativeLuminance, contrastRatio, labelColorFor)
+    push this past a single-block script; justified by the custom-plugin workaround
+    Chart.js's lack of a native sunburst type requires, but still a minor CQ-01 deduction.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, sampled corner pixel (250,248,241) ≈ #FAF8F1 as required — not pure white.
+      Chrome: Title "sunburst-basic · javascript · chartjs · anyplot.ai" in bold dark ink, fully visible with clear margin above (no top-edge clipping). Thin page-background-colored separators divide all arcs cleanly.
+      Data: Three concentric rings form the sunburst — innermost (level-1: Documents/Photos/Code/Videos) in large bold labels, middle (level-2: Reports/Invoices/Contracts/Vacation/Family/Frontend/Backend/Tutorials — Clips omitted, arc <20°) with smaller labels, outer (level-3 leaves) unlabeled by design (hover-only, per spec). First branch (Documents) uses Imprint brand green #009E73; other branches use the canonical palette order (lavender, blue, ochre), lightened per outward ring for branch identity.
+      Legibility verdict: PASS. Re-derived the label-color math for every branch/ring combination: level-1 and level-2 labels all resolve to dark (#1A1A17) text against their backgrounds except the blue (Code) level-1 arc, which correctly resolves to light (#F0EFE8) text — contrast ratios range 4.9:1–8.9:1 across all labeled segments, comfortably above WCAG AA. The teal/ochre labels that were washed out in attempt 1 (Reports/Invoices/Contracts/Tutorials) now sit at 7.9:1–8.4:1. Confirmed readable at the 400px mobile-preview thumbnail too.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, sampled corner pixel (26,26,23) = #1A1A17 exactly as required — not pure black.
+      Chrome: Title and level-1/level-2 labels flip to the theme-appropriate ink and remain fully readable — no dark-on-dark failures anywhere on the ring.
+      Data: Confirmed pixel-identical branch hues and tint ladders to the light render — only page background and border color (which matches page background, used as the inter-arc spacer) flipped, per the theme-adaptive-chrome contract. The label-color fix applies identically since the underlying arc colors don't change with theme.
+      Legibility verdict: PASS. Same contrast-ratio verification as the light render applies (label color choice is theme-independent by design, comparing against fixed #1A1A17/#F0EFE8 candidates), and both corner-pixel and visual inspection confirm no washed-out or invisible text.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: labelColorFor() fix resolved attempt-1's low-contrast level-2 labels;
+          all labels now 4.9-8.9:1 contrast in both themes, verified readable at 400px
+          mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/arc collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sub-20° segments correctly suppress labels (e.g. Clips) rather than
+          crowding illegible text
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed contrast-ratio-based label color selection eliminates the prior
+          low-contrast issue; no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas, well-proportioned rings, title comfortably
+          sized, no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Mandated title format present and correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First branch is #009E73; remaining branches follow canonical Imprint
+          order; backgrounds pixel-verified at #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom branch-tint scheme and bespoke label plugin show real design
+          intent beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean arc separators, minimal center cutout, no chartjunk
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Typographic hierarchy (bold level-1, lighter level-2) guides root-to-leaf
+          reading
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Layered doughnuts correctly express a sunburst, the only viable native-API
+          path in Chart.js
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent branch coloring, major-segment labeling, hover detail
+          for minor segments, angular parent/child alignment
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 3-level hierarchy with exact parent = sum(children) at every level
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; no legend needed (labels are
+          on-arc)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 root categories, 9 mid categories, 18 leaves — full 3-level hierarchy
+          within spec's 10-50 leaf range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Local drive folder usage in MB is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MB values (20-320) are sensible for a file-system-size scenario
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions, but justified by the custom-plugin/contrast-ratio
+          workaround
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Chart
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; complexity is proportional to the sunburst workaround
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container per contract; harness saves plot-{theme}.png/.html'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layered doughnut datasets is the correct idiomatic workaround given
+          no native sunburst type
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw label plugin, per-arc breadcrumb tooltip
+          callbacks, contrast-ratio-driven label coloring
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - publication-ready
