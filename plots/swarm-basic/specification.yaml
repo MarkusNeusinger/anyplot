@@ -6,7 +6,7 @@ title: Basic Swarm Plot
 
 # Specification tracking
 created: 2025-12-15T20:41:54Z
-updated: 2025-12-15T20:41:54Z
+updated: 2026-07-26T06:50:36Z
 issue: 974
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - swarm
-    - beeswarm
   data_type:
     - numeric
     - categorical
