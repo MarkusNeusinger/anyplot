@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: swarm-basic
 created: '2026-07-26T07:25:48Z'
-updated: '2026-07-26T07:30:33Z'
+updated: '2026-07-26T07:51:49Z'
 generated_by: claude-sonnet
 workflow_run: 30192609034
 issue: 974
@@ -12,45 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
+  - 'All three Attempt 1 weaknesses fixed: legend entry now labels the mean-diamond
+    markers, y-axis tick marks hidden to match x-axis chrome, and beeswarm layout
+    rewritten to a greedy nearest-slot placement in pixel space for an organic swarm
+    silhouette'
   - Correct Imprint palette assignment across all 4 categories in canonical order
     (Placebo=#009E73, Low Dose=#C475FD, Medium Dose=#4467A3, High Dose=#BD8233)
-  - Theme-adaptive chrome verified correct in both light and dark renders — no dark-on-dark
-    or light-on-light legibility failures
+  - Theme-adaptive chrome verified correct in both renders — no dark-on-dark or light-on-light
+    legibility failures
   - Deterministic seeded LCG data generation, fully reproducible
-  - Implements the spec's suggested 'subtle mean marker' feature with a diamond whose
-    border color matches the page background, giving a clean halo effect in both themes
   - Realistic, neutral CRP dose-escalation clinical trial dataset with a clear downward
-    dose-response trend, varied spread per group, and visible outliers (DQ-01 well
-    covered)
-  - Clean, KISS-adjacent code — the LCG/beeswarm helper functions are necessary complexity
-    for computing the layout, not gratuitous abstraction
+    dose-response trend, varied spread per group, and visible outliers
   weaknesses:
-  - Beeswarm point layout is quantized into discrete vertical columns from the fixed
-    bin/step offset formula, giving a blocky, grid-like silhouette rather than an
-    organic swarm curve — reduce bin width or use a smoother nearest-neighbor jitter
-    so density reads as a continuous shape.
-  - No legend or label identifies the dark diamond markers as the group mean — a viewer
-    of the static PNG (not hovering the interactive tooltip) cannot infer this. Add
-    a small legend entry or subtle annotation labeling 'Mean'.
-  - Y-axis tick marks (axisTick) are not explicitly hidden while x-axis ticks are
-    — inconsistent chrome minimalism; hide both for a cleaner L-shaped frame.
-  - Library Mastery is generic — the swarm is built with a plain scatter series and
-    manual offset math that any library could replicate; a custom renderItem or other
-    ECharts-distinctive technique would better showcase the library.
+  - Library Mastery is still fundamentally a generic scatter series; the custom layout
+    uses ECharts' coordinate-conversion API but doesn't showcase a truly ECharts-distinctive
+    series type (e.g. custom renderItem)
+  - Data storytelling is solid but static — no annotation or callout emphasizes the
+    dose-response trend beyond the visual pattern itself
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: title "swarm-basic · javascript · echarts · anyplot.ai" centered at top in dark charcoal, clearly legible. Y-axis titled "CRP (mg/L)" (has units) in soft gray. X-axis shows category names (Placebo, Low Dose, Medium Dose, High Dose) directly as tick labels. Subtle horizontal gridlines only (no vertical grid, appropriate for categorical x). All text is readable against the light background.
-      Data: four groups rendered as vertically-spread swarms of dots — green (#009E73, Placebo), purple (#C475FD, Low Dose), blue (#4467A3, Medium Dose), ochre (#BD8233, High Dose) — plus a dark diamond per group marking the mean, with a light halo border matching the page background. Clear downward trend in CRP across dose groups.
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "swarm-basic · javascript · echarts · anyplot.ai" centered, bold dark charcoal text, fully legible. "Group mean" legend with diamond icon top-right. Y-axis "CRP (mg/L)" label with units. X-axis category labels (Placebo, Low Dose, Medium Dose, High Dose) directly beneath each swarm. Subtle horizontal-only gridlines; both axis tick marks hidden. All readable against the light background.
+      Data: Four swarms in Imprint canonical order — green #009E73 (Placebo), lavender #C475FD (Low Dose), blue #4467A3 (Medium Dose), ochre #BD8233 (High Dose) — each with a dark diamond (light halo border) marking the group mean. Clear downward dose-response trend visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17 — not pure black.
-      Chrome: title, y-axis title, and all tick labels switch to light off-white/gray text and remain fully readable — no dark-on-dark failures detected. Gridlines remain subtle and visible against the dark surface.
-      Data: the four category colors (green, purple, blue, ochre) are pixel-identical to the light render — only chrome flipped. The mean-marker diamonds swap to a light fill with dark border to stay visible against the darker page, an appropriate theme-adaptive treatment.
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Title, legend text, y-axis title, and all tick labels switch to light off-white/gray and remain fully readable — no dark-on-dark failures anywhere. Gridlines remain subtle but visible.
+      Data: Colors are pixel-identical to the light render — only chrome flipped. Mean-marker diamonds swap to a light fill with dark border to stay visible against the darker page, an appropriate theme-adaptive treatment.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,50 +54,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis/tick labels 14px),
-          readable in both themes, well proportioned
+        comment: All text readable in both themes, correctly sized
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; dense point clustering is intentional swarm density,
-          not a defect
+        comment: No text or marker collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: symbolSize=14 with alpha=0.8 is visible and reasonable for ~45 pts/group,
-          though dense central bins get busy
+        comment: Marker size/alpha appropriate for ~45 points per group
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 CVD-safe hues, no red-green-only signal
+        comment: CVD-safe Imprint palette, adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a good portion of canvas, nothing cut
-          off
+        comment: Good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'CRP (mg/L)' has units
+        comment: Descriptive with units (CRP mg/L)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order across 4 series, theme-correct backgrounds
-          and text in both renders
+        comment: Canonical Imprint order, correct theme backgrounds both renders
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -113,24 +100,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom beeswarm layout + mean markers clearly above a configured
-          default, though blocky column shape holds it back from top marks
+        comment: Custom pixel-space beeswarm layout + themed mean markers
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle single-axis grid, generous whitespace; y-axis tick marks not
-          hidden (minor inconsistency)
+        comment: Subtle grid, generous whitespace, both axis ticks hidden (fixed from
+          Attempt 1)
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Dose-response trend and mean markers create visual hierarchy the
-          viewer can read at a glance
+        comment: Dose-response trend + labeled mean markers create readable hierarchy
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,27 +123,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct beeswarm/swarm construction despite no native ECharts series
+        comment: Correct swarm/beeswarm plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent point sizes, mean markers per category, color distinguishes
-          categories, clear spacing between groups
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x, value (CRP) on y, all data visible
+        comment: X/Y correct, axes show all data
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format exactly correct; no legend/label explains what the diamond
-          markers represent
+        comment: Exact title format; legend now identifies mean markers (fixed from
+          Attempt 1)
     data_quality:
       score: 15
       max: 15
@@ -168,19 +152,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows spread variation, outliers, and a clear multi-group trend
+        comment: Shows distribution shape, outliers, mean markers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible clinical dose-escalation CRP scenario
+        comment: Realistic, neutral CRP clinical trial data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: CRP mg/L values and dose-response direction are clinically plausible
+        comment: Sensible CRP mg/L values
     code_quality:
       score: 10
       max: 10
@@ -190,33 +174,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions are necessary for the beeswarm layout, not gratuitous
+        comment: Helper functions justified by lack of native ECharts swarm series
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG
+        comment: Seeded LCG RNG, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only globals used
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false
+        comment: Follows mount-node contract correctly
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -224,25 +208,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard scatter-series + axis formatter approach, correct given
-          no native beeswarm support
+        comment: Correct token usage, idiomatic setOption pattern
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No ECharts-distinctive feature used (e.g. custom renderItem); generic
-          scatter-based construction
-  verdict: REJECTED
+        comment: Uses convertToPixel/convertFromPixel coordinate API but still a plain
+          scatter series, not a distinctive ECharts technique like custom renderItem
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - binning
+  dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
