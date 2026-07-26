@@ -1,15 +1,21 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-26
 """
 
 import os
+import sys
 
-import altair as alt
-import numpy as np
-import pandas as pd
-from PIL import Image
+
+# Remove script directory from sys.path to avoid importing local altair.py
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != _script_dir]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from PIL import Image  # noqa: E402
 
 
 # Theme-adaptive chrome tokens (Imprint)
@@ -66,6 +72,14 @@ for name, hex_color in level1_colors.items():
     r3, g3, b3 = int(r + (255 - r) * 0.5), int(g + (255 - g) * 0.5), int(b + (255 - b) * 0.5)
     hex_to_lighter[name] = {"l1": hex_color, "l2": f"#{r2:02x}{g2:02x}{b2:02x}", "l3": f"#{r3:02x}{g3:02x}{b3:02x}"}
 
+
+def text_color_for_bg(hex_color):
+    """Pick black/white ink for readable contrast against a lightened wedge color."""
+    r, g, b = int(hex_color[1:3], 16) / 255, int(hex_color[3:5], 16) / 255, int(hex_color[5:7], 16) / 255
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return "#1A1A17" if luminance > 0.55 else "#ffffff"
+
+
 # Level 1: Department totals
 level1_df = df.groupby("level_1")["value"].sum().reset_index()
 level1_df.columns = ["name", "value"]
@@ -109,6 +123,7 @@ for idx in level2_df.index:
 
 # Assign lighter colors for level 2
 level2_df["color"] = level2_df["parent"].apply(lambda p: hex_to_lighter[p]["l2"])
+level2_df["label_color"] = level2_df["color"].apply(text_color_for_bg)
 
 # Level 3: Project values
 level3_df = df.copy()
@@ -212,6 +227,55 @@ text_l1 = (
     )
 )
 
+# Add labels for level 2 segments (team names at arc center) — every team wedge
+# spans >=24 degrees here, wide enough for short text, so all are labeled.
+level2_df["label_angle"] = (level2_df["theta"] + level2_df["theta2"]) / 2
+level2_df["label_radius"] = (inner_r2 + outer_r2) / 2
+level2_df["label_x"] = level2_df["label_radius"] * np.sin(level2_df["label_angle"])
+level2_df["label_y"] = -level2_df["label_radius"] * np.cos(level2_df["label_angle"])
+
+text_l2 = (
+    alt.Chart(level2_df)
+    .mark_text(fontSize=8, fontWeight="bold")
+    .encode(
+        x=alt.X("label_x:Q", scale=X_SCALE, axis=None),
+        y=alt.Y("label_y:Q", scale=Y_SCALE, axis=None),
+        text="name:N",
+        color=alt.Color("label_color:N", scale=None, legend=None),
+    )
+)
+
+# Focal-point emphasis (DE-03): outline + callout label on the single largest
+# leaf segment so the chart has one clear "headline" data point beyond the
+# radial nesting itself.
+top_leaf = level3_df.loc[[level3_df["value"].idxmax()]].copy()
+top_leaf["label_angle"] = (top_leaf["theta"] + top_leaf["theta2"]) / 2
+top_leaf["label_radius"] = outer_r3 + 38
+top_leaf["label_x"] = top_leaf["label_radius"] * np.sin(top_leaf["label_angle"])
+top_leaf["label_y"] = -top_leaf["label_radius"] * np.cos(top_leaf["label_angle"])
+top_leaf["label_text"] = top_leaf["parent_l1"] + " · " + top_leaf["name"] + " ($" + top_leaf["value"].astype(str) + "K)"
+
+chart_highlight = (
+    alt.Chart(top_leaf)
+    .mark_arc(innerRadius=inner_r3 - 2, outerRadius=outer_r3 + 6, stroke=INK, strokeWidth=2, fillOpacity=0)
+    .encode(theta=alt.Theta("theta:Q", scale=alt.Scale(domain=[0, 2 * np.pi])), theta2="theta2:Q")
+)
+
+# Anchor the callout away from the ring instead of centering it over the
+# wedge's radial edge (which sits near the top of the chart, close to x=0).
+_label_align = "left" if float(top_leaf["label_x"].iloc[0]) >= 0 else "right"
+_label_dx = 6 if _label_align == "left" else -6
+
+text_highlight = (
+    alt.Chart(top_leaf)
+    .mark_text(fontSize=11, fontWeight="bold", color=INK, align=_label_align, dx=_label_dx)
+    .encode(
+        x=alt.X("label_x:Q", scale=X_SCALE, axis=None),
+        y=alt.Y("label_y:Q", scale=Y_SCALE, axis=None),
+        text="label_text:N",
+    )
+)
+
 # Add legend as a horizontal row below the rings (kept left/right-balanced
 # around x=0 so the donut itself stays centered on the padded canvas)
 LEGEND_SLOT_W = 120
@@ -239,7 +303,9 @@ legend_text = (
 
 # Combine all layers
 chart = (
-    alt.layer(chart_l1, chart_l2, chart_l3, text_l1, legend_rects, legend_text)
+    alt.layer(
+        chart_l1, chart_l2, chart_l3, chart_highlight, text_l1, text_l2, text_highlight, legend_rects, legend_text
+    )
     .properties(
         width=500,
         height=460,
