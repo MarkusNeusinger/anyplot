@@ -1,0 +1,263 @@
+library: echarts
+language: javascript
+specification_id: slope-basic
+created: '2026-07-25T23:51:14Z'
+updated: '2026-07-26T00:05:42Z'
+generated_by: claude-sonnet
+workflow_run: 30179940609
+issue: 981
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/javascript/echarts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'All three weaknesses from the previous review were fixed with concrete, verifiable
+    changes: grid margins tightened from 300px to 190px (better canvas fill), symbolSize
+    bumped from 8 to 11 (more prominent markers for sparse two-point series), and
+    a graphic-text ''Biggest mover'' callout plus emphasis/focus + blur cross-series
+    highlighting were added to leverage ECharts-distinctive capabilities.'
+  - 'The ''Biggest mover: Support +15 pts'' callout gives the chart an explicit narrative
+    focal point, so the viewer immediately sees the standout insight instead of having
+    to scan all 10 lines.'
+  - 'Correct slope-chart construction: uses a continuous value y-axis (min 62 / max
+    90) instead of equal-spaced rows, so vertical position reflects the actual score
+    magnitude at each time point.'
+  - Semantic red/green line coloring for decrease/increase is redundant with the visible
+    slope direction, so the chart stays readable without relying on hue alone (CVD-safe).
+  - 'Theme-adaptive chrome verified correct in both light and dark renders; Imprint
+    data colors (#009E73 / #AE3030) are identical across themes, only chrome (background,
+    text) flips.'
+  - Realistic, neutral business dataset (employee engagement scores) with a good spread
+    of magnitude and direction, from a +15 point jump (Support) to a small -1 dip
+    (Legal).
+  weaknesses:
+  - Data labels for closely-valued entities ('Design 73' / 'Engineering 72', only
+    1 point apart on the value axis) still sit close together vertically — legible
+    at full canvas size but tightens further when scaled to mobile widths.
+  - LM-02 has improved (graphic callout + emphasis/focus/blur cross-highlighting)
+    but is still moderate rather than maxed — could go further with e.g. dynamic label-overlap
+    avoidance or additional graphic elements distinctive to ECharts.
+  - Data label fontSize (14px CSS, 28px in the 2x-scaled PNG) becomes quite small
+    once the image is scaled down to a ~400px mobile preview — consider a modest bump
+    for mobile legibility headroom.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Employee Engagement Score · slope-basic · javascript · echarts · anyplot.ai" in dark ink at top, centered, clearly legible (~54% of canvas width). Below it, an italic subtitle "Biggest mover: Support +15 pts" in soft dark gray, also clearly readable. "2024 (before)" / "2025 (after)" axis labels sit at the bottom on a thin baseline rule. No grid lines, no visible spines other than the bottom axis rule. Grid margins are visibly tighter than the previous attempt, so the plot occupies noticeably more of the canvas.
+      Data: 10 department lines connecting a 2024 value (left) to a 2025 value (right), each endpoint marked with a larger (11px) filled circle and a text label showing the department name and score. Lines trending up-right are brand green (#009E73), lines trending down-right are matte red (#AE3030). Values range 64-88. No overlapping text; even closely-valued entities (Design 73 / Engineering 72) remain visually separated.
+      Legibility verdict: PASS — all text (title, subtitle, axis labels, data labels) is dark-on-light and clearly readable; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title and subtitle now rendered in light ink/soft gray, clearly visible against the dark surface. Axis labels at the bottom are also light-colored and legible. No dark-on-dark text detected anywhere.
+      Data: Identical layout, identical marker size, and identical green (#009E73) / red (#AE3030) line colors to the light render — only the chrome (background, text) flipped, confirming theme-adaptive tokens were threaded through correctly.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements remain clearly distinguishable from the background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 20, subtitle 14, axis 16, data
+          labels 14); readable in both themes; title fits at ~54% width. Data label
+          text still becomes quite small once scaled to a ~400px mobile preview.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; even closely-valued entities (Design 73 / Engineering
+          72) remain visually separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: symbolSize bumped from 8 to 11, giving prominent, publication-ready
+          markers appropriate for 10 sparse two-point series (<50 total points).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green direction coding is redundant with visible line slope,
+          so CVD users can still read direction without relying on hue.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid margins tightened from 300px to 190px on each side, meaningfully
+          raising canvas utilization; balanced margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''2024 (before)'' / ''2025 (after)'' descriptively label the two
+          time points as required by the spec.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical use is #009E73 (increase); #AE3030 correctly reserved
+          for the semantic loss/decrease role. Identical data colors across both theme-correct
+          renders; backgrounds match #FAF8F1 / #1A1A17.'
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic coloring, callout annotation, and focus/blur
+          interaction states — clearly above a default line-chart look, though not
+          quite FiveThirtyEight-level polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: No grid, minimal chrome (single baseline rule only), generous whitespace,
+          consistent label formatting.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: 'New ''Biggest mover: Support +15 pts'' callout explicitly states
+          the key insight, combined with direction-based color coding — viewer immediately
+          sees the story without reading every number.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine slope chart with two vertical time points connected by lines.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Labels at both endpoints, direction color-coding, labeled vertical
+          axes, 10 entities within the 5-15 recommended range.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis correctly represents the two time points; y-axis value scale
+          correctly maps all department scores.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai'; per-line direct labels correctly substitute for a legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Good spread of magnitude and direction: large increase (Support
+          +15), moderate decrease (Marketing -5), and small changes (HR +3, Legal
+          -1).'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee engagement survey before/after a feedback program — realistic,
+          neutral business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores in the plausible 64-88 range on a 0-100 engagement scale;
+          changes are believable.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; linear data -> option -> render structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the provided echarts/token globals are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean functional series mapping, no over-engineering, no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false set, no explicit devicePixelRatio/size
+          passed to echarts.init.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level setOption usage with per-series style objects
+          and formatter callbacks.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Now uses ECharts-specific emphasis/focus + blur cross-series highlighting
+          and the graphic API for a declarative text overlay — clearly beyond generic
+          usage, though not a feature entirely unreplicable elsewhere.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
