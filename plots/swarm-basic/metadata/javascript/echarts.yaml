@@ -1,0 +1,229 @@
+library: echarts
+language: javascript
+specification_id: swarm-basic
+created: '2026-07-26T07:25:48Z'
+updated: '2026-07-26T07:51:49Z'
+generated_by: claude-sonnet
+workflow_run: 30192609034
+issue: 974
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'All three Attempt 1 weaknesses fixed: legend entry now labels the mean-diamond
+    markers, y-axis tick marks hidden to match x-axis chrome, and beeswarm layout
+    rewritten to a greedy nearest-slot placement in pixel space for an organic swarm
+    silhouette'
+  - Correct Imprint palette assignment across all 4 categories in canonical order
+    (Placebo=#009E73, Low Dose=#C475FD, Medium Dose=#4467A3, High Dose=#BD8233)
+  - Theme-adaptive chrome verified correct in both renders — no dark-on-dark or light-on-light
+    legibility failures
+  - Deterministic seeded LCG data generation, fully reproducible
+  - Realistic, neutral CRP dose-escalation clinical trial dataset with a clear downward
+    dose-response trend, varied spread per group, and visible outliers
+  weaknesses:
+  - Library Mastery is still fundamentally a generic scatter series; the custom layout
+    uses ECharts' coordinate-conversion API but doesn't showcase a truly ECharts-distinctive
+    series type (e.g. custom renderItem)
+  - Data storytelling is solid but static — no annotation or callout emphasizes the
+    dose-response trend beyond the visual pattern itself
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "swarm-basic · javascript · echarts · anyplot.ai" centered, bold dark charcoal text, fully legible. "Group mean" legend with diamond icon top-right. Y-axis "CRP (mg/L)" label with units. X-axis category labels (Placebo, Low Dose, Medium Dose, High Dose) directly beneath each swarm. Subtle horizontal-only gridlines; both axis tick marks hidden. All readable against the light background.
+      Data: Four swarms in Imprint canonical order — green #009E73 (Placebo), lavender #C475FD (Low Dose), blue #4467A3 (Medium Dose), ochre #BD8233 (High Dose) — each with a dark diamond (light halo border) marking the group mean. Clear downward dose-response trend visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Title, legend text, y-axis title, and all tick labels switch to light off-white/gray and remain fully readable — no dark-on-dark failures anywhere. Gridlines remain subtle but visible.
+      Data: Colors are pixel-identical to the light render — only chrome flipped. Mean-marker diamonds swap to a light fill with dark border to stay visible against the darker page, an appropriate theme-adaptive treatment.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes, correctly sized
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or marker collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker size/alpha appropriate for ~45 points per group
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette, adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units (CRP mg/L)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, correct theme backgrounds both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom pixel-space beeswarm layout + themed mean markers
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, both axis ticks hidden (fixed from
+          Attempt 1)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dose-response trend + labeled mean markers create readable hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct swarm/beeswarm plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact title format; legend now identifies mean markers (fixed from
+          Attempt 1)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows distribution shape, outliers, mean markers
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral CRP clinical trial data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible CRP mg/L values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions justified by lack of native ECharts swarm series
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG RNG, deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows mount-node contract correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct token usage, idiomatic setOption pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses convertToPixel/convertFromPixel coordinate API but still a plain
+          scatter series, not a distinctive ECharts technique like custom renderItem
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
