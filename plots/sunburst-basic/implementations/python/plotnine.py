@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
-Library: plotnine 0.15.3 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-04
+Library: plotnine 0.15.7 | Python 3.13.12
+Quality: 87/100 | Updated: 2026-07-26
 """
 
 import sys
@@ -72,13 +72,14 @@ for idx, (dept, teams) in enumerate(hierarchy.items()):
     for xi, yi in zip(xs, ys, strict=False):
         l1_rows.append({"x": xi, "y": yi, "group": dept, "fill": color})
 
-    # L1 department name: outer half of inner ring
+    # L1 department name + percentage: shared anchor at the ring's mid-radius, split into a
+    # two-line stack via va="bottom"/"top" (screen-space, not radial) so the pair never collides
+    # for sections whose mid-angle runs near-horizontal (radial offsetting alone would overlap there).
     a_mid = (a0 + a1) / 2
-    r_name = 0.54
-    label_rows.append({"x": r_name * np.cos(a_mid), "y": r_name * np.sin(a_mid), "label": dept, "level": 1})
-    # Percentage annotation: inner half of inner ring
-    r_pct = 0.44
-    label_rows.append({"x": r_pct * np.cos(a_mid), "y": r_pct * np.sin(a_mid), "label": f"{pct}%", "level": 3})
+    r_label = 0.50
+    lx, ly = r_label * np.cos(a_mid), r_label * np.sin(a_mid)
+    label_rows.append({"x": lx, "y": ly, "label": dept, "level": 1})
+    label_rows.append({"x": lx, "y": ly, "label": f"{pct}%", "level": 3})
 
     # L2 arc polygons (sub-departments)
     team_cumsum = cumsum
@@ -112,24 +113,24 @@ df_pct_labels = df_labels[df_labels["level"] == 3]
 # Plot
 plot = (
     ggplot()
-    + geom_polygon(data=df_l1, mapping=aes(x="x", y="y", group="group", fill="fill"), color=RING_SEP, size=1.5)
+    + geom_polygon(data=df_l1, mapping=aes(x="x", y="y", group="group", fill="fill"), color=RING_SEP, size=0.75)
     + geom_polygon(
-        data=df_l2, mapping=aes(x="x", y="y", group="group", fill="fill"), color=RING_SEP, size=0.8, alpha=0.65
+        data=df_l2, mapping=aes(x="x", y="y", group="group", fill="fill"), color=RING_SEP, size=0.4, alpha=0.65
     )
     + geom_text(
         data=df_l1_labels,
         mapping=aes(x="x", y="y", label="label"),
         color=INK,
-        size=16,
+        size=8,
         fontweight="bold",
         ha="center",
-        va="center",
+        va="bottom",
     )
     + geom_text(
-        data=df_pct_labels, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=13, ha="center", va="center"
+        data=df_pct_labels, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=7, ha="center", va="top"
     )
     + geom_text(
-        data=df_l2_labels, mapping=aes(x="x", y="y", label="label"), color=INK, size=16, ha="center", va="center"
+        data=df_l2_labels, mapping=aes(x="x", y="y", label="label"), color=INK, size=8, ha="center", va="center"
     )
     + scale_fill_identity()
     + coord_equal()
@@ -137,7 +138,7 @@ plot = (
     + scale_y_continuous(limits=(-1.15, 1.15), breaks=[], expand=(0, 0))
     + labs(title="sunburst-basic · plotnine · anyplot.ai")
     + theme(
-        figure_size=(12, 12),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
@@ -150,8 +151,8 @@ plot = (
         axis_ticks_minor_x=element_blank(),
         axis_ticks_minor_y=element_blank(),
         legend_position="none",
-        plot_title=element_text(color=INK, size=24, ha="center"),
+        plot_title=element_text(color=INK, size=12, ha="center"),
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
