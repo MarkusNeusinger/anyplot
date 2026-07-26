@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-07-26
@@ -20,6 +20,7 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_fill_manual,
     scale_x_continuous,
     scale_y_continuous,
@@ -126,7 +127,16 @@ for _, row in level1_agg.iterrows():
 
     x_pts, y_pts = create_wedge(r_inner_1, r_outer_1, end_angle, start_angle)
     for x, y in zip(x_pts, y_pts, strict=True):
-        polygon_rows.append({"x": x, "y": y, "segment_id": segment_id, "color": row["level_1"]})
+        polygon_rows.append(
+            {
+                "x": x,
+                "y": y,
+                "segment_id": segment_id,
+                "color": row["level_1"],
+                "value": row["value"],
+                "pct": row["pct"],
+            }
+        )
 
     mid_angle = (start_angle + end_angle) / 2
     label_r = r_outer_1 * 0.55
@@ -150,7 +160,16 @@ for level1_name in level1_agg["level_1"]:
 
         x_pts, y_pts = create_wedge(r_inner_2, r_outer_2, end_angle, cur_angle)
         for x, y in zip(x_pts, y_pts, strict=True):
-            polygon_rows.append({"x": x, "y": y, "segment_id": segment_id, "color": row["level_2"]})
+            polygon_rows.append(
+                {
+                    "x": x,
+                    "y": y,
+                    "segment_id": segment_id,
+                    "color": row["level_2"],
+                    "value": row["value"],
+                    "pct": row["pct"],
+                }
+            )
 
         mid_angle = (cur_angle + end_angle) / 2
         label_r = (r_inner_2 + r_outer_2) / 2
@@ -180,7 +199,16 @@ for level1_name in level1_agg["level_1"]:
 
             x_pts, y_pts = create_wedge(r_inner_3, r_outer_3, end_angle, cur_angle)
             for x, y in zip(x_pts, y_pts, strict=True):
-                polygon_rows.append({"x": x, "y": y, "segment_id": segment_id, "color": row["level_3"]})
+                polygon_rows.append(
+                    {
+                        "x": x,
+                        "y": y,
+                        "segment_id": segment_id,
+                        "color": row["level_3"],
+                        "value": row["value"],
+                        "pct": row["pct"],
+                    }
+                )
 
             mid_angle = (cur_angle + end_angle) / 2
             label_r = (r_inner_3 + r_outer_3) / 2
@@ -202,7 +230,17 @@ label_df = pd.DataFrame(label_rows)
 # Plot
 plot = (
     ggplot(polygon_df)
-    + geom_polygon(aes(x="x", y="y", fill="color", group="segment_id"), color=PAGE_BG, size=0.75, alpha=0.9)
+    + geom_polygon(
+        aes(x="x", y="y", fill="color", group="segment_id"),
+        color=PAGE_BG,
+        size=0.75,
+        alpha=0.9,
+        tooltips=layer_tooltips()
+        .line("@color")
+        .line("Budget|@value K")
+        .format("@pct", ".1%")
+        .line("Share of total|@pct"),
+    )
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=label_df[label_df["level"] == 1],
@@ -220,12 +258,16 @@ plot = (
     + coord_fixed(ratio=1)
     + scale_x_continuous(limits=(-100, 100))
     + scale_y_continuous(limits=(-100, 100))
-    + labs(title="sunburst-basic · letsplot · anyplot.ai")
+    + labs(
+        title="sunburst-basic · letsplot · anyplot.ai",
+        subtitle="Budget allocation by department, team, and project ($K)",
+    )
     + ggsize(600, 600)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=12, hjust=0.5, color=INK),
+        plot_title=element_text(size=13, hjust=0.5, color=INK),
+        plot_subtitle=element_text(size=9, hjust=0.5, color=INK),
         legend_position="none",
         axis_title=element_blank(),
         axis_text=element_blank(),
