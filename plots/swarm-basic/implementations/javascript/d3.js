@@ -1,7 +1,7 @@
 // anyplot.ai
-// swarm-basic: Patient Biomarker Levels by Treatment Group
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-07-26
+// swarm-basic: Basic Swarm Plot
+// Library: d3 7.9.0 | JavaScript 22.23.1
+// Quality: 92/100 | Created: 2026-07-26
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
