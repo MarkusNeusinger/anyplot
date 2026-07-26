@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waffle-basic: Basic Waffle Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 79/100 | Created: 2026-05-05
@@ -14,7 +14,6 @@ sys.path.pop(0)
 from plotnine import (
     aes,
     coord_equal,
-    element_blank,
     element_rect,
     element_text,
     geom_tile,
@@ -24,7 +23,7 @@ from plotnine import (
     labs,
     scale_fill_manual,
     theme,
-    theme_minimal,
+    theme_void,
 )
 
 
@@ -33,19 +32,24 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+# Imprint palette — 8 hues, theme-independent, hybrid-v3 sort
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
-# Data - Budget allocation by category
+# Data — a $5,000 monthly household budget, allocated by category.
+# Values sum to exactly 100 (one waffle square = 1% = $50).
 categories = ["Housing", "Food", "Transport", "Entertainment"]
-values = [35, 25, 18, 12]
-category_order = categories
+values = [39, 28, 20, 13]
+monthly_budget = 5000
+amounts = [round(v / 100 * monthly_budget) for v in values]
+assert sum(values) == 100
 
-# Create waffle grid (10x10 = 100 squares)
+# Waffle grid: 10x10 = 100 squares, filled row-major so each category
+# forms a contiguous reading-order block.
 grid_size = 10
 squares = []
 square_id = 0
-
 for val, cat in zip(values, categories, strict=True):
     for _ in range(val):
         row = square_id // grid_size
@@ -54,41 +58,42 @@ for val, cat in zip(values, categories, strict=True):
         square_id += 1
 
 df = pd.DataFrame(squares)
-df["category"] = pd.Categorical(df["category"], categories=category_order, ordered=True)
+df["category"] = pd.Categorical(df["category"], categories=categories, ordered=True)
 
-# Create color mapping with Okabe-Ito palette
-color_map = dict(zip(category_order, IMPRINT, strict=True))
+color_map = dict(zip(categories, IMPRINT, strict=True))
 value_map = dict(zip(categories, values, strict=True))
+amount_map = dict(zip(categories, amounts, strict=True))
+legend_labels = {cat: f"{cat} — {value_map[cat]}% (${amount_map[cat]:,})" for cat in categories}
 
-# Build legend labels with percentages
-legend_labels = {cat: f"{cat} ({value_map[cat]}%)" for cat in category_order}
-
-# Theme configuration
 anyplot_theme = theme(
-    figure_size=(16, 9),
+    figure_size=(6, 6),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    plot_title=element_text(size=24, color=INK, ha="center"),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_title=element_text(size=18, color=INK),
-    legend_text=element_text(size=16, color=INK_SOFT),
-    legend_position="right",
-    axis_text=element_blank(),
-    axis_title=element_blank(),
-    axis_ticks=element_blank(),
-    panel_grid=element_blank(),
+    plot_title=element_text(size=20, weight="bold", color=INK, ha="center"),
+    plot_subtitle=element_text(size=12, color=INK_SOFT, ha="center", style="italic"),
+    plot_caption=element_text(size=9, color=INK_MUTED, ha="center"),
+    legend_position="bottom",
+    legend_direction="horizontal",
+    legend_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    legend_key=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    legend_title=element_text(size=14, weight="bold", color=INK),
+    legend_text=element_text(size=12, color=INK_SOFT),
 )
 
-# Plot
 plot = (
     ggplot(df, aes(x="x", y="y", fill="category"))
-    + geom_tile(color=PAGE_BG, size=0.8)
-    + scale_fill_manual(values=color_map, labels=lambda x: [legend_labels[c] for c in x])
+    + geom_tile(color=PAGE_BG, size=1.4)
+    + scale_fill_manual(values=color_map, labels=lambda cats: [legend_labels[c] for c in cats])
     + coord_equal()
-    + labs(title="waffle-basic · plotnine · anyplot.ai", fill="Category")
+    + labs(
+        title="waffle-basic · plotnine · anyplot.ai",
+        subtitle=f"Monthly Household Budget Allocation — ${monthly_budget:,} Total",
+        caption="Each square represents 1% of the total monthly budget",
+        fill="Category",
+    )
     + guides(fill=guide_legend(ncol=1))
-    + theme_minimal()
+    + theme_void()
     + anyplot_theme
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
