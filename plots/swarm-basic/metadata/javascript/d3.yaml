@@ -1,0 +1,260 @@
+library: d3
+language: javascript
+specification_id: swarm-basic
+created: '2026-07-26T07:29:21Z'
+updated: '2026-07-26T07:33:36Z'
+generated_by: claude-sonnet
+workflow_run: 30192549742
+issue: 974
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Idiomatic D3 beeswarm layout via d3.forceSimulation with forceX + forceCollide,
+    pinning fy to the value scale and clamping the resolved x back into each category
+    band so groups never bleed into neighbors — the canonical D3-native approach to
+    swarm plots
+  - Subtle median marker per category (thin, semi-transparent line) reveals the dose-response
+    trend at a glance without cluttering the plot
+  - Data domain hugs the value range (not zero-anchored) with a documented rationale
+    in the code comment, using the full canvas height for the actual spread of values
+  - 'Full Decoration Removal Checklist compliance: top/right spines removed, tick
+    marks removed (domain line only), y-axis-only subtle gridlines, no redundant legend
+    since the x-axis already labels categories'
+  - Correct Imprint palette in canonical order (green/lavender/blue/ochre) for the
+    four dose groups, identical across light and dark renders, with theme-correct
+    chrome throughout
+  - Deterministic fixed-seed LCG + Box-Muller data generation, all data built in-memory
+    with no network calls
+  - 'Data tells a real story: clear dose-response relationship (Placebo highest CRP,
+    High Dose lowest) with realistic clinical-trial biomarker context and appropriately
+    varied spread/outliers per group'
+  weaknesses:
+  - Design Excellence is competent but not exceptional — no explicit callout/annotation
+    quantifying the dose-response effect (e.g. '% reduction vs. placebo'), which would
+    push Data Storytelling from good to excellent
+  - The Low Dose group's central cluster around its median is dense enough that individual
+    points partially merge despite the pageBg stroke — a slightly smaller radius or
+    a touch more collision padding would keep every point crisply distinguishable
+    in the densest region
+  - Aesthetic sophistication relies on the mandated system palette and a single median-line
+    accent; a secondary refinement (e.g. subtle background band per category, or emphasizing
+    the largest between-group gap) would lift it toward publication-tier polish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "swarm-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. Dark-ink axis labels "Treatment Group" (x) and "CRP Biomarker Level (mg/L)" (y, rotated) both fully legible. Soft-gray tick labels on both axes readable. Subtle horizontal gridlines (y-axis only) barely visible, not competing with data. Only left+bottom axis domain lines kept (spines), no tick marks.
+      Data: Four beeswarm clusters — Placebo (green #009E73), Low Dose (lavender), Medium Dose (blue), High Dose (ochre/tan) — each with a thin semi-transparent gray median line. Points are circular, moderate size, with a light stroke for separation. Clear descending trend in CRP level from Placebo to High Dose.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and axis labels render in light/white text, clearly visible against the dark background. Tick labels are a lighter soft gray, fully readable. Gridlines are a subtle light tint, visible but unobtrusive. Median marker lines render in a light gray, still visible against the dark background.
+      Data: Same four categories in the identical colors as the light render — green, lavender, blue, ochre — confirming the Imprint palette data colors do not shift between themes. Only the chrome (background, text, grid, stroke color) adapts.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and markers remain clearly legible.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14px ticks, 16px axis labels, 22px
+          bold title); readable in both themes; short title well within proportion
+          bounds, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap anywhere; axis and tick labels fully readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers well-sized for ~170 total points (40-45/group); the densest
+          sub-cluster (Low Dose median region) has some points touching despite pageBg
+          stroke
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe, white/pageBg stroke around markers adds
+          definition
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: ''CRP Biomarker Level (mg/L)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, remaining series follow canonical Imprint
+          order, identical across themes; backgrounds theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Median markers and clean color-coded grouping show design thought
+          beyond a bare default, but relies mostly on the mandated system palette
+          without a secondary distinguishing flourish
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full decoration-removal compliance: spines reduced to L-shape, tick
+          marks removed, subtle y-only grid, generous whitespace, no redundant legend'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dose-response trend is immediately visible via ordering + median
+          lines, but no explicit annotation quantifying the effect
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct force-simulation beeswarm swarm plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Overlap-avoiding spread, consistent point size, color per category,
+          median marker per spec's suggestion
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x (band scale), value on y (linear scale) correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec-id · javascript · d3 · anyplot.ai;
+          no legend needed since x-axis already labels categories
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows varied means, spreads, and outliers per group; all groups share
+          a roughly similar unimodal shape rather than distinctly varied distribution
+          shapes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible clinical-trial biomarker scenario across treatment
+          dose groups
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CRP mg/L values and dose-response magnitude are realistic for the
+          domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear top-to-bottom script; the two tiny LCG/gaussian helpers are
+          necessary for deterministic data generation, not over-structuring
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided d3 global; nothing unused
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a force-based beeswarm; no fake UI or
+          over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation, current d3 join API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of scaleBand/scaleLinear/scaleOrdinal, axisBottom/axisLeft,
+          and selection.data().join() data-binding
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.forceSimulation with forceX + forceCollide for beeswarm layout
+          is a hallmark D3-native technique not easily replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - force-simulation
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
