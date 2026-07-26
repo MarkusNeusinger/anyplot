@@ -1,3 +1,7 @@
+// anyplot.ai
+// sunburst-basic: Basic Sunburst Chart
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 91/100 | Created: 2026-07-26
 //# anyplot-orientation: square
 // anyplot.ai
 // sunburst-basic: Basic Sunburst Chart
