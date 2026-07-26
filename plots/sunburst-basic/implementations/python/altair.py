@@ -1,13 +1,23 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-04
+Quality: pending | Updated: 2026-07-26
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme-adaptive chrome tokens (Imprint)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Company budget breakdown by department, team, and project
 # Hierarchical structure: Department > Team > Project
@@ -38,12 +48,12 @@ data = [
 
 df = pd.DataFrame(data)
 
-# Color palette - Python Blue as primary, with colorblind-safe colors
+# Imprint palette - first series is always #009E73 (brand green)
 level1_colors = {
-    "Engineering": "#306998",  # Python Blue
-    "Marketing": "#FFD43B",  # Python Yellow
-    "Operations": "#4ECDC4",  # Teal
-    "Sales": "#FF6B6B",  # Coral
+    "Engineering": "#009E73",  # brand green
+    "Marketing": "#C475FD",  # lavender
+    "Operations": "#4467A3",  # blue
+    "Sales": "#BD8233",  # ochre
 }
 
 # Helper to lighten colors for child levels
@@ -128,15 +138,25 @@ for idx in level3_df.index:
 # Assign lightest colors for level 3
 level3_df["color"] = level3_df["level_1"].apply(lambda p: hex_to_lighter[p]["l3"])
 
-# Ring radii (scaled for 1200x1200 canvas)
-inner_r1, outer_r1 = 100, 200  # Level 1 (innermost)
-inner_r2, outer_r2 = 210, 310  # Level 2 (middle)
-inner_r3, outer_r3 = 320, 420  # Level 3 (outermost)
+# Ring radii (absolute pixels, centered in the 500x460 view)
+inner_r1, outer_r1 = 60, 98  # Level 1 (innermost)
+inner_r2, outer_r2 = 104, 142  # Level 2 (middle)
+inner_r3, outer_r3 = 148, 186  # Level 3 (outermost)
+
+# Overlay coordinate system (label/legend layer only, 1:1 with view pixels so
+# radii computed above line up exactly with the arc marks' own pixel radii).
+# range is explicit (not the Vega-Lite default flipped-Y range) so that
+# label_y = -radius*cos(angle) (standard y-down screen convention) lines up
+# with the arc marks' own top-origin, clockwise angle convention.
+X_DOMAIN = [-250, 250]  # matches half of properties(width=500)
+Y_DOMAIN = [-230, 230]  # matches half of properties(height=460)
+X_SCALE = alt.Scale(domain=X_DOMAIN, range=[0, 500])
+Y_SCALE = alt.Scale(domain=Y_DOMAIN, range=[0, 460])
 
 # Level 1 - innermost ring (Departments)
 chart_l1 = (
     alt.Chart(level1_df)
-    .mark_arc(innerRadius=inner_r1, outerRadius=outer_r1, stroke="#ffffff", strokeWidth=2)
+    .mark_arc(innerRadius=inner_r1, outerRadius=outer_r1, stroke=PAGE_BG, strokeWidth=2)
     .encode(
         theta=alt.Theta("theta:Q", scale=alt.Scale(domain=[0, 2 * np.pi])),
         theta2="theta2:Q",
@@ -148,7 +168,7 @@ chart_l1 = (
 # Level 2 - middle ring (Teams)
 chart_l2 = (
     alt.Chart(level2_df)
-    .mark_arc(innerRadius=inner_r2, outerRadius=outer_r2, stroke="#ffffff", strokeWidth=1.5)
+    .mark_arc(innerRadius=inner_r2, outerRadius=outer_r2, stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
         theta=alt.Theta("theta:Q", scale=alt.Scale(domain=[0, 2 * np.pi])),
         theta2="theta2:Q",
@@ -164,7 +184,7 @@ chart_l2 = (
 # Level 3 - outer ring (Projects)
 chart_l3 = (
     alt.Chart(level3_df)
-    .mark_arc(innerRadius=inner_r3, outerRadius=outer_r3, stroke="#ffffff", strokeWidth=1)
+    .mark_arc(innerRadius=inner_r3, outerRadius=outer_r3, stroke=PAGE_BG, strokeWidth=1)
     .encode(
         theta=alt.Theta("theta:Q", scale=alt.Scale(domain=[0, 2 * np.pi])),
         theta2="theta2:Q",
@@ -186,51 +206,63 @@ level1_df["label_y"] = -level1_df["label_radius"] * np.cos(level1_df["label_angl
 
 text_l1 = (
     alt.Chart(level1_df)
-    .mark_text(fontSize=18, fontWeight="bold", color="#ffffff")
+    .mark_text(fontSize=12, fontWeight="bold", color="#ffffff")
     .encode(
-        x=alt.X("label_x:Q", scale=alt.Scale(domain=[-500, 500]), axis=None),
-        y=alt.Y("label_y:Q", scale=alt.Scale(domain=[-500, 500]), axis=None),
-        text="name:N",
+        x=alt.X("label_x:Q", scale=X_SCALE, axis=None), y=alt.Y("label_y:Q", scale=Y_SCALE, axis=None), text="name:N"
     )
 )
 
-# Add legend with department colors (sorted by value, matching level1_df order)
+# Add legend as a horizontal row below the rings (kept left/right-balanced
+# around x=0 so the donut itself stays centered on the padded canvas)
+LEGEND_SLOT_W = 120
 legend_items = []
 for i, (_, row) in enumerate(level1_df.iterrows()):
-    legend_items.append({"dept": row["name"], "color": level1_colors[row["name"]], "x": 480, "y": -350 + i * 45})
+    slot_x = -LEGEND_SLOT_W * len(level1_df) / 2 + i * LEGEND_SLOT_W
+    legend_items.append({"dept": row["name"], "color": level1_colors[row["name"]], "x": slot_x, "y": 205})
 legend_df = pd.DataFrame(legend_items)
 
 legend_rects = (
     alt.Chart(legend_df)
-    .mark_rect(width=20, height=20)
+    .mark_rect(width=14, height=14)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-500, 500]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-500, 500]), axis=None),
+        x=alt.X("x:Q", scale=X_SCALE, axis=None),
+        y=alt.Y("y:Q", scale=Y_SCALE, axis=None),
         color=alt.Color("color:N", scale=None),
     )
 )
 
 legend_text = (
     alt.Chart(legend_df)
-    .mark_text(fontSize=16, align="left", dx=15)
-    .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-500, 500]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-500, 500]), axis=None),
-        text="dept:N",
-    )
+    .mark_text(fontSize=10, align="left", dx=8, color=INK_SOFT)
+    .encode(x=alt.X("x:Q", scale=X_SCALE, axis=None), y=alt.Y("y:Q", scale=Y_SCALE, axis=None), text="dept:N")
 )
 
 # Combine all layers
 chart = (
     alt.layer(chart_l1, chart_l2, chart_l3, text_l1, legend_rects, legend_text)
     .properties(
-        width=1200,
-        height=1200,
-        title=alt.Title(text="sunburst-basic · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        width=500,
+        height=460,
+        background=PAGE_BG,
+        title=alt.Title(text="sunburst-basic · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
 )
 
-# Save outputs (3600x3600 px with scale_factor=3.0)
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save outputs — canonical square target 2400x2400 (see prompts/library/altair.md "Canvas")
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
