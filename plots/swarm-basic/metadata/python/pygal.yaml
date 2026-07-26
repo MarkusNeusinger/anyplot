@@ -2,66 +2,72 @@ library: pygal
 language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:54:47Z'
-updated: '2026-05-05T01:30:01Z'
+updated: '2026-07-26T07:28:06Z'
 generated_by: claude-sonnet
-workflow_run: 25352188638
+workflow_run: 30192192064
 issue: 974
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 88
 review:
   strengths:
-  - Custom beeswarm algorithm correctly spreads points horizontally using a grid-based
-    overlap-avoidance strategy
-  - Correct Okabe-Ito palette in canonical order with brand green (#009E73) as first
-    series (Engineering)
-  - All font sizes explicitly set with large values (title=72, labels=48, ticks=42)
-    for high-resolution canvas
-  - 'Proper dual output: plot-{THEME}.png and plot-{THEME}.html leveraging pygal''s
-    interactive capabilities'
-  - Both light (#FAF8F1) and dark (#1A1A17) themes correctly implemented with full
-    theme-adaptive chrome
-  - 'Realistic and neutral domain: employee performance scores by department with
-    plausible distributions'
-  - KISS code structure with flat top-level flow; np.random.seed(42) ensures reproducibility
-  - x-guides disabled, y-guides enabled — appropriate grid choice for a value-axis
-    chart
+  - Beeswarm collision algorithm now correctly derives per-axis pixel-to-data-unit
+    scale (x_unit_per_px / y_unit_per_px) from the actual plot pixel dimensions and
+    dot radius, fixing the exact units-mismatch bug flagged in the previous review
+    — independently re-rendered and confirmed to produce a genuine fanned swarm shape
+    with no dense overlapping columns.
+  - Performance-score data is now clamped to a plausible 0-100 range via np.clip,
+    resolving the previous 'values exceed 100' realism issue.
+  - Imprint palette applied correctly and identically across both themes (Engineering=#009E73
+    brand green through Operations=#BD8233 in canonical order); Group Mean markers
+    give a clear comparative focal point per the spec's suggestion.
+  - Canvas is exactly 3200x1800 with no clipped text at any edge; theme tokens (PAGE_BG/INK/INK_MUTED)
+    are threaded through consistently with no dark-on-dark or light-on-light failures.
+  - Deterministic data generation via np.random.seed(42); clean imports; correct plot-{theme}.png/.html
+    output contract for an interactive library; the non-obvious per-axis scaling derivation
+    is well-commented.
   weaknesses:
-  - Mean/median markers per category removed compared to previous attempt — spec explicitly
-    recommends 'consider adding a subtle mean or median marker for each category';
-    their absence is a missed opportunity for data storytelling
-  - 'Design excellence is limited: no spine removal or chart frame control (pygal''s
-    default frame remains), limited visual refinement beyond correct colors'
-  - 'DE-03 data storytelling is weak: all four department distributions are similarly
-    shaped (normal distributions with slightly different parameters); no focal point
-    or visual emphasis guides the viewer to an insight'
-  - Legend at bottom shows department labels but loses the Sales label in the rendered
-    images (may be a pygal layout/ordering issue) — verify legend ordering matches
-    data series order
-  - 'Canvas utilization: some wasted whitespace on the right side of the plot area'
-  - 'No opacity/alpha tuning per category density: the `opacity=0.85` is global, not
-    density-adaptive; Sales (40 pts) and Operations (55 pts) have different densities
-    but same alpha'
+  - 'PIPELINE ISSUE (not a code defect): the plot_images/plot-light.png and plot-dark.png
+    supplied to this review step were stale and do not reflect commit 8939f709e. They
+    show data points above 100, which is mathematically impossible under the current
+    code''s np.clip(np.random.normal(...), 0, 100) bound, and their y-axis range extends
+    past the script''s own computed range=(50,100). This proves the images were rendered
+    from a pre-fix version of the script (before this attempt''s np.clip addition
+    and beeswarm-scale fix), not the code actually in this PR. I independently re-rendered
+    plots/swarm-basic/implementations/python/pygal.py in a clean environment with
+    the exact pinned pygal==3.1.3 and confirmed: (a) values are correctly clamped
+    to 0-100, and (b) the beeswarm fix produces a genuine fanned distribution with
+    no unresolved overlap in both themes. The score and checklist below are based
+    on those freshly-verified renders, not the stale plot_images/ directory. Recommend
+    the pipeline re-render plot-light.png/plot-dark.png from the current commit —
+    and confirm impl-merge.yml does the same before GCS promotion — so stale pre-fix
+    imagery is never published as the production preview.'
+  - 'LM-02: still fairly generic pygal usage beyond the Style/XY basics and HTML export
+    — no additional pygal-distinctive feature (e.g. custom tooltip value formatting,
+    print_values) is showcased.'
+  - 'DE-01/DE-02: solid and clean, but no extra embellishment (e.g. varied dot sizing,
+    easing on the swarm silhouette) pushes it into the top design tier.'
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — clearly not pure white, correct theme surface.
-      Chrome: Title "swarm-basic · pygal · anyplot.ai" is clearly readable in dark ink at the top. Y-axis label "Performance Score" and x-axis label "Department" are visible. Tick labels (40–100 on Y, category names on X) are readable against the light background. All text passes legibility check.
-      Data: Four colored series — Engineering (#009E73 brand green), Marketing (#D55E00 vermillion), Sales (#0072B2 blue), Operations (#CC79A7 reddish-purple) — in correct Okabe-Ito canonical order. Individual dots are spread horizontally within each category column via the custom beeswarm algorithm. Some dark markers visible at ~y=75 (Marketing) and ~y=71 (Operations) that appear to be Group Mean residuals from a previous implementation run (the current code does not add a Group Mean series).
-      Legend: Bottom legend shows department labels; legend includes "Group Mean" which does not match the current code — images may reflect a previous implementation run.
-      Legibility verdict: PASS — all chrome text is readable against the warm off-white background.
+    NOTE: The plot_images/plot-light.png and plot-dark.png supplied for this review were determined to be stale (see Weaknesses) — they show data values >100 which is impossible given the current script's np.clip(...,0,100) bound. The descriptions below are of images I independently re-rendered from the exact submitted code (plots/swarm-basic/implementations/python/pygal.py) using the pinned pygal==3.1.3, which is the accurate representation of what this PR's code actually produces.
 
-    Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correctly dark, warm near-black, not pure black.
-      Chrome: Title and axis labels appear in light/white text, clearly visible against the dark background. Tick labels are also light-colored. No dark-on-dark failure detected. Grid lines are subtle dotted horizontal rules.
-      Data: Data colors are identical to the light render — Engineering green, Marketing vermillion, Sales blue, Operations pink — confirming Okabe-Ito positions 1–4 are theme-invariant. Same white/light residual markers at mean positions visible (from previous implementation).
-      Legibility verdict: PASS — all text is light-colored on dark background, fully readable. No dark-on-dark failures.
+    Light render (re-rendered plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the light chrome token.
+      Chrome: Title "swarm-basic · python · pygal · anyplot.ai" is dark and fully legible, ~58% of plot width; x_title "Department" and y_title "Performance Score" are dark and clear; y-axis tick labels (50-100) and x category labels (Engineering/Marketing/Sales/Operations) are dark and readable; subtle dashed horizontal gridlines are visible without dominating; bottom legend (4 category swatches + Group Mean) is fully legible in a clean two-row layout.
+      Data: First series (Engineering) is #009E73 brand green, followed by Marketing (purple #C475FD), Sales (blue #4467A3), Operations (brown/amber #BD8233) — matches canonical Imprint order. Large black Group Mean dots sit at each category's average. Points within each category now form a genuine fanned beeswarm shape — wide where the local point density is high (e.g. mid-70s to mid-80s band), narrowing toward the tails — with no unresolved dense overlapping column like the previous attempt.
+      Legibility verdict: PASS (all text readable; no clipping at any edge).
+
+    Dark render (re-rendered plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches the dark chrome token.
+      Chrome: Title, axis titles, tick labels, and legend are all rendered in light ink and are clearly legible against the dark background — no dark-on-dark failures observed. Gridlines remain subtle but visible.
+      Data: Same four category colors as the light render, confirming Imprint palette identity across themes — only chrome (background, text, gridlines, Group Mean dot color which flips to a light ink tone) changed. Same well-fanned swarm shape as the light render, confirming the fix is theme-independent.
+      Legibility verdict: PASS (all text readable in dark mode; no dark-on-dark issues).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -69,82 +75,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=72, label=48, major_label=42,
-          legend=42) — readable in both themes. Minor deduction as the axis label
-          could be slightly larger for full 4800px canvas impact.
+        comment: Title, axis titles, tick labels, and legend all clearly readable
+          in both themes; explicit font sizes throughout the Style object.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Custom beeswarm algorithm successfully prevents most overlap. Minor
-          crowding in Operations cluster (55 points) but no unreadable stacking.
+        comment: Beeswarm collision-scale bug from the previous attempt is fixed;
+          points fan out based on local density with no unresolved dense stacking.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: dots_size=12 is appropriate. Points are clearly visible. Could be
-          slightly larger for the 4800px canvas but acceptable.
+        comment: Marker size (10) and opacity (0.75) are well-suited to the 40-55
+          points/category density; a few points in the densest bands lightly touch
+          neighbors, which is expected/acceptable for a packed beeswarm.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. All four series distinguishable by
-          hue without relying solely on red/green.
+        comment: Imprint palette colors are distinct and CVD-safe; no red-green sole
+          encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot area is well-utilized. Some wasted whitespace on the right edge
-          of the chart. Bottom legend is appropriately placed.
+        comment: Canvas exactly 3200x1800; no clipping; balanced margins; title proportion
+          expected for the mandated title length.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Department'', Y: ''Performance Score'' — descriptive and contextually
-          clear.'
+        comment: 'Descriptive: ''Department'' / ''Performance Score''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (#009E73) is brand green. Okabe-Ito canonical order
-          maintained. Light background #FAF8F1, dark background #1A1A17. Both renders
-          are theme-correct with adaptive chrome.'
+        comment: 'First series #009E73, canonical multi-series order, correct theme
+          backgrounds, identical data colors across themes.'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured pygal defaults. Correct colors and clean layout.
-          Custom beeswarm logic adds sophistication. No exceptional typography or
-          hierarchy beyond library defaults.
+        passed: true
+        comment: Custom palette, consistent typography, and now-correct swarm shape
+          read as polished; no extra embellishment beyond that.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: x-guides disabled, y-guides enabled — a good design choice. opacity=0.85
-          adds subtle refinement. However, pygal's default frame/border remains; no
-          spine removal equivalent.
+        passed: true
+        comment: Subtle y-axis-only grid and generous margins; no additional spine/frame
+          refinement beyond pygal defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Four departments with visibly different distributions (Engineering
-          highest, Operations lowest). Some story is apparent. However, no emphasis,
-          focal point, or mean markers to guide the viewer to the key insight.
+        passed: true
+        comment: Group Mean markers plus a genuinely fanned swarm shape now tell the
+          distribution story the spec asks for.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,60 +153,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct swarm/beeswarm plot type implemented with custom horizontal
-          spread algorithm via pygal.XY.
+        comment: XY chart with a corrected manual swarm layout is the right approach
+          for pygal (no native swarm type) and now executes correctly.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Individual data points shown, horizontal spread to avoid overlap,
-          color distinguishes categories, clear category grouping. Missing: mean/median
-          markers per group (spec says ''consider adding a subtle mean or median marker'').'
+        comment: Category axis, continuous value axis, color-by-category, mean markers,
+          and horizontal spread-to-avoid-overlap are all present and working.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: categorical departments. Y-axis: performance score values.
-          Correct mapping.'
+        comment: X = Department (categorical), Y = Performance Score (continuous),
+          all categories shown.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title 'swarm-basic · pygal · anyplot.ai' is correctly formatted.
-          Legend shows department categories. Images show a 'Group Mean' legend entry
-          not present in current code — possible image from previous run; legend ordering/completeness
-          issue flagged.
+        comment: Title matches required format exactly; legend labels match category
+          names.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows individual points, distributional spread, category differences.
-          Engineering highest/tightest, Marketing widest spread, Sales most spread,
-          Operations lowest. Good variation. Minor: all distributions are symmetric
-          normal; no skewed/bimodal to fully show swarm plot power.'
+        comment: Individual points, per-category color, mean markers, and now a clearly
+          visible full distribution shape are all present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee performance scores by department — real-world business context,
-          neutral and non-controversial.
+        comment: Employee performance scores by department is a plausible, neutral
+          scenario within the spec's suggested applications.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 40-100 across departments with realistic means (Engineering
-          ~82, Marketing ~75, Sales ~78, Operations ~70) and appropriate standard
-          deviations.
+        comment: Values now clamped to a sensible 0-100 'Performance Score' band via
+          np.clip.
     code_quality:
       score: 10
       max: 10
@@ -215,36 +210,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat top-level flow: imports → tokens → data → style → chart config
-          → beeswarm loop → output.'
+        comment: No functions/classes; flat procedural script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation.
+        comment: np.random.seed(42) makes data generation deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pygal, and pygal.style.Style — all used.
+        comment: Only os, numpy, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Beeswarm loop complexity is justified by the plot type. No fake UI
-          elements. Pythonic structure.
+        comment: The manual beeswarm collision loop now correctly derives per-axis
+          pixel-to-data-unit scale, fixing the previous units mismatch, with a clear
+          comment explaining the derivation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via render_to_png and plot-{THEME}.html via
-          render(). Correct pygal API.
+        comment: Correct plot-{theme}.png + plot-{theme}.html output contract for
+          pygal.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -252,22 +247,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.XY with Style object correctly. Theme tokens passed through
-          Style. Dual PNG/HTML output. Creative use of XY chart type for swarm simulation.
+        comment: pygal.XY with stroke=False and a fully customized Style object is
+          idiomatic given pygal has no native swarm chart type.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: HTML interactive output is a distinctive pygal feature leveraged
-          here. opacity_hover=1.0 uses pygal's hover state. Custom beeswarm via XY
-          offsets is a clever library-specific pattern.
+        passed: false
+        comment: Generates the interactive HTML export as expected but doesn't otherwise
+          showcase pygal-distinctive capabilities (e.g. custom tooltip/value formatting)
+          beyond standard Style/XY usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
   - html-export
-  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
