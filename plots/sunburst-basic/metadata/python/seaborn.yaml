@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: sunburst-basic
 created: '2025-12-23T21:57:04Z'
-updated: '2026-07-26T04:28:35Z'
+updated: '2026-07-26T04:48:12Z'
 generated_by: claude-sonnet
 workflow_run: 30187132041
 issue: 821
@@ -12,105 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - Branch-consistent color tinting via sns.light_palette ties each hierarchy level
-    visually to its parent branch, matching the spec's 'consistent colors within each
-    branch' requirement.
-  - Companion directory-totals bar panel (built with seaborn's Objects API, so.Plot/so.Bar/so.Nominal)
-    reinforces the sunburst's magnitude story with matching branch colors, acting
-    as a de facto legend.
-  - Center total label ('351 MB') and per-bar value labels add useful context without
-    extra chrome or a traditional legend.
-  - 'Correct Imprint palette (first series #009E73), correct theme-adaptive PAGE_BG/INK
-    tokens, correct 3200x1800 canvas via figsize/dpi, and no bbox_inches=''tight''
-    clipping risk.'
-  - Small-wedge labels are suppressed below angular-span thresholds, keeping the narrow
-    leaf segments uncluttered while still labeling all major segments per the spec's
-    guidance.
+  - 'Correct Imprint palette with branch-coherent tinting: each top-level directory
+    (src/, assets/, tests/, docs/) gets its own hue from the canonical order (green/purple/blue/ochre),
+    and inner-to-outer rings within a branch use consistent tints of that same hue,
+    making the hierarchy easy to trace visually.'
+  - Per-wedge label color is computed from the wedge fill's own luminance (with an
+    opposite-tone halo stroke), so text stays legible across the full range from pale
+    tints to fully-saturated colors, in both light and dark themes.
+  - Companion 'Directory Totals' bar chart uses the identical color mapping as the
+    sunburst rings and is sorted by size, giving a clear, redundant-encoding summary
+    of the same data alongside the radial view.
+  - 'Density-aware label suppression: level-2 labels are skipped below a 15° span
+    and level-3 labels below 10°, plus explicit collision avoidance between level-2
+    and level-3 labels, preventing label soup in the smallest wedges.'
+  - Canvas is exactly on-target (3200x1800, figsize=(8, 4.5) @ dpi=400) with generous,
+    balanced margins and no clipping at any canvas edge in either render.
+  - 'Theme-adaptive chrome is correctly threaded through sns.set_theme rc params,
+    the bar-chart panel, and the center total label; both plot-light.png and plot-dark.png
+    use the correct #FAF8F1/#1A1A17 backgrounds with fully readable text.'
   weaknesses:
-  - The level-2 label 'components' and the level-3 label 'forms' visually collide
-    near the top of the sunburst in both light and dark renders, reading as 'componentsforms'
-    with no gap between them — the label placement logic doesn't check proximity to
-    labels on the adjacent ring.
-  - The level-3 label 'validators' (INK_SOFT on the saturated outer green tint) has
-    noticeably lower contrast than sibling labels like 'helpers' in both themes, especially
-    in the dark render where it nearly blends into the wedge color.
-  - Level-1 ring labels use a hardcoded color='white' (line ~124) instead of a theme
-    token — it happens to work visually since those wedges are always fully-saturated
-    Imprint colors, but it bypasses the INK/theme system every other text element
-    in the file uses.
+  - The level-1 'docs/' label (bold, 14pt, labeldistance=0.6) sits mostly on top of
+    the neighboring tests/ (blue) wedge instead of its own ochre docs/ wedge, in both
+    renders — the docs/ wedge is narrow (~30 deg arc, 29 of 351 MB) and matplotlib's
+    default pie-label alignment (ha='right' when the anchor x is negative) pushes
+    the whole label further left, off the wedge it names. Consider a smaller labeldistance/fontsize
+    for narrow level-1 wedges, or clamp label x-offset to stay within the wedge's
+    angular half-width.
+  - The level-3 'validators' leaf label (src/utils/validators, ~10 MB, ~10.3 deg arc)
+    overflows well past its own narrow outer-ring wedge into the neighboring 'utils'
+    (level-2) wedge above and the adjacent level-3 wedge to the right, with wedge
+    divider lines visibly cutting through the letters, in both renders. The current
+    span>10 deg threshold lets this borderline-width wedge through; switch to an estimated-text-width-vs-chord-length
+    check (or raise the level-3 threshold slightly) so labels are skipped when they
+    can't fit inside their own wedge.
+  - Tint assignment for level-2 vs level-3 rings uses sns.light_palette(base_color,
+    n_colors=6) indices 3-4 for level-2 and 4-5 for level-3, so the outer (level-3)
+    ring ends up similarly saturated to the innermost level-1 ring while the middle
+    (level-2) ring reads noticeably lighter — the opposite of the more common expectation
+    that rings lighten (or darken) monotonically moving outward. Not incorrect, but
+    a bit visually inconsistent; consider a monotonic tint ramp across the three rings.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, correct.
-      Chrome: Title "sunburst-basic · python · seaborn · anyplot.ai" in bold dark ink at top, spans ~55% of canvas width. Left panel is a 3-ring sunburst (src/, assets/, tests/, docs/ innermost; subdirectories middle; leaf folders outer) with a "351 MB" center total. Right panel is a horizontal bar chart "Directory Totals" with axis label "Size (MB)", tick labels, and per-bar MB value labels, spines removed, y-axis-free light grid.
-      Data: First branch (src/) uses Imprint green #009E73 with light tints for its children; other branches use purple/blue/orange from the Imprint palette in canonical order; wedges separated by thin off-white edge lines.
-      Legibility verdict: Mostly PASS, with two exceptions: (1) the level-2 label "components" and level-3 label "forms" run together with no visible gap ("componentsforms") near the top of the sunburst; (2) the level-3 label "validators" has weaker contrast than its sibling "helpers" against the saturated green wedge. All other text (title, level-1 branch labels, bar-chart axis/tick/value labels) is clearly readable against the light background.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "sunburst-basic · python · seaborn · anyplot.ai" in bold dark ink at top, fully visible. Right panel title "Directory Totals" in bold dark ink. Bar-chart x-axis "Size (MB)" label and tick labels (0/50/100/150) in dark/soft-dark ink, all clearly legible. Center sunburst total "351 MB" in bold dark ink on the off-white hole. All ring/leaf text labels use a black-or-white color chosen per-wedge luminance with an opposite-tone halo, so every label reads clearly against its wedge fill.
+      Data: Three concentric rings plus a center hole. First (innermost) ring uses the Imprint order starting with #009E73 (src/, largest share), then #C475FD (assets/), #4467A3 (tests/), #BD8233 (docs/) — matches canonical Imprint order with green first. Middle and outer rings use lighter/darker tints of each branch's hue, keeping parent-child relationships visually traceable. The companion bar chart on the right uses the identical four colors, sorted ascending by size (docs 29 MB, assets 84 MB, tests 90 MB, src 148 MB), with value labels to the right of each bar.
+      Legibility verdict: PASS overall, with two localized proportion issues (not legibility failures) — the "docs/" ring label sits mostly over the neighboring tests/ wedge rather than its own ochre wedge, and the "validators" leaf label overflows its own narrow outer-ring wedge into the "utils" wedge above it. Both texts remain individually readable; the issue is placement/proportion, not contrast or size.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, correct.
-      Chrome: Same layout as the light render — title, sunburst, center total, and bar panel — with all chrome (title, tick labels, axis label, grid) correctly flipped to light ink on the dark surface. No dark-on-dark failures observed for chrome text.
-      Data: Colors are identical to the light render (green/purple/blue/orange branches with matching tints) — only the chrome and page background changed, as required.
-      Legibility verdict: Mostly PASS, with the same two exceptions as light: the "componentsforms" label collision persists, and "validators" is noticeably harder to read here than in the light render — the light-gray INK_SOFT text sits closer in lightness to the saturated green wedge under dark-theme conditions, reducing contrast more than in light mode. All other text remains legible.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title and panel title now in light/off-white ink, fully legible against the dark background. Bar-chart axis and tick labels use the lighter soft-ink tone, also legible. Center "351 MB" text is dark ink on the dark hole background at first glance but is set explicitly from the INK token (light in dark theme) — confirmed light-colored and readable, no dark-on-dark failure. No tick or label text was found rendered in a color that disappears into the dark surface.
+      Data: Ring colors are pixel-identical to the light render (#009E73 green first, then #C475FD, #4467A3, #BD8233, plus the same branch tints) — confirms the categorical/tint colors are theme-independent as required; only the chrome (background, text, edge strokes between wedges) flipped to the dark tokens.
+      Legibility verdict: PASS overall, same two localized proportion issues as the light render (docs/ label over tests/ wedge; validators label overflowing into utils/ wedge) — cosmetic placement problems, not a light/dark-specific defect since both renders show it identically.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; readable in both themes except the
-          low-contrast 'validators' leaf label (INK_SOFT on saturated green tint,
-          worse in dark render).
+        comment: All font sizes explicitly set and readable in both themes, but the
+          docs/ and validators labels overflow their own wedges into neighboring wedges
+          — a proportion issue, not a contrast/size issue.
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
-        passed: false
-        comment: '''components'' (level-2) and ''forms'' (level-3) labels run together
-          with no gap (''componentsforms'') in both renders — adjacent-ring label
-          proximity not checked.'
+        passed: true
+        comment: docs/ level-1 label sits mostly over the tests/ wedge; validators
+          level-3 label overflows into the utils/ wedge above it. Both remain individually
+          readable (minimal overlap, main content readable).
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: White wedge edges cleanly separate segments; small leaf wedges appropriately
-          drop labels via angular-span thresholds.
+        comment: Wedges well-sized and distinguishable; density-aware label suppression
+          (span thresholds) keeps tiny leaves uncluttered. Bar markers/labels clear.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues (green/purple/blue/orange) are distinct and CVD-safe;
-          no red-green-only encoding.
+        comment: Per-wedge luminance-based label color plus opposite-tone halo ensures
+          contrast regardless of underlying fill or theme; no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas; balanced two-panel layout; title ~55% width,
-          no overflow or clipping.
+        comment: Canvas exactly on target (3200x1800), balanced two-panel layout,
+          generous margins, nothing clipped at any canvas edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Bar panel x-axis labeled 'Size (MB)' with units; title matches required
-          format exactly.
+        comment: Bar-chart 'Size (MB)' axis label has units; sunburst center total
+          labeled '351 MB'.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; canonical Imprint order for the 4 branches;
-          correct PAGE_BG for both themes; data colors identical across themes.'
+        comment: 'First series #009E73 (src/), remaining series follow canonical Imprint
+          order; identical data colors across light/dark; correct #FAF8F1/#1A1A17
+          backgrounds and theme-correct chrome in both renders.'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -118,23 +132,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Branch-consistent tinting plus a companion totals panel is well above
-          generic defaults; docked one point for the label collision and the hardcoded
-          white level-1 label color bypassing the theme system.
+        comment: Branch-coherent tinting, luminance-aware label coloring with halos,
+          and a matched companion bar panel show clear design intent well above library
+          defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed on the bar panel, subtle grid, white wedge edges,
-          generous whitespace around both panels.
+        comment: Spines removed on the bar panel, subtle grid, generous whitespace,
+          wedge edges matched to page background for clean separation — but the label-overflow
+          issues undercut 'every detail polished.'
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Center total plus ranked companion bar chart give the viewer both
-          the hierarchy and a clear magnitude comparison.
+        comment: Center total plus a size-sorted, color-matched companion bar chart
+          gives clear visual hierarchy and an easy comparison across top-level directories.
     spec_compliance:
       score: 15
       max: 15
@@ -144,87 +159,95 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine multi-ring sunburst (nested pie rings), not a fake substitute.
+        comment: Genuine concentric-ring sunburst via nested pie() rings with matched
+          radii/widths.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent branch colors, major-segment labeling with small-segment
-          suppression, and clear ring separation all match the spec notes.
+        comment: level_1/level_2/level_3 all present with 2-4 levels, value-proportional
+          angles, labels on major segments, small segments silently omit labels per
+          seaborn's static-library rules.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 3 hierarchy levels correctly nested, angles proportional to value
-          at every ring, companion bar correctly maps top-level totals.
+        comment: All 351 MB of leaf data accounted for; parent wedges correctly bound
+          their children's angular span.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title exactly matches 'sunburst-basic · python · seaborn · anyplot.ai';
-          inline labels substitute appropriately for a traditional legend.
+          wedge/bar labels match directory names 1:1.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Uses all 3 levels (level_1/2/3 equivalent) across 4 top-level branches
-          and 18 leaf nodes, within the spec's 10-50 leaf / 2-4 level range.
+        comment: 4 top-level dirs, 2-3 subdirs each, 2 leaves each (10 leaves total),
+          values ranging 3-48 MB — decent variation across the hierarchy.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral repository disk-usage scenario.
+        comment: Software repository disk-usage breakdown (src/assets/tests/docs)
+          is a realistic, neutral, immediately-recognizable scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MB values (3-48) sum to a believable 351 MB repo total.
+        comment: MB-scale folder sizes (3-48 MB) and a 351 MB repo total are plausible
+          for a real codebase.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes; flat procedural script.
+        comment: Mostly linear imports -> data -> plot -> save, but defines two small
+          helper functions (_label_color, _label_halo) to avoid repeating luminance/halo
+          logic across ~3 label loops.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness.
+        comment: Fully deterministic hardcoded hierarchy, no randomness involved.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, plt, np, pd, sns, so) are used.
+        comment: Every import (os, mcolors, path_effects, plt, np, pd, sns, so) is
+          actually used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity is proportional to the plot type; no fake UI or simulated
-          interactivity.
+        comment: Complexity (label collision avoidance, luminance-based coloring,
+          dual-panel layout) is purposeful and serves visual quality, not over-engineered;
+          no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; default bbox_inches; current seaborn/matplotlib
-          API.
+        comment: Saves plot-{THEME}.png with dpi=400 and default bbox_inches; no deprecated
+          calls.
     library_mastery:
       score: 8
       max: 10
@@ -234,27 +257,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Combines the standard matplotlib nested-pie sunburst technique with
-          sns.set_theme rc tokens, sns.light_palette, and sns.despine.
+        comment: Uses sns.set_theme, sns.light_palette, sns.despine, and the modern
+          seaborn.objects (so.Plot/so.Bar/so.Nominal) interface for the bar panel;
+          the sunburst core necessarily falls back to matplotlib's pie() since seaborn
+          has no native sunburst.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses seaborn's modern Objects API (so.Plot/so.Bar/so.Nominal) for
-          the companion panel — a genuinely distinctive, less commonly showcased seaborn
-          feature.
-  verdict: REJECTED
+        comment: seaborn.objects (so.Plot with so.Nominal color scale) and sns.light_palette
+          for branch-coherent tinting are seaborn-specific, going beyond generic plotting-library
+          usage.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - subplots
   patterns:
   - data-generation
   - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
+  - publication-ready
   - edge-highlighting
   - grid-styling
