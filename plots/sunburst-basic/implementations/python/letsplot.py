@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-04
+Library: letsplot 4.11.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-07-26
 """
 
 import math
@@ -34,6 +34,9 @@ LetsPlot.setup_html()
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+# Level 2/3 segments stay light pastels in both themes (only chrome flips), so their
+# labels are fixed dark ink for contrast rather than the theme-adaptive INK token.
+LABEL_ON_PASTEL = "#1A1A17"
 
 # Data - Organizational budget by department, team, and project (3 levels)
 data = [
@@ -66,11 +69,11 @@ def create_wedge(inner_r, outer_r, start_angle, end_angle, n_points=30):
     return x_outer + x_inner, y_outer + y_inner
 
 
-# Okabe-Ito branch colors for level 1; graduated lighter shades for levels 2-3
+# Imprint palette branch colors for level 1; graduated lighter shades for levels 2-3
 branch_colors = {
-    "Eng": "#009E73",  # Okabe-Ito position 1 — brand green
-    "Sales": "#C475FD",  # Okabe-Ito position 2 — vermillion
-    "Mktg": "#4467A3",  # Okabe-Ito position 3 — blue
+    "Eng": "#009E73",  # Imprint palette position 1
+    "Sales": "#C475FD",  # Imprint palette position 2
+    "Mktg": "#4467A3",  # Imprint palette position 3
 }
 level2_colors = {
     "Backend": "#66C5AB",  # Eng, ~40% lighter
@@ -199,26 +202,30 @@ label_df = pd.DataFrame(label_rows)
 # Plot
 plot = (
     ggplot(polygon_df)
-    + geom_polygon(aes(x="x", y="y", fill="color", group="segment_id"), color=PAGE_BG, size=1.5, alpha=0.9)
+    + geom_polygon(aes(x="x", y="y", fill="color", group="segment_id"), color=PAGE_BG, size=0.75, alpha=0.9)
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=label_df[label_df["level"] == 1],
-        size=12,
+        size=6,
         color="#FFFFFF",
         fontface="bold",
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df[label_df["level"] == 2], size=11, color="#1A1A17")
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df[label_df["level"] == 3], size=9, color="#1A1A17")
+    + geom_text(
+        aes(x="x", y="y", label="label"), data=label_df[label_df["level"] == 2], size=5.5, color=LABEL_ON_PASTEL
+    )
+    + geom_text(
+        aes(x="x", y="y", label="label"), data=label_df[label_df["level"] == 3], size=4.5, color=LABEL_ON_PASTEL
+    )
     + scale_fill_manual(values=all_colors)
     + coord_fixed(ratio=1)
     + scale_x_continuous(limits=(-100, 100))
     + scale_y_continuous(limits=(-100, 100))
     + labs(title="sunburst-basic · letsplot · anyplot.ai")
-    + ggsize(1200, 1200)
+    + ggsize(600, 600)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, hjust=0.5, color=INK),
+        plot_title=element_text(size=12, hjust=0.5, color=INK),
         legend_position="none",
         axis_title=element_blank(),
         axis_text=element_blank(),
@@ -229,5 +236,5 @@ plot = (
 )
 
 # Save
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
