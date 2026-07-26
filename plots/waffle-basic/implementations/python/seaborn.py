@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waffle-basic: Basic Waffle Chart
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-26
@@ -88,7 +88,9 @@ ax.set_yticks([])
 sns.despine(ax=ax, left=True, bottom=True, top=True, right=True)  # clean floating grid, no frame
 
 # Title
-fig.text(0.5, 0.95, "waffle-basic · seaborn · anyplot.ai", ha="center", fontsize=12, fontweight="bold", color=INK)
+fig.text(
+    0.5, 0.95, "waffle-basic · python · seaborn · anyplot.ai", ha="center", fontsize=12, fontweight="bold", color=INK
+)
 
 # Caption — spells out the waffle-chart metaphor (each square = one unit of the whole)
 fig.text(0.5, 0.885, "Each square = 1% of 500 survey respondents", ha="center", fontsize=8, color=INK_MUTED)
