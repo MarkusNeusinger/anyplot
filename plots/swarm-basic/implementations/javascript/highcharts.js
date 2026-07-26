@@ -39,13 +39,17 @@ groups.forEach((g) => {
 });
 
 // --- Beeswarm layout: bin points by value, fan them out from center-out ----
+// Also reports the densest bin size so denser groups can render more
+// transparent, easing within-bin overlap where points stack up the most.
 function beeswarmOffsets(values, binWidth, gap) {
   const order = values.map((v, i) => i).sort((a, b) => values[a] - values[b]);
   const offsets = new Array(values.length).fill(0);
   let bin = [];
   let binStart = null;
+  let maxBinSize = 0;
 
   const flushBin = () => {
+    maxBinSize = Math.max(maxBinSize, bin.length);
     bin.forEach((idx, k) => {
       const side = k % 2 === 0 ? 1 : -1;
       const rank = Math.ceil((k + 1) / 2);
@@ -64,15 +68,26 @@ function beeswarmOffsets(values, binWidth, gap) {
   });
   flushBin();
 
-  return offsets;
+  return { offsets, maxBinSize };
 }
 
 const BIN_WIDTH = 0.5; // mg/L — points within this range share a swarm bin
 const SWARM_GAP = 0.045; // category-axis units between adjacent swarm points
 
 groups.forEach((g, i) => {
-  const offsets = beeswarmOffsets(g.values, BIN_WIDTH, SWARM_GAP);
+  const { offsets, maxBinSize } = beeswarmOffsets(g.values, BIN_WIDTH, SWARM_GAP);
   g.points = g.values.map((v, k) => ({ x: i + offsets[k], y: Number(v.toFixed(2)) }));
+  g.maxBinSize = maxBinSize;
+});
+
+// Denser groups (bigger densest-bin stacks) render more transparent so
+// overlapping points stay individually readable; sparser groups stay opaque.
+const densestBin = Math.max(...groups.map((g) => g.maxBinSize));
+const sparsestBin = Math.min(...groups.map((g) => g.maxBinSize));
+const binRange = densestBin - sparsestBin || 1;
+groups.forEach((g) => {
+  const density = (g.maxBinSize - sparsestBin) / binRange;
+  g.opacity = 0.88 - density * 0.28; // 0.88 (sparsest) down to 0.60 (densest)
 });
 
 // --- Chart -------------------------------------------------------------------
@@ -94,7 +109,7 @@ Highcharts.chart("container", {
     min: -0.6,
     max: categories.length - 1 + 0.6,
     tickPositions: categories.map((_, i) => i),
-    lineColor: t.inkSoft,
+    lineWidth: 0,
     tickColor: t.inkSoft,
     gridLineWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
@@ -102,6 +117,7 @@ Highcharts.chart("container", {
   },
   yAxis: {
     title: { text: "CRP Level (mg/L)", style: { color: t.inkSoft, fontSize: "16px" } },
+    lineWidth: 0,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
@@ -111,21 +127,35 @@ Highcharts.chart("container", {
   },
   plotOptions: {
     series: { animation: false },
-    scatter: { marker: { radius: 5, lineWidth: 0 }, opacity: 0.85 },
+    scatter: { marker: { radius: 5, lineWidth: 0 } },
   },
   series: [
     ...groups.map((g, i) => ({
       name: g.name,
+      type: "scatter",
       color: t.palette[i],
       data: g.points,
+      opacity: g.opacity,
       showInLegend: false,
     })),
     {
       name: "Group mean",
       type: "scatter",
       color: t.ink,
+      zIndex: 5,
       data: groups.map((g, i) => ({ x: i, y: Number(g.sampleMean.toFixed(2)) })),
-      marker: { symbol: "diamond", radius: 8, lineColor: t.pageBg, lineWidth: 2 },
+      marker: { symbol: "diamond", radius: 9, lineColor: t.pageBg, lineWidth: 3 },
+      dataLabels: {
+        enabled: true,
+        format: "{point.y:.1f}",
+        y: -16,
+        style: {
+          color: t.ink,
+          fontSize: "13px",
+          fontWeight: "600",
+          textOutline: "2px " + t.pageBg,
+        },
+      },
       showInLegend: true,
     },
   ],
