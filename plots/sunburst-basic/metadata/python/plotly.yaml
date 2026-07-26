@@ -2,106 +2,111 @@ library: plotly
 language: python
 specification_id: sunburst-basic
 created: '2025-12-23T21:54:49Z'
-updated: '2026-05-04T22:55:03Z'
+updated: '2026-07-26T04:15:16Z'
 generated_by: claude-sonnet
-workflow_run: 25347094831
+workflow_run: 30187196691
 issue: 821
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/plotly/plot-dark.html
-quality_score: 92
+quality_score: 94
 review:
   strengths:
-  - Excellent color family approach — Okabe-Ito tints/shades per branch encode hierarchy
-    relationships visually
-  - 'Strong data storytelling: explicit annotation calls out Engineering''s 37.5%
-    dominance'
-  - Theme adaptation is thorough — PAGE_BG, ELEVATED_BG, INK, and INK_MUTED all adapt;
-    center root circle is especially elegant
-  - 'Idiomatic Plotly sunburst usage: branchvalues=''total'', insidetextorientation=''radial'',
-    custom hovertemplate with percentParent'
-  - Internally consistent data values (all parent totals equal sum of children)
-  - HTML output included for interactive experience
-  - Square 3600×3600 format is appropriate for a symmetric radial chart
+  - Per-segment on-label text color computed from WCAG relative luminance (_on_segment_text_color)
+    guarantees legible labels on every wedge in both themes instead of relying on
+    Plotly's implicit auto-contrast
+  - 'Family-consistent hue palette: departments get canonical Imprint positions (#009E73,
+    #C475FD, #4467A3, #BD8233) and their child teams use lighter/darker variants of
+    the same hue, directly satisfying the spec''s ''consistent colors within each
+    branch'' requirement'
+  - branchvalues="total" with hand-verified value sums (e.g. Engineering 18 = Backend
+    8 + Frontend 6 + DevOps 4) so inner segments correctly encompass their children's
+    angular span
+  - Insight annotation ('Engineering leads with 37.5%...') surfaces a concrete finding
+    instead of leaving the viewer to find their own story
+  - Fully deterministic hardcoded data, no randomness needed
+  - Correct square 2400x2400 canvas choice (width=600, height=600, scale=4) for a
+    symmetric radial chart, with pinned margins so the long mandated title and bottom
+    annotation never clip
   weaknesses:
-  - Segment text color is not explicitly set — relies on Plotly's auto-contrast for
-    text inside colored segments; 'Enterprise' label renders in dark brown on the
-    lighter orange variant in both renders (readable but uncontrolled)
-  - 'Custom hex variants for child segments (#00B589, #007A58, #F07030, etc.) technically
-    deviate from pure Okabe-Ito; the family approach is appropriate but worth noting'
-  - DE-01 ceiling limited by the derivative nature of the color choices (tints of
-    Okabe-Ito rather than a fully custom palette)
+  - Only 9 leaf nodes (Backend, Frontend, DevOps, Enterprise, SMB, Digital, Brand,
+    HR, Finance) — spec requires 10-50 leaf nodes; split one more branch (e.g. add
+    a team under Marketing or Operations) to clear the stated minimum
+  - _on_segment_text_color is a small standalone helper function, a minor deviation
+    from the KISS 'no functions/classes' guidance — justified by its narrow, well-documented
+    purpose, but could be inlined as a comprehension if strict linear KISS structure
+    is desired
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "sunburst-basic · plotly · anyplot.ai" in dark ink, clearly readable at top center; bottom annotation text in INK_MUTED gray, readable
-      Data: Three-level sunburst — center 'Company' circle in dark charcoal (ELEVATED_BG applied via Plotly's root rendering); second ring: Engineering (teal-green #009E73), Sales (orange-vermillion #D55E00), Marketing (blue #0072B2), Operations (pink #CC79A7); outer ring shows child segments in color-family tints/shades of their parents; all segment labels in radial orientation with white or dark auto-contrast text
-      Legibility verdict: PASS — all labels readable; segment text at 22px is adequate; title at 36px is prominent; annotation at 20px is visible
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "sunburst-basic · plotly · anyplot.ai" in dark ink, centered at top, fully visible and not clipped. Center "Company" root rendered on an elevated near-white circle with dark text, clearly legible. Muted gray annotation ("Engineering leads with 37.5%...") sits below the chart, fully within canvas bounds.
+      Data: Three concentric rings — root (Company), 4 departments (Engineering #009E73 dominant green, Sales #C475FD purple, Marketing #4467A3 blue, Operations #BD8233 ochre), and 9 teams as lighter/darker shade variants of their parent hue. First categorical series (Engineering, the dominant branch) is #009E73 as required. On-segment radial text labels use explicitly computed dark or light ink per segment luminance and are all readable.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title rendered in light ink (#F0EFE8), clearly readable against dark background; annotation text in light-muted gray, readable
-      Data: Data segment colors are identical to light render — same Engineering green, Sales orange, Marketing blue, Operations pink, and their respective tints/shades for child segments; center root circle renders as light silver-gray (ELEVATED_BG #242420 interpreted by Plotly); separator lines use dark PAGE_BG creating clean segment boundaries
-      Legibility verdict: PASS — no dark-on-dark failures; white text on saturated segments is clear; auto-contrast dark text on lighter orange Enterprise segment is still readable; brand green #009E73 is clearly visible
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title renders in light/cream ink, clearly visible against the dark background. Center "Company" root sits on a near-black elevated circle with light text — legible, no dark-on-dark. Annotation text is muted light gray, clearly readable against the dark background.
+      Data: Identical department/team colors to the light render (same green/purple/blue/ochre family hues) — confirms only chrome flipped, not data colors. Per-segment text colors correctly re-flip per background luminance (e.g. dark ink stays on the light lavender segments, light ink stays on the saturated green segments) — no dark-on-dark or light-on-light failures observed anywhere in the wheel.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 36px and segment text 22px are explicitly set and readable
-          in both themes; segment text color relies on Plotly auto-contrast (not explicitly
-          controlled)
+        comment: All font sizes explicitly set (title=16, textfont=13, annotation=11);
+          per-segment WCAG-luminance text color guarantees readability in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All segment labels fit within their wedges; radial orientation prevents
-          overlap; no collisions observed
+        comment: Radial labels well spaced, no collisions with center label or annotation
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All three hierarchy levels are clearly visible; color families distinguish
-          branches; leaf opacity 0.88 adds subtle depth
+        comment: All wedges clearly distinguishable, leaf opacity 0.88 keeps outer
+          ring from overpowering inner rings
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito based palette is CVD-safe; no red-green as sole signal
+        comment: Okabe-Ito-derived hue families are CVD-safe; every segment carries
+          a direct text label so no reliance on hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 is ideal for symmetric radial chart; good margins;
-          annotation uses bottom space well; nothing cut off
+        comment: Sunburst fills most of the square canvas with balanced margins; title
+          and annotation both stay within bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for sunburst; title 'sunburst-basic · plotly
-          · anyplot.ai' is correct format
+        comment: Descriptive category labels; hovertemplate shows budget in $M with
+          percent-of-parent
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First data category (Engineering) = #009E73; backgrounds #FAF8F1
-          light / #1A1A17 dark correct; both renders theme-correct'
+        comment: 'First series (Engineering, dominant) is #009E73; department colors
+          match canonical Imprint order; backgrounds are theme-correct #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -109,26 +114,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful color family approach (tints/shades per branch), theme-adaptive
-          root circle, radial text, custom hovertemplate; above default but colors
-          are derivative
+        comment: Family-consistent hue shading plus computed per-segment text contrast
+          is clearly above default, though short of full publication-level typographic
+          polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: PAGE_BG separator lines create clean segment separation; no unnecessary
-          chrome; good margins; inherently clean radial form
+        comment: Clean segment borders matching page background, subtle leaf opacity,
+          generous whitespace, no chart junk
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Explicit insight annotation highlights Engineering's 37.5% dominance;
-          color families communicate hierarchy; Engineering segment is naturally dominant
-          focal point
+        comment: Explicit annotation surfaces the specific insight (Engineering =
+          37.5%, nearly double Sales) rather than leaving the viewer to find it
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,28 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sunburst chart with concentric rings
+        comment: Correct go.Sunburst chart type
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Concentric rings for hierarchy levels, consistent colors within branches,
-          segment labels, proportional angles
+        comment: 3-level hierarchy present, but only 9 leaf nodes vs the spec's 10-50
+          minimum
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 3 hierarchy levels (Company > Departments > Teams); values in $M;
-          branchvalues=total for correct proportions
+        comment: branchvalues=total with parent sums matching children exactly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; labels on segments serve as legend; no redundant
-          legend needed
+        comment: Title matches catalog convention '{spec-id} · {library} · anyplot.ai';
+          on-segment labels function as the legend
     data_quality:
       score: 15
       max: 15
@@ -167,56 +170,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 3 hierarchy levels; 14 nodes including root; demonstrates part-to-whole
-          at multiple levels; color family encoding
+        comment: Shows multi-level hierarchy, size variation across branches, and
+          family grouping
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Company budget breakdown is a realistic, neutral, and common business
-          use case
+        comment: Company budget breakdown by department/team — realistic, neutral,
+          comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values $3M-$48M are realistic; data arithmetic is internally
-          consistent (all parents equal sum of children)
+        comment: Values in $M are plausible and proportionally consistent
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: One small, well-justified helper function (_on_segment_text_color)
+          breaks strict linear KISS structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data, no randomness
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only 'os' and 'plotly.graph_objects' — both used
+        comment: Only os and plotly.graph_objects, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the chart type; no fake UI
+        comment: No fake functionality; appropriate complexity for a hierarchical
+          chart with adaptive contrast
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current write_image/write_html
+          API
     library_mastery:
       score: 9
       max: 10
@@ -226,24 +231,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: go.Sunburst with branchvalues='total', insidetextorientation='radial',
-          leaf opacity — all idiomatic
+        comment: Idiomatic go.Sunburst usage with marker.colors, textfont, hovertemplate,
+          leaf.opacity
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom hovertemplate with %{percentParent} formatting, HTML export,
-          leaf opacity — good Plotly-specific usage; slightly short of exceptional
+        comment: insidetextorientation='radial', percentParent hovertemplate, and
+          leaf opacity are Plotly-sunburst-specific and not trivially replicated elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
-  - html-export
   - annotations
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
+  - publication-ready
