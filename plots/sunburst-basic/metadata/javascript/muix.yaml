@@ -1,0 +1,268 @@
+library: muix
+language: javascript
+specification_id: sunburst-basic
+created: '2026-07-26T04:36:55Z'
+updated: '2026-07-26T04:43:14Z'
+generated_by: claude-sonnet
+workflow_run: 30187848953
+issue: 821
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct Imprint palette compliance: Engineering (largest department) uses brand
+    green #009E73, the other three departments follow canonical order (lavender, blue,
+    ochre); consistent hue-per-branch across all 3 rings via graduated opacity to
+    encode depth.'
+  - 'Fully theme-adaptive chrome: both light (#FAF8F1 bg, dark ink text) and dark
+    (#1A1A17 bg, light ink text) renders are legible; per-label paintOrder halo (fill=ink,
+    stroke=pageBg) keeps text readable against any wedge color in both themes.'
+  - 'Creative library workaround: since MUI X has no native Sunburst component, nests
+    3 PieChart series (departments/teams/projects) with matching value totals (1000
+    each) and consistently ordered data so arcs stay angularly aligned, satisfying
+    the spec''s ''inner segments visually encompass their children'' requirement.'
+  - Center KPI overlay ('$1.0M / TOTAL BUDGET') creates a clear focal point and visual
+    hierarchy without cluttering the radial chart.
+  - arcLabelMinAngle thresholds correctly suppress labels on segments too small to
+    fit text, avoiding overlap while still satisfying 'smaller segments show info
+    on hover' via MUI X's native tooltip.
+  - Realistic, well-scaled budget-allocation dataset spanning 4 departments / 9 teams
+    / 18 projects with plausible magnitudes and full coverage of the hierarchy.
+  weaknesses:
+  - Outermost 'projects' ring labels (11px CSS ≈ 22px final) will likely be hard to
+    read once the PNG is scaled to the ~400px mobile thumbnail — consider a slightly
+    larger projects-ring arcLabel fontsize or a higher arcLabelMinAngle so only labels
+    that stay legible at small scale are shown.
+  - Team/project ring fills are produced by alpha-blending the department hue over
+    the page background (rgba via the tint() helper), so their rendered color shifts
+    between light and dark themes, unlike the literal Imprint hex used for the department
+    ring — intentional per the code comment, but worth flagging against the style
+    guide's 'identical across themes' wording for categorical positions.
+  - hexToRgb/tint/currency helper functions add more structure than the minimal 'data
+    → plot' pattern; acceptable given the tinting design but slightly more code than
+    strictly necessary.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 (not pure white, not dark).
+      Chrome: Title "sunburst-basic · javascript · muix · anyplot.ai" is bold dark text, clearly visible at top-center. Three concentric rings (department / team / project) separated by thin cream-colored strokes matching the page background. Segment labels use dark ink fill with a cream stroke halo, fully readable against every wedge color. Center overlay "$1.0M / TOTAL BUDGET" in dark ink, clearly legible.
+      Data: Four department branches — Engineering (brand green #009E73, largest), Design (lavender), Marketing (blue), Operations (ochre) — each department's hue carries into its team and project rings via progressively lighter opacity tints, keeping branch identity readable at every depth. Segment angles are visibly proportional to value, and each parent arc visually spans the same angular range as its children below it.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 (not pure black, not light).
+      Chrome: Title renders in light/white text, clearly visible against the dark background. Ring separators are now dark strokes (page-background colored) giving the same clean visual break as in light mode. Segment labels use light ink fill with a dark stroke halo — fully readable on every wedge, no dark-on-dark or light-on-light failures observed. Center overlay "$1.0M / TOTAL BUDGET" in light ink, clearly legible.
+      Data: Same four department hues as the light render (Engineering green #009E73 first/brand, Design lavender, Marketing blue, Operations ochre) — department-ring colors are identical hex values across themes. Team/project ring tints are alpha-blended over the page background, so their absolute rendered shade differs slightly from the light render (darker background makes the translucent fills read darker), while the underlying hue family per branch stays consistent and recognizable.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All fonts explicitly sized and readable in both themes; outermost
+          project-ring labels (11px CSS) will likely be hard to read once scaled to
+          a ~400px mobile thumbnail.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: arcLabelMinAngle thresholds suppress labels that wouldn't fit, avoiding
+          any collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ring/segment sizing adapts well to the hierarchy; small segments
+          correctly hide labels rather than overlapping.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four distinct hue families (green/purple/blue/ochre), no red-green-only
+          encoding, good contrast via ink/pageBg label halos.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Circle fills roughly 50-55% of the square canvas area with balanced
+          margins; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a radial chart; segments are descriptively labeled
+          and the center KPI carries units ($1.0M).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/largest department (Engineering) is #009E73; remaining departments
+          follow canonical Imprint order; backgrounds and chrome are theme-correct
+          in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful hue-per-branch color system, deliberate typography hierarchy
+          across the 3 rings, and a polished center KPI overlay — clearly above library
+          defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle stroke separators between rings/segments, generous whitespace,
+          ink/pageBg label halos for legibility on any wedge color.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center total-budget KPI plus decreasing label prominence by depth
+          guides the eye from macro to micro, but the chart is a general drilldown
+          rather than emphasizing one specific insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sunburst emulation via nested concentric PieChart series,
+          the standard technique for this chart type when a library lacks a native
+          Sunburst component.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: level_1/level_2/level_3 all present, consistent branch coloring,
+          major segments labeled, minor segments deferred to hover tooltip as the
+          spec allows.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Segment angle correctly proportional to value; matching per-ring
+          totals (1000 each) and consistent grouping keep parent arcs spanning their
+          children's angular range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated 'sunburst-basic · javascript · muix ·
+          anyplot.ai' format; inline segment labels substitute for a legend appropriately.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 departments / 9 teams / 18 projects across 3 levels, wide range
+          of magnitudes (Engineering 480 down to Benefits 20).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible engineering-org budget-allocation scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportions are realistic (Engineering largest, HR/Benefits smallest)
+          and all per-level totals reconcile to the same $1,000K.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear data-then-plot, but adds hexToRgb/tint/currency helper
+          functions beyond the minimal pattern (needed for the tinting design).
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded, deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only imports PieChart from @mui/x-charts.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the color-tinting/alignment design, no
+          fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness-managed output; skipAnimation set, current MUI X PieChart
+          API used correctly.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of multi-series PieChart, arcLabel/arcLabelMinAngle, valueFormatter,
+          and per-series sx class targeting (.MuiPieArcLabel-series-*).
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative workaround for MUI X's lack of a native Sunburst — matched
+          per-ring totals plus sx-scoped per-series label styling.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

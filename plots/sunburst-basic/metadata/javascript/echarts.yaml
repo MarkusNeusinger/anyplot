@@ -1,0 +1,257 @@
+library: echarts
+language: javascript
+specification_id: sunburst-basic
+created: '2026-07-26T04:33:34Z'
+updated: '2026-07-26T04:51:13Z'
+generated_by: claude-sonnet
+workflow_run: 30187795370
+issue: 821
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Branch-consistent radial tint hierarchy (root/team/project) with WCAG-luminance-picked
+    label colors per tint gives a clean, readable result across all three rings in
+    both themes
+  - 'Genuine data storytelling: the subtitle callout plus a thicker/glowing border
+    on the Engineering root wedge draws the eye directly to the $1.86M / 49.6% insight
+    instead of leaving it implicit'
+  - 'Idiomatic ECharts sunburst mastery: per-level r0/r radial bands, sort: null to
+    preserve branch order, radial vs. tangential label rotation by depth, and emphasis.focus:
+    ''ancestor'' for hover drill-down'
+  - Root-ring categorical colors follow the Imprint canonical order exactly (green
+    -> lavender -> blue -> ochre) and stay identical between light/dark; both renders
+    pass theme-chrome checks
+  - Realistic, internally consistent budget data - leaf values sum exactly to the
+    stated $1.86M / 49.6% Engineering total
+  weaknesses:
+  - 'Team/project ring colors are one-off custom hex tints (e.g. #59C0A4, #D9A5FE,
+    #859CC3, #D4AE7A) rather than derived from the 8 Imprint palette swatches - acceptable
+    here as a hierarchy-tinting technique matching the spec''s ''consistent colors
+    within each branch'' note, but keep this pattern consistent rather than letting
+    it drift toward arbitrary custom hexes in future sunburst/treemap work'
+  - 'Design Excellence is strong but not top-tier: the branch tinting is a fairly
+    standard lighten/desaturate ramp rather than a truly bespoke palette, and the
+    small outer-ring cluster (Benefits/Recruiting/SEO/Design) feels slightly denser
+    than the rest of the chart'
+  - 'Library mastery is solid but leaves some ECharts-only differentiators on the
+    table beyond emphasis.focus: ''ancestor'' (e.g. label.minAngle handling for the
+    smallest leaf slices)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: title "sunburst-basic · javascript · echarts · anyplot.ai" in bold dark ink, subtitle "Engineering leads all departments — $1.86M, 49.6% of total R&D spend" in softer gray beneath it, both centered at the top and fully legible against the light surface.
+      Data: four-department sunburst (Engineering/Sales/Marketing/Operations root ring in Imprint canonical order green/lavender/blue/ochre), each with a team ring and project leaf ring in a consistent lighter tint of the branch hue; root labels in white bold text, team/project labels in dark text — all clearly readable; Engineering's root wedge has a visibly thicker border and soft green glow highlighting it as the largest department.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: title and subtitle switch to light-colored text (white/light-gray), fully readable against the dark surface; no dark-on-dark text found anywhere in the chart.
+      Data: same four-department palette and same per-branch tint hierarchy as the light render — Engineering green, Sales lavender/magenta, Marketing blue, Operations ochre are pixel-identical to the light version; only the chrome (background, title/subtitle color) flipped as expected.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Explicit font sizes at every level (title 22, subtext 15, ring labels
+          19/15/13); all readable in both themes. Smallest outer-ring labels (13px)
+          are a touch tight but still legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; truncate + rotate keep labels within their segments
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ring segments well-proportioned and clearly distinguishable across
+          all three levels
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Per-tint label colors chosen for contrast (WCAG-luminance picked
+          per code comments)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Sunburst fills the square canvas well with balanced margins; title/subtitle
+          occupy the reserved top band cleanly
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for sunburst; title/subtitle are descriptive with
+          quantified insight
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Root ring follows Imprint canonical order (green/lavender/blue/ochre),
+          first series is #009E73, backgrounds and chrome are theme-correct in both
+          renders, data colors identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate per-branch radial tint hierarchy with WCAG-tuned label
+          colors, clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean pageBg segment borders and generous whitespace; the small outer-ring
+          cluster (Benefits/Recruiting/SEO/Design) feels slightly denser than the
+          rest
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtitle + glowing/thicker border on the Engineering wedge creates
+          a clear, immediate focal point on the key insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sunburst with three concentric hierarchy levels
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent per-branch colors, labels on major segments, clear ring
+          separation, inner segments encompass children's angular span
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: level_1/level_2/level_3 map correctly to root/team/project rings;
+          value drives angular span
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; no legend needed since categories
+          are labeled directly on the rings
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 departments x 2-3 teams x 2 projects each, with varied leaf values
+          (85-420) across a 3-level hierarchy
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral R&D budget-allocation scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Verified: Engineering leaves sum to exactly $1,860k = 49.6% of the
+          $3,750k total, matching the subtitle claim'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> option -> setOption structure, no custom functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses the global echarts/ANYPLOT_TOKENS, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a 3-level hierarchy build, no fake UI
+          or fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false, no explicit size/devicePixelRatio, current setOption
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of levels[] with per-level r0/r bands, sort:null, and
+          label rotate per depth
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses emphasis.focus:'ancestor' and per-node itemStyle glow override;
+          leaves some ECharts-specific affordances (e.g. label.minAngle) unused
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
