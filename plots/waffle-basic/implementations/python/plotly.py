@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 waffle-basic: Basic Waffle Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-07-26
+Library: plotly 6.9.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-07-26
 """
 
 import os
