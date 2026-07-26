@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-05
+Library: bokeh 3.9.2 | Python 3.13.12
+Quality: 84/100 | Updated: 2026-07-26
 """
 
 import os
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -19,11 +19,10 @@ from selenium.webdriver.chrome.options import Options
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette — first series always #009E73
+# Imprint palette — first series always #009E73
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data — employee performance scores by department
@@ -85,25 +84,31 @@ colors = [color_map[cat] for cat in categories]
 # Plot
 source = ColumnDataSource(data={"x": x_positions, "y": values, "category": categories, "color": colors})
 
+hover = HoverTool(tooltips=[("Department", "@category"), ("Score", "@y{0.0}")])
+
 p = figure(
-    width=4800,
-    height=2700,
-    title="swarm-basic · bokeh · anyplot.ai",
+    width=3200,
+    height=1800,
+    title="swarm-basic · python · bokeh · anyplot.ai",
     x_axis_label="Department",
     y_axis_label="Performance Score",
     x_range=(-0.6, len(departments) - 0.4),
     y_range=(25, 108),
-    tools="",
+    tools=[hover],
     toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-p.scatter(x="x", y="y", source=source, size=18, color="color", alpha=0.75, line_color=PAGE_BG, line_width=1.5)
+p.scatter(x="x", y="y", source=source, size=12, color="color", alpha=0.75, line_color=PAGE_BG, line_width=1.2)
 
 # Median markers for each category
 for i, dept in enumerate(departments):
     mask = categories == dept
     median_val = np.median(values[mask])
-    p.line(x=[i - 0.32, i + 0.32], y=[median_val, median_val], line_width=5, line_color=INK, line_alpha=0.65)
+    p.line(x=[i - 0.32, i + 0.32], y=[median_val, median_val], line_width=4, line_color=INK, line_alpha=0.65)
 
 # X-axis category labels
 p.xaxis.ticker = list(range(len(departments)))
@@ -112,21 +117,21 @@ p.xaxis.major_label_overrides = dict(enumerate(departments))
 # Style — theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 p.title.text_color = INK
-p.title.text_font_size = "36pt"
+p.title.text_font_size = "50pt"
 p.title.align = "center"
 
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.axis_label_text_font_size = "26pt"
-p.yaxis.axis_label_text_font_size = "26pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-p.xaxis.major_label_text_font_size = "20pt"
-p.yaxis.major_label_text_font_size = "20pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
@@ -142,21 +147,25 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome (Selenium 4 / Selenium Manager)
-# Window height is larger than figure height to account for browser chrome (~140px)
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
     "--no-sandbox",
     "--disable-dev-shm-usage",
     "--disable-gpu",
-    f"--window-size={W},{H + 200}",
+    f"--window-size={W},{H}",
     "--hide-scrollbars",
 ):
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
-driver.set_window_size(W, H + 200)
+driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Pin viewport exactly via CDP — headless --window-size still reserves a
+# phantom title-bar height, which would otherwise shrink the screenshot below H.
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
