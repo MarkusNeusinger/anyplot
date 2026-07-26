@@ -2,12 +2,12 @@ library: matplotlib
 language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:54:23Z'
-updated: '2026-05-05T01:11:55Z'
+updated: '2026-07-26T07:16:36Z'
 generated_by: claude-sonnet
-workflow_run: 25351820138
+workflow_run: 30191826304
 issue: 974
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
@@ -15,34 +15,46 @@ preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - Violin + beeswarm hybrid combination shows distribution shape and individual data
-    points, exactly matching the spec intent
-  - Custom collision-detection algorithm correctly prevents point overlap without
-    external libraries
-  - 'Exemplary theme adaptation: backgrounds, text, grid, legend, and annotation chrome
-    all correctly flip; Okabe-Ito data colors remain constant across themes'
-  - Overall mean reference line and Top performer annotation create genuine narrative
-    hierarchy and data storytelling
+  - 'The core swarm-collision bug from attempt 1 is fully fixed: the pixel-space transData-based
+    greedy nearest-fit search now fans points into the signature diamond/beeswarm
+    shape in both renders, revealing genuine per-department distribution shape, spread,
+    and outliers instead of a collapsed column.'
+  - Y-axis label now reads 'Performance Score (0-100)' with an explicit unit/scale
+    qualifier, closing the VQ-06 gap flagged in the previous review.
+  - 'Theme-adaptive chrome remains flawless across both renders: identical Imprint
+    data colors (#009E73/#C475FD/#4467A3/#BD8233), correctly flipped background, text,
+    grid, spines, and legend frame, with no dark-on-dark or light-on-light failures.'
+  - Thoughtful legend construction — per-category diamond mean markers plus a dedicated
+    invisible-proxy scatter entry for a clean, non-crowding 'Mean' legend row — combined
+    with a subtle edge-highlighting cutout effect (edgecolors=PAGE_BG) that visually
+    separates touching points.
+  - Realistic, varied HR/performance-review dataset with genuine outliers (two low
+    Sales scores) and distinct means/spreads per department.
   weaknesses:
-  - Slight vertical stacking in Support group at lower values — swarm max_offset (0.35)
-    is too narrow for peak density; increase to 0.45 or adjust point_radius scaling
-  - Mean diamond markers use INK for edgecolors making them visually heavy; INK_SOFT
-    would be more refined
+  - Marker size (s=90) for ~40-55 points per category sits slightly below the style
+    guide's recommended 100-200 range for 30-100-point density — points are clearly
+    visible but could be marginally more prominent.
+  - The mean diamond marker is placed at offset=0 (category center, zorder=5), which
+    is usually the densest part of the swarm, so it visually obscures a handful of
+    individual points directly underneath it in each category.
+  - The hand-rolled O(n x 100) nearest-candidate collision-search loop is verbose
+    relative to a simpler approach, though the complexity is justified since matplotlib
+    has no native beeswarm/swarm API.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "swarm-basic · matplotlib · anyplot.ai" in dark ink, clearly readable; axis labels "Performance Score" (y) and "Department" (x) in dark ink; tick labels in INK_SOFT (#4A4A44) — all readable against light background
-      Data: Four departments with Okabe-Ito colors — Engineering=#009E73 (green, first series ✓), Sales=#D55E00 (orange), Marketing=#0072B2 (blue), Support=#CC79A7 (pink); violin KDE shapes behind scatter points; diamond mean markers; dashed reference line at Overall mean=74; "Top performer" annotation callout pointing to Marketing's highest scorer
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "swarm-basic · matplotlib · anyplot.ai" centered at top in dark ink, comfortably within the plot width. X-axis label "Department" and y-axis label "Performance Score (0-100)" in dark ink, both with clear unit/scale context. Tick labels and axis spines in a softer dark gray. Subtle horizontal gridlines at y=30..100. A legend (Engineering/Sales/Marketing/Support/Mean, with color swatches and a diamond for Mean) sits inside the plot's upper-right corner in an elevated cream box, positioned above the y=100 data ceiling so it never overlaps the swarm data. All text is clearly readable against the light background.
+      Data: Four vertical swarm columns (Engineering=green #009E73, Sales=lavender #C475FD, Marketing=blue #4467A3, Support=ochre #BD8233), each showing a genuine diamond-shaped beeswarm fan-out — individual points spread horizontally by density instead of stacking, so the true per-department distribution shape (spread, skew, denser middle) is now visible, along with a large diamond mean marker per category and two clear low outliers in the Sales column (~32, ~42).
+      Legibility verdict: PASS — all text and all data elements are readable, and the swarm collision-avoidance now works correctly (the core issue from the previous review is resolved).
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title and axis labels render in light text (#F0EFE8 equivalent) — fully readable against dark background; tick labels in lighter gray (INK_SOFT #B8B7B0) — readable; no dark-on-dark failures observed; legend box uses elevated dark background (#242420)
-      Data: Colors identical to light render — Engineering green, Sales orange, Marketing blue, Support pink all preserved ✓; violin fills appear deeper/more saturated due to dark background alpha interaction (expected); scatter point hues unchanged
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title/axis labels/ticks now rendered in light ink/off-white and soft light gray respectively, fully legible against the dark background. No dark-on-dark text anywhere. Gridlines are faint light lines. Legend box uses the elevated dark surface (#242420-like) with light gray border/text, still positioned clear of the data.
+      Data: Identical Imprint data colors to the light render (green/lavender/blue/ochre unchanged, confirming palette consistency across themes), same diamond mean markers now outlined in light gray, and the same correctly fanned-out swarm shape with the same two Sales outliers visible.
+      Legibility verdict: PASS — text and data elements are both readable; the swarm shape/collision-avoidance fix carries over correctly to the dark theme with no regressions.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,72 +62,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title=24, labels=20, ticks=16; readable
-          in both renders'
+        comment: All font sizes explicitly set; readable in both themes; title fits
+          comfortably without overflow.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Swarm algorithm prevents most overlap; slight vertical stacking in
-          Support at lower values
+        comment: No text-on-text overlap; legend sits above the y=100 data ceiling
+          so it never collides with the swarm.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: s=150, alpha=0.75 appropriate for 40-55 points; slightly cramped
-          in dense Support cluster
+        comment: Swarm collision-avoidance now works correctly and points are clearly
+          visible/spread; marker size (s=90) is slightly below the 100-200 guideline
+          for this density, and the mean diamond obscures a few underlying points.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; CVD-safe, good contrast
+        comment: 4 CVD-safe hues, no red-green-only signal, alpha + edge color aid
+          separation of touching points.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape, well-utilized canvas, balanced margins
+        comment: Swarm columns now use their allotted horizontal slot well; balanced
+          margins, legend near the plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Performance Score and Department are descriptive; scores are dimensionless
+        comment: Y-axis label now includes the unit qualifier '(0-100)', fixing the
+          prior gap.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order, correct theme backgrounds
-          and chrome'
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome
+          in both renders.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Violin+swarm combination, annotations, reference line — clearly above
-          library defaults
+        comment: Thoughtful custom beeswarm layout, diamond mean markers, and edge-highlighting
+          cutout effect clearly above library defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-only grid, alpha blending, edge
-          highlighting, generous whitespace
+        comment: Spines removed, subtle y-axis grid, legend neatly framed; whitespace
+          is generous but not maximally polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Top performer annotation + Overall mean reference line create narrative
-          hierarchy
+        comment: Diamond mean markers create a clear focal point per category, and
+          the now-correct swarm shape lets the viewer immediately compare both central
+          tendency and spread across departments.
     spec_compliance:
       score: 15
       max: 15
@@ -125,28 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct beeswarm with custom collision-avoidance; violin overlay
-          is valid enhancement
+        comment: Genuine swarm/beeswarm chart type with correct collision-avoidance
+          spread, all subtypes present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal spread, mean markers, color per category, clear group
-          spacing
+        comment: Consistent point sizes, per-category mean markers, color distinguishes
+          categories, and points now spread to avoid overlap as required.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, performance scores on y-axis
+        comment: Category on x, value on y, all data visible within axis bounds.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: swarm-basic · matplotlib · anyplot.ai; legend correctly labels all
-          series
+        comment: Title format correct; legend labels match categories plus an accurate
+          Mean entry.
     data_quality:
       score: 15
       max: 15
@@ -156,21 +173,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four groups with different means (68-82) and spreads showcase distribution
-          shape and individual values
+        comment: Different means/spreads per department, genuine outliers in Sales,
+          and the distribution shape itself is now visible thanks to the swarm fix.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee performance scores by department — real-world neutral business
-          scenario
+        comment: Neutral, plausible HR/performance-review scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 30-100, n=40-55 per group, plausible HR metrics
+        comment: 0-100 clipped scores with realistic means/ranges per department.
     code_quality:
       score: 10
       max: 10
@@ -180,34 +196,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> Data -> Plot -> Save; nested loops justified for beeswarm
-          implementation
+        comment: Imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy only; all used
+        comment: Only os, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality, Pythonic
+        comment: The collision-search loop is now correct (previous silent fallback-to-zero
+          bug is fixed); complexity is justified given matplotlib has no native beeswarm
+          API.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png
+        comment: Saves plot-{THEME}.png via current API, bbox_inches left default.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -215,23 +232,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ax.* methods throughout, plt.setp for legend text, idiomatic but
-          no advanced API leverage
+        comment: Correct Axes-method usage throughout, plus proper use of fig.canvas.draw()
+          + transData for real pixel-space geometry.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom beeswarm collision-detection (no native ax.swarm()), combined
-          with ax.violinplot() and ax.annotate() callout
+        comment: The transData pixel-space collision-avoidance algorithm is a genuinely
+          matplotlib-specific technique that now actually delivers correct swarm behavior,
+          unlike a generic scatter.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - custom-legend
-  - layer-composition
   - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
