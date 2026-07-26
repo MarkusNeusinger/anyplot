@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-07-26
@@ -40,34 +40,100 @@ scores_d = np.random.normal(78, 6, 40)
 
 all_scores = [scores_a, scores_b, scores_c, scores_d]
 
-# Plot — go.Box with boxpoints='all' gives the beeswarm effect (individual
-# jittered points). The box itself is de-emphasized (transparent fill, faint
-# outline) so it reads as a faint spread guide rather than competing with the
-# points; a dedicated diamond marker trace carries the per-group mean so it
-# stays crisp against the muted box outline.
+# Layout geometry (pre-scale coordinate space, matches write_image width=800/
+# height=450 below; scale=4 is applied uniformly so pixel ratios are unaffected).
+CANVAS_W, CANVAS_H = 800, 450
+MARGIN = {"l": 70, "r": 90, "t": 70, "b": 55}
+PLOT_W_PX = CANVAS_W - MARGIN["l"] - MARGIN["r"]
+PLOT_H_PX = CANVAS_H - MARGIN["t"] - MARGIN["b"]
+
+X_RANGE = (-0.6, len(classrooms) - 1 + 0.6)
+Y_RANGE = (30, 110)
+X_SCALE = PLOT_W_PX / (X_RANGE[1] - X_RANGE[0])  # px per 1 x-data-unit
+Y_SCALE = PLOT_H_PX / (Y_RANGE[1] - Y_RANGE[0])  # px per 1 y-data-unit
+
+MARKER_SIZE = 9
+SEP_PX = MARKER_SIZE * 1.2  # min center-to-center pixel distance -> no overlap
+MAX_OFFSET = 0.42  # data-units; keeps swarm clear of the neighboring category
+
+
+def swarm_offsets(y_values, x_scale, y_scale, sep_px, max_offset):
+    """Greedy beeswarm packing: place each point (sorted by y) at the offset
+    closest to the category center whose rendered marker circle does not
+    intersect any already-placed marker's circle, in true pixel space."""
+    n = len(y_values)
+    offsets = np.zeros(n)
+    order = np.argsort(y_values)
+    step = (sep_px / 6.0) / x_scale
+    max_steps = int(np.ceil(max_offset / step)) + 1
+
+    placed = []  # (offset, y)
+    for idx in order:
+        y = y_values[idx]
+        chosen = None
+        for k in range(max_steps + 1):
+            for cand in [0.0] if k == 0 else [k * step, -k * step]:
+                if abs(cand) > max_offset:
+                    continue
+                collides = False
+                for off, py in placed:
+                    dx_px = (cand - off) * x_scale
+                    dy_px = (y - py) * y_scale
+                    if dx_px * dx_px + dy_px * dy_px < sep_px * sep_px:
+                        collides = True
+                        break
+                if not collides:
+                    chosen = cand
+                    break
+            if chosen is not None:
+                break
+        if chosen is None:
+            chosen = max_offset if (len(placed) % 2 == 0) else -max_offset
+        placed.append((chosen, y))
+        offsets[idx] = chosen
+    return offsets
+
+
+# Plot — go.Box (fully transparent fill, faint outline, no points) is kept as
+# a de-emphasized quartile/spread guide; the actual beeswarm points are a
+# separate go.Scatter trace whose x-offsets are computed by swarm_offsets()
+# so marker circles never intersect, instead of relying on go.Box's
+# uniform-random jitter.
 fig = go.Figure()
 
 for i, (classroom, scores) in enumerate(zip(classrooms, all_scores, strict=False)):
     color = IMPRINT[i]
     r, g, b = IMPRINT_RGB[i]
+
     fig.add_trace(
         go.Box(
             y=scores,
+            x0=i,
+            width=0.3,
             name=classroom,
-            boxpoints="all",
-            jitter=0.75,
-            pointpos=0,
-            marker={"color": color, "size": 9, "opacity": 0.8, "line": {"width": 1.2, "color": PAGE_BG}},
+            boxpoints=False,
             line={"color": f"rgba({r}, {g}, {b}, 0.35)", "width": 1},
             fillcolor="rgba(0, 0, 0, 0)",
             whiskerwidth=0.3,
             boxmean=False,
+            hoverinfo="skip",
+        )
+    )
+
+    offsets = swarm_offsets(scores, X_SCALE, Y_SCALE, SEP_PX, MAX_OFFSET)
+    fig.add_trace(
+        go.Scatter(
+            x=i + offsets,
+            y=scores,
+            mode="markers",
+            marker={"color": color, "size": MARKER_SIZE, "opacity": 0.8, "line": {"width": 1.2, "color": PAGE_BG}},
+            showlegend=False,
             hovertemplate=f"{classroom}<br>Score: %{{y:.1f}}<extra></extra>",
         )
     )
     fig.add_trace(
         go.Scatter(
-            x=[classroom],
+            x=[i],
             y=[float(np.mean(scores))],
             mode="markers",
             marker={"symbol": "diamond", "size": 13, "color": color, "line": {"width": 1.5, "color": PAGE_BG}},
@@ -78,7 +144,7 @@ for i, (classroom, scores) in enumerate(zip(classrooms, all_scores, strict=False
 
 # Annotate Room C's bimodal shape — its most analytically interesting feature
 fig.add_annotation(
-    x="Room C",
+    x=2,
     y=71,
     text="Bimodal: two<br>skill clusters",
     showarrow=True,
@@ -95,11 +161,13 @@ fig.add_annotation(
 # Layout
 fig.update_layout(
     autosize=False,
+    width=CANVAS_W,
+    height=CANVAS_H,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     title={
-        "text": "swarm-basic · plotly · anyplot.ai",
+        "text": "swarm-basic · python · plotly · anyplot.ai",
         "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
@@ -107,9 +175,12 @@ fig.update_layout(
     xaxis={
         "title": {"text": "Classroom", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
+        "tickvals": list(range(len(classrooms))),
+        "ticktext": classrooms,
+        "range": list(X_RANGE),
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
-        "zerolinecolor": GRID,
+        "zeroline": False,
         "showgrid": False,
     },
     yaxis={
@@ -118,13 +189,13 @@ fig.update_layout(
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
         "zerolinecolor": GRID,
-        "range": [30, 110],
+        "range": list(Y_RANGE),
     },
     legend={"bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "borderwidth": 1, "font": {"size": 10, "color": INK_SOFT}},
     showlegend=True,
-    margin={"l": 70, "r": 90, "t": 70, "b": 55},
+    margin=MARGIN,
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=CANVAS_W, height=CANVAS_H, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
