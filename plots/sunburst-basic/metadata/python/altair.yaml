@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: sunburst-basic
 created: '2025-12-23T21:57:14Z'
-updated: '2026-07-26T04:24:58Z'
+updated: '2026-07-26T04:38:26Z'
 generated_by: claude-sonnet
 workflow_run: 30187306416
 issue: 821
@@ -12,54 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
+  - 'Fixes both weaknesses flagged in the prior 87/100 review: level_2 (Team) segments
+    now carry direct in-arc labels (Backend, Frontend, DevOps, Digital, Content, Support,
+    HR, SMB, Enterprise), and a focal-point callout now highlights the single largest
+    leaf segment (Engineering · API, $180K) with an outlined arc + connector label.'
   - 'Creative technique: builds a true sunburst via 3 layered mark_arc rings with
-    manually computed cumulative theta/theta2 angles proportional to values, working
+    manually computed cumulative theta/theta2 angles proportional to value, working
     around Altair''s lack of a native sunburst mark.'
   - 'Consistent branch-based color scheme: each department''s level_2/level_3 segments
     use progressively lighter tints (25%/50%) of that department''s own brand color,
     directly satisfying the spec''s ''consistent colors within each branch'' requirement.'
-  - 'Imprint palette correctly applied — Engineering (brand green #009E73) plus lavender/blue/ochre
-    for the other three departments, held identical across light and dark renders.'
-  - Segment strokes use the theme's PAGE_BG color so gaps between arcs read correctly
-    as background in both themes, keeping the rings crisp without a hard-coded stroke
-    color.
-  - Theme-adaptive chrome (title in INK, legend text in INK_SOFT) correctly threaded
-    through; both renders are legible.
+  - 'Imprint palette correctly applied — Engineering uses brand green #009E73 as the
+    first series, held pixel-identical across light and dark renders.'
+  - New text_color_for_bg() luminance helper picks black vs. white ink per level_2
+    wedge so labels stay readable against both the light-tint and the theme-adaptive
+    background.
   - Custom legend row is built left/right-balanced around x=0 so the donut itself
-    stays centered on the padded square canvas.
-  - Per-ring tooltips (Department / Team / Project + Budget $K) give full hierarchy
-    detail on hover in the interactive HTML output.
-  - Canvas correctly padded to the 2400x2400 square target with no clipping of title,
-    labels, or legend.
+    stays centered on the padded square canvas; canvas correctly padded to 2400x2400
+    with no clipping.
   weaknesses:
-  - Only the innermost (level_1/Department) ring carries text labels — level_2 (Team)
-    and level_3 (Project) segments have no direct labels even for large segments like
-    Backend or Frontend, so the static PNG relies entirely on color-shade + legend
-    to convey substructure; consider adding labels to the largest level_2 wedges.
-  - The design is competent but fairly standard 'layered donut' styling — nothing
-    pushes it into distinctive territory (e.g. no emphasis/callout on the single largest
-    leaf segment, no radial value reference).
-  - Level_3 (outermost ring) tints are uniformly very light (50% lighter) across all
-    four branches, which slightly reduces at-a-glance distinguishability between adjacent
-    thin segments in that ring, especially in dark mode.
+  - Level_1 (Department) in-arc labels use a hardcoded color='#ffffff' (mark_text
+    on chart_l1) instead of the new text_color_for_bg() contrast helper. On the Marketing
+    wedge (#C475FD, a light lavender) this yields an estimated WCAG contrast ratio
+    of ~2.9:1 for 12px bold white text — noticeably weaker than the other three department
+    wedges (blue ~5.7:1, green/ochre ~3.2:1) and below the 3:1 minimum for this text
+    size. Route level1_df through text_color_for_bg(hex_color) the same way level2_df['label_color']
+    already is.
+  - Level_3 (outermost ring) tints remain uniformly 50% lighter across all four branches,
+    which still slightly reduces at-a-glance separation between adjacent thin leaf
+    segments within the same department (most visible in dark mode) — minor, unchanged
+    from the prior review.
+  - The new text_color_for_bg() helper is a small function in an otherwise functions-free
+    procedural script (CQ-01 favors no functions/classes); acceptable given it is
+    reused for level_2 contrast, but worth inlining or noting as a deliberate KISS
+    exception if a future pass touches this file.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 target — not pure white.
-      Chrome: Title "sunburst-basic · python · altair · anyplot.ai" in bold dark ink, centered at top, clearly readable. Legend row below the sunburst shows 4 color swatches (Engineering/Sales/Marketing/Operations) with dark-gray labels, all legible.
-      Data: Three concentric rings (Department → Team → Project). Innermost ring uses the four Imprint hues (Engineering=brand green #009E73, Sales=ochre, Marketing=lavender, Operations=blue), with white bold department-name labels overlaid on each innermost wedge. Middle and outer rings use progressively lighter tints of the same parent hue, correctly showing branch-consistent coloring. Thin cream-colored strokes separate all wedges.
-      Legibility verdict: PASS — all title, legend, and department-label text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 target — not pure white, not dark.
+      Chrome: Title "sunburst-basic · python · altair · anyplot.ai" in bold dark ink, centered at top, clearly readable. A new callout in the upper-right reads "Engineering · API ($180K)" in dark ink, connected by a leader line to an outlined wedge in the outer ring — the new focal-point emphasis. Legend row below the sunburst shows 4 color swatches (Engineering/Sales/Marketing/Operations) with dark-gray labels, all legible.
+      Data: Three concentric rings (Department → Team → Project). Innermost ring uses the four Imprint hues (Engineering=brand green #009E73, Sales=ochre, Marketing=lavender, Operations=blue) with bold white department-name labels overlaid. The Marketing (lavender) label reads noticeably lower-contrast than the other three — estimated ~2.9:1 vs. ~3.2–5.7:1 elsewhere — a legibility weak point, though the bold weight keeps it just barely readable. Middle ring now carries its own labels (Backend, Frontend, DevOps, Digital, Content, Support, HR, SMB, Enterprise) in black or white text chosen per-wedge for contrast — all clearly legible. Outer ring is unlabeled (expected per spec for minor segments) except for the black-outlined focal wedge (Engineering·Backend·API). Thin cream-colored strokes separate all wedges.
+      Legibility verdict: PASS overall — only the Marketing level_1 label is a soft/marginal-contrast outlier; everything else is clearly readable against the light background with no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 target — not pure black.
-      Chrome: Title and legend text render in light ink/gray tones, clearly visible against the dark background. Wedge separator strokes are now dark (matching PAGE_BG) instead of cream, which is the correct theme-adaptive behavior.
-      Data: Data colors are identical to the light render — same brand green, ochre, lavender, blue for level_1, with the same lighter-tint progression for level_2/level_3. White bold department labels remain legible on all four colored innermost wedges.
-      Legibility verdict: PASS — no dark-on-dark failures; title, legend, and in-arc labels all read clearly against the near-black surface.
+      Background: Warm near-black, matches #1A1A17 target — not pure black, not light.
+      Chrome: Title and legend text render in light ink/gray tones, clearly visible against the dark background. The focal callout text and its outline switch to light ink/white stroke, still legible. Wedge separator strokes are now dark (matching PAGE_BG) instead of cream — correct theme-adaptive behavior.
+      Data: Data colors are identical to the light render — same brand green, ochre, lavender, blue for level_1, same lighter-tint progression for level_2/level_3. The same Marketing lavender/white-text contrast weakness is present here too (contrast ratio is independent of theme since it's white text on a fixed lavender fill). Level_2 labels remain readable via the per-wedge luminance-based text color. No dark-on-dark failures observed elsewhere — title, legend, and in-arc labels on the other three branches all read clearly against the near-black surface.
+      Legibility verdict: PASS overall — same isolated Marketing-label contrast caveat as the light render; no theme-adaptation (dark-on-dark) failures.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -67,49 +71,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, legend, and department labels are readable in both themes;
-          only level_1 carries in-arc text so overall label density is modest.
+        comment: Title, legend, callout, and level_2 labels are readable in both themes.
+          Level_1 'Marketing' label uses hardcoded white text on lavender with weak
+          (~2.9:1) contrast.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No text/data collisions in either render; new level_2 labels and
+          focal callout fit without colliding with level_1 labels or the ring boundaries.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: All 18 leaf wedges are visible and clearly separated by theme-matched
-          strokes.
+          strokes; focal-point outline is crisp in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Imprint palette used, CVD-safe, no red-green sole encoding.
+        comment: CVD-safe hues and no red-green sole encoding, but white-on-lavender
+          level_1 label falls below the 3:1 minimum for its text size.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
         comment: Square canvas correctly padded to 2400x2400, nothing cut off, balanced
-          legend.
+          legend and callout placement.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: No axes needed for a polar chart; title present and descriptive,
-          tooltips carry units ($K).
+          tooltips and callout carry $K units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Engineering = brand green #009E73; both renders theme-correct backgrounds.'
+        comment: 'Engineering = brand green #009E73 as first series; both renders
+          theme-correct backgrounds and identical data colors.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -117,24 +125,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Branch-consistent lightening scheme and theme-matched strokes show
-          real design intent beyond defaults.
+        comment: Branch-consistent lightening scheme, per-wedge contrast-aware level_2
+          labels, and theme-matched strokes show real design intent beyond defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean rings, generous whitespace, balanced legend; no grid/spine
-          clutter (n/a for polar chart).
+        comment: Clean rings, generous whitespace, balanced legend and callout; no
+          grid/spine clutter (n/a for polar chart).
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Radial nesting + color lightening guides the eye through the hierarchy,
-          but no additional focal-point emphasis on the largest single leaf.
+        comment: Radial nesting + color lightening + new focal-point outline/callout
+          on the largest leaf now gives the chart a clear single headline data point,
+          addressing the prior review's gap.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,11 +154,11 @@ review:
         comment: Correctly implements a sunburst via layered arc rings.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Major (level_1) segments labeled per spec; level_2/level_3 rely entirely
-          on tooltip/hover with no direct labels even for large team wedges.
+        comment: Both level_1 and level_2 major segments now labeled directly; level_3
+          relies on hover as the spec allows for smaller segments.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -165,16 +174,16 @@ review:
         comment: Title matches the mandated format exactly; legend labels match department
           names.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 3 hierarchy levels (18 leaf nodes) present, but full identification
-          of level_2/level_3 needs hover since they're unlabeled.
+        comment: All 3 hierarchy levels (18 leaf nodes) present; level_1 and level_2
+          now directly identifiable without hover.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -189,16 +198,16 @@ review:
         passed: true
         comment: Values (40-180, labeled Budget $K) are sensible for a budget domain.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes; procedural angle math is inherent to the no-native-sunburst
-          workaround.
+        comment: Procedural angle math is inherent to the no-native-sunburst workaround,
+          but a new text_color_for_bg() helper function was introduced.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,7 +219,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas, PIL.Image all used.
+        comment: os, sys, altair, numpy, pandas, PIL.Image all used (sys needed for
+          the altair.py filename-shadowing guard).
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -224,7 +234,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and .html; current vl-convert-based API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -236,12 +246,12 @@ review:
           pattern for radial charts.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
         comment: Multi-ring layering with a manually built overlay coordinate system
-          for labels/legend is a solid but known workaround technique, not a novel
-          library-specific feature.
+          for labels/legend, plus the new outlined focal-point wedge, is a solid,
+          purpose-built workaround technique.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -250,6 +260,7 @@ impl_tags:
   - polar-projection
   - layer-composition
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   - groupby-aggregation
