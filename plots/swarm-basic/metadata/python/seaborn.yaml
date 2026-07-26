@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:54:13Z'
-updated: '2026-07-26T07:02:38Z'
+updated: '2026-07-26T07:11:38Z'
 generated_by: claude-sonnet
 workflow_run: 30191886341
 issue: 974
@@ -12,131 +12,143 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Correct plot type: sns.swarmplot with hue=Condition, palette=IMPRINT_PALETTE,
-    legend=False follows the current (0.14+) API pattern and avoids the palette-without-hue
-    deprecation warning'
-  - 'Imprint palette applied in canonical order (#009E73, #C475FD, #4467A3, #BD8233)
-    and is pixel-identical between light and dark renders — only chrome (background,
-    ink, grid) flips as required'
-  - Median diamond markers (ax.scatter with marker='D') add a genuine data-storytelling
-    layer beyond the raw swarm, fulfilling the spec's optional 'consider a mean/median
-    marker' note, and are theme-adaptive (INK color + PAGE_BG edge) so they stay legible
-    on both backgrounds
-  - 'Data realism is strong: Control is tight/fast, Distraction shows wider spread,
-    Time Pressure is genuinely bimodal (rushed vs. deliberate responses), and Fatigue
-    includes a few severe attention-lapse outliers — this uses the full expressive
-    range of a swarm plot (individual points, density, distribution shape, outliers)
-    rather than four generic normal blobs'
-  - Canvas exact 3200x1800 via figsize=(8,4.5)@dpi=400 with bbox_inches left at default
-    (None), reproducible via np.random.seed(42), clean single-purpose script with
-    no fake interactivity
+  - 'Median-occlusion fix from attempt 1 works: hollow diamond markers (facecolor=''none'',
+    s=70, linewidth=1.8) no longer swallow nearby swarm points in dense categories
+    (Distraction, Fatigue) — points remain visible through the marker outline'
+  - Violin-outline hybrid (unfilled, alpha=0.35, drawn behind the swarm) adds genuine
+    distribution-shape/density context beyond raw points — directly implements the
+    LM-02 suggestion from the attempt-1 review
+  - Sample-size annotations folded into two-line x-tick labels (n=42/36/50/38) give
+    quick statistical context without crowding the plot with a separate subtitle or
+    legend entry
+  - Imprint palette in canonical order (green/purple/blue/amber), pixel-identical
+    data colors between light and dark renders — only chrome flips as required; median
+    marker itself is theme-adaptive (black outline on light, white outline on dark)
+  - 'Strong data realism preserved from attempt 1: Control tight/fast baseline, Distraction
+    wider spread, Time Pressure genuinely bimodal (rushed vs. deliberate responses),
+    Fatigue with rare severe attention-lapse outliers — uses the full expressive range
+    of a swarm plot'
+  - Exact 3200×1800 canvas (no bbox_inches='tight'), reproducible (np.random.seed(42)),
+    clean single-purpose script, no fake interactivity
   weaknesses:
-  - Median diamond markers sit directly on top of the densest part of several swarms
-    (e.g. Distraction, Fatigue), partially occluding a few data points — consider
-    a slightly larger PAGE_BG halo/edge width or nudging marker zorder/size so the
-    median stays a clear focal point without swallowing nearby dots
-  - Design execution mostly reproduces the library's own baseline style-guide defaults
-    (despine, alpha grid, standard legend box) rather than adding distinctive polish
-    beyond the median-marker idea — e.g. no typographic hierarchy or subtle per-category
-    emphasis to push visual refinement further
-  - Legend swatch only labels the median marker; a one-line caption or subtitle noting
-    n per condition would strengthen the story for readers unfamiliar with swarm plots,
-    though this is a nice-to-have, not a spec requirement
+  - Swarm marker size (s=4) is still on the smaller side for the 50-point Time Pressure
+    group — a touch larger (5-6) would improve individual-point visibility without
+    reintroducing overlap, since the swarm algorithm already prevents collisions at
+    any size
+  - Violin outline (linewidth=1.3, alpha=0.35) is quite subtle by design — appropriate
+    as a background silhouette on the full-size render, but worth keeping an eye on
+    at small thumbnail crops where it may nearly disappear
+  - Legend labels only the 'Median' marker (not per-category color) — adequate since
+    categories are already labeled on the x-axis, but a first-time viewer sees an
+    unlabeled color-to-category mapping outside the tick labels
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "swarm-basic · python · seaborn · anyplot.ai" in dark ink, clearly visible; axis titles "Reaction Time (ms)" (y) and "Experimental Condition" (x) in dark ink; tick labels (300-700 on y, Control/Distraction/Time Pressure/Fatigue on x) in soft dark gray, all legible; horizontal grid lines subtle and unobtrusive; legend box "Median" top-right with a light elevated background and soft edge.
-      Data: Four swarms in Imprint canonical order — green (#009E73, Control), lavender-purple (#C475FD, Distraction), blue (#4467A3, Time Pressure), amber (#BD8233, Fatigue); black diamond median markers with light-colored edges sit atop each swarm as focal points; points are small (size 4), lightly transparent (alpha 0.85), and well-spread with no excessive overlap.
-      Legibility verdict: PASS — no light-on-light or otherwise unreadable text found.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "swarm-basic · python · seaborn · anyplot.ai" and both axis titles
+        ("Reaction Time (ms)", "Experimental Condition") render in dark ink, clearly
+        legible. Two-line x-tick labels ("Control\n(n=42)", etc.) in soft dark gray,
+        readable and not overlapping the axis title below. Horizontal grid lines subtle
+        but visible. Legend box (top right) labels the hollow "Median" diamond marker.
+      Data: Four swarms in Imprint canonical order — green #009E73 (Control), lavender
+        #C475FD (Distraction), blue #4467A3 (Time Pressure), amber #BD8233 (Fatigue).
+        A faint unfilled violin silhouette sits behind each swarm showing the density
+        shape (clearly bimodal for Time Pressure, wide/skewed for Fatigue with two
+        high outliers). Hollow black diamond median markers sit on top per category
+        without hiding the points beneath them.
+      Legibility verdict: PASS — no light-on-light issues anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title and axis text now rendered in light cream ink, clearly visible against the dark surface; tick labels in a lighter soft gray, legible; grid lines subtle; legend box uses a slightly lighter dark elevated background with a soft light edge, distinguishable from the page background.
-      Data: Same four swarm colors as the light render (green/purple/blue/amber) — confirmed pixel-identical hues; median diamond markers flip from black to cream/white (INK token) so they remain clearly visible against the dark background — no dark-on-dark failure.
-      Legibility verdict: PASS — all title/axis/tick text and median markers read cleanly on the dark surface; no dark-on-dark text found.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title/axis text now renders in light cream ink, fully legible;
+        tick labels in a lighter soft gray, two-line "(n=...)" labels still readable.
+        Grid lines subtle. Legend box background/edge adapted to dark chrome tokens.
+      Data: Data colors are pixel-identical to the light render (same green/purple/
+        blue/amber hues and violin outlines) — only chrome flipped as required.
+        Median diamond markers flip from black outline to cream/white outline so
+        they stay clearly visible against the dark surface; hollow fill still lets
+        underlying points show through.
+      Legibility verdict: PASS — no dark-on-dark failures found (title, axis labels,
+        ticks, legend all pass).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at explicit font sizes (title 12pt,
-          axis labels 10pt, ticks 8pt)
+        comment: Explicit font sizes (title 12, axis 10, ticks 8); all text readable
+          in both themes including two-line n= tick labels
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text collisions; median diamond markers slightly occlude a few
-          underlying swarm points in dense categories (Distraction, Fatigue)
+        comment: Median occlusion from attempt 1 fixed via hollow diamond markers;
+          swarm algorithm prevents point overlap; legend clear of data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size (4) and alpha (0.85) appropriately sized for ~40-50 points
-          per category, avoiding overplotting while staying visible
+        comment: Points and violin outlines clearly visible at 3200x1800; density-appropriate
+          for 36-50 points/group
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette provides good contrast and CVD-safe hues; no red-green-only
-          encoding
+        comment: Imprint palette is CVD-safe; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); no overflow or clipping; balanced
-          axis labels
+        comment: 3200x1800 canvas confirmed (gate passed), balanced proportions, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (ms); title matches mandated format
-          exactly
+        comment: Descriptive labels with units (ms)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for remaining series,
-          correct theme backgrounds in both renders'
+        comment: 'First series #009E73, canonical multi-series order, correct theme-adaptive
+          backgrounds both renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above generic defaults thanks to the median-marker overlay and consistent
-          theme tokens, but overall polish stays close to the library's baseline style
-          guide
+        passed: true
+        comment: Layered violin+swarm+median composition shows real design intent
+          beyond generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Spines removed, subtle grid, generous whitespace — mostly reproduces
-          the style guide's own starting defaults rather than adding extra refinement
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Median diamonds create clear per-category focal points and let the
-          viewer compare central tendency against the full distribution shape
+        comment: Despine, subtle grid, hollow refined median marker, violin silhouette
+          add polish beyond the style-guide baseline
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Violin silhouette + median diamond + n annotations create clear hierarchy
+          and highlight the bimodal Time Pressure distribution
     spec_compliance:
       score: 15
       max: 15
@@ -146,29 +158,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: sns.swarmplot — correct beeswarm/swarm chart type
+        comment: Correct swarm plot (sns.swarmplot), violin outline is supplementary
+          context, not a substitute
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent point sizing, appropriate spread to avoid overlap, median
-          markers, color-coded categories, clear inter-group spacing — all spec notes
-          satisfied
+        comment: Individual points, spread avoiding overlap, median marker per spec's
+          'consider a median marker' note
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=Condition (categorical), y=Reaction Time (numeric); axis range
-          covers full clipped data range
+        comment: category on x, value on y, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'swarm-basic · python · seaborn · anyplot.ai'; legend
-          label 'Median' matches the marker it describes
+        comment: Title matches required format exactly; legend clearly labels the
+          median marker
     data_quality:
       score: 15
       max: 15
@@ -178,22 +189,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows individual points, density/spread, distribution shape (including
-          a genuinely bimodal condition), and outliers
+        comment: Shows distribution shape, density, spread, and central tendency simultaneously
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral psychology response-time experiment across four
-          well-motivated conditions
+        comment: Psychology reaction-time experiment, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reaction times (250-750ms range) are realistic for cognitive response-time
-          tasks
+        comment: 250-750ms range is sensible for a reaction-time task
     code_quality:
       score: 10
       max: 10
@@ -203,7 +211,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -215,21 +223,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI or simulated interactivity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, current hue+palette+legend=False API
+        comment: Saves plot-{THEME}.png, current hue+palette API avoids deprecation
+          warning
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -237,27 +246,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Axes-level sns.swarmplot with correct hue/palette/legend pattern
-          for 0.14+
+        comment: sns.swarmplot + sns.violinplot layering, sns.despine, current hue/palette
+          pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses swarmplot's core non-overlap placement (the spec's whole point)
-          plus a custom median overlay, but no further seaborn-specific flourishes
-          beyond that
+        passed: true
+        comment: Violin-outline-behind-swarm hybrid is a genuinely distinctive seaborn
+          layering technique, directly addressing prior LM-02 feedback
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
+  - manual-ticks
   - custom-legend
   patterns:
   - data-generation
-  - groupby-aggregation
   - iteration-over-groups
+  - groupby-aggregation
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
+  - publication-ready
