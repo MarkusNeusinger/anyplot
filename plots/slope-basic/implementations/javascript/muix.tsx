@@ -1,8 +1,7 @@
 // anyplot.ai
 // slope-basic: Basic Slope Chart (Slopegraph)
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: 88/100 | Created: 2026-07-25
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 94/100 | Updated: 2026-07-26
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
