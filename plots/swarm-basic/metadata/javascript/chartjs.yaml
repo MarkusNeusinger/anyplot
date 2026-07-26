@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: swarm-basic
 created: '2026-07-26T07:20:56Z'
-updated: '2026-07-26T07:25:17Z'
+updated: '2026-07-26T07:37:15Z'
 generated_by: claude-sonnet
 workflow_run: 30192487529
 issue: 974
@@ -12,51 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Custom deterministic swarm layout (value-binning + symmetric offset) produces
-    a genuine beeswarm spread on top of Chart.js's scatter type — a non-trivial technique
-    the library doesn't provide natively.
-  - Correct Imprint palette in canonical order (green, lavender, blue, ochre) with
-    data colors identical across light and dark renders; chrome (background, text,
-    grid, legend) is fully theme-adaptive in both.
-  - Per-category median reference line (mixed scatter+line dataset, filtered out of
-    the legend) adds a clear, uncluttered comparison point across groups without extra
-    visual noise.
+  - The amber backdrop band + amber median line on Sleep-Deprived directly resolves
+    Attempt 1's "no emphasis on the standout finding" feedback — the plot now has
+    a clear focal point without touching marker size (spec asks for consistent point
+    sizes throughout).
+  - Custom native plugin (beforeDatasetsDraw) and segment-based conditional line coloring
+    are genuine Chart.js-specific techniques, elevating Library Mastery beyond the
+    "minimum needed" assessment from Attempt 1.
+  - Custom deterministic swarm layout (value-binning + symmetric offset) still produces
+    a genuine beeswarm spread on top of Chart.js's scatter type.
+  - Correct Imprint palette in canonical order (green, lavender, blue, ochre), data
+    colors identical across light/dark, chrome fully theme-adaptive in both renders.
   - Realistic reaction-time data across 4 psychology-experiment conditions with distinct
-    means/spreads and genuine outliers in every group, showing real distribution variety.
-  - 'All chrome font sizes explicitly set (title 22px, axis labels 16px, ticks/legend
-    14-16px) and readable at full size in both themes; white-edge markers (borderColor:
-    pageBg) keep overlapping points distinct.'
+    means/spreads and genuine outliers in every group.
   weaknesses:
-  - 'Design Excellence is only at the ''strong but not publication-ready'' tier: the
-    chart relies on palette + median line for polish with no additional refinement
-    (e.g. subtle alpha, size variation, or a callout) that would push it toward FiveThirtyEight-level
-    sophistication.'
-  - No visual emphasis on the most notable finding (Sleep-Deprived group is markedly
-    slower and more variable than the others) — a subtle size, alpha, or annotation
-    cue on that group would strengthen the data storytelling beyond 'groups are colored
-    differently'.
-  - Sleep-Deprived swarm column is noticeably denser/tighter than the other three
-    groups (values cluster close together around 400-490ms) — consider a slightly
-    larger offset step or marker radius reduction there so individual points stay
-    as distinguishable as in the other groups.
-  - 'Library Mastery is solid but generic-adjacent: the mixed scatter+line technique
-    and afterBuildTicks override are the minimum needed to fake a categorical beeswarm
-    axis on Chart.js rather than a showcase of a distinctive Chart.js-only capability
-    (e.g. custom tooltip formatting, plugin-based annotations).'
+  - Sleep-Deprived swarm column still shows a denser cluster around 400-420ms than
+    the other three groups — the adaptive-binning comment claims "finer bins for wider-spread
+    groups," but binCount is actually fixed per group (driven only by values.length,
+    constant at 40 for every category) while only binSize scales with that group's
+    spread, so the densest y-region still accumulates more points per bin than in
+    the tighter-spread groups. A genuinely adaptive targetPointsPerBin (smaller for
+    higher-sd groups) would resolve this more directly.
+  - Design Excellence, while improved, still stops short of full publication-ready
+    polish (e.g. the median line width/amber treatment is the only differentiation
+    technique used — a second subtle cue, like slight alpha reduction in the densest
+    region, would push further).
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "swarm-basic · javascript · chartjs · anyplot.ai" centered at top; legend row below title with 4 color swatches (Control, Caffeine, Sleep-Deprived, Exercise); dark Y-axis title "Reaction Time (ms)" and dark X-axis title "Experimental Condition"; tick labels in a slightly softer dark grey. All fully readable against the light background.
-      Data: Four swarm columns of individual points (green Control, lavender Caffeine, blue Sleep-Deprived, ochre Exercise), first series is #009E73 brand green. Each column has a horizontal black median bar. Subtle horizontal-only gridlines. Points are white-edged for separation; no overlap between text and data.
+      Chrome: Bold dark title "swarm-basic · javascript · chartjs · anyplot.ai" centered at top; legend row below with 4 color swatches (Control, Caffeine, Sleep-Deprived, Exercise); dark Y-axis title "Reaction Time (ms)" and X-axis title "Experimental Condition"; tick labels in softer dark grey. All fully readable against the light background.
+      Data: Four swarm columns of individual points (green Control, lavender Caffeine, blue Sleep-Deprived, ochre Exercise), first series is #009E73 brand green, canonical Imprint order. Each column has a horizontal median bar (black by default). New in this attempt: a subtle amber backdrop band sits behind the Sleep-Deprived column with its median bar rendered in amber instead of black, creating a clear visual focal point on the standout finding. Points are white-edged for separation.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
       Chrome: Same title, legend, and axis titles now rendered in light/white text; tick labels in light grey; gridlines still subtle but visible. No dark-on-dark text anywhere — every label, tick, and title is clearly legible.
-      Data: Same four data colors as the light render (green/lavender/blue/ochre identical hex values), confirming only chrome flipped. Median bars are now white instead of black, remaining visible against the dark background. Brand green Control series still reads clearly.
+      Data: Same four data colors as the light render (green/lavender/blue/ochre identical hex values), confirming only chrome flipped. Median bars are white instead of black on non-highlighted groups; the amber backdrop + amber median on Sleep-Deprived is theme-invariant, exactly as in the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -82,13 +76,14 @@ review:
         max: 6
         passed: true
         comment: Markers well-sized for ~40 points/group with white edges; Sleep-Deprived
-          column is denser and points start touching
+          column remains denser than the other three around its mean region
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe, no red-green sole signal
+        comment: Imprint palette is CVD-safe, no red-green sole signal, amber accent
+          stays distinct from all 8 categorical hues
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -107,33 +102,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
-          in both renders'
+        comment: 'First series #009E73, canonical Imprint order, amber semantic anchor
+          used intentionally for emphasis, theme-correct chrome in both renders'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clearly above a bare default (custom swarm layout, median markers)
-          but not yet publication-ready polish
+        passed: true
+        comment: Custom plugin-based backdrop highlight, segment-conditional median
+          coloring, adaptive binning — clearly above a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle single-axis grid, white-edge markers, decent whitespace; some
-          refinement visible but not exhaustive
+        passed: true
+        comment: Subtle grid, white-edge markers, restrained low-alpha amber backdrop
+          band, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Median line creates visual hierarchy for group comparison, but no
-          emphasis calls out the standout Sleep-Deprived group
+        passed: true
+        comment: Amber backdrop + amber median line on Sleep-Deprived immediately
+          draws the eye to the standout finding — directly resolves Attempt 1 feedback
     spec_compliance:
       score: 15
       max: 15
@@ -150,7 +145,7 @@ review:
         max: 4
         passed: true
         comment: Consistent point sizes, median marker per category, color distinguishes
-          categories, no excessive overlap
+          categories, clear spacing between groups
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -195,8 +190,9 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Helper functions (rng, swarm offset, median) are justified by the
-          layout algorithm but add structure beyond pure linear script
+        comment: Helper functions (rng, swarm offset, median) plus a plugin object
+          are justified by the layout/emphasis algorithm but add structure beyond
+          a pure linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -214,7 +210,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the layout problem, no fake UI
+        comment: Appropriate complexity for the layout/emphasis problem, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -222,29 +218,31 @@ review:
         passed: true
         comment: 'Correct mount-node contract, animation: false set'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic mixed scatter+line composition, native plugin-core hook,
+          and segment styling API all used correctly
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic mixed scatter+line dataset composition and linear-axis-as-categorical
-          technique
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Uses Chart.js mixed-chart + afterBuildTicks override, but these are
-          the minimum needed rather than a showcase feature
-  verdict: REJECTED
+        comment: Native beforeDatasetsDraw plugin hook and segment-based conditional
+          line coloring are genuine Chart.js-only capabilities, not trivially replicated
+          in another library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -252,3 +250,4 @@ impl_tags:
   - binning
   styling:
   - edge-highlighting
+  - alpha-blending
