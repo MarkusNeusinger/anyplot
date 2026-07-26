@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-26
@@ -17,6 +17,7 @@ from lets_plot import (
     element_text,
     geom_crossbar,
     geom_sina,
+    geom_violin,
     ggplot,
     ggsave,
     ggsize,
@@ -75,15 +76,17 @@ title = "swarm-basic · python · letsplot · anyplot.ai"
 # Plot
 plot = (
     ggplot(df, aes(x="Department", y="Performance Score"))
+    + geom_violin(aes(fill="Department"), alpha=0.15, trim=False, show_legend=False)
     + geom_sina(aes(color="Department", fill="Department"), size=4, alpha=0.7, seed=42, scale="width")
     + geom_crossbar(aes(x="Department", y="mean", ymin="mean", ymax="mean"), data=means, width=0.5, size=1.5, color=INK)
     + scale_color_manual(values=IMPRINT_PALETTE)
     + scale_fill_manual(values=IMPRINT_PALETTE)
-    + labs(x="Department", y="Performance Score", title=title)
+    + labs(x="Department", y="Performance Score (0-100)", title=title)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         plot_title=element_text(size=16, face="bold", color=INK),
         axis_title=element_text(size=12, color=INK),
