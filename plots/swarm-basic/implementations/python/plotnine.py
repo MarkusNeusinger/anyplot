@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-26
@@ -59,26 +59,38 @@ df["treatment"] = pd.Categorical(df["treatment"], categories=treatment_groups, o
 df["x_num"] = df["treatment"].cat.codes.astype(float)
 
 
-# Deterministic beeswarm packing: bin each group's values, then stack points
-# alternating left/right of center within a bin so nearby values spread out
-# instead of colliding (a random jitter would overlap in the denser groups).
-def beeswarm_offsets(values, n_bins=22, spacing=0.05):
-    bin_width = (values.max() - values.min()) / n_bins
-    bin_seen = {}
+# Deterministic beeswarm packing: sweep points in ascending value order and
+# place each one in the nearest-to-center offset slot (alternating sides)
+# whose most recent occupant already cleared a minimum vertical gap — a slot
+# only frees up once its last point is far enough below the new one, so
+# offsets keep growing in dense stretches instead of every sparse column
+# resetting back to center and stacking near-concentrically with its neighbor.
+# min_gap is fixed to the shared y-axis scale (not each group's own spread)
+# since the marker's on-canvas footprint is the same regardless of group.
+def beeswarm_offsets(values, min_gap, spacing=0.09):
     offsets = np.zeros(len(values))
+    slot_last_y = {}  # offset slot (int) -> value of the last point placed there
     for idx in np.argsort(values):
-        b = round(values[idx] / bin_width)
-        count = bin_seen.get(b, 0)
-        side = 1 if count % 2 == 0 else -1
-        rank = (count // 2) + 1 if count > 0 else 0
-        offsets[idx] = side * rank * spacing
-        bin_seen[b] = count + 1
+        y = values[idx]
+        step = 0
+        while True:
+            for slot in (0,) if step == 0 else (step, -step):
+                last_y = slot_last_y.get(slot)
+                if last_y is None or y - last_y >= min_gap:
+                    offsets[idx] = slot * spacing
+                    slot_last_y[slot] = y
+                    step = None
+                    break
+            if step is None:
+                break
+            step += 1
     return offsets
 
 
+swarm_min_gap = (df["biomarker"].max() - df["biomarker"].min()) * 0.05
 for group in treatment_groups:
     mask = df["treatment"] == group
-    df.loc[mask, "x_num"] += beeswarm_offsets(df.loc[mask, "biomarker"].to_numpy())
+    df.loc[mask, "x_num"] += beeswarm_offsets(df.loc[mask, "biomarker"].to_numpy(), swarm_min_gap)
 
 medians_df = df.groupby("treatment", observed=True)["biomarker"].median().reset_index()
 medians_df["x_num"] = medians_df["treatment"].cat.codes.astype(float)
@@ -86,7 +98,7 @@ medians_df["x_num"] = medians_df["treatment"].cat.codes.astype(float)
 # Plot
 plot = (
     ggplot(df, aes(x="x_num", y="biomarker", color="treatment"))
-    + geom_point(size=2.5, alpha=0.8)
+    + geom_point(size=2.2, alpha=0.75)
     + geom_line(
         medians_df,
         aes(x="x_num", y="biomarker", group=1),
