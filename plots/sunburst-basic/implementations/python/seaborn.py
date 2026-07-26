@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-26
@@ -6,6 +6,8 @@ Quality: 88/100 | Updated: 2026-07-26
 
 import os
 
+import matplotlib.colors as mcolors
+import matplotlib.patheffects as path_effects
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -22,6 +24,28 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint palette — first series always #009E73; abstract folders get canonical order
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+
+# Ring-label text colors, chosen per-wedge from the wedge's own fill luminance rather than
+# a fixed theme token — wedge fills are data colors (branch tints), not page chrome, so their
+# brightness varies independently of THEME and a single INK/INK_SOFT choice can't stay legible
+# across the whole range from pale tints to fully-saturated branch colors.
+WEDGE_LABEL_LIGHT = "#F0EFE8"  # for text on saturated/dark wedge fills
+WEDGE_LABEL_DARK = "#1A1A17"  # for text on pale wedge tints
+
+
+def _label_color(hex_color):
+    r, g, b = mcolors.to_rgb(hex_color)
+    luminance = 0.299 * r + 0.587 * g + 0.114 * b
+    return WEDGE_LABEL_DARK if luminance > 0.5 else WEDGE_LABEL_LIGHT
+
+
+def _label_halo(fill_color):
+    # Opposite-tone halo so a label stays legible even where it overhangs its wedge
+    # onto the page background — PAGE_BG flips between light/dark per THEME, but the
+    # wedge-derived fill color above doesn't, so a plain fill can vanish into PAGE_BG.
+    halo_color = WEDGE_LABEL_LIGHT if fill_color == WEDGE_LABEL_DARK else WEDGE_LABEL_DARK
+    return [path_effects.withStroke(linewidth=2.5, foreground=halo_color)]
+
 
 # Hierarchical data: a repository's disk usage (in MB)
 # Level 1: top-level directories, Level 2: subdirectories, Level 3: leaf folders
@@ -112,7 +136,7 @@ wedges2, _ = ax_sun.pie(
 )
 
 # Level 1 (innermost ring — top-level directories)
-wedges1, _ = ax_sun.pie(
+wedges1, texts1 = ax_sun.pie(
     level1_values,
     radius=inner_radius + ring_width,
     colors=level1_colors,
@@ -121,10 +145,15 @@ wedges1, _ = ax_sun.pie(
     startangle=90,
     counterclock=False,
     wedgeprops={"width": ring_width, "edgecolor": PAGE_BG, "linewidth": 2},
-    textprops={"fontsize": 14, "fontweight": "bold", "color": "white"},
+    textprops={"fontsize": 14, "fontweight": "bold"},
 )
+for text, color in zip(texts1, level1_colors, strict=True):
+    fill = _label_color(color)
+    text.set_color(fill)
+    text.set_path_effects(_label_halo(fill))
 
 # Level 2 labels — horizontal, shown only where the wedge is wide enough to hold text
+level2_label_positions = []  # (x, y) of rendered labels, checked by level-3 labels below
 for i, wedge in enumerate(wedges2):
     ang = (wedge.theta2 + wedge.theta1) / 2
     span = wedge.theta2 - wedge.theta1
@@ -133,7 +162,18 @@ for i, wedge in enumerate(wedges2):
     r = inner_radius + 1.5 * ring_width
     x = r * np.cos(np.radians(ang))
     y = r * np.sin(np.radians(ang))
-    ax_sun.text(x, y, level2_names[i].rstrip("/"), ha="center", va="center", fontsize=12, color=INK)
+    fill = _label_color(level2_colors[i])
+    ax_sun.text(
+        x,
+        y,
+        level2_names[i].rstrip("/"),
+        ha="center",
+        va="center",
+        fontsize=12,
+        color=fill,
+        path_effects=_label_halo(fill),
+    )
+    level2_label_positions.append((x, y))
 
 # Level 3 labels — higher threshold to avoid crowding the outermost, narrowest wedges
 for i, wedge in enumerate(wedges3):
@@ -144,7 +184,21 @@ for i, wedge in enumerate(wedges3):
     r = inner_radius + 2.6 * ring_width
     x = r * np.cos(np.radians(ang))
     y = r * np.sin(np.radians(ang))
-    ax_sun.text(x, y, level3_names[i].rstrip("/"), ha="center", va="center", fontsize=10, color=INK_SOFT)
+    # Skip if a level-2 label already sits on almost the same horizontal line — at this
+    # radius scale their text would run together (e.g. "componentsforms") with no visible gap.
+    if any(abs(y - ly) < 0.08 and abs(x - lx) < 0.9 for lx, ly in level2_label_positions):
+        continue
+    fill = _label_color(level3_colors[i])
+    ax_sun.text(
+        x,
+        y,
+        level3_names[i].rstrip("/"),
+        ha="center",
+        va="center",
+        fontsize=10,
+        color=fill,
+        path_effects=_label_halo(fill),
+    )
 
 # Center text showing repository total
 total_size = sum(level1_values)
