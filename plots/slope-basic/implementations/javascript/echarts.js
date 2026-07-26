@@ -25,6 +25,12 @@ const departments = [
 const INCREASE = t.palette[0]; // "#009E73" brand green — profit/up/gain
 const DECREASE = t.palette[4]; // "#AE3030" matte red — semantic anchor for loss/down
 
+// Biggest mover (by absolute change) drives the callout annotation below.
+const biggestMover = departments.reduce((a, b) =>
+  Math.abs(b.end - b.start) > Math.abs(a.end - a.start) ? b : a,
+);
+const biggestDelta = biggestMover.end - biggestMover.start;
+
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -40,7 +46,18 @@ chart.setOption({
     top: 30,
     textStyle: { color: t.ink, fontSize: 20, fontWeight: 500 },
   },
-  grid: { left: 300, right: 300, top: 130, bottom: 90 },
+  graphic: {
+    type: "text",
+    left: "center",
+    top: 68,
+    style: {
+      text: `Biggest mover: ${biggestMover.name} ${biggestDelta > 0 ? "+" : ""}${biggestDelta} pts`,
+      fill: t.inkSoft,
+      fontSize: 14,
+      fontStyle: "italic",
+    },
+  },
+  grid: { left: 190, right: 190, top: 130, bottom: 90 },
   xAxis: {
     type: "category",
     data: ["2024 (before)", "2025 (after)"],
@@ -62,9 +79,11 @@ chart.setOption({
       name: d.name,
       type: "line",
       symbol: "circle",
-      symbolSize: 8,
+      symbolSize: 11,
       lineStyle: { width: 3, color },
       itemStyle: { color },
+      emphasis: { focus: "series", lineStyle: { width: 5 } },
+      blur: { lineStyle: { opacity: 0.15 }, label: { opacity: 0.25 } },
       data: [
         {
           value: d.start,
