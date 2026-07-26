@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-26
@@ -23,7 +23,9 @@ from plotnine import (
     geom_text,
     ggplot,
     labs,
-    scale_fill_identity,
+    scale_color_manual,
+    scale_fill_manual,
+    scale_size_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -40,102 +42,193 @@ RING_SEP = PAGE_BG if THEME == "light" else "#2E2D2B"
 
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
-# Data: company annual budget by department → team ($M)
+# Data: company annual budget by department -> team -> subproject ($M), 3 hierarchy levels
 hierarchy = {
-    "Engineering": {"Frontend": 15, "Backend": 15, "DevOps": 10},
-    "Marketing": {"Digital": 10, "Brand": 8, "Events": 7},
-    "Operations": {"HR": 8, "Finance": 7, "Legal": 5},
-    "R&D": {"Product": 8, "Data Science": 7},
+    "Engineering": {
+        "Frontend": {"Web": 9, "Mobile": 6},
+        "Backend": {"API": 8, "Data Pipeline": 7},
+        "DevOps": {"Infra": 6, "CI/CD": 4},
+    },
+    "Marketing": {
+        "Digital": {"Paid Ads": 6, "SEO": 4},
+        "Brand": {"Design": 5, "Content": 3},
+        "Events": {"Conferences": 4, "Webinars": 3},
+    },
+    "Operations": {
+        "HR": {"Recruiting": 5, "Benefits": 3},
+        "Finance": {"Accounting": 4, "Payroll": 3},
+        "Legal": {"Contracts": 3, "Compliance": 2},
+    },
+    "R&D": {"Product": {"Roadmap": 5, "UX Research": 3}, "Data Science": {"ML": 4, "Analytics": 3}},
 }
 
-total = sum(sum(v.values()) for v in hierarchy.values())
+dept_colors = dict(zip(hierarchy, IMPRINT, strict=False))
 
-# Ring radii
-R_INNER_L1, R_OUTER_L1 = 0.35, 0.65
-R_INNER_L2, R_OUTER_L2 = 0.67, 0.95
-N_PTS = 80  # arc resolution
+dept_totals = {dept: sum(sum(sub.values()) for sub in teams.values()) for dept, teams in hierarchy.items()}
+total = sum(dept_totals.values())
+focal_dept = max(dept_totals, key=dept_totals.get)  # largest segment gets a focal-point accent
 
-l1_rows, l2_rows, label_rows = [], [], []
+# Ring radii: 3 concentric bands (department -> team -> subproject). Generous gaps between
+# bands (0.10-0.12) keep long horizontally-oriented labels (e.g. "Engineering" at a near-0deg
+# mid-angle) from bleeding radially into the next ring's label.
+R1_IN, R1_OUT = 0.28, 0.48
+R2_IN, R2_OUT = 0.60, 0.80
+R3_IN, R3_OUT = 0.90, 1.08
+N_PTS = 60  # arc resolution
+
+l1_rows, l2_rows, l3_rows, label_rows = [], [], [], []
 cumsum = 0
 
-for idx, (dept, teams) in enumerate(hierarchy.items()):
-    dept_total = sum(teams.values())
+
+def arc_polygon(a0, a1, r_in, r_out):
+    t = np.linspace(a0, a1, N_PTS)
+    xs = np.concatenate([r_in * np.cos(t), r_out * np.cos(t[::-1])])
+    ys = np.concatenate([r_in * np.sin(t), r_out * np.sin(t[::-1])])
+    return xs, ys
+
+
+for dept, teams in hierarchy.items():
+    dept_total = dept_totals[dept]
     pct = round(dept_total / total * 100)
     a0 = 2 * np.pi * cumsum / total - np.pi / 2
     a1 = 2 * np.pi * (cumsum + dept_total) / total - np.pi / 2
-    color = IMPRINT[idx]
+    is_focal = dept == focal_dept
+    edge = "focal" if is_focal else "normal"
 
-    # L1 arc polygon: inner arc → outer arc (reversed) → closed shape
-    t = np.linspace(a0, a1, N_PTS)
-    xs = np.concatenate([R_INNER_L1 * np.cos(t), R_OUTER_L1 * np.cos(t[::-1])])
-    ys = np.concatenate([R_INNER_L1 * np.sin(t), R_OUTER_L1 * np.sin(t[::-1])])
+    # L1 arc polygon: inner arc -> outer arc (reversed) -> closed shape
+    xs, ys = arc_polygon(a0, a1, R1_IN, R1_OUT)
     for xi, yi in zip(xs, ys, strict=False):
-        l1_rows.append({"x": xi, "y": yi, "group": dept, "fill": color})
+        l1_rows.append({"x": xi, "y": yi, "group": dept, "dept": dept, "edge": f"L1_{edge}"})
 
     # L1 department name + percentage: shared anchor at the ring's mid-radius, split into a
     # two-line stack via va="bottom"/"top" (screen-space, not radial) so the pair never collides
     # for sections whose mid-angle runs near-horizontal (radial offsetting alone would overlap there).
     a_mid = (a0 + a1) / 2
-    r_label = 0.50
+    r_label = R1_IN + 0.28 * (R1_OUT - R1_IN)
     lx, ly = r_label * np.cos(a_mid), r_label * np.sin(a_mid)
     label_rows.append({"x": lx, "y": ly, "label": dept, "level": 1})
-    label_rows.append({"x": lx, "y": ly, "label": f"{pct}%", "level": 3})
+    label_rows.append({"x": lx, "y": ly, "label": f"{pct}%", "level": 4})
 
-    # L2 arc polygons (sub-departments)
     team_cumsum = cumsum
-    for t_idx, (team, budget) in enumerate(teams.items()):
+    for team, subprojects in teams.items():
+        team_total = sum(subprojects.values())
         b0 = 2 * np.pi * team_cumsum / total - np.pi / 2
-        b1 = 2 * np.pi * (team_cumsum + budget) / total - np.pi / 2
+        b1 = 2 * np.pi * (team_cumsum + team_total) / total - np.pi / 2
 
-        t2 = np.linspace(b0, b1, N_PTS)
-        xs2 = np.concatenate([R_INNER_L2 * np.cos(t2), R_OUTER_L2 * np.cos(t2[::-1])])
-        ys2 = np.concatenate([R_INNER_L2 * np.sin(t2), R_OUTER_L2 * np.sin(t2[::-1])])
-        grp = f"{dept}_{t_idx}"
+        xs2, ys2 = arc_polygon(b0, b1, R2_IN, R2_OUT)
+        grp2 = f"{dept}_{team}"
         for xi, yi in zip(xs2, ys2, strict=False):
-            l2_rows.append({"x": xi, "y": yi, "group": grp, "fill": color})
+            l2_rows.append({"x": xi, "y": yi, "group": grp2, "dept": dept, "edge": f"L2_{edge}"})
 
-        # Only label segments wide enough to hold text (≥8% share)
-        if budget / total >= 0.08:
+        if team_total / total >= 0.08:
             b_mid = (b0 + b1) / 2
-            r_mid2 = (R_INNER_L2 + R_OUTER_L2) / 2
+            r_mid2 = (R2_IN + R2_OUT) / 2
             label_rows.append({"x": r_mid2 * np.cos(b_mid), "y": r_mid2 * np.sin(b_mid), "label": team, "level": 2})
 
-        team_cumsum += budget
+        # L3 arc polygons (subprojects) — outermost ring
+        sub_cumsum = team_cumsum
+        for subproject, value in subprojects.items():
+            c0 = 2 * np.pi * sub_cumsum / total - np.pi / 2
+            c1 = 2 * np.pi * (sub_cumsum + value) / total - np.pi / 2
+
+            xs3, ys3 = arc_polygon(c0, c1, R3_IN, R3_OUT)
+            grp3 = f"{dept}_{team}_{subproject}"
+            for xi, yi in zip(xs3, ys3, strict=False):
+                l3_rows.append({"x": xi, "y": yi, "group": grp3, "dept": dept, "edge": f"L3_{edge}"})
+
+            # Only label subprojects wide enough to hold text (>=6% share) to keep the fine
+            # outer ring free of clutter — matches the spec's "label major segments" guidance.
+            if value / total >= 0.06:
+                c_mid = (c0 + c1) / 2
+                r_mid3 = (R3_IN + R3_OUT) / 2
+                label_rows.append(
+                    {"x": r_mid3 * np.cos(c_mid), "y": r_mid3 * np.sin(c_mid), "label": subproject, "level": 3}
+                )
+
+            sub_cumsum += value
+        team_cumsum += team_total
     cumsum += dept_total
 
 df_l1 = pd.DataFrame(l1_rows)
 df_l2 = pd.DataFrame(l2_rows)
+df_l3 = pd.DataFrame(l3_rows)
 df_labels = pd.DataFrame(label_rows)
 df_l1_labels = df_labels[df_labels["level"] == 1]
 df_l2_labels = df_labels[df_labels["level"] == 2]
-df_pct_labels = df_labels[df_labels["level"] == 3]
+df_l3_labels = df_labels[df_labels["level"] == 3]
+df_pct_labels = df_labels[df_labels["level"] == 4]
+
+# Center KPI label inside the donut hole — a focal anchor for the whole chart
+df_center = pd.DataFrame(
+    [
+        {"x": 0, "y": 0.045, "label": f"${total}M", "level": "value"},
+        {"x": 0, "y": -0.06, "label": "Total Budget", "level": "caption"},
+    ]
+)
+
+# Stroke accents: the focal department (largest share) gets a bolder outline on every
+# ring it touches, sharpening the visual hierarchy beyond wedge size + percentage alone.
+EDGE_COLORS = {
+    "L1_focal": INK,
+    "L1_normal": RING_SEP,
+    "L2_focal": INK,
+    "L2_normal": RING_SEP,
+    "L3_focal": INK,
+    "L3_normal": RING_SEP,
+}
+EDGE_SIZES = {"L1_focal": 1.3, "L1_normal": 0.75, "L2_focal": 0.9, "L2_normal": 0.4, "L3_focal": 0.7, "L3_normal": 0.3}
 
 # Plot
 plot = (
     ggplot()
-    + geom_polygon(data=df_l1, mapping=aes(x="x", y="y", group="group", fill="fill"), color=RING_SEP, size=0.75)
+    + geom_polygon(data=df_l1, mapping=aes(x="x", y="y", group="group", fill="dept", color="edge", size="edge"))
     + geom_polygon(
-        data=df_l2, mapping=aes(x="x", y="y", group="group", fill="fill"), color=RING_SEP, size=0.4, alpha=0.65
+        data=df_l2, mapping=aes(x="x", y="y", group="group", fill="dept", color="edge", size="edge"), alpha=0.72
+    )
+    + geom_polygon(
+        data=df_l3, mapping=aes(x="x", y="y", group="group", fill="dept", color="edge", size="edge"), alpha=0.48
     )
     + geom_text(
         data=df_l1_labels,
         mapping=aes(x="x", y="y", label="label"),
         color=INK,
-        size=8,
+        size=5.5,
         fontweight="bold",
         ha="center",
         va="bottom",
     )
     + geom_text(
-        data=df_pct_labels, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=7, ha="center", va="top"
+        data=df_pct_labels, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=5, ha="center", va="top"
     )
     + geom_text(
-        data=df_l2_labels, mapping=aes(x="x", y="y", label="label"), color=INK, size=8, ha="center", va="center"
+        data=df_l2_labels, mapping=aes(x="x", y="y", label="label"), color=INK, size=6.5, ha="center", va="center"
     )
-    + scale_fill_identity()
+    + geom_text(
+        data=df_l3_labels, mapping=aes(x="x", y="y", label="label"), color=INK, size=5.5, ha="center", va="center"
+    )
+    + geom_text(
+        data=df_center[df_center["level"] == "value"],
+        mapping=aes(x="x", y="y", label="label"),
+        color=INK,
+        size=10,
+        fontweight="bold",
+        ha="center",
+        va="center",
+    )
+    + geom_text(
+        data=df_center[df_center["level"] == "caption"],
+        mapping=aes(x="x", y="y", label="label"),
+        color=INK_SOFT,
+        size=6.5,
+        ha="center",
+        va="center",
+    )
+    + scale_fill_manual(values=dept_colors, guide=None)
+    + scale_color_manual(values=EDGE_COLORS, guide=None)
+    + scale_size_manual(values=EDGE_SIZES, guide=None)
     + coord_equal()
-    + scale_x_continuous(limits=(-1.15, 1.15), breaks=[], expand=(0, 0))
-    + scale_y_continuous(limits=(-1.15, 1.15), breaks=[], expand=(0, 0))
+    + scale_x_continuous(limits=(-1.30, 1.30), breaks=[], expand=(0, 0))
+    + scale_y_continuous(limits=(-1.30, 1.30), breaks=[], expand=(0, 0))
     + labs(title="sunburst-basic · plotnine · anyplot.ai")
     + theme(
         figure_size=(6, 6),
