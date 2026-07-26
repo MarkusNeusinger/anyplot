@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: sunburst-basic
 created: '2026-07-26T04:33:34Z'
-updated: '2026-07-26T04:40:23Z'
+updated: '2026-07-26T04:51:13Z'
 generated_by: claude-sonnet
 workflow_run: 30187795370
 issue: 821
@@ -12,54 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Correct Imprint palette with canonical branch ordering (green → lavender → blue
-    → ochre) and #009E73 correctly assigned to the root/first Engineering branch'
-  - WCAG-luminance-based per-segment text color function (textOn) guarantees every
-    label has adequate contrast against its own fill, regardless of tint depth
-  - Clean radial tint hierarchy (lighten) keeps each department's three rings visually
-    cohesive, directly fulfilling the spec's "consistent colors within each branch"
-    requirement
-  - 'Well-balanced, uncluttered layout: content spans ~80% of canvas width and ~92%
-    of height (including title) with no edge clipping and zero label overlap in either
-    theme'
-  - 'Idiomatic ECharts sunburst usage — per-level r0/r radius bands, label rotate
-    mode switched between radial (inner rings) and tangential (outer ring), and emphasis:
-    {focus: ''ancestor''} for genuine interactive drill-down highlighting in the HTML
-    output'
-  - Realistic, neutral org-budget dataset with sensible scale progression across departments
-    (Engineering $1,860k > Sales $850k > Marketing $620k > Operations $420k)
+  - Branch-consistent radial tint hierarchy (root/team/project) with WCAG-luminance-picked
+    label colors per tint gives a clean, readable result across all three rings in
+    both themes
+  - 'Genuine data storytelling: the subtitle callout plus a thicker/glowing border
+    on the Engineering root wedge draws the eye directly to the $1.86M / 49.6% insight
+    instead of leaving it implicit'
+  - 'Idiomatic ECharts sunburst mastery: per-level r0/r radial bands, sort: null to
+    preserve branch order, radial vs. tangential label rotation by depth, and emphasis.focus:
+    ''ancestor'' for hover drill-down'
+  - Root-ring categorical colors follow the Imprint canonical order exactly (green
+    -> lavender -> blue -> ochre) and stay identical between light/dark; both renders
+    pass theme-chrome checks
+  - Realistic, internally consistent budget data - leaf values sum exactly to the
+    stated $1.86M / 49.6% Engineering total
   weaknesses:
-  - Data storytelling is limited to what's inherent to the sunburst format (radial
-    size + per-level font weight) — no intentional emphasis (e.g. subtle highlight
-    or callout) draws the eye to the single largest budget item, so the chart displays
-    the hierarchy without guiding the viewer to an insight
-  - Code defines two module-level helper functions (lighten, textOn) rather than a
-    fully flat Imports → Data → Plot → Save script; given the branch/team/project
-    list is small and fixed, consider inlining the handful of resulting colors to
-    better match the mandated KISS structure
-  - 'Outermost (level-3) labels are set to fontSize: 12, which is legible at the full
-    2400×2400 render but will shrink close to unreadable once the PNG is scaled down
-    to a ~400px mobile thumbnail — a modest bump (or shortening only the tightest
-    wedges) would improve mobile legibility'
-  - 'Aesthetic polish is strong but stops short of "publication-ready": the plain
-    white/pageBg wedge borders and flat tint fills leave room for further refinement
-    (e.g. subtle radial shading or differentiated border treatment between hierarchy
-    levels) to reach top-tier design excellence'
+  - 'Team/project ring colors are one-off custom hex tints (e.g. #59C0A4, #D9A5FE,
+    #859CC3, #D4AE7A) rather than derived from the 8 Imprint palette swatches - acceptable
+    here as a hierarchy-tinting technique matching the spec''s ''consistent colors
+    within each branch'' note, but keep this pattern consistent rather than letting
+    it drift toward arbitrary custom hexes in future sunburst/treemap work'
+  - 'Design Excellence is strong but not top-tier: the branch tinting is a fairly
+    standard lighten/desaturate ramp rather than a truly bespoke palette, and the
+    small outer-ring cluster (Benefits/Recruiting/SEO/Design) feels slightly denser
+    than the rest of the chart'
+  - 'Library mastery is solid but leaves some ECharts-only differentiators on the
+    table beyond emphasis.focus: ''ancestor'' (e.g. label.minAngle handling for the
+    smallest leaf slices)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "sunburst-basic · javascript · echarts · anyplot.ai" centered at top in bold dark ink, clearly visible. No axes (expected for a sunburst). Thin off-white/page-colored borders separate every wedge, giving clean ring separation.
-      Data: Three concentric rings around a four-branch root — Engineering (green, #009E73), Sales (lavender/purple), Marketing (blue), Operations (ochre) — each branch's outer rings use progressively paler tints of its own hue, giving each department a coherent color family. Level-1 labels (Engineering, Sales, Marketing, Operations) are bold and radially oriented; level-2 labels (Platform, Product, Data Science, Enterprise, SMB, Growth, Brand, Finance, HR) are radial; level-3 (outermost) labels (Core API, Infra Migration, Mobile App, Web App, ML Models, Analytics, Key Accounts, New Business, Content, Design, Paid Ads, SEO, Accounting, Payroll, Recruiting, Benefits) are tangentially rotated and all fully legible with no truncation or overlap observed on close inspection.
-      Legibility verdict: PASS — every label is readable, text color is chosen per-segment via a WCAG-luminance check so no label ever sits on a background of similar lightness.
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: title "sunburst-basic · javascript · echarts · anyplot.ai" in bold dark ink, subtitle "Engineering leads all departments — $1.86M, 49.6% of total R&D spend" in softer gray beneath it, both centered at the top and fully legible against the light surface.
+      Data: four-department sunburst (Engineering/Sales/Marketing/Operations root ring in Imprint canonical order green/lavender/blue/ochre), each with a team ring and project leaf ring in a consistent lighter tint of the branch hue; root labels in white bold text, team/project labels in dark text — all clearly readable; Engineering's root wedge has a visibly thicker border and soft green glow highlighting it as the largest department.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now rendered in light ink, clearly visible against the dark background. Wedge borders now render in the dark page color, keeping the same clean ring separation as the light render.
-      Data: All branch/ring colors are pixel-identical to the light render (green/lavender/blue/ochre families with the same paler tints per ring) — only the chrome (background, title ink, wedge borders) flipped, as required. No color drift detected between themes.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures found; every ring's label remains clearly readable because per-segment text color is computed independently of theme from each fill's own luminance, and that computation still resolves correctly against the dark chrome.
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: title and subtitle switch to light-colored text (white/light-gray), fully readable against the dark surface; no dark-on-dark text found anywhere in the chart.
+      Data: same four-department palette and same per-branch tint hierarchy as the light render — Engineering green, Sales lavender/magenta, Marketing blue, Operations ochre are pixel-identical to the light version; only the chrome (background, title/subtitle color) flipped as expected.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -70,53 +64,53 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, level labels 19/15/12) and
-          fully readable at full 2400x2400 size in both themes; outer-ring 12px labels
-          are legible now but will get tight when scaled to a ~400px mobile thumbnail
+        comment: Explicit font sizes at every level (title 22, subtext 15, ring labels
+          19/15/13); all readable in both themes. Smallest outer-ring labels (13px)
+          are a touch tight but still legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero label/wedge overlap in either theme, confirmed via close crops
-          of every ring
+        comment: No text collisions; truncate + rotate keep labels within their segments
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All wedges clearly visible and separated by consistent border strokes
+        comment: Ring segments well-proportioned and clearly distinguishable across
+          all three levels
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Per-segment WCAG luminance-based text color guarantees contrast;
-          no red-green as sole signal
+        comment: Per-tint label colors chosen for contrast (WCAG-luminance picked
+          per code comments)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Content bounding box spans ~80% width / ~92% height with balanced
-          left/right margins (10.2% each); no cut-off content
+        comment: Sunburst fills the square canvas well with balanced margins; title/subtitle
+          occupy the reserved top band cleanly
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes (expected for sunburst); title fully descriptive and correctly
-          formatted
+        comment: No axes needed for sunburst; title/subtitle are descriptive with
+          quantified insight
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Root branch uses #009E73 (palette[0]); remaining branches follow
-          canonical Imprint order (lavender, blue, ochre); backgrounds theme-correct
-          in both renders'
+        comment: 'Root ring follows Imprint canonical order (green/lavender/blue/ochre),
+          first series is #009E73, backgrounds and chrome are theme-correct in both
+          renders, data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -124,23 +118,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom per-branch tint hierarchy and luminance-based label contrast
-          is clearly above default styling, though not yet fully publication-tier
+        comment: Deliberate per-branch radial tint hierarchy with WCAG-tuned label
+          colors, clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean, consistent wedge borders and generous whitespace; some refinement
-          visible but not maximal polish
+        comment: Clean pageBg segment borders and generous whitespace; the small outer-ring
+          cluster (Benefits/Recruiting/SEO/Design) feels slightly denser than the
+          rest
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Hierarchy is readable but there is no intentional emphasis (highlight,
-          callout) drawing the eye to a specific insight beyond what the sunburst
-          format itself provides
+        passed: true
+        comment: Subtitle + glowing/thicker border on the Engineering wedge creates
+          a clear, immediate focal point on the key insight
     spec_compliance:
       score: 15
       max: 15
@@ -150,28 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECharts sunburst series
+        comment: Correct sunburst with three concentric hierarchy levels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: consistent per-branch colors, labeled
-          major segments, clear ring separation, children nested within parent angular
-          span'
+        comment: Consistent per-branch colors, labels on major segments, clear ring
+          separation, inner segments encompass children's angular span
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: value correctly drives segment angle across all three hierarchy levels
+        comment: level_1/level_2/level_3 map correctly to root/team/project rings;
+          value drives angular span
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'sunburst-basic · javascript · echarts · anyplot.ai';
-          no separate legend needed since segments are directly labeled
+        comment: Title matches mandated format exactly; no legend needed since categories
+          are labeled directly on the rings
     data_quality:
       score: 15
       max: 15
@@ -181,60 +175,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 3-level hierarchy (4 departments, 11 teams, 18 leaf projects)
-          with varied branch widths and magnitudes
+        comment: 4 departments x 2-3 teams x 2 projects each, with varied leaf values
+          (85-420) across a 3-level hierarchy
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral org R&D/budget-allocation scenario matching the
-          spec's own example application
+        comment: Realistic, neutral R&D budget-allocation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Department totals scale plausibly (Engineering $1,860k > Sales $850k
-          > Marketing $620k > Operations $420k)
+        comment: 'Verified: Engineering leaves sum to exactly $1,860k = 49.6% of the
+          $3,750k total, matching the subtitle claim'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Two small helper functions (lighten, textOn) deviate from a fully
-          flat Imports→Data→Plot→Save script
+        comment: Flat data -> option -> setOption structure, no custom functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded data
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided echarts global
+        comment: Only uses the global echarts/ANYPLOT_TOKENS, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake functionality
+        comment: Appropriate complexity for a 3-level hierarchy build, no fake UI
+          or fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract, chart.setOption with series, animation:
-          false set'
+        comment: animation:false, no explicit size/devicePixelRatio, current setOption
+          API
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -242,16 +235,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of per-level radius bands (r0/r), emphasis.focus, and
-          levels array — ECharts' recommended sunburst configuration pattern
+        comment: Idiomatic use of levels[] with per-level r0/r bands, sort:null, and
+          label rotate per depth
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Per-level rotate mode (radial vs tangential) and emphasis: {focus:
-          ''ancestor''} drill-down highlighting are genuinely ECharts-sunburst-specific'
-  verdict: REJECTED
+        comment: Uses emphasis.focus:'ancestor' and per-node itemStyle glow override;
+          leaves some ECharts-specific affordances (e.g. label.minAngle) unused
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
@@ -260,5 +253,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
   - publication-ready
+  - edge-highlighting
