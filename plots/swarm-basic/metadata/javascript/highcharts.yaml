@@ -1,0 +1,252 @@
+library: highcharts
+language: javascript
+specification_id: swarm-basic
+created: '2026-07-26T07:14:44Z'
+updated: '2026-07-26T07:29:37Z'
+generated_by: claude-sonnet
+workflow_run: 30192249117
+issue: 974
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Repair directly addressed all three Attempt 1 weaknesses: numeric dataLabels
+    on the group-mean diamonds now surface the exact dose-response values (8.0 ->
+    6.3 -> 4.9 -> 3.3), density-scaled opacity (0.88 sparsest to 0.60 densest) eases
+    within-bin overlap in the denser groups, and both axis lines are now fully removed
+    (lineWidth: 0) for cleaner chrome.'
+  - Genuine beeswarm layout algorithm (bin-and-fan-out via beeswarmOffsets) backed
+    by a deterministic seeded mulberry32 PRNG.
+  - 'Excellent CVD-safe redundant encoding: each treatment group uses both a distinct
+    Imprint palette color AND a distinct marker shape (circle/diamond/square/triangle).'
+  - 'Correct Imprint palette in canonical order (#009E73 -> #C475FD -> #4467A3 ->
+    #BD8233), identical across both themes; chrome flips correctly light-to-dark with
+    no legibility issues, including the mean-diamond markers and their text-outlined
+    data labels.'
+  - 'Clean, minimal chrome: no axis lines, subtle single y-axis grid, unobtrusive
+    legend limited to the ''Group mean'' entry.'
+  weaknesses:
+  - Opacity is scaled per-group (based on each group's densest bin) rather than per-bin
+    within a group, so the densest individual bins (e.g. the Med Dose cluster around
+    3-4.5 mg/L) still show some marker-on-marker crowding even though the overall
+    group looks appropriately eased.
+  - Design Excellence is strong but still short of the 'publication-ready, FiveThirtyEight-level'
+    tier — the mean-diamond markers and data labels could gain one more layer of refinement
+    (e.g. a subtle connecting guide or size hierarchy) to fully close the gap to a
+    top-tier score.
+  - Library Mastery has improved with the dataLabels flourish but is still a scatter-based
+    workaround for the missing native beeswarm series; a Highcharts-distinctive technique
+    (e.g. a jitter/packing plugin pattern or dataLabels connector styling) would push
+    this further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "swarm-basic · javascript · highcharts · anyplot.ai" centered at top; axis titles "Treatment Group" (x) and "CRP Level (mg/L)" (y) both descriptive with units; tick labels dark/legible; subtle horizontal gridlines only, no visible axis lines. All chrome text clearly readable against the light background.
+      Data: Four treatment groups (Placebo, Low Dose, Med Dose, High Dose) rendered as beeswarms of scatter points fanned out to avoid overlap — Placebo in green circles (#009E73), Low Dose in light-purple diamonds, Med Dose in slate-blue squares, High Dose in amber triangles, matching the Imprint canonical palette order. A black diamond marks each group's sample mean, labeled with its numeric value (8.0, 6.3, 4.9, 3.3) in bold text with a light outline for legibility against overlapping points — the descending sequence makes the dose-response trend immediately visible. Marker opacity is tuned per group's density (more transparent for denser groups) to ease within-bin overlap.
+      Legibility verdict: PASS — all text (title, axis titles, ticks, mean-value labels, legend) is clearly readable, no overlap with data points.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/axis titles/tick labels now rendered in light gray/white, fully legible against the dark background. Gridlines remain subtle but visible.
+      Data: Data colors are pixel-identical to the light render (green/purple/blue/amber) — only chrome adapted. The group-mean diamond switches to a cream/white fill so it stays visible against the dark surface, and its numeric data label (e.g. "3.3") uses a dark text-outline against the light fill, remaining crisp. No dark-on-dark failures observed in tick labels, titles, or the mean-marker labels.
+      Legibility verdict: PASS — no dark-on-dark issues found; all text and data markers remain distinguishable from the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, well-proportioned and readable in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Mean-value data labels do not collide with markers or other text
+          in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Density-scaled opacity eases overlap in denser groups but some marker-on-marker
+          crowding remains in the densest bins
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Color AND marker shape both vary per group, fully CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing cut off, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint canonical order, theme-correct chrome in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color+shape pairing, numeric mean labels, and density-tuned
+          opacity lift this above a well-configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis lines now fully removed, subtle single y-axis grid, minimal
+          legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Numeric mean labels turn the implicit dose-response hierarchy into
+          an explicit, immediately readable narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine beeswarm via binned, fanned-out scatter offsets
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent point sizes, clear group spacing, color encoding, group-mean
+          marker
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x-axis, value on y-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches mandate; legend appropriately minimal
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Differing spreads and visible outliers alongside the dose-response
+          trend
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CRP biomarker levels across a 4-arm clinical trial, realistic and
+          neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physiologically plausible CRP values and trend
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Top-down flow; helper functions justified by the beeswarm algorithm
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded mulberry32(42) PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed or present
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on chart and series
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scatter-with-categories construction given the core bundle's
+          lack of a native beeswarm series
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Numeric dataLabels on the mean markers and per-series showInLegend
+          control are Highcharts-specific touches, though still not a fully distinctive
+          showcase
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
