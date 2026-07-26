@@ -6,7 +6,7 @@ title: Basic Sunburst Chart
 
 # Specification tracking
 created: 2025-12-14T18:23:22Z
-updated: 2025-12-14T18:23:22Z
+updated: 2026-07-26T09:45:33Z
 issue: 821
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - sunburst
-    - radial
   data_type:
     - hierarchical
     - categorical
@@ -24,5 +23,5 @@ tags:
     - business
   features:
     - basic
-    - hierarchical
+    - radial
     - proportional
