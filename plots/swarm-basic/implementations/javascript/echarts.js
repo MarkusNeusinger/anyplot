@@ -32,48 +32,106 @@ const groupValues = groups.map((g) =>
   Array.from({ length: g.n }, () => Math.max(0.1, g.mean + randNormal() * g.sd)),
 );
 
+// --- Init ---------------------------------------------------------------
+const chart = echarts.init(document.getElementById("container"));
+
+// Fix both axis extents up front so the coordinate system is fully
+// deterministic before any point is placed.
+const allValues = groupValues.flat();
+const yPad = (Math.max(...allValues) - Math.min(...allValues)) * 0.08;
+const yMin = Math.max(0, Math.floor(Math.min(...allValues) - yPad));
+const yMax = Math.ceil(Math.max(...allValues) + yPad);
+const xPad = 0.36; // 12% of the 3-unit category span, keeps swarms off the plot edge
+
+chart.setOption({
+  animation: false,
+  backgroundColor: "transparent",
+  title: {
+    text: "swarm-basic · javascript · echarts · anyplot.ai",
+    left: "center",
+    textStyle: { color: t.ink, fontSize: 22 },
+  },
+  legend: {
+    data: [{ name: "Group mean", icon: "diamond" }],
+    right: 60,
+    top: 56,
+    itemWidth: 12,
+    itemHeight: 12,
+    textStyle: { color: t.inkSoft, fontSize: 14 },
+  },
+  grid: { left: 100, right: 60, top: 100, bottom: 80 },
+  tooltip: {
+    trigger: "item",
+    formatter: (p) => `${categories[Math.round(p.value[0])] ?? p.seriesName}<br/>CRP: ${p.value[1].toFixed(2)} mg/L`,
+  },
+  xAxis: {
+    type: "value",
+    min: -xPad,
+    max: categories.length - 1 + xPad,
+    interval: 1,
+    axisLabel: {
+      color: t.inkSoft,
+      fontSize: 14,
+      formatter: (v) => categories[Math.round(v)] ?? "",
+      showMaxLabel: false,
+    },
+    axisLine: { lineStyle: { color: t.inkSoft }, onZero: false },
+    axisTick: { show: false },
+    splitLine: { show: false },
+  },
+  yAxis: {
+    type: "value",
+    min: yMin,
+    max: yMax,
+    name: "CRP (mg/L)",
+    nameLocation: "middle",
+    nameGap: 60,
+    nameTextStyle: { color: t.inkSoft, fontSize: 14 },
+    axisLabel: { color: t.inkSoft, fontSize: 14 },
+    axisLine: { lineStyle: { color: t.inkSoft }, onZero: false },
+    axisTick: { show: false },
+    splitLine: { lineStyle: { color: t.grid } },
+  },
+});
+
 // --- Beeswarm layout ---------------------------------------------------------
-// ECharts has no native swarm/beeswarm series, so points are bucketed into
-// fine value bins per category and stacked symmetrically outward within each
-// bin — the classic histogram-based beeswarm construction.
-function beeswarmOffsets(values) {
-  const n = values.length;
-  const order = values.map((_, i) => i).sort((a, b) => values[a] - values[b]);
-  const sorted = order.map((i) => values[i]);
-  const range = sorted[n - 1] - sorted[0] || 1;
-  const binCount = Math.max(10, Math.round(Math.sqrt(n) * 3));
-  const binWidth = range / binCount;
-  const bins = new Map();
-  sorted.forEach((v, sortedIdx) => {
-    const b = Math.min(binCount - 1, Math.floor((v - sorted[0]) / binWidth));
-    if (!bins.has(b)) bins.set(b, []);
-    bins.get(b).push(sortedIdx);
+// ECharts has no native swarm/beeswarm series. Rather than bucketing points
+// into fixed-width bins (which produces a blocky, grid-like silhouette), this
+// greedily places each point at the nearest collision-free slot using the
+// chart's own pixel projection (`convertToPixel`/`convertFromPixel`) — the
+// same technique ECharts' own beeswarm/packed-scatter examples use — so the
+// swarm reads as a continuous organic shape at any density.
+const SYMBOL_SIZE = 14;
+const GAP = SYMBOL_SIZE * 0.92; // slight overlap reads as a continuous swarm
+function beeswarmLayout(ci, values) {
+  const basePx = values.map((v) => chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [ci, v]));
+  const order = basePx.map((_, i) => i).sort((a, b) => basePx[a][1] - basePx[b][1]);
+  const placed = [];
+  const finalX = new Array(values.length);
+  order.forEach((i) => {
+    const [cx, cy] = basePx[i];
+    let px = cx;
+    let k = 0;
+    while (k < 200 && placed.some((p) => Math.hypot(p.x - px, p.y - cy) < GAP)) {
+      k += 1;
+      const step = Math.ceil(k / 2);
+      const side = k % 2 === 1 ? 1 : -1;
+      px = cx + side * step * GAP;
+    }
+    placed.push({ x: px, y: cy });
+    finalX[i] = chart.convertFromPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [px, cy])[0];
   });
-  const spacing = 0.075;
-  const maxOffset = 0.42;
-  const offsetsBySortedIdx = new Array(n);
-  for (const members of bins.values()) {
-    members.forEach((sortedIdx, k) => {
-      const side = k % 2 === 0 ? 1 : -1;
-      const step = Math.ceil((k + 1) / 2);
-      offsetsBySortedIdx[sortedIdx] = Math.max(-maxOffset, Math.min(maxOffset, side * step * spacing));
-    });
-  }
-  const offsets = new Array(n);
-  order.forEach((origIdx, sortedIdx) => {
-    offsets[origIdx] = offsetsBySortedIdx[sortedIdx];
-  });
-  return offsets;
+  return finalX;
 }
 
 const pointSeries = groups.map((g, ci) => {
   const values = groupValues[ci];
-  const offsets = beeswarmOffsets(values);
+  const xs = beeswarmLayout(ci, values);
   return {
     name: g.name,
     type: "scatter",
-    data: values.map((v, i) => [ci + offsets[i], v]),
-    symbolSize: 14,
+    data: values.map((v, i) => [xs[i], v]),
+    symbolSize: SYMBOL_SIZE,
     itemStyle: { color: t.palette[ci], opacity: 0.8 },
   };
 });
@@ -88,44 +146,4 @@ const meanSeries = {
   z: 3,
 };
 
-// --- Init ---------------------------------------------------------------
-const chart = echarts.init(document.getElementById("container"));
-
-// --- Option ---------------------------------------------------------------
-chart.setOption({
-  animation: false,
-  backgroundColor: "transparent",
-  title: {
-    text: "swarm-basic · javascript · echarts · anyplot.ai",
-    left: "center",
-    textStyle: { color: t.ink, fontSize: 22 },
-  },
-  grid: { left: 100, right: 60, top: 100, bottom: 80 },
-  tooltip: {
-    trigger: "item",
-    formatter: (p) => `${categories[Math.round(p.value[0])] ?? p.seriesName}<br/>CRP: ${p.value[1].toFixed(2)} mg/L`,
-  },
-  xAxis: {
-    type: "value",
-    min: 0,
-    max: categories.length - 1,
-    interval: 1,
-    boundaryGap: ["12%", "12%"],
-    axisLabel: { color: t.inkSoft, fontSize: 14, formatter: (v) => categories[v] ?? "" },
-    axisLine: { lineStyle: { color: t.inkSoft } },
-    axisTick: { show: false },
-    splitLine: { show: false },
-  },
-  yAxis: {
-    type: "value",
-    name: "CRP (mg/L)",
-    nameLocation: "middle",
-    nameGap: 60,
-    nameTextStyle: { color: t.inkSoft, fontSize: 14 },
-    axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
-    axisTick: { show: false },
-    splitLine: { lineStyle: { color: t.grid } },
-  },
-  series: [...pointSeries, meanSeries],
-});
+chart.setOption({ series: [...pointSeries, meanSeries] });
