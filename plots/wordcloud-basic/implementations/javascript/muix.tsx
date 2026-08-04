@@ -75,59 +75,77 @@ function textWidth(word, fontSize) {
   return measureCtx.measureText(word).width;
 }
 
-const SIZED_WORDS = WORDS.map((w) => {
-  const fontSize = fontSizeFor(w.frequency);
-  return {
-    ...w,
-    fontSize,
-    width: textWidth(w.word, fontSize),
-    height: fontSize * 1.15,
-  };
-}).sort((a, b) => b.frequency - a.frequency);
+const SIZED_WORDS = WORDS.map((w) => ({ ...w, fontSize: fontSizeFor(w.frequency) })).sort(
+  (a, b) => b.frequency - a.frequency,
+);
 
 // --- Archimedean-spiral placement, re-centered to balance canvas fill ------
 // Biggest word first, spiraling outward until a collision-free box is found.
 // The spiral's vertical excursion is scaled by the canvas aspect ratio so the
 // cloud fills an ellipse matching the mount shape, then the whole cloud is
 // re-centered on its own bounding box so neither side gets a lopsided margin.
-const PADDING = 7;
+const PADDING = 5;
+const MAX_STEPS = 24000;
+const ANGLE_STEP = 0.16;
+const RADIUS_STEP = 1.6;
+
+// Finds a collision-free box for a word at the given font size, spiraling
+// outward from the canvas center. Returns null if the budget runs out.
+function trySpiralPlacement(word, fontSize, centerX, centerY, aspect, width, height, placed) {
+  const boxW = textWidth(word.word, fontSize) + PADDING * 2;
+  const boxH = fontSize * 1.15 + PADDING * 2;
+  let angle = 0;
+  let radius = 0;
+
+  for (let step = 0; step < MAX_STEPS; step += 1) {
+    const cx = centerX + radius * Math.cos(angle);
+    const cy = centerY + radius * Math.sin(angle) * aspect;
+    const rect = {
+      left: cx - boxW / 2,
+      right: cx + boxW / 2,
+      top: cy - boxH / 2,
+      bottom: cy + boxH / 2,
+    };
+    const inBounds = rect.left >= 0 && rect.right <= width && rect.top >= 0 && rect.bottom <= height;
+    const collides = placed.some(
+      (p) => !(rect.right < p.rect.left || rect.left > p.rect.right || rect.bottom < p.rect.top || rect.top > p.rect.bottom),
+    );
+    if (inBounds && !collides) {
+      return { x: cx, y: cy, rect, fontSize };
+    }
+    angle += ANGLE_STEP;
+    radius += RADIUS_STEP * (ANGLE_STEP / (2 * Math.PI));
+  }
+  return null;
+}
+
+// Every word must render — a word cloud that silently drops terms undercuts
+// the whole point. If the full-size spiral search saturates (rare, only for
+// words that land in an already-dense pocket), shrink that word's font in
+// small steps and retry until it fits; the shrink floor still keeps it legible.
+const SHRINK_FLOOR = FONT_MIN * 0.6;
 
 function layoutWordCloud(words, width, height) {
   const centerX = width / 2;
   const centerY = height / 2;
   const aspect = height / width;
-  const angleStep = 0.26;
-  const radiusStep = 2.4;
   const placed = [];
 
   words.forEach((word) => {
-    const boxW = word.width + PADDING * 2;
-    const boxH = word.height + PADDING * 2;
-    let angle = 0;
-    let radius = 0;
-
-    for (let step = 0; step < 8000; step += 1) {
-      const cx = centerX + radius * Math.cos(angle);
-      const cy = centerY + radius * Math.sin(angle) * aspect;
-      const rect = {
-        left: cx - boxW / 2,
-        right: cx + boxW / 2,
-        top: cy - boxH / 2,
-        bottom: cy + boxH / 2,
-      };
-      const inBounds = rect.left >= 0 && rect.right <= width && rect.top >= 0 && rect.bottom <= height;
-      const collides = placed.some(
-        (p) => !(rect.right < p.rect.left || rect.left > p.rect.right || rect.bottom < p.rect.top || rect.top > p.rect.bottom),
-      );
-      if (inBounds && !collides) {
-        placed.push({ ...word, x: cx, y: cy, rect });
-        return;
+    let fontSize = word.fontSize;
+    let placement = null;
+    while (!placement) {
+      placement = trySpiralPlacement(word, fontSize, centerX, centerY, aspect, width, height, placed);
+      if (!placement) {
+        if (fontSize <= SHRINK_FLOOR) break;
+        fontSize = Math.max(SHRINK_FLOOR, fontSize * 0.85);
       }
-      angle += angleStep;
-      radius += radiusStep * (angleStep / (2 * Math.PI));
     }
-    // Spiral saturated (shouldn't happen at this word count/canvas size) —
-    // drop the word rather than overlap or throw, keeping layout deterministic.
+    // `placement` is only null if even the shrink floor can't clear the
+    // canvas bounds, which never happens at this word count/canvas size.
+    if (placement) {
+      placed.push({ ...word, fontSize: placement.fontSize, x: placement.x, y: placement.y, rect: placement.rect });
+    }
   });
 
   const left = Math.min(...placed.map((p) => p.rect.left));
