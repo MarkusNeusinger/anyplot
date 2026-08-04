@@ -1,7 +1,7 @@
 // anyplot.ai
 // ternary-basic: Basic Ternary Plot
 // Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 85/100 | Created: 2026-08-04
+// Quality: 88/100 | Created: 2026-08-04
 //# anyplot-orientation: square
 // anyplot.ai
 // ternary-basic: Basic Ternary Plot
