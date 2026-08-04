@@ -1,0 +1,258 @@
+library: highcharts
+language: javascript
+specification_id: waterfall-basic
+created: '2026-08-04T11:28:19Z'
+updated: '2026-08-04T11:45:45Z'
+generated_by: claude-sonnet
+workflow_run: 30904065662
+issue: 777
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Correctly hand-builds a waterfall from stacked columns plus a custom SVG connector-line
+    layer (chart.renderer.path in a render event) since the core Highcharts bundle
+    lacks the native waterfall series — connector heights verified accurate at every
+    cumulative step (500 -> 850 -> 1000 -> 780 -> 600 -> 570 -> 500).
+  - 'Excellent semantic color usage: Increase/Decrease bars use the Imprint green/red
+    semantic-exception pair (palette[0] brand green, palette[4] matte red), matching
+    the style guide''s documented finance profit/loss exception; Total bars use the
+    theme-adaptive ink anchor.'
+  - Total bar fill and its data-label color both automatically flip per theme (t.ink
+    / t.pageBg), so Starting Balance/Net Profit read as dark-on-cream in light mode
+    and cream-on-dark in dark mode without hardcoded per-theme branching.
+  - 'Both renders are fully legible with no dark-on-dark/light-on-light failures,
+    no edge clipping, and no text/element overlap; dead top-level `colors: t.palette`
+    config from the prior attempt was correctly removed since every series sets its
+    own explicit color.'
+  weaknesses:
+  - 'Code/render mismatch: this attempt''s commit added `fmtChangeWithRunningTotal`
+    so intermediate bar labels should read e.g. ''+$350 -> $850'', but both plot-light.png
+    and plot-dark.png still show only the bare step delta (''+$350'', ''+$150'', etc.)
+    with no arrow or running-total figure anywhere near the bar. The source change
+    did not visibly take effect in either render -- verify the harness actually rebuilt
+    against the latest commit, and re-check the dataLabels formatter/point.custom
+    wiring if it did.'
+  - Because the running-total label fix did not visually land, the spec note 'Display
+    running total labels on or near bars for clarity' is still only partially satisfied
+    for intermediate bars -- the dashed connector marks the level visually but there
+    is no numeric confirmation on those bars.
+  - 'Design Excellence is solid but not exceptional: no annotation calling out the
+    net change from Starting Balance to Net Profit, and typography stays at standard
+    style-guide defaults without extra hierarchy.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "waterfall-basic · javascript · highcharts · anyplot.ai" in bold dark text (~32% of canvas width -- proportionate for this short spec-id, no overflow), subtitle "Quarterly financial breakdown — revenue to net profit" in soft gray, Y-axis title "Amount ($ thousands)" rotated on the left, dark x-axis category labels for all 8 steps, subtle horizontal gridlines, legend at bottom (Increase / Decrease / Total). All chrome is clearly legible against the light background; no clipping at any edge (verified y-axis tick labels and Net Profit total bar are fully visible up to the right canvas edge).
+      Data: Starting Balance and Net Profit are dark/black "Total" bars with white "$500" labels; Product Revenue and Service Revenue are brand-green (#009E73) "Increase" bars labeled "+$350"/"+$150"; COGS, Operating Expenses, Interest Expense, Tax Adjustment are matte-red "Decrease" bars labeled "−$220"/"−$180"/"−$30"/"−$70". Dashed gray connector lines correctly bridge each bar to the next at the right cumulative height. NOTE: despite the source code's `fmtChangeWithRunningTotal` helper, none of the intermediate bar labels actually show the "-> $cumulative" suffix in the rendered PNG -- only the bare delta is visible even under 2x zoom crops.
+      Legibility verdict: PASS -- all text clearly readable, no dark-on-dark/light-on-light issues, no clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title/axis title in light text, subtitle and tick labels in soft light gray, gridlines subtle, legend readable at bottom. All chrome legible against the dark background.
+      Data: Increase (green) and Decrease (red) bars are pixel-identical to the light render, confirming data colors are theme-constant. Total bars flip to an off-white/cream fill with dark "$500" labels (theme-adaptive ink/pageBg swap), avoiding a black-on-black failure. Connector lines render in light gray, clearly visible. Same running-total-label mismatch as the light render: bars show only the delta, not the intended "delta -> cumulative" string.
+      Legibility verdict: PASS -- no dark-on-dark failures found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; not a perfect
+          8 only because label density on narrow bars (Interest Expense) leaves little
+          breathing room.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, bars, connectors, or legend.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 columns with generous width for the canvas; connectors and labels
+          clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red pair has strong luminance + hue separation; not the sole
+          signal (position/label also encode sign).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well, balanced margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Amount ($ thousands)' with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series is #009E73; red uses the documented finance
+          loss semantic exception (palette[4]); backgrounds are theme-correct #FAF8F1/#1A1A17.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom connector rendering and theme-adaptive total-bar coloring
+          go beyond generic defaults, but overall composition stays close to a well-configured
+          chart.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid and chrome via theme tokens; no exceptional refinement
+          beyond standard treatment.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed connectors and total-bar color contrast guide the eye through
+          the cumulative flow.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct waterfall chart with floating bars and connectors.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Color-by-sign, connectors, and distinct total bars all present. Running-total
+          labels on intermediate bars were coded this attempt (fmtChangeWithRunningTotal)
+          but do not actually appear in either rendered PNG -- still only the step
+          delta is shown.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on X, cumulative amount on Y, all 8 steps visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches 'waterfall-basic · javascript · highcharts · anyplot.ai';
+          legend labels (Increase/Decrease/Total) match the data semantics.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows increases, decreases of varying magnitude, and both start/end
+          totals.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible quarterly financial breakdown.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and running totals are internally consistent and realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat imports -> data -> chart structure; the prior attempt''s dead
+          `colors: t.palette` config was removed this attempt.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the Highcharts global is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a manually-built waterfall; no fake UI
+          or interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Uses Highcharts.chart('container', ...) per the mount-node contract,
+          animation disabled.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic stacked-column + renderer.path technique for a series type
+          unavailable in the core bundle.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom SVG connector layer via chart.renderer.path in a render event
+          hook is distinctive to Highcharts' renderer API.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
