@@ -1,7 +1,7 @@
 """ anyplot.ai
 wordcloud-basic: Basic Word Cloud
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-06
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 79/100 | Updated: 2026-08-04
 """
 
 import os
