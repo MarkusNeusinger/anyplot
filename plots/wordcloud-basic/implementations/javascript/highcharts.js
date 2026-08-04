@@ -52,13 +52,13 @@ const terms = [
 ];
 
 // --- Layout: Archimedean spiral packer --------------------------------------
-const MIN_FONT = 16;
-const MAX_FONT = 92;
+const MIN_FONT = 22;
+const MAX_FONT = 88;
 const FONT_STACK =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
-const marginTop = 100;
-const marginBottom = 30;
+const marginTop = 76;
+const marginBottom = 44;
 const marginSide = 30;
 const plotWidth = size.width - marginSide * 2;
 const plotHeight = size.height - marginTop - marginBottom;
@@ -66,12 +66,36 @@ const plotHeight = size.height - marginTop - marginBottom;
 const freqs = terms.map((d) => d[1]);
 const freqMin = Math.min(...freqs);
 const freqMax = Math.max(...freqs);
+const freqTotal = freqs.reduce((sum, f) => sum + f, 0);
 
 const measureCtx = document.createElement("canvas").getContext("2d");
 
 function fontSizeFor(freq) {
   const ratio = Math.sqrt((freq - freqMin) / (freqMax - freqMin));
   return Math.round(MIN_FONT + (MAX_FONT - MIN_FONT) * ratio);
+}
+
+function fontWeightFor(fontSize) {
+  if (fontSize >= 65) return "700";
+  if (fontSize >= 42) return "600";
+  return "500";
+}
+
+// A handful of words tilt off-horizontal (a common word-cloud convention) so
+// the cloud reads as organically packed rather than size-sorted; most stay
+// horizontal for legibility.
+function rotationFor(i) {
+  if (i % 4 === 3) return 90;
+  if (i % 6 === 1) return -30;
+  return 0;
+}
+
+function rotatedBounds(w, h, rotationDeg) {
+  const rad = (rotationDeg * Math.PI) / 180;
+  return {
+    w: Math.abs(w * Math.cos(rad)) + Math.abs(h * Math.sin(rad)),
+    h: Math.abs(w * Math.sin(rad)) + Math.abs(h * Math.cos(rad)),
+  };
 }
 
 function rectsOverlap(a, b, pad) {
@@ -85,15 +109,19 @@ function rectsOverlap(a, b, pad) {
 
 const placedBoxes = [];
 const points = [];
-const cx = plotWidth / 2;
-const cy = plotHeight / 2;
+// Spiral center nudged slightly down-right of plot-area center so the packer
+// fills the lower-right quadrant as evenly as the rest of the canvas.
+const cx = plotWidth * 0.52;
+const cy = plotHeight * 0.55;
 
 terms.forEach(([word, freq], i) => {
   const fontSize = fontSizeFor(freq);
-  const fontWeight = fontSize > 55 ? "700" : "600";
+  const fontWeight = fontWeightFor(fontSize);
+  const rotation = rotationFor(i);
   measureCtx.font = `${fontWeight} ${fontSize}px ${FONT_STACK}`;
-  const w = measureCtx.measureText(word).width * 1.06; // small safety margin
-  const h = fontSize * 1.25;
+  const rawW = measureCtx.measureText(word).width * 1.06; // small safety margin
+  const rawH = fontSize * 1.25;
+  const { w, h } = rotatedBounds(rawW, rawH, rotation);
 
   let angle = 0;
   let radius = 0;
@@ -122,8 +150,10 @@ terms.forEach(([word, freq], i) => {
       y,
       name: word,
       freq,
+      share: freq / freqTotal,
       color: t.palette[i % t.palette.length],
       dataLabels: {
+        rotation,
         style: {
           fontSize: `${fontSize}px`,
           fontWeight,
@@ -153,10 +183,12 @@ Highcharts.chart("container", {
   yAxis: { min: 0, max: plotHeight, reversed: true, visible: false, title: { text: null } },
   legend: { enabled: false },
   tooltip: {
-    headerFormat: "",
-    pointFormat: "<b>{point.name}</b>: {point.freq} mentions",
     backgroundColor: t.elevatedBg,
     style: { color: t.ink },
+    formatter() {
+      const pct = (this.point.share * 100).toFixed(1);
+      return `<b>${this.point.name}</b>: ${this.point.freq} mentions (${pct}% of corpus)`;
+    },
   },
   plotOptions: {
     series: { animation: false },
@@ -173,6 +205,15 @@ Highcharts.chart("container", {
         style: { fontFamily: "inherit", textOutline: "none" },
       },
       states: { inactive: { opacity: 1 } },
+      point: {
+        events: {
+          // Bring the hovered word's label above its spiral-packed neighbors
+          // — an idiomatic use of Highcharts' SVGElement.toFront().
+          mouseOver() {
+            if (this.dataLabel) this.dataLabel.toFront();
+          },
+        },
+      },
     },
   },
   series: [{ name: "Support ticket terms", data: points }],
