@@ -1,0 +1,242 @@
+library: d3
+language: javascript
+specification_id: wireframe-3d-basic
+created: '2026-08-04T19:03:40Z'
+updated: '2026-08-04T19:21:57Z'
+generated_by: claude-sonnet
+workflow_run: 30939180144
+issue: 1015
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/d3/plot-dark.html
+quality_score: 97
+review:
+  strengths:
+  - Fully custom orthographic 3D-to-2D projection built from scratch in D3 (camera
+    basis vectors via cross/normalize/dot, project()/depthOf() helpers) — a mathematically
+    correct wireframe, not a simulated one
+  - 'The corner tick-label overlap flagged in attempt 1 is now fixed: a screen-space
+    proximity guard (CORNER_PX_RADIUS) pushes any tick label that projects near the
+    shared axis corner further outward, confirmed clean in both themes at full resolution'
+  - Depth-based opacity per mesh strand (painter's-algorithm sort by mean depth +
+    0.3-0.95 opacity scale) gives a convincing, well-executed near/far depth cue
+  - Adaptive axis-frame anchor selection picks the floor corner that best traces the
+    mesh's visual silhouette instead of a hard-coded corner
+  - Full theme-adaptive chrome; green mesh color is pixel-identical between light
+    and dark renders
+  - Grid lines rendered in both row and column directions as required; all three axes
+    labeled with ticks and units-free but descriptive X/Y/Z labels
+  - Clean, idiomatic D3 data-join patterns throughout despite the bespoke 3D math
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Bold dark title "wireframe-3d-basic · javascript · d3 · anyplot.ai" centered at top, fully within canvas bounds. Minimalist dark-grey axis frame (three lines meeting at a shared floor corner) with tick marks, tick labels (X: -4,-2,0; Y: -2,0,2,4; Z: 0.5,0.0,-0.5) and bold X/Y/Z axis-name labels — all clearly legible against the light background. Zoomed inspection of the previously-flagged corner region (the "2" Z-axis tick) confirms the label now sits cleanly clear of the mesh, with no crossing strands.
+      Data: Single green (#009E73) 30x30 wireframe mesh forms a ripple surface (z = sin(sqrt(x^2+y^2))), with depth-based opacity giving a convincing near/far cue.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same layout with light-grey axis frame/ticks and off-white title/axis labels — all clearly legible, no dark-on-dark failures. The same corner region inspected at 2x zoom confirms the tick label is clear of the mesh here too.
+      Data: Colors are pixel-identical to the light render (same green, same depth-opacity gradient); only chrome flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All chrome readable in both themes; the attempt-1 corner-overlap
+          defect is fixed
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zoomed inspection confirms the screen-space corner guard fixed the
+          mesh/tick-label collision from attempt 1; no other overlaps found
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Mesh line weight and depth-opacity well matched to the 30x30 grid
+          density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue mesh with good contrast on both backgrounds; no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No clipping anywhere, generous margins, well-fit silhouette, correct
+          3200x1800 canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X/Y/Z labeled with ticks; title matches required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint #009E73 first series, identical across themes; backgrounds
+          correct in both renders'
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Genuinely custom 3D engine (camera basis vectors, adaptive corner
+          anchor, depth opacity); visual style is polished but intentionally spare
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Minimal axis frame, generous whitespace, subtle mesh strokes; the
+          corner crowding from attempt 1 is resolved
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Depth-based opacity gives a clear near/far hierarchy and strong central
+          focal point on the ripple
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D wireframe rendering
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid lines in both directions, 3D perspective (elevation 38, azimuth
+          42), all three axes labeled with ticks
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correctly mapped, full grid range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches exact required format
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full mesh, both grid directions, all three labeled axes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ripple function z=sin(sqrt(x^2+y^2)) is a standard, neutral demo
+          surface, matches spec example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30x30 grid within the spec's recommended 20x20-50x50 range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small math helpers are necessary for the projection technique, not
+          over-abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No import statements; only the d3 global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity for a hand-built
+          3D projection
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract; harness captures plot-{theme}.png/.html
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic d3 join patterns, d3.ticks/d3.format/d3.range/d3.mean/d3.extent
+          used throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: D3 has no native 3D support; this hand-builds a camera/projection/depth-sort
+          system that is now defect-free — a strong demonstration of D3's flexibility
+          per the library's no-workarounds rule
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
