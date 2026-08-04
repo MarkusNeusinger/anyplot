@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:51:26Z'
-updated: '2026-08-04T09:10:02Z'
+updated: '2026-08-04T09:17:52Z'
 generated_by: claude-sonnet
 workflow_run: 30893483900
 issue: 766
@@ -12,142 +12,127 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 95
 review:
   strengths:
+  - 'Dark-mode contrast bug from Attempt 1 is fully resolved: per-tile text color
+    is now chosen via WCAG relative-luminance comparison (best_text_color()), so every
+    subcategory tile - including the palest, most heavily white-tinted ones like ''Events
+    $90K'' and ''Training $80K'' - renders fully legible text in both themes.'
   - Canonical Imprint order across all 5 departments with brand green (#009E73) correctly
-    first, and identical data colors verified between light and dark renders.
-  - Dual encoding of magnitude (rectangle area via branchvalues="total" AND color-shade
+    first; data colors verified identical between light and dark renders.
+  - Dual encoding of magnitude (rectangle area via branchvalues='total' AND color-shade
     intensity within each department) directly implements the spec's explicit request
-    to "show hierarchy through nesting depth or color shading intensity."
+    to 'show hierarchy through nesting depth or color shading intensity.'
   - 'Depth-aware typography hierarchy: bold 24pt department headers vs. 16pt subcategory
     labels creates a clear reading order.'
-  - 'Thoughtful, documented workaround: per-department roots (parent "") instead of
-    one synthetic root avoid kaleido''s forced breadcrumb bar in static export.'
+  - 'Thoughtful, documented workaround: per-department roots (parent='''') instead
+    of one synthetic root avoid kaleido''s forced breadcrumb bar in static export.'
   - 'Theme-adaptive chrome correctly implemented: page background, title/font color,
-    and tile border color (set to PAGE_BG) all flip correctly between renders.'
+    and tile border color all flip correctly between renders.'
   - Rounded corners (cornerradius=6) and generous inter-tile padding give a polished,
     non-default appearance.
   - Realistic, neutral corporate budget dataset with plausible relative scale across
     departments and cost centers.
-  - Deterministic, clean, well-commented code; correct current API usage (write_image
-    + write_html) and file naming.
+  - Deterministic, well-commented code explaining the non-obvious WCAG-contrast text-color
+    technique; correct current API usage (write_image + write_html) and file naming.
   weaknesses:
-  - 'Dark-render contrast failure on subcategory tiles: the lighten() helper always
-    blends each department''s base hue toward white (amount 0.15–0.55 by value share)
-    to encode magnitude, but textfont.color stays fixed at INK for every node. In
-    light theme INK is near-black, so contrast stays excellent. In dark theme INK
-    is #F0EFE8 (near-white) — as tiles get paler for smaller-value subcategories,
-    the same near-white text nearly disappears into them. Computed WCAG contrast for
-    #F0EFE8 text on the lightened tiles: Product Dev ~1.3:1, Research ~1.1:1, QA ~1.1:1,
-    Content ~1.6:1, Events ~1.4:1, Support ~1.7:1, Facilities ~1.4:1, Training ~2.0:1,
-    Partnerships ~2.0:1 — all far below the 3:1 WCAG minimum for large text (most
-    under 2:1). Only the largest-share tile per department (e.g. Infrastructure, Direct
-    Sales) stays close to the base hue and is comparatively closer to passing (still
-    under 4.5:1). Text remains just barely parseable on close inspection but is a
-    genuine washed-out, near-white-on-near-white legibility failure specific to the
-    dark render. Fix: for dark theme, either drive the tint toward PAGE_BG (near-black)
-    instead of always toward white so smaller-value tiles darken rather than lighten,
-    or pick each node''s text color from computed background luminance instead of
-    a single fixed INK value, or cap the lighten amount much lower in dark theme.'
-  - 'CQ-01 (KISS structure): the lighten() helper function is a reasonable, well-justified
-    addition for the shading technique, but it is a deviation from the plain imports→data→plot→save
-    structure requested by the guideline.'
+  - 'CQ-01: the implementation now carries three small helper functions (lighten,
+    relative_luminance, best_text_color) instead of a single one - still well justified
+    for the accessibility fix, but a further step away from the plain imports->data->plot->save
+    structure.'
+  - Title occupies only ~40% of plot width at 20pt - on the small side relative to
+    the ~50-70% guidance for a non-prefixed mandated title, though not a hard violation
+    since it doesn't overflow or look squeezed.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "treemap-basic · python · plotly · anyplot.ai" centered at top in near-black ink, clearly legible. All department headers (bold, larger) and subcategory labels (smaller, with "$XXXK" values) render in near-black ink and are clearly readable against every tile color, including the lightest tinted tiles. Thin off-white borders cleanly separate all rectangles.
-      Data: Five department roots sized by total budget (Engineering largest, HR smallest) — Engineering=green #009E73, Marketing=lavender #C475FD, Sales=blue #4467A3, Operations=ochre #BD8233, HR=red #AE3030, matching canonical Imprint order with brand green first. Each department's subcategories are shaded lighter as their value share within the department shrinks, layering a second magnitude cue on top of rectangle area.
-      Legibility verdict: PASS — all text reads cleanly against both the saturated base colors and the lightened tint colors.
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "treemap-basic · python · plotly · anyplot.ai" is centered at the top in near-black ink (#1A1A17), clearly legible. All department-header labels (bold, 24pt) and subcategory labels (16pt, "Label / $XXXK") read cleanly in near-black text against every tile color, including the lightest tints (e.g. "Events $90K", "Training $80K"). Thin off-white borders separate all rectangles; no clipping at any canvas edge.
+      Data: Five department roots sized by total budget - Engineering=#009E73 (green, largest), Marketing=#C475FD (lavender), Sales=#4467A3 (blue), Operations=#BD8233 (ochre), HR=#AE3030 (red, smallest) - canonical Imprint order with brand green first. Subcategories within each department are shaded progressively lighter as their value share shrinks, layering a magnitude cue on top of rectangle area.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Title and department headers use light cream text (#F0EFE8), clearly readable against the dark page background. Tile borders are near-black (matching PAGE_BG), giving a clean separation look consistent with the design intent.
-      Data: Data colors are confirmed identical to the light render (Engineering green, Marketing lavender, Sales blue, Operations ochre, HR red — unchanged hexes). However, the same cream (#F0EFE8) text is used on the lightened subcategory tiles, which in dark mode are tinted toward white for smaller-value items. This produces a severe contrast drop on roughly half the subcategory tiles — e.g. "Product Dev", "Research", "QA" (Engineering), "Content", "Events" (Marketing), "Support" (Sales), "Facilities" (Operations), "Training" (HR) — with computed WCAG contrast ratios between ~1.1:1 and ~2.0:1, all well under the 3:1 minimum for large text. The text is still just barely parseable up close but is visibly washed out compared to the crisp department headers, which sit on the full-saturation base color and read fine.
-      Legibility verdict: FAIL for the lightened subcategory tiles (near-white text on near-white-tinted backgrounds); PASS for department headers and all other chrome.
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Title and department headers use light cream text (#F0EFE8), clearly readable against the page. Crucially, the Attempt-1 dark-on-light-tint failure is fixed: subcategory tiles now pick per-node text color (black #1A1A17 or cream #F0EFE8) based on each tile's own computed WCAG contrast, so even the palest white-tinted tiles (e.g. "Events $90K", "Training $80K", "Content $150K") render crisp black text instead of washed-out cream-on-near-white. No dark-on-dark or light-on-light failures anywhere in the render, verified via close-up crops of the HR and Marketing groups.
+      Data: Colors confirmed identical to the light render (same #009E73/#C475FD/#4467A3/#BD8233/#AE3030 hues and the same per-tile shade gradient) - only the chrome (background, borders, text) flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 8
         max: 8
-        passed: false
-        comment: Sizes explicitly set with a deliberate depth-aware hierarchy (24pt
-          headers / 16pt subcategory labels), but several dark-render subcategory
-          tiles have near-white text on tiles tinted toward white, producing a washed-out,
-          hard-to-read result (see VQ-04).
+        passed: true
+        comment: Explicit depth-aware sizing (24pt/16pt); dark-theme per-tile text
+          color fix resolves prior wash-out, fully readable in both themes and at
+          mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text, data, or borders in either render.
+        comment: No overlap between any text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 19 rectangles (5 roots + 14 leaves) are clearly visible and appropriately
-          sized for a 14-item hierarchy on this canvas.
+        comment: Rectangle sizes and shading clearly convey magnitude at this item
+          count
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Critical contrast failure: computed WCAG contrast between the fixed
-          near-white text color and several lightened subcategory tiles in the dark
-          render falls to ~1.1-2.0:1, well below the 3:1 minimum even for large text.'
+        passed: true
+        comment: Per-tile WCAG contrast selection fixes the prior critical contrast
+          failure; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent canvas utilization (~85%+), balanced margins, nothing cut
-          off, no canvas-gate failure.
+        comment: Balanced margins, good canvas utilization, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Treemap has no traditional axes; every tile carries a descriptive
-          label plus a unit-bearing value ("$450K"), which is the correct equivalent
-          for this chart type.
+        comment: Title descriptive per mandated format; treemap has no axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; remaining 4 departments follow canonical
-          Imprint order (#C475FD, #4467A3, #BD8233, #AE3030); backgrounds and chrome
-          are theme-correct in both renders; the per-node tint is a deliberate lightness
-          derivative of the correct base hue, not an arbitrary custom color.'
+        comment: Canonical Imprint order, brand green first, theme-correct backgrounds
+          in both renders
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: Rounded corners, dual area+shade magnitude encoding, and a deliberate
-          two-tier typographic hierarchy read as clearly above a configured default.
+        passed: true
+        comment: Cornerradius, dual area+shade encoding, deliberate two-tier typography,
+          accessibility-aware text color
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
-        comment: Subtle background-colored borders, generous inter-tile spacing, no
-          chartjunk; the dark-mode contrast miss is itself an unpolished detail keeping
-          this below perfect.
+        passed: true
+        comment: Clean borders, generous padding, the prior dark-mode polish gap is
+          now closed
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
-        comment: The value-based lightness gradient gives an immediate secondary read
-          of magnitude within each department beyond area alone, directly serving
-          the spec's storytelling ask.
+        passed: true
+        comment: Value-based lightness gradient gives a clear secondary read of magnitude
+          per the spec's own request
     spec_compliance:
       score: 15
       max: 15
@@ -156,26 +141,27 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct treemap with nested category/subcategory hierarchy.
+        passed: true
+        comment: Correct treemap with nested hierarchy
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Distinct department colors, value-proportional areas, labels on rectangles,
-          subtle borders, and hierarchy via both nesting and color shading are all
-          present.
+        passed: true
+        comment: Labels, borders, and shading hierarchy all present per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: branchvalues="total" correctly rolls leaf values up into department
-          totals; all 14 data points are represented.
+        passed: true
+        comment: category/subcategory/value mapped correctly, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title exactly matches "treemap-basic · python · plotly · anyplot.ai";
-          no legend needed since every rectangle is directly labeled.
+        passed: true
+        comment: Title matches mandated format exactly; no legend needed, labels are
+          in-tile
     data_quality:
       score: 15
       max: 15
@@ -184,20 +170,21 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: 5 departments with 2-4 subcategories each and a wide value range
-          (80-450) exercise the full hierarchy and magnitude range.
+        passed: true
+        comment: 5 departments, 14 subcategories, varied sizes showing full range
+          of the hierarchy
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Corporate budget allocation by department and cost center is a realistic,
-          neutral business scenario.
+        passed: true
+        comment: Neutral, realistic corporate budget-allocation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Dollar-thousand values and relative department sizes (Engineering
-          largest, HR smallest) are plausible for a real company budget.
+        passed: true
+        comment: Plausible department/cost-center dollar amounts
     code_quality:
       score: 9
       max: 10
@@ -206,30 +193,34 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Mostly linear imports→data→plot→save, but adds one small, well-justified
-          lighten() helper for the shading technique.
+        passed: true
+        comment: Three small, justified helper functions (lighten, relative_luminance,
+          best_text_color) deviate from strict imports->data->plot->save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully deterministic hardcoded data, no randomness involved.
+        passed: true
+        comment: Fully deterministic data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: colorsys, os, sys all used; no unused imports.
+        passed: true
+        comment: colorsys, os, sys all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Clean, well-commented, appropriately complex for the technique; no
-          fake functionality.
+        passed: true
+        comment: No fake functionality, appropriate complexity for the accessibility
+          fix
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct plot-{THEME}.png / plot-{THEME}.html output via current write_image/write_html
-          API.
+        passed: true
+        comment: write_image/write_html with correct plot-{THEME} naming
     library_mastery:
       score: 9
       max: 10
@@ -238,26 +229,25 @@ review:
         name: Idiomatic Usage
         score: 5
         max: 5
-        comment: Idiomatic go.Treemap usage with ids/labels/parents/values/branchvalues,
-          the recommended graph-objects pattern for hierarchical charts.
+        passed: true
+        comment: Idiomatic go.Treemap usage with proper ids/parents/branchvalues
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: Uses plotly-Treemap-specific features (cornerradius, per-node textfont.size
-          array, marker.pad, percentParent in hovertemplate) not easily replicated
-          in another library.
-  verdict: REJECTED
+        passed: true
+        comment: cornerradius, per-node textfont.size/color arrays, marker.pad, percentParent
+          hovertemplate
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  - groupby-aggregation
   dataprep: []
   styling:
-  - gradient-fill
+  - publication-ready
   - edge-highlighting

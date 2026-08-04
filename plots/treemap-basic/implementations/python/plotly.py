@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 treemap-basic: Basic Treemap
 Library: plotly 6.9.0 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-08-04
+Quality: 95/100 | Updated: 2026-08-04
 """
 
 import colorsys
