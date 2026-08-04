@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waterfall-basic: Basic Waterfall Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-04
@@ -114,11 +114,13 @@ chart = WaterfallChart(
     width=3200,
     height=1800,
     style=custom_style,
-    title="waterfall-basic · pygal · anyplot.ai",
+    title="waterfall-basic · python · pygal · anyplot.ai",
     x_title="Category",
     y_title="Amount ($K)",
     show_legend=True,
     legend_at_bottom=True,
+    legend_at_bottom_columns=3,  # force Total/Increase/Decrease onto one row
+    # instead of pygal's default ceil(sqrt(n)) grid, which scattered them 2x2
     show_y_guides=True,
     show_x_guides=False,
     print_labels=True,  # show the "+$150K" / "-$180K" strings from each point's
@@ -131,7 +133,7 @@ chart = WaterfallChart(
     x_label_rotation=25,
     margin=60,
     margin_bottom=380,
-    spacing=18,
+    spacing=34,  # extra breathing room so the legend row doesn't crowd the x_title
     connector_levels=running_totals[:-1],
     connector_color=INK_MUTED,
 )
@@ -168,7 +170,7 @@ for i in range(len(categories)):
 # index: spacer(0)=transparent, Total(1)=neutral, Increase(2)=brand green
 # (Imprint position 1 — semantic "gain"), Decrease(3)=matte red (Imprint
 # position 5 — semantic "loss"), per default-style-guide.md Semantic Exception.
-chart.add("", spacer_data, stroke_style={"width": 0}, show_legend=False)
+chart.add(None, spacer_data, stroke_style={"width": 0}, show_legend=False)
 chart.add("Total", total_data)
 chart.add("Increase", positive_data)
 chart.add("Decrease", negative_data)
