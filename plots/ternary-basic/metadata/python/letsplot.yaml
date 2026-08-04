@@ -2,95 +2,125 @@ library: letsplot
 language: python
 specification_id: ternary-basic
 created: '2025-12-24T09:50:57Z'
-updated: '2026-05-06T03:39:09Z'
-generated_by: claude-haiku
-workflow_run: 25415009627
+updated: '2026-08-04T15:23:38Z'
+generated_by: claude-sonnet
+workflow_run: 30922198359
 issue: 1001
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/letsplot/plot-dark.html
-quality_score: 93
+quality_score: 92
 review:
   strengths:
-  - 'Perfect theme adaptation: data colors identical between light/dark renders, chrome
-    correctly inverted'
-  - 'Excellent visual quality: all text perfectly legible at 4800×2700px with no overlaps'
-  - 'Complete spec implementation: all required ternary plot features present and
-    correctly rendered'
-  - Clean, maintainable code with explicit font sizing and reproducible synthetic
-    data
-  - 'Scientific accuracy: realistic soil composition data with proper sum-to-100%
-    constraints'
-  - Professional design with thoughtful Okabe-Ito color choices and balanced layout
+  - 'Repair loop meaningfully addressed attempt-1 feedback: marker size bumped 3.5→4.2
+    (VQ-03), legend_title now bold for typographic consistency with the plot title
+    (DE-01), and cluster centroid rings + labels add real visual hierarchy and storytelling
+    (DE-03) beyond plain color-coded scatter'
+  - Correct manual ternary-to-Cartesian coordinate transformation (lets-plot has no
+    native ternary geom), validated against the standard formula, with all three components
+    summing exactly to 100%
+  - 'Exact-match theme chrome: light background measured (250,248,241)=#FAF8F1 and
+    dark measured (26,26,23)=#1A1A17, canvas measured exactly 3200×1800px — no drift'
+  - 'Correct Imprint palette in canonical order (#009E73 Sandy, #C475FD Silty, #4467A3
+    Clayey), identical data colors across both themes, correct theme-adaptive text/grid/legend
+    chrome in both renders with no clipping and no dark-on-dark/light-on-light failures'
+  - Vertex labels, edge tick labels (20/40/60/80 on all three edges), and 20%-interval
+    grid lines all present per spec, correctly offset to avoid collision with the
+    triangle and each other
+  - 'Distinctive lets-plot feature: layer_tooltips() surfaces per-point hover detail
+    (soil type + exact sand/silt/clay %) in the exported HTML'
+  - Deterministic (np.random.seed(42)), flat KISS script, correct output naming/API
+    (ggsave with scale=4, PNG + HTML for both themes)
   weaknesses:
-  - 'Library mastery LM-02: doesn''t showcase features distinctly unique to letsplot
-    (though letsplot''s ggplot2 API inherently limits distinctiveness)'
+  - The "Silty" centroid label (geom_text size=3.8mm) renders with a dotless lowercase
+    "i" that is visually indistinguishable from the adjacent "l", so it reads as "SIlty"
+    in both light and dark renders (confirmed by pixel-level zoom). The larger vertex
+    label "Silt (%)" at size=5.5mm does not have this problem, confirming it's a size-related
+    rendering artifact at the smaller centroid-label scale — bump geom_text size for
+    the three centroid labels from 3.8 to ~4.5 so the dot survives, or switch fontface
+    from bold to plain for just that layer.
+  - Grid line alpha=0.3 sits slightly above the style guide's recommended 15-25% subtle
+    range — drop to ~0.2 for a lighter touch that competes even less with the data
+    points.
+  - Design Excellence, while improved with the centroid callouts, is still closer
+    to a well-executed grammar-of-graphics composition than a truly distinctive one
+    — an optional subtitle or brief source note could push DE-01 further, though this
+    is polish, not a requirement.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 with dark borders and grid
-      Chrome: Title, vertex labels, and tick labels all dark (#1A1A17) and fully readable; no text contrast issues
-      Data: Sandy (green #009E73) in lower-left, Silty (orange #D55E00) in lower-right, Clayey (blue #0072B2) in upper region; 60 markers clearly visible with alpha=0.8
-      Legibility verdict: PASS - all elements readable, no overlaps, perfect theme adaptation
+      Background: Warm off-white, pixel-sampled at (250,248,241) = #FAF8F1, matches spec exactly.
+      Chrome: Bold black title "ternary-basic · python · letsplot · anyplot.ai" top-left, fully visible with no clipping. Bold vertex labels "Sand (%)" / "Silt (%)" / "Clay (%)" at the three triangle corners in dark ink. Tick labels (20/40/60/80) run along all three edges in lighter grey ink. A "Soil Type" legend box sits top-right with an elevated cream background, bold title, and Sandy/Silty/Clayey swatches. Grid lines at 20% intervals, subtle grey. All chrome text reads clearly against the light background.
+      Data: 60 points form 3 clearly separated clusters colored green (#009E73, Sandy), lavender (#C475FD, Silty), and blue (#4467A3, Clayey) — canonical Imprint order. Each cluster has a larger ring-shaped centroid marker (white fill, colored stroke) with a bold text callout naming the region ("Sandy" / "Silty" / "Clayey").
+      Legibility verdict: PASS, with one caveat — the "Silty" centroid callout's lowercase "i" renders dotless at this text size and is easy to misread as "SIlty" on close inspection (confirmed via pixel zoom). All other text, including the same word at the larger vertex-label size ("Silt (%)"), renders correctly.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 with light borders and grid
-      Chrome: Title, vertex labels, and tick labels all light (#F0EFE8, #B8B7B0) and fully readable; no dark-on-dark failures
-      Data: Data colors identical to light render - Sandy green #009E73, Silty orange #D55E00, Clayey blue #0072B2 in same regions; legend box correctly uses #242420 background with light text
-      Legibility verdict: PASS - all text readable, data colors unchanged, chrome correctly theme-adapted
+      Background: Warm near-black, pixel-sampled at (26,26,23) = #1A1A17, matches spec exactly.
+      Chrome: Title, vertex labels, tick labels, triangle outline, and grid lines all flip to light/off-white ink and remain clearly visible. The legend box flips to a dark elevated background with light text. No dark-on-dark failures observed.
+      Data: Point colors are identical to the light render (#009E73 / #C475FD / #4467A3) — only chrome flipped, as required. Centroid rings and callout text also confirmed present and legible.
+      Legibility verdict: PASS, same "Silty" dotless-i caveat as the light render (same font/size issue, theme-independent).
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable at 4800×2700px
-          in both themes
+        comment: Explicit sizes throughout, well-proportioned, no overflow — but the
+          'Silty' centroid label (size=3.8mm) renders with a dotless 'i', reading
+          as 'SIlty' in both themes; the same word at larger vertex-label size (5.5mm)
+          renders correctly, confirming a size-related font-rendering defect on one
+          label
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels positioned with offsets; no overlapping text
+        comment: No text-on-text or text-on-data collisions in either render; centroid
+          labels are offset cleanly from their rings
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 60 markers (size=6, alpha=0.8) clearly visible; categories well-separated
+        comment: Marker size increased from 3.5 to 4.2 per prior review feedback;
+          scatter points and ring centroids are clearly visible and well-sized for
+          the 20-points-per-cluster density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with excellent contrast; CVD-safe
+        comment: Green/lavender/blue triad is CVD-distinguishable; alpha=0.85 on data
+          points and ring outlines aid separation without relying on hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Triangle fills 60-70% of canvas; balanced margins; proper proportions
+        comment: Canvas measured exactly 3200x1800px; triangle + legend fill the canvas
+          well with balanced margins; legend sits near the plot, not isolated
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels with units; correct title format
+        comment: 'Vertex labels carry units: ''Sand (%)'', ''Silt (%)'', ''Clay (%)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito canonical order; backgrounds correct (#FAF8F1 light, #1A1A17
-          dark); theme chrome perfect'
+        comment: 'First series #009E73 (Sandy), canonical order continues #C475FD/#4467A3;
+          backgrounds pixel-verified #FAF8F1 light / #1A1A17 dark; data colors identical
+          across themes'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -98,22 +128,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong professional design with thoughtful color choices; follows
-          established patterns rather than exceptional
+        comment: Elevated legend box, bold legend title now matching plot-title weight,
+          ring-style centroid markers — clearly above library defaults, though not
+          yet a fully distinctive composition
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle grid (alpha=0.3), clean legend styling, generous whitespace,
-          excellent polish
+        comment: Axis lines/panel grid removed in favor of a custom subtle grid, generous
+          whitespace, clean triangle frame; grid alpha=0.3 is slightly above the 15-25%
+          guideline range
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Good visual hierarchy through spatial arrangement; soil types occupy
-          natural regions
+        comment: Centroid ring markers + region-name callouts give each cluster a
+          clear focal point and immediately guide the viewer to the three soil-type
+          regions, a real improvement over plain color-coded scatter
     spec_compliance:
       score: 15
       max: 15
@@ -123,26 +156,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary plot with equilateral triangle
+        comment: Correct ternary plot with triangular coordinate transform
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Triangle outline, grid at 20% intervals, vertex labels, tick marks
-          present
+        comment: 20%-interval grid, vertex labels, edge tick marks, distinct point
+          styling all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct ternary-to-Cartesian conversion; all 60 points visible
+        comment: Ternary-to-Cartesian transform correct; all points fall within the
+          triangle bounds
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title matches mandated format exactly; legend labels (Sandy/Silty/Clayey)
+          match the data categories
     data_quality:
       score: 15
       max: 15
@@ -152,19 +187,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all three soil types with realistic variation
+        comment: Three distinct, internally varied clusters (Sandy/Silty/Clayey) demonstrate
+          exactly what a ternary plot is for
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real geological scenario (soil composition); neutral and accurate
+        comment: Soil composition (sand/silt/clay) is a real, neutral scientific application
+          listed in the spec's own Applications section
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportions align with soil science; constraints properly satisfied
+        comment: Components sum to exactly 100% by construction; per-cluster ranges
+          (e.g. 60-90% sand for Sandy) align with real soil-texture logic
     code_quality:
       score: 10
       max: 10
@@ -174,58 +212,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → plot → save'
+        comment: 'Flat script: imports -> data -> plot -> save, no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no clutter
+        comment: Only used lets_plot symbols, numpy, pandas, os imported
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; clear variable names; correct math
+        comment: Appropriate complexity for the centroid-callout addition; no fake
+          UI or interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct ggsave API
+        comment: ggsave with scale=4 to plot-{THEME}.png/.html, current lets-plot
+          API
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert-level ggplot2-style composition with proper theme configuration
+        comment: Correct grammar-of-graphics composition (ggplot() + multiple geom_*
+          layers), scale_color_manual, theme() customization; doesn't push beyond
+          standard layering patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses letsplot's theme system correctly but no features distinctly
-          unique to letsplot
+        passed: true
+        comment: layer_tooltips() gives real per-point hover detail (soil type + exact
+          composition) in the exported HTML, a genuine lets-plot-specific feature
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   - layer-composition
-  - manual-ticks
   patterns:
   - data-generation
-  - matrix-construction
+  - groupby-aggregation
   dataprep: []
   styling:
-  - publication-ready
+  - alpha-blending
+  - edge-highlighting

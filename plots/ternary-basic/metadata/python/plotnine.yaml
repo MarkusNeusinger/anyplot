@@ -2,120 +2,136 @@ library: plotnine
 language: python
 specification_id: ternary-basic
 created: '2025-12-24T09:50:39Z'
-updated: '2026-05-06T03:42:25Z'
-generated_by: claude-haiku
-workflow_run: 25414931905
+updated: '2026-08-04T15:16:17Z'
+generated_by: claude-sonnet
+workflow_run: 30921655226
 issue: 1001
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - Correct ternary coordinate transformation and mapping
-  - Theme-adaptive styling perfectly executed in both light and dark renders
-  - Clean, idiomatic plotnine code using grammar of graphics
-  - Realistic and well-distributed data with good variety
-  - All text readable in both themes with no contrast issues
-  - Proper label positioning avoiding overlaps
+  - Legend is now anchored inset within the panel whitespace beside the triangle instead
+    of stranded in an isolated right-side column — directly fixes the prior VQ-05/DE-02
+    weakness and reads as one cohesive composition in both themes
+  - Reduced marker alpha (0.7, down from 0.85) noticeably improves distinguishability
+    of overlapping samples in the Dirichlet-heavy vertex clusters without sacrificing
+    overall marker visibility
+  - Continuous "distance to ideal loam" color encoding turns a plain scatter into
+    a clear data story with an obvious focal point (the black/cream Ideal-loam diamond)
+  - 'Correct imprint_seq gradient (#009E73 -> #4467A3) for the single-polarity continuous
+    distance metric, matching the style-guide sequential-colormap spec exactly'
+  - Faithful, real-world USDA-style soil-texture domain (sand/silt/clay) with physically
+    sensible Dirichlet-sampled values summing to 100%
+  - Clean theme-adaptive chrome — both renders pass the readability checklist with
+    no dark-on-dark or light-on-light failures, and data colors are pixel-identical
+    between themes
+  - Exact canvas target hit (3200x1800, verified border-to-border with no clipped
+    pixels) and clean, KISS-structured, reproducible code (np.random.seed(42))
   weaknesses:
-  - Design is functional but minimal — no visual hierarchy or data storytelling
-  - Generic usage pattern without distinctive plotnine features
-  - No visual emphasis or focal point to guide viewer attention
+  - Even at alpha=0.7, the tightest vertex clusters (e.g. the top Clay-heavy cluster
+    and the bottom-left Sand-heavy cluster) still visually merge into blob-like shapes
+    — a small additional jitter or a slightly smaller marker size in only the densest
+    clusters would make individual sample counts easier to read at a glance
+  - The manual ternary-triangle construction (geom_polygon + geom_segment + geom_text
+    for the frame/grid/ticks) is a solid workaround for plotnine's missing native
+    ternary support, but it doesn't showcase anything unique to plotnine/ggplot's
+    grammar beyond generic layer composition — future attempts could lean further
+    into plotnine-specific idioms (e.g. stat transforms, ggplot-style faceting of
+    the three texture clusters) to raise Library Mastery
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (exactly correct)
-      Chrome: Title "ternary-basic · plotnine · anyplot.ai" in dark text (24pt), vertex labels "Sand (%)", "Silt (%)", "Clay (%)" in bold dark text (18pt), tick labels (0–100) in gray text (14pt) — all clearly readable against light surface
-      Data: 50 points in Okabe-Ito green #009E73 at 80% opacity, well-distributed across triangle interior, clear marker visibility
-      Triangle frame: Brand green #009E73 with proper line weight
-      Grid: Subtle gray lines at 20% intervals, providing orientation without competing with data
-      Legibility verdict: PASS — all elements readable at full resolution
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "ternary-basic · plotnine · anyplot.ai" is dark, centered, and clearly readable. Vertex labels "Clay (%)" (top), "Sand (%)" (bottom-left), "Silt (%)" (bottom-right) are bold dark text with units. Edge tick labels (0/20/40/60/80/100) are small gray text along all three sides, all legible. The "Distance to ideal loam" legend box sits inset at the top-right of the panel with a dark title, dark tick labels, and a visible border — no isolation from the plot. No text overlaps other text or data.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (exactly correct)
-      Chrome: Same title in light text (#F0EFE8, 24pt), vertex labels in light gray (#B8B7B0, 18pt), tick labels in light gray (14pt) — all readable, no dark-on-dark failures
-      Data: Same 50 points in identical green #009E73, confirming theme-independent data colors
-      Triangle frame: Identical green to light render
-      Grid: Light gray lines at same opacity, subtle but visible on dark background
-      Legibility verdict: PASS — all elements readable, no contrast issues, proper theme adaptation with only chrome flipping
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, vertex labels, and tick labels all flip to light cream/gray tones against the dark background — fully readable, no dark-on-dark failures anywhere. Legend box flips to a dark elevated fill with light text, border still visible. The target diamond and its "Ideal loam" label flip from black to a cream/off-white theme-adaptive ink token.
+      Data: Triangle frame remains brand green (#009E73), identical in hue and position to the light render; the green-to-blue (#009E73 -> #4467A3) point gradient is pixel-identical between renders — only chrome (background, text, legend fill) flipped, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title, vertex, and tick labels all explicit sized and theme-adapted.
-          Readable in both themes at full resolution.
+        comment: All font sizes explicitly set; title/labels proportionate and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text positioned with offsets. No collisions between labels or
-          data points.
+        comment: No text-on-text or text-on-data collisions; legend no longer collides
+          with the plot margin
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, grid, and frame visible. Grid appropriately subtle without
-          competing with data.
+        comment: alpha reduced to 0.7, meaningfully improving distinguishability of
+          overlapping samples in vertex-dense clusters vs. the prior 0.85
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito green #009E73 is colorblind-safe. No red-green sole signals.'
+        comment: Sequential green-to-blue gradient is CVD-safe, not reliant on hue
+          alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 16:9 at 300 DPI = 4800×2700px. Generous margins. Nothing clipped.
+        comment: Inset legend placement fixes the prior isolated right-margin issue;
+          canvas hits exact 3200x1800 target with zero border clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels descriptive with units. Title format correct.
+        comment: Vertex labels include units (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Data: #009E73 (position 1). Background: #FAF8F1 light / #1A1A17
-          dark (exact). Both renders theme-correct.'
+        comment: 'Correct imprint_seq gradient (#009E73 -> #4467A3), brand-green frame,
+          theme-correct #FAF8F1/#1A1A17 backgrounds in both renders'
     design_excellence:
-      score: 8
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Baseline styling. Uses Okabe-Ito appropriately but no distinctive
-          custom palette or design thought.
+        passed: true
+        comment: Custom gradient tied to a meaningful derived metric (distance to
+          ideal loam), well above default styling
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Minimal customization. theme_void() appropriate but no additional
-          refinement.
+        passed: true
+        comment: theme_void, subtle gridlines, generous whitespace, and now a well-integrated
+          inset legend
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: No visual hierarchy or focal point. Three groups visible but no emphasis.
+        passed: true
+        comment: Ideal-loam target diamond plus distance gradient gives a clear focal
+          point and narrative
     spec_compliance:
       score: 15
       max: 15
@@ -125,50 +141,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary plot. Three-component data mapped to equilateral
-          triangle.
+        comment: Correct ternary plot with proper barycentric-to-Cartesian conversion
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid lines at 20% intervals, vertex labels, tick marks, data points
-          all present.
+        comment: Gridlines at 20% intervals, labeled vertices, distinct markers, edge
+          tick marks all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Ternary-to-Cartesian transformation correct. Axes span 0–100% properly.
+        comment: Proportions correctly mapped; all three components readable via edge
+          scales
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Single-series, legend not needed.
+        comment: Title matches mandated format; legend accurately labeled
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All ternary aspects shown: three-component, proportional summing,
-          spatial distribution.'
+        comment: Three Dirichlet clusters plus a loam-zone spread give good coverage
+          of the composition space
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Soil composition (sand, silt, clay) is real-world, well-known, neutral.
+        comment: Real, neutral USDA-style soil-texture scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0–100% proportions sensible. Data realistic for soil samples.
+        comment: Components sum to 100%; ideal-loam target values are physically plausible
     code_quality:
       score: 10
       max: 10
@@ -178,58 +194,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Straightforward linear flow.
+        comment: Linear flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42). Deterministic.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: numpy, pandas, plotnine.'
+        comment: Every imported symbol used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or workarounds. Appropriate complexity.
+        comment: Appropriately complex manual ternary construction, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly.
+        comment: Saves plot-{THEME}.png at exact 3200x1800 target
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Excellent plotnine idiom. Uses geom_polygon, geom_segment, geom_point.
-          theme_void() and coord_fixed() correct.
+        comment: Textbook layered-grammar composition (geom_polygon + geom_segment
+          + geom_point + geom_text)
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No distinctive plotnine features (no faceting, layer composition,
-          or custom scales). Generic for spec.
+        comment: Manual ternary construction is a reasonable workaround but not plotnine-unique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
+  - annotations
+  - colorbar
   - manual-ticks
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
   - alpha-blending
+  - custom-colormap
