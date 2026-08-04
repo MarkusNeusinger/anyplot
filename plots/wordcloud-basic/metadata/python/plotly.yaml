@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:51:15Z'
-updated: '2026-08-04T23:02:52Z'
+updated: '2026-08-04T23:12:42Z'
 generated_by: claude-sonnet
 workflow_run: 30957764111
 issue: 1012
@@ -12,99 +12,91 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
+  - NLTK/OpenCV collision from attempt 1 is fully resolved — NLTK's x-position was
+    nudged left (0.421 -> 0.402), restoring a clean visible gap in both renders
   - Category-to-color mapping doubles as content encoding and legend-based filter
-    (click-to-toggle in the interactive HTML) — a smart reuse of Plotly's native legend
-    interactivity to compensate for the lack of a built-in wordcloud trace
-  - Font-weight variation (Arial Black for freq >= 75) adds a secondary visual-hierarchy
-    cue beyond size alone, reinforcing the highest-frequency words
-  - Manual bounding-box-packed positions keep the 28-word cloud dense and centered
-    without wasted whitespace, and mostly avoid overlap despite the tight layout
-  - Full theme-adaptive chrome (paper/plot background, ink tokens, legend box, hover
-    label) correctly threaded through both light and dark renders — no dark-on-dark
+    (click-to-toggle in the interactive HTML) — smart reuse of Plotly's native legend
+    interactivity given there's no native wordcloud trace
+  - Font-weight variation (Arial Black for freq >= 75) adds a secondary hierarchy
+    cue beyond size alone
+  - Code is now fully clean — vestigial random/numpy imports and seed calls were removed
+    since word_data and all positions are hardcoded
+  - Full theme-adaptive chrome correctly threaded through both renders — no dark-on-dark
     or light-on-light failures
-  - Hover tooltip surfaces the exact frequency per word — genuine added interactive
-    value beyond the static PNG
+  - Hover tooltip surfaces exact frequency per word — genuine interactive value beyond
+    the static PNG
   weaknesses:
-  - '"NLTK" and "OpenCV" labels overlap in both renders — the K of NLTK touches the
-    O of OpenCV in the bottom-center cluster (word_data positions x=0.421/y=0.038
-    and x=0.500/y=0.025). Nudge NLTK''s x position left by ~0.03-0.04 (or move OpenCV
-    right) to restore a clear gap.'
-  - Smallest word labels (NLTK, MLflow, Statsmodels at min_size=13pt -> ~52px source)
-    risk becoming hard to read once the image is downscaled to the ~400px mobile thumbnail.
-    Raise min_size from 13 to ~16-18pt so even the lowest-frequency words stay legible
-    at mobile width.
-  - The random.seed(42) / np.random.seed(42) calls (and the numpy/random imports backing
-    them) are vestigial — word_data and every x/y position are fully hardcoded, so
-    nothing in the script actually consumes randomness. Either remove the unused seeding/imports
-    or use them meaningfully.
+  - A few adjacent words in different categories sit with very tight kerning (e.g.
+    AWS/Keras, Airflow/MLflow) — no missing pixels or overlap, but the margin is thin
+    enough that a slightly denser font substitution could reintroduce collisions later
+  - Design Excellence is still at 'strong but not exceptional' — a bit more typographic
+    contrast (e.g. varying font family per category, not just weight) could push storytelling
+    further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "wordcloud-basic · python · plotly · anyplot.ai" is centered, dark ink text, clearly legible. A bordered horizontal legend strip sits below the word cluster listing the 5 categories with "Aa" color swatches (Data Wrangling, ML & Deep Learning, Visualization & BI, Data Engineering & Ops, Cloud & AI Toolkits), all in soft dark text on a slightly elevated off-white box. Axes/ticks/grid are intentionally hidden (appropriate — word position is a packing layout, not a data scale).
-      Data: 28 words sized by frequency (NumPy, Pandas, TensorFlow, SQL largest; NLTK, MLflow, Statsmodels smallest) and colored by category using 5 Imprint hues: brand green (#009E73, Data Wrangling), lavender (#C475FD, ML & Deep Learning), blue (#4467A3, Visualization & BI), ochre (#BD8233, Data Engineering & Ops), and cyan (#2ABCCD, Cloud & AI Toolkits) — correctly skipping the reserved semantic-red slot since no category needs an error/bad connotation. The highest-frequency words (NumPy, Pandas, TensorFlow, SQL, Git) render in a heavier weight (Arial Black), adding a legible hierarchy cue on top of size.
-      Legibility verdict: PASS overall, with one flagged defect — "NLTK" and "OpenCV" labels touch/overlap at the bottom-center of the cluster (the K of NLTK collides with the O of OpenCV). All other words, including the smallest (NLTK, MLflow, Statsmodels), are readable at full resolution though they would be tight at mobile thumbnail scale.
+      Background: warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: centered title "wordcloud-basic · python · plotly · anyplot.ai" in dark ink (#1A1A17), fully legible; bordered horizontal legend below the word cluster lists all 5 categories with "Aa" swatches in matching category colors and dark-ink label text; axes correctly hidden.
+      Data: 28 words sized by frequency (16-40pt) and colored by 5 categories using Imprint hues (green/lavender/blue/ochre/cyan). Highest-frequency words (NumPy, Pandas, TensorFlow, SQL, Git) render in a heavier weight for extra hierarchy. The NLTK/OpenCV collision present in attempt 1 is now resolved — verified via pixel-level crop, there is a clean visible gap between the two labels. Other tight-but-non-overlapping pairs (AWS/Keras, Airflow/MLflow) were also crop-checked and confirmed to have a visible (if narrow) gap, not touching pixels.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title renders in light ink text (#F0EFE8), clearly legible against the dark background. The legend strip box and border flip to the dark-theme elevated tone with light secondary text — fully readable, no dark-on-dark failure.
-      Data: All 28 word colors are pixel-identical to the light render (same 5 Imprint hues), confirming only chrome (background, title, legend frame/text) flipped between themes as required.
-      Legibility verdict: PASS overall, with the same NLTK/OpenCV overlap present in this render too (positions are theme-independent). No dark-on-dark or light-on-light chrome issues found.
+      Background: warm near-black, matches #1A1A17 — not pure black.
+      Chrome: title and legend text flip to light ink tokens (#F0EFE8 title, lighter legend labels) and remain fully readable — no dark-on-dark failures anywhere in the chrome or legend box.
+      Data: word colors are pixel-identical to the light render (same 5 Imprint hues per category), confirming only chrome flipped between themes as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Readable in both themes at full res; smallest words (NLTK, MLflow,
-          Statsmodels at ~13pt/52px source) risk mobile-thumbnail legibility
+        comment: min_size raised 13->16pt per attempt-1 feedback, improving mobile-thumbnail
+          legibility; all text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: NLTK and OpenCV labels touch/overlap in both renders; rest of the
-          28-word packing is collision-free
+        comment: NLTK/OpenCV collision fixed via x-position nudge; no other overlaps
+          found on pixel-level inspection
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Font sizes scale cleanly with frequency (13-40pt), density-appropriate
-          for 28 words
+        comment: sizes scale cleanly 16-40pt with frequency
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, category redundantly labeled via legend text, no
-          red-green-only encoding
+        comment: Imprint palette, category redundantly labeled via legend
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; title, cluster, and legend well-proportioned
-          with no overflow
+        comment: canvas gate passed, well-proportioned, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly hidden for a word cloud; title format correct
+        comment: axes correctly hidden, title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series brand green; correctly skips reserved red slot for abstract
-          categories; both themes correct backgrounds
+        comment: brand green first, correct semantic-red skip, correct theme backgrounds,
+          identical data colors across themes
     design_excellence:
       score: 14
       max: 20
@@ -114,23 +106,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Category color coding plus weight-based hierarchy shows real design
-          intent beyond defaults
+        comment: category color coding + weight-based hierarchy shows real design
+          intent, above default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean minimal-chrome layout, bordered legend box, generous whitespace
+        comment: clean minimal-chrome layout, bordered legend box, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size + color + weight triple-encode importance and category, guiding
-          the eye to top tools
+        comment: size + color + weight triple-encode importance and category
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,27 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct word cloud via sized/positioned text marks
+        comment: correct word cloud via sized/positioned text marks
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: word + frequency both encoded (size), 28 words within the spec's
-          20-200 typical range
+        comment: word + frequency both encoded, 28 words within spec's 20-200 range
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Size maps to frequency correctly; one position collision (NLTK/OpenCV)
-          dings mapping cleanliness
+        comment: size maps to frequency correctly; prior NLTK/OpenCV position collision
+          now fixed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels match the 5 categories
+        comment: title format exact, legend labels match categories
     data_quality:
       score: 14
       max: 15
@@ -168,22 +158,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers size-by-frequency and category encoding, the two core word-cloud
-          dimensions
+        comment: covers size-by-frequency and category, the two core word-cloud dimensions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Data-science tool ecosystem is plausible and neutral
+        comment: data-science tool ecosystem, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 45-95 is sensible for mention counts
+        comment: frequency range 45-95 is sensible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -191,32 +180,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeds set (though data is fully static so not strictly needed)
+        comment: fully hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: random and numpy imports only back vestigial seed calls; nothing
-          in the script actually consumes randomness
+        passed: true
+        comment: vestigial random/numpy imports removed per attempt-1 feedback; only
+          os and plotly.graph_objects remain, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; complexity matches the task
+        comment: no fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct write_image/write_html calls with theme-suffixed filenames
+        comment: correct write_image/write_html calls with theme-suffixed filenames
     library_mastery:
       score: 7
       max: 10
@@ -233,17 +222,14 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Leverages native legend click-to-toggle filtering and per-word hover
-          tooltips — genuine interactive value
+        comment: leverages native legend click-to-toggle filtering and per-word hover
+          tooltips
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
-  - html-export
-  patterns:
-  - iteration-over-groups
-  dataprep:
-  - normalization
+  patterns: []
+  dataprep: []
   styling:
   - minimal-chrome
