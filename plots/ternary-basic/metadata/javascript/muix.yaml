@@ -1,0 +1,270 @@
+library: muix
+language: javascript
+specification_id: ternary-basic
+created: '2026-08-04T15:22:32Z'
+updated: '2026-08-04T15:39:48Z'
+generated_by: claude-sonnet
+workflow_run: 30923272668
+issue: 1001
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Genuinely custom-engineered ternary plot built on MUI X's composable ChartContainer
+    plus useXScale/useYScale hooks — a technically sophisticated solution to a chart
+    type MUI X does not natively support.
+  - Correct equilateral-triangle projection math, grid lines at 20% intervals on all
+    three axes, and edge tick marks (0-100 by 20) on all three edges with clearly
+    labeled vertices.
+  - 'Theme-adaptive chrome via window.ANYPLOT_TOKENS is threaded through every custom
+    SVG layer (grid, ticks, vertex labels, title) — both renders are fully legible
+    with the #009E73 data color preserved identically.'
+  - Deterministic seeded LCG plus gamma-shape sampling produces a compositionally
+    plausible point cloud that naturally clusters toward the Copper apex without needing
+    an explicit annotation.
+  - Responsive title font-sizing formula keeps the long mandated title string from
+    overflowing or clipping in either theme.
+  weaknesses:
+  - 'Data realism: the ''Bronze Alloy'' framing implies a copper-dominant alloy (real
+    bronze/gunmetal is typically ~85-98% Cu), but the sampled cloud spreads broadly
+    across the simplex with many points at Cu 10-30% — not representative of actual
+    bronze compositions. Either relabel as a generic Cu-Sn-Zn ternary system, or bias
+    the gamma-shape parameters (e.g. raise the Cu shape parameter further, shrink
+    Sn/Zn shapes) so most samples sit in the realistic 80-98% Cu band with only minor
+    Sn/Zn variation.'
+  - Beyond the natural clustering toward the Copper apex, there is no explicit visual
+    emphasis (e.g. a reference marker for a canonical bronze composition, or color/size
+    encoding of a secondary attribute) to guide the viewer to an insight — DE-03 storytelling
+    is present but implicit only.
+  - Markers in the densest mid-triangle region touch/overlap slightly (natural at
+    N=65 with this spread) — a slightly smaller radius or lower alpha would keep clusters
+    fully separable at a glance.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Bronze Alloy Composition · ternary-basic · javascript · muix · anyplot.ai" in bold dark ink at top, fully visible with generous margin above and below. Equilateral triangle outlined in dark ink. Bold vertex labels "Copper (%)" (top), "Tin (%)" (bottom-left), "Zinc (%)" (bottom-right). Dashed light-gray grid lines at 20/40/60/80 parallel to each edge. Gray tick numerals (0,20,40,60,80,100) along all three edges, clearly legible and not clipped at the canvas border.
+      Data: Green (#009E73-family, alpha ~0.85) circular markers, ~65 points, clustering toward the Copper apex while spreading across the simplex — no other categorical colors present (single series).
+      Legibility verdict: PASS — all text reads cleanly against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, now in light/cream text, fully legible. Triangle outline in light gray. Vertex labels in bold white/cream. Grid dashed lines and tick numerals in muted gray, both clearly visible against the dark background — no dark-on-dark failures observed anywhere (title, vertex labels, tick numbers all confirmed legible).
+      Data: Markers are the identical green as the light render — only the chrome (background, ink, grid) flipped, confirming Imprint palette compliance.
+      Legibility verdict: PASS — all text reads cleanly against the dark background, no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (responsive title sizing, 14px ticks,
+          22px vertex labels); readable in both themes at full size and clearly legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data overlap; tick labels sit clear of
+          the triangle edges.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers (radius 8, alpha 0.85) clearly visible; slight touching/overlap
+          in the densest mid-triangle cluster, but no data is hidden.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue series with good contrast against both backgrounds; no
+          red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Triangle fills most of the square canvas with balanced margins; title/vertex
+          labels/tick text all fully within canvas bounds, no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Vertex labels are descriptive with units (Copper (%), Tin (%), Zinc
+          (%)).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series uses #009E73, identical across themes; backgrounds
+          match #FAF8F1 / #1A1A17; chrome is theme-correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: The entire ternary visual system (grid, ticks, vertex labels) was
+          custom-engineered since MUI X has no native ternary type — clearly above
+          a configured default, though not fully publication-polished.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No extraneous chart chrome (no axis spines from the underlying linear
+          scale, no legend clutter), subtle dashed grid; could be a touch more restrained
+          in the densest cluster.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Natural clustering toward the Copper apex reads as a story about
+          copper-dominant alloys, but there is no explicit emphasis (reference point,
+          secondary encoding) beyond that implicit pattern.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ternary/simplex plot with triangular grid and three-component
+          projection.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 20% grid lines, labeled vertices, edge tick marks at 0/20/40/60/80/100,
+          visually distinct markers — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All three components correctly projected; full dataset visible inside
+          the triangle.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · ternary-basic · javascript ·
+          muix · anyplot.ai'; single series needs no legend, tooltip provides per-point
+          labels.
+    data_quality:
+      score: 11
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Points span most of the simplex with visible density variation, though
+          few samples sit very close to the Tin/Zinc-heavy corners.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible materials-science scenario (alloy composition);
+          domain precision is only partially accurate (see DQ-03).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 2
+        max: 4
+        passed: false
+        comment: Real bronze/gunmetal alloys are copper-dominant (~85-98% Cu); this
+          sample cloud spreads down to ~10-20% Cu, which does not match real bronze
+          compositions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom structure (data → projection → grid/tick/label
+          components → Chart); functions are required by the React/MUI X component
+          contract, not incidental complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG (seed = 20260804).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer, ScatterPlot, ChartsTooltip, useXScale, useYScale
+          imported — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for a from-scratch ternary projection; no fake
+          UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the harness contract (default-exported component, ANYPLOT_SIZE,
+          skipAnimation); current MUI X community API only.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ChartContainer's composable-children architecture with useXScale/useYScale
+          hooks — the sanctioned MUI X pattern for custom overlay elements.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The scale-sharing hook composition used to build a non-native chart
+          type (ternary) is genuinely distinctive to MUI X's architecture, not easily
+          replicated as cleanly in imperative-canvas libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling
