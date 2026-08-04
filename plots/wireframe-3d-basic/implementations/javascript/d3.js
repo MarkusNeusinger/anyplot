@@ -210,6 +210,33 @@ tickGroup
   .attr("x2", (d) => toScreen(project(...d.b))[0])
   .attr("y2", (d) => toScreen(project(...d.b))[1]);
 
+// Screen-space corner-overlap guard: CORNER_GUARD above only filters ticks by
+// 3D data-space distance to the anchor, but a tick far from the anchor in
+// data space can still project close to the shared corner in 2D at this
+// camera angle. Push any tick label whose *projected* position lands inside
+// a pixel radius of the projected corner further out along the corner->label
+// direction, so no label ever renders on top of the mesh silhouette there.
+const anchorScreen = toScreen(project(anchorX, anchorY, zMinScaled));
+const CORNER_PX_RADIUS = 42;
+for (const tk of allTicks) {
+  const [sx, sy] = toScreen(project(...tk.label));
+  let dx = sx - anchorScreen[0];
+  let dy = sy - anchorScreen[1];
+  let dist = Math.hypot(dx, dy);
+  if (dist < 1e-6) {
+    const [bx, by] = toScreen(project(...tk.b));
+    dx = bx - anchorScreen[0];
+    dy = by - anchorScreen[1];
+    dist = Math.hypot(dx, dy) || 1;
+  }
+  if (dist < CORNER_PX_RADIUS) {
+    const scale = (CORNER_PX_RADIUS * 1.15) / dist;
+    tk.labelScreen = [anchorScreen[0] + dx * scale, anchorScreen[1] + dy * scale];
+  } else {
+    tk.labelScreen = [sx, sy];
+  }
+}
+
 svg
   .append("g")
   .attr("fill", t.inkSoft)
@@ -217,8 +244,8 @@ svg
   .selectAll("text")
   .data(allTicks)
   .join("text")
-  .attr("x", (d) => toScreen(project(...d.label))[0])
-  .attr("y", (d) => toScreen(project(...d.label))[1])
+  .attr("x", (d) => d.labelScreen[0])
+  .attr("y", (d) => d.labelScreen[1])
   .attr("text-anchor", "middle")
   .attr("dominant-baseline", "middle")
   .text((d) => d.text);
