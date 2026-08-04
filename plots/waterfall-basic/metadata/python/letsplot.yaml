@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: waterfall-basic
 created: '2025-12-24T09:58:59Z'
-updated: '2026-08-04T11:28:36Z'
+updated: '2026-08-04T11:34:42Z'
 generated_by: claude-sonnet
 workflow_run: 30904206392
 issue: 777
@@ -12,47 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/letsplot/plot-dark.html
-quality_score: 82
+quality_score: 90
 review:
   strengths:
+  - 'Connector-line anchor bug from attempt 1 is fully fixed: every dashed connector
+    now touches both the bar it leaves and the bar it enters in both light and dark
+    renders, restoring the waterfall''s core cumulative-flow narrative'
   - Correct, theme-adaptive Imprint palette use with a well-justified semantic exception
     (green=increase, matte red=decrease, blue=totals) matching both the palette's
     semantic-exception rules and the spec's own suggested convention
   - Explicit font sizing matching the style guide's scale-based defaults exactly (title
     16px / axis 12px / ticks 10px), fully legible in both themes with no dark-on-dark
     or light-on-light failures
-  - layer_tooltips() surfaces the running total on hover in the HTML export - a lets-plot-specific
+  - layer_tooltips() surfaces the running total on hover in the HTML export, a lets-plot-specific
     interactive complement to the static labels
   - Clean, fully deterministic, flat KISS script with correct dual PNG+HTML output
+    at the exact 3200x1800 landscape canvas target
   weaknesses:
-  - The dashed connector line after every decrease bar is anchored to the bar's ymax
-    (pre-decrease level) instead of ymin (post-decrease level), so it floats one bar-height
-    above the next bar instead of touching it - breaks the connector for 3 of 6 transitions
-    (Operating Costs->Marketing, Marketing->Taxes, Taxes->Net Profit) in both light
-    and dark renders, confirmed by pixel inspection
-  - Design Excellence is held back mainly by the connector-line bug, which directly
-    undercuts the 'cumulative flow' storytelling that is the core value of a waterfall
-    chart
-  - Overall composition is correct and clean but fairly plain; could use slightly
-    bolder typographic hierarchy or subtle background treatment to lift it toward
-    publication-ready
+  - Composition remains fairly plain beyond the semantic color mapping and bordered
+    bars - no additional typographic hierarchy or focal-point treatment (e.g. emphasizing
+    the Net Profit bar) to lift Design Excellence further
+  - Distinctive Features (LM-02) usage is limited to layer_tooltips(); no other lets-plot-specific
+    capability (e.g. custom scale transforms, additional grammar layers) is showcased
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1
-      Chrome: title "waterfall-basic · python · letsplot · anyplot.ai" in dark ink, y-axis "Amount ($)" with $-formatted ticks, x-axis category labels rotated ~30°, "Change Type" legend (Increase/Decrease/Total) at right - all clearly readable
-      Data: Starting Balance/Net Profit = blue (#4467A3) total bars; Product Sales/Service Revenue = green (#009E73) increase bars; Operating Costs/Marketing/Taxes = matte red (#AE3030) decrease bars; bold dark value labels centered in each bar; dashed connector lines between bars
-      Legibility verdict: PASS (all text readable against light background; no light-on-light issues)
+      Background: Warm off-white (#FAF8F1), matches the required light chrome token.
+      Chrome: Title "waterfall-basic · python · letsplot · anyplot.ai" in dark ink at top-left, y-axis "Amount ($)" with dollar-formatted ticks, x-axis category labels rotated ~30deg, "Change Type" legend (Increase/Decrease/Total) at right. All text is dark ink or ink-soft and clearly readable against the light background.
+      Data: "Starting Balance" ($50,000) and "Net Profit" ($61,000) are matte blue (#4467A3) total bars; "Product Sales" (+35,000) and "Service Revenue" (+18,000) are Imprint green (#009E73); "Operating Costs" (-22,000), "Marketing" (-8,000), and "Taxes" (-12,000) are matte red (#AE3030). Dashed connector lines now visibly touch both the departing and arriving bar edge at every transition (verified pixel-by-pixel: Service Revenue top -> Operating Costs top at ~$103,000; Operating Costs bottom -> Marketing top at ~$81,000; Marketing bottom -> Taxes top at ~$73,000; Taxes bottom -> Net Profit top at ~$61,000) - the attempt-1 floating-connector bug is resolved.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17
-      Chrome: same layout with title/axis/tick text flipped to light cream, value labels flipped from black to white, gridlines/borders light gray, legend uses dark elevated surface - all clearly readable, no dark-on-dark failures
-      Data: identical green/red/blue data colors to light render, confirmed pixel-identical
-      Legibility verdict: PASS (all text readable against dark background; no dark-on-dark failures)
-
-    Defect found identically in both renders: dashed connector lines after decrease bars (Operating Costs->Marketing, Marketing->Taxes, Taxes->Net Profit) are anchored to the wrong bar edge (ymax instead of ymin) and float disconnected above the next bar - verified by pixel-cropping both PNGs.
+      Background: Warm near-black (#1A1A17), matches the required dark chrome token.
+      Chrome: Same title/axis/legend layout with all text flipped to light cream/ink-soft tones; bar borders and gridlines flipped to light gray; legend box uses the dark elevated surface. All text is clearly legible against the dark background - no dark-on-dark failures.
+      Data: Green, red, and blue data colors are pixel-identical to the light render - only chrome flipped, as required. Connector lines touch bars correctly at every transition, matching the light render's fixed geometry.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,8 +56,9 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit sizes matching style-guide scale-based defaults; readable
-          in both themes
+        comment: Explicit sizes matching style-guide scale (title 16pt, axis_title
+          12pt, axis_text 10pt); readable in both themes; rotated x-tick labels slightly
+          generous
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -70,39 +67,42 @@ review:
         comment: No text collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars well-sized; decrease-bar connector lines visually disconnected
-          from target bar
+        comment: Bars well-sized for 7 categories; connector-line anchor bug from
+          attempt 1 is fixed, every connector now touches its bars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant +/- sign labels and legend beyond color alone
+        comment: Green/red/blue redundantly encoded with explicit +/- sign labels
+          and a legend, not color alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization; minor deduction for floating connector segments
+        comment: Good canvas utilization (~80% width, balanced margins), canvas measures
+          exactly 3200x1800 landscape target, connector fix removed the prior rendering-inconsistency
+          deduction
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Amount ($) has units; empty x-title appropriate for self-explanatory
-          categories
+        comment: '"Amount ($)" has units; empty x-axis title appropriate since category
+          labels are self-explanatory'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Imprint semantic-exception colors, identical across themes,
-          theme-correct backgrounds
+        comment: 'Green #009E73 (gain), matte red #AE3030 (loss), blue #4467A3 (totals)
+          - identical across themes; both backgrounds theme-correct'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -110,24 +110,26 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Thoughtful semantic color mapping, clearly above defaults, but fairly
-          plain overall composition
+        comment: Thoughtful semantic color mapping and clean bordered bars above library
+          defaults, but composition stays fairly plain beyond that
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid, generous whitespace, borders for definition; connector
-          bug undermines polish
+        passed: true
+        comment: theme_minimal() with y-only subtle grid, generous whitespace, borders
+          for definition; connector-line fix removes the prior polish-undermining
+          defect
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Connector-line bug undermines the cumulative-flow narrative that
-          is the chart's core story
+        passed: true
+        comment: Connector lines now visibly carry the cumulative-flow narrative across
+          all 6 transitions; no strong additional focal-point treatment (e.g. emphasized
+          Net Profit bar) for full marks
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -135,27 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waterfall with distinct total bars and up/down intermediate
-          bars
+        comment: Correct waterfall chart with distinct start/end total bars and up/down
+          intermediate bars
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Color coding, total-bar distinction, and labels present; connecting
-          lines broken for 3 of 6 transitions
+        passed: true
+        comment: Positive/negative color coding, distinct total-bar color, running-total
+          labels, and now correctly-anchored connecting lines emphasizing cumulative
+          flow - all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all steps and axes visible
+        comment: X/Y correctly assigned, all 7 steps and both axes fully visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels correct
+        comment: Title matches mandated format exactly; legend labels (Increase/Decrease/Total)
+          correctly describe the data
     data_quality:
       score: 14
       max: 15
@@ -165,20 +169,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows increases, decreases, and both totals; could add a zero-change
-          edge case
+        comment: Shows both increases and decreases plus start/end totals; could add
+          a step landing exactly at zero for full marks
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible quarterly financial breakdown
+        comment: Neutral, plausible quarterly financial breakdown (revenue -> costs/taxes
+          -> net profit)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions realistic for a small-business quarterly P&L
+        comment: Values and proportions internally consistent and realistic for a
+          small-business quarterly P&L
     code_quality:
       score: 10
       max: 10
@@ -188,13 +194,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: 'Flat script: imports -> theme tokens -> data -> waterfall math ->
+          DataFrame -> plot -> save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data
+        comment: Fully deterministic hard-coded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -206,13 +213,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex given no native waterfall geom; no fake functionality
+        comment: Appropriately complex for a manually-constructed waterfall (lets-plot
+          has no native waterfall geom); no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png/.html output via current ggsave API
+        comment: Saves plot-{THEME}.png via ggsave(..., scale=4) and plot-{THEME}.html;
+          current API
     library_mastery:
       score: 7
       max: 10
@@ -222,27 +231,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic ggplot-grammar layering, standard approach for a library
-          with no native waterfall geom
+        comment: Idiomatic ggplot-grammar layering (geom_rect + geom_segment + geom_text
+          + scale_fill_manual + theme), the standard way to build a waterfall in a
+          grammar-of-graphics library with no native waterfall geom
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: layer_tooltips() is a genuinely lets-plot-specific interactive touch
-  verdict: REJECTED
+        comment: layer_tooltips() is a genuinely lets-plot-specific interactive touch,
+          but no other distinctive library feature is showcased
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
   - edge-highlighting
+  - grid-styling
