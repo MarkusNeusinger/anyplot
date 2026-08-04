@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-08-04
@@ -105,7 +105,7 @@ for i, rect in enumerate(rects):
     if area > 150:
         r_val, g_val, b_val = shade_color[:3]
         luminance = 0.299 * r_val + 0.587 * g_val + 0.114 * b_val
-        text_color = INK if luminance > 0.5 else "#FFFFFF"
+        text_color = "#1A1A17" if luminance > 0.5 else "#FFFFFF"
         fontsize = min(18, max(12, int(area**0.35)))
 
         label = f"{subcategories[i]}\n{values[i]}GB"
