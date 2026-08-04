@@ -22,9 +22,9 @@ function lcg(seed) {
 const rand = lcg(42123);
 const samples = [];
 for (let i = 0; i < 28; i++) {
-  const wClay = 0.15 + rand() * 0.85;
-  const wSand = 0.15 + rand() * 0.85;
-  const wSilt = 0.15 + rand() * 0.85;
+  const wClay = 0.02 + rand() * 0.98;
+  const wSand = 0.02 + rand() * 0.98;
+  const wSilt = 0.02 + rand() * 0.98;
   const total = wClay + wSand + wSilt;
   samples.push({
     clay: (wClay / total) * 100,
@@ -110,8 +110,13 @@ for (const p of ticks) {
     .attr("stroke", t.inkSoft)
     .attr("stroke-width", 1.5);
 }
+// Skip lv=0: each axis's "0" tick lands exactly on the vertex where a
+// different axis's "100" tick already sits (e.g. the silt axis's 0 coincides
+// with the clay axis's 100 at the apex) - drawing both stacks two labels on
+// one pixel. The "100" from the owning axis is kept and is unambiguous.
 const tickLabels = [];
 for (const lv of tickLevels) {
+  if (lv === 0) continue;
   tickLabels.push({ p: outward(toXY(lv, 1 - lv, 0), 34), text: Math.round(lv * 100) });
   tickLabels.push({ p: outward(toXY(1 - lv, 0, lv), 34), text: Math.round(lv * 100) });
   tickLabels.push({ p: outward(toXY(0, lv, 1 - lv), 34), text: Math.round(lv * 100) });
@@ -132,9 +137,9 @@ svg
 
 // --- Vertex labels --------------------------------------------------------------
 const vertexLabels = [
-  { p: outward(apex, 78), text: "Clay" },
-  { p: outward(left, 78), text: "Sand" },
-  { p: outward(right, 78), text: "Silt" },
+  { p: outward(apex, 78), text: "Clay (%)" },
+  { p: outward(left, 78), text: "Sand (%)" },
+  { p: outward(right, 78), text: "Silt (%)" },
 ];
 svg
   .selectAll(".vertex-label")
@@ -151,8 +156,14 @@ svg
   .style("font-family", "sans-serif")
   .text((d) => d.text);
 
-// --- Data points ------------------------------------------------------------
-const points = samples.map((s) => toXY(s.clay / 100, s.sand / 100, s.silt / 100));
+// --- Data points --------------------------------------------------------------
+// Marker radius scales with compositional purity (the dominant component's
+// share) so the rarer near-vertex, high-purity samples read as a focal point
+// against the more common balanced mixtures clustered mid-triangle.
+const points = samples.map((s) => {
+  const purity = Math.max(s.clay, s.sand, s.silt) / 100;
+  return { ...toXY(s.clay / 100, s.sand / 100, s.silt / 100), r: 7 + purity * 7 };
+});
 svg
   .selectAll(".sample")
   .data(points)
@@ -160,7 +171,7 @@ svg
   .attr("class", "sample")
   .attr("cx", (d) => d.x)
   .attr("cy", (d) => d.y)
-  .attr("r", 9)
+  .attr("r", (d) => d.r)
   .attr("fill", t.palette[0])
   .attr("fill-opacity", 0.85)
   .attr("stroke", t.pageBg)
