@@ -11,15 +11,17 @@ const THEME    = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const BRAND    = colorant"#009E73"  # Imprint palette position 1 — ALWAYS first series
+const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])  # sequential, height-encoded
 
 # --- Data ---------------------------------------------------------------
-# Ripple function z = sin(r) / (r + 1) evaluated on a 24x24 grid
-grid_points = range(-10, 10; length = 24)
+# Ripple function z = sin(0.55 * r) / (r + 1) evaluated on a 20x20 grid.
+# The damped oscillation (~1.1 periods across the domain, vs. ~2.2 previously)
+# and coarser grid keep the mesh see-through instead of cluttered near the peak.
+grid_points = range(-10, 10; length = 20)
 x = collect(grid_points)
 y = collect(grid_points)
 radius = [sqrt(xi^2 + yi^2) for xi in x, yi in y]
-z = sin.(radius) ./ (radius .+ 1)
+z = sin.(0.55 .* radius) ./ (radius .+ 1)
 
 # --- Plot -----------------------------------------------------------------
 title_text = "wireframe-3d-basic · julia · makie · anyplot.ai"
@@ -39,6 +41,12 @@ ax = Axis3(
     xlabel            = "X",
     ylabel            = "Y",
     zlabel            = "Z",
+    xlabelsize        = 14,
+    ylabelsize        = 14,
+    zlabelsize        = 14,
+    xticklabelsize    = 12,
+    yticklabelsize    = 12,
+    zticklabelsize    = 12,
     xlabelcolor       = INK,
     ylabelcolor       = INK,
     zlabelcolor       = INK,
@@ -65,7 +73,24 @@ ax = Axis3(
     aspect            = (1, 1, 0.6),
 )
 
-wireframe!(ax, x, y, z; color = BRAND, linewidth = 1.3)
+# Height-based line coloring (brand green -> blue via ANYPLOT_SEQ) so each
+# wireframe segment is colored by the endpoints' z-height, giving the mesh a
+# depth cue instead of a single flat line color.
+grid_m, grid_n = size(z)
+line_faces = Makie.decompose(
+    Makie.LineFace{Makie.GLIndex}, Makie.Tesselation(Makie.Rect2(0, 0, 1, 1), (grid_m, grid_n))
+)
+z_per_vertex = vec(z)
+segment_colors = Float64[]
+for face in line_faces
+    push!(segment_colors, z_per_vertex[face[1]])
+    push!(segment_colors, z_per_vertex[face[2]])
+end
+
+wireframe!(
+    ax, x, y, z;
+    color = segment_colors, colormap = ANYPLOT_SEQ, colorrange = extrema(z), linewidth = 1.3,
+)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
