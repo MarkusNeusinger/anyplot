@@ -6,15 +6,13 @@ title: Basic Ternary Plot
 
 # Specification tracking
 created: 2025-12-15T20:44:43Z
-updated: 2025-12-15T20:44:43Z
+updated: 2026-08-04T14:43:51Z
 issue: 1001
 suggested: MarkusNeusinger
 
 # Classification tags (applies to all library implementations)
 tags:
-  plot_type:
-    - ternary
-    - triangle
+  plot_type: []
   data_type:
     - numeric
     - compositional
