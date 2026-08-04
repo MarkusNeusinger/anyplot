@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-04
@@ -23,29 +23,34 @@ BRAND = IMPRINT_PALETTE[0]
 
 H = math.sqrt(3) / 2
 
-# (copper, tin, zinc) proportions, % — spans phosphor/bell bronze, gunmetal,
-# cartridge brass and a few synthetic extremes so the whole triangle is covered.
-compositions = [
-    (88, 12, 0),
-    (94, 6, 0),
-    (78, 22, 0),
-    (90, 5, 5),
-    (85, 5, 10),
-    (70, 0, 30),
+# (copper, tin, zinc) proportions, % — two groups so the plot can show a visual
+# hierarchy: established named alloy families vs. exploratory interior points
+# that survey the rest of the compositional space (a common ternary-diagram
+# practice, distinct from a real commercial alloy).
+named_compositions = [
+    (88, 12, 0),  # traditional bronze
+    (94, 6, 0),  # statuary bronze
+    (78, 22, 0),  # bell bronze (bell metal)
+    (90, 5, 5),  # gunmetal
+    (85, 5, 10),  # admiralty gunmetal
+    (70, 0, 30),  # cartridge brass
+]
+exploratory_compositions = [
     (60, 5, 35),
     (65, 25, 10),
     (55, 35, 10),
     (50, 10, 40),
     (33, 34, 33),
     (30, 35, 35),
-    (10, 45, 45),
+    (24, 38, 38),
     (40, 40, 20),
     (20, 65, 15),
-    (15, 20, 65),
+    (28, 22, 50),
 ]
 
 # Barycentric (copper, tin, zinc) -> cartesian (x, y) on the unit equilateral triangle.
-data_points = [(0.5 * (2 * s[1] + s[0]) / 100, H * s[0] / 100) for s in compositions]
+named_points = [(0.5 * (2 * s[1] + s[0]) / 100, H * s[0] / 100) for s in named_compositions]
+exploratory_points = [(0.5 * (2 * s[1] + s[0]) / 100, H * s[0] / 100) for s in exploratory_compositions]
 
 vertex_copper = (0.5, H)
 vertex_tin = (1.0, 0.0)
@@ -75,9 +80,9 @@ for pct in [0.2, 0.4, 0.6, 0.8]:
 title = "Bronze Alloy Composition · ternary-basic · python · pygal · anyplot.ai"
 title_font_size = max(44, round(66 * min(1.0, 67 / len(title))))
 
-# One chart.add() call per series (boundary, each grid segment, the data, each tick
-# segment) — Style.colors is indexed by that same series order.
-series_colors = [INK] + [INK_MUTED] * len(grid_segments) + [BRAND] + [INK] * len(tick_segments)
+# One chart.add() call per series (boundary, each grid segment, the two data
+# groups, each tick segment) — Style.colors is indexed by that same series order.
+series_colors = [INK] + [INK_MUTED] * len(grid_segments) + [BRAND, BRAND] + [INK] * len(tick_segments)
 
 custom_style = Style(
     background=PAGE_BG,
@@ -126,7 +131,12 @@ chart.add(
 for segment in grid_segments:
     chart.add(None, segment, stroke=True, show_dots=False, stroke_style={"width": 1.5, "dasharray": "8,5"})
 
-chart.add("Alloy Samples", data_points, stroke=False, dots_size=22)
+# Larger dots for named alloy families, smaller for exploratory survey points —
+# a size-based hierarchy (same brand color, so palette compliance is untouched
+# and both groups stay theme-invariant) that makes the two-category story in
+# the data visible in the image itself.
+chart.add("Named Alloys", named_points, stroke=False, dots_size=27)
+chart.add("Survey Points", exploratory_points, stroke=False, dots_size=14)
 
 for segment in tick_segments:
     chart.add(None, segment, stroke=True, show_dots=False, stroke_style={"width": 2.5})
@@ -160,9 +170,9 @@ def to_px(x, y):
 
 
 vertex_labels = [
-    ("COPPER", (0.5, H + 0.07), "middle"),
-    ("TIN", (1.0 + 0.05, -0.05), "start"),
-    ("ZINC", (0.0 - 0.05, -0.05), "end"),
+    ("COPPER (%)", (0.5, H + 0.07), "middle"),
+    ("TIN (%)", (1.0 + 0.05, -0.05), "start"),
+    ("ZINC (%)", (0.0 - 0.05, -0.05), "end"),
 ]
 
 vertex_labels_svg = ""
@@ -179,19 +189,19 @@ for pct in [20, 40, 60, 80]:
 
     px, py = to_px(0.5 * frac - 0.055, H * frac)
     pct_labels_svg += (
-        f'  <text x="{px:.1f}" y="{py:.1f}" text-anchor="end" font-size="32" '
+        f'  <text x="{px:.1f}" y="{py:.1f}" text-anchor="end" font-size="42" '
         f'fill="{INK_MUTED}" font-family="sans-serif">{pct}</text>\n'
     )
 
     px, py = to_px(0.5 * (2 - frac) + 0.045, H * frac)
     pct_labels_svg += (
-        f'  <text x="{px:.1f}" y="{py:.1f}" text-anchor="start" font-size="32" '
+        f'  <text x="{px:.1f}" y="{py:.1f}" text-anchor="start" font-size="42" '
         f'fill="{INK_MUTED}" font-family="sans-serif">{pct}</text>\n'
     )
 
     px, py = to_px(frac, -0.05)
     pct_labels_svg += (
-        f'  <text x="{px:.1f}" y="{py:.1f}" text-anchor="middle" font-size="32" '
+        f'  <text x="{px:.1f}" y="{py:.1f}" text-anchor="middle" font-size="42" '
         f'fill="{INK_MUTED}" font-family="sans-serif">{pct}</text>\n'
     )
 
