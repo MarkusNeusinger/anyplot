@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-05
+Library: altair | Python
 """
 
 import os
@@ -10,8 +9,11 @@ import sys
 import pandas as pd
 
 
-sys.path.remove(os.path.dirname(__file__))
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+if _script_dir in sys.path:
+    sys.path.remove(_script_dir)
 import altair as alt
+from PIL import Image
 
 
 # Theme tokens
@@ -21,10 +23,10 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
+# Imprint palette (categorical, canonical order)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
-# Data - Market capitalization by sector and company (in billions USD)
+# Data - market capitalization by sector and company (billions USD)
 data = [
     {"category": "Technology", "subcategory": "Apple", "value": 2800},
     {"category": "Technology", "subcategory": "Microsoft", "value": 2400},
@@ -42,73 +44,132 @@ data = [
     {"category": "Consumer", "subcategory": "Walmart", "value": 400},
     {"category": "Consumer", "subcategory": "Tesla", "value": 600},
 ]
-
 df = pd.DataFrame(data)
 
-# Canvas dimensions for 16:9 aspect ratio (4800x2700 at scale_factor=3)
-width = 1600
-height = 900
+# Canvas dimensions - Altair inner view (see prompts/library/altair.md "Canvas")
+width = 620
+height = 320
 
-# Compute category totals and sort
+
+# --- Squarified treemap layout (Bruls, Huizing & van Wijk, 2000) -----------
+# A strip layout (categories as plain vertical bands) produces elongated,
+# hard-to-scan slivers for small subcategories. Squarifying keeps every
+# rectangle's aspect ratio close to 1:1, which is both easier to read and
+# closer to how disk-usage / finance treemap tools lay hierarchy out.
+def squarify(sizes, x, y, w, h):
+    """Lay `sizes` (already normalized so sum(sizes) == w * h) into the
+    x, y, w, h rectangle. Returns rects in the same order as `sizes`."""
+    sizes = list(sizes)
+    rects = []
+    while sizes:
+        side = min(w, h)
+        row = [sizes[0]]
+        for size in sizes[1:]:
+            if _worst_ratio([*row, size], side) <= _worst_ratio(row, side):
+                row.append(size)
+            else:
+                break
+        row_sum = sum(row)
+        if w >= h:
+            row_w = row_sum / h
+            ry = y
+            for size in row:
+                rh = (size / row_sum) * h
+                rects.append((x, ry, row_w, rh))
+                ry += rh
+            x, w = x + row_w, w - row_w
+        else:
+            row_h = row_sum / w
+            rx = x
+            for size in row:
+                rw = (size / row_sum) * w
+                rects.append((rx, y, rw, row_h))
+                rx += rw
+            y, h = y + row_h, h - row_h
+        sizes = sizes[len(row) :]
+    return rects
+
+
+def _worst_ratio(row, side):
+    row_sum = sum(row)
+    row_max, row_min = max(row), min(row)
+    return max((side**2 * row_max) / row_sum**2, row_sum**2 / (side**2 * row_min))
+
+
+def normalize(values, area):
+    total = sum(values)
+    return [v / total * area for v in values]
+
+
+GUTTER_OUTER = 3.2  # gap between category groups, in view units
+GUTTER_INNER = 1.1  # gap between subcategory cells within a group
+
 category_totals = df.groupby("category")["value"].sum().sort_values(ascending=False)
 sorted_cats = list(category_totals.index)
-cat_values = list(category_totals.values)
-total_value = sum(cat_values)
+color_map = {cat: IMPRINT[i % len(IMPRINT)] for i, cat in enumerate(sorted_cats)}
 
-# Simple strip layout - categories as vertical strips, subcategories stacked within
-cat_rects = {}
-current_x = 0
-for cat, val in zip(sorted_cats, cat_values, strict=False):
-    rect_width = (val / total_value) * width
-    cat_rects[cat] = {"x": current_x, "y": 0, "dx": rect_width, "dy": height}
-    current_x += rect_width
+cat_sizes = normalize(list(category_totals.to_numpy()), width * height)
+cat_boxes_raw = squarify(cat_sizes, 0, 0, width, height)
 
-# Compute subcategory rectangles within each category (stacked vertically)
+category_boxes = []
 all_rects = []
-for cat in sorted_cats:
-    cat_df = df[df["category"] == cat].sort_values("value", ascending=False)
-    cat_rect = cat_rects[cat]
-    cat_total = cat_df["value"].sum()
+for cat, (cx, cy, cw, ch) in zip(sorted_cats, cat_boxes_raw, strict=True):
+    category_boxes.append({"category": cat, "x": cx, "y": cy, "x2": cx + cw, "y2": cy + ch})
 
-    current_y = 0
-    for _, row in cat_df.iterrows():
-        rect_height = (row["value"] / cat_total) * cat_rect["dy"]
+    # Inset the group so a visible gap separates it from its neighbors.
+    ix, iy = cx + GUTTER_OUTER / 2, cy + GUTTER_OUTER / 2
+    iw, ih = max(cw - GUTTER_OUTER, 1.0), max(ch - GUTTER_OUTER, 1.0)
+
+    cat_df = df[df["category"] == cat].sort_values("value", ascending=False)
+    cat_total = cat_df["value"].sum()
+    sub_sizes = normalize(list(cat_df["value"].to_numpy()), iw * ih)
+    sub_boxes = squarify(sub_sizes, ix, iy, iw, ih)
+
+    for (_, row), (sx, sy, sw, sh) in zip(cat_df.iterrows(), sub_boxes, strict=True):
+        gx, gy = min(GUTTER_INNER / 2, sw / 3), min(GUTTER_INNER / 2, sh / 3)
+        dx, dy = max(sw - 2 * gx, 0.5), max(sh - 2 * gy, 0.5)
         all_rects.append(
             {
                 "category": cat,
                 "subcategory": row["subcategory"],
                 "value": row["value"],
-                "x": cat_rect["x"],
-                "y": current_y,
-                "dx": cat_rect["dx"],
-                "dy": rect_height,
+                "share_of_category": row["value"] / cat_total,
+                "x": sx + gx,
+                "y": sy + gy,
+                "x2": sx + gx + dx,
+                "y2": sy + gy + dy,
+                "x_center": sx + gx + dx / 2,
+                "y_center": sy + gy + dy / 2,
+                "area": dx * dy,
             }
         )
-        current_y += rect_height
 
+category_df = pd.DataFrame(category_boxes)
 rects_df = pd.DataFrame(all_rects)
+rects_df["display_value"] = rects_df["value"].apply(lambda v: f"${v}B")
 
-# Calculate corner and center coordinates for Altair
-rects_df["x2"] = rects_df["x"] + rects_df["dx"]
-rects_df["y2"] = rects_df["y"] + rects_df["dy"]
-rects_df["x_center"] = rects_df["x"] + rects_df["dx"] / 2
-rects_df["y_center"] = rects_df["y"] + rects_df["dy"] / 2
-rects_df["display_value"] = rects_df["value"].apply(lambda x: f"${x}B")
+min_area_for_label = width * height * 0.018
 
-# Determine which rectangles are large enough for labels
-rects_df["area"] = rects_df["dx"] * rects_df["dy"]
-min_area_for_label = width * height * 0.02
+# Group outline - a heavier border around each category shows the nesting
+# depth (group -> item) independently of color.
+group_outline = (
+    alt.Chart(category_df)
+    .mark_rect(filled=False, stroke=INK_SOFT, strokeWidth=2.2, strokeOpacity=0.55)
+    .encode(
+        x=alt.X("x:Q", scale=alt.Scale(domain=[0, width]), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height]), axis=None),
+        x2="x2:Q",
+        y2="y2:Q",
+    )
+)
 
-# Map categories to colors using Okabe-Ito palette
-color_map = {}
-for i, cat in enumerate(sorted_cats):
-    color_map[cat] = IMPRINT[i % len(IMPRINT)]
+# Hover selection - a distinctly Altair/Vega-Lite feature (a declarative
+# param bound to encoding channels) rather than a plain static layer.
+hover = alt.selection_point(on="pointerover", fields=["subcategory"], empty=False)
 
-# Treemap rectangles with borders matching theme
-stroke_color = INK_SOFT
-rects_chart = (
+cells = (
     alt.Chart(rects_df)
-    .mark_rect(stroke=stroke_color, strokeWidth=2)
+    .mark_rect()
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, width]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height]), axis=None),
@@ -119,9 +180,9 @@ rects_chart = (
             scale=alt.Scale(domain=list(color_map.keys()), range=list(color_map.values())),
             legend=alt.Legend(
                 title="Sector",
-                titleFontSize=22,
-                labelFontSize=18,
-                symbolSize=400,
+                titleFontSize=11,
+                labelFontSize=10,
+                symbolSize=90,
                 orient="right",
                 fillColor=ELEVATED_BG,
                 strokeColor=INK_SOFT,
@@ -129,21 +190,38 @@ rects_chart = (
                 labelColor=INK_SOFT,
             ),
         ),
+        stroke=alt.condition(hover, alt.value(INK), alt.value(PAGE_BG)),
+        strokeWidth=alt.condition(hover, alt.value(3.0), alt.value(1.0)),
         tooltip=[
             alt.Tooltip("category:N", title="Sector"),
             alt.Tooltip("subcategory:N", title="Company"),
             alt.Tooltip("display_value:N", title="Market Cap"),
         ],
     )
+    .add_params(hover)
 )
 
-# Filter for large rectangles that can fit labels
-labels_df = rects_df[rects_df["area"] >= min_area_for_label].copy()
+# Shading overlay - the smaller a cell is relative to its own sector, the
+# more it is tinted toward the ink token. This reads as depth/weight within
+# the hierarchy (per spec: "nesting depth or color shading intensity")
+# without altering the underlying categorical hue used for the legend.
+shading = (
+    alt.Chart(rects_df)
+    .mark_rect(fill=INK)
+    .encode(
+        x=alt.X("x:Q", scale=alt.Scale(domain=[0, width]), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height]), axis=None),
+        x2="x2:Q",
+        y2="y2:Q",
+        opacity=alt.Opacity("share_of_category:Q", scale=alt.Scale(domain=[0, 1], range=[0.22, 0.0]), legend=None),
+    )
+)
 
-# Company name labels
+labels_df = rects_df[rects_df["area"] >= min_area_for_label]
+
 name_labels = (
     alt.Chart(labels_df)
-    .mark_text(fontSize=20, fontWeight="bold", color=INK, dy=-10)
+    .mark_text(fontSize=12, fontWeight="bold", color=INK, dy=-9)
     .encode(
         x=alt.X("x_center:Q", scale=alt.Scale(domain=[0, width])),
         y=alt.Y("y_center:Q", scale=alt.Scale(domain=[0, height])),
@@ -151,10 +229,9 @@ name_labels = (
     )
 )
 
-# Value labels
 value_labels = (
     alt.Chart(labels_df)
-    .mark_text(fontSize=16, color=INK, dy=10)
+    .mark_text(fontSize=10, color=INK, dy=8)
     .encode(
         x=alt.X("x_center:Q", scale=alt.Scale(domain=[0, width])),
         y=alt.Y("y_center:Q", scale=alt.Scale(domain=[0, height])),
@@ -162,22 +239,32 @@ value_labels = (
     )
 )
 
-# Combine all layers
 chart = (
-    alt.layer(rects_chart, name_labels, value_labels)
+    alt.layer(group_outline, cells, shading, name_labels, value_labels)
     .properties(
         width=width,
         height=height,
         background=PAGE_BG,
-        title=alt.Title(text="treemap-basic · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
+        title=alt.Title(text="treemap-basic · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
-    .configure_axis(
-        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
-    )
+    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
     .configure_title(color=INK)
 )
 
-# Save outputs - scale_factor=3 gives 4800x2700
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save outputs - hard target 3200x1800 (see prompts/library/altair.md "Canvas")
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
