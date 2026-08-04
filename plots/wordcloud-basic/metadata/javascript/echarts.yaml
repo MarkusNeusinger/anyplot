@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: wordcloud-basic
 created: '2026-08-04T23:19:43Z'
-updated: '2026-08-04T23:25:21Z'
+updated: '2026-08-04T23:35:17Z'
 generated_by: claude-sonnet
 workflow_run: 30959107162
 issue: 1012
@@ -12,112 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Hand-built Archimedean spiral placement (measureWord + boxesOverlap + placeWords)
-    produces a genuine word-cloud layout with zero visible overlap, despite ECharts
-    having no native wordcloud series without the disallowed echarts-wordcloud extension.
-  - Font size scales via sqrt-normalized frequency (fontSizeFor), and the top 6 ranked
-    words additionally get bold (700) weight vs. regular (500) for the rest — a real,
-    intentional visual-hierarchy technique, not just size scaling.
-  - 'First-ranked word (''performance'', highest frequency) renders in brand green
-    #009E73, with the remaining words cycling through the full 8-hue Imprint palette;
-    identical data colors confirmed between light and dark renders.'
-  - 'Both renders are fully theme-correct: warm off-white #FAF8F1 background with
-    dark bold title in light mode, warm near-black #1A1A17 background with light title
-    in dark mode, no dark-on-dark or light-on-light failures.'
-  - Realistic, neutral product-feedback-survey term set (38 words, frequency 8-132)
-    gives a wide, plausible dynamic range for size variation and good feature coverage.
-  - 'Title format exactly matches the mandated ''wordcloud-basic · javascript · echarts
-    · anyplot.ai'' pattern; mount-node contract followed correctly (animation: false,
-    no explicit init size/devicePixelRatio, chart.on(''finished'') readiness flag).'
+  - Frequency-driven triple encoding (cube-root font-size curve, bold weight for the
+    top 6 terms, Imprint-ranked color) creates an immediate visual hierarchy that
+    spotlights "performance", "reliability", and "support" as the dominant survey
+    themes.
+  - Hand-rolled Archimedean-spiral collision layout (necessary since ECharts has no
+    native wordcloud series and the extension package is disallowed) places all 38
+    words with no visible overlap.
+  - 'Palette compliance verified across ranks: the highest-frequency word "performance"
+    renders in brand green #009E73, and subsequent ranks cycle through the Imprint
+    palette in canonical order, identical between light and dark renders.'
+  - Deterministic, in-memory product-feedback term-frequency dataset spans a wide,
+    realistic range (8-132) in a neutral business context.
+  - 'Title and chrome correctly use theme-adaptive ink tokens, readable in both themes;
+    backgrounds match the Imprint surface tokens (#FAF8F1 light / #1A1A17 dark).'
   weaknesses:
-  - 'The smallest tail words (freq 8-15: ''sync'', ''import'', ''export'', ''shortcuts'',
-    ''caching'', ''throughput'', ''widgets'') sit near FONT_MIN=18 CSS px. At full
-    2400px canvas they''re readable but small; scaled down to a ~400px mobile preview
-    they risk becoming near-illegible. Raise FONT_MIN to ~22-24 CSS px (and compress
-    the sqrt curve slightly) so the least-frequent words stay legible without losing
-    the size hierarchy for the rest.'
-  - The code relies on four helper functions (fontSizeFor, measureWord, boxesOverlap,
-    placeWords) rather than a flat imports-to-data-to-plot script. This is a reasonable/necessary
-    trade-off given ECharts has no native wordcloud series, but it is worth a comment
-    noting why the spiral-placement algorithm needs this structure so future readers
-    don't mistake it for over-engineering.
-  - Because the visualization is built entirely from graphic.elements text nodes rather
-    than a chart.setOption series, it doesn't showcase any distinctly ECharts-idiomatic
-    charting API beyond the graphic layer itself — the spiral-placement math is generic
-    JS that would port to any canvas-capable library with minimal changes.
+  - Smallest-frequency words (e.g. "sync", "import", "export", freq 8-10, fontSize
+    ~23px) shrink to roughly 7-8px effective height at the 400px mobile preview breakpoint
+    — borderline illegible there; consider raising FONT_MIN slightly (e.g. to ~26-28)
+    to keep the tail readable on mobile without flattening the size hierarchy.
+  - 'CQ-01 KISS structure: four helper functions (fontSizeFor, measureWord, boxesOverlap,
+    placeWords) are used instead of a flat Imports->Data->Plot->Save script — a justified
+    deviation given the lack of a native ECharts wordcloud series, but still a deduction
+    under the strict KISS criterion.'
+  - Noticeably more whitespace sits above the cloud (under the title) than below it;
+    nudging cloudArea.y0 down slightly or increasing cloudArea.h would balance canvas
+    utilization further.
+  - The placement logic is generic canvas measureText + spiral math routed through
+    ECharts' graphic.elements escape hatch rather than an ECharts-specific chart feature,
+    so Library Mastery (distinctive features) stays low — any canvas-capable library
+    could replicate this identically.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "wordcloud-basic · javascript · echarts · anyplot.ai" is bold dark text, centered top, clearly readable. No axes, no grid, no legend (appropriate — word clouds have none).
-      Data: 38 words packed into a roughly circular blob via spiral placement, sized by frequency (largest: "performance", "reliability", "support", "usability" in bold weight; smallest: "sync", "import", "export" in thin regular weight). Colors cycle through the 8-hue Imprint palette; the highest-frequency word "performance" renders in brand green #009E73. All words are distinguishable from the light background, no overlap, no clipping at any canvas edge.
-      Legibility verdict: PASS (smallest tail words are small but not unreadable at full resolution; flagged as a mobile-scale risk in weaknesses).
+      Chrome: Title "wordcloud-basic · javascript · echarts · anyplot.ai" is bold, centered, dark ink text — clearly readable against the light background. No axis/legend chrome (word cloud has neither).
+      Data: 38 words fill roughly the center 75-85% of the canvas in a dense, non-overlapping arrangement. The largest word, "performance" (highest frequency, rank 0), renders in brand green #009E73. Other high-frequency words ("reliability", "support", "usability", "pricing", "integration", "security", "documentation") are bold-weight and colored in the next Imprint palette positions in canonical order (lavender, blue, ochre, matte red, cyan, rose, lime). Lower-frequency words ("sync", "import", "export", "caching") are small, regular-weight, and colored via palette-position wraparound (rank % 8), still visible at full resolution.
+      Legibility verdict: PASS — all text is readable against the light background; the smallest tail words (freq 8-10) are legible at full canvas resolution though they would shrink significantly at a 400px mobile preview.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title renders in light/white text, clearly readable against the dark background. Same layout as light render, no axes/grid/legend.
-      Data: Identical word placement, sizes, and colors to the light render — confirmed pixel-for-pixel same palette assignment (e.g. "performance" is still brand green #009E73, "reliability" still lavender/purple, "pricing" still matte red). No dark-on-dark failures: every word color (green, purple, blue, ochre, red, cyan, rose, lime) has sufficient contrast against the near-black surface.
-      Legibility verdict: PASS.
+      Chrome: Title renders in light ink text (white/near-white), clearly readable against the dark background — no dark-on-dark issue.
+      Data: Identical word layout, sizes, weights, and colors to the light render — confirms data colors (Imprint palette positions) are unchanged between themes; only the background and title ink flipped.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all chrome and data text is clearly distinguishable from the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Sizes explicitly computed from frequency (not defaults); majority
-          of words well-proportioned and readable, but tail words near FONT_MIN=18px
-          risk mobile-scale legibility
+        comment: Font sizes explicitly computed via a cube-root frequency curve; all
+          text readable at full canvas size in both themes. Smallest-frequency words
+          (fontSize ~23px) would shrink to ~7-8px at the 400px mobile preview breakpoint,
+          borderline illegible for the tail terms.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Spiral placement with bounding-box collision checks produces zero
-          visible overlap
+        comment: Spiral collision placement (boxesOverlap check with 5px padding)
+          prevents any word-on-word overlap; verified visually across both renders.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Word sizes adapt well to frequency across 38 terms; smallest handful
-          are borderline small
+        comment: 38-word density is within the spec's 20-200 typical range; font sizes
+          adapt appropriately from 23px (rare terms) to 100px (top term).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 8 distinct Imprint hues cycle across words, no red-green-only reliance,
-          size+color+position all differentiate
+        comment: Imprint palette is CVD-safe; size and weight provide redundant encoding
+          alongside color.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Circular word blob fills a balanced majority of the square canvas
-          with even margins on all sides; corner whitespace is expected/standard for
-          spiral-packed word clouds
+        comment: Word cloud fills ~75-85% of the 2400x2400 canvas with balanced left/right
+          margins; minor extra whitespace above the cloud under the title, nothing
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes applicable to word clouds; title present and correctly formatted
+        comment: No axes apply to a word cloud; title format is fully compliant.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First/highest-frequency word is #009E73 brand green; remaining words
-          cycle canonical Imprint order; backgrounds and chrome theme-correct in both
-          renders'
+        comment: 'Highest-frequency word is #009E73; subsequent ranks cycle the Imprint
+          palette in canonical order; identical data colors between light/dark; both
+          backgrounds theme-correct.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -125,23 +123,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom spiral-packed layout, weight-based hierarchy for top terms,
-          full 8-hue palette cycling — clearly above a configured-default look
+        comment: Cube-root sizing curve, bold-weight hierarchy for top terms, and
+          rank-ordered Imprint coloring show thoughtful design clearly above library
+          defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No chrome to distract (no axes/grid/legend), tight spiral packing
-          with consistent padding between words
+        comment: Spiral collision layout gives generous, even spacing between words,
+          though the top of the canvas carries noticeably more whitespace than the
+          bottom.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size + bold weight for the top 6 ranked terms creates a clear focal
-          point ('performance', 'reliability', 'support', 'usability') without needing
-          annotations
+        comment: Size + bold weight + color-rank triple encoding gives an immediate,
+          unambiguous focal hierarchy without requiring annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -151,28 +150,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine word cloud with spiral placement, correct plot type
+        comment: 'Correct word-cloud representation: word size encodes frequency,
+          words fill the available space.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 38 words (within the 20-200 recommended range), frequency-driven
-          sizing, decorative color all present
+        comment: word + frequency data model present; spatial fill via spiral placement
+          matches spec notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Monotonic sqrt-scaled font size correctly maps frequency to visual
-          size
+        comment: Font size correctly and monotonically maps to frequency (cube-root
+          curve is a legibility choice, not a mapping error).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches mandated pattern; no legend needed/present
-          for a decorative-color word cloud
+        comment: Title exactly matches the mandated format; no legend needed for a
+          single decorative-color word cloud.
     data_quality:
       score: 15
       max: 15
@@ -182,20 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Frequency range 8-132 gives wide size variation across 38 terms,
-          good coverage of the visualization's core feature
+        comment: 38 terms spanning the full frequency range (8-132) show the complete
+          size spectrum from barely-mentioned to dominant themes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral product-feedback survey term set
+        comment: Product-feedback survey term frequencies are realistic, neutral,
+          and business-appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency counts are realistic for a survey-sized corpus
+        comment: Frequency counts (8-132) are plausible for a survey term-extraction
+          scenario with no factual issues.
     code_quality:
       score: 9
       max: 10
@@ -205,62 +207,64 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Four helper functions deviate from flat imports-to-plot structure,
-          but are a necessary consequence of implementing spiral placement without
-          a native wordcloud series
+        comment: Four helper functions (fontSizeFor, measureWord, boxesOverlap, placeWords)
+          deviate from the flat Imports->Data->Plot->Save ideal, but are a justified
+          consequence of hand-rolling a layout algorithm ECharts doesn't provide natively.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no RNG needed
+        comment: Fully deterministic hardcoded term-frequency data, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses only browser globals and Canvas measureText
-          API
+        comment: No imports beyond the provided echarts/window globals.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a manual word-cloud algorithm, no fake
-          UI/interactivity
+        comment: Complexity is appropriate to the constraint (no native wordcloud
+          series); no fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, readiness flag set
+        comment: 'Correct mount-node contract: no explicit width/height on echarts.init,
+          no devicePixelRatio override, animation:false set, chart.on(''finished'')
+          signals readiness.'
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct use of ECharts' graphic component, the only viable native
-          path since wordcloud has no built-in series and the extension package is
-          disallowed
+        comment: Appropriately uses ECharts' graphic.elements escape hatch given the
+          disallowed wordcloud extension, but doesn't drive the render through a data-bound
+          series.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Uses ECharts' graphic.elements text layer creatively, though the
-          spiral-placement math itself is generic and library-agnostic
-  verdict: REJECTED
+        passed: false
+        comment: The spiral placement and canvas text measurement are generic algorithms
+          that could be replicated in any graphics-capable library (D3, Chart.js),
+          not something distinctive to ECharts specifically.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - spiral-layout
-  - collision-detection
-  patterns: []
+  patterns:
+  - data-generation
   dataprep:
   - normalization
   styling:
-  - minimal-chrome
+  - publication-ready
