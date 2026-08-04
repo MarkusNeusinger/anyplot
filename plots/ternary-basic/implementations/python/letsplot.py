@@ -1,7 +1,7 @@
 """ anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-06
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-08-04
 """
 
 import os
@@ -22,6 +22,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    layer_tooltips,
     scale_color_manual,
     theme,
 )
@@ -36,7 +37,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
+# Imprint palette (categorical, positions 1-3)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Soil composition samples (Sand, Silt, Clay)
@@ -86,7 +87,16 @@ for sand, silt, clay in samples:
     x_coords.append(0.5 * (2 * silt_norm + clay_norm))
     y_coords.append(sqrt3_2 * clay_norm)
 
-df = pd.DataFrame({"x": x_coords, "y": y_coords, "soil_type": soil_types})
+df = pd.DataFrame(
+    {
+        "x": x_coords,
+        "y": y_coords,
+        "soil_type": soil_types,
+        "sand": [round(s, 1) for s, _, _ in samples],
+        "silt": [round(s, 1) for _, s, _ in samples],
+        "clay": [round(c, 1) for _, _, c in samples],
+    }
+)
 
 # Triangle vertices (Sand at bottom-left, Silt at bottom-right, Clay at top)
 vertices = pd.DataFrame({"x": [0, 1, 0.5, 0], "y": [0, 0, sqrt3_2, 0]})
@@ -148,33 +158,59 @@ for pct in [20, 40, 60, 80]:
 
 tick_df = pd.DataFrame(tick_labels)
 
+# Cluster centroids nudged toward the triangle center, for a storytelling
+# callout per region beyond plain color-coded scatter.
+tri_center_x, tri_center_y = 0.5, sqrt3_2 / 3
+centroid_df = df.groupby("soil_type", as_index=False)[["x", "y"]].mean()
+centroid_df["label_x"] = centroid_df["x"] + 0.14 * (tri_center_x - centroid_df["x"])
+centroid_df["label_y"] = centroid_df["y"] + 0.14 * (tri_center_y - centroid_df["y"]) + 0.075
+
+# Distinctive letsplot feature: interactive per-point tooltips carrying the
+# exact composition (not just position) — surfaced in the exported HTML.
+point_tooltips = (
+    layer_tooltips().line("Soil type|@soil_type").line("Sand (%)|@sand").line("Silt (%)|@silt").line("Clay (%)|@clay")
+)
+
 # Plot
 plot = (
     ggplot()
     # Triangle outline
-    + geom_polygon(data=vertices, mapping=aes(x="x", y="y"), fill=PAGE_BG, color=INK_SOFT, size=1.5, alpha=1)
+    + geom_polygon(data=vertices, mapping=aes(x="x", y="y"), fill=PAGE_BG, color=INK_SOFT, size=1.2, alpha=1)
     # Grid lines
     + geom_segment(
-        data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, size=0.6, alpha=0.3
+        data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, size=0.4, alpha=0.3
     )
     # Data points
-    + geom_point(data=df, mapping=aes(x="x", y="y", color="soil_type"), size=6, alpha=0.8)
+    + geom_point(data=df, mapping=aes(x="x", y="y", color="soil_type"), size=4.2, alpha=0.85, tooltips=point_tooltips)
+    # Cluster centroid markers (ring) + labels, calling out each soil region
+    + geom_point(
+        data=centroid_df,
+        mapping=aes(x="x", y="y", color="soil_type"),
+        size=9,
+        shape=21,
+        fill="white",
+        stroke=2.2,
+        show_legend=False,
+    )
+    + geom_text(
+        data=centroid_df, mapping=aes(x="label_x", y="label_y", label="soil_type"), size=3.8, fontface="bold", color=INK
+    )
     # Vertex labels
-    + geom_text(data=labels_df, mapping=aes(x="x", y="y", label="label"), size=18, fontface="bold", color=INK)
+    + geom_text(data=labels_df, mapping=aes(x="x", y="y", label="label"), size=5.5, fontface="bold", color=INK)
     # Tick labels
-    + geom_text(data=tick_df, mapping=aes(x="x", y="y", label="label"), size=11, color=INK_SOFT)
-    # Color scale using Okabe-Ito palette
+    + geom_text(data=tick_df, mapping=aes(x="x", y="y", label="label"), size=3.2, color=INK_SOFT)
+    # Color scale using Imprint palette
     + scale_color_manual(values=IMPRINT)
     # Labels and title
-    + labs(title="ternary-basic · letsplot · anyplot.ai", color="Soil Type")
+    + labs(title="ternary-basic · python · letsplot · anyplot.ai", color="Soil Type")
     # Theme
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, face="bold", color=INK),
+        plot_title=element_text(size=16, face="bold", color=INK),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=12, color=INK, face="bold"),
+        legend_text=element_text(size=10, color=INK_SOFT),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -182,9 +218,9 @@ plot = (
         panel_grid=element_blank(),
         legend_position="right",
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale 3x to get 4800 x 2700 px) and HTML
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# Save as PNG (scale 4x to get 3200 x 1800 px) and HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
