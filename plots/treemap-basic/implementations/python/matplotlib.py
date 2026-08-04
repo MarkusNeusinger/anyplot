@@ -1,13 +1,15 @@
-""" anyplot.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-05
+Quality: pending | Updated: 2026-08-04
 """
 
+import colorsys
 import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+from matplotlib.colors import to_hex, to_rgb
 from matplotlib.patches import Rectangle
 
 
@@ -18,7 +20,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for categories
+# Imprint palette for categories
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Budget allocation by department and project
@@ -42,9 +44,10 @@ categories = [d[0] for d in data]
 subcategories = [d[1] for d in data]
 values = [d[2] for d in data]
 
-# Category to color mapping (using Okabe-Ito palette)
+# Category to color mapping (canonical Imprint order)
 unique_categories = ["Engineering", "Sales", "Marketing", "Operations", "HR"]
 category_colors = {cat: IMPRINT[i % len(IMPRINT)] for i, cat in enumerate(unique_categories)}
+category_max = {cat: max(v for c, _, v in data if c == cat) for cat in unique_categories}
 
 # Normalize values to fill a 160x90 area (matching figsize aspect ratio)
 total = sum(values)
@@ -128,20 +131,27 @@ while remaining:
     placed_indices = {idx for _, idx in strip_items}
     remaining = [(a, i) for a, i in remaining if i not in placed_indices]
 
-# Create plot (4800x2700 px)
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Create plot (3200x1800 px)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Draw rectangles with labels
+# Draw rectangles with labels. Fill lightness is value-driven within each
+# category (largest item keeps the full-strength hue, smaller ones lighten
+# toward a soft tint) so area and shade reinforce the same magnitude signal.
 for rx, ry, rw, rh, idx in rects:
-    color = category_colors[categories[idx]]
-    rect = Rectangle((rx, ry), rw, rh, facecolor=color, edgecolor=PAGE_BG, linewidth=3, alpha=0.85)
+    cat = categories[idx]
+    base_r, base_g, base_b = to_rgb(category_colors[cat])
+    hue, lightness, sat = colorsys.rgb_to_hls(base_r, base_g, base_b)
+    weight = values[idx] / category_max[cat]
+    tint = to_hex(colorsys.hls_to_rgb(hue, min(0.92, lightness + (1 - weight) * 0.18), sat))
+
+    rect = Rectangle((rx, ry), rw, rh, facecolor=tint, edgecolor=PAGE_BG, linewidth=1.5)
     ax.add_patch(rect)
 
     # Add labels for all visible rectangles
     area = rw * rh
     if area > 80:
-        fontsize = min(18, max(11, int(area**0.35)))
+        fontsize = min(9, max(6, round(area**0.35 * 0.5)))
 
         label = f"{subcategories[idx]}\n${values[idx]}M"
         ax.text(
@@ -155,23 +165,23 @@ ax.axis("off")
 ax.set_aspect("equal")
 
 # Title
-ax.set_title("treemap-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
+ax.set_title("treemap-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
 
-# Legend for categories
+# Legend for categories (canonical Imprint hue, unshaded, for brand fidelity)
 legend_handles = [mpatches.Patch(color=category_colors[cat], label=cat) for cat in unique_categories]
 leg = ax.legend(
     handles=legend_handles,
     loc="upper center",
-    fontsize=16,
+    fontsize=8,
     framealpha=0.95,
     edgecolor=INK_SOFT,
     ncol=5,
-    bbox_to_anchor=(0.5, -0.02),
+    bbox_to_anchor=(0.5, -0.03),
 )
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 for text in leg.get_texts():
     text.set_color(INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.90, bottom=0.13)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
