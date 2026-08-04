@@ -1,7 +1,7 @@
 // anyplot.ai
 // ternary-basic: Basic Ternary Plot
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-08-04
+// Library: chartjs 4.4.7 | JavaScript 22.23.1
+// Quality: 92/100 | Created: 2026-08-04
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
