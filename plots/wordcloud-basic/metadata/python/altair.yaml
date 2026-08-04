@@ -2,126 +2,136 @@ library: altair
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:54:19Z'
-updated: '2026-05-06T07:29:59Z'
-generated_by: claude-haiku
-workflow_run: 25421767216
+updated: '2026-08-04T23:15:08Z'
+generated_by: claude-sonnet
+workflow_run: 30958013116
 issue: 1012
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - Perfect technical execution with no text overlaps and correct theme-adaptive chrome
-  - Spiral algorithm with collision detection creates professional word positioning
-  - 'Excellent palette compliance: first series is #009E73, colors cycle correctly
-    through Okabe-Ito'
-  - Realistic and plausible tech industry data with proper frequency distribution
-  - Clean, reproducible code with KISS structure and deterministic seed
-  - Strong idiomatic Altair usage with declarative encoding and selection patterns
+  - 'Word count fix from attempt 1 landed cleanly: 44 realistic developer-conference
+    terms (up from 23), comfortably mid-range of the spec''s 20-200 guidance, with
+    no new overlaps introduced'
+  - Imprint palette applied in canonical order (Languages/Data & AI/Cloud & Infra/Practices
+    -> green/purple/blue/ochre), identical across light and dark, with a correctly-labeled
+    "Topic" legend
+  - Theme-adaptive chrome threaded correctly end-to-end -- title, legend fill/stroke/text
+    all flip appropriately; both renders pass the light/dark legibility check with
+    no dark-on-dark or light-on-light failures
+  - Deterministic elliptical spiral-packing algorithm (no RNG) with 90-degree word
+    rotation on select low-frequency terms -- a genuinely idiomatic-for-altair solution
+    given the library has no native wordcloud mark
+  - Word sizes scale cleanly with frequency (9-32pt), and the biggest terms ("Python",
+    "Kubernetes", "Analytics", "DevOps") clearly read as the visual focal point
   weaknesses:
-  - Design Excellence is generic—looks like a well-configured library default rather
-    than custom design
-  - Visual Refinement relies entirely on the spiral algorithm; minimal polish beyond
-    that
-  - Data storytelling is basic—size-frequency mapping with no additional narrative
-    or emphasis beyond ordering
-  - Distinctive Library Mastery limited—Altair selection interactivity doesn't render
-    in static PNG
+  - The fill-space gap from attempt 1 is improved but not resolved -- it has moved
+    rather than closed. Roughly 15-18% of canvas width on the right edge (beyond "Load
+    Balancing"/"Neural Networks") and ~12% of canvas height at the bottom (below "Monitoring"/"Automation"/"Observability")
+    remain empty background. Consider widening the spiral search to bias placement
+    toward the canvas edges once the center is dense, or nudging canvas_w/canvas_h
+    (within the +/-20px altair allowance) to better match the elliptical packing's
+    natural aspect ratio so it reaches all four edges more evenly.
+  - The smallest words (Firewall, Elixir, C++, Caching at ~9-11pt) are legible at
+    full render size but will be very small at the ~400px mobile thumbnail scale used
+    elsewhere on the site. Raising min_size slightly (e.g. 9 -> 11) would help mobile
+    legibility without meaningfully hurting the packing density.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec
-      Chrome: Title "wordcloud-basic · altair · anyplot.ai" in dark text (#1A1A17). All text clearly readable.
-      Data: Words sized 24-80px by frequency. Python (80px, green #009E73) dominates. Colors cycle through Okabe-Ito palette: Data (orange #D55E00), Machine (blue #0072B2), Learning (magenta #CC79A7), etc. Yellow terms visible but less prominent per style guide.
-      Positioning: Spiral algorithm places words with 30px padding, preventing all overlaps.
-      Legibility verdict: PASS
+      Background: warm off-white, consistent with #FAF8F1
+      Chrome: title "wordcloud-basic · python · altair · anyplot.ai" in bold dark ink top-left, clearly readable; "Topic" legend top-right on a cream box with dark-ink swatches/labels (Languages/Data & AI/Cloud & Infra/Practices), clearly readable
+      Data: 44 words, size scaled 9-32pt by frequency, colored by category (green #009E73 Languages, purple #C475FD Data & AI, blue #4467A3 Cloud & Infra, ochre #BD8233 Practices); dominant terms Python/Kubernetes/Analytics/DevOps/JavaScript; several words rotated 90 degrees (Microservices, GCP, Load Balancing, Firewall, Networking, Caching, Data Pipeline) to fill vertical gaps; no overlaps
+      Legibility verdict: PASS (smallest words ~9-11pt are legible at full size but marginal at mobile thumbnail scale -- noted as weakness, not a FAIL)
+      Layout note: right ~15-18% of canvas width and bottom ~12% of canvas height are empty background (fill-space gap, relocated from attempt 1's bottom band)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec
-      Chrome: Title in light text (#F0EFE8), clearly visible. All text adapted to dark surface—no dark-on-dark failures.
-      Data: Colors identical to light render—Python still green #009E73, Data still orange #D55E00, etc. Data colors remain constant across themes as required.
-      Positioning: Identical to light render—same spiral layout and sizes.
+      Background: warm near-black, consistent with #1A1A17
+      Chrome: title flips to light ink (#F0EFE8), legend flips to elevated dark fill with light stroke and soft light-grey text; both clearly readable, no dark-on-dark failures anywhere
+      Data: identical colors, sizes, positions, and rotations as the light render -- confirmed only chrome flipped
       Legibility verdict: PASS
+      Layout note: same right-edge and bottom-strip empty-space pattern as the light render
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (24-80px). All readable in both themes.
+        comment: All text readable in both themes at full size; smallest terms (~9-11pt)
+          marginal at mobile thumbnail scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Spiral algorithm with collision detection and 30px padding prevents
-          overlaps.
+        comment: Spiral-packing collision detection scales cleanly to 44 words with
+          zero overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Optimal sizing: 80px to 24px range. All distinguishable.'
+        comment: Font sizes scale 9-32pt with frequency; smallest terms borderline
+          small
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with good contrast.
+        comment: 4 distinct hues, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 1600×900 scaled 3x. Word cloud fills 70% of canvas with balanced
-          margins.
+        passed: false
+        comment: ~15-18% of canvas width (right edge) and ~12% of height (bottom)
+          remain empty background
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: wordcloud-basic · altair · anyplot.ai'
+        comment: No axes needed for word cloud; title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Colors cycle through Okabe-Ito 1-7. Backgrounds
-          correct. Theme chrome adapted.'
+        comment: Imprint palette canonical order, identical across themes, correct
+          theme-adaptive backgrounds
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: Well-configured default. Okabe-Ito + bold font professional but not
-          exceptional.
+        comment: Category color-coding, rotation variety, clean typography, genuine
+          collision-avoidance spiral
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Spiral algorithm provides organized spacing. Minimal customization
-          beyond algorithm.
+        passed: false
+        comment: Lopsided whitespace (heavy on the right) undercuts balanced margins
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Size hierarchy shows term importance. Basic storytelling through
-          frequency encoding.
+        comment: Size + color create clear hierarchy and focal point
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -129,47 +139,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct word cloud with frequency-to-size mapping.
+        comment: Correctly implemented as size/color-encoded text-mark word cloud
+          with spiral placement
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Words displayed, frequency encodes size, tooltips on hover.
+        comment: Size encodes frequency, color encodes category; "fill available space"
+          only partially met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y positioning, size for frequency, color for palette cycling.
+        comment: x/y are packing coordinates, correct for this plot type
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend not needed (decorative coloring).
+        comment: Mandated title format correct; legend matches category names
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 25 words, frequencies 100→22. Full feature range.
+        comment: Frequency sizing, category coloring, rotation fill technique all
+          present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tech industry buzzwords with realistic distribution.
+        comment: Plausible, neutral developer-conference term frequencies
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions align with real-world tech term popularity.
+        comment: 44 words comfortably mid-range of spec's 20-200 typical range, fixed
+          from attempt 1's 23
     code_quality:
       score: 10
       max: 10
@@ -179,57 +193,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → seed → data → chart → save. No functions/classes.
+        comment: No functions/classes, flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: Fully deterministic spiral-packing algorithm, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, altair, numpy, pandas.'
+        comment: os/sys for path fix, altair/numpy/pandas/PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Spiral algorithm is appropriately complex. No fake interactivity.
+        comment: Real collision-avoidance algorithm, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/.html with correct scale_factor=3.0.
+        comment: Saves plot-{THEME}.png (padded to exact target) and plot-{THEME}.html,
+          current altair API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert Altair: mark_text(), encoding channels, selection_point(),
-          configure_*().'
+        comment: mark_text with alt.Size/alt.Angle/alt.Color encodings plus custom
+          packing layer -- correct idiomatic approach given no native wordcloud mark
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
         passed: true
-        comment: Uses selection + conditional opacity (Altair-specific). Hover doesn't
-          render in PNG.
+        comment: Rotation via alt.Angle, frequency-scaled alt.Size, category-semantic
+          coloring, rich tooltips
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - normalization
   styling:
-  - minimal-chrome
+  - publication-ready
