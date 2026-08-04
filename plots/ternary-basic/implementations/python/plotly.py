@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: plotly 6.7.0 | Python 3.13.13
+Library: plotly 6.9.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-08-04
 """
 
 import os
