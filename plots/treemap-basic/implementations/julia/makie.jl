@@ -96,6 +96,17 @@ function contrast_ink(c)
         colorant"#1A1A17" : colorant"#FAF8F1"
 end
 
+# Intra-category rank tint via perceptually uniform LCHab lightness lift
+# toward a fixed ceiling (never the theme background), so a given rank
+# renders the identical color in both light and dark PNGs -- only the
+# surrounding chrome is allowed to flip.
+function tint_lightness(base::RGB, frac::Float64)
+    lch      = convert(LCHab, base)
+    target_l = min(lch.l + 32.0, 92.0)
+    l        = lch.l + frac * (target_l - lch.l)
+    convert(RGB, LCHab(l, lch.c, lch.h))
+end
+
 # Data ---------------------------------------------------------------------
 # Cloud object-storage usage (TB) by owning team and application.
 categories = [
@@ -112,7 +123,7 @@ categories = [
         ("Campaign Media", 33.0), ("Video Archive", 22.0),
     ]),
     ("Customer Support", [
-        ("Ticket Attachments", 24.0), ("Call Recordings", 19.0),
+        ("Ticket Attachments", 43.0),
     ]),
 ]
 
@@ -150,9 +161,9 @@ for (i, (name, subs)) in enumerate(categories)
     subrects   = squarify(sub_values .* scale, cx, cy, cw, ch)
 
     for (j, (sx, sy, sw, sh)) in enumerate(subrects)
-        tint = length(subs) > 1 ? (j - 1) / (length(subs) - 1) * 0.4 : 0.0
+        tint = length(subs) > 1 ? (j - 1) / (length(subs) - 1) : 0.0
         push!(leaf_rects, (sx, sy, sw, sh))
-        push!(leaf_colors, weighted_color_mean(tint, PAGE_BG, base))
+        push!(leaf_colors, tint_lightness(base, tint))
         push!(leaf_names, sub_names[j])
         push!(leaf_values, sub_values[j])
     end
