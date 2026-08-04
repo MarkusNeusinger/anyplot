@@ -1,12 +1,32 @@
 """ anyplot.ai
 treemap-basic: Basic Treemap
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-05
+Quality: 80/100 | Updated: 2026-08-04
 """
 
-import pandas as pd
-from plotnine import aes, element_text, geom_rect, geom_text, ggplot, labs, scale_fill_manual, theme, theme_void
+import os
 
+import pandas as pd
+from plotnine import (
+    aes,
+    element_rect,
+    element_text,
+    geom_rect,
+    geom_text,
+    ggplot,
+    labs,
+    scale_fill_manual,
+    theme,
+    theme_void,
+)
+
+
+# Theme-adaptive tokens (Imprint palette + chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Budget allocation by department
 data = {
@@ -141,35 +161,40 @@ df["ymax"] = df["y"] + df["dy"]
 df["xcenter"] = df["x"] + df["dx"] / 2
 df["ycenter"] = df["y"] + df["dy"] / 2
 
-# Create combined label with value
-df["label"] = df["subcategory"] + "\n$" + df["value"].astype(str) + "K"
+# Label larger rectangles with subcategory + value; smallest ones stay unlabeled for clarity
+df["label"] = [f"{sub}\n${val}K" if val >= 100 else "" for sub, val in zip(df["subcategory"], df["value"], strict=True)]
 
-# Color palette for categories (Python Blue and Yellow first, then colorblind-safe)
+# Imprint palette, canonical order (first series is always #009E73)
 category_colors = {
-    "Engineering": "#306998",  # Python Blue
-    "Marketing": "#FFD43B",  # Python Yellow
-    "Sales": "#4ECDC4",  # Teal
-    "Operations": "#FF6B6B",  # Coral
-    "HR": "#95E1A3",  # Light green
-    "Finance": "#DDA0DD",  # Plum
+    "Engineering": "#009E73",
+    "Marketing": "#C475FD",
+    "Sales": "#4467A3",
+    "Operations": "#BD8233",
+    "HR": "#AE3030",
+    "Finance": "#2ABCCD",
 }
+
+title = "Budget Allocation by Department · treemap-basic · python · plotnine · anyplot.ai"
 
 # Create plot
 plot = (
     ggplot(df)
     + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="category"), color="white", size=2)
-    + geom_text(aes(x="xcenter", y="ycenter", label="label"), size=12, color="black", fontweight="bold")
+    + geom_text(aes(x="xcenter", y="ycenter", label="label"), size=4, color=INK, fontweight="bold")
     + scale_fill_manual(values=category_colors)
-    + labs(title="Budget Allocation by Department · treemap-basic · plotnine · pyplots.ai", fill="Department")
+    + labs(title=title, fill="Department")
     + theme_void()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold", margin={"b": 20}),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=10, ha="center", weight="bold", color=INK, margin={"b": 12}),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="right",
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
