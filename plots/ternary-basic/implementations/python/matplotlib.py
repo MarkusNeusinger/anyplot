@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-06
+Library: matplotlib 3.11.1 | Python 3.13.12
+Quality: pending | Updated: 2026-08-04
 """
 
 import os
@@ -41,14 +41,14 @@ total = sand + silt + clay
 x_points = 0.5 * (2 * clay + sand) / total
 y_points = sqrt3_2 * sand / total
 
-# Create figure (square format for triangle)
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+# Create figure (square format for triangle) — 6x6in @ dpi=400 -> exactly 2400x2400px
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Draw triangle outline
 triangle_x = [0.5, 0, 1, 0.5]
 triangle_y = [sqrt3_2, 0, 0, sqrt3_2]
-ax.plot(triangle_x, triangle_y, color=INK_SOFT, linewidth=2.5)
+ax.plot(triangle_x, triangle_y, color=INK_SOFT, linewidth=1.5)
 
 # Draw grid lines at 20% intervals
 grid_levels = [0.2, 0.4, 0.6, 0.8]
@@ -59,7 +59,7 @@ for level in grid_levels:
     y1 = sqrt3_2 * a_val
     x2 = 0.5 * (2 * 0 + a_val)
     y2 = sqrt3_2 * a_val
-    ax.plot([x1, x2], [y1, y2], color=INK_SOFT, alpha=0.15, linewidth=1.2, linestyle="--")
+    ax.plot([x1, x2], [y1, y2], color=INK, alpha=0.15, linewidth=0.8, linestyle="--")
 
     # Lines parallel to right edge (constant silt)
     b_val = level
@@ -67,7 +67,7 @@ for level in grid_levels:
     y1 = sqrt3_2 * 0
     x2 = 0.5 * (2 * 0 + (1 - b_val))
     y2 = sqrt3_2 * (1 - b_val)
-    ax.plot([x1, x2], [y1, y2], color=INK_SOFT, alpha=0.15, linewidth=1.2, linestyle="--")
+    ax.plot([x1, x2], [y1, y2], color=INK, alpha=0.15, linewidth=0.8, linestyle="--")
 
     # Lines parallel to left edge (constant clay)
     c_val = level
@@ -75,10 +75,10 @@ for level in grid_levels:
     y1 = sqrt3_2 * 0
     x2 = 0.5 * (2 * c_val + (1 - c_val))
     y2 = sqrt3_2 * (1 - c_val)
-    ax.plot([x1, x2], [y1, y2], color=INK_SOFT, alpha=0.15, linewidth=1.2, linestyle="--")
+    ax.plot([x1, x2], [y1, y2], color=INK, alpha=0.15, linewidth=0.8, linestyle="--")
 
 # Add tick labels at 20% intervals along each edge
-tick_fontsize = 14
+tick_fontsize = 10
 for level in [0, 20, 40, 60, 80, 100]:
     frac = level / 100
 
@@ -98,10 +98,10 @@ for level in [0, 20, 40, 60, 80, 100]:
     ax.text(x_tick + 0.06, y_tick, f"{level}", fontsize=tick_fontsize, ha="left", va="center", color=INK_SOFT)
 
 # Plot data points
-ax.scatter(x_points, y_points, s=220, color=BRAND, alpha=0.75, edgecolors=PAGE_BG, linewidth=1.2, zorder=5)
+ax.scatter(x_points, y_points, s=130, color=BRAND, alpha=0.75, edgecolors=PAGE_BG, linewidth=0.8, zorder=5)
 
 # Add vertex labels with component names
-label_fontsize = 20
+label_fontsize = 16
 ax.text(
     0.5, sqrt3_2 + 0.12, "Sand (%)", fontsize=label_fontsize, ha="center", va="bottom", fontweight="bold", color=INK
 )
@@ -109,7 +109,7 @@ ax.text(-0.1, -0.1, "Silt (%)", fontsize=label_fontsize, ha="right", va="top", f
 ax.text(1.1, -0.1, "Clay (%)", fontsize=label_fontsize, ha="left", va="top", fontweight="bold", color=INK)
 
 # Title
-ax.set_title("ternary-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
+ax.set_title("ternary-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=14)
 
 # Clean up axes
 ax.set_aspect("equal")
@@ -120,4 +120,4 @@ ax.set_xlim(-0.28, 1.28)
 ax.set_ylim(-0.22, 1.15)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
