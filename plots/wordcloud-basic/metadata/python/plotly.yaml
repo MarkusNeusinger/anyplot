@@ -2,12 +2,12 @@ library: plotly
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:51:15Z'
-updated: '2026-05-06T07:22:11Z'
-generated_by: claude-haiku
-workflow_run: 25421614849
+updated: '2026-08-04T23:12:42Z'
+generated_by: claude-sonnet
+workflow_run: 30957764111
 issue: 1012
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotly/plot-light.html
@@ -15,101 +15,111 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 quality_score: 89
 review:
   strengths:
-  - Excellent theme adaptation with both renders passing legibility checks
-  - Perfect overlap prevention through manual positioning of all 27 words
-  - Strong visual quality with explicit font sizing and professional Okabe-Ito palette
-  - Perfect spec compliance across all categories
-  - Clean, reproducible code with KISS structure
+  - NLTK/OpenCV collision from attempt 1 is fully resolved — NLTK's x-position was
+    nudged left (0.421 -> 0.402), restoring a clean visible gap in both renders
+  - Category-to-color mapping doubles as content encoding and legend-based filter
+    (click-to-toggle in the interactive HTML) — smart reuse of Plotly's native legend
+    interactivity given there's no native wordcloud trace
+  - Font-weight variation (Arial Black for freq >= 75) adds a secondary hierarchy
+    cue beyond size alone
+  - Code is now fully clean — vestigial random/numpy imports and seed calls were removed
+    since word_data and all positions are hardcoded
+  - Full theme-adaptive chrome correctly threaded through both renders — no dark-on-dark
+    or light-on-light failures
+  - Hover tooltip surfaces exact frequency per word — genuine interactive value beyond
+    the static PNG
   weaknesses:
-  - Design Excellence could be elevated with custom visual refinements beyond standard
-    word cloud styling
-  - Data storytelling is basic (frequency-to-size) without emphasis techniques like
-    category annotations or highlights
-  - Library Mastery could leverage Plotly's interactive features (clickable elements,
-    dynamic filtering)
+  - A few adjacent words in different categories sit with very tight kerning (e.g.
+    AWS/Keras, Airflow/MLflow) — no missing pixels or overlap, but the margin is thin
+    enough that a slightly denser font substitution could reintroduce collisions later
+  - Design Excellence is still at 'strong but not exceptional' — a bit more typographic
+    contrast (e.g. varying font family per category, not just weight) could push storytelling
+    further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "wordcloud-basic · plotly · anyplot.ai" in dark text (#1A1A17) - fully readable
-      Data: 27 words displayed with Okabe-Ito palette colors; sizes 26-88px scaled by frequency; NumPy (green #009E73) largest, Statsmodels smallest
-      Legibility verdict: PASS - all text clearly readable, no overlap, excellent contrast against light background
+      Background: warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: centered title "wordcloud-basic · python · plotly · anyplot.ai" in dark ink (#1A1A17), fully legible; bordered horizontal legend below the word cluster lists all 5 categories with "Aa" swatches in matching category colors and dark-ink label text; axes correctly hidden.
+      Data: 28 words sized by frequency (16-40pt) and colored by 5 categories using Imprint hues (green/lavender/blue/ochre/cyan). Highest-frequency words (NumPy, Pandas, TensorFlow, SQL, Git) render in a heavier weight for extra hierarchy. The NLTK/OpenCV collision present in attempt 1 is now resolved — verified via pixel-level crop, there is a clean visible gap between the two labels. Other tight-but-non-overlapping pairs (AWS/Keras, Airflow/MLflow) were also crop-checked and confirmed to have a visible (if narrow) gap, not touching pixels.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title in light text (#F0EFE8) - fully readable; no dark-on-dark failures
-      Data: Identical colors to light render (NumPy still #009E73, etc.); same positioning and sizing; all words clearly distinguishable
-      Legibility verdict: PASS - all text clearly readable, excellent contrast against dark background; data colors consistent with light render (only chrome adapted)
+      Background: warm near-black, matches #1A1A17 — not pure black.
+      Chrome: title and legend text flip to light ink tokens (#F0EFE8 title, lighter legend labels) and remain fully readable — no dark-on-dark failures anywhere in the chrome or legend box.
+      Data: word colors are pixel-identical to the light render (same 5 Imprint hues per category), confirming only chrome flipped between themes as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28px, words 26-88px; readable
-          in both themes
+        comment: min_size raised 13->16pt per attempt-1 feedback, improving mobile-thumbnail
+          legibility; all text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Manual positioning eliminates all overlap
+        comment: NLTK/OpenCV collision fixed via x-position nudge; no other overlaps
+          found on pixel-level inspection
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Words perfectly adapted to frequency; all clearly visible
+        comment: sizes scale cleanly 16-40pt with frequency
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe with strong contrast
+        comment: Imprint palette, category redundantly labeled via legend
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px; plot fills canvas well with balanced margins
+        comment: canvas gate passed, well-proportioned, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axes not needed for word cloud
+        comment: axes correctly hidden, title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds correct
-          for both themes'
+        comment: brand green first, correct semantic-red skip, correct theme backgrounds,
+          identical data colors across themes
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Professional palette and positioning, but standard word cloud styling
+        passed: true
+        comment: category color coding + weight-based hierarchy shows real design
+          intent, above default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean background, hidden axes, generous margins - above defaults
+        comment: clean minimal-chrome layout, bordered legend box, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Frequency-to-size creates basic hierarchy; no strong emphasis techniques
+        passed: true
+        comment: size + color + weight triple-encode importance and category
     spec_compliance:
       score: 15
       max: 15
@@ -119,47 +129,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct word cloud visualization
+        comment: correct word cloud via sized/positioned text marks
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present; 27 words within 20-200 range
+        comment: word + frequency both encoded, 28 words within spec's 20-200 range
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Words to positions, frequency to size
+        comment: size maps to frequency correctly; prior NLTK/OpenCV position collision
+          now fixed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed
+        comment: title format exact, legend labels match categories
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full distribution from 95 to 45 with variety
+        comment: covers size-by-frequency and category, the two core word-cloud dimensions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic data science tools; neutral context
+        comment: data-science tool ecosystem, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and scaling proportionally accurate
+        comment: frequency range 45-95 is sensible
     code_quality:
       score: 10
       max: 10
@@ -169,31 +180,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → plot → save; no functions
+        comment: flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeds set for both random and numpy
+        comment: fully hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: vestigial random/numpy imports removed per attempt-1 feedback; only
+          os and plotly.graph_objects remain, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no fake functionality
+        comment: no fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: correct write_image/write_html calls with theme-suffixed filenames
     library_mastery:
       score: 7
       max: 10
@@ -203,21 +215,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic go.Figure() + Scatter text mode
+        comment: go.Scatter(mode='text') is the standard Plotly workaround for word
+          clouds (no native trace type)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses text mode and hover templates; could leverage more interactive
-          features
+        passed: true
+        comment: leverages native legend click-to-toggle filtering and per-word hover
+          tooltips
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
