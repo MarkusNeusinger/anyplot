@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wordcloud-basic: Basic Word Cloud
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-08-04
@@ -16,15 +16,24 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
-# Imprint palette — canonical order, first series always #009E73
-IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+# Imprint palette — canonical order, first series always #009E73 — built via
+# sns.color_palette() so seaborn validates/normalizes the hex values instead of
+# using the raw list directly.
+IMPRINT_PALETTE = sns.color_palette(
+    ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+).as_hex()
 
 sns.set_theme(
     style="white",
     rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "font.family": "sans-serif", "text.color": INK},
 )
+# Drives the title's font size below (plt.rcParams["axes.titlesize"]) so the
+# text scale is governed by seaborn's context system, not a bare literal.
+sns.set_context("notebook", font_scale=1.0)
 
-# Data - tech-skill mentions from a developer survey (frequency = respondent count)
+# Data - tech-skill mentions from a developer survey (frequency = respondent count).
+# Brand/product names and acronyms keep their established casing (Python, AWS, SQL,
+# ...); generic descriptive terms are lowercased per the spec's preprocessing note.
 word_frequencies = {
     "Python": 180,
     "JavaScript": 160,
@@ -36,23 +45,23 @@ word_frequencies = {
     "Git": 115,
     "API": 110,
     "DevOps": 105,
-    "Cloud": 100,
-    "Testing": 95,
-    "Agile": 90,
+    "cloud": 100,
+    "testing": 95,
+    "agile": 90,
     "TypeScript": 87,
     "Node": 84,
     "Kubernetes": 81,
     "MongoDB": 78,
-    "Security": 75,
+    "security": 75,
     "Azure": 72,
     "REST": 69,
     "Redis": 66,
     "GraphQL": 63,
-    "Analytics": 60,
+    "analytics": 60,
     "PostgreSQL": 57,
     "Terraform": 54,
-    "Backend": 51,
-    "Frontend": 48,
+    "backend": 51,
+    "frontend": 48,
     "CICD": 45,
     "Spark": 42,
     "Kafka": 39,
@@ -148,6 +157,12 @@ for idx, (word, target_fontsize) in enumerate(zip(words, font_sizes, strict=True
     placed_boxes.append((x - hw, y - hh, x + hw, y + hh))
     ax.text(x, y, word, fontsize=fontsize, fontweight="bold", ha="center", va="center", color=color)
 
-ax.set_title("wordcloud-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=14)
+ax.set_title(
+    "wordcloud-basic · python · seaborn · anyplot.ai",
+    fontsize=plt.rcParams["axes.titlesize"],
+    fontweight="medium",
+    color=INK,
+    pad=14,
+)
 
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
