@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wordcloud-basic: Basic Word Cloud
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-08-04
@@ -54,6 +54,28 @@ word_data = [
     ("GraphQL", 30, "Data & AI"),
     ("Go", 28, "Languages"),
     ("Scalability", 26, "Practices"),
+    ("Java", 25, "Languages"),
+    ("GCP", 24, "Cloud & Infra"),
+    ("NoSQL", 23, "Data & AI"),
+    ("Serverless", 22, "Cloud & Infra"),
+    ("CI/CD", 21, "Practices"),
+    ("Data Pipeline", 20, "Data & AI"),
+    ("Swift", 19, "Languages"),
+    ("Monitoring", 18, "Practices"),
+    ("Redis", 17, "Data & AI"),
+    ("Networking", 16, "Cloud & Infra"),
+    ("Kotlin", 15, "Languages"),
+    ("Automation", 15, "Practices"),
+    ("PostgreSQL", 14, "Data & AI"),
+    ("Load Balancing", 13, "Cloud & Infra"),
+    ("Refactoring", 13, "Practices"),
+    ("C++", 12, "Languages"),
+    ("Observability", 11, "Practices"),
+    ("Caching", 11, "Cloud & Infra"),
+    ("Neural Networks", 10, "Data & AI"),
+    ("Deployment", 10, "Practices"),
+    ("Elixir", 9, "Languages"),
+    ("Firewall", 9, "Cloud & Infra"),
 ]
 
 # Canvas — altair inner-view dims tuned within the library prompt's ±20px
@@ -64,7 +86,7 @@ canvas_h = 340
 # Scale frequencies to font sizes
 frequencies = [freq for _, freq, _ in word_data]
 min_freq, max_freq = min(frequencies), max(frequencies)
-min_size, max_size = 10, 30
+min_size, max_size = 9, 32
 
 # Build data with spiral positioning; a handful of lower-frequency words
 # rotate 90° (a classic word-cloud technique) to fill the vertical gaps a
