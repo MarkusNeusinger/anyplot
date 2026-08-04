@@ -1,7 +1,7 @@
 // anyplot.ai
 // wordcloud-basic: Basic Word Cloud
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-08-04
+// Library: chartjs 4.4.7 | JavaScript 22.23.1
+// Quality: 84/100 | Created: 2026-08-04
 //# anyplot-orientation: landscape
 
 // Chart.js ships no native word-cloud chart type, and the chartjs-chart-wordcloud
