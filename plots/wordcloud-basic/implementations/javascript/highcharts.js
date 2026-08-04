@@ -1,7 +1,7 @@
 // anyplot.ai
 // wordcloud-basic: Basic Word Cloud
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 83/100 | Created: 2026-08-04
+// Quality: 88/100 | Created: 2026-08-04
 
 // Only the core `highcharts` bundle is loaded — the `wordcloud` series type
 // lives in modules/wordcloud.js, which is not vendored (see prompts/library/
