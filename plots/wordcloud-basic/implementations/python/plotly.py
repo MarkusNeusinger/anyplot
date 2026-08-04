@@ -1,13 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 wordcloud-basic: Basic Word Cloud
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-08-04
 """
 
 import os
-import random
 
-import numpy as np
 import plotly.graph_objects as go
 
 
@@ -43,15 +41,15 @@ word_data = {
     "Keras": (70, 1, 0.739, 0.498),
     "Docker": (70, 3, 0.275, 0.781),
     "Tableau": (68, 2, 0.730, 0.775),
-    "Azure": (68, 4, 0.340, 0.050),
+    "Azure": (68, 4, 0.300, 0.050),
     "Power BI": (65, 2, 0.736, 0.892),
     "Kubernetes": (62, 3, 0.253, 0.898),
     "OpenCV": (60, 4, 0.500, 0.025),
-    "Airflow": (58, 3, 0.500, 0.972),
+    "Airflow": (58, 3, 0.528, 0.972),
     "Hugging Face": (55, 1, 0.832, 0.609),
-    "Dask": (52, 0, 0.413, 0.965),
-    "MLflow": (50, 3, 0.598, 0.965),
-    "NLTK": (48, 4, 0.421, 0.038),
+    "Dask": (52, 0, 0.435, 0.965),
+    "MLflow": (50, 3, 0.618, 0.965),
+    "NLTK": (48, 4, 0.402, 0.038),
     "Statsmodels": (45, 0, 0.326, 0.990),
 }
 categories = [
@@ -62,12 +60,8 @@ categories = [
     "Cloud & AI Toolkits",
 ]
 
-# Seed for reproducibility
-random.seed(42)
-np.random.seed(42)
-
 # Scale font sizes for the 800x450 logical canvas (scale=4 -> 3200x1800 source px)
-min_size, max_size = 13, 40
+min_size, max_size = 16, 40
 freqs_all = [v[0] for v in word_data.values()]
 min_freq, max_freq = min(freqs_all), max(freqs_all)
 
