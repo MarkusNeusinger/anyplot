@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-08-04
@@ -182,7 +182,9 @@ cells = (
             legend=alt.Legend(
                 title="Sector",
                 titleFontSize=11,
-                labelFontSize=10,
+                labelFontSize=9,
+                labelLimit=200,
+                padding=10,
                 symbolSize=90,
                 orient="right",
                 fillColor=ELEVATED_BG,
@@ -246,7 +248,7 @@ chart = (
         width=width,
         height=height,
         background=PAGE_BG,
-        title=alt.Title(text="treemap-basic · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
+        title=alt.Title(text="treemap-basic · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
