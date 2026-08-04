@@ -1,7 +1,7 @@
 """ anyplot.ai
 wordcloud-basic: Basic Word Cloud
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-06
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 85/100 | Updated: 2026-08-04
 """
 
 import os
@@ -18,6 +18,7 @@ from plotnine import (
     geom_text,
     ggplot,
     labs,
+    scale_alpha_identity,
     scale_color_identity,
     scale_size_identity,
     theme,
@@ -30,11 +31,10 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for frequency tiers
+# Imprint palette for frequency tiers
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Word frequency data - technology survey responses
-np.random.seed(42)
 words_data = {
     "word": [
         "Python",
@@ -62,15 +62,51 @@ words_data = {
         "Docker",
         "AWS",
         "Azure",
+        "Kubernetes",
+        "Terraform",
+        "GraphQL",
+        "Redis",
     ],
-    "frequency": [95, 88, 82, 78, 75, 70, 65, 62, 58, 55, 52, 48, 45, 42, 38, 35, 32, 30, 28, 26, 24, 22, 20, 18, 16],
+    "frequency": [
+        95,
+        88,
+        82,
+        78,
+        75,
+        70,
+        65,
+        62,
+        58,
+        55,
+        52,
+        48,
+        45,
+        42,
+        38,
+        35,
+        32,
+        30,
+        28,
+        26,
+        24,
+        22,
+        20,
+        18,
+        16,
+        14,
+        11,
+        8,
+        6,
+    ],
 }
 
 df = pd.DataFrame(words_data)
 
-# Calculate font sizes with more dramatic range (10-50) for better emphasis
+# Calculate font sizes (6-25 mm) for emphasis, and a subtle alpha ramp for depth
 min_freq, max_freq = df["frequency"].min(), df["frequency"].max()
-df["size"] = 10 + (df["frequency"] - min_freq) / (max_freq - min_freq) * 40
+freq_norm = (df["frequency"] - min_freq) / (max_freq - min_freq)
+df["size"] = 6 + freq_norm * 19
+df["alpha"] = 0.6 + freq_norm * 0.4
 
 # Sort by frequency descending
 df = df.sort_values("frequency", ascending=False).reset_index(drop=True)
@@ -102,22 +138,29 @@ positions = [
     (30, 6),  # Docker
     (6, 6),  # AWS
     (75, 6),  # Azure
+    (94, 10),  # Kubernetes - fills empty right margin below the legend
+    (94, 24),  # Terraform - fills empty right margin below the legend
+    (78, 53),  # GraphQL - fills empty upper-right quadrant
+    (42, 20),  # Redis - fills gap between the mid-canvas clusters
 ]
 
 df["x"] = [p[0] for p in positions]
 df["y"] = [p[1] for p in positions]
 
-# Assign Okabe-Ito colors based on frequency tiers
+# AWS sits alone in the bottom-left corner - rotate it for an organic word-cloud feel
+df["angle"] = np.where(df["word"] == "AWS", 90, 0)
+
+# Assign Imprint colors based on frequency tiers
 colors = []
 for freq in df["frequency"]:
     if freq >= 65:
-        colors.append(IMPRINT[0])  # Bluish green (brand) - highest
+        colors.append(IMPRINT[0])  # Brand green - highest
     elif freq >= 35:
-        colors.append(IMPRINT[1])  # Vermillion - medium-high
+        colors.append(IMPRINT[1])  # Lavender - medium-high
     elif freq >= 15:
         colors.append(IMPRINT[2])  # Blue - medium-low
     else:
-        colors.append(IMPRINT[3])  # Reddish purple - lowest
+        colors.append(IMPRINT[3])  # Ochre - lowest
 
 df["color"] = colors
 
@@ -134,18 +177,19 @@ legend_df = pd.DataFrame(
 # Create plot
 plot = (
     ggplot(df, aes(x="x", y="y", label="word", size="size", color="color"))
-    + geom_text(family="sans-serif", fontweight="normal", show_legend=False)
+    + geom_text(aes(alpha="alpha", angle="angle"), family="sans-serif", fontweight="normal", show_legend=False)
     + geom_text(
-        data=legend_df, mapping=aes(x="x", y="y", label="label", color="color"), size=9, ha="left", show_legend=False
+        data=legend_df, mapping=aes(x="x", y="y", label="label", color="color"), size=4, ha="left", show_legend=False
     )
-    + annotate("text", x=92, y=50, label="Frequency", size=11, ha="left", fontweight="bold", color=INK)
+    + annotate("text", x=92, y=50, label="Frequency", size=5.5, ha="left", fontweight="bold", color=INK)
     + scale_size_identity()
     + scale_color_identity()
-    + coord_cartesian(xlim=(0, 100), ylim=(0, 56.25))
+    + scale_alpha_identity()
+    + coord_cartesian(xlim=(0, 100), ylim=(0, 56.25), expand=False)
     + labs(title="wordcloud-basic · plotnine · anyplot.ai")
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold", color=INK, margin={"b": 15}),
+        figure_size=(8, 4.5),
+        plot_title=element_text(size=12, ha="center", weight="bold", color=INK, margin={"b": 8}),
         panel_background=element_rect(fill=PAGE_BG, color=None),
         plot_background=element_rect(fill=PAGE_BG, color=None),
         panel_grid_major=element_blank(),
@@ -157,4 +201,4 @@ plot = (
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
