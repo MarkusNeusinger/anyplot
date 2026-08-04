@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waterfall-basic: Basic Waterfall Chart
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-04
@@ -60,7 +60,7 @@ for i in range(1, n):
 # Create display values for labels
 display_values = []
 for i, val in enumerate(values):
-    if val is None:
+    if bar_types[i] == "total":
         display_values.append(f"${int(running_total[i])}")
     elif val >= 0:
         display_values.append(f"+${int(val)}")
