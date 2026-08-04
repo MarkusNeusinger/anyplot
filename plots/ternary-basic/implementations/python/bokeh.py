@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ternary-basic: Basic Ternary Plot
 Library: bokeh 3.9.2 | Python 3.13.14
-Quality: 89/100 | Created: 2026-08-04
+Quality: 92/100 | Created: 2026-08-04
 """
 
 import os
