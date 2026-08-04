@@ -1,7 +1,7 @@
 // anyplot.ai
 // treemap-basic: Basic Treemap
 // Library: echarts 6.1.0 | JavaScript 22.23.1
-// Quality: 84/100 | Created: 2026-08-04
+// Quality: 94/100 | Created: 2026-08-04
 
 const t = window.ANYPLOT_TOKENS;
 // Text drawn on the data-colored tiles themselves (not the page background)

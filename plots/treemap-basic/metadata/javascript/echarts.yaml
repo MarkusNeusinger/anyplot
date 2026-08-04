@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: treemap-basic
 created: '2026-08-04T09:39:38Z'
-updated: '2026-08-04T09:47:12Z'
+updated: '2026-08-04T10:07:10Z'
 generated_by: claude-sonnet
 workflow_run: 30895153464
 issue: 766
@@ -12,129 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 94
 review:
   strengths:
-  - 'Correct 2-level treemap hierarchy (division → project) with rectangle area proportional
-    to value; canonical Imprint palette order verified pixel-by-pixel (#009E73, #C475FD,
-    #4467A3, #BD8233, #AE3030 in that order after ECharts'' default value-descending
-    sort)'
-  - Idiomatic, distinctive use of ECharts treemap `levels[]` config — per-depth `upperLabel`
-    header bars, `colorSaturation`/`borderColorSaturation` for hierarchy shading,
-    theme-matched borders (`t.pageBg`) between top-level groups
-  - 'Clean, deterministic, minimal code — no unused imports, correct mount-node contract
-    (`animation: false`, no explicit size/devicePixelRatio)'
-  - Realistic, neutral R&D-budget dataset (19 nodes, $280k–$1850k range), well within
-    the 5–50 item spec range
-  - 'Title format matches spec exactly; both renders are theme-correct (backgrounds
-    #FAF8F1/#1A1A17, chrome flips, data colors identical between themes)'
-  - No clipping at any canvas edge — title and every tile label confirmed fully inside
-    the 3200×1800 canvas
+  - 'Repair fully resolved the attempt-1 contrast failure: all 14 project-tile labels
+    now measure 5.03:1-17.32:1 against the fixed cream label, verified by direct pixel
+    sampling of both renders'
+  - Explicit per-division itemStyle.color indexed by array position removes the attempt-1
+    robustness gap - canonical Imprint order is now guaranteed regardless of ECharts'
+    default value-descending sort
+  - Correct 2-level treemap hierarchy (division -> project) with rectangle area proportional
+    to value; idiomatic, distinctive use of ECharts treemap levels[] - per-depth upperLabel
+    header bars, tuned colorSaturation/borderColorSaturation for hierarchy shading
+  - 'Clean, deterministic, minimal code - correct mount-node contract (animation:
+    false, no explicit size/devicePixelRatio)'
+  - Realistic, neutral R&D-budget dataset (19 nodes, $280k-$1850k range), well within
+    the 5-50 item spec range
+  - Both renders theme-correct, tile fills pixel-identical between light/dark, no
+    clipping at any canvas edge
   weaknesses:
-  - 'Fixed cream TILE_LABEL (#FAF8F1) text is used on every tile regardless of fill
-    brightness. Measured WCAG contrast ratios (text vs. sampled fill pixel, identical
-    in both renders): Core Services (the single LARGEST tile in the whole chart, fill
-    ≈ rgb(26,255,193)) = 1.23:1; Developer Tools = 1.64:1; Infrastructure = 1.87:1;
-    Reliability = 2.54:1; Threat Detection = 2.44:1 — all far below the 4.5:1 WCAG
-    AA minimum for normal text. Fix: darken the label color on bright fills (e.g.
-    switch to `t.ink`/near-black when the tile''s own value-based lightness pushes
-    it above a luminance threshold), or constrain the level-2 `colorSaturation`/lightness
-    range so no child tile gets this washed-out bright, so every label clears ≥4.5:1
-    contrast.'
-  - 'Minor robustness note: because ECharts treemap sorts children by value by default
-    before assigning `color` by index, the top-level division colors land in Imprint
-    canonical order only because Platform Engineering happens to have the largest
-    total value. Consider setting `itemStyle.color` explicitly per division (looked
-    up from `t.palette` by the division''s position in the original, unsorted `divisions`
-    array) so the canonical-order guarantee doesn''t depend on the data''s value ordering.'
+  - Core Services (the single largest tile, division = Platform Engineering) sits
+    closest to the contrast floor at 5.03:1 - comfortably above the 4.5:1 AA minimum
+    but with less margin than every other tile; re-verify if the palette or dataset
+    changes in a future edit
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) plot background, confirmed via pixel sample (250,248,241).
-      Chrome: Title "treemap-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, fully visible, not clipped. Five division header bars ("Platform Engineering", "Data & AI", "Product Design", "Security", "QA & Support") in bold cream-on-dark-hue text, all clearly legible. Thin cream borders (matching page background) separate the five top-level division blocks; slightly darker borders separate project tiles within each division.
-      Data: 5 divisions arranged by the treemap's default value-descending sort (Platform Engineering largest → QA & Support smallest), each subdivided into project tiles whose area is proportional to $-value. Division colors verified against the Imprint palette in canonical order: Platform Engineering=#009E73 (green, position 1), Data & AI=#C475FD family (lavender, position 2), Product Design=#4467A3 family (blue, position 3), Security=#BD8233 family (ochre, position 4), QA & Support=#AE3030 family (red, position 5). Project tiles within each division are lighter/darker shades of the parent hue, scaled by each project's relative value (larger project = brighter/lighter tile).
-      Legibility verdict: PARTIAL FAIL — most labels are readable, but on the brightest tiles (all four Platform Engineering children, plus Threat Detection) the fixed cream label text has measured WCAG contrast ratios between 1.23:1 and 2.54:1 against the fill — far below the 4.5:1 AA minimum. The text is still visually parseable up close (hue difference helps) but is genuinely low-contrast, and it happens on the single largest, most prominent tile in the entire chart ("Core Services", 1.23:1).
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Title "treemap-basic · javascript · echarts · anyplot.ai" centered at top, dark ink, fully visible. Five division header bars (Platform Engineering, Data & AI, Product Design, Security, QA & Support) in bold cream text on their own colored strip, all clearly legible.
+      Data: Divisions colored by explicit index into canonical Imprint order: Platform Engineering=#009E73 (slot 1), Product Design=lavender family (slot 2), Data & AI=blue family (slot 3), Security=#BD8233 (slot 4), QA & Support=matte-red family (slot 5). Project tiles shaded from parent hue with narrowed brightness range vs attempt 1. Pixel-sampled WCAG contrast of all 14 project-tile labels against fixed cream text: 5.03:1 (Core Services, largest tile) to 17.32:1 (Research) - all clear the 4.5:1 AA minimum.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) plot background — page chrome (title, division header text, tick-free layout) all switch to light/cream text and are clearly readable against the dark surface. No dark-on-dark failures observed on any chrome element.
-      Chrome: Title and all five division headers render in light cream text on the dark page background, fully legible. Border color between top-level divisions is now the dark page background (matches `t.pageBg` token), correctly threaded through the theme.
-      Data: Tile fill colors are pixel-identical to the light render (confirmed via direct sampling) — only the page chrome (title ink, borders between top-level blocks) flips between themes, exactly as required.
-      Legibility verdict: PARTIAL FAIL for the same reason as the light render — the low-contrast label-vs-fill issue on Core Services/Developer Tools/Infrastructure/Reliability/Threat Detection is a property of the tile fill vs. the fixed cream TILE_LABEL, so it reproduces identically in the dark render (tile fills don't change between themes). No additional dark-specific failures found.
+      Background: Warm near-black, matches #1A1A17 (pixel-sampled)
+      Chrome: Title and all division headers correctly flip to light/cream text on dark surface. No dark-on-dark failures. Division borders correctly switch from light page bg to dark page bg.
+      Data: Tile fill colors pixel-identical to light render (verified: Core Services=(0,122,89) in both, Threat Detection=(96,66,26) in both). Same improved contrast reproduces identically since it's fill-vs-fixed-label-color, not theme chrome.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 7
         max: 8
-        passed: false
-        comment: Readable up close but genuinely low-contrast on 5 of 14 leaf tiles,
-          including the single largest tile in the chart (Core Services)
+        passed: true
+        comment: All 14 project-tile labels now clear 4.5:1 contrast; Core Services
+          closest to floor at 5.03:1
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; every label sits cleanly inside its own
-          tile
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 19 tiles at appropriate size for the canvas, gapWidth/borderWidth
-          give clean separation
+        comment: All tiles and labels clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Measured WCAG contrast 1.23:1-2.54:1 on multiple tiles vs. required
-          4.5:1 minimum
+        passed: true
+        comment: Measured contrast 5.03:1-17.32:1 across all sampled tiles, previously
+          1.23:1-2.54:1
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed, no canvas-gate failure, margins and title
-          proportion correct, nothing clipped at edges
+        comment: Canvas gate passed, no clipping, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for treemap; title matches required format exactly
+        comment: Title matches spec format exactly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First division = #009E73, remaining divisions in Imprint canonical
-          order (verified via pixel sampling); backgrounds theme-correct in both renders'
+        comment: Explicit per-division palette indexing guarantees canonical order
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
-        comment: Custom palette + hierarchical shading is a real design choice, but
-          the resulting brightness variance on some tiles undercuts the polish
+        passed: true
+        comment: Narrower, tuned colorSaturation range reads as intentional and polished
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Clean subtle borders/gaps between hierarchy levels, minimal chrome,
-          no chartjunk
+        passed: true
+        comment: Clean subtle borders/gaps, minimal chrome, consistent hierarchy shading
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Area + color + nesting together clearly communicate both grouping
-          and relative magnitude; Platform Engineering reads immediately as the largest
-          spend area
+        passed: true
+        comment: Area + color + nesting clearly communicate grouping and magnitude
     spec_compliance:
       score: 15
       max: 15
@@ -143,25 +126,26 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct treemap with nested rectangles
+        passed: true
+        comment: Correct 2-level treemap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Distinct division colors, borders between rectangles, labels on larger
-          tiles, hierarchy shown via nesting + shading intensity
+        passed: true
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: value correctly drives tile area; category/subcategory correctly
-          map to the 2-level hierarchy
+        passed: true
+        comment: Value correctly drives tile area
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches required format exactly; no separate legend needed
-          since divisions are directly labeled
+        passed: true
+        comment: Title matches required format exactly
     data_quality:
       score: 15
       max: 15
@@ -170,19 +154,20 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: Shows 2-level nesting, proportional area, distinct category coloring,
-          and shading-based hierarchy all at once
+        passed: true
+        comment: 19 nodes, 2-level hierarchy, full feature coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Plausible, neutral R&D budget breakdown by division/project
+        passed: true
+        comment: Plausible, neutral R&D budget dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Values ($280k-$1850k) and item count (19, within spec's 5-50) are
-          sensible
+        passed: true
+        comment: $280k-$1850k range, sensible for domain
     code_quality:
       score: 10
       max: 10
@@ -191,49 +176,54 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Single flat option object, no functions/classes
+        passed: true
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Hardcoded deterministic data
+        passed: true
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No unused imports; echarts is the pre-provided global
+        passed: true
+        comment: No extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity for the levels[] config, no fake UI
+        passed: true
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio
+        passed: true
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        comment: Correct high-level treemap series API usage
+        passed: true
+        comment: Explicit per-child itemStyle.color plus tuned levels[] config robust
+          to data reordering
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Genuine use of levels[], colorSaturation/borderColorSaturation, upperLabel
-          — distinctive to ECharts treemap, but the unmanaged brightness variance
-          is a side effect of that same feature going untuned
-  verdict: REJECTED
+        passed: true
+        comment: Deliberate, well-tuned use of levels[]/colorSaturation/upperLabel
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
-  - publication-ready
+  - minimal-chrome
