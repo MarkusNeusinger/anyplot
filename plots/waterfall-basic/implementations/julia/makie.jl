@@ -93,21 +93,43 @@ half = bar_width / 2
 for i in 1:(n - 1)
     level = running[i]
     lines!(ax, [i + half, i + 1 - half], [level, level];
-        color = INK_SOFT, linewidth = 1.5, linestyle = :dot)
+        color = INK_SOFT, linewidth = 1.8, linestyle = :dot)
 end
+
+# The largest single decrease gets a bolder, slightly larger label to call
+# out the focal point of the bridge.
+decrease_idxs = findall(i -> !is_total[i] && deltas[i] < 0, 1:n)
+biggest_idx = decrease_idxs[argmax(abs.(deltas[decrease_idxs]))]
+biggest_label = replace(categories[biggest_idx], "\n" => " ")
 
 # Running total labels — above the bar for increases/totals, below for decreases
 label_offset = maximum(tops) * 0.035
 for i in 1:n
     label = @sprintf("\$%.2fM", running[i])
+    emphasize = i == biggest_idx
+    lbl_fontsize = emphasize ? 17 : 15
+    lbl_font = emphasize ? :bold : :regular
     if is_total[i] || deltas[i] >= 0
         text!(ax, i, tops[i] + label_offset; text = label,
-            align = (:center, :bottom), color = INK, fontsize = 13)
+            align = (:center, :bottom), color = INK, fontsize = lbl_fontsize, font = lbl_font)
     else
         text!(ax, i, bottoms[i] - label_offset; text = label,
-            align = (:center, :top), color = INK, fontsize = 13)
+            align = (:center, :top), color = INK, fontsize = lbl_fontsize, font = lbl_font)
     end
 end
+
+# Subtitle annotation summarizing the bridge's focal point, set in the axis's
+# relative-space headroom above the tallest bar — a Makie `rich()` touch that
+# mixes weight/color within a single text object to call out the two key figures.
+subtitle_rich = rich(
+    "Net profit reaches ",
+    rich(@sprintf("\$%.2fM", running[end]); color = BRAND, font = :bold),
+    " despite a ",
+    rich(@sprintf("\$%.2fM", abs(deltas[biggest_idx])); color = LOSS, font = :bold),
+    " $biggest_label pullback — the bridge's largest single decrease",
+)
+text!(ax, 0.5, 0.97; space = :relative, text = subtitle_rich,
+    align = (:center, :top), fontsize = 13, color = INK_SOFT)
 
 ylims!(ax, -maximum(tops) * 0.08, maximum(tops) * 1.18)
 
