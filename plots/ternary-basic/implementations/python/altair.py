@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-04
@@ -23,9 +23,10 @@ import altair as alt  # noqa: E402
 # Theme tokens (Imprint)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3"]  # Imprint positions 1-3
 
 # Data - Soil composition samples (sand, silt, clay)
 np.random.seed(42)
@@ -47,7 +48,22 @@ total = sand + silt + clay
 x = silt / total + 0.5 * clay / total
 y = clay / total * height
 
-df = pd.DataFrame({"x": x, "y": y, "Sand (%)": sand.round(1), "Silt (%)": silt.round(1), "Clay (%)": clay.round(1)})
+# Classify each sample by its dominant component -- gives the point cloud a
+# focal data story (three texture groups radiating from their vertex) instead
+# of one undifferentiated color blob.
+dominant_idx = np.argmax(np.stack([sand, silt, clay], axis=1), axis=1)
+texture = np.array(["Sand-dominant", "Silt-dominant", "Clay-dominant"])[dominant_idx]
+
+df = pd.DataFrame(
+    {
+        "x": x,
+        "y": y,
+        "Sand (%)": sand.round(1),
+        "Silt (%)": silt.round(1),
+        "Clay (%)": clay.round(1),
+        "Texture": texture,
+    }
+)
 
 # Create triangle outline
 triangle_vertices = pd.DataFrame({"x": [0, 1, 0.5, 0], "y": [0, 0, height, 0], "order": [0, 1, 2, 3]})
@@ -166,17 +182,32 @@ vertex_text = (
     .encode(x="x:Q", y="y:Q", text="label:N")
 )
 
-# Data points - Okabe-Ito brand green (Imprint palette position 1)
+# Data points - colored by dominant component, Imprint palette positions 1-3
 points = (
     alt.Chart(df)
-    .mark_point(filled=True, size=80, color=BRAND, opacity=0.85)
+    .mark_point(filled=True, size=130, opacity=0.8)
     .encode(
         x="x:Q",
         y="y:Q",
+        color=alt.Color(
+            "Texture:N",
+            scale=alt.Scale(domain=["Sand-dominant", "Silt-dominant", "Clay-dominant"], range=IMPRINT_PALETTE),
+            legend=alt.Legend(
+                title="Dominant component",
+                orient="bottom",
+                direction="horizontal",
+                titleColor=INK,
+                labelColor=INK_SOFT,
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+                symbolSize=90,
+            ),
+        ),
         tooltip=[
             alt.Tooltip("Sand (%):Q", format=".1f"),
             alt.Tooltip("Silt (%):Q", format=".1f"),
             alt.Tooltip("Clay (%):Q", format=".1f"),
+            alt.Tooltip("Texture:N"),
         ],
     )
 )
