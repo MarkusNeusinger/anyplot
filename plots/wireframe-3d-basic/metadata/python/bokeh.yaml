@@ -2,129 +2,147 @@ library: bokeh
 language: python
 specification_id: wireframe-3d-basic
 created: '2025-12-24T09:50:50Z'
-updated: '2026-05-06T05:33:47Z'
-generated_by: claude-haiku
-workflow_run: 25417918982
+updated: '2026-08-04T18:41:21Z'
+generated_by: claude-sonnet
+workflow_run: 30937734090
 issue: 1015
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 85
 review:
   strengths:
-  - Perfect visual quality with flawless theme adaptation in both light and dark renders
-  - Complete spec compliance with all required 3D wireframe features correctly implemented
-  - Excellent text legibility with zero contrast failures in both themes
-  - Strong educational value with formula annotation and well-chosen 3D perspective
-  - 'Proper theme token implementation with correct background colors (#FAF8F1 light,
-    #1A1A17 dark)'
+  - 'Fixed both attempt-1 weaknesses: the title now includes the required ''python''
+    language segment (''wireframe-3d-basic · python · bokeh · anyplot.ai''), and the
+    schematic X/Y/Z axis is now scaled to the true data extent (length 4, matching
+    the x,y ± 4 data range) with numeric tick labels (1/2/3/4, 0.25/0.5/0.75/1) instead
+    of the previous unscaled, unlabeled stub.'
+  - Creative custom 3D-to-2D projection pipeline (elevation 30°, azimuth 45°) renders
+    a genuine grid wireframe mesh in bokeh, a library with no native 3D support.
+  - Height-based line coloring via a custom imprint_seq (brand green -> blue) LinearColorMapper
+    with a matching ColorBar gives an immediate visual read of z-value magnitude (peaks
+    vs. troughs) at a glance.
+  - Both light and dark renders are fully theme-correct — identical data colors, properly
+    flipped chrome, no dark-on-dark or light-on-light failures.
+  - HoverTool adds real interactive value (slice direction, grid index, average height)
+    in the HTML detail view without harming the static PNG.
+  - Canonical 3200x1800 canvas hit exactly; no clipped elements at any edge (title,
+    colorbar, and axis labels all verified clear of the canvas border via close-up
+    crops).
   weaknesses:
-  - Limited exploration of Bokeh's distinctive interactive features—implementation
-    treats library as static renderer
-  - Design sophistication is minimal with single color scheme, no exploration of optional
-    height-based coloring
-  - Code structure could benefit from helper functions for 3D projection logic to
-    improve maintainability
+  - Lengthening the schematic axis to match the true data extent (the attempt-1 fix)
+    now routes the X/Y/Z axis lines, tick marks, and numeric labels directly through
+    the densest part of the wireframe mesh in both renders — the axis and dozens of
+    crossing mesh strands visually tangle near the origin, making the schematic axis
+    harder to parse as a distinct reference even though each element stays individually
+    legible. Consider offsetting the axis into a clearer quadrant, drawing it with
+    a subtle halo/outline so it separates from the data lines, or thinning the mesh
+    near the axis.
+  - Helper functions (_lerp_hex, project_point, project_grid, draw_axis_ticks) deviate
+    from the KISS 'Imports -> Data -> Plot -> Save' structure — understandable given
+    the custom projection math needed for 3D-in-bokeh, but still a CQ-01 deduction
+    (unchanged from attempt 1).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title in dark bold text (56pt), axis labels in dark bold text (80pt), formula in secondary dark gray italic (56pt) - all clearly readable against light surface
-      Data: Brand green (#009E73) wireframe lines clearly visible, ripple surface well-defined with 30x30 grid
-      3D elements: Custom X/Y/Z axis lines and tick marks in subtle gray (INK_SOFT color)
-      Layout: Title at top, axes at bottom-center, formula in center-left - no overlaps
-      Legibility verdict: PASS - all text highly readable with excellent contrast
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold black title "wireframe-3d-basic · python · bokeh · anyplot.ai" top-left, clearly readable (now includes the 'python' segment, fixed from attempt 1). Italic gray formula annotation "z = sin(√(x² + y²))" upper-left, readable. Custom X/Y/Z schematic axis near the projected origin, now scaled to the full data extent (length 4) with numeric tick labels (1, 2, 3, 4 on X/Y; 0.25, 0.5, 0.75, 1 on Z) — legible individually, but the axis lines/ticks/labels run directly through the densest region of the wireframe mesh, visually tangling with dozens of crossing mesh strands. ColorBar on the right labeled "z height" with tick labels 0.5, 0, -0.5 in soft dark gray, fully legible with no clipping at the canvas edge (confirmed via close crop).
+      Data: Wireframe mesh of ~60 lines (30 row / 30 column slices) colored on a green (#009E73) -> blue (#4467A3) ramp keyed to average line height (imprint_seq). Brand green anchors the low end of the continuous ramp, confirming palette compliance.
+      Legibility verdict: PASS — all text (title, formula, axis letters/ticks, colorbar) is readable against the light background; no light-on-light issues. The axis/mesh visual tangle is a clutter concern, not a legibility failure.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title in light text (#F0EFE8), axis labels in light bold text, formula in soft light gray (#B8B7B0) - all clearly readable against dark surface
-      Data: Brand green (#009E73) wireframe identical to light render, appearing more vibrant against darker background
-      3D elements: Custom axes and ticks visible, theme-adapted to lighter color for visibility
-      Layout: Identical positioning to light render with no overlaps
-      Color consistency: Data colors (green wireframe) remain exactly #009E73 in both renders - only chrome changes between themes
-      Legibility verdict: PASS - no dark-on-dark failures, all elements clearly visible with excellent contrast
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: White title (same corrected format), light-gray italic formula annotation, readable. Axis labels and tick marks rendered in near-white/light-gray ink, legible against the dark background but crossed by the same tangled mesh pattern seen in the light render. ColorBar tick labels in light gray, legible, no edge clipping.
+      Data: Same green -> blue wireframe color ramp as the light render — data colors are identical between renders; only chrome (background, text, axis-line ink) flips per theme.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title/label/tick text is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title (56pt), axis labels (80pt), formula (56pt) properly sized and
-          theme-adapted. Readable in both themes.
+        comment: All font sizes explicitly set (50pt title, 42pt axis letters, 34pt
+          formula/colorbar title, 26-34pt tick labels); readable in both themes. Axis
+          tick numbers lose some at-a-glance clarity from the busy mesh behind them,
+          though contrast itself is fine.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: All elements properly positioned with no collisions. X/Y/Z at endpoints,
-          formula in center-left, title at top.
+        comment: The now-full-length schematic axis (lines, ticks, numeric labels)
+          is drawn directly through the densest part of the wireframe mesh in both
+          renders, visually tangling with dozens of crossing data lines near the origin.
+          Individually legible but a real collision between chrome and data.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 30x30 wireframe grid (60 lines) at 3px width clearly visible. Surface
-          topology well-defined.
+        comment: Line width 2.5px and alpha 0.85 keep the ~60-line mesh readable;
+          busiest where lines cross near the peak and around the axis indicator.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green (#009E73) has excellent contrast on both light and dark
-          backgrounds. CVD-safe Okabe-Ito palette.
+        comment: imprint_seq green->blue ramp is CVD-safe and not used as sole categorical
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 landscape format ideal for 3D wireframe. Generous padding,
-          nothing cut off.
+        comment: Exact 3200x1800 canvas (verified via image dimensions); no overflow
+          or cut-off elements at any edge (title, colorbar, axis labels all confirmed
+          clear via close crops); balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''wireframe-3d-basic · bokeh · anyplot.ai''.
-          Axes labeled X/Y/Z. Formula provides context.'
+        comment: X/Y/Z labeled per spec; descriptive, correctly-formatted title present.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Wireframe uses #009E73. Backgrounds correct: #FAF8F1 (light) and
-          #1A1A17 (dark). Theme adaptation flawless.'
+        comment: Continuous imprint_seq ramp anchored at brand green for low values;
+          theme backgrounds correct in both renders.
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean functional design with good visual hierarchy. Single color
-          scheme is minimal; spec permits optional height-based coloring which wasn't
-          explored.
+        passed: true
+        comment: Custom 3D projection, height-mapped colorbar, and formula annotation
+          show real design thought beyond generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Grid disabled for cleaner appearance. Custom 3D axis visualization
-          shows thoughtful refinement. Generous whitespace.
+        comment: Default axes hidden, grid disabled, generous whitespace around the
+          mesh overall, but the lengthened schematic axis now visually tangles with
+          the mesh near the origin, reading as cluttered rather than refined in that
+          region.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clear focal point on wireframe surface. Formula annotation effectively
-          communicates the mathematical function. 3D perspective guides viewer.
+        comment: Height-based coloring gives an immediate visual read of peaks vs.
+          troughs and a clear focal point at the center peak, though the tangled axis
+          slightly muddies the schematic near the origin.
     spec_compliance:
       score: 15
       max: 15
@@ -134,121 +152,124 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D wireframe chart. Grid lines in both x and y directions.
-          Mesh clearly reveals surface topology.
+        comment: Correct 3D wireframe mesh.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: grid in both directions, consistent line
-          color, 3D projection (elevation 30°, azimuth 45°), all axes labeled.'
+        comment: Grid lines in both x/y directions, optional height coloring, elev=30/azim=45
+          perspective, and now numeric tick-value labels are all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y grid correctly projected. Z heights properly mapped. Axes show
-          full data range [-4,4] with appropriate padding.
+        comment: X/Y/Z correctly mapped; the schematic axis indicator is now scaled
+          to the actual -4..4 data extent, fixing attempt 1's undersized axis.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format matches spec: ''wireframe-3d-basic · bokeh · anyplot.ai''.
-          Legend N/A for single-series.'
+        comment: 'Title now matches the required format exactly: ''wireframe-3d-basic
+          · python · bokeh · anyplot.ai''.'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 30x30 grid comprehensively demonstrates wireframe capabilities. Ripple
-          function effectively showcases 3D visualization.
+        comment: Full ripple surface with mesh + height coloring covers the plot type
+          well.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic mathematical function (ripple surface). Neutral content.
-          High educational and pedagogical value.
+        comment: Classic, neutral, real-world-plausible math function (radial ripple
+          / sombrero).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: X/Y range [-4,4] standard for ripple function. Z values [-1,1] from
-          sin() are sensible and appropriate.
+        comment: 30x30 grid within the recommended 20-50 range; x,y in [-4,4], z in
+          [-1,1] are sensible.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 1
         max: 3
         passed: false
-        comment: Well-organized. 3D projection math is complex but necessary. Could
-          benefit from helper functions.
+        comment: Four helper functions (_lerp_hex, project_point, project_grid, draw_axis_ticks)
+          deviate from the no-functions KISS structure, though needed for the custom
+          projection math.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility. Fully deterministic implementation.
+        comment: Fully deterministic, no randomness used.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, time, Path, numpy, bokeh, selenium. No
-          unused imports.'
+        comment: All imports used (numpy, bokeh, selenium for the required export
+          path).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for 3D math. No fake UI or simulated interactivity.
+        comment: No fake UI/functionality; complexity matches the technique required.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct: plot-{THEME}.png and plot-{THEME}.html. Uses current Bokeh
-          API.'
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current bokeh API.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource, transform(), LinearColorMapper, ColorBar, HoverTool
+          all used idiomatically per library rules.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Good Bokeh patterns: figure(), multi_line(), Label() annotations.
-          Theme-adaptive properties. Proper output_file/save and Selenium rendering.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Limited use of Bokeh's interactive capabilities (hover tooltips,
-          callbacks). Treating as static renderer. Appropriate for spec but underutilizes
-          library.
+        comment: multi_line() creatively repurposed to fake a 3D wireframe in a 2D-only
+          library, plus HoverTool for per-slice inspection.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - 3d-projection
+  - hover-tooltips
+  - colorbar
   - annotations
   - html-export
+  - 3d-projection
   patterns:
   - data-generation
+  - columndatasource
   - matrix-construction
   dataprep: []
   styling:
-  - publication-ready
+  - alpha-blending
+  - custom-colormap
+  - minimal-chrome
