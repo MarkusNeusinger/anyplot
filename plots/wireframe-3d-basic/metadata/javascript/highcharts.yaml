@@ -1,0 +1,254 @@
+library: highcharts
+language: javascript
+specification_id: wireframe-3d-basic
+created: '2026-08-04T18:33:34Z'
+updated: '2026-08-04T18:53:24Z'
+generated_by: claude-sonnet
+workflow_run: 30938374736
+issue: 1015
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/highcharts/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - Creative, well-documented manual 3D->2D projection (elevation 28 deg, azimuth
+    40 deg) that faithfully substitutes for the unavailable highcharts-3d module,
+    with clear code comments explaining the rationale
+  - Height-based mesh color gradient built correctly from imprint_seq (green -> blue)
+    for continuous data, instead of the categorical palette
+  - Data colors are pixel-identical between light and dark renders; only chrome (ink,
+    backgrounds, axis-frame color) adapts to theme
+  - Grid size (27x27) sits comfortably inside the spec's recommended 20x20-50x50 range,
+    and the ripple function z = sin(sqrt(x^2+y^2)) matches the spec's suggested example
+  - Fully deterministic data generation, core-only Highcharts usage (no forbidden
+    add-on modules), animation disabled at both chart and series level
+  weaknesses:
+  - 'Header block is missing the mandatory ''// License: Highcharts - commercial license,
+    free for non-commercial use (highcharts.com/license)'' line required by prompts/library/highcharts.md
+    - restore it as the 4th header line'
+  - X-axis and Y-axis '-6' tick labels both project to the shared frame corner and
+    land immediately next to the Z-axis's '-1.0' tick label, creating a crowded, ambiguous
+    label cluster that a viewer could misread as a 4th Z tick - push the '-6' labels
+    further apart or to distinct sides
+  - Mesh color is computed per full grid row/column average z rather than per local
+    vertex/segment, so the gradient reads as a smooth wash rather than tightly tracking
+    local peaks and valleys
+  - The central ripple ring creates a visually tangled cluster of overlapping lines
+    that is hard to parse at a glance - inherent to the chosen function/viewing angle,
+    a slightly different azimuth or elevation could reduce the tangle
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: bold dark title "wireframe-3d-basic · javascript · highcharts · anyplot.ai" centered top, gray subtitle "z = sin(√(x²+y²)) ripple surface" beneath it. Three dark-gray reference lines form an X/Y/Z axis frame from a shared bottom-left corner, with bold "X"/"Y"/"Z" axis titles at the line ends and tick labels ("0", "6", height values "1.0"/"0.0"/"-1.0") near each line. All primary text is readable, EXCEPT the "-6" tick labels for the X and Y axes both anchor to the shared corner and land right next to the Z-axis's "-1.0" tick, forming a crowded, ambiguous label cluster.
+      Data: dense teal-to-blue gradient wireframe mesh (27x27 grid) showing a central peak surrounded by ripple valleys/rings; first-series color reads as the brand green #009E73 at the low end of the gradient, shifting to blue at the high end (imprint_seq).
+      Legibility verdict: PASS (all text technically readable; corner tick-label crowding flagged as a weakness, not a failure).
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: all chrome inverts to light - bold white title, light-gray subtitle, white "X"/"Y"/"Z" axis titles, light-gray tick labels, light-gray/white axis reference lines. No dark-on-dark failures observed; every chrome element reads clearly against the dark surface. The same "-6"/"-1.0" corner crowding from the light render is present here too.
+      Data: identical teal-to-blue gradient mesh colors as the light render - confirms only chrome flips between themes, data colors are constant.
+      Legibility verdict: PASS (all text technically readable; corner tick-label crowding flagged as a weakness, not a failure).
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable in both themes, but the corner '-6' tick labels
+          crowd against the Z '-1.0' tick, hurting legibility of that cluster
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: X and Y axis '-6' tick labels both anchor to the shared frame corner
+          and crowd the Z-axis '-1.0' tick label
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Mesh line width (1.3) appropriate for 27x27 density; central ripple
+          ring is visually tangled but mathematically accurate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green->blue) sequential gradient is CVD-safe and used
+          correctly for continuous height data
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No clipping or overflow at canvas edges in either render, generous
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: X/Y/Z labeled, but tick marks are ambiguous at the shared corner
+          (see VQ-02)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_seq usage for continuous data, theme-correct backgrounds
+          in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom manual 3D projection and height-gradient coloring show real
+          design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No cartesian box/spines, minimal custom axis frame, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Height-based color gradient adds hierarchy and guides the eye to
+          peaks/valleys, though undermined slightly by the tangled central ring and
+          per-row/column (not per-vertex) color averaging
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D wireframe mesh
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Grid lines in both x and y directions, perspective projection with
+          elevation/azimuth, all 3 axes labeled - tick marks ambiguous at corner
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z all represented; axes cover the full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; no legend needed for continuous
+          single-surface encoding
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 27x27 grid within the recommended 20x20-50x50 range; uses the spec's
+          own suggested example function
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral mathematical demonstration, appropriate for the spec's educational/debugging
+          use cases
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Range -6..6 shows roughly two ripple cycles, sensible scale
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes, flat arrow functions, no over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided Highcharts/tokens globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented manual projection workaround, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: 'Missing mandatory ''// License: Highcharts ...'' header line required
+          by prompts/library/highcharts.md'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Reasonable core-Highcharts-only usage given no highcharts-3d module
+          is loaded
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Manual 3D->2D projection and dataLabels-based axis frame are a genuinely
+          distinctive workaround for the library's module constraints
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
