@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-05
+Library: seaborn 0.13.2 | Python 3.13.12
+Quality: pending | Updated: 2026-08-04
 """
 
 import os
@@ -21,6 +21,18 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "text.color": INK,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Imprint palette — canonical order, first series always #009E73
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 # Data - Disk usage by storage device and data type (GB)
@@ -50,7 +62,7 @@ width, height = 160, 90
 rects = squarify.normalize_sizes(values, width, height)
 rects = squarify.squarify(rects, 0, 0, width, height)
 
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 category_counts = {}
@@ -61,6 +73,10 @@ for i, cat in enumerate(categories):
         category_indices[cat] = []
     category_indices[cat].append(i)
     category_counts[cat] += 1
+
+# The single largest rectangle by area anchors the visual hierarchy — the reader's
+# eye should land there first, so it gets a bolder outline than the rest.
+largest_idx = max(range(len(rects)), key=lambda i: rects[i]["dx"] * rects[i]["dy"])
 
 for i, rect in enumerate(rects):
     cat = categories[i]
@@ -73,8 +89,15 @@ for i, rect in enumerate(rects):
     shades = sns.light_palette(base_color, n_colors=num_in_category + 2, reverse=True)
     shade_color = shades[rank_in_category + 1]
 
+    is_largest = i == largest_idx
     rectangle = Rectangle(
-        (rect["x"], rect["y"]), rect["dx"], rect["dy"], facecolor=shade_color, edgecolor=PAGE_BG, linewidth=3, alpha=0.9
+        (rect["x"], rect["y"]),
+        rect["dx"],
+        rect["dy"],
+        facecolor=shade_color,
+        edgecolor=INK if is_largest else PAGE_BG,
+        linewidth=4.5 if is_largest else 3,
+        alpha=0.92,
     )
     ax.add_patch(rectangle)
 
@@ -102,15 +125,15 @@ ax.set_ylim(0, height)
 ax.axis("off")
 ax.set_aspect("equal")
 
-ax.set_title(
-    "Disk Usage by Device · treemap-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20
-)
+title = "Disk Usage by Device · treemap-basic · python · seaborn · anyplot.ai"
+title_fontsize = max(8, round(12 * min(1.0, 67 / len(title))))
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=14)
 
 legend_handles = [Patch(facecolor=category_colors[cat], label=cat, edgecolor=INK_SOFT) for cat in unique_categories]
 ax.legend(
     handles=legend_handles,
     loc="upper center",
-    fontsize=16,
+    fontsize=8,
     framealpha=0.95,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
@@ -118,5 +141,5 @@ ax.legend(
     bbox_to_anchor=(0.5, -0.02),
 )
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.88, bottom=0.1)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
