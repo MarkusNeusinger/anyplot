@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 96/100 | Updated: 2026-08-04
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 75/100 | Updated: 2026-08-04
 """
 
 import os
