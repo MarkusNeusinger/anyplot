@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:50:29Z'
-updated: '2026-08-04T09:01:04Z'
+updated: '2026-08-04T09:22:27Z'
 generated_by: claude-sonnet
 workflow_run: 30893631524
 issue: 766
@@ -12,51 +12,71 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 81
 review:
   strengths:
   - Implements a real squarify algorithm for proportional-area treemap layout since
-    bokeh has no native treemap glyph — a genuine, non-trivial engineering effort
-    rather than a shortcut
+    bokeh has no native treemap glyph — genuine engineering effort, not a shortcut
   - Category-to-color mapping follows canonical Imprint order exactly (Engineering=#009E73
-    first, then Sales/Marketing/HR/Finance in appearance order), matching legend order
-    1:1
-  - Theme tokens (PAGE_BG/INK/INK_SOFT) correctly threaded through background, title,
-    labels, legend, and rectangle borders — both renders are fully readable with identical
-    data colors and only chrome flipping
+    first, then Sales/Marketing/HR/Finance), matching legend order 1:1 in both themes
+  - Theme tokens are correctly threaded through background, title, labels, legend,
+    and rectangle borders — both renders are fully readable with identical data colors
+    and only chrome flipping
+  - The category-aware sort (group by category total, then value descending within
+    category) is a genuine improvement over attempt 1's flat value-sort, giving the
+    squarify layout a better chance at spatial clustering by category
   - HoverTool provides genuinely useful detail (department, project, budget, share%)
     for the HTML view without faking any interactivity in the static PNG
   - Custom Legend built from invisible dummy renderers is cleanly anchored in the
     right gutter outside the 0-100 data range, so it never collides with a rectangle
-  - Title matches the required '{spec-id} · {language} · {library} · anyplot.ai' format
-    exactly, canvas is the correct 3200x1800 landscape size with no clipping
+  - Title matches the required format exactly; canvas is the correct 3200x1800 landscape
+    size with no clipping in either theme
   weaknesses:
-  - All 12 leaf rectangles are squarified as one flat set sorted by value, with hierarchy
-    conveyed only through color — there is no visual grouping/nesting of subcategories
-    within their parent category's region (e.g. thicker borders around each category
-    cluster), so category adjacency in the layout is coincidental (Frontend/Enterprise/Backend
-    stack together despite being two different categories)
-  - Design is functional but plain — uniform thin borders everywhere regardless of
-    whether the boundary is between categories or within one, missing an opportunity
-    for a stronger visual hierarchy cue
-  - The squarify() helper is a ~80-line general-purpose layout algorithm; necessary
-    given bokeh's lack of a native treemap glyph, but it pushes past the typical KISS
-    bar for this catalog's plots
+  - 'BLOCKING: the category-boundary divider fix from the previous review is not visible
+    in either delivered render. category_boundaries()/p.segment(..., line_color=INK_SOFT,
+    line_width=5) computes 18 inter-category shared edges and draws them, but a full
+    pixel scan of plot-light.png shows every rectangle border as a uniform 1-2px line,
+    and grepping the embedded Bokeh document JSON in plot-light.html / plot-dark.html
+    for the ''Segment'' glyph type returns zero matches in both files. Re-running
+    the exact committed bokeh.py locally with bokeh==3.9.2 (matching library_version)
+    up through save(p) DOES produce 3 ''Segment'' glyph entries per theme, so the
+    code itself is not obviously broken in isolation — but the artifacts reviewed
+    here do not contain the renderer. Before resubmitting, verify end-to-end that
+    the saved plot-{theme}.html actually contains a Segment glyph (grep for the literal
+    string "Segment" in the saved HTML) and that the PNG screenshot shows a visibly
+    thicker/darker line at inter-category edges — do not rely on the code compiling/running
+    without error as proof the feature shipped.'
+  - Spec Notes explicitly require 'subtle borders between rectangles to show hierarchy
+    boundaries' — as delivered, hierarchy is conveyed by fill color alone (same gap
+    the previous review already flagged), since the intended border differentiation
+    does not render.
+  - The category_boundaries() helper (~35 lines) plus the p.segment() call add real
+    complexity on top of the already-flagged 80-line squarify() implementation, but
+    currently deliver zero visible payoff — net negative on KISS/code-elegance until
+    the render is confirmed working.
+  - 'Category clustering from the new sort order is only partial: Sales still ends
+    up split into two non-adjacent rectangles (Enterprise top-left, SMB bottom-right)
+    rather than a single contiguous region, so the ''clusters spatially'' claim in
+    the code comment overstates what the squarify layout actually produces for this
+    data.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), matches spec.
-      Chrome: Bold centered title "treemap-basic · bokeh · anyplot.ai" in dark ink, clearly legible. No axes shown (intentional, appropriate for a treemap). Legend anchored in the right gutter on an elevated cream card with a soft border, listing Engineering/Sales/Marketing/HR/Finance with small colored square swatches matching each category's fill color.
-      Data: 12 rectangles laid out via a squarify algorithm, area proportional to budget value. Colors follow the Imprint palette in canonical order — Engineering=#009E73 (green, first series, correct), Sales=purple, Marketing=blue, HR=amber, Finance=red. Each rectangle has a centered two-line label (subcategory name + "$XXXK") in dark ink, clearly readable against every fill color. Thin light-colored borders separate adjacent rectangles.
+      Chrome: Bold centered title "treemap-basic · bokeh · anyplot.ai" in dark ink, clearly legible. No axes shown (correct for a treemap). Legend anchored in the right gutter on an elevated cream card with a soft border, listing Engineering/Sales/Marketing/HR/Finance with small colored square swatches matching each category's fill.
+      Data: 12 rectangles laid out via a squarify algorithm, area proportional to budget value, colored with the Imprint palette in canonical order (Engineering=#009E73 first, then Sales/Marketing/HR/Finance). Each rectangle has a centered "subcategory / $value" label in dark ink, clearly readable against every fill color. All rectangle-to-rectangle borders are a uniform thin (~2px) off-white line, regardless of whether the two neighboring rectangles belong to the same category or different categories — no thicker/darker divider is visible anywhere, including at Engineering/Sales, Engineering/Marketing, HR/Finance, and Marketing/HR boundaries.
       Legibility verdict: PASS — all text (title, labels, legend) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), matches spec.
-      Chrome: Same title, now in light ink, clearly legible against the dark background. Legend card uses a dark elevated background with light text, still clearly readable. Outline border of the plot area is faintly visible.
-      Data: Identical rectangle layout and identical fill colors to the light render (Engineering green #009E73 first, then purple/blue/amber/red) — confirms data colors are theme-invariant. Rectangle labels now render in light ink and remain clearly legible on every fill color; no dark-on-dark failures. Borders between rectangles are now dark, consistent with the theme-adaptive PAGE_BG border color.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; brand green data color is still vivid and distinguishable.
+      Chrome: Same title, now in light ink, clearly legible. Legend card flips to a dark elevated background with light text, still clearly readable.
+      Data: Identical rectangle layout and identical fill colors to the light render (Engineering green #009E73 first, confirming data colors are theme-invariant). Labels render in light ink and stay legible on every fill color; no dark-on-dark failures. As in the light render, every rectangle border is a uniform thin (~2px) dark line — no bold category-boundary divider is visible anywhere.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; brand green data color is still vivid.
+
+    Verified discrepancy (not a legibility issue, but material to scoring):
+      The implementation's category_boundaries()/p.segment() code computes 18 shared-edge segments between differently-colored (different-category) rectangles and calls p.segment(..., line_color=INK_SOFT, line_width=5) specifically to draw bold hierarchy-boundary dividers — this was the exact fix added in commit da2014d45 to address the prior review's "hierarchy conveyed only through color" weakness. Neither plot-light.png nor plot-dark.png shows any such divider: a full pixel scan of plot-light.png found every rectangle-to-rectangle border to be 1-2px wide with no wider/darker line at any inter-category edge. Independently, grepping the embedded Bokeh document JSON in both plot-light.html and plot-dark.html for the "Segment" glyph type returns zero matches in either file. Re-executing the exact committed plots/treemap-basic/implementations/python/bokeh.py locally (matching library_version bokeh==3.9.2) up through `save(p)` DOES produce a document containing 3 "Segment" glyph entries per theme — so the code, run faithfully, does add the renderer. The artifacts under review here do not contain it, so the delivered preview does not show the intended fix.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,21 +85,21 @@ review:
         max: 8
         passed: true
         comment: Explicit font sizes (50pt title, 26pt labels, 30pt legend); readable
-          in both themes with no light/dark-on-same collisions
+          in both themes, no dark-on-dark/light-on-light issues
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Every label sits centered within its own rectangle; legend is fully
-          outside the 0-100 data range so it never collides with a rect
+        comment: Every label sits centered within its own rectangle; legend fully
+          outside the 0-100 data range
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Rectangles clearly distinguishable via fill color + subtle theme-adaptive
-          border; density (12 items) handled well with squarify
+        comment: Rectangles clearly distinguishable via fill color + border; density
+          (12 items) handled well with squarify
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -89,11 +109,12 @@ review:
           color-only distinction
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed (no canvas gate failure); title comfortably
-          sized, no overflow or cutoff
+        comment: 3200x1800 canvas confirmed, title/legend well proportioned, nothing
+          clipped — docked 1 point because the intended inter-category divider treatment
+          (part of communicating layout hierarchy) does not render in either theme
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -106,34 +127,38 @@ review:
         max: 2
         passed: true
         comment: 'Engineering (first category) correctly uses #009E73; canonical Imprint
-          order preserved; backgrounds match #FAF8F1/#1A1A17'
+          order preserved; backgrounds match #FAF8F1/#1A1A17 in both renders'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Custom palette and real squarify layout show effort, but visual treatment
-          stays fairly plain/uniform
+        passed: false
+        comment: Custom palette and real squarify layout show effort, but the visual
+          treatment remains plain/uniform — the attempted bold-divider polish for
+          this round does not actually render, so no aesthetic improvement was delivered
+          despite the added code
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Axes hidden, generous whitespace, subtle theme-adaptive borders and
+        comment: Axes hidden, generous whitespace, subtle theme-adaptive borders,
           elevated legend card
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Descending value sort gives a clear size hierarchy and focal point
-          (Backend/Enterprise), but no grouping cue beyond color
+        passed: false
+        comment: Descending value sort still gives a clear size hierarchy; the new
+          category-aware sort gives partial spatial clustering (e.g. HR/Finance cluster
+          together) but Sales ends up split into two non-adjacent rectangles, and
+          no border-based hierarchy cue is visible
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -144,12 +169,14 @@ review:
         comment: Genuine proportional-area treemap via squarify algorithm
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Distinct category colors, labels on all (appropriately-sized) rects,
-          subtle borders, hierarchy conveyed via color as spec's notes explicitly
-          allow
+        passed: false
+        comment: Spec explicitly requires 'subtle borders between rectangles to show
+          hierarchy boundaries'; distinct category colors and labels are present,
+          but the hierarchy-boundary border differentiation is coded (category_boundaries()/p.segment())
+          yet verifiably absent from both rendered artifacts — hierarchy is conveyed
+          by color only, same gap as the previous review
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -187,16 +214,17 @@ review:
         passed: true
         comment: Values ($40K-$220K) are sensible for a departmental budget domain
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 1
         max: 3
-        passed: true
-        comment: The squarify() helper is a sizeable algorithm function, though justified
-          by bokeh lacking a native treemap glyph
+        passed: false
+        comment: The ~35-line category_boundaries() helper plus the segment call add
+          real complexity on top of the already-sizeable squarify() implementation,
+          currently for zero verified visual payoff
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -211,10 +239,13 @@ review:
         comment: All imports (pandas, bokeh, selenium, os, time, pathlib) are used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake interactivity; complexity is proportional to the problem
+        passed: false
+        comment: A non-trivial feature (boundary segment computation + p.segment call,
+          with a comment claiming it 'reinforces the hierarchy spatially') does not
+          appear in either delivered artifact — code that doesn't deliver its stated
+          behavior undermines correctness/elegance until verified
       - id: CQ-05
         name: Output & API
         score: 1
@@ -223,25 +254,26 @@ review:
         comment: Saves plot-{THEME}.png and plot-{THEME}.html via the documented Selenium
           pattern
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
         comment: ColumnDataSource, HoverTool, LabelSet, Legend/LegendItem all used
-          the idiomatic bokeh way
+          idiomatically; docking for the unverified p.segment() usage whose output
+          is absent from the shipped artifacts
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
         comment: HoverTool tooltips and a hand-built Legend from dummy renderers are
-          solid bokeh-specific touches, though treemap itself is a custom (non-native)
+          solid bokeh-specific touches, though the treemap itself is a custom (non-native)
           construction
-  verdict: APPROVED
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
@@ -252,6 +284,7 @@ impl_tags:
   patterns:
   - data-generation
   - columndatasource
+  - groupby-aggregation
   dataprep:
   - normalization
   styling:
