@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-04
@@ -136,8 +136,9 @@ plot = (
     # Grid lines
     + geom_segment(data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=0.4, alpha=0.15)
     # Data points, colored by distance to the ideal-loam target — brand green (close)
-    # to blue (far), the imprint_seq sequential colormap
-    + geom_point(data=df, mapping=aes(x="x", y="y", color="distance"), size=3, alpha=0.85)
+    # to blue (far), the imprint_seq sequential colormap. alpha=0.7 keeps overlapping
+    # samples in the vertex-heavy Dirichlet clusters distinguishable.
+    + geom_point(data=df, mapping=aes(x="x", y="y", color="distance"), size=3, alpha=0.7)
     + scale_color_gradient(low=BRAND, high=BLUE, name="Distance to\nideal loam")
     # Target marker — theme-neutral reference point, not a data series
     + geom_point(data=target_df, mapping=aes(x="x", y="y"), color=INK, size=4.5, shape="D", stroke=1.2)
@@ -164,7 +165,14 @@ plot = (
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_text=element_text(size=7, color=INK_SOFT),
         legend_title=element_text(size=8, color=INK),
-        legend_position="right",
+        # Inset legend (NPC coords within the panel) instead of a separate right-side
+        # column — coord_fixed already leaves whitespace beside the triangle since the
+        # panel is wider than the triangle's aspect ratio; anchoring the legend high
+        # and to the right (where the clay vertex tapers away) keeps it close to the
+        # plot, clear of the triangle frame, instead of stranded past an empty margin.
+        legend_position=(0.86, 0.86),
+        legend_direction="vertical",
+        legend_key_size=14,
         plot_margin=0.02,
     )
 )
