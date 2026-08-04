@@ -1,3 +1,7 @@
+// anyplot.ai
+// wireframe-3d-basic: Basic 3D Wireframe Plot
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 82/100 | Created: 2026-08-04
 //# anyplot-orientation: landscape
 // anyplot.ai
 // wireframe-3d-basic: Basic 3D Wireframe Plot
