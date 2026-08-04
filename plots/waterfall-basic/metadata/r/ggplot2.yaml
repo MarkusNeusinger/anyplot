@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: waterfall-basic
 created: '2026-08-04T11:24:26Z'
-updated: '2026-08-04T11:29:12Z'
+updated: '2026-08-04T11:39:45Z'
 generated_by: claude-sonnet
 workflow_run: 30904344714
 issue: 777
@@ -12,55 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Correct waterfall structure with distinct Increase/Decrease/Total categories and
-    dotted step-connectors emphasizing the cumulative flow, exactly as the spec requires
-  - 'Well-reasoned Imprint semantic-exception color mapping (profit/gain → brand green
-    #009E73, loss → matte red #AE3030, totals → blue #4467A3), documented in a code
-    comment and applied consistently between light and dark renders'
-  - Explicit font sizing throughout (title formula, 10pt axis title, 8pt ticks/legend)
-    matching the ggplot2 style-guide defaults, with no overlap or clipping in either
-    theme
-  - Theme-adaptive chrome correctly threaded through background, grid, ticks, and
-    legend for both plot-light.png and plot-dark.png
+  - 'Both previously flagged weaknesses (y-axis unit, running-total labels) are fully
+    resolved: "Amount ($K)" axis title and italic running-total annotations on every
+    intermediate bar'
+  - Net Profit bar now has a bold outline focal treatment, sharpening the data storytelling
+    around the bridge's punchline as requested
+  - 'Well-reasoned Imprint semantic-exception color mapping (profit/gain -> brand
+    green #009E73, loss -> matte red #AE3030, totals -> blue #4467A3), documented
+    in a code comment and applied consistently between light and dark renders'
+  - Explicit font sizing throughout, including a length-aware title-shrink formula
+    for the mandated title, with no overlap or clipping in either theme
   - Realistic, arithmetically consistent quarterly P&L data (850 - 320 - 180 - 95
     + 40 - 85 = 210) with a neutral business scenario
-  - Title format exactly matches the mandated `{Descriptive Title} · {spec-id} · {language}
-    · {library} · anyplot.ai` pattern
+  - Theme-adaptive chrome correctly threaded through background, grid, ticks, legend,
+    connectors, and the focal outline for both renders
   weaknesses:
-  - Y-axis title is just 'Amount' with no unit — the $K unit only appears on tick
-    labels via label_dollar(suffix='K'); rename the axis title to 'Amount ($K)' for
-    VQ-06 full credit
-  - Intermediate bars are labeled with their delta value (e.g. '-$320K') rather than
-    the literal running total the spec asks for ('Display running total labels on
-    or near bars') — consider adding a small running-total annotation (e.g. a lighter
-    secondary label showing the cumulative value reached) so the requirement is unambiguously
-    satisfied
-  - Design is a competent, standard geom_rect/geom_segment waterfall layering that
-    any grammar-of-graphics or imperative plotting library could replicate — nothing
-    here is distinctive to ggplot2 specifically (e.g. no use of ggplot2-only extensions,
-    stats, or coordinate systems) — LM-02 stays at the generic-usage default
-  - 'Visual polish is good but not yet publication-grade: the Net Profit bar (the
-    punchline of a profit bridge) isn''t visually emphasized beyond its blue ''Total''
-    color — consider a stronger focal treatment (e.g. bolder outline, callout, or
-    size cue) to sharpen the data storytelling'
+  - The waterfall is still built from generic geom_rect/geom_segment/geom_text layering
+    that any imperative plotting library could replicate - nothing here is distinctive
+    to ggplot2 specifically (e.g. no ggplot2-only stats, coordinate systems, or extension
+    packages)
+  - With two stacked labels per bar (delta + running total), the chart is getting
+    label-dense; still readable at full and mobile scale in this review, but worth
+    keeping an eye on if further annotations are ever added
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "Quarterly Profit Bridge · waterfall-basic · r · ggplot2 · anyplot.ai" spans ~78% of canvas width; horizontal legend (Increase/Decrease/Total swatches) top-left below title; dark "Amount" y-axis title; angled (~25°) dark-gray x-axis category labels; subtle horizontal gridlines only.
-      Data: 7 bars — Gross Revenue (blue, $850K) → Cost of Goods Sold (red, -$320K) → Operating Expenses (red, -$180K) → R&D Investment (red, -$95K) → Other Income (green, +$40K) → Taxes (red, -$85K) → Net Profit (blue, $210K). Dotted gray connector lines link each bar's ending level to the next bar's start. Value labels sit directly above/below each bar without overlap.
-      Legibility verdict: PASS — all title, axis, tick, legend, and data-label text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: Bold dark title "Quarterly Profit Bridge · waterfall-basic · r · ggplot2 · anyplot.ai" top-left, within canvas bounds; horizontal legend (Increase/Decrease/Total swatches) below title; dark "Amount ($K)" y-axis title (unit now present); angled (~25°) dark-gray x-axis category labels; subtle horizontal gridlines only.
+      Data: 7 bars - Gross Revenue (blue total, $850K) -> Cost of Goods Sold (red, -$320K) -> Operating Expenses (red, -$180K) -> R&D Investment (red, -$95K) -> Other Income (green, +$40K) -> Taxes (red, -$85K) -> Net Profit (blue total, $210K, bold-outlined as focal bar). Dotted gray connector lines link each bar's ending level to the next bar's start. Each intermediate bar shows a bold delta label plus an italic running-total label (e.g. "-$320K" / "$530K") - satisfies the spec's running-total requirement. No overlap between any labels.
+      Legibility verdict: PASS - all title, axis, tick, legend, and data-label text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same layout as light — title, legend, axis titles/ticks and gridlines all rendered in light ink (#F0EFE8 primary / #B8B7B0 secondary) against the dark surface.
-      Data: Identical bar colors, values, and connector styling as the light render (#009E73 green, #AE3030 red, #4467A3 blue) — only the chrome (background, text, gridlines) flipped to the dark tokens, confirming palette consistency across themes.
-      Legibility verdict: PASS — no dark-on-dark failures; all text (title, ticks, legend, value labels) reads clearly against the near-black background.
+      Background: Warm near-black, matches #1A1A17 - not pure black.
+      Chrome: Same layout as light - title, legend, axis titles/ticks, gridlines, connectors, and the Net Profit focal outline all rendered in light ink (#F0EFE8 primary / #B8B7B0 secondary) against the dark surface.
+      Data: Identical bar colors, delta/running-total labels, and connector styling as the light render (#009E73 green, #AE3030 red, #4467A3 blue) - only chrome flipped to the dark tokens, confirming palette consistency across themes.
+      Legibility verdict: PASS - no dark-on-dark failures; all text (title, ticks, legend, delta labels, running-total labels) reads clearly against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -68,15 +59,15 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (title formula, 10pt axis title, 8pt
-          ticks/legend); readable in both themes, no overflow or crowding
+        comment: Explicit font sizes throughout, length-aware title-shrink formula;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Value labels, connectors, and category ticks are all clear of one
-          another
+        comment: Delta labels, running-total labels, connectors, and category ticks
+          are all clear of one another
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -95,15 +86,13 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot area uses a healthy share of the canvas, nothing
-          cut off
+        comment: Correct 3200x1800 canvas, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis title 'Amount' lacks a unit; unit only appears on tick labels
-          ($K)
+        passed: true
+        comment: 'Fixed: y-axis title now ''Amount ($K)'' with explicit unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -113,55 +102,61 @@ review:
           loss=matte red #AE3030, total=blue #4467A3), identical across themes; correct
           #FAF8F1/#1A1A17 backgrounds'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Thoughtful, documented semantic color choice and clean typography
-          — above a bare default but not publication-grade
+        passed: true
+        comment: Dual-label annotation layer (delta + running total) and the focal-outline
+          treatment show real design intent
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
+        passed: true
         comment: Subtle y-only gridlines, no spines/ticks, generous margins, minimal
           legend chrome
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Color contrast and dotted connectors guide the eye through the bridge,
-          but the final Net Profit punchline isn't specially emphasized
+        passed: true
+        comment: 'Fixed: Net Profit bar now has a bold outline marking it as the bridge''s
+          punchline'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: Correct waterfall/bridge chart with all subtypes (increase, decrease,
           total, connectors)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        comment: Colors positive/negative differently, connecting lines present, distinct
-          total bars present; but bar labels show step deltas rather than literal
-          running totals
+        passed: true
+        comment: 'Fixed: italic secondary labels now show the literal running total
+          on/near each bar'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
+        passed: true
         comment: Category on x, cumulative-positioned value on y, all 7 steps visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches mandated format exactly; legend labels (Increase/Decrease/Total)
-          match the data semantics
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match the data
+          semantics
     data_quality:
       score: 15
       max: 15
@@ -170,17 +165,20 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: Shows increases, decreases, and both start/end totals — full feature
+        passed: true
+        comment: Shows increases, decreases, and both start/end totals - full feature
           set for a waterfall
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Neutral, comprehensible quarterly P&L scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
+        passed: true
         comment: Values sum correctly (850-320-180-95+40-85=210) and are plausible
           for a mid-size company's quarter
     code_quality:
@@ -191,26 +189,31 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Linear imports → data → plot → save, no functions/classes
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: set.seed(42) present; data is otherwise fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        passed: true
         comment: ggplot2, dplyr, scales, ragg all actually used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
+        passed: true
         comment: Clean dplyr pipeline, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
+        passed: true
         comment: Saves plot-{THEME}.png via ragg::agg_png, current API
     library_mastery:
       score: 5
@@ -220,15 +223,17 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
+        passed: true
         comment: Proper layered grammar-of-graphics usage (geom_rect/geom_segment/geom_text,
           scale_fill_manual, theme_minimal)
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
+        passed: false
         comment: Generic geom-layering waterfall technique, replicable in any imperative
-          plotting library — nothing ggplot2-specific leveraged
-  verdict: REJECTED
+          plotting library - nothing ggplot2-specific leveraged
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:

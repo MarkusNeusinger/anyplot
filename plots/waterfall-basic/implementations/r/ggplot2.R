@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' waterfall-basic: Basic Waterfall Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Created: 2026-08-04
+#' Quality: 91/100 | Created: 2026-08-04
 
 library(ggplot2)
 library(dplyr)
