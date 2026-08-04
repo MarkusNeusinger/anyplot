@@ -2,121 +2,133 @@ library: altair
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:53:29Z'
-updated: '2026-05-05T22:49:25Z'
-generated_by: claude-haiku
-workflow_run: 25406119791
+updated: '2026-08-04T09:13:15Z'
+generated_by: claude-sonnet
+workflow_run: 30893778626
 issue: 766
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Perfect visual quality: all typography, colors, and accessibility requirements
-    met in both themes'
-  - 'Theme-adaptive excellence: backgrounds, text colors, and borders correctly adapt
-    between light and dark; data colors remain constant'
-  - Clean, readable treemap with effective manual layout and well-considered label
-    placement
-  - 'Strong spec compliance: all features from specification implemented'
+  - 'Both attempt-1 defects are confirmed fixed: legend "Technology" label no longer
+    clips its descender in either theme, and the title now includes the required python
+    language token'
+  - Proper squarified treemap layout (Bruls, Huizing & van Wijk algorithm) producing
+    near-square cells instead of elongated slivers
+  - 'Correct Imprint palette application: first series #009E73, remaining sectors
+    follow canonical order ranked by category total, pixel-identical hues across light/dark'
+  - 'Genuinely Altair-distinctive interactivity: hover selection driving conditional
+    stroke/strokeWidth plus tooltip'
+  - Directly answers the spec's hierarchy note with both a heavier group outline AND
+    a share-of-category shading overlay
+  - Realistic, neutral business data (well-known companies' market caps across 5 sectors)
+    with good size variety; canvas lands exactly on the 3200x1800 target
   weaknesses:
-  - 'Design Excellence moderate (13/20): strip-layout treemap is effective but straightforward
-    without unusual sophistication or visual refinement beyond basics'
-  - 'Library Mastery not fully maximized (6/10): while using idiomatic Altair well,
-    implementation doesn''t showcase distinctive Altair features beyond layer composition
-    and tooltips'
+  - 'CQ-01: the squarify layout math is still factored into three helper functions
+    rather than a flat top-to-bottom script - minor, and defensible given the algorithm''s
+    complexity, but not fixed from attempt 1'
+  - 'DE-03: no explicit textual insight/annotation calling out the largest holding
+    - visual hierarchy alone carries the storytelling'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "treemap-basic · altair · anyplot.ai" in bold dark text (#1A1A17), subtitle visible, axis labels removed appropriately
-      Data: Technology sector (green #009E73, dominant left) shows Apple, Microsoft, Google, NVIDIA. Consumer (orange #D55E00) shows Amazon, Tesla, Walmart. Healthcare (blue #0072B2), Finance (pink #CC79A7), Energy (yellow #F0E442) sectors properly colored. All company names bold 20px, values 16px, both readable.
-      Legend: Right-side legend with light background (#FFFDF6), dark text labels for sectors
-      Borders: Subtle gray (#4A4A44) between rectangles
-      Legibility verdict: PASS - all text clearly readable against light background, no low-contrast failures
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "treemap-basic · python · altair · anyplot.ai" in dark ink, centered, fully readable - the missing "python" token from attempt 1 has been added. "Sector" legend title and its 5 entries (Technology, Consumer, Healthcare, Finance, Energy) render fully inside the elevated legend box with no clipped descenders (previously "Technology"'s "y" was chopped by the border; confirmed fixed via pixel-level crop).
+      Data: Nested rectangles colored by sector using the Imprint palette - Technology=#009E73 (green, largest group: Apple/Microsoft/Google/NVIDIA), Consumer=violet (#C475FD), Healthcare=blue (#4467A3), Finance=ochre (#BD8233), Energy=red (#AE3030). Bold company names + "$XXXB" value labels sit inside larger cells; the two smallest cells (Pfizer, Wells Fargo) omit labels per the spec's own guidance for small rectangles. Heavier grey group outlines separate sectors; thin near-white gutters separate items within a sector.
+      Legibility verdict: PASS - all text readable, including the previously clipped legend entry.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title in light text (F0EFE8), clearly visible. No low-contrast elements.
-      Data: All category colors IDENTICAL to light render - Technology green (#009E73), Consumer orange (#D55E00), Healthcare blue (#0072B2), Finance pink (#CC79A7), Energy yellow (#F0E442). Company labels now in light text (#F0EFE8 primary, #B8B7B0 secondary), all readable.
-      Legend: Dark background (#242420) with light text labels, proper adaptation
-      Borders: Visible in dark INK_SOFT color
-      Legibility verdict: PASS - all text clearly readable against dark background, no dark-on-dark failures, perfect theme adaptation
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title and all axis/legend text render in light ink (#F0EFE8 title, softer grey #B8B7B0 legend labels), clearly legible against the dark background - no dark-on-dark failures anywhere. Legend box uses the dark elevated surface (#242420) with a light border; all five entries including "Technology" render fully inside the frame.
+      Data: Same five sector colors as the light render, confirmed pixel-identical (Technology green, Consumer violet, Healthcare blue, Finance ochre, Energy red) - only the chrome (background, borders, text ink) flipped for the theme, exactly as required.
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, legend clipping fix confirmed in this theme as well.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title, labels, and legend all clearly readable in both light and
-          dark themes with proper contrast
+        comment: All font sizes explicitly set (16/12/11/10/9pt); legend clipping
+          from attempt 1 is fixed (confirmed via pixel crop, both themes); remains
+          legible down to the 400px mobile preview
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Well-positioned labels with intelligent omission on small rectangles
-          to avoid clutter
+        comment: No text overlaps other text or data elements; name/value label pairs
+          are cleanly stacked inside each cell
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All rectangles clearly distinguishable by color and subtle borders
+        comment: Squarified layout keeps every cell close to a 1:1 aspect ratio; appropriate
+          for 15 items, no invisible or overlapping rectangles
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety with adequate contrast
+        comment: Imprint palette hues are well separated and not reliant on red-green
+          alone; cells are further distinguished by group borders
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent 16:9 landscape proportions with clean margins
+        comment: Treemap + legend fill roughly 55% of canvas with balanced margins;
+          no cut-off content after the legend fix
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title and clear legend with sector identifier
+        comment: No traditional axes (expected for treemap); title and legend title
+          (Sector) are descriptive of the data shown
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Okabe-Ito order with brand green first; proper theme backgrounds
-          and chrome adaptation
+        comment: 'First series is #009E73, remaining sectors follow canonical Imprint
+          order by category-total rank, identical across light/dark; backgrounds are
+          exactly #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Standard palette and layout without custom design innovations
+        passed: true
+        comment: Custom palette, intentional two-level hierarchy (group outline +
+          shading overlay), squarified algorithm for polished cell shapes - clearly
+          above a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Clean borders and minimal aesthetic; limited refinement beyond requirements
+        passed: true
+        comment: No axis clutter, subtle gutters between cells, elevated legend surface;
+          the clipped legend text from attempt 1 is now fixed
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Natural hierarchy from treemap structure, not specially crafted visual
-          storytelling
+        comment: Share-of-category shading and group outlines create visual hierarchy
+          from sector down to item; largest sector/company are immediately obvious
+          focal points, though no explicit textual insight is called out
     spec_compliance:
       score: 15
       max: 15
@@ -126,114 +138,124 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct treemap with area-proportional rectangles
+        comment: Correct treemap with real hierarchical nesting (category > subcategory),
+          not a flat bar-in-disguise
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: categories, subcategories, values,
-          borders, color coding, selective labels'
+        comment: Distinct category colors, labels on larger rectangles with smaller
+          ones omitted, subtle borders, and hierarchy shown via outline+shading -
+          all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly mapped to rectangle area with proper hierarchy
+        comment: Value maps correctly to rectangle area via the squarify algorithm;
+          all 15 items are visible and accounted for
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend with matching colors
+        comment: Title now reads treemap-basic · python · altair · anyplot.ai, matching
+          the mandated format exactly; legend content correct
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows complete range of market caps demonstrating treemap strengths
+        comment: 'Good variety: sectors range from 2 to 4 subcategories and values
+          span $200B-$2800B, exercising both large and small treemap cells'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real company names and plausible market cap values in neutral context
+        comment: Real, well-known public companies grouped by real sectors - plausible,
+          neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Billions USD scale appropriate for market cap with meaningful size
-          correspondence
+        comment: Market cap figures are in the right ballpark and internally consistent
+          relative to each other
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Straightforward treemap layout without unnecessary abstractions
+        passed: false
+        comment: Overall Imports -> Data -> Plot -> Save flow, but the squarify layout
+          is still factored into 3 helper functions rather than inlined
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static data with deterministic output
+        comment: Fully deterministic hard-coded data, no randomness involved
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: os, sys, pandas, altair, PIL.Image are all used purposefully
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI elements or excessive complexity
+        comment: No fake UI or simulated interactivity; complexity is justified by
+          the custom treemap layout altair has no native mark for
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming and scale factor for target resolution
+        comment: Saves plot-{THEME}.png and .html via current chart.save API
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Proper mark_rect, encoding, color scales, and legend configuration
-          with integrated theme tokens
+        comment: Idiomatic layered alt.Chart/mark_rect composition with alt.Color
+          scale+legend and alt.condition; the manual coordinate layout is an inherent
+          constraint of treemaps in Altair, not a library-usage flaw
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 4
         max: 5
-        passed: false
-        comment: Uses standard alt.layer composition; treemap layout computed in Python
-          rather than leveraging Altair's declarative strengths
+        passed: true
+        comment: alt.selection_point(on='pointerover') driving conditional stroke
+          encoding plus tooltips is a genuinely Vega-Lite/Altair-specific declarative
+          interactivity pattern
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
+  - groupby-aggregation
   - iteration-over-groups
   dataprep:
-  - groupby-aggregation
+  - normalization
   styling:
   - minimal-chrome
-  - edge-highlighting
+  - alpha-blending
