@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-04
@@ -43,6 +43,24 @@ data = {
     ],
 }
 
+
+def _lighten(hex_color, t):
+    """Blend hex_color toward white by fraction t (theme-independent)."""
+    r, g, b = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+    return "#{:02X}{:02X}{:02X}".format(*(int(round(c + (255 - c) * t)) for c in (r, g, b)))
+
+
+# Value-proportional shading within each sector: the largest company keeps
+# the full sector color, smaller ones lighten toward white, reinforcing the
+# size hierarchy beyond flat category coloring (spec calls for "nesting
+# depth or color shading intensity"). Applied identically in both themes so
+# data colors stay theme-independent.
+for sector_index, items in enumerate(data.values()):
+    sector_color = IMPRINT[sector_index]
+    max_value = max(item["value"] for item in items)
+    for item in items:
+        item["color"] = _lighten(sector_color, 0.35 * (1 - item["value"] / max_value))
+
 # Custom style for 3200x1800 px canvas with theme-adaptive colors
 custom_style = Style(
     background=PAGE_BG,
@@ -56,6 +74,10 @@ custom_style = Style(
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
+    # Treemap per-cell captions are CSS class text.label, styled by
+    # value_label_font_size (not label_font_size, which only affects axis
+    # text and has no effect on treemaps).
+    value_label_font_size=20,
     stroke_width=2.5,
 )
 
