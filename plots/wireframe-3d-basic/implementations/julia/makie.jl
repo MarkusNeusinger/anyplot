@@ -1,7 +1,7 @@
 # anyplot.ai
 # wireframe-3d-basic: Basic 3D Wireframe Plot
-# Library: Makie.jl 0.22 | Julia 1.11
-# Quality: pending | Created: 2026-08-04
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 77/100 | Created: 2026-08-04
 
 using CairoMakie
 using Colors
