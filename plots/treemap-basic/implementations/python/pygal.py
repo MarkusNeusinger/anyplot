@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 treemap-basic: Basic Treemap
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-05
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-08-04
 """
 
 import os
