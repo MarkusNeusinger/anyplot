@@ -9,10 +9,7 @@ const t = window.ANYPLOT_TOKENS;
 const GRID_N = 27;
 const RANGE = 6;
 const grid = Array.from({ length: GRID_N }, (_, i) => -RANGE + (2 * RANGE * i) / (GRID_N - 1));
-const zAt = (x, y) => {
-  const r = Math.sqrt(x * x + y * y);
-  return r < 1e-6 ? 1 : Math.sin(r) / r;
-};
+const zAt = (x, y) => Math.sin(Math.sqrt(x * x + y * y));
 const zGrid = grid.map((y) => grid.map((x) => zAt(x, y)));
 let zMin = Infinity;
 let zMax = -Infinity;
@@ -105,16 +102,20 @@ const axisFrameSeries = [
 // --- Axis ticks + titles as labeled points (core dataLabels, no modules) ---
 // The three axes share one corner, so ticks placed there are offset in
 // different directions per axis (down / left / left) to keep the labels from
-// stacking on top of each other.
+// stacking on top of each other. The two "-RANGE" ticks (one per axis) sit
+// exactly on top of that shared corner point, so they get an extra push
+// beyond the normal offset to stay independently legible.
 const tickVals = [-RANGE, 0, RANGE];
 const tickPoints = [];
 tickVals.forEach((v) => {
   const [sx, sy] = project(v, -RANGE, floorZ);
-  tickPoints.push({ x: sx, y: sy, name: String(v), dataLabels: { x: 0, y: 18 } });
+  const cornerBoost = v === -RANGE ? 16 : 0;
+  tickPoints.push({ x: sx, y: sy, name: String(v), dataLabels: { x: 0, y: 18 + cornerBoost } });
 });
 tickVals.forEach((v) => {
   const [sx, sy] = project(-RANGE, v, floorZ);
-  tickPoints.push({ x: sx, y: sy, name: String(v), dataLabels: { x: -22, y: 0 } });
+  const cornerBoost = v === -RANGE ? 16 : 0;
+  tickPoints.push({ x: sx, y: sy, name: String(v), dataLabels: { x: -22 - cornerBoost, y: 0 } });
 });
 [zMin, 0, zMax].forEach((v) => {
   const [sx, sy] = project(-RANGE, -RANGE, v);
@@ -183,6 +184,10 @@ Highcharts.chart("container", {
   title: {
     text: "wireframe-3d-basic · javascript · highcharts · anyplot.ai",
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+  },
+  subtitle: {
+    text: "z = sin(&#8730;(x&sup2; + y&sup2;)) ripple surface",
+    style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
     visible: false,
