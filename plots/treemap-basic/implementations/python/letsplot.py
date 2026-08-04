@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 treemap-basic: Basic Treemap
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-05
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 74/100 | Updated: 2026-08-04
 """
 
 import os
