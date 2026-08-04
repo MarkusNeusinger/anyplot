@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-05
@@ -219,13 +219,13 @@ color_values = [category_colors[cat] for cat in unique_categories]
 
 # Determine text color based on theme for better contrast
 TEXT_COLOR = INK if THEME == "light" else INK
-TEXT_SIZE = 14
+TEXT_SIZE = 7
 
 # Create the plot
 plot = (
     ggplot(rect_df)
     + geom_rect(
-        aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax", fill="category"), color=INK_SOFT, size=1.2, alpha=0.95
+        aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax", fill="category"), color=INK_SOFT, size=0.7, alpha=0.95
     )
     + geom_text(aes(x="label_x", y="label_y", label="label"), size=TEXT_SIZE, color=TEXT_COLOR, fontface="bold")
     + scale_fill_manual(values=color_values)
@@ -233,17 +233,17 @@ plot = (
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_title=element_text(size=24, color=INK, hjust=0.5),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=16, color=INK, hjust=0.5),
+        legend_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_position=[0.15, 0.5],
+        legend_position="right",
         axis_title=element_blank(),
         axis_text=element_blank(),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save outputs with theme suffix
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
