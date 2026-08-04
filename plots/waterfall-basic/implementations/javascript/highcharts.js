@@ -43,6 +43,9 @@ steps.forEach((s, i) => {
 const fmtTotal = (v) => `$${v.toLocaleString()}`;
 const fmtChange = (v) =>
   v >= 0 ? `+$${v.toLocaleString()}` : `−$${Math.abs(v).toLocaleString()}`;
+// Change label plus the running cumulative total it leaves the waterfall at,
+// so intermediate bars communicate both the step delta and the running total.
+const fmtChangeWithRunningTotal = (v, cum) => `${fmtChange(v)} → ${fmtTotal(cum)}`;
 
 const baseData = [];
 const totalData = [];
@@ -59,7 +62,10 @@ steps.forEach((s, i) => {
     const prevCum = cumulative[i] - s.value;
     baseData.push(prevCum);
     totalData.push(null);
-    increaseData.push({ y: s.value, custom: { label: fmtChange(s.value) } });
+    increaseData.push({
+      y: s.value,
+      custom: { label: fmtChangeWithRunningTotal(s.value, cumulative[i]) },
+    });
     decreaseData.push(null);
   } else {
     baseData.push(cumulative[i]);
@@ -67,7 +73,7 @@ steps.forEach((s, i) => {
     increaseData.push(null);
     decreaseData.push({
       y: -s.value,
-      custom: { label: fmtChange(s.value) },
+      custom: { label: fmtChangeWithRunningTotal(s.value, cumulative[i]) },
     });
   }
 });
@@ -123,7 +129,6 @@ Highcharts.chart("container", {
     },
   },
   credits: { enabled: false },
-  colors: t.palette,
   title: {
     text: "waterfall-basic · javascript · highcharts · anyplot.ai",
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
