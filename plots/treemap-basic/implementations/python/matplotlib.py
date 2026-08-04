@@ -1,13 +1,15 @@
 """ anyplot.ai
 treemap-basic: Basic Treemap
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-05
+Library: matplotlib 3.11.1 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-08-04
 """
 
+import colorsys
 import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+from matplotlib.colors import to_hex, to_rgb
 from matplotlib.patches import Rectangle
 
 
@@ -18,10 +20,12 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for categories
+# Imprint palette for categories
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
-# Data - Budget allocation by department and project
+# Data - Budget allocation by department and project. Operations has no
+# subcategory split (renders as one unsubdivided rectangle) to demonstrate
+# that the hierarchy nesting is optional, per the spec.
 data = [
     ("Engineering", "Product Dev", 45),
     ("Sales", "Enterprise", 35),
@@ -29,10 +33,9 @@ data = [
     ("Engineering", "Infrastructure", 25),
     ("Sales", "SMB", 25),
     ("Marketing", "Events", 20),
-    ("Operations", "Logistics", 20),
+    ("Operations", None, 35),
     ("Engineering", "QA", 15),
     ("Sales", "Partners", 15),
-    ("Operations", "Support", 15),
     ("HR", "Recruiting", 12),
     ("HR", "Training", 8),
 ]
@@ -42,9 +45,10 @@ categories = [d[0] for d in data]
 subcategories = [d[1] for d in data]
 values = [d[2] for d in data]
 
-# Category to color mapping (using Okabe-Ito palette)
+# Category to color mapping (canonical Imprint order)
 unique_categories = ["Engineering", "Sales", "Marketing", "Operations", "HR"]
 category_colors = {cat: IMPRINT[i % len(IMPRINT)] for i, cat in enumerate(unique_categories)}
+category_max = {cat: max(v for c, _, v in data if c == cat) for cat in unique_categories}
 
 # Normalize values to fill a 160x90 area (matching figsize aspect ratio)
 total = sum(values)
@@ -57,93 +61,84 @@ remaining = list(zip(normalized, range(len(normalized)), strict=True))
 x, y, w, h = 0, 0, width, height
 
 while remaining:
-    # Lay out items in current strip
+    vertical = w >= h
+    fixed = h if vertical else w  # dimension held constant while the strip fills
+
+    # Add items to the current strip one at a time, backing off as soon as
+    # the strip's worst aspect ratio would get worse. Shared by both the
+    # vertical-strip and horizontal-strip cases below, which differ only in
+    # which dimension (h or w) is held fixed.
     strip_items = []
     strip_area = 0
+    for area, idx in remaining:
+        strip_items.append((area, idx))
+        strip_area += area
+        thickness = strip_area / fixed
+        if len(strip_items) > 1:
+            aspects = [max(thickness / (a / thickness), (a / thickness) / thickness) for a, _ in strip_items]
+            prev_area = strip_area - area
+            prev_aspects = []
+            if prev_area > 0:
+                prev_thickness = prev_area / fixed
+                prev_aspects = [
+                    max(prev_thickness / (a / prev_thickness), (a / prev_thickness) / prev_thickness)
+                    for a, _ in strip_items[:-1]
+                ]
+            if prev_aspects and max(aspects) > max(prev_aspects):
+                strip_items.pop()
+                strip_area -= area
+                break
 
-    if w >= h:
-        # Vertical strip
-        for area, idx in remaining:
-            strip_items.append((area, idx))
-            strip_area += area
-            strip_width = strip_area / h
-            # Check if aspect ratios are getting worse
-            if len(strip_items) > 1:
-                aspects = [
-                    max(strip_width / (a / strip_width), (a / strip_width) / strip_width) for a, _ in strip_items
-                ]
-                prev_aspects = []
-                prev_area = strip_area - area
-                if prev_area > 0:
-                    prev_width = prev_area / h
-                    prev_aspects = [
-                        max(prev_width / (a / prev_width), (a / prev_width) / prev_width) for a, _ in strip_items[:-1]
-                    ]
-                if prev_aspects and max(aspects) > max(prev_aspects):
-                    strip_items.pop()
-                    strip_area -= area
-                    break
-        # Layout strip vertically
-        strip_width = strip_area / h if h > 0 else 0
-        cy = y
-        for area, idx in strip_items:
-            rect_h = area / strip_width if strip_width > 0 else 0
-            rects.append((x, cy, strip_width, rect_h, idx))
-            cy += rect_h
-        x += strip_width
-        w -= strip_width
+    # Lay out the finished strip along its fixed dimension
+    thickness = strip_area / fixed if fixed > 0 else 0
+    pos = y if vertical else x
+    for area, idx in strip_items:
+        length = area / thickness if thickness > 0 else 0
+        if vertical:
+            rects.append((x, pos, thickness, length, idx))
+        else:
+            rects.append((pos, y, length, thickness, idx))
+        pos += length
+    if vertical:
+        x += thickness
+        w -= thickness
     else:
-        # Horizontal strip
-        for area, idx in remaining:
-            strip_items.append((area, idx))
-            strip_area += area
-            strip_height = strip_area / w
-            if len(strip_items) > 1:
-                aspects = [
-                    max(strip_height / (a / strip_height), (a / strip_height) / strip_height) for a, _ in strip_items
-                ]
-                prev_aspects = []
-                prev_area = strip_area - area
-                if prev_area > 0:
-                    prev_height = prev_area / w
-                    prev_aspects = [
-                        max(prev_height / (a / prev_height), (a / prev_height) / prev_height)
-                        for a, _ in strip_items[:-1]
-                    ]
-                if prev_aspects and max(aspects) > max(prev_aspects):
-                    strip_items.pop()
-                    strip_area -= area
-                    break
-        # Layout strip horizontally
-        strip_height = strip_area / w if w > 0 else 0
-        cx = x
-        for area, idx in strip_items:
-            rect_w = area / strip_height if strip_height > 0 else 0
-            rects.append((cx, y, rect_w, strip_height, idx))
-            cx += rect_w
-        y += strip_height
-        h -= strip_height
+        y += thickness
+        h -= thickness
 
     # Remove placed items
     placed_indices = {idx for _, idx in strip_items}
     remaining = [(a, i) for a, i in remaining if i not in placed_indices]
 
-# Create plot (4800x2700 px)
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Create plot (3200x1800 px)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Draw rectangles with labels
+# Draw rectangles with labels. Fill lightness is value-driven within each
+# category (largest item keeps the full-strength hue, smaller ones lighten
+# toward a soft tint) so area and shade reinforce the same magnitude signal.
+# The single largest rectangle overall gets a bold ink outline as a focal-point
+# callout, sharpening the visual hierarchy beyond area and shading alone.
+focal_idx = values.index(max(values))
 for rx, ry, rw, rh, idx in rects:
-    color = category_colors[categories[idx]]
-    rect = Rectangle((rx, ry), rw, rh, facecolor=color, edgecolor=PAGE_BG, linewidth=3, alpha=0.85)
+    cat = categories[idx]
+    base_r, base_g, base_b = to_rgb(category_colors[cat])
+    hue, lightness, sat = colorsys.rgb_to_hls(base_r, base_g, base_b)
+    weight = values[idx] / category_max[cat]
+    tint = to_hex(colorsys.hls_to_rgb(hue, min(0.92, lightness + (1 - weight) * 0.18), sat))
+
+    is_focal = idx == focal_idx
+    edge_color = INK if is_focal else PAGE_BG
+    edge_width = 3.5 if is_focal else 1.5
+    rect = Rectangle((rx, ry), rw, rh, facecolor=tint, edgecolor=edge_color, linewidth=edge_width)
     ax.add_patch(rect)
 
     # Add labels for all visible rectangles
     area = rw * rh
     if area > 80:
-        fontsize = min(18, max(11, int(area**0.35)))
+        fontsize = min(9, max(6, round(area**0.35 * 0.5)))
 
-        label = f"{subcategories[idx]}\n${values[idx]}M"
+        label = f"{subcategories[idx] or cat}\n${values[idx]}M"
         ax.text(
             rx + rw / 2, ry + rh / 2, label, ha="center", va="center", fontsize=fontsize, fontweight="bold", color=INK
         )
@@ -155,23 +150,23 @@ ax.axis("off")
 ax.set_aspect("equal")
 
 # Title
-ax.set_title("treemap-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
+ax.set_title("treemap-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
 
-# Legend for categories
+# Legend for categories (canonical Imprint hue, unshaded, for brand fidelity)
 legend_handles = [mpatches.Patch(color=category_colors[cat], label=cat) for cat in unique_categories]
 leg = ax.legend(
     handles=legend_handles,
     loc="upper center",
-    fontsize=16,
+    fontsize=8,
     framealpha=0.95,
     edgecolor=INK_SOFT,
     ncol=5,
-    bbox_to_anchor=(0.5, -0.02),
+    bbox_to_anchor=(0.5, -0.03),
 )
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 for text in leg.get_texts():
     text.set_color(INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.90, bottom=0.13)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

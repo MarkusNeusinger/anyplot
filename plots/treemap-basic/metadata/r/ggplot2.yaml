@@ -1,0 +1,270 @@
+library: ggplot2
+language: r
+specification_id: treemap-basic
+created: '2026-08-04T09:33:14Z'
+updated: '2026-08-04T09:39:18Z'
+generated_by: claude-sonnet
+workflow_run: 30894535613
+issue: 766
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Custom squarified treemap algorithm (Bruls, Huizing & van Wijk, 1999) implemented
+    from scratch since ggplot2 has no native treemap geom — category header bands
+    sit above squarified children, correctly nesting the hierarchy.
+  - WCAG relative-luminance-based ink selection picks readable label text against
+    both fixed header colors and alpha-blended tile fills, correctly re-evaluated
+    per theme.
+  - 'Clear visual hierarchy: bold colored header bands show category totals, alpha-shaded
+    children (darker-to-lighter by rank within category) communicate both grouping
+    and relative magnitude at a glance.'
+  - 'Palette fully compliant — Compute (largest total) renders in Imprint #009E73,
+    remaining categories follow canonical palette order by descending total; data
+    colors are identical across light/dark renders, background/chrome is theme-correct
+    in both.'
+  - Adaptive label suppression (show_name/show_value gated by tile width/height vs.
+    text length) prevents overflow — small tiles cleanly omit text instead of clipping.
+  - Title fontsize scales with title length to avoid overflow for the long mandated
+    title string.
+  weaknesses:
+  - 'CQ-01 KISS Structure: the implementation relies on 5 custom helper functions
+    (relative_luminance, blend_hex, squarify plus nested worst_ratio/place_row) rather
+    than a flat Imports->Data->Plot->Save script. Some complexity is inherent to implementing
+    a treemap layout ggplot2 doesn''t natively support, but the algorithm could be
+    trimmed or better isolated to reduce custom code surface.'
+  - Sub-tile resource labels (geom_text size=2.7/2.3mm, roughly 43/36 source-px) are
+    noticeably smaller than the category header text; at ~400px mobile scale these
+    shrink to roughly 5px, right at the edge of legibility — consider a slightly larger
+    minimum size for small-but-labeled tiles.
+  - Category identity relies entirely on the header bands with no separate legend;
+    not an issue with this dataset but worth noting as a layout edge case if a future
+    data change ever produces a category whose header band becomes too small to render
+    its label.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "Cloud Infrastructure Spend · treemap-basic · r · ggplot2 · anyplot.ai" centered at top, clearly readable dark-on-light. Category header bands (Compute/Storage/Database/Networking/Security) show bold white text on their saturated fill colors with total spend ($965K, $525K, $470K, $340K, $120K). Child tile labels (resource name + $ value) render in dark or light ink chosen per-tile based on the blended tile shade, all legible. Thin off-white borders separate every tile.
+      Data: Five categories in Imprint palette canonical order by descending total — Compute=#009E73 (brand green, first/largest), Database=lavender, Storage=blue, Networking=ochre, Security=matte red. Within each category, children are shaded from more saturated (largest) to lighter (smallest) via alpha blending against the page background, encoding rank.
+      Legibility verdict: PASS — all header and tile text readable, no overlap, no clipping at canvas edges.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title renders in light ink, clearly visible against the dark background. Header bands keep the same fill colors as light mode with white bold text. Child tile labels re-evaluate their ink color against the theme's background before alpha-blending, so no dark-on-dark or light-on-light failures are visible — every label remains legible.
+      Data: Confirmed identical to the light render — same five categorical hues (#009E73 green first, then lavender/blue/ochre/red), only the chrome (background, borders, title) flips to the dark tokens.
+      Legibility verdict: PASS — no dark-on-dark text found; all header and tile labels remain readable against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizing throughout (dynamic header_size, title_size, geom_text
+          sizes); readable in both themes, no overflow. Resource labels are on the
+          small side at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text observed; adaptive label suppression avoids collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tile sizes proportional to value via squarified layout; all rectangles
+          clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues plus borders/labels for redundant encoding; no red-green-only
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Treemap fills the canvas with balanced margins on all sides; nothing
+          cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a treemap; title is descriptive with the mandated
+          format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (largest) category is #009E73; remaining categories follow
+          canonical Imprint order; theme-correct chrome and identical data colors
+          across both renders.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Bespoke header-band + rank-shading system with WCAG-aware label ink
+          goes well beyond a configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void removes all chrome, subtle background-matched borders
+          between tiles, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Size (area), position (largest-first squarify), and shading (rank
+          within category) combine into a clear visual hierarchy; viewer immediately
+          sees Compute dominates spend.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct treemap: nested rectangles, area proportional to value.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct category colors, labels on larger rects only, borders between
+          rectangles, hierarchy shown via nesting + shading intensity — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value correctly drives tile area via the squarify algorithm; all
+          data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · treemap-basic · r · ggplot2
+          · anyplot.ai'; category headers serve as the legend equivalent, appropriate
+          for a treemap.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 categories with 2-4 subcategories each, wide range of values, demonstrates
+          full hierarchy depth and size variation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Cloud infrastructure spend by service category — realistic, neutral
+          business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Dollar figures and relative proportions (Compute dominant, Security
+          smallest) are plausible for real-world cloud spend.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 1
+        max: 3
+        passed: false
+        comment: Uses 5 custom helper functions (relative_luminance, blend_hex, squarify
+          + nested worst_ratio/place_row) instead of a flat Imports->Data->Plot->Save
+          script; largely necessitated by ggplot2 lacking a native treemap geom.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is fully deterministic (hardcoded tribble), no randomness involved.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; complexity is appropriate for a from-scratch
+          treemap layout.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ggsave/ragg::agg_png, current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics layering (geom_rect + geom_text + scale_*_identity)
+          — the standard community pattern for treemaps in base ggplot2 without extension
+          packages.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: scale_fill_identity/scale_color_identity/scale_size_identity bypass
+          the legend machinery to drive per-row precomputed aesthetics — a distinctive
+          ggplot2-specific technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - treemap-layout
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
