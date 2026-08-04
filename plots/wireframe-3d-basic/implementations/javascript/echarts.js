@@ -1,7 +1,7 @@
 // anyplot.ai
 // wireframe-3d-basic: Basic 3D Wireframe Plot
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-08-04
+// Library: echarts 6.1.0 | JavaScript 22.23.1
+// Quality: 89/100 | Created: 2026-08-04
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
