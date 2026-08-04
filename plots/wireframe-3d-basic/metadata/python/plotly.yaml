@@ -2,98 +2,113 @@ library: plotly
 language: python
 specification_id: wireframe-3d-basic
 created: '2025-12-24T09:50:45Z'
-updated: '2026-05-06T05:23:54Z'
-generated_by: claude-haiku
-workflow_run: 25417860575
+updated: '2026-08-04T18:33:42Z'
+generated_by: claude-sonnet
+workflow_run: 30937573431
 issue: 1015
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 86
 review:
   strengths:
-  - Professional 3D rendering with excellent height-based color coding that clearly
-    shows ripple topology
-  - 'Perfect theme adaptation: data colors identical between light/dark, chrome properly
-    theme-responsive'
-  - All text explicitly sized and readable in both themes — no accessibility gaps
-  - Clean, Pythonic code using Plotly's high-level API idiomatically
-  - 'Descriptive axis labels include context (Height: sin(√(x² + y²))) that explains
-    the formula'
+  - Height-based diverging color (imprint_div) mapped per-line with a single shared
+    colorbar via the last-trace showscale trick — elegant, and the diverging polarity
+    is the right choice since height is a signed deviation around z=0
+  - 'Correct plot type: a true wireframe built from row-direction AND column-direction
+    go.Scatter3d ''lines'' traces — a see-through mesh, not a solid surface, matching
+    the spec''s definition precisely'
+  - Theme-adaptive chrome (background, ink, grid, colorbar bgcolor/outline) threaded
+    correctly through both renders — both plot-light.png and plot-dark.png are fully
+    legible with no dark-on-dark or light-on-light failures
+  - Canvas is exactly 3200x1800 (width=800, height=450, scale=4), correct PNG+HTML
+    outputs, deterministic KISS-structured code with only necessary imports (numpy,
+    plotly.graph_objects)
   weaknesses:
-  - 'Design could be more sophisticated: while the viridis gradient is good, no custom
-    styling beyond defaults'
-  - 'Visual refinement at default level: subtle but not exceptional (grid opacity,
-    spacing)'
+  - 'Excessive dead whitespace around the 3D object: a large empty gap sits between
+    the title/formula annotation and the top of the wireframe, and another wide gap
+    sits between the plot''s right edge and the colorbar. The wireframe cube occupies
+    well under half the canvas area. Move the camera closer (reduce the eye-vector
+    magnitude below plotly''s default ~2.17, e.g. eye={x:1.3,y:1.3,z:0.9}) and/or
+    enlarge the scene domain and pull the annotation down closer to the plot top to
+    tighten the composition and raise canvas utilization.'
+  - The dense 24x24 line grid combined with the highly oscillatory ripple surface
+    produces a busy 'starburst' tangle of crossing lines near the plot center, which
+    mildly obscures the underlying surface topology despite the helpful diverging
+    color cue. A slightly coarser grid (e.g. 20x20, still within the spec's 20x20-50x50
+    recommendation) or marginally thinner lines would reduce clutter.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title "wireframe-3d-basic · plotly · anyplot.ai" (32px dark gray), axis labels "Radius (x-coordinate)" / "Radius (y-coordinate)" / "Height: sin(√(x² + y²))" (22px dark ink), tick labels (16px soft gray) — all clearly readable against light background
-      Data: Viridis colorscale with height-based coloring; yellow at peaks, transitioning through green, cyan, blue, purple in valleys; 30×30 wireframe grid rendered in both x/y directions
-      Grid: Subtle 10% opacity grid lines visible but not dominant
-      Legibility verdict: PASS - all elements readable, excellent contrast
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "wireframe-3d-basic · python · plotly · anyplot.ai" centered at top in dark ink, clearly legible. Formula annotation "z = sin(√(x² + y²))" in soft gray below the title. Axis titles "Radius (x)", "Radius (y)", "Height (z)" and tick labels in dark/soft-dark ink, all readable against the light background. Colorbar titled "Height" with tick labels 1, 0.5, 0, -0.5, -1, housed in a light elevated box with a subtle outline.
+      Data: A 3D wireframe mesh (grid lines in both x- and y-directions) forming a "sombrero"-like ripple surface. Lines are colored via a red-to-blue diverging scale (matte red at height -1, near-neutral at 0, blue at height +1) that matches the plot background at the zero midpoint, consistent with the Imprint `imprint_div` continuous colormap.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title and axis labels now light (#F0EFE8), tick labels soft light gray (#B8B7B0), grid lines light-transparent rgba(240,239,232,0.10) — all clearly visible against dark background; no dark-on-dark failures
-      Data: Viridis colors identical to light render (yellow→green→blue→purple); only chrome has adapted to dark theme
-      Grid: Subtle light grid lines visible
-      Legibility verdict: PASS - all elements readable in dark theme, data colors match light perfectly
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, formula annotation, axis titles, and tick labels, now rendered in light ink (white/light-gray), clearly legible against the dark background. Colorbar box uses a darker elevated fill with a light-gray outline; "Height" title and tick labels are light-colored and readable.
+      Data: Same wireframe mesh and same red-to-blue diverging color scale as the light render — the data colors are identical between the two themes; only the chrome (background, text, grid, colorbar box) flips as expected.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/colorbar text is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 32px, labels 22px, ticks 16px);
-          perfectly readable in both light and dark themes
+        comment: All font sizes explicitly set (title 16, axis titles 14, tickfonts
+          11, annotation 12, colorbar title 14/tick 11); readable in both themes at
+          full size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text properly spaced; no collisions or overlapping elements
+        comment: No text-text or text-data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: All 30×30 wireframe lines clearly visible; line width 3 is optimal
-          for this density
+        comment: Line width 3.5 is visible, but the dense 24x24 grid on a highly oscillatory
+          surface produces a busy crossing-line tangle near the center that reduces
+          topology clarity
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe; excellent contrast
-          between colors
+        comment: Diverging red/blue via imprint_div, good contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins (20px); 3D view not
-          cut off
+        comment: Wireframe object occupies a comparatively small share of the canvas
+          — large empty gaps above the plot (title/annotation to plot top) and between
+          the plot and the colorbar; not cut off and colorbar is not isolated, but
+          utilization is well under the 50% target
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All labels descriptive with context including formula
+        comment: Descriptive axis titles (Radius (x), Radius (y), Height (z)) appropriate
+          for unitless math coordinates
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct for continuous height data; backgrounds are #FAF8F1
-          (light) / #1A1A17 (dark); chrome tokens properly theme-adaptive'
+        comment: 'imprint_div correctly used for signed-deviation height data with
+          theme-adaptive midpoint; backgrounds are #FAF8F1/#1A1A17; chrome theme-correct
+          in both renders'
     design_excellence:
       score: 14
       max: 20
@@ -103,22 +118,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Height-based viridis coloring creates visual hierarchy; professional
-          3D rendering; clean typography
+        comment: Thoughtful height-encoded diverging color with shared colorbar goes
+          clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid styling is subtle with appropriate opacity (10%); scene background
-          matches theme tokens; good attention to detail
+        comment: Subtle grid (10% opacity), clean chrome, but whitespace is imbalanced
+          rather than generous-and-even
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Viridis gradient immediately shows wave topology; clear focal point
-          at ripple peak; viewer sees concentric pattern without effort
+        comment: Diverging color and formula annotation create a clear focal point
+          (peak vs. trough) guiding the viewer
     spec_compliance:
       score: 15
       max: 15
@@ -128,29 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D wireframe using go.Scatter3d with mode=lines
+        comment: True see-through wireframe mesh via row+column line traces, not a
+          solid surface
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 30×30 grid in both x/y directions; camera angle ~30°/45° as specified;
-          height-based coloring
+        comment: Grid lines in both x and y directions, height-based coloring, ~30/45
+          deg perspective camera, all three axes labeled with ticks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; Z shows ripple function; all data visible
+        comment: X/Y/Z correctly assigned, full grid range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: wireframe-3d-basic · plotly · anyplot.ai;
-          no legend needed (single series)'
+        comment: Title format exactly matches mandated pattern; colorbar (serving
+          as the height legend) is correctly labeled
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -158,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete ripple pattern from -1 to +1; concentric waves clearly
-          visible
+        comment: 24x24 grid within the spec's 20x20-50x50 range; ripple function shows
+          both peak and trough regions
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Classic educational example (sin(√(x² + y²))); neutral and commonly
-          used
+        comment: Canonical, neutral mathematical demonstration explicitly suggested
+          by the spec itself; inherently abstract math rather than a real-world dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: X/Y range [-5,5]; Z range [-1,1] correct for sin; 30×30 resolution
-          appropriate
+        comment: Height correctly bounded to sin() range [-1,1], radius range [-5,5]
+          sensible
     code_quality:
       score: 10
       max: 10
@@ -183,58 +199,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple: data generation → plot creation → layout → save; no unnecessary
-          functions'
+        comment: No functions/classes, linear imports->data->plot->save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.linspace (deterministic); no random seed needed
+        comment: Fully deterministic (linspace/meshgrid), no randomness to seed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only imports used: os, numpy, plotly'
+        comment: Only numpy and plotly.graph_objects, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and appropriate complexity; for-loops for wireframe lines
-          are idiomatic
+        comment: Appropriate complexity for a manual wireframe construction, no fake
+          functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with correct naming
+        comment: Saves plot-{THEME}.png at correct 3200x1800 dims plus plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter3d (idiomatic for 3D); proper scene configuration;
-          theme-adaptive colors
+        comment: Standard idiomatic workaround for wireframes in plotly (no native
+          wireframe trace exists) via looped Scatter3d line traces
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Height-based colorscale (distinctive to Plotly); 3D camera configuration;
-          interactive HTML export
+        comment: Per-segment array-based line coloring with a shared colorbar (showscale
+          only on the last trace) is a plotly-specific trick not easily replicated
+          elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
-  - hover-tooltips
-  - html-export
+  - colorbar
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
