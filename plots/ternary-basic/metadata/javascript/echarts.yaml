@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: ternary-basic
 created: '2026-08-04T15:24:39Z'
-updated: '2026-08-04T15:29:37Z'
+updated: '2026-08-04T15:44:58Z'
 generated_by: claude-sonnet
 workflow_run: 30923091806
 issue: 1001
@@ -12,55 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/echarts/plot-dark.html
-quality_score: 81
+quality_score: 88
 review:
   strengths:
+  - Composition centers now match a real bronze alloy (88% Cu / 2% Zn / 10% Sn, statuary-bronze
+    family) — the prior 45/35/20 realism issue from attempt 1 is fully resolved
+  - 'New labeled reference marker (diamond glyph + dashed leader line, ''Reference:
+    Bell Bronze (78/22)'') gives the plot a real point of comparison and a focal point
+    beyond the raw sample cloud, directly addressing the prior data-storytelling weakness'
+  - Distance-from-mean alpha cue (points near the batch mean are more transparent,
+    outliers more opaque) is a genuine, correctly-implemented density mitigation,
+    paired with a subtle page-background stroke on every marker so overlapping circles
+    stay individually countable
   - Correct, accurate ternary geometry (barycentric-to-Cartesian conversion) with
-    properly labeled vertices, 20% grid lines, and edge tick marks — mirrors a professional
+    properly labeled vertices, 20% grid lines, and edge tick marks — a professional
     ternary diagram despite ECharts having no native ternary coordinate system
   - Real interactive tooltip via a genuine `custom` series (not faked) — shows exact
-    Copper/Zinc/Tin percentages on hover, adding real value in the HTML detail view
+    Copper/Zinc/Tin percentages on hover
   - 'Both light and dark renders are fully theme-correct: identical brand-green data
-    color, correct #FAF8F1/#1A1A17 backgrounds, and legible theme-adaptive chrome
-    text/grid throughout'
-  - Title fontsize correctly auto-scales for the longer descriptive-prefixed title,
-    avoiding overflow or clipping
-  - Clean, deterministic, seeded data generation with a small hand-rolled LCG + Box-Muller
-    gaussian — fully reproducible
+    color, correct #FAF8F1/#1A1A17 backgrounds, legible theme-adaptive chrome throughout,
+    and the reference marker/label also flips color correctly'
+  - Clean, deterministic, seeded data generation (hand-rolled LCG + Box-Muller gaussian)
+    — fully reproducible
   weaknesses:
-  - The 'Bronze Alloy' composition averages ~45% Copper / 35% Zinc / 20% Tin, which
-    does not match real-world bronze alloys (copper-dominant, typically 85%+ Cu with
-    tin as the secondary component). Shift the Gaussian centers toward realistic bronze
-    proportions (e.g. ~88% Cu, ~10% Sn, ~2% Zn) or rename the scenario to a copper-zinc-tin
-    alloy family whose real composition matches the current centers (e.g. a leaded
-    red brass / gunmetal still needs to stay copper-dominant, so most likely fix is
-    adjusting the centers, not just the label)
-  - Data Storytelling is minimal — a single undifferentiated green blob with no visual
-    hierarchy, annotation, or grouping. Consider adding a labeled reference/target-composition
-    marker, or a lightly encoded secondary dimension (e.g. alpha or size keyed to
-    a sample-quality/batch attribute) to give the chart a clearer focal point
-  - Marker overlap in the dense cluster core makes individual points hard to distinguish
-    — consider reducing the marker radius slightly or lowering opacity further (e.g.
-    ~0.65) to improve individual-point legibility where points overlap most
-  - Aesthetic Sophistication reads as a well-executed default — functionally excellent
-    but visually plain (single hue, no supporting visual elements). Consider a subtle
-    density cue (e.g. slight alpha gradient toward the cluster center) to add polish
-    beyond the flat scatter
+  - The realistic, narrow-tolerance bronze composition packs ~70 points into a small
+    corner of the triangle, so the dense cluster core still has meaningful marker-to-marker
+    overlap despite the alpha/stroke mitigation — a slightly smaller marker radius
+    (e.g. 5-5.5px instead of 6.5px) would ease this further without hurting sparse-outlier
+    visibility
+  - Data Feature Coverage is still a single alloy family plus one reference point
+    — a second small comparison cluster (e.g. a leaded gunmetal or a wider historical
+    scatter) would use more of the ternary space and reinforce the storytelling
+  - Aesthetic Sophistication reads as a well-executed, above-default build (hand-built
+    ternary chrome, density cue, reference annotation) but stops short of top-tier
+    publication polish — e.g. no secondary encoding (size/hue) distinguishing outliers
+    from the reference beyond position
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Bronze Alloy Composition · ternary-basic · javascript · echarts · anyplot.ai" is dark, centered, fully legible, and auto-scaled to avoid overflow. The equilateral triangle is drawn with a dark ink-soft border; three bold vertex labels ("Tin (C)" top, "Copper (A)" bottom-left, "Zinc (B)" bottom-right) are clearly readable outside the triangle. Subtle 20%-interval grid lines cross the triangle interior, with small tick marks and numeric labels (20/40/60/80) along all three edges in a muted ink-soft tone. All text is readable against the light background.
-      Data: ~70 circular markers in brand green (#009E73) with a light stroke, clustered in the lower-central region of the triangle (roughly Copper 35-55%, Zinc 25-45%, Tin 10-30%), with one visible outlier extending toward higher Tin. First (only) series correctly uses #009E73.
-      Legibility verdict: PASS
+      Chrome: Title "Bronze Alloy Composition · ternary-basic · javascript · echarts · anyplot.ai" is dark, centered, comfortably sized (~55% width), and fully legible. Equilateral triangle with a dark ink-soft 2.5px border, bold vertex labels ("Tin (C)" top, "Copper (A)" bottom-left, "Zinc (B)" bottom-right), subtle 20%-interval internal grid lines, and numeric tick marks (20/40/60/80) along all three edges. All chrome text is dark-on-light and readable.
+      Data: ~70 brand-green (#009E73) circular markers with a thin light-stroke edge form a tight cluster in the lower-left (Copper-dominant) region of the triangle, consistent with realistic bronze compositions (~88% Cu / 2% Zn / 10% Sn). A hollow diamond reference marker sits just outside the cluster on the Copper-Tin edge, connected by a dashed leader line to the label "Reference: Bell Bronze (78/22)" — a real point of comparison. Points closer to the cluster mean are rendered more transparent, points further out (outliers) more opaque, which combined with the marker stroke keeps individual points distinguishable despite the density.
+      Legibility verdict: PASS — all title, vertex labels, tick labels, and the reference annotation are clearly readable against the light background; no light-on-light text.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light/off-white text, fully legible against the dark background. Triangle border and grid lines flip to light-toned strokes; vertex labels and tick labels are light-colored and clearly readable. No dark-on-dark text observed anywhere — title, vertex labels, and tick numbers all read cleanly.
-      Data: Same ~70 markers in identical brand green (#009E73), same cluster shape and position as the light render — confirms data colors are unchanged between themes; only chrome (background, borders, grid, text) flipped.
-      Legibility verdict: PASS
+      Chrome: Same title, triangle border, grid lines, vertex labels, and tick labels, all flipped to light-toned strokes/text (ink/inkSoft tokens) and fully legible against the dark background. No dark-on-dark issues on any chrome element.
+      Data: Identical brand-green (#009E73) markers in the same cluster position, shape, and opacity gradient as the light render — confirming only chrome flipped, not data color. The reference diamond and its dashed leader/label also flip correctly to light ink and remain legible.
+      Legibility verdict: PASS — all text and data markers are clearly readable against the dark background; no dark-on-dark failures found.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -68,70 +69,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title auto-scales for the longer descriptive-prefixed
-          string and stays well within bounds in both themes
+        comment: All text readable in both themes; title auto-scales for length
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-to-text or text-to-data collisions
+        comment: No text-to-text or text-to-data collisions; reference label sits
+          clear of the cluster
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Markers visible overall, but the dense cluster core has meaningful
-          overlap that blends several points together
+        comment: Dense cluster core still overlaps meaningfully, but alpha-by-distance
+          + page-bg stroke keeps points individually countable — improved from attempt
+          1
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green with light stroke is CVD-safe and high-contrast
+        comment: Good contrast, single-hue data with shape/position redundancy
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Triangle fills a well-balanced portion of the square canvas with
-          even margins; nothing cut off
+        comment: Correct 2400x2400 square canvas, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels name each component with clear unit context via percentage
-          tick labels
+        comment: Descriptive vertex labels with component letters
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds are
-          theme-correct #FAF8F1/#1A1A17'
+        comment: 'First series is #009E73, correct theme backgrounds in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Hand-built ternary grid/ticks/vertex labels show above-default effort,
-          but the overall look is a well-executed default rather than publication-level
-          polish
+        passed: true
+        comment: 'Above-default: hand-built ternary chrome, density cue, reference
+          annotation, but stops short of top-tier polish'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        comment: Subtle grid, clean triangle border, generous whitespace, no clutter
+        passed: true
+        comment: Subtle grid, clean border, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        comment: Data is displayed but not interpreted — single undifferentiated cluster
-          with no visual hierarchy or focal point
+        passed: true
+        comment: Reference marker + density gradient now give the plot a real focal
+          point and comparison, up from a single undifferentiated blob
     spec_compliance:
       score: 15
       max: 15
@@ -140,48 +141,51 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct ternary plot with proper triangular coordinate mapping
+        passed: true
+        comment: Correct ternary composition plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: 20% grid lines, labeled vertices, edge tick marks, and visually distinct
-          markers all present per spec notes
+        passed: true
+        comment: Grid lines, vertex labels, edge tick marks all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: component_a/b/c correctly mapped to the three vertices; tooltip confirms
-          correct per-point values
+        passed: true
+        comment: A/B/C correctly mapped to vertices, sums to 100%
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches the mandated format with a descriptive prefix; single-series
-          so legend correctly omitted
+        passed: true
+        comment: Title matches mandated format with descriptive prefix
     data_quality:
-      score: 11
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        comment: Shows realistic sample-to-sample variance and one clear outlier,
-          but it's a single Gaussian cluster without broader compositional coverage
+        passed: true
+        comment: Single realistic alloy family plus one labeled reference point; a
+          second comparison cluster would use more of the space
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, comprehensible materials-science scenario (alloy composition
-          analysis)
+        passed: true
+        comment: Copper-dominant statuary-bronze composition and Bell Bronze reference
+          are both real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        comment: Composition centers (~45% Cu / 35% Zn / 20% Sn) don't match real-world
-          bronze, which is copper-dominant (85%+ Cu); the domain label and the data
-          proportions don't align
+        passed: true
+        comment: Fixed from attempt 1 — composition now matches real bronze (~88%
+          Cu)
     code_quality:
       score: 9
       max: 10
@@ -190,58 +194,61 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Small helper functions (RNG, gaussian, ternaryToPixel, outward) are
-          necessary given ECharts has no native ternary coordinate system, but they
-          add structure beyond pure linear KISS flow
+        passed: true
+        comment: Helper functions are justified by the lack of native ternary support
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Seeded LCG RNG, fully deterministic
+        passed: true
+        comment: Seeded LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No unused imports; only the ANYPLOT globals and echarts are used
+        passed: true
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake UI/interactivity; appropriate complexity for the geometry
-          the task required
+        passed: true
+        comment: No fake UI, genuine custom series + graphic layer
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct mount-node contract, animation disabled, current setOption
-          API
+        passed: true
+        comment: Uses harness mount-node contract correctly, animation disabled
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Uses the graphic component and a real custom series appropriately
-          — the correct idiomatic escape hatch given ECharts lacks a built-in ternary
-          coordinate system
+        passed: true
+        comment: 'Correct escape hatch (graphic + coordinateSystem: none custom series)
+          given ECharts has no native ternary support'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Creative use of ECharts' custom-series renderItem and graphic elements
-          to build a coordinate system the library doesn't natively support, while
-          keeping tooltip interactivity genuine
-  verdict: REJECTED
+        passed: true
+        comment: Custom renderItem, graphic polygon/leader-line annotation, genuine
+          tooltip interactivity
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   - hover-tooltips
+  - manual-ticks
+  - patches
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting

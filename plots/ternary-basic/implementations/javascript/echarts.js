@@ -1,7 +1,7 @@
 // anyplot.ai
 // ternary-basic: Basic Ternary Plot
 // Library: echarts 6.1.0 | JavaScript 22.23.1
-// Quality: 81/100 | Created: 2026-08-04
+// Quality: 88/100 | Created: 2026-08-04
 
 //# anyplot-orientation: square
 
