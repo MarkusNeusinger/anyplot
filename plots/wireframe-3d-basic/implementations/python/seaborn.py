@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: 79/100 | Updated: 2026-08-04
+Quality: 83/100 | Updated: 2026-08-04
 """
 
 import sys
