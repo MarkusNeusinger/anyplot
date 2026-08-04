@@ -2,113 +2,138 @@ library: seaborn
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:53:14Z'
-updated: '2026-05-06T07:30:14Z'
-generated_by: claude-haiku
-workflow_run: 25421538930
+updated: '2026-08-04T23:07:05Z'
+generated_by: claude-sonnet
+workflow_run: 30957641704
 issue: 1012
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 86
 review:
   strengths:
-  - Excellent theme adaptation with no legibility failures in either render
-  - Perfect spec compliance; correct plot type and all features present
-  - Clean, maintainable code with proper deterministic seeding
-  - Proper Okabe-Ito palette cycling and theme-aware color application
-  - Well-scaled typography (14-52pt) with readable text at all sizes
+  - 'Fixed the attempt-1 SC-02 weakness: generic descriptive terms (cloud, testing,
+    agile, security, analytics, backend, frontend) are now lowercased while brand/product
+    names and acronyms (Python, AWS, SQL, CICD) correctly keep their established casing'
+  - 'Fixed the attempt-1 LM-01 weakness by earning real seaborn API surface: sns.color_palette()
+    now derives/validates the Imprint hex list, and sns.set_context("notebook", font_scale=1.0)
+    now drives the title font size instead of a bare literal'
+  - Custom collision-aware spiral placement algorithm uses real rendered text bounding
+    boxes to guarantee zero overlaps across all 50 words in both renders
+  - Canvas is exactly 3200x1800 (figsize=(8, 4.5), dpi=400, no bbox_inches='tight')
+    - no drift from the mandated landscape target
+  - 'Imprint palette correctly applied: highest-frequency word (Python) anchored to
+    #009E73, data colors pixel-identical between light/dark renders - only chrome
+    flips'
+  - Fully deterministic output - golden-angle spiral needs no random seed
+  - Realistic, neutral dataset (developer-survey tech-skill mentions) with a plausible
+    frequency range (2-180)
   weaknesses:
-  - Minor word overlap in spiral center; some words slightly collide with larger neighbors
-  - Generic design with standard spiral algorithm; no custom refinements or visual
-    storytelling
-  - Limited seaborn integration; uses raw matplotlib without leveraging higher-level
-    styling
+  - The core word-placement logic (sizing, spiral positioning, ax.text() rendering)
+    is still raw matplotlib - seaborn has no word-cloud primitive, so this is an inherent
+    ceiling for this spec/library combination, not a fresh regression, but LM-02 stays
+    low since sns.color_palette()/sns.set_context() are generic utility calls rather
+    than a distinctive seaborn feature
+  - Color assignment is still a flat round-robin cycle through the 8-hue palette (idx
+    % 8) rather than encoding any real signal - acceptable since the spec allows decorative
+    color, but a missed data-storytelling opportunity (e.g. grouping by tech category)
+  - Two helper functions (half_extent_data, collides) still depart from the flat-script
+    KISS pattern typical of these implementations - justified by the collision-avoidance
+    algorithm's needs, but adds structure beyond a simple script
+  - Smallest words (Istio, Pulumi, dbt, Airflow) sit near the 8pt floor - legible
+    at full 3200x1800 resolution but marginal once scaled down to a ~400px mobile
+    preview
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface at #FAF8F1 with no readability issues
-      Chrome: Title "wordcloud-basic · seaborn · anyplot.ai" rendered in dark ink (#1A1A17), clearly visible and properly sized
-      Data: 48 tech terms arranged in golden spiral; colors follow Okabe-Ito palette order with Python first as #009E73; font sizes scale 14-52pt based on frequency
-      Legibility verdict: PASS — All text readable; no light-on-light failures; proper contrast throughout
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark. Correct.
+      Chrome: Title "wordcloud-basic · python · seaborn · anyplot.ai" in dark ink, centered top, clearly legible. No axes/ticks/grid/legend (correctly omitted - word cloud needs none).
+      Data: 50 words arranged in a roughly circular/organic silhouette via spiral placement; size scales with frequency - "Python", "JavaScript", "React", "Docker", "AWS", "Linux" are largest and centrally placed, "Istio", "Pulumi", "dbt", "Airflow" are smallest at the periphery. Colors cycle through the 8-hue Imprint palette; "Python" (highest frequency) is #009E73 green. Generic terms (cloud, testing, agile, security, analytics, backend, frontend) are lowercased; brand/acronym names (Python, AWS, SQL, CICD, JavaScript) keep established casing. No visible overlaps or edge clipping.
+      Legibility verdict: PASS - all text clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface at #1A1A17 with excellent readability
-      Chrome: Title rendered in light color (#F0EFE8), clearly visible against dark background; no dark-on-dark issues
-      Data: Identical colors to light render (data colors unchanged, only background/text chrome adapted); same golden spiral layout and frequency-based sizing preserved
-      Legibility verdict: PASS — All text readable; no dark-on-dark failures; perfect theme adaptation
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light. Correct.
+      Chrome: Title flips to light ink, stays clearly legible against the dark surface.
+      Data: Identical word set, sizes, and spiral positions as the light render - colors are pixel-identical for every word (Python teal-green, JavaScript light purple, Docker brown/amber, AWS red, etc.), confirming only chrome flipped, not data colors.
+      Legibility verdict: PASS - no dark-on-dark issues found; every word has strong contrast against the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text readable at full size in both themes; 14-52pt font sizes
-          properly scaled
+        comment: Explicit font sizes scaled 8-30pt by frequency, readable in both
+          themes; smallest words are legible but tight at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Minor overlap with smaller words in center (Docker/DevOps); not severe
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 48 words clearly distinguishable; font sizing well-adapted
+        comment: Collision-aware placement checks real bounding boxes; zero overlaps
+          in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Density-appropriate sizing for 50 words; smallest terms are small
+          but still distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; adequate contrast
+        comment: Good contrast on both surfaces, color is decorative only (words self-label)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 proportions; nothing cut off; generous margins
+        comment: Good proportions, generous margins, nothing clipped, canvas exactly
+          3200x1800
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive and properly formatted
+        comment: No axes needed (N/A, credited), title correctly formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order; backgrounds correct; both
-          renders theme-correct'
+        comment: 'Imprint palette cycled correctly, most-prominent word = #009E73,
+          backgrounds correct both themes, data colors identical across renders'
     design_excellence:
-      score: 8
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Generic defaults; standard golden spiral; no custom refinements
+        passed: true
+        comment: Custom spiral collision algorithm produces a polished, professional
+          word-cloud silhouette, clearly above generic-default effort
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal customization; no sophisticated spacing or emphasis
+        passed: true
+        comment: Fully de-chromed (axis off, no spines/grid), generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Clear frequency display but no visual hierarchy or narrative emphasis
+        passed: true
+        comment: Clear hierarchy via size = frequency, largest terms draw the eye
+          to center
     spec_compliance:
       score: 15
       max: 15
@@ -118,26 +143,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct word cloud with size encoding frequency
+        comment: Correctly implements word-cloud with size-encodes-frequency
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: words displayed, size represents frequency,
-          realistic data'
+        comment: Word+frequency mapped to size correctly; generic terms now lowercased
+          per spec preprocessing note, brand names correctly kept as-is
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Proper frequency-to-font mapping; 48-term range displayed
+        comment: Frequency-to-size mapping correct, all 50 words placed and visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Standard format present; legend N/A for single dimension
+        comment: Title exactly matches mandated format, no legend needed
     data_quality:
       score: 14
       max: 15
@@ -147,56 +172,58 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 48 terms from Python (180) to Istio (2); frequency distribution somewhat
-          uniform
+        comment: 50 words (within 20-200 typical range) fill the canvas via spiral
+          placement
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tech industry data is plausible and neutral
+        comment: Developer-survey tech-skill mention counts, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 2-180 sensible; word count (48) at readable level
+        comment: Frequency range 2-180 is a sensible respondent-count scale
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Direct implementation; no unnecessary functions
+        comment: Two helper functions needed by the placement algorithm, departs from
+          flat-script norm
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42); deterministic spiral
+        comment: Deterministic, no random seed dependency
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports present
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Complexity proportionate to the collision-avoidance problem, no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves plot-{THEME}.png at dpi=400, no bbox_inches='tight'
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -204,22 +231,25 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses matplotlib directly (appropriate); could leverage sns.set_theme()
-          more
+        comment: 'Fixed from attempt 1: now uses sns.color_palette() to derive/validate
+          the Imprint palette and sns.set_context() to drive font scaling, in addition
+          to sns.set_theme(); core word placement remains raw matplotlib since seaborn
+          has no word-cloud primitive'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic usage; word clouds lack distinctive seaborn features
+        comment: sns.color_palette()/sns.set_context() are generic utility calls,
+          not a feature distinctive to seaborn specifically
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - normalization
   styling:
   - minimal-chrome
