@@ -19,14 +19,18 @@ const categories = [
 const stepType = ["total", "increase", "increase", "decrease", "decrease", "decrease", "total"];
 const rawValues = [850, 320, 180, -95, -410, -145, 700];
 
+const fmt = (n) => n.toLocaleString("en-US");
+
 const base = [];
 const totalSeries = [];
 const increaseSeries = [];
 const decreaseSeries = [];
 const connectorTop = [];
 const labelText = [];
+const runningTotalText = [];
 
 let cumulative = 0;
+const lastIndex = categories.length - 1;
 for (let i = 0; i < categories.length; i++) {
   const kind = stepType[i];
   const value = rawValues[i];
@@ -37,22 +41,41 @@ for (let i = 0; i < categories.length; i++) {
 
   if (kind === "total") {
     base.push(0);
-    totalSeries[i] = value;
     cumulative = value;
-    labelText.push(`$${value}k`);
+    labelText.push(`$${fmt(value)}k`);
+    runningTotalText.push("");
+    // Emphasize the ending Net Profit total: dark outline + bold, larger label.
+    totalSeries[i] =
+      i === lastIndex
+        ? {
+            value,
+            itemStyle: { color: t.palette[2], borderColor: t.ink, borderWidth: 2.5 },
+            label: {
+              formatter: () => `$${fmt(value)}k`,
+              fontWeight: 700,
+              fontSize: 17,
+              color: t.ink,
+            },
+          }
+        : value;
   } else if (kind === "increase") {
     base.push(cumulative);
     increaseSeries[i] = value;
     cumulative += value;
-    labelText.push(`+$${value}k`);
+    labelText.push(`+$${fmt(value)}k`);
+    runningTotalText.push(`Total: $${fmt(cumulative)}k`);
   } else {
     cumulative += value;
     base.push(cumulative);
     decreaseSeries[i] = -value;
-    labelText.push(`-$${Math.abs(value)}k`);
+    labelText.push(`-$${fmt(Math.abs(value))}k`);
+    runningTotalText.push(`Total: $${fmt(cumulative)}k`);
   }
   connectorTop.push(cumulative);
 }
+
+const maxTop = Math.max(...connectorTop, ...totalSeries.map((v) => (typeof v === "object" ? v.value : v)));
+const yAxisMax = Math.ceil((maxTop * 1.3) / 100) * 100;
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -61,9 +84,16 @@ const chart = echarts.init(document.getElementById("container"));
 const topLabel = {
   show: true,
   position: "top",
-  color: t.inkSoft,
-  fontSize: 14,
-  formatter: (params) => (params.value === 0 ? "" : labelText[params.dataIndex]),
+  formatter: (params) => {
+    if (params.value === 0) return "";
+    const idx = params.dataIndex;
+    const sub = runningTotalText[idx];
+    return sub ? `{main|${labelText[idx]}}\n{sub|${sub}}` : `{main|${labelText[idx]}}`;
+  },
+  rich: {
+    main: { color: t.inkSoft, fontSize: 14, lineHeight: 16 },
+    sub: { color: t.inkSoft, fontSize: 11, lineHeight: 14 },
+  },
 };
 
 chart.setOption({
@@ -72,7 +102,7 @@ chart.setOption({
   title: {
     text: "waterfall-basic · javascript · echarts · anyplot.ai",
     left: "center",
-    textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+    textStyle: { color: t.ink, fontSize: 26, fontWeight: 500 },
   },
   legend: {
     data: ["Total", "Increase", "Decrease"],
@@ -94,6 +124,7 @@ chart.setOption({
     type: "value",
     name: "Amount ($ thousands)",
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
+    max: yAxisMax,
     axisLabel: { color: t.inkSoft, fontSize: 14, formatter: "${value}k" },
     axisLine: { show: false },
     axisTick: { show: false },
