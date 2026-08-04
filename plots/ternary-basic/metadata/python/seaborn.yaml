@@ -2,17 +2,271 @@ library: seaborn
 language: python
 specification_id: ternary-basic
 created: '2025-12-24T09:50:43Z'
-updated: '2026-05-06T03:31:22Z'
-generated_by: claude-haiku
-workflow_run: 25414705887
+updated: '2026-08-04T15:13:44Z'
+generated_by: claude-sonnet
+workflow_run: 30920937001
 issue: 1001
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 96
+quality_score: 85
 review:
-  strengths: []
-  weaknesses: []
+  strengths:
+  - 'Correct manual ternary construction: triangle outline, 10% simplex grid lines,
+    20%-interval edge tick marks, and all three vertex labels (Sand/Silt/Clay) are
+    present and geometrically accurate.'
+  - sns.kdeplot density backdrop is properly clipped to the simplex via a Polygon
+    clip path — a genuine statistical/distinctive seaborn feature that gives the point
+    cloud visual hierarchy instead of a flat scatter.
+  - Centroid ('Mean composition') diamond marker plus leader-line annotation gives
+    the chart a clear focal point and a guided narrative beyond a plain point cloud.
+  - 'Imprint palette compliance: brand green (#009E73) is identical between light/dark
+    renders, imprint_seq colormap used for the density fill, and theme-adaptive chrome
+    tokens (PAGE_BG/INK/INK_SOFT) are threaded through every element in both themes.'
+  - Clean, reproducible, KISS-structured code — seed=42, no functions/classes, all
+    imports used, correct plot-{THEME}.png output naming.
+  - Correctly uses a square 2400x2400 canvas, appropriate for this symmetric plot
+    type, and the mandated title format with a sensible descriptive prefix.
+  weaknesses:
+  - 'Title occupies ~99% of the canvas width in both renders (measured bbox: x=12..2384
+    of 2400px, only ~12-16px margin on each side) at fontsize=12 with the ''Soil Texture
+    Classification ·'' prefix — not clipped, but dangerously close to the edge. Reduce
+    title fontsize to ~10-10.5pt on this square canvas, or shorten/drop the descriptive
+    prefix, to bring the title back into a safer proportion with real breathing room.'
+  - The 'Mean composition' annotation leader line is routed straight through one of
+    the nearby data markers (the point cluster near x~0.68, y~0.32 in data coordinates),
+    partially obscuring it. Bend the leader line's path (adjust textcoords/connectionstyle
+    or the elbow point) to route around that cluster instead of through it.
+  - Dirichlet(alpha=[1,1,1]) generates points uniformly across the entire simplex,
+    including near-pure single-component samples close to each vertex. Real soil rarely
+    reaches those extremes for a 'soil texture classification' framing — a mildly
+    peaked Dirichlet (e.g. alpha slightly > 1, or means clustered around common USDA
+    texture classes) would read as more realistic domain data while still giving full
+    simplex coverage.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), consistent across the full 2400x2400 canvas — no pure-white areas.
+      Chrome: Title "Soil Texture Classification · ternary-basic · python · seaborn · anyplot.ai" reads clearly in dark ink at the top, though it spans ~99% of the canvas width (measured bbox 12-2384px of 2400px) — very tight margins, right at the edge of overflow but not clipped. Bold vertex labels "Sand (100%)" (bottom-left), "Silt (100%)" (bottom-right), and "Clay (100%)" (top apex) are all clearly legible in dark ink. Edge tick labels (20%/40%/60%/80%) along all three sides are legible gray text, well clear of the canvas border. Thin 10%-interval grid lines inside the triangle are subtle (INK @ alpha 0.15) but visible against the light KDE-shaded backdrop.
+      Data: A green (#009E73) KDE density fill (via imprint_seq colormap, green-to-blue-gray) sits behind ~50 green scatter points with light-bg-colored edge strokes, correctly clipped to the triangle. A black diamond marks the mean composition, connected by a thin leader line to a "Mean composition" label — the line unfortunately crosses over one nearby data point. All text is readable against the light background; no light-on-light issues observed.
+      Legibility verdict: PASS (title proportion is a VQ-05 concern, not a legibility failure — all text remains crisp and readable)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), consistent across the canvas — no pure-black areas.
+      Chrome: Same title, now in light ink (#F0EFE8), same ~99%-width proportion issue as the light render. Vertex labels and edge tick labels are rendered in light/light-gray ink, clearly visible against the dark background. Grid lines remain subtle. The mean-composition diamond marker is now light-colored with a dark edge, correctly inverted for contrast against the dark backdrop.
+      Data: Data point colors are identical to the light render — same #009E73 green markers, same imprint_seq density gradient (only the chrome/background flipped as required). No dark-on-dark failures: title, vertex labels, tick labels, and the "Mean composition" annotation are all clearly legible light-on-dark.
+      Legibility verdict: PASS (same title-width caveat as the light render; no dark-on-dark text failures)
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable in both themes, but title fontsize is too generous
+          for the descriptive-prefixed title length on this square canvas (~99% width,
+          ~12-16px margins).
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions, but the 'Mean composition'
+          leader line crosses directly over one data marker.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size (s=110) and alpha (0.75) well-suited to 50 sparse points;
+          clearly visible against the density backdrop.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, single-hue categorical + sequential density gradient,
+          no red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Title occupies ~99% of canvas width with only ~12-16px margins on
+          a 2400px square canvas — real proportion issue, though not clipped (no canvas-gate
+          failure).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Mandated title format followed with a sensible descriptive prefix;
+          all three vertices descriptively labeled.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green identical in both themes; imprint_seq used for the KDE
+          fill; correct theme-adaptive backgrounds in both renders.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: KDE density backdrop and centroid annotation show intentional design
+          thought beyond a flat scatter, though overall polish is functional rather
+          than highly refined.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (axis off), grid subtle, generous whitespace — undercut
+          somewhat by the tight title margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Centroid marker + density shading create a clear visual hierarchy
+          and focal point for the viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ternary/simplex plot construction.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 10%-interval grid, 20%-interval edge ticks, labeled vertices, distinct
+          markers — all present per spec Notes.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct barycentric-to-Cartesian transform; components sum to 100%;
+          all three axes represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai'; single series needs no legend.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 50 points span the full simplex broadly, showing compositions across
+          the whole triangle.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Soil texture is a plausible, neutral domain; uniform Dirichlet(1,1,1)
+          coverage reaches unrealistic near-pure single-component extremes for real
+          soil.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100% scale is sensible and correctly constrained to sum to 100.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import (os, sys, numpy, pandas, seaborn, matplotlib, LinearSegmentedColormap,
+          Polygon) is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Manual grid/tick construction is necessary boilerplate given no native
+          ternary support in seaborn/matplotlib; no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with correct dpi and facecolor, bbox_inches
+          left at default.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.scatterplot and sns.kdeplot for the actual data layers;
+          the manual triangle/grid is unavoidable given seaborn's lack of native ternary
+          support.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: KDE density backdrop clipped to the simplex is a genuine, distinctive
+          use of a seaborn statistical estimator for a ternary layout.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - patches
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - kde
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
