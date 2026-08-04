@@ -38,15 +38,10 @@ const clayeySoils = soilCluster(16, 24, 60, 16, 24);
 // Equilateral triangle: Sand at the apex, Silt at bottom-left, Clay at bottom-right.
 // x = 0.5 * sand_frac + clay_frac, y = sand_frac * TRI_H  (weighted average of the vertices)
 const TRI_H = Math.sqrt(3) / 2;
-function toPoint(sample) {
-  const a = sample.sand / 100;
-  const c = sample.clay / 100;
-  return { x: 0.5 * a + c, y: a * TRI_H, sand: sample.sand, silt: sample.silt, clay: sample.clay };
-}
 
 // --- Chart -------------------------------------------------------------------
-const PLOT_MARGIN_LR = 125;
-const PLOT_MARGIN_TOP = 150;
+const PLOT_MARGIN_LR = 100;
+const PLOT_MARGIN_TOP = 100;
 const PLOT_MARGIN_BOTTOM = 100; // marginTop + marginBottom == 2 * marginLR -> square plot area
 
 Highcharts.chart("container", {
@@ -164,8 +159,10 @@ Highcharts.chart("container", {
     title: { text: null },
   },
   yAxis: {
-    min: -0.15,
-    max: 1.05,
+    // Same 1.2 total span as xAxis (keeps the triangle undistorted), but shifted
+    // down so the apex sits close to the top instead of leaving a blank band.
+    min: -0.25,
+    max: 0.95,
     startOnTick: false,
     endOnTick: false,
     gridLineWidth: 0,
@@ -197,13 +194,26 @@ Highcharts.chart("container", {
   plotOptions: {
     series: { animation: false },
     scatter: {
-      marker: { radius: 7, lineWidth: 1, lineColor: t.pageBg, symbol: "circle" },
+      marker: { radius: 5, lineWidth: 1, lineColor: t.pageBg, symbol: "circle" },
       states: { hover: { enabled: true } },
     },
   },
+  // x = 0.5 * sand_frac + clay_frac, y = sand_frac * TRI_H (barycentric -> Cartesian)
   series: [
-    { name: "Sandy soils", color: t.palette[0], data: sandySoils.map(toPoint) },
-    { name: "Loamy soils", color: t.palette[1], data: loamySoils.map(toPoint) },
-    { name: "Clayey soils", color: t.palette[2], data: clayeySoils.map(toPoint) },
+    {
+      name: "Sandy soils",
+      color: t.palette[0],
+      data: sandySoils.map((s) => ({ x: 0.5 * (s.sand / 100) + s.clay / 100, y: (s.sand / 100) * TRI_H, ...s })),
+    },
+    {
+      name: "Loamy soils",
+      color: t.palette[1],
+      data: loamySoils.map((s) => ({ x: 0.5 * (s.sand / 100) + s.clay / 100, y: (s.sand / 100) * TRI_H, ...s })),
+    },
+    {
+      name: "Clayey soils",
+      color: t.palette[2],
+      data: clayeySoils.map((s) => ({ x: 0.5 * (s.sand / 100) + s.clay / 100, y: (s.sand / 100) * TRI_H, ...s })),
+    },
   ],
 });
