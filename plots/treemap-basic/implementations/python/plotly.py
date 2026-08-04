@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-04
@@ -74,6 +74,32 @@ def lighten(hex_color, amount):
     return f"#{round(r2 * 255):02X}{round(g2 * 255):02X}{round(b2 * 255):02X}"
 
 
+def relative_luminance(hex_color):
+    """WCAG relative luminance of a hex color."""
+
+    def channel(c):
+        c /= 255
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+    r, g, b = (channel(int(hex_color[i : i + 2], 16)) for i in (1, 3, 5))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def best_text_color(bg_hex):
+    """Pick whichever ink extreme has higher WCAG contrast against bg_hex.
+
+    Subcategory tiles get lightened toward white by a variable amount to encode
+    magnitude, so a single fixed text color washes out on the palest tiles in
+    dark theme. Choosing per-tile from the tile's own resulting lightness keeps
+    every leaf legible regardless of how far it was tinted.
+    """
+    dark_ink, light_ink = "#1A1A17", "#F0EFE8"
+    bg_lum = relative_luminance(bg_hex)
+    contrast_dark = (bg_lum + 0.05) / (relative_luminance(dark_ink) + 0.05)
+    contrast_light = (relative_luminance(light_ink) + 0.05) / (bg_lum + 0.05)
+    return dark_ink if contrast_dark >= contrast_light else light_ink
+
+
 # Distinct, hierarchy-safe node ids (avoids label collisions between siblings,
 # e.g. two departments both running a "Support" line item); "labels" stays
 # display-only text, decoupled from the id used for parent lookups. Departments
@@ -111,6 +137,13 @@ text += [f"{sub}<br>${val:,}K" for sub, val in zip(subcategories, values, strict
 # cost-center labels follow at a smaller, secondary size.
 textsizes = [24] * len(unique_cats_ordered) + [16] * len(subcategories)
 
+# Depth-aware text color: department headers sit on full-saturation base hues,
+# where the theme's INK always contrasts well, so they keep INK. Subcategory
+# tiles get lightened by a variable amount to encode magnitude, so a fixed INK
+# would wash out on the palest tiles in dark theme - pick each leaf's text
+# color from its own resulting tile lightness instead.
+textcolors = [INK] * len(unique_cats_ordered) + [best_text_color(c) for c in colors[len(unique_cats_ordered) :]]
+
 # Create treemap
 fig = go.Figure(
     go.Treemap(
@@ -122,7 +155,7 @@ fig = go.Figure(
         text=text,
         textinfo="text",
         textposition="middle center",
-        textfont={"size": textsizes, "color": INK},
+        textfont={"size": textsizes, "color": textcolors},
         marker={
             "colors": colors,
             "line": {"width": 2, "color": PAGE_BG},
