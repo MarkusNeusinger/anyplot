@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:50:17Z'
-updated: '2026-08-04T22:59:42Z'
+updated: '2026-08-04T23:09:46Z'
 generated_by: claude-sonnet
 workflow_run: 30957888465
 issue: 1012
@@ -12,126 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Custom spiral placement algorithm with collision detection cleanly avoids word
-    overlap across all 37 words in both renders
-  - 'Correct Imprint sequential colormap (#009E73 -> #4467A3) applied to the continuous
-    frequency encoding, with theme-correct title and background colors in both renders'
-  - Canvas exactly matches the 3200x1800 landscape target (toolbar_location=None correctly
-    avoids the toolbar-height regression called out in the library guide); no edge
-    clipping on any side
-  - HoverTool tooltips (word + frequency) add genuine interactive value in the HTML
-    export without cluttering the static PNG, per the interactive-library fairness
-    rules
-  - 'Minimal-chrome presentation: axes, grid, and outline are all hidden, letting
-    the word cloud read as pure typography with no chartjunk'
+  - 'Category-based coloring (green=ML & Algorithms, purple=Data & Analytics, blue=Tools
+    & Libraries, ochre=Infra & Pipeline) fixes the attempt-1 redundancy: color now
+    carries a genuine second dimension instead of re-encoding frequency, and HoverTool
+    surfaces the category name explicitly on hover'
+  - Size floor raised from 34pt to 42pt with a sub-linear (power-0.6) curve, so the
+    lowest-frequency tail words (Config, Cache, Token, Stream, Cluster) are noticeably
+    more legible at thumbnail scale than attempt 1 while the top terms still cap at
+    150pt
+  - Custom spiral collision-detection layout keeps all 37 words cleanly separated
+    with no overlap in either render, and the canvas is exactly 3200x1800 with no
+    edge clipping
+  - Removed the unused np.random.seed(42) call flagged in the prior review — the deterministic
+    spiral placement no longer carries dead code
+  - Imprint categorical colors (#009E73/#C475FD/#4467A3/#BD8233) used correctly for
+    the category encoding; theme-adaptive background/title colors correct in both
+    renders
   weaknesses:
-  - Smallest-frequency words (fontsize ~34-46pt, e.g. Config, Cache, Stream, Cluster)
-    shrink to near-illegible size once the PNG is downscaled to the 400px thumbnail
-    - raise the min_size floor or steepen the size curve for the lowest tier so low-frequency
-    terms stay legible at gallery thumbnail scale
-  - Color and size both encode the same frequency variable, which is redundant - consider
-    letting color encode a secondary dimension (e.g. category) as the spec suggests,
-    or treat color as purely decorative rather than a second frequency-derived scale
-  - np.random.seed(42) is set but unused - the spiral placement algorithm is already
-    fully deterministic (fixed word order, no randomness), so the seed call is vestigial
+  - The category-color mapping (which word belongs to which of the 4 categories) is
+    only discoverable via HoverTool in the HTML — the static PNG viewer sees 4 colors
+    with no key explaining what they mean; a compact legend or corner key would let
+    the color encoding pay off for print/thumbnail viewers too
+  - Smallest-frequency words (Config, Layer, Schema, Index, Cluster) are still quite
+    small at the 400px thumbnail size — legible at full resolution but near the edge
+    of readability once scaled down; a slightly higher size floor or fewer very-low-frequency
+    entries would help
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches the #FAF8F1 spec target - not pure white.
-      Chrome: Title "wordcloud-basic · bokeh · anyplot.ai" is bold, dark ink, centered at the top with clean margin above and below; no axes, ticks, or grid lines are present (correctly hidden for a word-cloud plot type).
-      Data: 37 words arranged in a dense, non-overlapping spiral fill from center outward. Word size scales with frequency (min 34pt / max 150pt); color follows the Imprint sequential ramp from #009E73 (green, low frequency) to #4467A3 (blue, high frequency) - the largest central terms (Python, Data, Learning, Machine, Analytics) render in blue, smaller peripheral terms (Config, Cache, Token, Stream) render in green/teal. Several words are rotated 90°/-90° for spiral-fill variety.
-      Legibility verdict: PASS - all text is clearly readable against the light background; even the smallest words are visible at full 3200x1800 resolution, though they would be tight at small thumbnail sizes (see weaknesses).
+      Background: Warm off-white (#FAF8F1), not pure white — matches spec.
+      Chrome: Bold dark-ink title "wordcloud-basic · bokeh · anyplot.ai" centered at top with clean margin (~18px from top edge). No axes, ticks, or grid lines, correct for a word cloud. All title text clearly readable against the light background.
+      Data: 37 words fill the canvas via a spiral collision-avoidance layout with no overlaps and healthy margins on all sides (no edge clipping). Size scales with frequency (42-150pt, sub-linear curve raising the floor for low-frequency terms). Color now encodes topical category rather than frequency: green (#009E73, ML & Algorithms — Machine, Learning, Neural, Algorithm, Model, Deep, Tensor, Vector), purple (#C475FD, Data & Analytics — Data, Analytics, Statistics, Science, Analysis, Dataset, Metrics), blue (#4467A3, Tools & Libraries — Python, API, Framework, Library, Code, Cache, Token, Query, Index, Schema, Config), ochre (#BD8233, Infra & Pipeline — Visualization, Cloud, Deploy, Pipeline, Training, Graph, Batch, Epoch, Layer, Cluster, Stream). Several words rotated 90°/-90° for spiral-fill variety. All word text is clearly readable against the light background at full resolution; smallest terms (Config, Layer, Schema) shrink but stay decipherable at thumbnail scale.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches the #1A1A17 spec target - not pure black.
-      Chrome: Same title text and layout, correctly flipped to light/white ink for contrast against the dark background; axes/grid remain hidden as in the light render.
-      Data: Identical word placement, sizes, and colors as the light render (same green-to-blue Imprint sequential ramp) - confirms the data color encoding does not shift between themes, only chrome (background, title color) flips as required.
-      Legibility verdict: PASS - no dark-on-dark failures; the teal/green/blue word colors are all saturated enough to read clearly against the #1A1A17 background, and the title is rendered in light ink.
+      Background: Warm near-black (#1A1A17), not pure black — matches spec.
+      Chrome: Same title, correctly flipped to light ink for contrast against the dark background. Fully readable, no dark-on-dark issues.
+      Data: Word placement, sizes, rotations, and the 4 category colors are pixel-identical to the light render — confirms only chrome (background, title color) flips between themes, data/category colors do not. No dark-on-dark failures; all four category hues (green/purple/blue/ochre) remain saturated and clearly distinguishable from the near-black background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Explicit pt-based font sizes throughout, readable in both themes
-          at full resolution; lowest-frequency words (34-46pt) get quite small and
-          risk illegibility at the 400px thumbnail size
+        comment: Size floor raised 34pt->42pt with sub-linear curve; readable at full
+          res in both themes, smallest tail words still tight at 400px thumbnail
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Custom spiral collision-detection algorithm keeps all 37 words cleanly
-          separated with padding in both renders
+        comment: Spiral collision-detection keeps all 37 words cleanly separated in
+          both renders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Word sizes scale proportionally with frequency (34-150pt), giving
-          clear visual weight to the most frequent terms
+        comment: Sizes scale proportionally with frequency via sub-linear curve
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential ramp provides good contrast on both light
-          and dark surfaces; no red-green-only signal
+        comment: 4-color Imprint categorical palette (green/purple/blue/ochre) is
+          CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800; title and words stay fully within bounds
-          with no clipping or overflow at any edge
+        comment: Exactly 3200x1800, healthy margins on all sides, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes (correct for word cloud); title exactly matches required
-          '{spec-id} · {lib} · anyplot.ai' format
+        comment: No axes needed; title format exact
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous frequency data correctly uses an Imprint-derived sequential
-          ramp (#009E73 -> #4467A3) rather than a forbidden built-in colormap; backgrounds
-          match #FAF8F1/#1A1A17 exactly'
+        comment: Canonical Imprint categorical hex values used for category encoding;
+          backgrounds theme-correct in both renders
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color-ramp interpolation and spiral layout show real design
-          effort beyond library defaults, though the chart type itself is visually
-          simple
+        comment: Custom spiral placement plus a deliberate categorical color scheme
+          (not a generic default) beyond library defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Axes, grid, and outline all removed; generous whitespace around the
-          word mass
+        comment: Axes/grid/outline all removed, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size creates a clear focal hierarchy toward the center; color reinforcing
-          the same frequency variable is somewhat redundant rather than adding a second
-          story dimension
+        comment: Color now carries a real second dimension (topical category) alongside
+          size=frequency, fixing the attempt-1 redundancy; static PNG still lacks
+          a key mapping colors to category names
     spec_compliance:
       score: 15
       max: 15
@@ -141,52 +137,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implemented as a word cloud with size-encoded frequency
+        comment: Correct word cloud with size-encoded frequency
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Word size represents frequency/importance as required; words fill
-          available space via spiral placement
+        comment: Size = frequency, spiral fill of available space
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency maps to both size and color consistently across all 37
-          words
+        comment: Frequency maps to size; category maps to color
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'wordcloud-basic · bokeh · anyplot.ai'; no
-          legend needed for this plot type
+        comment: Title exact match; no legend required for this plot type
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers size variance, color variance, and rotation variety; color
-          duplicates the size encoding rather than adding a distinct dimension
+        comment: Size, non-redundant category color, and rotation together demonstrate
+          distinct feature coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Technology/ML terminology is realistic, plausible, and neutral
+        comment: Plausible, neutral tech/ML terminology
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 37 words (within the 20-200 spec range) with frequencies 10-100,
-          a sensible spread for readable word-size scaling
+        comment: 37 words (within 20-200 spec range), frequencies 10-100
     code_quality:
       score: 10
       max: 10
@@ -196,37 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script; only a small color-interpolation helper, matching
-          the library-guide pattern
+        comment: Flat script, no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Placement is fully deterministic (fixed word order, no randomness
-          in the spiral algorithm)
+        comment: Fully deterministic spiral placement; unused random seed removed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (numpy, bokeh models, selenium) are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a custom collision-avoiding layout; no
-          fake UI or simulated interactivity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html via output_file/save and plot-{THEME}.png
-          via the Selenium screenshot pattern from the library guide
+        comment: Correct plot-{THEME}.png/.html output pattern
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -234,14 +222,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of ColumnDataSource, LabelSet, and HoverTool; follows
-          the library guide's Selenium export pattern exactly
+        comment: Correct ColumnDataSource/LabelSet/HoverTool usage, follows library
+          guide's Selenium export pattern
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: HoverTool tooltips exposing word+frequency and a custom collision-avoiding
+        comment: HoverTool tooltips (word/frequency/category) plus custom collision-avoiding
           spiral layout fill the gap left by bokeh having no built-in word-cloud glyph
   verdict: APPROVED
 impl_tags:
@@ -252,8 +240,6 @@ impl_tags:
   - html-export
   patterns:
   - columndatasource
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - minimal-chrome
-  - custom-colormap
+  - publication-ready
