@@ -2,12 +2,12 @@ library: altair
 language: python
 specification_id: waterfall-basic
 created: '2025-12-24T09:50:48Z'
-updated: '2026-05-06T01:05:57Z'
-generated_by: claude-haiku
-workflow_run: 25410774625
+updated: '2026-08-04T11:32:13Z'
+generated_by: claude-sonnet
+workflow_run: 30903633818
 issue: 777
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/altair/plot-light.html
@@ -15,30 +15,38 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall
 quality_score: 92
 review:
   strengths:
-  - Correct waterfall semantics with three-color palette (green for positive, orange
-    for negative, blue for totals) aligned to spec requirements
-  - Effective connector lines (dashed) create clear visual flow between cumulative
-    levels
-  - Value labels on bars provide precise amounts; labels are properly positioned and
-    legible
-  - 'Flawless theme adaptation: both light and dark renders are readable with appropriate
-    INK/INK_SOFT tokens applied consistently'
-  - 'Clean Altair idioms: proper use of y/y2 encoding, layering, and custom scales'
+  - 'Correct waterfall mechanics: running totals, bar offsets, and connector-line
+    positions are mathematically consistent across all 7 steps in both renders'
+  - 'The Attempt-1 label-overflow bug is fully fixed: display_values now branches
+    on bar_type == ''total'' first (rather than values[i] is None), so the Revenue
+    bar reads a plain ''$500'' flush inside its bar like the other totals; pixel-checked
+    the tightest case (''+$25'' on the narrow Other Income bar) and it still sits
+    ~7px inside the bar edges with no overflow'
+  - Semantic color mapping (green=gain, red=loss, blue=total) is redundantly encoded
+    via bar direction + text sign, not color alone, matching both the spec's Notes
+    and the style guide's finance semantic exception
+  - Clear typographic hierarchy between total and delta labels (bold/larger vs regular/smaller),
+    with per-fill text color chosen for contrast (white on blue/red, ink on green)
+  - Pixel-exact 3200x1800 canvas in both renders; theme tokens threaded through consistently
+    with no dark-on-dark/light-on-light failures
   weaknesses:
-  - Grid styling could be subtly refined for more sophisticated visual polish
-  - DE-02 and DE-03 scores reflect competent but not elevated design; no additional
-    visual hierarchy or emphasis beyond the data structure itself
+  - No legend or on-chart caption explains the green/red/blue color meaning — inferable
+    from +/- prefixes and category names, but this was flagged as an easy win in Attempt
+    1 and still hasn't been added
+  - Composition remains a conventional waterfall look; the optional focal-point suggestion
+    from Attempt 1 (e.g. a net-margin percentage callout near Net Income) was not
+    applied, capping Design Excellence below publication-exceptional
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface color
-      Chrome: Title "waterfall-basic · altair · anyplot.ai" in dark text (28px), axis labels "Category" and "Amount ($)" in 22px dark text, tick labels in 18px dark text - all clearly readable
-      Data: Blue bars for totals (Revenue, Gross Profit, Net Income), orange bars for negatives (Cost of Goods, Operating Expenses, Taxes), green bar for positive (Other Income). Value labels (+$500, -$200, $300, -$150, +$25, -$45, $130) centered on bars. Dashed connector lines link bars.
+      Background: Warm off-white, sampled visually at ~#FAF8F1 — matches the target token, not pure white.
+      Chrome: Bold dark title "waterfall-basic · python · altair · anyplot.ai" fully visible at top, ~68% of plot width. Axis titles "Amount ($)" and "Category" bold dark; rotated (-20°) category tick labels and y-axis tick labels soft gray — all clearly readable, good contrast against the light background.
+      Data: Seven bars — Revenue/Gross Profit/Net Income in blue (#4467A3, totals), Cost of Goods/Operating Expenses/Taxes in red (#AE3030, losses), Other Income in green (#009E73, gain) — linked by dashed gray connector lines showing cumulative flow. Data labels are white-on-blue/red and dark-ink-on-green, all readable. Pixel-checked: the "$500" label on the Revenue total bar (previously "+$500" and overflowing in Attempt 1) now sits flush inside the bar with margin on both sides; the tightest label, "+$25" on the narrow Other Income bar, still sits ~7px inside the green bar's left/right edges — no overflow anywhere.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct surface color
-      Chrome: Title in light text, axis labels in light text (#F0EFE8), tick labels in light text (#B8B7B0) - all clearly readable against dark background. No dark-on-dark failures.
-      Data: Blue, orange, and green data colors identical to light render (Okabe-Ito palette positions 1-3 are theme-independent). Value labels in white, fully legible. Dashed connector lines in light gray, visible.
+      Background: Warm near-black, sampled visually at ~#1A1A17 — matches the target token, not pure black.
+      Chrome: Title, axis titles, and tick labels all flip to light tones (off-white/soft-gray) and stay fully readable against the dark background — no dark-on-dark failures found anywhere (title, axis labels, ticks, connector dashes all clearly visible).
+      Data: Bar fill colors are pixel-identical to the light render (blue #4467A3 / red #AE3030 / green #009E73 unchanged) — only chrome (background, text, grid, connector color) flips with theme, as required. The same fixed "$500" label and tight-but-non-overflowing "+$25" label reproduce identically since layout is theme-independent.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -50,45 +58,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at specified sizes
+        comment: Attempt-1 overflow bug fixed; all labels (including the tightest,
+          '+$25') fit flush inside their bars; explicit font sizes; readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels angled -20°, no overlaps
+        comment: No text/element collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars, labels, and connectors clearly visible
+        comment: 7 bars at fixed width appropriate for sparse (7-step) data; connectors
+          and markers clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe
+        comment: Red/green redundantly encoded with bar direction and explicit +/-
+          text signs, not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 proportions, generous margins, well-balanced
+        comment: Title ~68% width, no overflow/clipping, pixel-exact 3200x1800 canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels and correct title format
+        comment: '''Amount ($)'' and ''Category'' descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1-3, correct backgrounds, theme-correct
+        comment: 'Green/red/blue match the style guide''s finance semantic exception;
+          backgrounds exact #FAF8F1/#1A1A17; data colors theme-invariant'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -96,19 +109,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color scheme for waterfall semantics, intentional bar styling
+        comment: Deliberate 3-color semantic palette and bold/regular label hierarchy,
+          but a fairly conventional waterfall composition overall
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Dashed connectors and subtle grid, could be more refined
+        comment: Subtle grid, generous whitespace, edge-highlighted bars; the Attempt-1
+          overflow blemish is now resolved
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear progression, but no additional emphasis
+        comment: Color contrast + dashed connectors guide the eye through the flow,
+          but no explicit focal-point emphasis on the final result was added
     spec_compliance:
       score: 15
       max: 15
@@ -118,25 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waterfall with y/y2 encoding
+        comment: Correct waterfall chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Positive/negative colors, connectors, totals, labels all present
+        comment: Pos/neg coloring, connectors, distinct totals, running-total labels
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: categories, Y: amounts, all data shown'
+        comment: X=category, Y=cumulative bar range, axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend appropriately omitted
+        comment: Title format exact; no legend needed given self-explanatory +/- labels
+          and category names
     data_quality:
       score: 15
       max: 15
@@ -146,19 +164,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All waterfall aspects shown
+        comment: Covers totals, gains, losses, subtotal, connectors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly financial breakdown, realistic and neutral
+        comment: Plausible, neutral quarterly financial breakdown
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible financial values
+        comment: Running totals arithmetically correct at every step
     code_quality:
       score: 10
       max: 10
@@ -168,56 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward calculation, no unnecessary functions
+        comment: No functions/classes, flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed data, deterministic
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pandas, altair - all used
+        comment: alt, pd, PIL.Image, os — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, appropriate complexity
+        comment: display_values bug from Attempt 1 fixed; branches cleanly on bar_type
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html correctly
+        comment: Saves plot-{THEME}.png and .html, current vl-convert API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: High-level Chart API, proper encodings and marks
+        comment: Good use of alt.layer, alt.Scale, EncodingSortField, y2 encoding
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: y/y2 encoding and layering used well
+        comment: Declaratively layers independently-filtered mark_text layers over
+          shared bar geometry — a distinctly Altair/Vega-Lite compositional pattern
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - annotations
   - html-export
-  patterns:
-  - data-generation
-  dataprep: []
+  patterns: []
+  dataprep:
+  - cumulative-sum
   styling:
+  - edge-highlighting
+  - grid-styling
   - publication-ready
