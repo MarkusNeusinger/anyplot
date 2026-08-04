@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:49:49Z'
-updated: '2026-08-04T08:57:00Z'
+updated: '2026-08-04T09:07:04Z'
 generated_by: claude-sonnet
 workflow_run: 30893190288
 issue: 766
@@ -12,55 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Hand-rolled squarify algorithm correctly implements the treemap layout with no
-    external dependency, entirely with Axes-level Rectangle patches
-  - 'Magnitude is double-encoded: rectangle area AND within-category lightness shading
-    (largest item keeps full-strength hue, smaller items lighten) — a genuine data-storytelling
-    touch that goes beyond a generic treemap'
-  - 'Imprint palette applied in canonical order with Engineering correctly mapped
-    to #009E73 (brand green), verified identical across both renders'
-  - 'Theme-adaptive chrome is fully correct: PAGE_BG, INK, INK_SOFT, ELEVATED_BG all
-    branch on ANYPLOT_THEME and render correctly in both plot-light.png and plot-dark.png'
-  - Text is explicitly sized per-rectangle via an area-driven formula and stays legible
-    (bold weight, good contrast) down to the smallest tile ("Training $8M")
-  - Subtle PAGE_BG-colored borders between cells cleanly delineate hierarchy without
-    adding visual noise
-  - Title and legend fully match the spec-mandated format; canvas is exactly 3200x1800
+  - Correct squarified treemap algorithm implemented from scratch (matplotlib has
+    no native treemap primitive) producing accurate area-proportional rectangles
+  - 'Excellent spec-compliant hierarchy signaling: value-driven color-shading intensity
+    within each category directly satisfies the spec''s ''nesting depth OR color shading
+    intensity'' requirement'
+  - 'Clean theme-adaptive chrome: title, legend, and label tokens correctly branch
+    on ANYPLOT_THEME; both renders are fully readable with no dark-on-dark or light-on-light
+    failures'
+  - Focal-point highlight (bold ink outline on the single largest rectangle, Product
+    Dev $45M) adds clear visual hierarchy and a storytelling cue beyond area/shading
+    alone
+  - Deterministic, realistic company-budget dataset that explicitly covers the 'no
+    subcategory' edge case (Operations renders as one unsubdivided rectangle), demonstrating
+    the optional-hierarchy behavior
+  - Clean KISS script structure, correct current matplotlib API usage, canonical plot-{THEME}.png
+    output naming, no bbox_inches='tight' pitfall
   weaknesses:
-  - Squarify strip-layout logic is nearly duplicated between the vertical-strip and
-    horizontal-strip branches of the while-loop (aspect-ratio comparison code repeated
-    almost verbatim) — condense the shared comparison logic to reduce redundancy without
-    introducing a function/class
-  - Data always uses the full category+subcategory hierarchy; the spec notes subcategory
-    is optional — showing at least one category rendered as a single unsubdivided
-    rectangle would demonstrate that the implementation handles the optional-nesting
-    case too
-  - Legend swatches show the canonical unshaded hue per category, while the actual
-    tiles are lightness-tinted by subcategory value — most tiles will never visually
-    match their legend swatch exactly (only the max-value tile per category does);
-    consider a short caption or slightly less aggressive tint range so the legend
-    stays representative
-  - Aesthetic sophistication is strong but stops short of publication-grade — e.g.
-    no additional visual emphasis (like a bolder outline or callout) on the single
-    largest rectangle ("Product Dev") to make the focal point unmistakable at a glance
+  - Rectangle fills use lightness-tinted derivatives of the Imprint hues (for value
+    shading) rather than the canonical hex itself — legend swatches correctly use
+    the canonical hex. This is a deliberate, spec-sanctioned technique for encoding
+    magnitude, but strictly it introduces custom hex values outside the 8-position
+    + 3-anchor palette, costing a partial VQ-07 point.
+  - Library Mastery leans on generic Rectangle/Patch drawing; could push further into
+    matplotlib-distinctive capabilities (e.g. PatchCollection, blended transforms,
+    or a colorbar-driven shading legend) to raise LM-02 beyond 'uses some library-specific
+    features'.
+  - Label font sizes across differently-sized rectangles look fairly uniform rather
+    than clearly scaling with area (fontsize formula is clamped to a narrow 6-9pt
+    band) — a slightly wider spread would sharpen the size hierarchy further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "treemap-basic · python · matplotlib · anyplot.ai" is dark, centered, comfortably sized, fully visible with no clipping. Legend below the treemap lists Engineering/Sales/Marketing/Operations/HR with color swatches, dark secondary-toned text, and an elevated-cream legend box with a soft border.
-      Data: 12 rectangles tiled via a squarify treemap, sized proportionally to their $ value. Engineering = full-strength Imprint green (#009E73) on its largest tile ("Product Dev $45M"), with "Infrastructure" and "QA" progressively lighter tints of the same green as their values shrink. Sales = lavender/purple, Marketing = blue, Operations = ochre, HR = matte red — all first-series-green-first canonical Imprint order. Every rectangle carries a bold two-line label (subcategory name + value) in dark ink, clearly legible against every tile shade, including the smallest ("Training $8M"). Thin cream-colored borders separate all cells cleanly.
-      Legibility verdict: PASS — all title, legend, and in-cell text is clearly readable against the light background; no light-on-light issues found.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "treemap-basic · python · matplotlib · anyplot.ai" in dark ink (#1A1A17), centered at top, fully readable and not clipped. Legend below the treemap with 5 swatches (Engineering, Sales, Marketing, Operations, HR) in a light elevated box with dark ink text — fully legible.
+      Data: 11 rectangles sized proportionally to their dollar values via a squarified layout. First category (Engineering, alphabetically/canonically first in the legend) renders in Imprint brand green #009E73 for its full-strength cell (Product Dev); other categories use lavender, blue, ochre, and matte red in canonical Imprint order. Smaller items within a category are rendered as lighter tints of the same hue (value-driven shading). The single largest rectangle (Product Dev, $45M) has a bold dark-ink outline as a focal-point callout; all other rectangles have thin page-background-colored dividers. Labels (category/subcategory + dollar value) are dark ink text centered in each rectangle, clearly readable against every fill color.
+      Legibility verdict: PASS — no light-on-light text anywhere, all labels and chrome text read clearly against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and legend text both flip to light ink (near-white/soft-light-gray) against the dark background; legend box uses the darker elevated fill (#242420) with a soft light border. Fully readable, no dark-on-dark issues.
-      Data: Identical rectangle layout, sizes, and hues to the light render — confirmed the Imprint data colors (green/lavender/blue/ochre/red) are pixel-identical between themes; only chrome (background, borders, text) flipped. In-cell labels flipped to light/near-white text and remain clearly legible against every tile, including the darker "Product Dev" green tile and the red HR tiles.
-      Legibility verdict: PASS — all text is readable in the dark theme; no dark-on-dark or light-on-dark contrast failures found.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title text now in light ink (#F0EFE8), fully readable and not clipped. Legend box uses the dark elevated fill (#242420) with light secondary-ink text (#B8B7B0) — fully legible.
+      Data: Identical rectangle layout and identical Imprint hues/tints to the light render — confirms the palette data colors did not shift between themes. The focal rectangle's outline switches to the light ink token so it still reads as a bold callout against the dark background. Rectangle divider lines switch to the dark page-background color as expected.
+      Legibility verdict: PASS — no dark-on-dark text; all title, label, and legend text is light-colored and clearly legible against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -68,49 +66,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit area-driven font-size formula; readable at every tile size
-          in both themes
+        comment: All font sizes explicitly set (title=12pt, dynamic 6-9pt cell labels,
+          legend=8pt); readable in both themes, title fits without clipping. Cell-label
+          size range is a bit narrow relative to area spread.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions anywhere in either render
+        comment: No overlapping text or elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 12 rectangles clearly visible and distinctly bordered
+        comment: All 11 rectangles clearly visible and appropriately sized for an
+          11-item treemap
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Bold dark/light text on every tile plus redundant value labels; no
-          red-green-only signal
+        comment: 5 categorical hues, well within CVD-safe range for n<=6; focal outline
+          adds redundant non-color cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Treemap fills most of the canvas width/height, legend sits directly
-          below, balanced margins
+        comment: Treemap fills the canvas efficiently, legend sits directly below,
+          balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a treemap; title fully descriptive per spec format
+        comment: No axes needed for a treemap; mandated title present and correctly
+          formatted
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Canonical Imprint order, first series #009E73, backgrounds exactly
-          on-spec, chrome theme-correct in both renders'
+        passed: false
+        comment: 'Legend swatches use canonical Imprint hex correctly and first category
+          is #009E73, but cell fills use lightness-tinted derivatives of the canonical
+          hues for value shading rather than the canonical hex itself'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -118,22 +120,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful magnitude-driven lightness shading on top of canonical
-          palette; clearly above defaults
+        comment: Custom squarified algorithm, value-driven tinting, and focal-point
+          outline show thoughtful design well above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Axes fully removed, subtle cell borders, generous whitespace, polished
-          legend frame
+        comment: Axis fully removed, subtle page-colored dividers between cells, generous
+          margin around the whole composition
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Area + shading both reinforce magnitude, giving a clear visual hierarchy
-          without a hard focal-point callout
+        comment: Focal-point outline and value-shading create a clear visual hierarchy
+          that guides the eye to the largest allocation
     spec_compliance:
       score: 15
       max: 15
@@ -143,53 +145,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct squarify treemap
+        comment: Correct treemap with properly area-proportional nested rectangles
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct category colors, conditional labeling, subtle borders, and
-          shading-based hierarchy all present
+        comment: Distinct category colors, labels on all cells, subtle borders, and
+          hierarchy shown via color-shading intensity as explicitly permitted by the
+          spec
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value correctly drives rectangle area; all 12 data points represented
+        comment: Rectangle area maps correctly to dollar value; all data represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels match the 5 categories
+        comment: Title exactly matches the mandated format; legend labels match the
+          5 categories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good spread of category/subcategory counts and value ranges; doesn't
-          demonstrate the optional single-level (no-subcategory) case
+        comment: Wide value range (8-45M), multiple categories with varying subcategory
+          counts, and an explicit no-subcategory case
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department/project budget allocation — realistic, neutral business
-          scenario
+        comment: Neutral, plausible company budget-allocation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget figures ($8M-$45M) are plausible and proportionally sensible
-          for a mid-size company
+        comment: Department/project budget figures are realistic and internally consistent
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -197,32 +199,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; flat imports-data-plot-save structure
+        comment: Linear imports -> data -> layout -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness involved
+        comment: Fully deterministic hardcoded dataset, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import (colorsys, os, patches, pyplot, colors) is used
+        comment: Every import (colorsys, os, mpatches, pyplot, colors, Rectangle)
+          is used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Vertical/horizontal strip branches of the squarify loop duplicate
-          the aspect-ratio comparison logic almost verbatim
+        comment: Appropriate complexity for a from-scratch squarified layout; no fake
+          functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with no deprecated calls
+        comment: Saves as plot-{THEME}.png, no deprecated calls, no bbox_inches='tight'
     library_mastery:
       score: 7
       max: 10
@@ -232,23 +235,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Consistent Axes-method usage (ax.add_patch, ax.text, ax.legend) per
-          matplotlib rules
+        comment: Idiomatic use of Axes-level Rectangle patches and custom legend handles,
+          the standard matplotlib approach given no native treemap
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom squarify algorithm built from Rectangle patches plus colorsys
-          HLS shading — a genuinely matplotlib-specific low-level technique since
-          the library has no native treemap
-  verdict: REJECTED
+        comment: colorsys HLS manipulation and manual patch compositing are matplotlib-specific,
+          though the technique is portable in concept to other patch-drawing libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - patches
-  - custom-legend
   - annotations
+  - custom-legend
   patterns:
   - explicit-figure
   - iteration-over-groups
