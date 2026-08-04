@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-04
@@ -57,8 +57,8 @@ def project_grid(gx, gy, gz, elev_rad, azim_rad):
     return x2d, y2d
 
 
-def draw_axis_ticks(fig, origin_xy, end_xy, color, width, n_ticks=5, tick_length=0.15):
-    """Draw evenly-spaced perpendicular tick marks along a projected 2D axis segment."""
+def draw_axis_ticks(fig, origin_xy, end_xy, axis_max, color, text_color, width, n_ticks=4, tick_length=0.2):
+    """Draw evenly-spaced perpendicular tick marks with numeric value labels along a projected 2D axis segment."""
     ox, oy = origin_xy
     ex, ey = end_xy
     direction = np.array([ex - ox, ey - oy])
@@ -67,7 +67,7 @@ def draw_axis_ticks(fig, origin_xy, end_xy, color, width, n_ticks=5, tick_length
         return
     direction = direction / norm
     perp = np.array([-direction[1], direction[0]])
-    for i in range(1, n_ticks):
+    for i in range(1, n_ticks + 1):
         t = i / n_ticks
         tx = ox + t * (ex - ox)
         ty = oy + t * (ey - oy)
@@ -76,6 +76,15 @@ def draw_axis_ticks(fig, origin_xy, end_xy, color, width, n_ticks=5, tick_length
             y=[ty - tick_length * perp[1], ty + tick_length * perp[1]],
             line_color=color,
             line_width=width,
+        )
+        fig.add_layout(
+            Label(
+                x=tx + tick_length * 1.8 * perp[0],
+                y=ty + tick_length * 1.8 * perp[1],
+                text=f"{axis_max * t:.2g}",
+                text_font_size="24pt",
+                text_color=text_color,
+            )
         )
 
 
@@ -119,7 +128,7 @@ source = ColumnDataSource(data={"xs": all_xs, "ys": all_ys, "direction": directi
 p = figure(
     width=3200,
     height=1800,
-    title="wireframe-3d-basic · bokeh · anyplot.ai",
+    title="wireframe-3d-basic · python · bokeh · anyplot.ai",
     toolbar_location=None,  # bokeh's default toolbar adds ~30-50px above the canvas
     tools="",
     min_border_top=110,  # room for 50pt title
@@ -155,9 +164,32 @@ color_bar = ColorBar(
 )
 p.add_layout(color_bar, "right")
 
-# Set appropriate ranges with padding for axes and labels
-x_min, x_max = min(min(xs) for xs in all_xs), max(max(xs) for xs in all_xs)
-y_min, y_max = min(min(ys) for ys in all_ys), max(max(ys) for ys in all_ys)
+# Custom 3D axis lines positioned at the projected origin
+origin_x, origin_y = project_point(0, 0, 0, elev_rad, azim_rad)
+
+axis_color = INK_SOFT
+axis_width = 4
+
+# Draw all three schematic arms at a shared visual length spanning the plotted
+# range (matching the x,y data extent) so the compass reads as a real axis
+# rather than a tiny floating stub; each arm's tick labels below are scaled
+# to that dimension's own true data extent so the numbers stay meaningful.
+axis_length = float(np.max(np.abs(X)))
+x_extent = float(np.max(np.abs(X)))
+y_extent = float(np.max(np.abs(Y)))
+z_extent = float(np.max(np.abs(Z)))
+
+x_axis_end_x, x_axis_end_y = project_point(axis_length, 0, 0, elev_rad, azim_rad)
+y_axis_end_x, y_axis_end_y = project_point(0, axis_length, 0, elev_rad, azim_rad)
+z_axis_end_x, z_axis_end_y = project_point(0, 0, axis_length, elev_rad, azim_rad)
+
+# Set appropriate ranges with padding for axes and labels — must also cover
+# the schematic axis arms above, not just the mesh, or the Z arm (tallest
+# projected element) gets clipped against the fixed Range1d bounds.
+x_min = min(min(min(xs) for xs in all_xs), origin_x, x_axis_end_x, y_axis_end_x, z_axis_end_x)
+x_max = max(max(max(xs) for xs in all_xs), origin_x, x_axis_end_x, y_axis_end_x, z_axis_end_x)
+y_min = min(min(min(ys) for ys in all_ys), origin_y, x_axis_end_y, y_axis_end_y, z_axis_end_y)
+y_max = max(max(max(ys) for ys in all_ys), origin_y, x_axis_end_y, y_axis_end_y, z_axis_end_y)
 
 x_pad = (x_max - x_min) * 0.20
 y_pad = (y_max - y_min) * 0.25
@@ -165,27 +197,16 @@ y_pad = (y_max - y_min) * 0.25
 p.x_range = Range1d(x_min - x_pad, x_max + x_pad)
 p.y_range = Range1d(y_min - y_pad * 1.2, y_max + y_pad)
 
-# Custom 3D axis lines positioned at the projected origin
-origin_x, origin_y = project_point(0, 0, 0, elev_rad, azim_rad)
-
-axis_color = INK_SOFT
-axis_width = 4
-axis_length = 2.5
-
-x_axis_end_x, x_axis_end_y = project_point(axis_length, 0, 0, elev_rad, azim_rad)
-y_axis_end_x, y_axis_end_y = project_point(0, axis_length, 0, elev_rad, azim_rad)
-z_axis_end_x, z_axis_end_y = project_point(0, 0, axis_length, elev_rad, azim_rad)
-
 # Draw axis lines from projected origin
 p.line(x=[origin_x, x_axis_end_x], y=[origin_y, x_axis_end_y], line_color=axis_color, line_width=axis_width)
 p.line(x=[origin_x, y_axis_end_x], y=[origin_y, y_axis_end_y], line_color=axis_color, line_width=axis_width)
 p.line(x=[origin_x, z_axis_end_x], y=[origin_y, z_axis_end_y], line_color=axis_color, line_width=axis_width)
 
-# Add axis tick marks (small lines perpendicular to axes)
+# Add axis tick marks with real coordinate-value labels
 origin_xy = (origin_x, origin_y)
-draw_axis_ticks(p, origin_xy, (x_axis_end_x, x_axis_end_y), axis_color, 2)
-draw_axis_ticks(p, origin_xy, (y_axis_end_x, y_axis_end_y), axis_color, 2)
-draw_axis_ticks(p, origin_xy, (z_axis_end_x, z_axis_end_y), axis_color, 2)
+draw_axis_ticks(p, origin_xy, (x_axis_end_x, x_axis_end_y), x_extent, axis_color, INK_SOFT, 2)
+draw_axis_ticks(p, origin_xy, (y_axis_end_x, y_axis_end_y), y_extent, axis_color, INK_SOFT, 2)
+draw_axis_ticks(p, origin_xy, (z_axis_end_x, z_axis_end_y), z_extent, axis_color, INK_SOFT, 2)
 
 # Add axis labels
 x_label = Label(
