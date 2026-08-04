@@ -6,10 +6,12 @@
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
 
-// --- Data: ripple surface z = sin(sqrt(x^2 + y^2)) on a 24x24 grid ---------
+// --- Data: ripple surface z = sinc(r) = sin(r)/r on a 24x24 grid -----------
 // RANGE is chosen so the diagonal (the farthest grid corner) reaches close to
 // one full sin() period (2*pi) — a clean central peak plus one surrounding
-// ring, without a truncated third lobe fraying the corners.
+// ring, without a truncated third lobe fraying the corners. Dividing by r
+// (the sinc form, naturally 1 at r=0) keeps the apex a smooth dome instead of
+// the sharp cusp a raw sin(r) surface has at the center.
 const GRID_N = 24;
 const RANGE = 4.4;
 const step = (2 * RANGE) / (GRID_N - 1);
@@ -18,7 +20,7 @@ const ys = Array.from({ length: GRID_N }, (_, i) => -RANGE + i * step);
 const zGrid = xs.map((x) =>
   ys.map((y) => {
     const r = Math.sqrt(x * x + y * y);
-    return r === 0 ? 1 : Math.sin(r);
+    return r === 0 ? 1 : Math.sin(r) / r;
   })
 );
 const zFlat = zGrid.flat();
@@ -213,7 +215,10 @@ axisLine([Z_CORNER_X, Z_CORNER_Y, zMin], [Z_CORNER_X, Z_CORNER_Y, zMax]);
 const zTicks = [zMin, (zMin + zMax) / 2, zMax];
 zTicks.forEach((v) => {
   tickMark([Z_CORNER_X, Z_CORNER_Y, v], [Z_CORNER_X, Z_CORNER_Y - TICK_LEN, v]);
-  tickLabel([Z_CORNER_X, Z_CORNER_Y - TICK_LEN * 2.2, v], v.toFixed(1), "center");
+  // Guard the near-zero midpoint: floating-point rounding can leave it as a
+  // tiny negative value, which .toFixed(1) would otherwise render as "-0.0".
+  const label = (Math.abs(v) < 1e-9 ? 0 : v).toFixed(1);
+  tickLabel([Z_CORNER_X, Z_CORNER_Y - TICK_LEN * 2.2, v], label, "center");
 });
 axisTitle([Z_CORNER_X, Z_CORNER_Y, zMax], "Z", [0, -34]);
 
