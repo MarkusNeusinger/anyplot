@@ -1,7 +1,7 @@
 """ anyplot.ai
 wordcloud-basic: Basic Word Cloud
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-06
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 85/100 | Updated: 2026-08-04
 """
 
 import math
@@ -19,12 +19,14 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
+    scale_alpha_identity,
     scale_color_manual,
     scale_size_identity,
+    scale_x_continuous,
+    scale_y_continuous,
     theme,
     theme_void,
-    xlim,
-    ylim,
 )
 from lets_plot.export import ggsave
 
@@ -37,8 +39,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette (first series always #009E73)
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data - Programming language popularity
 np.random.seed(42)
@@ -79,13 +81,16 @@ sorted_indices = np.argsort(frequencies)[::-1]
 words = [words[i] for i in sorted_indices]
 frequencies = [frequencies[i] for i in sorted_indices]
 
-# Canvas dimensions
-canvas_width = 280
-canvas_height = 140
+# Canvas dimensions (data-space, independent of the exported pixel size) -
+# square domain so the naturally circular/blob-shaped spiral fills the frame
+# evenly on all sides (landscape left large empty side margins)
+canvas_width = 150
+canvas_height = 150
 
-# Scale font sizes for readability
+# Scale font sizes for readability (mm, geom_text units) - floor raised so the
+# smallest-frequency words stay legible once scaled down to mobile widths
 min_freq, max_freq = min(frequencies), max(frequencies)
-min_size, max_size = 9, 26
+min_size, max_size = 6.5, 14
 
 sizes = []
 for freq in frequencies:
@@ -93,15 +98,23 @@ for freq in frequencies:
     size = min_size + (normalized**0.6) * (max_size - min_size)
     sizes.append(size)
 
-# Spiral word placement with collision detection
+# Fade lower-frequency words slightly so the eye lands on the dominant terms first
+alphas = [0.55 + 0.45 * ((freq - min_freq) / (max_freq - min_freq)) for freq in frequencies]
+
+# Vertical rotation for a subset of words (skip the top 3 focal terms) - a
+# lets-plot geom_text `angle` aesthetic, the classic word-cloud variety cue
+angles = [90 if (i >= 3 and i % 5 == 2) else 0 for i in range(len(words))]
+
+# Spiral word placement with collision detection (rotation-aware bounding box)
 placed = []
 positions_x = []
 positions_y = []
-char_width_ratio = 0.52
+char_width_ratio = 0.62
 
-for word, size in zip(words, sizes, strict=True):
-    word_width = len(word) * size * char_width_ratio
-    word_height = size * 1.05
+for word, size, angle in zip(words, sizes, angles, strict=True):
+    raw_width = len(word) * size * char_width_ratio
+    raw_height = size * 1.05
+    word_width, word_height = (raw_height, raw_width) if angle == 90 else (raw_width, raw_height)
 
     t = 0
     step = 0.08
@@ -110,9 +123,9 @@ for word, size in zip(words, sizes, strict=True):
 
     while t < max_iterations and not placed_word:
         r = 0.1 + t * 0.08
-        angle = t * 0.35
-        x = canvas_width / 2 + r * math.cos(angle) * 0.95
-        y = canvas_height / 2 + r * math.sin(angle)
+        theta = t * 0.35
+        x = canvas_width / 2 + r * math.cos(theta) * 0.95
+        y = canvas_height / 2 + r * math.sin(theta)
 
         margin = 3
         if (
@@ -125,7 +138,7 @@ for word, size in zip(words, sizes, strict=True):
             continue
 
         collision = False
-        padding = 0.6
+        padding = 1.6
         for px, py, pw, ph in placed:
             if abs(x - px) < (word_width / 2 + pw / 2 + padding) and abs(y - py) < (word_height / 2 + ph / 2 + padding):
                 collision = True
@@ -145,38 +158,43 @@ for word, size in zip(words, sizes, strict=True):
 
 # Build dataframe with placed words
 df_data = []
-for word, freq, size, x, y in zip(words, frequencies, sizes, positions_x, positions_y, strict=True):
+for word, freq, size, angle, alpha, x, y in zip(
+    words, frequencies, sizes, angles, alphas, positions_x, positions_y, strict=True
+):
     if x is not None and y is not None:
-        df_data.append({"word": word, "frequency": freq, "size": size, "x": x, "y": y})
+        df_data.append({"word": word, "frequency": freq, "size": size, "angle": angle, "alpha": alpha, "x": x, "y": y})
 
 df = pd.DataFrame(df_data)
 
-# Assign Okabe-Ito colors to words
+# Assign Imprint colors to words
 df["color"] = [IMPRINT[i % len(IMPRINT)] for i in range(len(df))]
 
 # Plot with theme-adaptive chrome
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    plot_title=element_text(size=24, color=INK, hjust=0.5),
+    plot_title=element_text(size=16, color=INK, hjust=0.5),
     legend_position="none",
     axis_title=element_blank(),
     axis_text=element_blank(),
 )
 
+word_tooltips = layer_tooltips().title("@word").line("Frequency|@frequency")
+
 plot = (
-    ggplot(df, aes(x="x", y="y", label="word", size="size", color="color"))
-    + geom_text(fontface="bold")
+    ggplot(df, aes(x="x", y="y", label="word", size="size", color="color", angle="angle", alpha="alpha"))
+    + geom_text(fontface="bold", tooltips=word_tooltips)
     + scale_size_identity()
+    + scale_alpha_identity()
     + scale_color_manual(values=df["color"].unique(), guide="none")
-    + xlim(0, canvas_width)
-    + ylim(0, canvas_height)
+    + scale_x_continuous(limits=(0, canvas_width), expand=[0, 0])
+    + scale_y_continuous(limits=(0, canvas_height), expand=[0, 0])
     + labs(title="wordcloud-basic · letsplot · anyplot.ai")
     + theme_void()
     + anyplot_theme
-    + ggsize(1600, 900)
+    + ggsize(600, 600)
 )
 
 # Save
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
