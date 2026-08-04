@@ -1,26 +1,26 @@
-""" anyplot.ai
+"""anyplot.ai
 waterfall-basic: Basic Waterfall Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-06
+Library: altair | Python 3.13
+Quality: pending | Updated: 2026-08-04
 """
 
 import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens (see prompts/default-style-guide.md)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for waterfall types
-POSITIVE_COLOR = "#009E73"  # Position 1: brand green for positive
-NEGATIVE_COLOR = "#AE3030"  # imprint red — negative
-TOTAL_COLOR = "#4467A3"  # Position 3: blue for totals
+# Imprint palette — semantic exception applied: green=gain, matte red=loss, blue=total/baseline
+POSITIVE_COLOR = "#009E73"  # Imprint position 1 — brand green, always first
+NEGATIVE_COLOR = "#AE3030"  # Imprint position 5 — semantic anchor for loss
+TOTAL_COLOR = "#4467A3"  # Imprint position 3 — blue for totals/subtotals
 
 # Data: Quarterly financial breakdown from revenue to net income
 categories = ["Revenue", "Cost of Goods", "Gross Profit", "Operating Expenses", "Other Income", "Taxes", "Net Income"]
@@ -81,37 +81,56 @@ df = pd.DataFrame(
     }
 )
 
-# Color scale using Okabe-Ito palette
+# Color scale using the Imprint palette (semantic exception: total/positive/negative)
 color_scale = alt.Scale(domain=["total", "positive", "negative"], range=[TOTAL_COLOR, POSITIVE_COLOR, NEGATIVE_COLOR])
 
 # Sort by order field
 sort_order = alt.EncodingSortField(field="order", order="ascending")
 
-# Create bar chart using bar marks with y and y2
+# Bars using bar marks with y and y2
 bars = (
     alt.Chart(df)
-    .mark_bar(size=65, stroke=INK_SOFT, strokeWidth=2)
+    .mark_bar(size=28, stroke=INK_SOFT, strokeWidth=1)
     .encode(
         x=alt.X(
             "category:N",
             sort=sort_order,
             title="Category",
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=-20),
+            axis=alt.Axis(labelFontSize=10, titleFontSize=12, labelAngle=-20, grid=False),
         ),
-        y=alt.Y("bar_bottom:Q", title="Amount ($)", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
+        y=alt.Y(
+            "bar_bottom:Q", title="Amount ($)", axis=alt.Axis(labelFontSize=10, titleFontSize=12, gridOpacity=0.12)
+        ),
         y2=alt.Y2("bar_top:Q"),
         color=alt.Color("bar_type:N", scale=color_scale, legend=None),
     )
 )
 
-# Value labels on bars
-labels = (
+# Value labels, split by bar_type so each sits on its own fill with solid contrast:
+# bold + larger on totals (visual hierarchy anchor), regular + smaller on deltas (secondary).
+# White reads best on the dark blue/red fills; ink reads best on the brighter green fill.
+total_labels = (
     alt.Chart(df)
-    .mark_text(fontSize=18, fontWeight="bold", color=INK)
+    .transform_filter(alt.datum.bar_type == "total")
+    .mark_text(fontSize=13, fontWeight="bold", color="#FFFFFF", dy=-4)
     .encode(x=alt.X("category:N", sort=sort_order), y=alt.Y("label_y:Q"), text="display_value:N")
 )
 
-# Create connector lines data
+positive_labels = (
+    alt.Chart(df)
+    .transform_filter(alt.datum.bar_type == "positive")
+    .mark_text(fontSize=11, fontWeight="normal", color=INK, dy=-4)
+    .encode(x=alt.X("category:N", sort=sort_order), y=alt.Y("label_y:Q"), text="display_value:N")
+)
+
+negative_labels = (
+    alt.Chart(df)
+    .transform_filter(alt.datum.bar_type == "negative")
+    .mark_text(fontSize=11, fontWeight="normal", color="#FFFFFF", dy=-4)
+    .encode(x=alt.X("category:N", sort=sort_order), y=alt.Y("label_y:Q"), text="display_value:N")
+)
+
+# Connector lines between cumulative levels
 connector_data = []
 for i in range(n - 1):
     connector_data.append(
@@ -120,29 +139,42 @@ for i in range(n - 1):
 
 df_connectors = pd.DataFrame(connector_data)
 
-# Connector lines using rule mark
 connectors = (
     alt.Chart(df_connectors)
-    .mark_rule(color=INK_SOFT, strokeDash=[6, 4], strokeWidth=2)
+    .mark_rule(color=INK_SOFT, strokeDash=[5, 3], strokeWidth=1.2)
     .encode(x=alt.X("x:N", sort=sort_order), x2=alt.X2("x2:N"), y=alt.Y("y:Q"))
 )
 
 # Combine all layers
+title = "waterfall-basic · python · altair · anyplot.ai"
 chart = (
-    alt.layer(connectors, bars, labels)
+    alt.layer(connectors, bars, total_labels, positive_labels, negative_labels)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
         background=PAGE_BG,
-        title=alt.Title("waterfall-basic · altair · anyplot.ai", fontSize=28, color=INK),
+        title=alt.Title(title, fontSize=16, color=INK),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, continuousWidth=1600, continuousHeight=900)
-    .configure_axis(
-        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
-    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, continuousWidth=620, continuousHeight=320)
+    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
     .configure_title(color=INK)
 )
 
-# Save as PNG and HTML with theme suffix
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save as PNG (padded to the canonical target) and HTML with theme suffix
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Canvas contract: pad (never crop) the saved PNG up to the exact 3200x1800 target
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
