@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 89/100 | Created: 2026-08-04
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, Label
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -41,6 +41,13 @@ purity = np.clip((dominance - 1 / 3) / (1 - 1 / 3), 0, 1)
 marker_size = 12 + purity * 16
 marker_alpha = 0.55 + purity * 0.35
 
+# Most extreme sample — the single highest-purity point becomes the plot's
+# explicit focal callout, giving viewers a concrete entry point beyond the
+# implicit size/alpha gradient.
+idx_extreme = int(np.argmax(purity))
+extreme_component = ["Sand", "Silt", "Clay"][int(np.argmax(raw[idx_extreme]))]
+extreme_pct = raw[idx_extreme].max()
+
 
 # Convert ternary coordinates to Cartesian (equilateral triangle)
 def ternary_to_cartesian(a, b, c):
@@ -66,13 +73,18 @@ tri_y = [0, 0, np.sqrt(3) / 2, 0]
 # axis. Equal-span ranges below (x: -0.12..1.12, y: -0.15..1.09, both span
 # 1.24) paired with symmetric min_border on a square figure keep the pixel
 # scale uniform in x and y, so the triangle renders truly equilateral.
+# HoverTool works as an active inspector even with toolbar_location=None (it
+# only shows a toolbar *button*, not the hover behavior), so the static PNG
+# render is unaffected while the HTML artifact gains sand/silt/clay tooltips.
+hover = HoverTool(tooltips=[("Sand", "@sand{0.0}%"), ("Silt", "@silt{0.0}%"), ("Clay", "@clay{0.0}%")])
+
 p = figure(
     width=2400,
     height=2400,
     title="Soil Composition · ternary-basic · python · bokeh · anyplot.ai",
     x_range=(-0.12, 1.12),
     y_range=(-0.15, 1.09),
-    tools="",
+    tools=[hover],
     toolbar_location=None,  # IMPORTANT: default toolbar adds ~30-50px, shrinking the saved PNG
     min_border_left=60,
     min_border_right=60,
@@ -220,6 +232,29 @@ source = ColumnDataSource(
 )
 
 p.scatter(x="x", y="y", source=source, size="size", color=BRAND, fill_alpha="alpha", line_color=PAGE_BG, line_width=1.5)
+
+# Ring the single most extreme (highest-purity) sample and annotate it —
+# an explicit focal callout so the viewer has a concrete entry point into
+# the composition space, not just the implicit size/alpha gradient.
+p.scatter(
+    x=[x_data[idx_extreme]],
+    y=[y_data[idx_extreme]],
+    size=marker_size[idx_extreme] + 14,
+    fill_color=None,
+    line_color=INK,
+    line_width=2.5,
+)
+extreme_label = Label(
+    x=x_data[idx_extreme],
+    y=y_data[idx_extreme] + 0.05,
+    text=f"{extreme_pct:.0f}% {extreme_component}",
+    text_font_size="30pt",
+    text_font_style="bold",
+    text_color=INK,
+    text_align="center",
+    text_baseline="bottom",
+)
+p.add_layout(extreme_label)
 
 # Style title
 p.title.text_font_size = "50pt"
