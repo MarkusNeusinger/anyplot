@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: wordcloud-basic
 created: '2026-08-04T23:21:10Z'
-updated: '2026-08-04T23:26:41Z'
+updated: '2026-08-04T23:40:41Z'
 generated_by: claude-sonnet
 workflow_run: 30959224005
 issue: 1012
@@ -15,53 +15,60 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 quality_score: 79
 review:
   strengths:
-  - 'Excellent Imprint palette compliance: words are colored in strict descending-frequency
-    order through the canonical palette (#009E73 -> #C475FD -> #4467A3 -> #BD8233
-    -> #AE3030 -> #2ABCCD -> #954477 -> #99B314, then wraps), so the dominant word
-    (''solar'') is brand green and every subsequent color matches the canonical order
-    exactly - identical in both themes.'
-  - 'Genuine collision-free spiral layout: real canvas glyph-width measurement (measureText)
-    feeds an Archimedean-spiral placement loop with rect-overlap checks, so words
-    never actually collide - not a hand-waved approximation.'
-  - Correct sqrt-based font-size scaling so rendered glyph AREA (not height) follows
-    frequency, which is the standard, correct word-cloud sizing approach.
-  - Deterministic, realistic renewable-energy term-frequency dataset (39 words, Zipf-shaped
-    tail 980->40) - neutral, plausible domain.
-  - Theme chrome (background, title color) and skipAnimation are handled correctly
-    in both light and dark renders; mandated title format is exact.
+  - Genuinely custom word-cloud engine built on top of ScatterChart's `slots.scatter`
+    extension point — real xScale/yScale-driven text placement, not a faked static
+    image
+  - Archimedean-spiral collision-avoidance layout with real canvas-measured glyph
+    widths (`measureCtx.measureText`) so boxes are sized from actual rendered text,
+    not estimates
+  - sqrt font-size scale correctly makes rendered AREA (not height) proportional to
+    frequency, with a sensible clamp so the smallest words stay legible at mobile
+    thumbnail size
+  - Highest-frequency word ('solar') renders in brand green `#009E73`, and all data
+    colors are pixel-identical between the light and dark renders — only chrome flips
+  - Realistic, neutral renewable-energy term-frequency dataset with a plausible Zipf-shaped
+    tail (980 down to 40)
+  - 'Clean single-purpose file: only imports `ScatterChart`, disables animation/voronoi/tooltip
+    appropriately for a static-feeling word cloud, hides the cartesian axes since
+    they carry no semantic meaning here'
   weaknesses:
-  - 'Library Mastery is very low: ChartContainer is mounted with series={[]} and margin=0,
-    used only as an empty SVG root - none of the actual word-cloud rendering (sizing,
-    spiral placement, coloring) goes through any MUI X data/marks API. Since MUI X
-    community has no wordcloud/treemap primitive, this is close to the ''shell out
-    to raw SVG instead of a real chart type'' pattern the muix.md guide warns against;
-    if a more idiomatic composition isn''t possible, this should at least be called
-    out rather than silently using ChartContainer as a blank canvas.'
-  - 'CQ-01 KISS Structure is far from Imports -> Data -> Plot -> Save: fontSizeFor,
-    textWidth, rectsOverlap, layoutWordCloud and WordCloudMarks are five extra helper
-    functions/components. Understandable given the library gap, but it is real, scoreable
-    complexity - trim where possible (e.g. inline the tiny rectsOverlap check).'
-  - 'Mobile legibility (400px width): the smallest-frequency words (''scale'', ''market'',
-    ''cost'', ''research'', ''policy'') at FONT_MIN=16 are hard to read once the PNG
-    is scaled down to the ~400px mobile preview - raise FONT_MIN (e.g. to ~20-22)
-    or compress the sqrt scale range so the tail stays legible at small sizes.'
-  - 'Layout balance: the spiral cloud leaves a visibly larger empty margin on the
-    right side (above ''microgrid''/''research''/''policy''/''cost'' and below ''capacity'')
-    than on the left, giving a slightly lopsided canvas-fill rather than a balanced
-    ellipse - widen the spiral''s horizontal reach or re-center to use the right edge
-    more evenly.'
+  - 'Silent data loss: the spiral placement loop in `layoutWordCloud` caps at 8000
+    steps per word and drops any word that never finds a collision-free slot (''Spiral
+    saturated ... drop the word rather than overlap''). In this render 15 of the 39
+    input words (~38%) never appear at all — ''sustainability'', ''infrastructure'',
+    ''resilience'', ''biomass'', ''geothermal'', ''recycling'', ''deployment'', ''monitoring'',
+    ''materials'', ''modeling'', ''transition'', ''climate'', ''innovation'', ''cleantech'',
+    ''renewables'' are all missing from both renders, with no fallback (smaller font,
+    denser packing, more steps) attempted before dropping. These aren''t just the
+    smallest values either — ''sustainability'' (375) and ''infrastructure'' (310)
+    outrank several words that DID get placed (e.g. ''carbon'' 350, ''policy'' 290,
+    ''forecast'' 150), so the omission looks arbitrary rather than a deliberate long-tail
+    cutoff.'
+  - Because of the dropped words, the cloud does not 'fill available space' as the
+    spec requires — there is uneven, unintentional-looking whitespace (e.g. upper-right
+    above 'forecast'/'capacity', lower-right past 'smartgrid') that would likely have
+    been filled had all 39 words placed.
+  - 'The word-count reduction directly undercuts feature/data coverage: with 38% of
+    the term list invisible, the chart understates the vocabulary breadth a word cloud
+    is meant to summarize.'
+  - Title occupies only ~35% of canvas width — noticeably smaller than the ~70-85%
+    that's typical/expected for the mandated title string at the style-guide default
+    size; not a hard violation, but the title reads as a little understated relative
+    to the rest of the composition.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white.
-      Chrome: Centered title "wordcloud-basic · javascript · muix · anyplot.ai" in dark bold text at the top, clearly readable. No axes, grid, or legend (correctly - a word cloud needs none).
-      Data: 39 words of varying font size (16-128px) arranged in a dense, roughly elliptical spiral filling most of the canvas. Colors cycle through the Imprint palette in strict descending-frequency order: "solar" (largest, highest frequency) is brand green #009E73, "battery" is violet, "grid" is blue, "storage" is ochre, "wind" is red, "efficiency" is cyan, "emissions" is mauve, "hydrogen" is olive, then the cycle repeats green for "photovoltaic". No two words overlap. Slightly more empty space on the right side of the canvas than the left.
-      Legibility verdict: PASS - all 39 words are readable at full resolution; the smallest words ("scale", "market", "cost", "research", "policy") are legible at full size but become borderline hard to read once scaled down to the ~400px mobile thumbnail.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Centered bold title "wordcloud-basic · javascript · muix · anyplot.ai" in dark ink at the top, clearly legible. No axes, ticks, or legend are drawn (appropriately hidden — a word cloud has no cartesian meaning here).
+      Data: ~24 words rendered in an organic, roughly elliptical spiral arrangement filling most of the frame from upper-left ("adoption") to lower-right ("smartgrid"). Font size scales with frequency ("solar", "battery", "photovoltaic" largest; "market", "research", "scale" smallest). Colors cycle through the Imprint categorical palette; the single highest-frequency word "solar" renders in brand green #009E73 as required. No text overlaps, no clipping at any canvas edge (checked all four margins at pixel level, including tight spots like "storage/solar/wind/policy" and "investment"/"scale" near the left edge).
+      Legibility verdict: PASS — all visible text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black.
-      Chrome: Same title, now in light/white text, clearly readable against the dark background. No axes/grid/legend, as in light.
-      Data: Identical word placement, sizes, and colors to the light render - confirmed the same green/violet/blue/ochre/red/cyan/mauve/olive sequence in the same positions. Only the page background and title color flipped.
-      Legibility verdict: PASS - no dark-on-dark issues; every word color has sufficient contrast against the near-black background. Same mobile-scale caveat as light for the smallest words.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, now rendered in light/white ink, fully legible against the dark background — no dark-on-dark failures observed.
+      Data: Identical word set, identical layout, and identical per-word colors to the light render (e.g. "solar" is the same #009E73 green, "battery" the same purple, "carbon" the same red) — only the background/title chrome flipped as required.
+      Legibility verdict: PASS — all visible text is clearly readable against the dark background; no black-on-black or washed-out elements.
+
+    Note: both renders are internally consistent and legible, but both are missing the same 15 of 39 source words (see Weaknesses) — this is a data/layout defect, not a theme-legibility defect, and affects both renders identically.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -69,51 +76,52 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Explicit sizing, readable at full res in both themes; smallest words
-          (scale, market, cost) borderline at ~400px mobile scale
+        comment: Font sizes explicitly derived from a sqrt frequency scale, readable
+          in both themes and at mobile scale; title is a bit small relative to the
+          style-guide's expected proportion but not clipped or overflowing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Real collision detection - no overlaps found
+        comment: Pixel-level check of tight rows ('storage solar wind policy', 'battery
+          microgrid') and left-edge words ('investment', 'scale') shows no collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good sqrt area-based sizing; smallest words nearly at the visibility
-          floor
+        comment: Placed words are clearly visible and well-sized; not perfect only
+          because dropped words leave the density uneven
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Words identified by text + size, not by hue alone; good contrast
-          on both backgrounds
+        comment: Good hue contrast across the Imprint palette, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Good canvas fill, but right side has more empty space than left -
-          slightly unbalanced
+        passed: false
+        comment: Noticeable uneven whitespace (upper-right, lower-right) caused by
+          the 15 words that never got placed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A axes for a word cloud; mandated title present and correct
+        comment: No axes needed for a word cloud; title matches the mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Dominant word is #009E73; remaining words follow canonical Imprint
-          order exactly, identical across themes; correct theme backgrounds'
+        comment: 'Highest-frequency word uses #009E73; Imprint palette cycling; theme-correct
+          #FAF8F1/#1A1A17 backgrounds; identical data colors across themes'
     design_excellence:
       score: 14
       max: 20
@@ -122,116 +130,146 @@ review:
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: Thoughtful frequency-to-palette-rank mapping and real spiral placement,
-          clearly above a naive default
+        passed: true
+        comment: A genuinely custom spiral word-cloud renderer with real glyph-metric
+          measurement — clearly above a configured default, though the gaps from dropped
+          words hold it back from publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Clean, chrome-free presentation; right-side whitespace imbalance
-          keeps it from perfect
+        passed: true
+        comment: Axes/legend cleanly removed, generous margins, but whitespace balance
+          is undermined by the missing words
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Size + color rank create a clear visual hierarchy toward 'solar'/'battery'/'grid'
-          as the dominant themes
+        passed: true
+        comment: Size + color hierarchy clearly foregrounds top themes (solar, battery,
+          storage); no explicit annotations but none are required for this spec
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct word-cloud visual output
+        passed: true
+        comment: Legitimate word-cloud implementation via a custom scatter-slot text
+          mark, not a fake/mock
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        comment: Word + frequency-driven size present; words lowercase, no stop words
+        passed: false
+        comment: ~38% of the input words never render — a real gap against the spec's
+          'arranged to fill available space' requirement
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        comment: Frequency correctly mapped to font size via sqrt-area scale
+        passed: false
+        comment: 'Not all data is shown: 15 of 39 (word, frequency) pairs are silently
+          dropped by the placement algorithm'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format exact; no legend needed
+        passed: true
+        comment: Title exactly matches 'wordcloud-basic · javascript · muix · anyplot.ai';
+          no legend needed (color is decorative per spec notes)
     data_quality:
-      score: 14
+      score: 11
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 2
         max: 6
-        comment: Good frequency spread (40-980) with a Zipf-like tail
+        passed: false
+        comment: The Zipf-shaped frequency tail is present in the source array, but
+          rendering loses over a third of it, including several mid-range frequency
+          terms — the visible chart doesn't actually show the full distribution it
+          was designed to demonstrate
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, plausible renewable-energy research corpus
+        passed: true
+        comment: Neutral, plausible renewable-energy research-corpus term frequencies
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Plausible term-frequency counts
+        passed: true
+        comment: Frequency values and their relative proportions are realistic for
+          a term-frequency corpus
     code_quality:
       score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 2
         max: 3
-        comment: Five helper functions/components beyond Imports->Data->Plot->Save
-          - needed for the custom layout, but real added structure
+        passed: true
+        comment: Goes beyond flat imports/data/plot since a real word cloud needs
+          a layout algorithm, but the helper functions are all justified by that requirement,
+          not gratuitous
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully deterministic hardcoded data
+        passed: true
+        comment: Fully deterministic hardcoded data, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only ChartContainer imported and used
+        passed: true
+        comment: Only `ScatterChart` imported and used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        comment: Appropriate complexity for a from-scratch word-cloud layout; no fake
-          functionality
+        passed: true
+        comment: No fake UI/functionality, but the spiral saturation edge case was
+          acknowledged in a comment yet never actually handled (words are just dropped)
+          — that's the root cause of the data-loss weakness
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct default export, skipAnimation set
+        passed: true
+        comment: Correctly default-exports the Chart component for the harness to
+          mount/screenshot; no manual save calls
     library_mastery:
-      score: 2
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 5
         max: 5
-        comment: ChartContainer mounted with series=[] and used purely as an empty
-          SVG root; none of MUI X's series/scale/marks machinery is actually exercised
+        passed: true
+        comment: 'Correct use of `slots.scatter`, `skipAnimation`, `disableVoronoi`,
+          `tooltip.trigger: ''none''`, and real xScale/yScale-driven coordinates rather
+          than raw pixel placement'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        comment: The hand-rolled spiral + raw <text> approach is generic - it isn't
-          leveraging anything specific to MUI X and could be built in any SVG-capable
-          framework
+        passed: true
+        comment: Overriding the scatter mark slot to draw custom SVG text keyed to
+          real chart scales is a genuinely MUI-X-specific technique that would need
+          an entirely different approach in another library
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-marks
+  - spiral-layout
   - collision-detection
   patterns:
   - data-generation
