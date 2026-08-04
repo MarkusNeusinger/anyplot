@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ternary-basic: Basic Ternary Plot
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-08-04
+Quality: 90/100 | Updated: 2026-08-04
 """
 
 import os
