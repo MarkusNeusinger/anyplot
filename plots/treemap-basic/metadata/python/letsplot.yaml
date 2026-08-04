@@ -2,92 +2,118 @@ library: letsplot
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:55:28Z'
-updated: '2026-05-05T22:54:52Z'
-generated_by: claude-haiku
-workflow_run: 25406410578
+updated: '2026-08-04T09:24:46Z'
+generated_by: claude-sonnet
+workflow_run: 30894379430
 issue: 766
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/letsplot/plot-dark.html
-quality_score: 93
+quality_score: 88
 review:
   strengths:
-  - 'Perfect Visual Quality: Both renders pass rigorous theme-readiness checks with
-    readable text in all elements'
-  - 'Clean theme adaptation: Colors stay constant, chrome flips appropriately; no
-    dark-on-dark or light-on-light failures'
-  - 'Thoughtful design: Adaptive labeling, theme-adaptive tokens, and Okabe-Ito palette
-    show design consideration beyond defaults'
-  - 'Correct treemap implementation: Squarify algorithm produces well-balanced rectangles;
-    hierarchy is clear'
-  - 'Realistic, neutral data: Budget allocation scenario is compelling and accessible'
-  - 'Perfect code quality: Reproducible, clean imports, appropriate complexity'
-  weaknesses: []
+  - 'Squarify layout bug from attempt 1 is fixed: the treemap now fully tiles its
+    bounding box in both renders with no unfilled gap'
+  - 'Title now includes all four required segments in the mandated format: "Budget
+    Breakdown · treemap-basic · python · letsplot · anyplot.ai"'
+  - Per-swatch WCAG-aware label color selection (best_label_color) fixes the prior
+    borderline-contrast failure on the red HR rectangle — every label is now clearly
+    legible against its own fill in both themes
+  - Correct Imprint canonical palette order with brand green (#009E73) first for Engineering,
+    identical data colors across light and dark renders, theme-correct chrome (background,
+    title, legend, borders) flips correctly
+  - Alpha-based shading intensity by subcategory rank adds a hierarchy cue beyond
+    color and label alone, addressing the spec's "nesting depth or color shading intensity"
+    note
+  - Adaptive label density (category+subcategory+% for large rects, subcategory-only
+    for smaller ones) keeps the treemap uncluttered
+  - Deterministic, realistic two-level budget-allocation data (6 departments, 10 cost
+    centers) with sensible value ranges
+  - Dead no-op ternary from attempt 1 is gone; code is clean and reproducible with
+    correct dual PNG+HTML output via ggsave
+  weaknesses:
+  - Alpha-shading differences between subcategories of the same department (0.95 down
+    to a 0.55 floor) are quite subtle at final render size — a viewer is unlikely
+    to notice the intensity gradient without close inspection; a larger step or a
+    visible outline could make the nesting cue read more clearly.
+  - The squarify layout sorts and tiles all 10 leaf rows as one flat pass by value
+    rather than first partitioning space by department and then subdividing within
+    each department block, so same-department rectangles aren't spatially contiguous
+    (e.g. Engineering appears as three separated blocks). Category identity still
+    reads correctly via color and the legend, but the layout doesn't visually convey
+    true two-level nesting the way a grouped treemap would.
+  - Library mastery remains fairly generic — the implementation is built from geom_rect
+    + geom_text, patterns that are directly transferable to plotnine/ggplot2 rather
+    than showcasing anything distinctive to lets-plot.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1 (correct)
-      Chrome: Title "Budget Breakdown · treemap-basic · letsplot · anyplot.ai" in dark text (readable); department labels and percentages clearly visible; legend on left side with all 6 departments readable
-      Data: Okabe-Ito palette colors 1-6 (green, orange, blue, pink, yellow, sky blue); rectangles properly sized; borders in soft gray (#4A4A44); all labels readable
-      Legibility verdict: PASS - all text is readable against light background
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Budget Breakdown · treemap-basic · python · letsplot · anyplot.ai" in dark ink, centered, fully readable, comfortably filling the canvas width without clipping. "Department" legend at the right with 6 color swatches (Engineering, Marketing, Sales, Operations, HR, Finance), dark title text and slightly softer dark entry text, all readable against the light legend box.
+      Data: 10 rectangles fully tile the treemap's bounding box (no gaps), sized proportional to value, using the Imprint palette in canonical order — green (Engineering), lavender (Marketing), blue (Sales), ochre/brown (Operations), red (HR), cyan (Finance). Each rectangle shows a bold label (category/subcategory/percentage for large rects, subcategory + percentage for smaller ones), with per-swatch text color (near-black on light swatches like green/lavender/orange, near-white on darker swatches like blue/red) giving strong contrast everywhere, including the red "HR Recruiting" rectangle that was borderline in attempt 1. Thin borders separate all rectangles.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17 (correct)
-      Chrome: Title in light text (readable); all labels in light colors (#F0EFE8 and #B8B7B0); clearly visible against dark background
-      Data: Same Okabe-Ito colors as light render (confirms proper theme-static palette); green Engineering (#009E73) remains visible on dark surface; borders subtly visible
-      Legibility verdict: PASS - all text is readable against dark background, no dark-on-dark failures
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title now in light ink (#F0EFE8), fully readable against the dark surface. Legend box uses the dark elevated surface with light borders, legend title and entries clearly legible.
+      Data: Rectangle fill colors and layout are pixel-identical to the light render (only chrome flipped), confirming the data palette held constant across themes. Per-swatch label colors are unchanged from the light render (they're computed from swatch luminance, not theme), and remain highly legible on every rectangle in the dark surface too — no dark-on-dark or light-on-light failures observed.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable in both themes
+        comment: All font sizes explicitly set, readable in both themes and at 400px
+          mobile scale; smallest '5%' labels are legible but tight
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels fully readable, no collisions
+        comment: No collisions between labels, rectangles, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All rectangles and labels visible with excellent contrast
+        comment: All 10 rectangles clearly visible with distinct borders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Per-swatch WCAG-aware label color fixes the prior red-rectangle contrast
+          failure
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas well-utilized at 75%; balanced margins
+        comment: Squarify bug fixed; treemap now fully tiles its bounding box with
+          no gap, correct 3200x1800 canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with spec-id format
+        comment: Descriptive title in mandated format; treemap correctly has no traditional
+          axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series follows Okabe-Ito order; theme-correct
-          backgrounds'
+        comment: Canonical Imprint order, brand green first, theme-correct chrome
+          in both renders
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -95,22 +121,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Professional styling with theme-adaptive tokens; thoughtful color
-          hierarchy
+        comment: Clean palette, per-swatch contrast, subtle alpha shading; layout
+          gap that undercut polish in attempt 1 is fixed
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: theme_void() provides clean base; subtle borders; generous whitespace
+        comment: Subtle borders, generous whitespace, no more unfilled-gap artifact
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear visual hierarchy through rectangle size; color guides identification
+        comment: Adaptive label density plus subcategory alpha shading create visual
+          hierarchy
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -118,25 +145,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct treemap type with proper hierarchical nesting
+        comment: Clearly recognizable treemap, fully tiles its space
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: All spec requirements present
+        comment: Distinct category colors, labels for larger rects, subtle borders,
+          and shading-intensity hierarchy present but the alpha step is subtle
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories map to colors; values determine area
+        comment: Value correctly drives rectangle area
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Title now includes the required 'python' segment; legend labels match
+          departments
     data_quality:
       score: 15
       max: 15
@@ -146,55 +175,57 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates full treemap features
+        comment: Two-level hierarchy, area encoding, color grouping, adaptive labels,
+          alpha shading
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world budget allocation; realistic and neutral
+        comment: Plausible, neutral company budget-allocation data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values sensible; proportions logically sound
+        comment: Values sum sensibly with a realistic 5-16 range per cost center
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Clean flow; squarify() is necessary
+        comment: squarify() and per-swatch contrast helpers are justified by lets-plot
+          lacking a native treemap geom, but add non-trivial helper-function count
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is deterministic
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used lets-plot symbols and pandas/os imported
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and well-structured
+        comment: Layout bug and dead ternary from attempt 1 are both fixed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -202,20 +233,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: High-level ggplot2-style API with correct patterns
+        comment: Correct ggplot-style layering, scale_*_identity/manual, theme_void
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Custom squarify algorithm and adaptive labeling
+        passed: false
+        comment: geom_rect + geom_text approach is generic, directly transferable
+          to plotnine/ggplot2
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - groupby-aggregation
   dataprep: []
   styling:
+  - alpha-blending
   - minimal-chrome
+  - edge-highlighting

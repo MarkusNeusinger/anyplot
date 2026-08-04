@@ -1,7 +1,7 @@
 """ anyplot.ai
 treemap-basic: Basic Treemap
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-05
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-08-04
 """
 
 import os
@@ -18,6 +18,8 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    scale_alpha_identity,
+    scale_color_identity,
     scale_fill_manual,
     theme,
     theme_void,
@@ -72,12 +74,17 @@ df_data = df_data.sort_values("value", ascending=False).reset_index(drop=True)
 
 
 def squarify(values, x, y, width, height):
-    """Compute treemap rectangles using squarify algorithm."""
+    """Compute treemap rectangles using squarify algorithm.
+
+    Tracks a running remaining-total and remaining width/height (rather than
+    the fixed global values) so consumed area always matches the actual
+    remaining container, guaranteeing the tiling fully fills the bounding box.
+    """
     if len(values) == 0:
         return []
 
-    total = sum(values)
-    if total == 0:
+    remaining_total = sum(values)
+    if remaining_total == 0:
         return []
 
     rects = []
@@ -94,7 +101,7 @@ def squarify(values, x, y, width, height):
             for v in remaining_values:
                 test_values = row_values + [v]
                 test_sum = row_sum + v
-                row_width = (test_sum / total) * width if total > 0 else 0
+                row_width = (test_sum / remaining_total) * remaining_w if remaining_total > 0 else 0
 
                 if row_width > 0:
                     worst_ratio = 0
@@ -115,7 +122,7 @@ def squarify(values, x, y, width, height):
                     row_values = test_values
                     row_sum = test_sum
 
-            row_width = (row_sum / total) * width if total > 0 else 0
+            row_width = (row_sum / remaining_total) * remaining_w if remaining_total > 0 else 0
             current_y = remaining_y
             for rv in row_values:
                 rect_height = (rv / row_sum) * remaining_h if row_sum > 0 else 0
@@ -124,6 +131,7 @@ def squarify(values, x, y, width, height):
 
             remaining_x += row_width
             remaining_w -= row_width
+            remaining_total -= row_sum
             remaining_values = remaining_values[len(row_values) :]
         else:
             col_values = []
@@ -133,7 +141,7 @@ def squarify(values, x, y, width, height):
             for v in remaining_values:
                 test_values = col_values + [v]
                 test_sum = col_sum + v
-                col_height = (test_sum / total) * height if total > 0 else 0
+                col_height = (test_sum / remaining_total) * remaining_h if remaining_total > 0 else 0
 
                 if col_height > 0:
                     worst_ratio = 0
@@ -154,7 +162,7 @@ def squarify(values, x, y, width, height):
                     col_values = test_values
                     col_sum = test_sum
 
-            col_height = (col_sum / total) * height if total > 0 else 0
+            col_height = (col_sum / remaining_total) * remaining_h if remaining_total > 0 else 0
             current_x = remaining_x
             for cv in col_values:
                 rect_width = (cv / col_sum) * remaining_w if col_sum > 0 else 0
@@ -163,6 +171,7 @@ def squarify(values, x, y, width, height):
 
             remaining_y += col_height
             remaining_h -= col_height
+            remaining_total -= col_sum
             remaining_values = remaining_values[len(col_values) :]
 
     return rects
@@ -189,6 +198,12 @@ rect_df["label_x"] = (rect_df["xmin"] + rect_df["xmax"]) / 2
 rect_df["label_y"] = (rect_df["ymin"] + rect_df["ymax"]) / 2
 rect_df["width"] = rect_df["xmax"] - rect_df["xmin"]
 rect_df["height"] = rect_df["ymax"] - rect_df["ymin"]
+
+# Shading intensity by nesting depth: within each department, the largest
+# cost center is fully opaque and successive ones step down in alpha, giving
+# a visual cue for the subcategory hierarchy beyond color alone.
+rect_df["subcat_rank"] = rect_df.groupby("category")["value"].rank(ascending=False, method="first") - 1
+rect_df["shade_alpha"] = (0.95 - 0.15 * rect_df["subcat_rank"]).clip(lower=0.55)
 
 # Create adaptive labels for improved readability
 total_value = df_data["value"].sum()
@@ -217,33 +232,66 @@ unique_categories = df_data["category"].unique().tolist()
 category_colors = {cat: IMPRINT[i % len(IMPRINT)] for i, cat in enumerate(unique_categories)}
 color_values = [category_colors[cat] for cat in unique_categories]
 
-# Determine text color based on theme for better contrast
-TEXT_COLOR = INK if THEME == "light" else INK
-TEXT_SIZE = 14
+# Per-swatch label color: pick whichever of near-black/near-white ink gives
+# the higher WCAG contrast against that category's fill, so labels stay
+# legible on both light swatches (e.g. lavender) and dark ones (e.g. red).
+DARK_INK = "#1A1A17"
+LIGHT_INK = "#F0EFE8"
+
+
+def relative_luminance(hex_color):
+    r, g, b = (int(hex_color.lstrip("#")[i : i + 2], 16) / 255 for i in (0, 2, 4))
+
+    def channel(c):
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+    r, g, b = channel(r), channel(g), channel(b)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast_ratio(lum_a, lum_b):
+    lighter, darker = max(lum_a, lum_b), min(lum_a, lum_b)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def best_label_color(bg_hex):
+    bg_lum = relative_luminance(bg_hex)
+    dark_contrast = contrast_ratio(bg_lum, relative_luminance(DARK_INK))
+    light_contrast = contrast_ratio(bg_lum, relative_luminance(LIGHT_INK))
+    return DARK_INK if dark_contrast >= light_contrast else LIGHT_INK
+
+
+label_colors = {cat: best_label_color(color) for cat, color in category_colors.items()}
+rect_df["label_color"] = rect_df["category"].map(label_colors)
+TEXT_SIZE = 7
 
 # Create the plot
 plot = (
     ggplot(rect_df)
     + geom_rect(
-        aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax", fill="category"), color=INK_SOFT, size=1.2, alpha=0.95
+        aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax", fill="category", alpha="shade_alpha"),
+        color=INK_SOFT,
+        size=0.7,
     )
-    + geom_text(aes(x="label_x", y="label_y", label="label"), size=TEXT_SIZE, color=TEXT_COLOR, fontface="bold")
+    + geom_text(aes(x="label_x", y="label_y", label="label", color="label_color"), size=TEXT_SIZE, fontface="bold")
     + scale_fill_manual(values=color_values)
-    + labs(title="Budget Breakdown · treemap-basic · letsplot · anyplot.ai", fill="Department")
+    + scale_color_identity()
+    + scale_alpha_identity()
+    + labs(title="Budget Breakdown · treemap-basic · python · letsplot · anyplot.ai", fill="Department")
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_title=element_text(size=24, color=INK, hjust=0.5),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=16, color=INK, hjust=0.5),
+        legend_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_position=[0.15, 0.5],
+        legend_position="right",
         axis_title=element_blank(),
         axis_text=element_blank(),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save outputs with theme suffix
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
