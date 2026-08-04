@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: treemap-basic
 created: '2026-08-04T09:20:47Z'
-updated: '2026-08-04T09:27:02Z'
+updated: '2026-08-04T09:42:52Z'
 generated_by: claude-sonnet
 workflow_run: 30894687705
 issue: 766
@@ -15,46 +15,54 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - Implements a proper squarified treemap layout (Bruls-Huizing-van Wijk), not a
-    naive grid, producing well-proportioned, aspect-balanced rectangles
+  - Proper squarified treemap layout (Bruls-Huizing-van Wijk algorithm), not a naive
+    grid, producing well-proportioned rectangles
+  - Source now blends intra-category tint via a fixed-ceiling LCHab lightness lift
+    (tint_lightness) instead of blending toward the theme background, correctly addressing
+    the attempt-1 VQ-07 finding at the code level
   - Contrast-aware label ink (per-tile relative-luminance check) keeps every label
-    legible regardless of the underlying tile's saturation or tint, in both themes
-  - Category label 'chips' backed by the elevated-bg token create a clean two-level
-    hierarchy (category totals + subcategory name/value) without needing a separate
-    legend
-  - 'Correct Imprint palette canonical ordering by category rank (green -> purple
-    -> blue -> ochre -> red), first series is brand green #009E73'
-  - Clean theme-adaptive chrome (backgrounds, borders, chip fills) and a realistic,
-    neutral cloud-storage dataset with sensible TB values
+    legible regardless of the underlying tile's saturation or tint
+  - Category label chips backed by the elevated-bg token create a clean two-level
+    hierarchy without needing a separate legend
+  - 'Correct Imprint palette canonical ordering by category rank, first series is
+    brand green #009E73'
+  - Clean theme-adaptive chrome and a realistic, neutral cloud-storage dataset with
+    sensible TB values
   weaknesses:
-  - 'VQ-07: The intra-category tint `weighted_color_mean(tint, PAGE_BG, base)` blends
-    toward the theme-dependent PAGE_BG, so every subcategory tile except the largest
-    one in each group renders a different hue between light and dark mode (e.g. ''ML
-    Model Store'' is a pastel mint in light mode but a muted dark green in dark mode).
-    The style guide requires the Imprint data colors to be pixel-identical across
-    themes -- only chrome may flip. Fix: blend toward a fixed neutral (e.g. white/black
-    at a fixed ratio, or adjust the HSL/LCH lightness channel directly) instead of
-    PAGE_BG, so the tint direction is the same in both renders.'
-  - 'DQ-01: All five categories have 2-3 subcategories; showing at least one category
-    with a single subcategory (or none) would better exercise the ''optional sub-category''
-    edge case the spec calls out.'
-  - 'LM-02: The overall technique (manual polygon rectangles + luminance-based text
-    color) is not distinctly Makie -- it could be replicated in matplotlib patches
-    with similar effort. Consider leaning further into Makie-specific strengths (e.g.
-    Colors.jl colorspace-aware blending in Lab/LCH for perceptually uniform tints)
-    to raise distinctiveness.'
+  - 'CRITICAL / PIPELINE: plot-light.png and plot-dark.png in this review run do not
+    match the current source (commit 95229d2e8, the attempt-1 fix). The render shows
+    Customer Support split into two leaves (''Ticket Attachments 24 TB'' + ''Call
+    Recordings 19 TB''), but the current source defines only one leaf (''Ticket Attachments'',
+    43.0). Pixel sampling also shows leaf tint colors still differ between light and
+    dark (e.g. ML Model Store: RGB(50,176,140) light vs RGB(5,132,97) dark; Container
+    Registry: RGB(218,169,248) light vs RGB(128,81,161) dark) — only possible under
+    the OLD weighted_color_mean(tint, PAGE_BG, base) algorithm, not the tint_lightness(base,
+    frac) fixed-ceiling LCHab function present in the current file. The rendered artifacts
+    predate the attempt-1 fix commit and must be regenerated from the current source
+    before this attempt can be scored on its actual merits.'
+  - 'VQ-07 (as rendered): leaf tint is not theme-identical — same underlying defect
+    flagged in attempt 1, still visible in the provided PNGs even though the source-level
+    fix is already present.'
+  - 'DQ-01 (as rendered): no category shows a single/zero-leaf edge case in the images
+    shown — the source-level fix (Customer Support now single-leaf) is present but
+    not reflected in the provided renders.'
+  - 'LM-02: once correctly rendered, the LCHab-based perceptually uniform tinting
+    (Colors.jl LCHab conversion) would be a genuinely Makie/Colors.jl-distinctive
+    technique, but this cannot be credited until the renders reflect the current source.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1 -- not pure white, not dark.
-      Chrome: Title "Cloud Storage Usage by Team · treemap-basic · julia · makie · anyplot.ai" in dark ink, centered at top, comfortably sized, not clipped. Category label chips use a cream elevated-bg fill with a soft border, bold dark text. Subtle off-white hairlines separate adjacent tiles; darker soft-ink outlines separate the five category groups.
-      Data: Five category groups (Data & Analytics 202TB green, Engineering 175TB purple, Marketing 55TB blue, Product Design 45TB ochre, Customer Support 43TB red) tiled via a squarified treemap, each split into 2-3 labeled subcategory leaves with area proportional to value (e.g. Data Warehouse 96TB, CI/CD Artifacts 82TB). Leaf tiles use a lightness tint of the category's base color to indicate rank within the category; label text color flips between dark and light per-tile based on the tile's own luminance, and stays readable everywhere observed.
-      Legibility verdict: PASS
+      Background: warm off-white, matches #FAF8F1.
+      Chrome: title "Cloud Storage Usage by Team · treemap-basic · julia · makie · anyplot.ai" renders in dark ink, centered, not clipped. Five category groups (Data & Analytics 202TB green, Engineering 175TB purple, Marketing 55TB blue, Product Design 45TB ochre, Customer Support 43TB red) tiled via a squarified treemap. Category label chips use a cream elevated-bg fill with soft border and bold dark text; subtle off-white hairlines separate leaf tiles; darker soft-ink outlines separate the five category groups.
+      Data: Customer Support renders as TWO leaves — "Ticket Attachments 24 TB" and "Call Recordings 19 TB" — but the current source file (commit 95229d2e8) defines Customer Support with only ONE leaf ("Ticket Attachments", 43.0). This render does not match the reviewed source.
+      Legibility verdict: PASS (all text readable), but the render content itself is STALE relative to the source under review.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17 -- not pure black, not light.
-      Chrome: Title renders in light ink, clearly visible. Category chips flip to the dark elevated-bg (#242420) fill with light bold text, fully legible. Hairlines and group outlines flip to their dark-theme soft-ink tone.
-      Data: Same five category groups in the same positions with the same base hues (green/purple/blue/ochre/red) as the light render -- the top-level category colors are identical across themes as required. However, the intra-category tint blends each non-primary subcategory tile toward the theme's PAGE_BG rather than a fixed neutral, so several leaf tiles (e.g. "ML Model Store", "Log Archive", "Container Registry") show a visibly different hue/tone between the light and dark renders instead of being pixel-identical -- this is a real palette-compliance gap (see VQ-07 in Weaknesses), even though no text is dark-on-dark or otherwise unreadable.
-      Legibility verdict: PASS (all text reads clearly in dark mode; the issue found is a data-color theme-consistency defect, not a legibility failure)
+      Background: warm near-black, matches #1A1A17.
+      Chrome: title flips to light ink and stays clearly visible; category chips flip to the dark elevated-bg (#242420) fill with light bold text. No dark-on-dark failures found — all chrome text reads clearly.
+      Data: Top-level category base colors match the light render (green/purple/blue/ochre/red preserved), but intra-category tinted leaf colors differ from their light-render counterparts. Pixel sampling: ML Model Store RGB(50,176,140) light vs RGB(5,132,97) dark; Container Registry RGB(218,169,248) light vs RGB(128,81,161) dark. This is the theme-dependent-tint defect flagged in attempt 1 (VQ-07); the current source already replaces the blend with a fixed-ceiling LCHab lift (tint_lightness) that should make these identical across themes, so this render also does not reflect the current source.
+      Legibility verdict: PASS (all text readable), but again the render content is STALE relative to the source under review.
+
+    Overall: both images are internally readable and theme-correct on the chrome layer, but the DATA and TINT COLORS in both renders correspond to the pre-fix version of the code (before commit 95229d2e8), not the current implementation file. This is a pipeline artifact-sync issue — the PNGs must be regenerated from the current source before the VQ-07 and DQ-01 fixes can be verified visually.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -65,50 +73,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title scaling formula, chip fontsize=14
-          bold, leaf fontsize=12); readable in both themes via contrast-aware ink
+        comment: All text readable in both themes, explicit font sizes, title auto-scaled
+          to length
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text observed in either render
+        comment: No collisions between labels, chips, or tiles
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tiles and labels clearly visible; small tiles correctly omit labels
-          that wouldn't fit
+        comment: Tile sizes proportional to values; labels shown/omitted based on
+          tile size appropriately
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Per-tile luminance-based text ink is a strong CVD/contrast strategy;
-          no red-green sole signal
+        comment: Distinct hues per category, contrast-aware label ink, no red-green-only
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Treemap fills the canvas well with balanced margins; nothing cut
-          off
+        comment: Treemap fills the canvas well, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for a treemap; title is fully descriptive and
-          units (TB) are shown on every tile
+        comment: Descriptive title; axis decorations correctly hidden for a treemap
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Category-level colors correct and theme-consistent, but intra-category
-          tint blends toward theme-dependent PAGE_BG, making most subcategory tile
-          colors differ between light and dark renders
+        comment: As rendered, leaf tint colors are not theme-identical (e.g. ML Model
+          Store RGB(50,176,140) light vs RGB(5,132,97) dark) — this is the pre-fix
+          render; current source already contains the fix (tint_lightness with fixed
+          LCHab ceiling) but it is not reflected in these PNGs
     design_excellence:
       score: 16
       max: 20
@@ -117,19 +124,22 @@ review:
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: 'Strong design: custom squarified layout, elevated label chips, contrast-aware
-          ink -- clearly above defaults'
+        passed: true
+        comment: Custom squarified layout, elevated label chips, contrast-aware ink;
+          clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
+        passed: true
         comment: Spines/decorations hidden, subtle hairlines, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
-        comment: Size-sorted layout and total/value labels make the largest storage
-          consumers immediately obvious
+        passed: true
+        comment: Size-sorted layout and value labels make top storage consumers immediately
+          obvious
     spec_compliance:
       score: 15
       max: 15
@@ -138,24 +148,29 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct squarified treemap
+        passed: true
+        comment: Correct treemap with nested rectangles
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Distinct category colors, labels on larger rects only, subtle borders,
-          hierarchy shown via nesting + shading -- all spec notes covered
+        passed: true
+        comment: Distinct category colors, labels on larger rects, borders between
+          rectangles, hierarchy shown via nesting and tint
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Area proportional to value via squarify; all data visible
+        passed: true
+        comment: Rectangle area correctly proportional to value at both hierarchy
+          levels
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format correct; in-tile labels substitute appropriately for
-          a legend on this plot type
+        passed: true
+        comment: Title matches '{Descriptive Title} · spec-id · julia · makie · anyplot.ai';
+          no separate legend needed since labels are in-place
     data_quality:
       score: 14
       max: 15
@@ -164,19 +179,22 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Good size variation across categories and leaves, but no category
-          exercises the 'optional sub-category' single/zero-leaf edge case
+        passed: true
+        comment: As rendered, no category shows the single/zero-leaf edge case; source
+          already fixes this (Customer Support now one leaf) but it is not visible
+          in these stale renders
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Cloud storage usage by team is a real, neutral, comprehensible business
-          scenario
+        passed: true
+        comment: Neutral, plausible cloud-storage-by-team scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: TB values are sensible for company-scale cloud storage
+        passed: true
+        comment: TB values and category totals are sensible and internally consistent
     code_quality:
       score: 9
       max: 10
@@ -185,28 +203,33 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Uses helper functions (squarify, row_rects, contrast_ink) -- reasonably
-          necessary for a squarified layout algorithm Makie has no native geom for
+        passed: true
+        comment: Helper functions (squarify, tint_lightness, contrast_ink) are reasonably
+          necessary for the treemap layout algorithm, not gratuitous abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Random.seed!(42) set; data is deterministic (hardcoded)
+        passed: true
+        comment: Random.seed!(42) set, though data itself is deterministic literals
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        passed: true
         comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake functionality; complexity matches the plot type's needs
+        passed: true
+        comment: No fake UI, no over-engineering; layout math is well-commented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: save('plot-$(THEME).png', fig; px_per_unit=2) -- canonical convention
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current API
     library_mastery:
       score: 6
       max: 10
@@ -215,22 +238,24 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Vectorized poly! batch rendering with a color vector, DataAspect(),
-          hidedecorations!/hidespines! -- solid idiomatic Makie usage
+        passed: true
+        comment: Vectorized poly! batch rendering, DataAspect(), hidedecorations!/hidespines!
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        comment: Polygon-rectangle + luminance-based ink approach could be replicated
-          similarly in matplotlib; not strongly Makie-distinctive
+        passed: false
+        comment: Source now uses Colors.jl LCHab perceptually-uniform lightness blending,
+          which would be a genuinely distinctive touch, but it cannot be credited
+          until a fresh render actually reflects it
   verdict: REJECTED
 impl_tags:
-  dependencies:
-  - colors-jl
+  dependencies: []
   techniques:
-  - patches
   - annotations
+  - patches
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
