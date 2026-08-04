@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-04
