@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: wordcloud-basic
+created: '2026-08-04T23:16:49Z'
+updated: '2026-08-04T23:21:24Z'
+generated_by: claude-sonnet
+workflow_run: 30958628617
+issue: 1012
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Custom spiral-placement algorithm with rectangle collision detection plus a closest-to-center
+    grid fallback produces a dense, overlap-free word cloud despite ggplot2 having
+    no native word-cloud geom.
+  - Font size scales with sqrt(frequency) so rendered glyph AREA (not height) tracks
+    word importance -- a more perceptually accurate encoding than naive linear scaling,
+    and the rationale is documented in code comments.
+  - 'Correct Imprint palette usage: brand green (#009E73) as the base, imprint_seq
+    gradient (green to #4467A3) reserved for the highest-frequency term, and theme-correct
+    chrome (background, title ink) in both light and dark renders.'
+  - Zero overlap and zero edge clipping across both renders; canvas is well utilized
+    (~85%+ fill) with balanced margins on all sides.
+  - Realistic, neutral renewable-energy term-frequency dataset with a plausible power-law-like
+    frequency decay by rank.
+  weaknesses:
+  - Color redundantly encodes the same signal as size (frequency) rather than a second
+    dimension -- nice polish but limited added analytical value; mapping color to
+    a category/theme grouping would strengthen the storytelling.
+  - Smallest words (size_min = 3.2mm, e.g. 'subsidy', 'capacity') shrink to only ~5-6px
+    cap height at a 400px mobile thumbnail -- borderline legible; consider raising
+    size_min slightly.
+  - LM-02 distinctive-feature usage is moderate -- the placement algorithm itself
+    is generic R, not a ggplot2-specific feature; only the final rendering (coord_fixed
+    + mm-based geom_text sizing) leans on ggplot2 idioms.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "wordcloud-basic · r · ggplot2 · anyplot.ai" centered at top in dark ink, clearly legible. No axes, ticks, or grid (theme_void, appropriate for this plot type).
+      Data: 30 renewable-energy terms arranged in a dense, roughly circular/rectangular cloud filling most of the canvas. Font size scales with word frequency ("solar", "wind", "renewable", "energy" are largest; "capacity", "subsidy", "market" are smallest). Nearly all words render in Imprint brand green (#009E73); the single highest-frequency word "solar" renders in the sequential gradient's high-end blue (#4467A3), with "wind" showing an intermediate teal-blue -- confirming a continuous imprint_seq color scale keyed to frequency.
+      Legibility verdict: PASS -- all text, including the smallest words, is readable against the light background at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title, now rendered in light ink (near-white), clearly legible against the dark background. No dark-on-dark issues found.
+      Data: Identical word set, layout, sizes, and colors as the light render -- "solar" is the same blue, all other words the same green -- confirming only chrome (background/title ink) flips between themes and data colors are unchanged.
+      Legibility verdict: PASS -- all text readable against the dark background; no dark-on-dark or light-on-light failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Sizes explicitly computed from sqrt(frequency); readable in both
+          themes at full size. Smallest words (~3.2mm) would shrink to borderline
+          legibility at a 400px mobile thumbnail.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Custom collision-avoidance spiral + grid fallback produces zero overlapping
+          words across both renders.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Word sizes well adapted to frequency density, from prominent 'solar'
+          down to small but still legible 'subsidy'/'capacity'.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue gradient is CVD-safe and clearly distinguishable from
+          both backgrounds; no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Word cloud fills ~85%+ of canvas with balanced margins on all sides;
+          nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a word cloud (theme_void appropriate); title present
+          and descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Base brand green #009E73 with imprint_seq gradient to #4467A3 exactly
+          matching style guide; theme-correct backgrounds in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom spiral placement + sqrt-area sizing shows strong, thoughtful
+          design clearly above a naive default word cloud.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void removes all chrome; generous, balanced whitespace; polished
+          bold typography throughout.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size and color hierarchy create a clear focal point on 'solar'/'renewable'/'energy',
+          though color mostly duplicates the size signal rather than adding a second
+          dimension.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct word cloud with size-encodes-frequency.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Word/frequency data, size mapping, and space-filling arrangement
+          (spiral placement) all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 30 words placed and visible; no data hidden or mismapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'wordcloud-basic · r · ggplot2 · anyplot.ai';
+          no legend needed (color scale intentionally guide='none').
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 terms spanning a wide frequency range (5 to ~150), showing full
+          size variation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible renewable-energy report term-frequency scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Power-law-like frequency decay by rank is realistic for term-frequency
+          data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> layout -> plot -> save, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, tibble, ragg all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is appropriate and necessary given ggplot2 has no native
+          word-cloud geom; no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ragg::agg_png at the correct dimensions.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_text, scale_size_identity, coord_fixed, theme_void, scale_color_gradient
+          all used idiomatically.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: mm-based geom_text sizing + coord_fixed for area-true text scaling
+          is a ggplot2-specific technique, though the placement algorithm itself is
+          generic R.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap

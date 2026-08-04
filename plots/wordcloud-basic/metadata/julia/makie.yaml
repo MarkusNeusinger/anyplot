@@ -1,0 +1,255 @@
+library: makie
+language: julia
+specification_id: wordcloud-basic
+created: '2026-08-04T23:11:26Z'
+updated: '2026-08-04T23:31:10Z'
+generated_by: claude-sonnet
+workflow_run: 30958755041
+issue: 1012
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Color now encodes sentiment polarity (positive -> brand green #009E73, negative
+    -> matte red #AE3030, neutral -> muted gray) rather than repeating the frequency-rank
+    signal already shown by size -- this is the exact fix requested in Attempt 1 review
+    and correctly applies the style guide''s sentiment/polarity semantic exception'
+  - min_fs raised from 16 to 22, so the smallest-frequency tail words (manual, refund,
+    restart) stay legible at mobile thumbnail scale
+  - 'Theme-adaptive chrome is pixel-exact: #FAF8F1 light / #1A1A17 dark backgrounds,
+    INK/INK_MUTED tokens flip correctly, data colors (green/red) are byte-identical
+    across both renders'
+  - Genuinely Makie-distinctive collision-free placement built on real glyph metrics
+    (Makie.text_bb) rather than approximate character-count heuristics
+  - Realistic, neutral smart-thermostat support-ticket scenario with a well-rounded
+    frequency range (16-340) spanning both satisfaction and pain-point terms
+  - Title format exactly matches the mandated `wordcloud-basic · julia · makie · anyplot.ai`
+    pattern, fully legible, no clipping in either theme
+  - 'Fully deterministic/reproducible: hardcoded word/frequency arrays, no RNG dependency'
+  weaknesses:
+  - 'Several of the largest, most central (highest-frequency) words touch with zero
+    visible gap despite the pad=6.0 collision buffer: ''savings'' and ''love'' run
+    directly together with no whitespace, as do ''love''/''app'', ''app''/''easy'',
+    and all three of ''notifications''/''setup''/''schedule'' -- verified by pixel-cropping
+    the renders. This is precisely the densest, most eye-catching part of the cloud,
+    so it undermines both No-Overlap legibility and the ''generous whitespace'' refinement
+    expectation. Fix: increase the pad buffer used in the collision check (e.g. scale
+    pad with fontsize, ~0.12-0.15x fontsize, rather than a fixed 6.0 units) so visually
+    distinct gaps appear between adjacent words, especially near the spiral''s origin
+    where the largest words are placed first.'
+  - No caption/legend documents the green=positive / red=negative / gray=neutral color
+    mapping -- a first-time viewer must infer the sentiment encoding purely from the
+    words' semantic content. A small unobtrusive legend or subtitle would make the
+    storytelling fully self-evident rather than relying on the reader's own judgment
+    of word connotation.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "wordcloud-basic · julia · makie · anyplot.ai" renders bold and dark, top-center, fully legible. No axes/spines/grid (correctly hidden for a word cloud).
+      Data: 44 lowercase support-ticket terms sized by sqrt(frequency); font sizes range ~22-108pt. Color encodes sentiment: positive terms (love, easy, savings, helpful, intuitive, reliable, recommend, sleek) render in brand green #009E73; negative/complaint terms (slow, laggy, bugs, confusing, glitch, freeze, restart, unresponsive, complicated, expensive, disappointed, refund) render in matte red #AE3030; neutral/functional terms render in muted gray. Pixel-level cropping confirms no glyph-on-glyph overlap, but several of the largest central words (savings/love, love/app, app/easy, notifications/setup/schedule) touch with zero visible gap, blurring word boundaries in the cloud's densest region.
+      Legibility verdict: PASS (all text readable; touching-word gap issue is a refinement/scanability concern, not an illegibility failure -- no glyphs are obscured or unreadable).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title now in light ink, fully legible against the dark surface. No dark-on-dark text observed anywhere -- neutral words switch to a lighter warm-gray tone that remains clearly visible.
+      Data: Green (#009E73) and red (#AE3030) data colors are visually identical to the light render -- only the chrome (background, muted-gray tone) flips as expected. Same touching-word pattern as the light render (savings/love, notifications/setup/schedule) since word geometry is theme-independent.
+      Legibility verdict: PASS (no dark-on-dark failures; brand green and matte red both read clearly on the near-black surface).
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: min_fs raised to 22, all sizes explicit and readable in both themes;
+          touching word boundaries in the densest cluster slightly blur legibility
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: No glyph-on-glyph pixel overlap, but several of the largest words
+          (savings/love, love/app, app/easy, notifications/setup/schedule) touch with
+          zero gap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Font sizing well adapted to word count/frequency density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red/gray scheme is CVD-safe and redundantly encoded with size,
+          not the sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Strong canvas utilization, no cut-off content, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed; title correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct semantic-exception use of Imprint palette: green=positive,
+          matte red=negative, muted gray=neutral; theme chrome correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Meaningful, insight-driven color mapping (sentiment) clearly above
+          library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/axes fully hidden, clean background, but whitespace is not
+          generous in the densest central cluster (zero-gap touching words)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Size=frequency + color=sentiment creates a genuine two-dimensional
+          story about what users love vs. what frustrates them; a small legend would
+          make the mapping fully explicit for a first-time viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct word cloud
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Size-by-frequency, preprocessed lowercase words, no stop words
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency correctly maps to font size via sqrt scaling
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; no data-series legend needed for a word cloud
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide frequency range (16-340), positive/negative/neutral terms all
+          represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral smart-thermostat support-ticket scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequency values and proportions are sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single essential overlap-check helper for placement logic, otherwise
+          linear Imports/Data/Plot/Save flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Makie, Colors all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for spiral placement, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current save() API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Axis/text!/hidedecorations!/hidespines! usage; manual placement
+          is appropriate since Makie has no wordcloud recipe
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Genuinely Makie-specific use of Makie.text_bb for real glyph-metric
+          collision detection, though the overall spiral-search recipe is a fairly
+          generic wordcloud pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - spiral-placement
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
