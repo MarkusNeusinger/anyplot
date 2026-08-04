@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 94/100 | Created: 2026-05-06
@@ -56,13 +56,13 @@ df = pd.DataFrame(lines)
 # Create plot with wireframe lines
 plot = (
     ggplot(df, aes(x="x", y="y", group="line"))
-    + geom_path(color=BRAND, size=1.2, alpha=0.85)
-    + ggsize(1600, 900)
+    + geom_path(color=BRAND, size=0.6, alpha=0.85)
+    + ggsize(800, 450)
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, color=INK, hjust=0.5),
+        plot_title=element_text(size=16, color=INK, hjust=0.5),
     )
     + labs(title="wireframe-3d-basic · letsplot · anyplot.ai")
 )
@@ -70,7 +70,7 @@ plot = (
 # Setup and save
 LetsPlot.setup_html()
 
-ggsave(plot, f"plot-{THEME}.png", scale=3)
+ggsave(plot, f"plot-{THEME}.png", scale=4)
 ggsave(plot, f"plot-{THEME}.html")
 
 # Move files from lets-plot-images to current directory
