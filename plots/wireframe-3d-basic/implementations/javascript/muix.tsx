@@ -14,8 +14,8 @@ import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: wave surface z = sin(x) · cos(y) over a 32x32 grid ---------------
-const GRID_N = 32;
+// --- Data: wave surface z = sin(x) · cos(y) over a 24x24 grid ---------------
+const GRID_N = 24;
 const AXIS_MIN = -3.2;
 const AXIS_MAX = 3.2;
 
@@ -118,31 +118,38 @@ function Wireframe() {
         const unitY = dirY / len;
         const perpX = -unitY * 11;
         const perpY = unitX * 11;
-        // Only the midpoint gets its own tick — the min end is shared by all
+        // Intermediate ticks at 1/4, 1/2, 3/4 — the min end is shared by all
         // three arms at the corner and gets one combined label below.
-        const midValue = a.from + (a.to - a.from) * 0.5;
-        const midX = originPx.x + dirX * 0.5;
-        const midY = originPx.y + dirY * 0.5;
+        const tickFracs = [0.25, 0.5, 0.75];
         return (
           <g key={a.key}>
             <line x1={originPx.x} y1={originPx.y} x2={endPx.x} y2={endPx.y} stroke={t.inkSoft} strokeWidth={2.5} />
-            <line
-              x1={midX - perpX}
-              y1={midY - perpY}
-              x2={midX + perpX}
-              y2={midY + perpY}
-              stroke={t.inkSoft}
-              strokeWidth={1.5}
-            />
-            <text
-              x={midX + perpX * 2.1}
-              y={midY + perpY * 2.1}
-              fill={t.inkSoft}
-              textAnchor="middle"
-              style={{ fontSize: 13, fontFamily: "Inter, system-ui, sans-serif" }}
-            >
-              {midValue.toFixed(1)}
-            </text>
+            {tickFracs.map((frac) => {
+              const tickValue = a.from + (a.to - a.from) * frac;
+              const tickX = originPx.x + dirX * frac;
+              const tickY = originPx.y + dirY * frac;
+              return (
+                <g key={frac}>
+                  <line
+                    x1={tickX - perpX}
+                    y1={tickY - perpY}
+                    x2={tickX + perpX}
+                    y2={tickY + perpY}
+                    stroke={t.inkSoft}
+                    strokeWidth={1.5}
+                  />
+                  <text
+                    x={tickX + perpX * 2.1}
+                    y={tickY + perpY * 2.1}
+                    fill={t.inkSoft}
+                    textAnchor="middle"
+                    style={{ fontSize: 13, fontFamily: "Inter, system-ui, sans-serif" }}
+                  >
+                    {tickValue.toFixed(1)}
+                  </text>
+                </g>
+              );
+            })}
             <text
               x={endPx.x + unitX * 34}
               y={endPx.y + unitY * 34}
@@ -173,6 +180,27 @@ function Wireframe() {
       >
         ({AXIS_MIN.toFixed(1)}, {AXIS_MIN.toFixed(1)}, {Z_MIN.toFixed(1)})
       </text>
+      {/* Legend: explain the two mesh line colors (VQ storytelling gap). */}
+      <g transform={`translate(${left + width - 190}, ${top + 4})`}>
+        <rect x={0} y={0} width={14} height={14} fill={t.palette[0]} />
+        <text
+          x={20}
+          y={11}
+          fill={t.inkSoft}
+          style={{ fontSize: 13, fontFamily: "Inter, system-ui, sans-serif" }}
+        >
+          X-direction lines
+        </text>
+        <rect x={0} y={22} width={14} height={14} fill={t.palette[1]} />
+        <text
+          x={20}
+          y={33}
+          fill={t.inkSoft}
+          style={{ fontSize: 13, fontFamily: "Inter, system-ui, sans-serif" }}
+        >
+          Y-direction lines
+        </text>
+      </g>
     </g>
   );
 }
