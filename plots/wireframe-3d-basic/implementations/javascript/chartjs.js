@@ -1,7 +1,7 @@
 // anyplot.ai
 // wireframe-3d-basic: Basic 3D Wireframe Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.1
-// Quality: 86/100 | Created: 2026-08-04
+// Quality: 88/100 | Created: 2026-08-04
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
