@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: wireframe-3d-basic
 created: '2026-08-04T18:57:09Z'
-updated: '2026-08-04T19:02:32Z'
+updated: '2026-08-04T19:13:26Z'
 generated_by: claude-sonnet
 workflow_run: 30939345133
 issue: 1015
@@ -15,45 +15,53 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe
 quality_score: 89
 review:
   strengths:
-  - Custom 3D-to-2D projection engine (elevation 30 deg, azimuth 45 deg) built entirely
-    from scratch on ECharts' graphic.elements API -- a well-engineered workaround
-    given ECharts has no native 3D wireframe support and echarts-gl is disallowed
-  - Depth-based back-to-front draw order with opacity fade (0.4-0.9) creates a convincing
-    pseudo-3D depth cue without any hidden-line-removal complexity
-  - Careful axis-corner placement (choosing the corner farthest from the camera for
-    X/Y, and the x+y=0 corner for Z to avoid the peak) keeps tick labels and axis
-    titles clear of the mesh in both themes
-  - Theme-adaptive chrome fully correct -- identical brand-green (#009E73) data color
-    and correct background/text tokens in both light and dark renders
-  - Title format, axis labeling (X/Y/Z with tick marks), grid density (24x24, within
-    the spec's 20-50 range), and camera angle all match the specification precisely
+  - 'Both attempt-1 weaknesses are fixed: the ripple function now uses sinc (sin(r)/r)
+    so the surface peak is a smooth, coherent dome instead of a chaotic starburst,
+    and the Z-axis midpoint tick correctly reads ''0.4'' with no ''-0.0'' artifact.'
+  - Custom 3D-to-2D projection engine (elevation 30°, azimuth 45°) built entirely
+    on ECharts' graphic.elements API, with back-to-front depth-sorted polylines and
+    a depth-based opacity fade (0.4-0.9) giving a convincing pseudo-3D see-through
+    cue.
+  - Careful axis-corner placement keeps X/Y tick labels and axis titles clear of the
+    mesh, and places the Z axis on the corner where the azimuth cancels the mesh's
+    screen-column, keeping it clear of the peak in both themes.
+  - 'Theme-adaptive chrome is fully correct: identical brand-green (#009E73) mesh
+    in both renders, correct #FAF8F1/#1A1A17 backgrounds, and legible ink/inkSoft
+    text in both themes.'
+  - Title format, axis labeling, grid density (24x24, within the spec's 20-50 range),
+    and camera angle (elevation 30, azimuth 45) all match the specification precisely.
   weaknesses:
-  - 'Z-axis midpoint tick renders as "-0.0" instead of "0.0" in both light and dark
-    renders -- a floating-point sign artifact from (zMin + zMax) / 2 then .toFixed(1).
-    Fix by guarding near-zero values before formatting, e.g. `(v === 0 ? 0 : v).toFixed(1)`
-    or `(Math.abs(v) < 1e-9 ? 0 : v).toFixed(1)`.'
-  - 'The wireframe converges into a dense, chaotic crisscross right at the surface
-    peak because z = sin(r) (with r===0 special-cased to 1) has a sharp cusp rather
-    than a smooth apex -- the center reads as a jagged starburst instead of a clean
-    dome. Consider a smoother ripple function (e.g. sinc: sin(r)/r, which is naturally
-    1 at r=0) to keep the peak visually coherent.'
-  - Depth-fade hierarchy is present but subtle enough that the data storytelling (near
-    vs. far mesh) doesn't strongly guide the eye beyond the overall dome shape.
+  - 'The rendered mesh+axes only fill ~42% of canvas width and ~48% of canvas height
+    (measured on plot-light.png: content bbox x=910-2251px, y=631-1492px of the 3200x1800
+    canvas), leaving unusually large uniform empty margins on all sides. Root cause:
+    the fitting box in echarts.js is built from the 8 corners of x,y in {-RANGE,RANGE}
+    times z in {zMin,zMax} (see the `corners` loop before TOP_MARGIN/SIDE_MARGIN/PAD),
+    which assumes the z-extreme co-occurs with the x/y-extreme corners. For a domed/peaked
+    surface (sinc ripple), zMax actually occurs at the center (x=0,y=0), not at any
+    x/y corner, so this box overestimates the true projected extent and the resulting
+    scale under-fills the mount. Fix: compute boxW/boxH/boxCx/boxCy from the min/max
+    of the actual projected mesh grid points (or the mesh + axis tick/label positions)
+    instead of the 8 synthetic box corners, then re-fit.'
+  - Because of the underfill above, the plot reads small and sparse relative to the
+    3200x1800 canvas rather than intentionally spacious — DE-02's 'generous whitespace'
+    tips into wasted canvas space.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
-      Chrome: Title "wireframe-3d-basic · javascript · echarts · anyplot.ai" is dark and centered at top, clearly legible. Axis titles X, Y, Z are bold dark text, clearly legible. Numeric tick labels (-4..4 on X/Y, -1.0..1.0 on Z) are soft gray, legible against the light background. The three partial axis edges (X, Y at the base, Z on the left) are drawn in soft gray, visible but unobtrusive. One tick label reads "-0.0" instead of "0.0" on the Z axis (floating-point sign artifact).
-      Data: Single-hue brand green (#009E73) wireframe mesh, grid lines running in both x and y directions, with a subtle opacity fade (dimmer far side, brighter near side) giving a soft depth cue. The mesh forms a dome/ripple shape with a sharp, slightly chaotic crisscross convergence right at the central peak.
-      Legibility verdict: PASS (title, axis titles, and tick labels all readable; only the "-0.0" tick text is a minor formatting defect, not a legibility failure).
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "wireframe-3d-basic · javascript · echarts · anyplot.ai" is dark, centered at top, clearly legible. Bold dark X/Y/Z axis titles and soft-gray numeric tick labels (-4..4 on X/Y, -0.2/0.4/1.0 on Z) are all legible. Three partial axis edges (X and Y at the base, Z on the left) are drawn in soft gray. No "-0.0" artifact — the Z midpoint tick correctly reads "0.4".
+      Data: Single brand-green (#009E73) wireframe mesh running in both x and y directions with a depth-based opacity fade (dimmer far side, brighter near side), forming a smooth, clean dome/ripple shape — the sinc-based surface removes the chaotic crisscross that the previous attempt had at the center.
+      Layout: The mesh + axis frame occupy only roughly the middle-left ~42% of canvas width and ~48% of canvas height, leaving unusually large empty margins on all four sides (measured content bbox: x=910-2251px, y=631-1492px of 3200x1800). This reads as underfilled/sparse rather than intentionally spacious.
+      Legibility verdict: PASS (all text readable), but layout/canvas-fill verdict: FAIL (see weaknesses).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
-      Chrome: Title is white/light and centered at top, clearly legible. Axis titles X, Y, Z are bold white text, clearly legible. Numeric tick labels are light gray, legible against the dark background -- no dark-on-dark failure. Axis edges are light gray, visible but subtle. The same "-0.0" tick-label artifact appears on the Z axis.
-      Data: Data color is identical brand green (#009E73) to the light render -- only chrome (background, text, axis-line color) flipped, as required. Same crisscross convergence pattern at the peak.
-      Legibility verdict: PASS (no dark-on-dark text; all chrome elements clearly readable against the near-black surface).
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title and axis titles are white/light and clearly legible. Tick labels are light gray, legible against the dark background — no dark-on-dark failure anywhere.
+      Data: Data color is identical brand green (#009E73) to the light render — only chrome (background, text, axis-line color) flips, as required. Same smooth dome shape as the light render.
+      Layout: Same underfill issue as the light render — mesh confined to the same small central-left region of the canvas, large empty margins on all sides.
+      Legibility verdict: PASS (all text readable), but layout/canvas-fill verdict: FAIL (see weaknesses).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -61,49 +69,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis titles, and tick labels are readable in both themes at
-          explicit font sizes.
+        comment: All text readable in both themes, no dark-on-dark or light-on-light
+          issues
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text/data collisions; mesh density near the peak reads as busy
-          but is not an overlap defect.
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line width and opacity fade keep the mesh visible; the cusp at the
-          peak reduces clarity there.
+        comment: Mesh lines clearly visible against both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green hue against warm neutral backgrounds gives strong
-          contrast; no red-green reliance.
+        comment: Single brand-green series, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Good proportions, nothing clipped, title within expected width band.
+        passed: false
+        comment: Mesh+axes fill only ~42% width / ~48% height of the 3200x1800 canvas
+          due to a box-corner fitting bug (zMax doesn't co-occur with x/y corners
+          for a domed surface)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Z-axis midpoint tick renders as "-0.0" instead of "0.0" in both renders
-          (floating-point sign artifact).
+        passed: true
+        comment: X/Y/Z labeled with ticks; the attempt-1 '-0.0' artifact is fixed
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First/only series uses #009E73; identical between themes; correct
-          light/dark chrome backgrounds.'
+        comment: 'Brand green #009E73 identical in both renders; correct theme backgrounds'
     design_excellence:
       score: 15
       max: 20
@@ -113,21 +118,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom 3D projection engine, corner-aware axis placement, and depth-sorted
-          rendering show real design engineering.
+        comment: Genuinely sophisticated custom 3D projection engine on a library
+          with no native 3D wireframe support
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Minimal 3-edge axis frame, no floor grid, generous whitespace.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Depth-based opacity fade gives a near/far hierarchy, but the effect
-          is subtle and the chaotic peak slightly undercuts the focal point.
+        comment: Minimal 3-edge axis frame and no floor grid are good, but the canvas
+          underfill makes it read sparse rather than intentionally spacious
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Depth fade plus the now-smooth dome (sinc fix) gives a clear focal
+          point and near/far hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -137,52 +143,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D wireframe rendering.
+        comment: Correct wireframe mesh in x and y directions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid lines in both x and y directions, elevation 30 / azimuth 45
-          perspective, all three axes labeled with ticks.
+        comment: Grid lines both directions, 3D perspective at elevation 30/azimuth
+          45, all axes labeled
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z mapped correctly; full data range shown on all axes.
+        comment: x/y/z mapped correctly, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; no legend needed for a single-series
-          wireframe.
+        comment: Title matches required format exactly; no legend needed (single series)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full mesh structure shown; center convergence is a bit chaotic due
-          to the cusp at r=0.
+        comment: Full mesh structure shown with a clean, coherent dome apex after
+          the sinc fix
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral mathematical ripple function, matches the spec's suggested
-          example exactly.
+        comment: Ripple/sinc function is a plausible, neutral example surface per
+          the spec
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 24x24 grid within the spec's recommended 20-50 range; sin() range
-          -1..1 is sensible.
+        comment: 24x24 grid within the spec's recommended 20x20-50x50 range
     code_quality:
       score: 10
       max: 10
@@ -192,32 +196,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions are necessary for the custom 3D projection math,
-          not unnecessary abstraction.
+        comment: Helper functions are justified by the custom projection math, no
+          unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG.
+        comment: Fully deterministic in-memory data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only uses provided globals.
+        comment: No imports beyond the echarts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-commented, no fake UI/interactivity.
+        comment: No fake interactivity; well-commented projection math
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract, animation: false, no explicit size/devicePixelRatio.'
+        comment: animation:false set, mount-node contract respected, no explicit size/devicePixelRatio
     library_mastery:
       score: 9
       max: 10
@@ -228,23 +232,23 @@ review:
         max: 5
         passed: true
         comment: graphic.elements is the correct idiomatic escape hatch given ECharts
-          has no native 3D wireframe support.
+          has no native 3D wireframe support
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Depth-sorted rendering, opacity fade, and corner-aware axis engineering
-          are distinctive beyond a basic chart.
-  verdict: APPROVED
+        comment: Depth-sorted rendering, opacity fade, corner-aware axis engineering
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
+  - manual-ticks
   patterns:
+  - data-generation
   - matrix-construction
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - alpha-blending
   - minimal-chrome
