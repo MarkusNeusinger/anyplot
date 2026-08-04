@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: wordcloud-basic
 created: '2026-08-04T23:14:41Z'
-updated: '2026-08-04T23:19:21Z'
+updated: '2026-08-04T23:33:55Z'
 generated_by: claude-sonnet
 workflow_run: 30958875245
 issue: 1012
@@ -12,60 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/javascript/chartjs/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'Creative, correct solution to Chart.js shipping no native word-cloud type: a
-    chart-scoped afterDraw plugin implements a deterministic Archimedean-spiral placement
-    with box-overlap collision detection, entirely within core Chart.js (no chartjs-chart-*
-    import, per the library''s no-workarounds rule).'
-  - Sqrt-scaled font size (18-104px) and interpolated font weight (500-800) give a
-    readable frequency hierarchy without letting the top word dwarf the rest.
-  - 'Fully deterministic: in-memory hardcoded data, largest-first placement queue,
-    fixed spiral step sizes - reproducible across runs with no RNG.'
-  - 'Imprint palette correctly applied: first category (Performance, the dominant
-    theme) uses #009E73 brand green, remaining 4 categories follow palette order;
-    data colors are pixel-identical between light and dark renders, only chrome flips
-    (#FAF8F1 / #1A1A17 backgrounds correct).'
-  - Integrated category legend (color swatch + label) drawn in the same canvas pass,
-    doubling as both legend and the spec's 'color encodes additional category information'
-    feature.
-  - No overlapping text among the 35 placed words; canvas is exactly 3200x1800, satisfying
-    the hard landscape size rule; title matches the mandated 'wordcloud-basic · javascript
-    · chartjs · anyplot.ai' format.
+  - 'Repair correctly targeted the prior review''s two concrete weaknesses: dropped
+    the three lowest-frequency words (discount=38, refund=44, lag=62) and raised MIN_FONT_PX
+    from 18 to 22, improving the smallest-word legibility floor.'
+  - Added AREA_MARGIN (20px inset on all four sides of the spiral placement area)
+    so words now breathe away from the canvas frame - visually confirmed in both renders
+    that no word touches or clips the canvas edge (helpdesk, uptime, resolution, reporting
+    all sit comfortably inside the margin now).
+  - Deterministic Archimedean-spiral placement with box-overlap collision detection
+    remains a creative, spec-compliant solution to Chart.js shipping no native word-cloud
+    type, built entirely within core Chart.js per the library's no-workarounds rule.
+  - Sqrt-scaled font size (22-104px) and interpolated font weight (500-800) give a
+    readable frequency hierarchy without letting the top word 'performance' dwarf
+    the rest; it still anchors a clear visual focal point.
+  - 'Imprint palette correctly applied: first category (Performance) uses #009E73
+    brand green, remaining 4 categories follow canonical palette order; data colors
+    are pixel-identical between light and dark renders, only chrome (background, legend/title
+    text) flips correctly (#FAF8F1 / #1A1A17).'
   weaknesses:
-  - Smallest-frequency words ('discount' freq=38, 'refund' freq=44, 'lag' freq=62)
-    render near MIN_FONT_PX=18 and become hard to read once scaled to the ~400px mobile
-    thumbnail - raise the size floor or drop the lowest-frequency tail so remaining
-    words stay legible at small scale.
-  - Word placements sit very close to the canvas edges in several spots (helpdesk/uptime
-    near the left edge, reporting/documentation near the right edge, refund near the
-    bottom) - tighten the spiral's usable area with more inner margin so words breathe
-    away from the frame.
-  - Implementation leans on several helper functions (scale, boxesOverlap, layoutWords)
-    and a plugin object rather than a flat KISS script - understandable given the
-    placement algorithm Chart.js doesn't provide natively, but it is more structure
+  - Smallest-frequency words (helpdesk=47, accessibility=49, reporting=48, resolution=54,
+    uptime=54) still render near the MIN_FONT_PX=22 floor; at a ~400px mobile thumbnail
+    scale (canvas is 3200px wide, ~8x downscale) these remain hard to read - consider
+    raising the floor a bit further or trimming the lowest-frequency tail more aggressively
+    so every remaining word clears a mobile-legible size.
+  - Implementation still relies on several helper functions and a plugin object (scale,
+    layoutWords, wordCloudPlugin) rather than a flat KISS script - understandable
+    given the placement algorithm Chart.js doesn't provide natively, but more structure
     than a typical anyplot snippet.
-  - 'The chart''s own scales/datasets stay empty (type: ''scatter'' with data: [])
-    and all real rendering happens via a custom afterDraw plugin - the correct workaround
+  - 'The chart''s own scales/datasets stay empty (type: ''scatter'', data: []) and
+    all real rendering happens via the custom afterDraw plugin - the correct workaround
     per the library''s no-native-wordcloud constraint, but it means the snippet demonstrates
     canvas-drawing skill more than Chart.js''s built-in charting primitives (scales,
     datasets, native chart types).'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "wordcloud-basic · javascript · chartjs · anyplot.ai" is bold dark text, clearly readable at top center. A one-row legend below the title shows 5 colored swatches (green/purple/blue/gold/red) with labels "Performance", "Usability", "Support", "Pricing & Billing", "Features" in dark text - all legible against the light background.
-      Data: 35 words fill the canvas below the legend, sized 18-104px by sqrt-scaled frequency and colored by category using the Imprint palette (green #009E73 for "performance", the highest-frequency category, confirming palette[0] usage). No overlapping words observed; the largest word ("performance") anchors the visual center. Smallest words ("discount", "refund", "lag") are noticeably small but still legible at full resolution.
-      Legibility verdict: PASS (full resolution) - at the 400px mobile thumbnail the smallest words become hard to read, a minor legibility concern noted in weaknesses.
+      Chrome: Title "wordcloud-basic · javascript · chartjs · anyplot.ai" is bold dark text, clearly readable at top center. A one-row legend below the title shows 5 colored swatches (green/lavender/blue/ochre/red) with labels "Performance", "Usability", "Support", "Pricing & Billing", "Features" in dark text - all legible against the light background.
+      Data: 32 words fill the canvas below the legend, sized ~22-104px by sqrt-scaled frequency and colored by category using the Imprint palette (brand green #009E73 for "performance", the highest-frequency category, confirming palette[0] usage). No overlapping words observed. Words now sit with visible breathing room from all four canvas edges (helpdesk, uptime, resolution, reporting, accessibility - the words closest to the frame - all have clear margin, no clipping). The largest word ("performance") anchors the visual center; smallest words are noticeably smaller but still legible at full resolution.
+      Legibility verdict: PASS (full resolution). At a ~400px mobile thumbnail the smallest words (helpdesk, accessibility, reporting, resolution, uptime) remain harder to read - a residual, non-blocking concern noted in weaknesses.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Same title and legend, now rendered in light/off-white text - clearly readable against the dark background, no dark-on-dark issues detected.
-      Data: Identical word set, sizes, and positions as the light render; colors are pixel-identical (green, purple, blue, gold, red) - only the chrome (background, title/legend text color) flipped as required. No dark-on-dark or light-on-light failures found; brand green #009E73 remains clearly visible on the dark surface.
+      Chrome: Same title and legend, rendered in light/off-white text - clearly readable against the dark background, no dark-on-dark issues detected.
+      Data: Identical word set, sizes, and positions as the light render; colors are pixel-identical (green, lavender, blue, ochre, red) - only chrome (background, title/legend text color) flipped as required. No dark-on-dark or light-on-light failures found; brand green #009E73 remains clearly visible on the dark surface.
       Legibility verdict: PASS - same minor small-word-at-thumbnail-scale caveat as the light render, otherwise fully readable.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -73,22 +69,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Readable in both themes at full resolution; smallest-frequency words
-          (discount, refund, lag) become hard to read at the ~400px mobile thumbnail
-          scale
+        comment: Readable in both themes at full resolution; MIN_FONT_PX raised 18->22
+          improved the floor, but smallest words (helpdesk, accessibility, reporting,
+          resolution, uptime) are still hard to read at a ~400px mobile thumbnail
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions detected among the 35 placed words or with the legend/title
+        comment: No collisions detected among the 32 placed words or with the legend/title
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Density is appropriate for 35 words, but the lowest-frequency words
-          are borderline visible at their minimum font size
+        comment: Density is appropriate for 32 words; lowest-frequency words are borderline
+          visible at their minimum font size but no longer edge-crowded
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -98,11 +94,12 @@ review:
           signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800, but several words (helpdesk, uptime,
-          reporting, documentation, refund) sit very close to the canvas edges
+        comment: Canvas is exactly 3200x1800; new AREA_MARGIN inset fixed the prior
+          edge-crowding issue - words now sit with clear margin from the frame on
+          both renders
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -118,7 +115,7 @@ review:
         comment: 'First category (Performance) uses #009E73; data colors identical
           between themes; backgrounds correctly #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -130,11 +127,11 @@ review:
           category-mapped Imprint palette
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: No axes/chrome clutter, but words are packed tightly toward the edges
-          leaving little breathing room
+        passed: true
+        comment: No axes/chrome clutter; the new margin inset gives words real breathing
+          room from the edges, up from the prior cramped edges
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -194,7 +191,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 35 words with frequencies 38-145 - within the spec's 20-200 word
+        comment: 32 words with frequencies 47-145 - within the spec's 20-200 word
           range and a sensible spread
     code_quality:
       score: 9
@@ -205,9 +202,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses several helper functions (scale, boxesOverlap, layoutWords)
-          plus a plugin object - more structure than a flat script, though justified
-          by the placement algorithm
+        comment: Uses helper functions (scale, layoutWords) plus a plugin object -
+          more structure than a flat script, though justified by the placement algorithm
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -252,7 +248,7 @@ review:
         comment: Uses Chart.js's plugin extensibility distinctively, but leaves the
           library's native scales/datasets entirely unused - closer to raw canvas
           drawing than charting-API mastery
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
