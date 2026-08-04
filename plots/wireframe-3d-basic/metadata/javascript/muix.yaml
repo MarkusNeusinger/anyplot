@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: wireframe-3d-basic
 created: '2026-08-04T18:57:18Z'
-updated: '2026-08-04T19:02:19Z'
+updated: '2026-08-04T19:14:04Z'
 generated_by: claude-sonnet
 workflow_run: 30940035065
 issue: 1015
@@ -15,51 +15,54 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe
 quality_score: 82
 review:
   strengths:
-  - Custom axonometric 3D->2D projection (elevation 22 deg, azimuth -38 deg) built
-    from scratch and composed with MUI X's useDrawingArea hook -- a genuine implementation
-    of the documented 'composition pattern' for chart types the community series don't
-    cover, not a hacky workaround
+  - Legend now explains the X-direction (green) vs Y-direction (purple) color coding,
+    addressing the prior review's DE-03 feedback
+  - More intermediate tick marks (25%/50%/75% fractions) added per axis arm, addressing
+    the prior review's sparse-tick feedback
+  - Grid density reduced from 32x32 to 24x24, reducing visual clutter at the hump/trough
+    crossing regions per prior feedback
+  - Custom axonometric 3D-to-2D projection (elevation 22 degrees, azimuth -38 degrees)
+    is a genuine, well-executed implementation of MUI X's documented ChartContainer
+    + useDrawingArea composition pattern for chart types the community series can't
+    natively express
   - 'Correct Imprint palette usage: X-direction lines use palette[0] (brand green
-    #009E73), Y-direction lines use palette[1]; data colors are identical between
-    light and dark renders, only chrome flips'
-  - 'Theme-adaptive chrome is fully legible on both the #FAF8F1 and #1A1A17 surfaces
-    -- title, axis labels, and tick text all pass the light/dark readability check
-    with no dark-on-dark or light-on-light failures'
-  - skipAnimation set on ChartContainer, no clipped or cropped elements at any canvas
-    edge in either render, canvas dimension gate passed
-  - Deterministic in-memory data (z = sin(x)*cos(y) over a 32x32 grid) -- fully reproducible
-    with no RNG needed
+    #009E73), Y-direction lines use palette[1] (lavender); data colors are pixel-identical
+    between light and dark renders'
+  - 'Theme-adaptive chrome (title, axis labels, ticks) is fully legible on both the
+    #FAF8F1 light and #1A1A17 dark surfaces, with no dark-on-dark or light-on-light
+    failures'
+  - Fully deterministic in-memory data generation, clean imports, skipAnimation set,
+    canvas dimension gate passed, no clipped elements at any canvas edge
   weaknesses:
-  - Axis tick marks are sparse -- each of the X/Y/Z arms only shows a midpoint value
-    and an endpoint value (plus one combined origin label), so the mapping between
-    grid density and coordinate values is hard to read precisely. Add 1-2 more intermediate
-    ticks per axis arm.
-  - The two grid-line colors (green for X-direction lines, purple for Y-direction
-    lines) are never explained -- add a small legend or caption clarifying what each
-    color represents to strengthen the data storytelling.
-  - At 32x32 grid resolution with two overlapping ripple families (sin(x)*cos(y) creates
-    two humps and two troughs), the mesh gets visually dense/cluttered where the surfaces
-    cross near the plot center -- consider reducing to ~24x24 grid lines or lowering
-    opacity slightly (e.g. 0.7) to reduce clutter in that region.
-  - The wireframe is a flat 2D projection with no hidden-line/depth occlusion, so
-    far and near mesh lines overlap identically -- consider a subtle depth cue (e.g.
-    thinner stroke or lower opacity for lines further from the viewer) to reinforce
-    the 3D depth read.
+  - The Y-axis line and its tick/axis-name labels ('1.6', '3.2', 'Y') cross directly
+    through the dense wireframe mesh in the plot's midsection, visibly overlapping
+    axis chrome with data lines -- reposition the axis triad's far arm outside the
+    mesh's projected bounding box, or add a small background halo/pill behind axis
+    labels so they read cleanly over the mesh
+  - Axis labels are bare single letters 'X'/'Y'/'Z' with no formula or units context
+    -- a small caption near the title (e.g. 'z = sin(x) times cos(y)') would strengthen
+    the axis-labeling criterion for this abstract math domain
+  - Grid still creates moderate visual density at the two hump/trough crossing regions
+    even at 24x24 -- consider slightly lower opacity (e.g. 0.7) or thinner strokes
+    at higher-order intersections if further refinement is needed
+  - No hidden-line/depth occlusion cue (front and back mesh lines render identically)
+    -- a minor authenticity gap versus a true 3D wireframe render, though this is
+    an inherent limitation of the SVG-projection approach rather than a simple fix
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
-      Chrome: Bold dark title "wireframe-3d-basic · javascript · muix · anyplot.ai" centered at top, clearly readable. Schematic 3-axis triad (X, Y, Z) in dark ink drawn from a near-corner origin, with bold axis-name labels, midpoint tick values ("0.0"), endpoint tick values ("3.2"/"1.0"), and a combined origin coordinate label "(-3.2, -3.2, -1.0)" in the bottom-left. All axis text is dark ink on the light background and reads clearly, no light-on-light issues.
-      Data: A wave-like saddle surface (sin(x)*cos(y)) rendered as two families of ~32 polylines each: green lines tracing the X direction (brand green #009E73, first series) and purple/magenta lines tracing the Y direction. The two families overlap into a plaid mesh that clearly conveys the ripple topology, with two humps and two troughs visible across the grid.
-      Legibility verdict: PASS -- title, axis labels, and tick values are all legible against the light background; no clipping at any canvas edge.
+      Background: Warm off-white, confirmed pixel-exact #FAF8F1 (250,248,241) -- not pure white.
+      Chrome: Bold dark title "wireframe-3d-basic · javascript · muix · anyplot.ai" centered at top, fully visible with a thin (~40px/1800) but unclipped top margin. Schematic X/Y/Z axis triad in dark ink from a near-corner origin, with axis-name labels, 25%/50%/75%/100% tick values, and a combined origin coordinate label "(-3.2, -3.2, -1.0)". A top-right legend with two swatches labels "X-direction lines" (green) and "Y-direction lines" (purple). All chrome text confirmed legible against the light background -- no light-on-light issues. One localized readability caveat: the Y-axis line and its "1.6"/"3.2"/"Y" labels run diagonally across the busy mesh interior, so those specific labels sit atop crossing colored lines (still legible due to bold dark ink contrast, but visually cluttered).
+      Data: Wave-like saddle surface z = sin(x)*cos(y) over a 24x24 grid, rendered as two polyline families: brand green (#009E73) tracing the X direction, lavender-purple (#C475FD, Imprint position 2) tracing the Y direction -- correct canonical palette order, first series is brand green as required.
+      Legibility verdict: PASS (with the axis/mesh-overlap caveat noted above, which is a VQ-02 deduction rather than a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
-      Chrome: Same title and axis triad, now rendered in light/cream ink (text.primary/text.secondary tokens flipped for dark mode) -- title and all axis/tick labels are clearly visible against the dark background, no dark-on-dark failures.
-      Data: Identical green (#009E73) and purple line colors as the light render -- confirms data colors are theme-invariant and only chrome (ink, background) flips as required.
-      Legibility verdict: PASS -- all text is legible against the near-black background; brand green remains vivid on the dark surface.
+      Background: Warm near-black, confirmed pixel-exact #1A1A17 (26,26,23) -- not pure black.
+      Chrome: Same title, axis triad, and legend as the light render, now rendered in light/cream ink -- fully legible against the dark surface, no dark-on-dark failures anywhere (title, tick labels, origin label, legend text all confirmed light-colored). Same localized Y-axis/mesh overlap as the light render.
+      Data: Colors are pixel-identical to the light render (verified via source-code token usage, t.palette[0]/[1] are theme-independent) -- brand green and lavender read exactly the same across both themes, confirming only chrome flipped.
+      Legibility verdict: PASS (same overlap caveat as light render; no dark-on-dark issues).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -67,43 +70,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text legible in both themes; tick labels (12-13px) are a bit
-          small relative to the 3200x1800 canvas, may get faint at 400px thumbnail
-          scale
+        comment: All font sizes explicitly set (13px ticks, 20px axis labels, 22px
+          title); readable in both themes; minor deduction for tick numbers losing
+          crispness where they cross the busy mesh
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No overlapping text or elements observed in either render
+        comment: Y-axis line and its tick/axis-name labels cross visibly through the
+          mesh interior -- text stays readable but chrome overlaps data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Grid lines visible and distinguishable, but the 32x32 double-ripple
-          mesh creates moderate visual clutter where the two humps/troughs cross
+        comment: 24x24 grid (reduced from 32x32) is appropriately visible; still moderately
+          dense at hump/trough crossings
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple pairing is CVD-safe, no reliance on red-green as sole
-          signal
+        comment: Green/lavender pairing is CVD-safe and well-distinguished
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No overflow or clipping; canvas dimension gate passed (3200x1800)
+        comment: Content bounding box ~85% width x 81% height, balanced margins, nothing
+          cut off, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Axes labeled only 'X'/'Y'/'Z' with no units or formula context --
+          appropriate for abstract math data but literally generic per rubric wording
+      - id: VQ-07
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: X/Y/Z axes labeled with tick values; title matches mandated format
+        comment: 'First series brand green #009E73, second series Imprint position
+          2 lavender; backgrounds pixel-exact #FAF8F1/#1A1A17; chrome theme-correct
+          in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -111,22 +124,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom axonometric 3D projection built from scratch shows real engineering
-          effort beyond default styling
+        comment: Custom axonometric 3D projection built from scratch, well beyond
+          a library default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minimal chrome and generous whitespace, but grid density creates
-          some visual noise at the crossing region
+        comment: Generous whitespace, subtle stroke/opacity choices; axis/mesh overlap
+          and crossing density keep it from perfect polish
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clear ripple focal point, but the two-color scheme (X vs Y direction)
-          is never explained via legend or caption
+        passed: true
+        comment: New legend clarifies the X vs Y direction color coding, giving the
+          mesh an explained visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +149,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D wireframe via custom SVG projection
+        comment: Correct 3D wireframe via projected SVG mesh
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid lines in both X and Y directions, perspective projection with
-          elevation/azimuth, all three axes labeled
+        comment: Grid lines in both X and Y directions, perspective-style projection
+          with elevation/azimuth, all three axes labeled with tick marks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly mapped and shown across their full ranges
+        comment: X/Y/Z correctly mapped across their full ranges
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated 'spec-id · language · library · anyplot.ai'
-          format
+        comment: Title exactly matches 'wireframe-3d-basic · javascript · muix · anyplot.ai';
+          legend labels match the data series
     data_quality:
       score: 14
       max: 15
@@ -166,21 +179,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Full 32x32 grid mesh shown; lacks depth/hidden-line cues typical
-          of richer 3D wireframe renders
+        comment: Full 24x24 grid mesh shows the surface's humps and troughs; lacks
+          a depth/hidden-line cue typical of richer 3D wireframe renders
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: z = sin(x)*cos(y) is a neutral, plausible mathematical surface
+        comment: z = sin(x)*cos(y) is exactly the spec's primary application (visualizing
+          a mathematical function), neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Domain range [-3.2, 3.2] and z range [-1, 1] are sensible for a trig
-          surface
+        comment: Domain [-3.2, 3.2] and z-range [-1, 1] are sensible and factually
+          correct for this trig surface
     code_quality:
       score: 10
       max: 10
@@ -190,13 +204,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes, small focused helper functions only
+        comment: Structure is appropriately simple given React's component requirement
+          and the necessity of a manual projection function
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data, no RNG
+        comment: Fully deterministic in-memory data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -208,14 +223,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the projection math, no fake UI
+        comment: Appropriate complexity for a custom 3D workaround; no fake UI or
+          interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports Chart(), sized from window.ANYPLOT_SIZE, skipAnimation
-          set
+        comment: export default component, skipAnimation set, sized from window.ANYPLOT_SIZE
     library_mastery:
       score: 4
       max: 10
@@ -233,12 +248,13 @@ review:
         max: 5
         passed: false
         comment: No native MUI X series/marks used beyond drawing-area sizing -- inherent
-          to the 3D workaround, not a fixable gap
-  verdict: REJECTED
+          to the 3D workaround, not really fixable within community MUI X
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
+  - custom-legend
   - manual-ticks
   patterns:
   - data-generation
