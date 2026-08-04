@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: ternary-basic
 created: '2026-08-04T15:11:00Z'
-updated: '2026-08-04T15:16:03Z'
+updated: '2026-08-04T15:32:40Z'
 generated_by: claude-sonnet
 workflow_run: 30922020262
 issue: 1001
@@ -12,60 +12,60 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
+  - 'Layout balance from the prior review is fixed: the triangle now spans ~69% of
+    canvas width and ~67% of canvas height, centered symmetrically (368px margin on
+    both left/right at the base), with no oversized blank band between the title and
+    the apex.'
+  - 'Marker overlap is substantially reduced: shrinking marker.radius from 7 to 5
+    leaves only two touching pairs across ~48 points in the densest (Loamy) cluster
+    core, versus multiple overlapping points before.'
+  - The toPoint() helper was inlined into each series' .map(), simplifying the code
+    structure toward the requested KISS shape while the barycentric-to-Cartesian math
+    stays correct.
   - 'Highcharts has no native ternary chart type, yet the implementation builds an
-    accurate one from scratch: a scatter series carries the data while a `chart.events.render`
+    accurate one from scratch: a scatter series carries the data while a chart.events.render
     hook draws the triangle frame, 20% gridlines, vertex labels, and edge tick marks
-    using a correct barycentric-to-Cartesian transform (`toPx`).'
-  - 'Imprint palette is correctly applied and identical across themes: Sandy soils
-    = #009E73 (brand green), Loamy soils and Clayey soils follow the canonical order
-    (violet, steel-blue); background, text, and grid colors are theme-correct in both
-    the light (#FAF8F1-like) and dark (#1A1A17-like) renders.'
+    via a correct toPx/toPixels transform.'
+  - 'Imprint palette is correctly applied and identical across themes (Sandy = #009E73
+    brand green, Loamy = lavender, Clayey = blue), and background/text/grid colors
+    are theme-correct in both the light (#FAF8F1-like) and dark (#1A1A17-like) renders.'
   - 'Data is realistic and spec-aligned: sand/silt/clay soil-texture proportions (a
-    textbook USDA soil-triangle use case explicitly named in the spec''s Applications
-    section), normalized so each sample sums to 100%, with three clearly separated,
-    distinguishable clusters.'
-  - Title format is correct (`ternary-basic · javascript · highcharts · anyplot.ai`),
-    legend labels match the series (Sandy/Loamy/Clayey soils), and the tooltip formatter
-    reports all three component percentages.
-  - 'Reproducible and clean: deterministic LCG (seed 42) for jittered cluster data,
-    `animation: false` set on both `chart` and `plotOptions.series`, no stray imports,
-    no fake interactivity.'
+    textbook USDA soil-triangle use case named in the spec''s Applications section),
+    normalized so each sample sums to 100%, with three clearly separated clusters.'
+  - Title format is correct, legend labels match the series (Sandy/Loamy/Clayey soils),
+    and the tooltip formatter reports all three component percentages.
+  - 'Reproducible: deterministic LCG (seed 42), animation: false set on both chart
+    and plotOptions.series, no stray imports, no fake interactivity.'
   weaknesses:
-  - 'Layout balance (VQ-05): there is a noticeably large blank band between the title
-    and the triangle''s apex (roughly a fifth of the canvas height) before any chart
-    content appears — tighten `marginTop` and/or the yAxis top padding (currently
-    max=1.05 vs. apex+label at ~0.94) so the plot sits more centered and the whitespace
-    above/below is better balanced.'
-  - 'Element visibility (VQ-03): within each cluster several same-color points touch
-    or overlap at the cluster core (most visible in the Loamy cluster around 45-55%
-    silt) — reduce `marker.radius` slightly from 7 or add a touch more spacing/alpha
-    so individual points stay distinguishable even in dense sub-regions.'
-  - 'Design polish (DE-01/DE-02): the custom triangle is already well above a generic
-    default, but could be pushed further toward publication-ready — e.g. faint shaded
-    soil-classification zones (sandy loam, silty clay, etc.) behind the 20% gridlines,
-    or a subtle marker stroke/shadow for depth.'
-  - 'Code structure (CQ-01): the implementation relies on several standalone helper
-    functions (`makeLcg`, `soilCluster`, `toPoint`) plus the render-event closure
-    — where practical, flatten toward a simpler imports → data → plot shape (e.g.
-    inline the barycentric transform instead of a separate `toPoint` helper).'
+  - 'Element visibility (VQ-03): two pairs of same-color markers still touch at the
+    Loamy cluster core even at radius=5 — either drop radius slightly further (to
+    ~4) in the densest sub-regions or add jitter separation to fully eliminate touching
+    points.'
+  - 'Code structure (CQ-01): makeLcg and soilCluster remain as standalone helper functions
+    plus the chart.events.render closure; while defensible for de-duplicating 3 cluster
+    generations, this still isn''t a flat imports -> data -> plot shape.'
+  - 'Design polish (DE-01/DE-03): the ternary system is well-built but still fairly
+    literal — no shaded soil-classification zones (sandy loam, silty clay, etc.) or
+    other visual-hierarchy device to push it toward genuine data storytelling beyond
+    color-coded clusters.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "ternary-basic · javascript · highcharts · anyplot.ai" in dark ink at top, well readable and not overflowing/clipped. The custom-drawn triangle frame (dark ink stroke) has bold vertex labels "Sand" (top), "Silt" (bottom-left), "Clay" (bottom-right) in dark, semi-bold text, plus smaller gray edge tick labels (20/40/60/80) along each side with short tick marks. Internal gridlines at 20% steps are subtle mid-gray, visible but not dominant. Legend ("Sandy soils", "Loamy soils", "Clayey soils") sits centered below the triangle in muted gray text with color swatches.
-      Data: Three clearly separated clusters of circular markers — green (#009E73, Sandy soils, near the Sand vertex), violet (Loamy soils, centered mid-triangle), and steel-blue (Clayey soils, near the Clay vertex). All points sit inside the triangle and are distinct from the background.
+      Chrome: Title "ternary-basic · javascript · highcharts · anyplot.ai" in dark ink at top, fully readable, not overflowing or clipped. The custom-drawn triangle frame (dark ink stroke) has bold vertex labels "Sand" (apex), "Silt" (bottom-left), "Clay" (bottom-right) in dark semi-bold text, plus smaller gray edge tick labels (20/40/60/80) along each side with short outward tick marks. Internal gridlines at 20% steps are subtle mid-gray, visible but not dominant. Legend ("Sandy soils", "Loamy soils", "Clayey soils") sits centered below the triangle in muted gray text with color swatches. Measured against the canvas, the triangle+labels span roughly 69% of canvas width and 67% of canvas height, symmetrically centered — the large blank band above the apex flagged in the prior review is gone.
+      Data: Three clearly separated clusters of circular markers — green (#009E73, Sandy soils, near the Sand vertex), lavender (Loamy soils, centered mid-triangle), and blue (Clayey soils, near the Clay vertex). A pixel-level crop of the densest Loamy cluster shows only two pairs of markers still touching; the rest are cleanly separated (marker radius was reduced from 7 to 5 since the last review).
       Legibility verdict: PASS — all title, vertex labels, tick labels, and legend text are clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title now rendered in light/near-white text, clearly legible. Triangle frame stroke, vertex labels ("Sand"/"Silt"/"Clay"), edge tick labels, and gridlines all flip to light-toned/theme-adaptive colors and remain clearly visible against the dark surface. Legend text is light gray, readable.
-      Data: Same three clusters in the identical colors as the light render — green (#009E73), violet, and steel-blue — confirming data colors do not change between themes, only chrome.
+      Chrome: Title now rendered in light/near-white text, clearly legible. Triangle frame stroke, vertex labels ("Sand"/"Silt"/"Clay"), edge tick labels, and gridlines all flip to light-toned/theme-adaptive colors and remain clearly visible against the dark surface. Legend text is light gray, readable. Pixel-bound checks confirm identical geometry to the light render (same triangle bounding box), so the layout fix applies equally in both themes.
+      Data: Same three clusters in the identical colors as the light render — green (#009E73), lavender, and blue — confirming data colors do not change between themes, only chrome.
       Legibility verdict: PASS — no dark-on-dark failures observed; all text elements (title, vertex/tick labels, legend) are clearly visible against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -73,53 +73,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, vertex labels 18px, ticks
-          12px, legend 14px); readable in both themes, title well-proportioned.
+        comment: All font sizes explicitly set (title 22px, vertex labels 18px, edge
+          ticks 12px, legend 14px); readable in both themes, well-proportioned title.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; tick labels and vertex labels sit clear
-          of the triangle and legend.
+        comment: No text/data-label collisions; tick labels, vertex labels, title,
+          and legend all sit clear of each other and of the triangle.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible and color-distinct, but several same-color points
-          touch/overlap within cluster cores.
+        comment: Marker radius reduced 7->5 since last review; a pixel-crop of the
+          densest Loamy cluster shows only two remaining touching pairs, down from
+          multiple overlaps before.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/violet/steel-blue hues are well separated; no red-green-only
-          encoding.
+        comment: Green/lavender/blue hues well separated; no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall utilization, but a large blank band between title and
-          triangle apex makes the top margin heavier than the bottom.
+        comment: 'Measured bounding boxes: triangle spans ~69% canvas width (symmetric
+          368px margins) and ~67% canvas height; the prior large top blank band is
+          resolved.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels (Sand/Silt/Clay) plus percentage tick marks are fully
-          descriptive for a ternary axis system.
+        comment: Vertex labels (Sand/Silt/Clay) plus percentage tick marks fully describe
+          the ternary axis system.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series #009E73; remaining series follow canonical Imprint
-          order; theme-correct chrome in both renders; data colors identical across
-          themes.'
+          order; theme-correct chrome confirmed identical geometry/colors in both
+          renders.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -129,21 +130,21 @@ review:
         passed: true
         comment: Entirely custom-built triangle/grid/tick system (Highcharts has no
           native ternary type) — clearly above a configured default, though not yet
-          fully publication-level (e.g. no zone shading).
+          fully publication-level (no zone shading).
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Default axes fully suppressed and replaced with a subtle custom frame/grid;
-          generous whitespace; minor room to tighten top margin.
+          generous, now well-balanced whitespace after the margin/yAxis fix.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Three color-coded clusters immediately convey the soil-classification
-          story; no explicit region annotations beyond that.
+          story; no explicit region annotations or shading beyond that.
     spec_compliance:
       score: 15
       max: 15
@@ -191,7 +192,7 @@ review:
         max: 5
         passed: true
         comment: Soil-texture classification is a real, neutral, textbook ternary-plot
-          use case, explicitly named in the spec.
+          use case explicitly named in the spec.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -200,17 +201,17 @@ review:
         comment: All samples normalized to sum to 100%; cluster means are realistic
           soil-texture proportions.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: Relies on several standalone helper functions (makeLcg, soilCluster,
-          toPoint) plus a render-event closure rather than a flat imports→data→plot
-          shape.
+        passed: true
+        comment: toPoint() helper was inlined into the series map since last review;
+          makeLcg/soilCluster remain but are justified for de-duplicating 3 cluster
+          generations.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -256,7 +257,7 @@ review:
         comment: Hand-built ternary coordinate system via chart.renderer + the render
           event (redraws on resize) is a genuinely Highcharts-specific technique,
           hard to replicate as-is in another library.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
