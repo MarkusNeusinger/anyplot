@@ -1,83 +1,83 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-06
+Library: pygal 3.1.3 | Python 3.13.12
+Quality: 92/100 | Updated: 2026-08-04
 """
 
 import math
 import os
+import re
 
 import cairosvg
-import numpy as np
 import pygal
 from pygal.style import Style
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"
 
-np.random.seed(42)
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+BRAND = IMPRINT_PALETTE[0]
 
 H = math.sqrt(3) / 2
 
+# (copper, tin, zinc) proportions, % — spans phosphor/bell bronze, gunmetal,
+# cartridge brass and a few synthetic extremes so the whole triangle is covered.
 compositions = [
-    (65, 25, 10),
-    (10, 45, 45),
-    (30, 35, 35),
-    (40, 40, 20),
-    (50, 10, 40),
-    (20, 65, 15),
+    (88, 12, 0),
+    (94, 6, 0),
+    (78, 22, 0),
     (90, 5, 5),
-    (5, 90, 5),
-    (5, 5, 90),
-    (33, 34, 33),
-    (45, 45, 10),
+    (85, 5, 10),
+    (70, 0, 30),
+    (60, 5, 35),
+    (65, 25, 10),
     (55, 35, 10),
+    (50, 10, 40),
+    (33, 34, 33),
+    (30, 35, 35),
+    (10, 45, 45),
+    (40, 40, 20),
+    (20, 65, 15),
     (15, 20, 65),
-    (10, 15, 75),
-    (50, 30, 20),
 ]
 
+# Barycentric (copper, tin, zinc) -> cartesian (x, y) on the unit equilateral triangle.
 data_points = [(0.5 * (2 * s[1] + s[0]) / 100, H * s[0] / 100) for s in compositions]
 
-vertex_sand = (0.5, H)
-vertex_silt = (1.0, 0.0)
-vertex_clay = (0.0, 0.0)
+vertex_copper = (0.5, H)
+vertex_tin = (1.0, 0.0)
+vertex_zinc = (0.0, 0.0)
 
-grid_lines = []
+# Each entry is its own line segment — pygal's XY chart has no gap marker for a
+# single series (a bare (None, None) point is silently dropped, not treated as a
+# break, which would wrongly connect consecutive segments into one zig-zag path).
+grid_segments = []
 for pct in [0.2, 0.4, 0.6, 0.8]:
-    p1 = (0.5 * (2 * (1 - pct) + pct), H * pct)
-    p2 = (0.5 * pct, H * pct)
-    grid_lines.extend([p1, p2, (None, None)])
+    grid_segments.append([(0.5 * (2 * (1 - pct) + pct), H * pct), (0.5 * pct, H * pct)])
+    grid_segments.append([(0.5 * (2 * pct + (1 - pct)), H * (1 - pct)), (pct, 0.0)])
+    grid_segments.append([(0.5 * (1 - pct), H * (1 - pct)), (0.5 * (2 * (1 - pct)), 0.0)])
 
-    p1 = (0.5 * (2 * pct + (1 - pct)), H * (1 - pct))
-    p2 = (pct, 0.0)
-    grid_lines.extend([p1, p2, (None, None)])
-
-    p1 = (0.5 * (1 - pct), H * (1 - pct))
-    p2 = (0.5 * (2 * (1 - pct)), 0.0)
-    grid_lines.extend([p1, p2, (None, None)])
-
-tick_marks = []
 tick_len = 0.03
-
+tick_segments = []
 for pct in [0.2, 0.4, 0.6, 0.8]:
-    x_left = 0.5 * pct
-    y_left = H * pct
-    tick_marks.extend([(x_left, y_left), (x_left - tick_len, y_left), (None, None)])
+    x_left, y_left = 0.5 * pct, H * pct
+    tick_segments.append([(x_left, y_left), (x_left - tick_len, y_left)])
 
-    x_right = 0.5 * (2 - pct)
-    y_right = H * pct
-    tick_marks.extend([(x_right, y_right), (x_right + tick_len, y_right), (None, None)])
+    x_right, y_right = 0.5 * (2 - pct), H * pct
+    tick_segments.append([(x_right, y_right), (x_right + tick_len, y_right)])
 
     x_base = pct
-    y_base = 0.0
-    tick_marks.extend([(x_base, y_base), (x_base, y_base - tick_len), (None, None)])
+    tick_segments.append([(x_base, 0.0), (x_base, -tick_len)])
+
+title = "Bronze Alloy Composition · ternary-basic · python · pygal · anyplot.ai"
+title_font_size = max(44, round(66 * min(1.0, 67 / len(title))))
+
+# One chart.add() call per series (boundary, each grid segment, the data, each tick
+# segment) — Style.colors is indexed by that same series order.
+series_colors = [INK] + [INK_MUTED] * len(grid_segments) + [BRAND] + [INK] * len(tick_segments)
 
 custom_style = Style(
     background=PAGE_BG,
@@ -85,97 +85,117 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(INK, INK_MUTED, BRAND, INK),
-    title_font_size=80,
-    label_font_size=48,
+    colors=tuple(series_colors),
+    title_font_size=title_font_size,
+    label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
-    value_font_size=40,
+    value_font_size=36,
+    stroke_width=2.5,
     opacity=0.85,
 )
 
 chart = pygal.XY(
-    width=3600,
-    height=3600,
+    width=2400,
+    height=2400,
     style=custom_style,
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
     show_x_guides=False,
     show_y_guides=False,
     show_x_labels=False,
     show_y_labels=False,
     x_title="",
     y_title="",
-    title="Soil Composition · ternary-basic · pygal · anyplot.ai",
-    dots_size=20,
+    title=title,
     stroke=False,
     include_x_axis=False,
     xrange=(-0.15, 1.15),
     yrange=(-0.20, 1.05),
     explicit_size=True,
-    margin=50,
+    margin_top=290,
+    margin_right=50,
     margin_bottom=120,
+    margin_left=50,
 )
 
 chart.add(
-    None, [vertex_clay, vertex_silt, vertex_sand, vertex_clay], stroke=True, show_dots=False, stroke_style={"width": 5}
+    None, [vertex_zinc, vertex_tin, vertex_copper, vertex_zinc], stroke=True, show_dots=False, stroke_style={"width": 4}
 )
 
-chart.add(None, grid_lines, stroke=True, show_dots=False, stroke_style={"width": 2, "dasharray": "8,5"})
+for segment in grid_segments:
+    chart.add(None, segment, stroke=True, show_dots=False, stroke_style={"width": 1.5, "dasharray": "8,5"})
 
-chart.add("Soil Samples", data_points, stroke=False, dots_size=22)
+chart.add("Alloy Samples", data_points, stroke=False, dots_size=22)
 
-chart.add(None, tick_marks, stroke=True, show_dots=False, stroke_style={"width": 3})
+for segment in tick_segments:
+    chart.add(None, segment, stroke=True, show_dots=False, stroke_style={"width": 2.5})
 
 svg_content = chart.render().decode("utf-8")
 
-plot_x_start = 150
-plot_x_end = 3450
-plot_y_start = 250
-plot_y_end = 3350
-x_range = 1.30
-y_range = 1.25
+# Derive the exact data-space -> pixel-space affine transform from the boundary
+# triangle pygal already rendered (serie-0), instead of hand-calibrating offsets.
+# The series live inside a translated <g> ("plot overlay"); its offset must be
+# folded in since the labels below are inserted as untransformed top-level SVG.
+overlay_dx, overlay_dy = (
+    float(v) for v in re.search(r'translate\(([\d.\-]+), ?([\d.\-]+)\)"\s*class="plot overlay"', svg_content).groups()
+)
 
-sand_px = plot_x_start + (0.5 + 0.15) / x_range * (plot_x_end - plot_x_start)
-sand_py = plot_y_start + (1.05 - (H + 0.06)) / y_range * (plot_y_end - plot_y_start)
-silt_px = plot_x_start + (1.07 + 0.15) / x_range * (plot_x_end - plot_x_start)
-silt_py = plot_y_start + (1.05 - (-0.03)) / y_range * (plot_y_end - plot_y_start)
-clay_px = plot_x_start + (-0.07 + 0.15) / x_range * (plot_x_end - plot_x_start)
-clay_py = plot_y_start + (1.05 - (-0.03)) / y_range * (plot_y_end - plot_y_start)
+boundary_segment = svg_content[
+    svg_content.index('<g class="series serie-0') : svg_content.index('<g class="series serie-1')
+]
+path_d = re.search(r'<path d="([^"]+)"', boundary_segment).group(1)
+zinc_px, tin_px, copper_px, _ = re.findall(r"(-?\d+\.\d+) (-?\d+\.\d+)", path_d)
+zinc_px = tuple(float(v) for v in zinc_px)
+tin_px = tuple(float(v) for v in tin_px)
+copper_px = tuple(float(v) for v in copper_px)
 
-vertex_labels_svg = f"""
-  <text x="{sand_px}" y="{sand_py}" text-anchor="middle" font-size="60" font-weight="bold" fill="{INK}" font-family="sans-serif">SAND</text>
-  <text x="{silt_px}" y="{silt_py}" text-anchor="start" font-size="60" font-weight="bold" fill="{INK}" font-family="sans-serif">SILT</text>
-  <text x="{clay_px}" y="{clay_py}" text-anchor="end" font-size="60" font-weight="bold" fill="{INK}" font-family="sans-serif">CLAY</text>
-"""
+origin_x, origin_y = zinc_px[0] + overlay_dx, zinc_px[1] + overlay_dy
+scale_x = tin_px[0] - zinc_px[0]
+scale_y = (zinc_px[1] - copper_px[1]) / H
+
+
+def to_px(x, y):
+    return origin_x + scale_x * x, origin_y - scale_y * y
+
+
+vertex_labels = [
+    ("COPPER", (0.5, H + 0.07), "middle"),
+    ("TIN", (1.0 + 0.05, -0.05), "start"),
+    ("ZINC", (0.0 - 0.05, -0.05), "end"),
+]
+
+vertex_labels_svg = ""
+for name, (x, y), anchor in vertex_labels:
+    px, py = to_px(x, y)
+    vertex_labels_svg += (
+        f'  <text x="{px:.1f}" y="{py:.1f}" text-anchor="{anchor}" font-size="52" '
+        f'font-weight="bold" fill="{INK}" font-family="sans-serif">{name}</text>\n'
+    )
 
 pct_labels_svg = ""
-pct_font_size = 36
-
 for pct in [20, 40, 60, 80]:
     frac = pct / 100.0
 
-    left_x = 0.5 * frac
-    left_y = H * frac
-    left_px = plot_x_start + (left_x - 0.06 + 0.15) / x_range * (plot_x_end - plot_x_start)
-    left_py = plot_y_start + (1.05 - left_y) / y_range * (plot_y_end - plot_y_start)
-    pct_labels_svg += f'  <text x="{left_px}" y="{left_py}" text-anchor="end" font-size="{pct_font_size}" fill="{INK_MUTED}" font-family="sans-serif">{pct}</text>\n'
+    px, py = to_px(0.5 * frac - 0.055, H * frac)
+    pct_labels_svg += (
+        f'  <text x="{px:.1f}" y="{py:.1f}" text-anchor="end" font-size="32" '
+        f'fill="{INK_MUTED}" font-family="sans-serif">{pct}</text>\n'
+    )
 
-    right_x = 0.5 * (2 - frac)
-    right_y = H * frac
-    right_px = plot_x_start + (right_x + 0.04 + 0.15) / x_range * (plot_x_end - plot_x_start)
-    right_py = plot_y_start + (1.05 - right_y) / y_range * (plot_y_end - plot_y_start)
-    pct_labels_svg += f'  <text x="{right_px}" y="{right_py}" text-anchor="start" font-size="{pct_font_size}" fill="{INK_MUTED}" font-family="sans-serif">{pct}</text>\n'
+    px, py = to_px(0.5 * (2 - frac) + 0.045, H * frac)
+    pct_labels_svg += (
+        f'  <text x="{px:.1f}" y="{py:.1f}" text-anchor="start" font-size="32" '
+        f'fill="{INK_MUTED}" font-family="sans-serif">{pct}</text>\n'
+    )
 
-    base_x = frac
-    base_y = -0.05
-    base_px = plot_x_start + (base_x + 0.15) / x_range * (plot_x_end - plot_x_start)
-    base_py = plot_y_start + (1.05 - base_y) / y_range * (plot_y_end - plot_y_start)
-    pct_labels_svg += f'  <text x="{base_px}" y="{base_py}" text-anchor="middle" font-size="{pct_font_size}" fill="{INK_MUTED}" font-family="sans-serif">{pct}</text>\n'
+    px, py = to_px(frac, -0.05)
+    pct_labels_svg += (
+        f'  <text x="{px:.1f}" y="{py:.1f}" text-anchor="middle" font-size="32" '
+        f'fill="{INK_MUTED}" font-family="sans-serif">{pct}</text>\n'
+    )
 
-all_labels_svg = vertex_labels_svg + pct_labels_svg
-svg_content = svg_content.replace("</svg>", all_labels_svg + "</svg>")
+svg_content = svg_content.replace("</svg>", vertex_labels_svg + pct_labels_svg + "</svg>")
 
 with open(f"plot-{THEME}.html", "w") as f:
     f.write(svg_content)
