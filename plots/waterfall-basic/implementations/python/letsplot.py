@@ -1,7 +1,7 @@
 """ anyplot.ai
 waterfall-basic: Basic Waterfall Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-06
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-08-04
 """
 
 import os
@@ -11,6 +11,7 @@ from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_line,
     element_rect,
     element_text,
     geom_rect,
@@ -19,6 +20,7 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_fill_manual,
     scale_x_continuous,
     scale_y_continuous,
@@ -37,10 +39,12 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # Position 1 - green
-ACCENT_1 = "#C475FD"  # Position 2 - orange
-ACCENT_2 = "#4467A3"  # Position 3 - blue
+# Imprint palette, with a semantic exception for the profit/loss convention:
+# green for gains, matte red for losses (both drawn from the Imprint pool),
+# blue for the start/end total bars per the spec's "blue or gray" example.
+BRAND = "#009E73"  # Position 1 - green (increase)
+NEGATIVE = "#AE3030"  # Position 5 - matte red, semantic anchor for loss (decrease)
+TOTAL = "#4467A3"  # Position 3 - blue (start/end totals)
 
 # Data - Quarterly financial breakdown from revenue to net income
 categories = [
@@ -108,11 +112,16 @@ df["label_y"] = (df["ymin"] + df["ymax"]) / 2
 df["label"] = df.apply(
     lambda row: f"${row['value']:,.0f}" if row["color_type"] == "total" else f"{row['value']:+,.0f}", axis=1
 )
+df["tooltip_change"] = df.apply(
+    lambda row: "Starting/ending total" if row["color_type"] == "total" else row["label"], axis=1
+)
 
-# Calculate connector line data (connects bars)
+# Calculate connector line data (connects bars) - connect at the edge that
+# matches the running total after this bar's change: ymin for decreases
+# (post-decrease level), ymax for increases and totals (post-increase level)
 connectors = []
 for i in range(len(categories) - 1):
-    y_val = df["ymax"].iloc[i]
+    y_val = df["ymin"].iloc[i] if df["color_type"].iloc[i] == "negative" else df["ymax"].iloc[i]
     connectors.append({"x_start": i + bar_width, "x_end": i + 1 - bar_width, "y": y_val})
 
 connector_df = pd.DataFrame(connectors)
@@ -120,12 +129,14 @@ connector_df = pd.DataFrame(connectors)
 # Build waterfall chart
 plot = (
     ggplot()
-    # Draw bars using geom_rect with pre-computed coordinates
+    # Draw bars using geom_rect with pre-computed coordinates; tooltip surfaces
+    # the running-total range on hover, a lets-plot-specific interactive touch
     + geom_rect(
         data=df,
         mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="color_type"),
         color=INK_SOFT,
         size=0.8,
+        tooltips=layer_tooltips().line("@category").line("Change|@tooltip_change").line("Running total|$@ymax"),
     )
     # Connector lines between bars
     + geom_segment(
@@ -136,10 +147,10 @@ plot = (
         linetype="dashed",
     )
     # Value labels on bars
-    + geom_text(data=df, mapping=aes(x="x_pos", y="label_y", label="label"), color=INK, size=12, fontface="bold")
-    # Colors: Okabe-Ito palette
+    + geom_text(data=df, mapping=aes(x="x_pos", y="label_y", label="label"), color=INK, size=4, fontface="bold")
+    # Colors: Imprint palette with a profit/loss semantic exception
     + scale_fill_manual(
-        values={"positive": BRAND, "negative": ACCENT_1, "total": ACCENT_2},
+        values={"positive": BRAND, "negative": NEGATIVE, "total": TOTAL},
         name="Change Type",
         labels={"positive": "Increase", "negative": "Decrease", "total": "Total"},
     )
@@ -148,29 +159,29 @@ plot = (
     # Y axis
     + scale_y_continuous(format="${,.0f}")
     # Labels
-    + labs(title="waterfall-basic · letsplot · anyplot.ai", x="", y="Amount ($)")
+    + labs(title="waterfall-basic · python · letsplot · anyplot.ai", x="", y="Amount ($)")
     # Theme
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid_major_y=element_rect(color=INK_SOFT, size=0.4, linetype="solid"),
+        panel_grid_major_y=element_line(color=INK_SOFT, size=0.4),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        plot_title=element_text(size=24, color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text_x=element_text(size=14, color=INK_SOFT, angle=30),
-        axis_text_y=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=16, color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text_x=element_text(size=10, color=INK_SOFT, angle=30),
+        axis_text_y=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# Save as PNG (scale 4x for 3200x1800)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 
 # Save as HTML for interactivity
 ggsave(plot, f"plot-{THEME}.html", path=".")

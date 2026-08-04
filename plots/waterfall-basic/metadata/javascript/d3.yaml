@@ -1,0 +1,252 @@
+library: d3
+language: javascript
+specification_id: waterfall-basic
+created: '2026-08-04T11:30:50Z'
+updated: '2026-08-04T11:36:23Z'
+generated_by: claude-sonnet
+workflow_run: 30904761855
+issue: 777
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct Imprint palette with a well-justified semantic exception: green (#009E73)
+    for increases, matte red (#AE3030) for decreases, and the theme-adaptive neutral/ink
+    token for totals — matches the style guide''s documented ''totals/baseline'' role
+    for the neutral anchor'
+  - 'Theme-adaptive chrome is fully correct in both renders: light background #FAF8F1
+    with dark text, dark background #1A1A17 with light text, and the data colors are
+    pixel-identical across themes'
+  - Accurate waterfall float logic — dashed connector lines align exactly with each
+    bar's cumulative level; verified arithmetic (850 - 320 - 180 - 95 - 60 - 45 +
+    25 = 175) matches the displayed Net Profit total
+  - Clean KISS structure with deterministic hardcoded data, correct mount-node/API
+    contract, no animations, rounded bar corners and a manually built legend add visual
+    polish
+  - No edge clipping — title, legend, and rotated x-axis labels all sit comfortably
+    inside the canvas with generous margins
+  weaknesses:
+  - Intermediate change bars label the step delta (e.g. '-320K') rather than an explicit
+    running-total figure; only the first and last total bars show the cumulative value
+    directly — a minor deviation from the spec note 'display running total labels
+    on or near bars'
+  - At the ~400px mobile thumbnail width, the eight rotated x-axis category labels
+    compress and become harder to read
+  - No explicit annotation calls out the largest driver of the decline (Cost of Goods
+    Sold, -320K), which would sharpen the data story further
+  - D3-distinctive features are present but modest (manual cumulative-flow computation,
+    hand-built connector lines) rather than something like transitions or a bespoke
+    interactive overlay in the HTML output
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Quarterly Revenue Bridge · waterfall-basic · javascript · d3 · anyplot.ai" in bold dark ink, clearly legible. Y-axis label "Amount ($K)" and tick labels ($0K-$1,000K) in dark ink, fully readable. X-axis category labels ("Starting Revenue", "Cost of Goods Sold", "Operating Expenses", "R&D Investment", "Marketing Spend", "Tax Adjustment", "Other Income", "Net Profit") rotated -30°, dark text, fully readable and non-overlapping. Legend (Increase / Decrease / Total swatches) top-right, readable.
+      Data: 8 bars forming a waterfall — black "Starting Revenue" ($850K) and "Net Profit" ($175K) total bars, five red decrease bars (-320K, -180K, -95K, -60K, -45K), one green increase bar (+25K). First categorical (increase) series is #009E73 as required. Dashed gray connector lines link each bar's cumulative level to the next. Value labels sit just above each bar.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-light or light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light/off-white text, clearly legible against the dark surface. The two total bars ("Starting Revenue", "Net Profit") flip from black to a light near-white fill (theme-adaptive neutral/ink token) — correct chrome behavior, not a data-color change. Grid lines and axis domain lines are subtle but visible.
+      Data: Green increase bar and red decrease bars are pixel-identical in hue to the light render (#009E73 green, #AE3030 red) — only the total-bar neutral tone and all chrome flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text (title, axis labels, tick labels, legend, value labels) is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14px ticks, 16px labels, dynamic title).
+          Readable in both themes; x-axis category labels compress somewhat at ~400px
+          mobile width.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar widths and connector-line weight well suited to 8-category density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green distinction is redundantly encoded via bar position, sign-prefixed
+          text labels, and a legend — not color alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills ~85-95% of canvas width/height, balanced margins,
+          nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Amount ($K)' with units; x-axis categories are self-descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical (increase) series is #009E73; decrease uses matte
+          red #AE3030 as a justified semantic exception; totals use the theme-adaptive
+          neutral anchor; backgrounds and chrome are theme-correct in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color mapping and rounded bar corners clearly
+          above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, L-shaped implicit spines, generous whitespace,
+          dashed connector lines add polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color contrast and connector flow guide the eye from starting revenue
+          to net profit, but no explicit callout of the largest driver.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct waterfall chart with distinct total and change bar subtypes.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Increase/decrease color-coding, connecting lines, distinct total
+          bars, and value labels all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on x-axis, dollar amounts on y-axis; all 8 steps visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format 'Quarterly Revenue Bridge · waterfall-basic · javascript
+          · d3 · anyplot.ai' matches spec; legend labels (Increase/Decrease/Total)
+          match the data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both increases and decreases plus distinct start/end totals.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral quarterly revenue bridge scenario, fully comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sum correctly (850-320-180-95-60-45+25=175) and are proportionally
+          realistic for a mid-size company.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/plot flow, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a bespoke waterfall, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, single svg appended, no animation.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses scaleBand/scaleLinear/axisBottom/axisLeft and the modern .data().join()
+          update pattern correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hand-built waterfall (no native chart type in D3) via manual cumulative
+          computation and custom connector-line marks — leverages D3's low-level flexibility,
+          though nothing further distinctive like transitions.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns: []
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
