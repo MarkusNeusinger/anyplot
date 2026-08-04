@@ -1,7 +1,7 @@
 # anyplot.ai
 # ternary-basic: Basic Ternary Plot
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 70/100 | Created: 2026-08-04
+# Quality: 91/100 | Created: 2026-08-04
 
 using CairoMakie
 using Colors
