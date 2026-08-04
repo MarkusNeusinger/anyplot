@@ -2,6 +2,7 @@
 // wireframe-3d-basic: Basic 3D Wireframe Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.1
 // Quality: 86/100 | Created: 2026-08-04
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 const INK = t.ink;
@@ -122,11 +123,15 @@ segments.forEach((s) => { consider({ x: s.x1, y: s.y1 }); consider({ x: s.x2, y:
 axisEdges.forEach((e) => { consider(project(...e.from)); consider(project(...e.to)); });
 floorCorners.forEach(consider);
 
-const MARGIN = 0.42; // room for tick labels + axis titles outside the box
+const MARGIN = 0.3; // room for tick labels + axis titles outside the box
 let halfX = ((maxX - minX) / 2) * (1 + MARGIN);
 let halfY = ((maxY - minY) / 2) * (1 + MARGIN);
 const midX = (minX + maxX) / 2, midY = (minY + maxY) / 2;
-const TARGET_ASPECT = 1600 / 900; // landscape mount — keep x/y data units undistorted
+// Square mount (1200x1200 CSS) — this camera angle projects the cube into a
+// roughly square bounding box, so a square canvas (vs. the 16:9 default)
+// keeps x/y data units undistorted while letting the wireframe actually fill
+// the frame instead of leaving huge empty bands on a landscape canvas.
+const TARGET_ASPECT = 1.0;
 if (halfX / halfY < TARGET_ASPECT) halfX = halfY * TARGET_ASPECT; else halfY = halfX / TARGET_ASPECT;
 
 // --- Mount --------------------------------------------------------------
