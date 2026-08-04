@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wordcloud-basic: Basic Word Cloud
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 79/100 | Updated: 2026-08-04
@@ -35,7 +35,6 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Word frequency data - technology survey responses
-np.random.seed(42)
 words_data = {
     "word": [
         "Python",
@@ -63,16 +62,50 @@ words_data = {
         "Docker",
         "AWS",
         "Azure",
+        "Kubernetes",
+        "Terraform",
+        "GraphQL",
+        "Redis",
     ],
-    "frequency": [95, 88, 82, 78, 75, 70, 65, 62, 58, 55, 52, 48, 45, 42, 38, 35, 32, 30, 28, 26, 24, 22, 20, 18, 16],
+    "frequency": [
+        95,
+        88,
+        82,
+        78,
+        75,
+        70,
+        65,
+        62,
+        58,
+        55,
+        52,
+        48,
+        45,
+        42,
+        38,
+        35,
+        32,
+        30,
+        28,
+        26,
+        24,
+        22,
+        20,
+        18,
+        16,
+        14,
+        11,
+        8,
+        6,
+    ],
 }
 
 df = pd.DataFrame(words_data)
 
-# Calculate font sizes (5-25 mm) for emphasis, and a subtle alpha ramp for depth
+# Calculate font sizes (6-25 mm) for emphasis, and a subtle alpha ramp for depth
 min_freq, max_freq = df["frequency"].min(), df["frequency"].max()
 freq_norm = (df["frequency"] - min_freq) / (max_freq - min_freq)
-df["size"] = 5 + freq_norm * 20
+df["size"] = 6 + freq_norm * 19
 df["alpha"] = 0.6 + freq_norm * 0.4
 
 # Sort by frequency descending
@@ -105,6 +138,10 @@ positions = [
     (30, 6),  # Docker
     (6, 6),  # AWS
     (75, 6),  # Azure
+    (94, 10),  # Kubernetes - fills empty right margin below the legend
+    (94, 24),  # Terraform - fills empty right margin below the legend
+    (78, 53),  # GraphQL - fills empty upper-right quadrant
+    (42, 20),  # Redis - fills gap between the mid-canvas clusters
 ]
 
 df["x"] = [p[0] for p in positions]
@@ -148,7 +185,7 @@ plot = (
     + scale_size_identity()
     + scale_color_identity()
     + scale_alpha_identity()
-    + coord_cartesian(xlim=(0, 100), ylim=(0, 56.25))
+    + coord_cartesian(xlim=(0, 100), ylim=(0, 56.25), expand=False)
     + labs(title="wordcloud-basic · plotnine · anyplot.ai")
     + theme(
         figure_size=(8, 4.5),
