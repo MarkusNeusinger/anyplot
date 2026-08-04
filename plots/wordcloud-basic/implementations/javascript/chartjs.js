@@ -48,7 +48,6 @@ const WORDS = [
   { word: "chat", frequency: 66, category: "support" },
   { word: "analytics", frequency: 65, category: "features" },
   { word: "mobile", frequency: 63, category: "features" },
-  { word: "lag", frequency: 62, category: "performance" },
   { word: "documentation", frequency: 61, category: "support" },
   { word: "onboarding", frequency: 58, category: "usability" },
   { word: "plan", frequency: 57, category: "pricing" },
@@ -58,17 +57,16 @@ const WORDS = [
   { word: "search", frequency: 51, category: "features" },
   { word: "accessibility", frequency: 49, category: "usability" },
   { word: "helpdesk", frequency: 47, category: "support" },
-  { word: "refund", frequency: 44, category: "pricing" },
   { word: "reporting", frequency: 48, category: "features" },
-  { word: "discount", frequency: 38, category: "pricing" },
 ];
 
 const FONT_FAMILY = "'Helvetica Neue', Helvetica, Arial, sans-serif";
-const MIN_FONT_PX = 18;
+const MIN_FONT_PX = 22;
 const MAX_FONT_PX = 104;
 const MIN_WEIGHT = 500;
 const MAX_WEIGHT = 800;
 const BOX_PAD = 6;
+const AREA_MARGIN = 20;
 
 const freqs = WORDS.map((w) => w.frequency);
 const minFreq = Math.min(...freqs);
@@ -92,10 +90,6 @@ const categoryColor = Object.fromEntries(
 // words and lets smaller ones fill the remaining gaps.
 const layoutQueue = WORDS.slice().sort((a, b) => b.frequency - a.frequency);
 
-function boxesOverlap(a, b) {
-  return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
-}
-
 function layoutWords(ctx, area) {
   const centerX = (area.left + area.right) / 2;
   const centerY = (area.top + area.bottom) / 2;
@@ -112,7 +106,7 @@ function layoutWords(ctx, area) {
 
     let found = null;
     const angleStep = 0.35;
-    const radiusStep = 2.6;
+    const radiusStep = 2.0;
     for (let step = 0, angle = 0, radius = 0; radius < maxRadius; step++, angle += angleStep, radius = radiusStep * angle) {
       // Flatten the spiral vertically so it fills the wide landscape mount
       // instead of drifting into a tall, narrow column.
@@ -120,7 +114,8 @@ function layoutWords(ctx, area) {
       const y = centerY + radius * Math.sin(angle) * 0.62;
       const box = { left: x - boxW / 2, right: x + boxW / 2, top: y - boxH / 2, bottom: y + boxH / 2 };
       if (box.left < area.left || box.right > area.right || box.top < area.top || box.bottom > area.bottom) continue;
-      if (!placed.some((p) => boxesOverlap(p, box))) {
+      const collides = (p) => p.left < box.right && p.right > box.left && p.top < box.bottom && p.bottom > box.top;
+      if (!placed.some(collides)) {
         found = { x, y, box };
         break;
       }
@@ -163,12 +158,13 @@ const wordCloudPlugin = {
       lx += ctx.measureText(cat.label).width + 26;
     }
 
-    // Word cloud fills the region below the legend row.
+    // Word cloud fills the region below the legend row, inset by a margin so
+    // words breathe away from the canvas frame instead of crowding the edges.
     const area = {
-      left: chartArea.left,
-      right: chartArea.right,
-      top: chartArea.top + LEGEND_ROW_H,
-      bottom: chartArea.bottom,
+      left: chartArea.left + AREA_MARGIN,
+      right: chartArea.right - AREA_MARGIN,
+      top: chartArea.top + LEGEND_ROW_H + AREA_MARGIN,
+      bottom: chartArea.bottom - AREA_MARGIN,
     };
     const words = layoutWords(ctx, area);
 
