@@ -1,7 +1,7 @@
 """ anyplot.ai
 waterfall-basic: Basic Waterfall Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 84/100 | Created: 2026-05-06
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 92/100 | Created: 2026-08-04
 """
 
 import os
@@ -28,18 +28,23 @@ from plotnine import (
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint categorical palette - positive/negative reassigned via the finance
+# semantic exception (profit/gain -> green, loss/down -> red); totals use the
+# theme-adaptive neutral anchor so they read as part of the chart's structure.
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data - quarterly financial breakdown
 categories = ["Starting Balance", "Q1 Sales", "Operating Costs", "R&D Investment", "Tax Payment", "Ending Balance"]
 values = [1000, 450, -280, -120, -150, 900]
 
-# Calculate waterfall positions
 df = pd.DataFrame({"category": categories, "value": values})
 df["category"] = pd.Categorical(df["category"], categories=categories, ordered=True)
 
-# Calculate cumulative positions for waterfall
+# Calculate cumulative waterfall positions
 running_total = 0
 starts = []
 ends = []
@@ -68,57 +73,76 @@ for i, val in enumerate(values):
 
 df["start"] = starts
 df["end"] = ends
-df["bar_type"] = bar_types
+df["bar_type"] = pd.Categorical(bar_types, categories=["positive", "negative", "total"], ordered=True)
 df["x_pos"] = range(len(categories))
 
-# Create connector lines
+# Value labels: signed deltas for changes, plain totals for start/end bars
+label_offset = 45
+df["label"] = [f"{v:+,}" if t != "total" else f"{v:,}" for v, t in zip(values, bar_types, strict=True)]
+df["label_y"] = [e + label_offset if e >= s else e - label_offset for s, e in zip(starts, ends, strict=True)]
+
+# Connector lines bridging each bar's running total to the next bar's start.
+# The bridging y-value is always the post-change running total after step i:
+# for a decrease bar that value lives in "start", not "end".
 connectors = []
 for i in range(len(df) - 1):
-    if i < len(df) - 2:
-        connectors.append(
-            {"x_start": df.iloc[i]["x_pos"] + 0.4, "x_end": df.iloc[i + 1]["x_pos"] - 0.4, "y": df.iloc[i]["end"]}
-        )
+    bridge_y = df.iloc[i]["start"] if bar_types[i] == "negative" else df.iloc[i]["end"]
+    connectors.append({"x_start": df.iloc[i]["x_pos"] + 0.35, "x_end": df.iloc[i + 1]["x_pos"] - 0.35, "y": bridge_y})
 connector_df = pd.DataFrame(connectors) if connectors else pd.DataFrame()
 
-# Colors: green for positive, red for negative, gray for totals
-colors = {"total": INK_SOFT, "positive": "#2ecc71", "negative": "#e74c3c"}
+colors = {"total": INK, "positive": IMPRINT_PALETTE[0], "negative": IMPRINT_PALETTE[4]}
 
-# Create plot
+# Title, scaled to the mandated ~67-char baseline
+title = "Quarterly Financial Summary · waterfall-basic · python · plotnine · anyplot.ai"
+title_fontsize = round(12 * min(1.0, 67 / len(title)))
+
 plot = ggplot() + geom_rect(
-    df, aes(xmin="x_pos - 0.35", xmax="x_pos + 0.35", ymin="start", ymax="end", fill="bar_type")
+    df,
+    aes(xmin="x_pos - 0.35", xmax="x_pos + 0.35", ymin="start", ymax="end", fill="bar_type"),
+    color=PAGE_BG,
+    size=0.6,
 )
 
 if not connector_df.empty:
     plot = plot + geom_segment(
-        connector_df, aes(x="x_start", xend="x_end", y="y", yend="y"), color=INK_SOFT, size=0.5, alpha=0.5
+        connector_df,
+        aes(x="x_start", xend="x_end", y="y", yend="y"),
+        color=INK_SOFT,
+        size=0.6,
+        alpha=0.5,
+        linetype="dashed",
     )
 
 plot = (
     plot
-    + geom_text(df, aes(x="x_pos", y="end", label="value"), size=10, color=INK)
+    + geom_text(df, aes(x="x_pos", y="label_y", label="label"), size=7, color=INK)
     + scale_fill_manual(
-        values=colors, name="Category", labels={"total": "Total", "positive": "Increase", "negative": "Decrease"}
+        values=colors, name="Change Type", labels={"total": "Total", "positive": "Increase", "negative": "Decrease"}
     )
     + scale_x_continuous(breaks=list(range(len(categories))), labels=categories, limits=(-0.6, len(categories) - 0.4))
-    + labs(x="", y="Amount ($1K)", title="Quarterly Financial Summary · waterfall-basic · plotnine · anyplot.ai")
+    + labs(x="", y="Amount ($1K)", title=title)
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK_SOFT, size=0.3, alpha=0.1, linewidth=0.8),
+        panel_border=element_blank(),
+        panel_grid_major_x=element_blank(),
+        panel_grid_major_y=element_line(color=INK, size=0.4, alpha=0.15),
         panel_grid_minor=element_blank(),
-        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
-        axis_title=element_text(size=20, color=INK),
-        axis_text_x=element_text(size=16, color=INK_SOFT, angle=45, ha="right"),
-        axis_text_y=element_text(size=16, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT, size=0.5),
-        plot_title=element_text(size=24, color=INK, face="medium"),
-        legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT, size=0.5),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=16, color=INK),
+        axis_line_x=element_line(color=INK_SOFT, size=0.6),
+        axis_line_y=element_line(color=INK_SOFT, size=0.6),
+        axis_ticks_major=element_blank(),
+        axis_title=element_text(size=10, color=INK),
+        axis_text_x=element_text(size=8, color=INK_SOFT, angle=45, ha="right"),
+        axis_text_y=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=title_fontsize, color=INK, fontweight="bold"),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.4),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=8, color=INK),
         legend_position="top",
+        legend_key=element_blank(),
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")

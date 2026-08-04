@@ -1,7 +1,7 @@
 """ anyplot.ai
 waterfall-basic: Basic Waterfall Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 98/100 | Updated: 2026-05-06
+Library: plotly 6.9.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-08-04
 """
 
 import os
@@ -22,10 +22,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette
-COLOR_POSITIVE = "#009E73"  # bluish green (first series)
-COLOR_NEGATIVE = "#AE3030"  # imprint red
-COLOR_TOTAL = "#4467A3"  # blue
+# Imprint palette
+COLOR_POSITIVE = "#009E73"  # brand green (first series) — increases
+COLOR_NEGATIVE = "#AE3030"  # matte red — decreases (semantic loss anchor)
+COLOR_TOTAL = "#4467A3"  # blue — start/end totals
 
 # Data - Quarterly financial breakdown from revenue to net income
 categories = ["Revenue", "Product Costs", "Operating Expenses", "Marketing", "Other Income", "Taxes", "Net Income"]
@@ -37,6 +37,22 @@ values = [500000, -180000, -95000, -45000, 25000, -51250, 153750]
 # Define measure types: absolute for start, relative for changes, total for end
 measures = ["absolute", "relative", "relative", "relative", "relative", "relative", "total"]
 
+# Running/cumulative total after each step, so intermediate bars can display it
+running_totals = []
+cumulative = 0
+for value, measure in zip(values, measures, strict=True):
+    cumulative = value if measure != "relative" else cumulative + value
+    running_totals.append(cumulative)
+
+# Bar labels: delta amount for relative steps (with the running total below it),
+# and the total itself for the absolute/total anchor bars
+bar_labels = [
+    f"${value:,.0f}"
+    if measure != "relative"
+    else f"{'+' if value >= 0 else '-'}${abs(value):,.0f}<br>(${running_total:,.0f})"
+    for value, measure, running_total in zip(values, measures, running_totals, strict=True)
+]
+
 # Create waterfall chart using Plotly's native Waterfall trace
 fig = go.Figure(
     go.Waterfall(
@@ -46,14 +62,13 @@ fig = go.Figure(
         x=categories,
         y=values,
         textposition="outside",
-        text=[f"${abs(v):,.0f}" for v in values],
-        textfont={"size": 18, "color": INK},
-        connector={"line": {"color": INK_SOFT, "width": 2, "dash": "dot"}},
+        text=bar_labels,
+        textfont={"size": 13, "color": INK},
+        connector={"line": {"color": INK_SOFT, "width": 1.5, "dash": "dot"}},
         decreasing={"marker": {"color": COLOR_NEGATIVE}},
         increasing={"marker": {"color": COLOR_POSITIVE}},
         totals={"marker": {"color": COLOR_TOTAL}},
-        showlegend=True,
-        legendgroup="main",
+        showlegend=False,
     )
 )
 
@@ -63,7 +78,7 @@ fig.add_trace(
         x=[None],
         y=[None],
         mode="markers",
-        marker={"size": 14, "color": COLOR_POSITIVE},
+        marker={"size": 10, "color": COLOR_POSITIVE},
         name="Increases",
         showlegend=True,
         legendgroup="colors",
@@ -76,7 +91,7 @@ fig.add_trace(
         x=[None],
         y=[None],
         mode="markers",
-        marker={"size": 14, "color": COLOR_NEGATIVE},
+        marker={"size": 10, "color": COLOR_NEGATIVE},
         name="Decreases",
         showlegend=True,
         legendgroup="colors",
@@ -89,7 +104,7 @@ fig.add_trace(
         x=[None],
         y=[None],
         mode="markers",
-        marker={"size": 14, "color": COLOR_TOTAL},
+        marker={"size": 10, "color": COLOR_TOTAL},
         name="Totals",
         showlegend=True,
         legendgroup="colors",
@@ -97,23 +112,24 @@ fig.add_trace(
     )
 )
 
-# Update layout for 4800x2700 px canvas with theme colors
+# Update layout for 3200x1800 px canvas with theme colors
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "waterfall-basic · plotly · pyplots.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "waterfall-basic · python · plotly · anyplot.ai",
+        "font": {"size": 19, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Category", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Category", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "linecolor": INK_SOFT,
-        "gridcolor": GRID,
+        "showgrid": False,
     },
     yaxis={
-        "title": {"text": "Amount ($)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Amount ($)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickformat": "$,.0f",
         "showgrid": True,
         "gridwidth": 1,
@@ -132,11 +148,11 @@ fig.update_layout(
         "yanchor": "top",
         "bgcolor": "rgba(0,0,0,0)" if THEME == "light" else "rgba(255,255,255,0)",
         "borderwidth": 0,
-        "font": {"size": 16, "color": INK_SOFT},
+        "font": {"size": 10, "color": INK_SOFT},
     },
-    margin={"t": 100, "b": 80, "l": 120, "r": 50},
+    margin={"t": 90, "b": 70, "l": 100, "r": 40},
 )
 
 # Save as PNG and HTML with theme-suffixed filenames
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
