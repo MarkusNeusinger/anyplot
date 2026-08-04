@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-04
@@ -158,6 +158,13 @@ for pct in [20, 40, 60, 80]:
 
 tick_df = pd.DataFrame(tick_labels)
 
+# Cluster centroids nudged toward the triangle center, for a storytelling
+# callout per region beyond plain color-coded scatter.
+tri_center_x, tri_center_y = 0.5, sqrt3_2 / 3
+centroid_df = df.groupby("soil_type", as_index=False)[["x", "y"]].mean()
+centroid_df["label_x"] = centroid_df["x"] + 0.14 * (tri_center_x - centroid_df["x"])
+centroid_df["label_y"] = centroid_df["y"] + 0.14 * (tri_center_y - centroid_df["y"]) + 0.075
+
 # Distinctive letsplot feature: interactive per-point tooltips carrying the
 # exact composition (not just position) — surfaced in the exported HTML.
 point_tooltips = (
@@ -174,7 +181,20 @@ plot = (
         data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, size=0.4, alpha=0.3
     )
     # Data points
-    + geom_point(data=df, mapping=aes(x="x", y="y", color="soil_type"), size=3.5, alpha=0.85, tooltips=point_tooltips)
+    + geom_point(data=df, mapping=aes(x="x", y="y", color="soil_type"), size=4.2, alpha=0.85, tooltips=point_tooltips)
+    # Cluster centroid markers (ring) + labels, calling out each soil region
+    + geom_point(
+        data=centroid_df,
+        mapping=aes(x="x", y="y", color="soil_type"),
+        size=9,
+        shape=21,
+        fill="white",
+        stroke=2.2,
+        show_legend=False,
+    )
+    + geom_text(
+        data=centroid_df, mapping=aes(x="label_x", y="label_y", label="soil_type"), size=3.8, fontface="bold", color=INK
+    )
     # Vertex labels
     + geom_text(data=labels_df, mapping=aes(x="x", y="y", label="label"), size=5.5, fontface="bold", color=INK)
     # Tick labels
@@ -189,7 +209,7 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         plot_title=element_text(size=16, face="bold", color=INK),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=12, color=INK),
+        legend_title=element_text(size=12, color=INK, face="bold"),
         legend_text=element_text(size=10, color=INK_SOFT),
         axis_title=element_blank(),
         axis_text=element_blank(),
