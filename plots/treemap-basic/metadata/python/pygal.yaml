@@ -2,99 +2,117 @@ library: pygal
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:49:59Z'
-updated: '2026-05-05T22:51:57Z'
-generated_by: claude-haiku
-workflow_run: 25406267187
+updated: '2026-08-04T09:21:09Z'
+generated_by: claude-sonnet
+workflow_run: 30894080359
 issue: 766
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 93
 review:
   strengths:
-  - Perfect theme adaptation with warm off-white and near-black backgrounds
-  - Okabe-Ito palette correctly applied with brand green as first category
-  - All text fully legible in both light and dark renders
-  - Clean hierarchical treemap with clear visual category separation
-  - Polished data formatting ($XXK values)
-  - Comprehensive theme-token usage (foreground, foreground_strong, foreground_subtle)
-  - Proper interactive HTML output alongside PNG
-  - Appropriate canvas size and font sizing for large resolution
+  - Per-cell captions are now uniformly sized (value_label_font_size drives both the
+    company name and the dollar value in the same text block) — the disproportionate
+    label/value sizing flagged in Attempt 1 is fully resolved
+  - New value-proportional shading (_lighten helper) darkens the largest company in
+    each sector and lightens smaller ones toward white, adding a second layer of visual
+    hierarchy inside each category — directly answers the spec's 'nesting depth or
+    color shading intensity' note and elevates Design Excellence beyond the flat-color
+    Attempt 1 version
+  - Correct Imprint palette order with identical data colors across themes; theme-adaptive
+    chrome (background, title ink, legend ink) is spot-on in both renders with no
+    dark-on-dark/light-on-light failures
+  - Faithful two-level hierarchy (sector to company) matching the spec's category/subcategory
+    requirement, with subtle strokes delineating rectangle boundaries
+  - Realistic, well-scaled real-world market-cap data across four neutral business
+    sectors; sizing plus shading communicate the story at a glance
+  - Clean, KISS-structured, deterministic, idiomatic pygal Treemap code with no edge
+    clipping
   weaknesses:
-  - Legend could benefit from subtle background frame using elevated surface tokens
-  - Category labels within rectangles could emphasize hierarchy through font-weight
-    variation
-  - Could explore bolder category names for improved visual hierarchy
+  - Narrowest cells (e.g. 'Johnson & Johnson' at $430B, the smallest Healthcare wedge)
+    render their caption very close to the cell's right divider — not clipped or overlapping,
+    but tight enough that it's worth a small safety margin if data were ever less
+    generous
+  - 'Design Excellence is strong but still short of publication-ready: the per-sector
+    shading is a good hierarchy cue, yet the four sector colors themselves are flat
+    single hues with no additional refinement (e.g. a subtle border treatment or typographic
+    distinction for the sector-level cells vs. company-level cells)'
+  - value-proportional shading is a generic per-item color computation rather than
+    a pygal-distinctive feature — Library Mastery would benefit from leaning on a
+    pygal-specific Treemap capability beyond value_formatter/print_labels/print_values/legend_at_bottom_columns
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "Budget Allocation · treemap-basic · pygal · anyplot.ai" clearly visible in dark text; legend at bottom shows all four departments with correct colors; all labels readable
-      Data: Four categories in Okabe-Ito colors - Engineering (#009E73 brand green), Marketing (#D55E00 orange), Sales (#CC79A7 reddish purple), Operations (#0072B2 blue); twelve nested subcategories with $XXK formatted values
-      Legibility verdict: PASS - all text readable, no overlap, strong contrast
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Market Capitalization by Sector · treemap-basic · pygal · anyplot.ai" renders in dark ink, fully readable, spanning ~80-85% of canvas width without clipping or overflow. Bottom legend shows all four sector names (Technology, Financials, Healthcare, Energy) with matching color swatches, clearly readable.
+      Data: Technology (brand green #009E73) occupies the left ~45% of the canvas as three sub-cells (Apple $3400B, Microsoft $3100B, Nvidia $2900B); Financials (lavender/purple), Healthcare (blue), and Energy (ochre) fill three stacked rows on the right, each split into three company cells. Within each sector, the largest company keeps the full saturated sector color while smaller companies lighten toward white (e.g. Berkshire Hathaway $950B is a deeper purple than JPMorgan Chase $610B and Visa $560B), reinforcing size hierarchy. Every cell's caption (company name + dollar value) is now uniformly sized — the Attempt 1 mismatch between company-name and value-label font sizes is resolved. First series is confirmed #009E73.
+      Legibility verdict: PASS — all text, including the narrowest cell ("Johnson & Johnson" at $430B), is fully readable with no clipping or overlap.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title clearly visible in light text against dark background; legend visible with matching department colors; all labels and values readable; no "dark-on-dark" failures
-      Data: Data colors are identical to light render (green, orange, pink, blue) - only chrome flips between themes; all rectangles and labels clearly distinguishable
-      Legibility verdict: PASS - all text readable, colors identical to light render, excellent theme adaptation
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and legend text flip to light ink and remain fully readable against the dark background. No dark-on-dark failures.
+      Data: Rectangle layout and categorical colors (green/lavender/blue/ochre, including the per-company shading gradient) are pixel-identical to the light render — only chrome (background, title ink, legend ink) flipped, as required. Per-cell caption text stays dark navy/black and remains legible in both themes because the four category colors are medium-toned enough to contrast against dark caption text regardless of page theme.
+      Legibility verdict: PASS — all text readable in both themes; no dark-on-dark or light-on-light failures observed.
+
+    Both renders pass the theme-readability check (5c) and the proportional sizing check (5d). No canvas-dimension gate file was present, confirming the 3200x1800 landscape canvas was hit within tolerance.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28px, label=18px, major=16px,
-          legend=16px, value=14px); readable in both light and dark themes
+        comment: Company-name and value captions now share one font-size token (value_label_font_size)
+          and are uniformly legible in both themes; the Attempt 1 disproportionate-sizing
+          issue is fixed
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text and elements readable; no collisions between labels or values
+        comment: No overlapping text; narrowest cell (J&J) caption is tight against
+          its border but not overlapping or clipped
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 12 items (4 categories × 3 subcategories) visible; no hidden
-          elements
+        comment: Rectangles and captions clearly visible and proportioned to value
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD-safety; strong contrast throughout
+        comment: Good contrast, CVD-safe categorical hues plus shading, no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 landscape appropriate; good proportions; nothing cut off;
-          generous margins
+        comment: Plot fills nearly the full canvas, balanced legend placement, no
+          cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with library and site name; legend matches categories;
-          values formatted with units
+        comment: Title descriptive; per-cell dollar values include units ($B)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 brand green; follows Okabe-Ito order (green,
-          orange, blue, pink); backgrounds #FAF8F1 light and #1A1A17 dark; both renders
-          theme-correct'
+        comment: 'Imprint palette in canonical order, first series #009E73, identical
+          data colors across themes, theme-correct backgrounds'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -102,22 +120,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Professional execution with intentional Okabe-Ito palette; category
-          hierarchy via colors; theme-adaptive tokens show design consideration
+        comment: Value-proportional shading within sectors is a thoughtful, intentional
+          hierarchy cue that clearly moves beyond flat-default coloring
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean rectangle borders define hierarchy; appropriate absence of
-          grid for treemap; generous whitespace; polished $XXK formatting
+        comment: Subtle stroke dividers, generous legend whitespace, and the new shading
+          add real polish; not yet every-detail-perfect
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Category colors create clear visual separation; Engineering (green)
-          visually prominent; color coding aids department identification
+        comment: Two-level hierarchy (sector hue + company shade) lets the viewer
+          see both category dominance and within-category rank at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +145,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct treemap with hierarchical nested rectangles
+        comment: Correct treemap with nested rectangles
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Categories, subcategories, area-proportional values, distinct colors,
-          labeled rectangles, subtle borders all present
+        comment: Labels, borders, and shading hierarchy all present per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 items visible; values correctly displayed; no data omitted
+        comment: Category/subcategory/value correctly mapped to nested area
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; legend displays all four departments
+        comment: Title format correct with descriptive prefix; legend labels match
+          sector names
     data_quality:
       score: 15
       max: 15
@@ -156,20 +174,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multi-level hierarchy shown; part-to-whole relationships clear; area
-          encoding correct
+        comment: Shows both sector-level and company-level hierarchy with varied magnitudes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Budget allocation by department is real-world plausible and neutral
+        comment: Real, neutral business scenario (market capitalization by sector)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values ($110K–$450K) are realistic for departmental budgets
+        comment: Values and relative proportions align with plausible real-world market-cap
+          figures
     code_quality:
       score: 10
       max: 10
@@ -179,54 +197,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple script with no unnecessary functions or classes
+        comment: No classes; imports, data, helper, plot, save flow linearly
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data hardcoded; fully reproducible
+        comment: Fully deterministic literal data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only uses os, pygal, pygal.style.Style - all necessary
+        comment: Only os, pygal, and pygal.style.Style are imported and used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Simple loop for adding categories; no fake UI; consistent style
+        comment: Small, purposeful _lighten helper; no over-engineering or fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses Style object correctly; theme-adaptive via environment variable;
-          proper chart configuration
+        comment: Idiomatic pygal.Treemap + Style usage with per-item color overrides
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages pygal's interactive SVG/JS output; interactive tooltips
-          rendered in HTML
+        comment: Uses pygal-specific value_formatter, print_labels/print_values, legend_at_bottom_columns,
+          and value_label_font_size discovery; shading itself is a generic technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - gradient-fill
