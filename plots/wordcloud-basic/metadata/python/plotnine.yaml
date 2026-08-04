@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:53:44Z'
-updated: '2026-08-04T23:05:16Z'
+updated: '2026-08-04T23:15:14Z'
 generated_by: claude-sonnet
 workflow_run: 30958137694
 issue: 1012
@@ -12,51 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 85
 review:
   strengths:
-  - Correct Imprint palette applied in canonical order across the 4 frequency tiers,
-    with brand green (#009E73) as the highest-frequency tier; backgrounds and all
-    chrome are correctly theme-adaptive between light and dark renders.
-  - Hand-placed layout achieves zero text overlap across 25 words spanning a wide
-    size range (5-25mm).
-  - Creative custom legend built from colored geom_text labels instead of a boxed
+  - 'Directly addressed all three actionable weaknesses from Attempt 1: added Kubernetes,
+    Terraform, GraphQL, and Redis to fill the previously empty upper-right quadrant,
+    right margin, and mid-canvas gaps; the ''Low (<15)'' legend tier is now backed
+    by 4 real words (Kubernetes=14, Terraform=11, GraphQL=8, Redis=6) instead of being
+    empty; and the vestigial np.random.seed(42) dead code was removed entirely.'
+  - Correct Imprint palette in canonical order across all 4 frequency tiers, brand
+    green (#009E73) for the highest tier; backgrounds and all chrome are theme-adaptive
+    and data colors are pixel-identical between light and dark renders.
+  - Zero-overlap hand-placed layout across 29 words spanning a wide size range (6-25mm)
+    that clearly encodes frequency via size and reinforces it with color tiers.
+  - Creative custom legend built from colored geom_text labels rather than a boxed
     plotnine default legend - fits the word-cloud aesthetic and stays legible in both
     themes.
   - Minimal chrome (axes, grid, ticks, spines all removed) keeps focus entirely on
-    the word data, appropriate to the plot type.
-  - Sensible workaround for plotnine's lack of a native word-cloud geom - uses scale_size_identity/scale_color_identity/scale_alpha_identity
-    cleanly rather than falling back to matplotlib, per the library's no-workaround
-    rule.
+    the word data, appropriate to the plot type, and is a sensible non-matplotlib
+    workaround for plotnine's lack of a native word-cloud geom.
   weaknesses:
-  - Layout leaves significant empty whitespace (upper-right quadrant, right margin
-    beyond the legend, gaps between word clusters) rather than tightly filling available
-    space as the spec describes ('Words are arranged to fill available space') - a
-    spiral/organic packing approach would use the canvas more densely.
-  - Legend shows a 'Low (<15)' ochre tier that has zero actual words in the dataset
-    (minimum frequency is 16, Azure) - either add a word below frequency 15 or drop
-    the unused tier so the legend matches the rendered data.
-  - Smallest words (Azure, Docker, AWS) sit near the bottom of the size range and
-    may be difficult to read at mobile/thumbnail scale - consider raising the minimum
-    font-size floor slightly.
-  - np.random.seed(42) is dead code - the entire dataset (words, frequencies, positions)
-    is hardcoded, so no randomness is actually used; remove the seed call or make
-    it meaningful.
+  - Smallest words (Redis freq=6, GraphQL freq=8) sit at the 6mm floor of the size
+    formula and may be difficult to read at mobile/thumbnail scale - consider raising
+    the minimum font-size floor slightly for the sub-15 tier.
+  - Placement is still a hand-tuned grid-like layout rather than an organic spiral/packing
+    algorithm, so some residual whitespace remains (bottom margin, gaps between clusters)
+    versus a fully packed word cloud - inherent to the manual-coordinates approach
+    plotnine requires here, not a hard defect.
+  - Word count (29) remains at the low end of the spec's stated 20-200 typical range;
+    a few more words would further densify the composition.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Bold black title "wordcloud-basic · plotnine · anyplot.ai" centered at top, comfortably sized (~45% of canvas width). No axes, ticks, or grid - appropriate for a word cloud. A "Frequency" legend header (bold, dark ink) sits top-right with four colored category labels underneath.
-      Data: 25 technology-survey words placed by hand across the canvas, sized 5-25mm by frequency. Color follows the Imprint palette in canonical order: brand green #009E73 for the highest tier (Python, Data, Machine, Learning, AI, Cloud, API - largest words), lavender #C475FD for medium (Database, Security, DevOps, Analytics, Automation, Development, Integration), and slate blue #4467A3 for low-medium (Platform, Infrastructure, Framework, Monitoring, Deployment, Testing, AWS, Docker, Azure). The fourth ochre tier ("Low (<15)") appears only in the legend with no matching words, since the minimum data frequency is 16. AWS is rotated 90° for an organic touch.
-      Legibility verdict: PASS - all title, legend, and word text is clearly readable against the light background; no light-on-light issues.
+      Chrome: Bold dark title "wordcloud-basic · plotnine · anyplot.ai" centered at top, comfortably sized. No axes, ticks, or grid - appropriate for a word cloud. A bold "Frequency" legend header sits top-right with four colored category labels underneath ("High (65+)" green, "Medium (35-64)" lavender, "Low-Med (15-34)" blue, "Low (<15)" ochre), all populated by real words this attempt.
+      Data: 29 technology-survey words placed by hand across the canvas, sized ~6-25mm by frequency. Colors follow the Imprint palette in canonical order: brand green #009E73 for the highest tier (Python, Data, Machine, Learning, AI, Cloud, API), lavender #C475FD for medium (Database, Security, DevOps, Analytics, Automation, Software, Code, Development, Integration), blue #4467A3 for low-medium (Platform, Infrastructure, Testing, Deployment, Monitoring, Framework, Docker, AWS, Azure), and ochre #BD8233 for low (Kubernetes, Terraform, GraphQL, Redis). AWS is rotated 90° for an organic touch. No overlaps observed between any word, the legend, or the title.
+      Legibility verdict: PASS - all title, legend, and word text is clearly readable against the light background; no light-on-light issues. The smallest words (Redis, GraphQL) are legible at full resolution but borderline at deep mobile scale-down.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title, now rendered in off-white ink, fully legible. Legend header and category labels flip to light-toned text/ink where needed while retaining their frequency-tier colors.
-      Data: Word colors are pixel-identical to the light render (green/lavender/blue - only chrome flipped), confirming the Imprint data-color rule is respected. Positions and sizes match the light render exactly.
+      Chrome: Same title, now rendered in off-white ink, fully legible. Legend header and category labels flip to light-toned chrome where needed while retaining their frequency-tier colors.
+      Data: Word colors are pixel-identical to the light render (green/lavender/blue/ochre tiers unchanged - only chrome flipped), confirming the Imprint data-color rule is respected. Positions, sizes, and rotation match the light render exactly.
       Legibility verdict: PASS - no dark-on-dark failures; every title, legend, and word element is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -64,14 +63,15 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All text readable in both themes; smallest words (Azure/Docker/AWS
-          at ~5mm) are borderline at mobile scale
+        comment: All text readable in both themes; smallest words (Redis/GraphQL at
+          ~6mm) remain borderline at deep mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero collisions across 25 hand-placed words
+        comment: Zero collisions across 29 hand-placed words including the 4 newly
+          added
       - id: VQ-03
         name: Element Visibility
         score: 5
@@ -87,11 +87,11 @@ review:
         comment: CVD-safe Imprint tiers, redundantly encoded with size
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, nothing clipped, but noticeable unused whitespace
-          (upper-right, right margin) vs. a tightly packed word cloud
+        comment: Canvas gate passed, nothing clipped; the 4 new words visibly reduced
+          the whitespace flagged in attempt 1
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -106,7 +106,7 @@ review:
         comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
           in both renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -114,8 +114,8 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom tier colors, hand-tuned no-overlap layout, custom legend -
-          above generic default, but not a fully organic word-cloud algorithm
+        comment: Custom tier colors, hand-tuned no-overlap layout, custom legend;
+          above generic default but not a fully organic word-cloud algorithm
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -124,13 +124,13 @@ review:
         comment: Spines/grid/axes fully removed, clean minimal chrome
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Size+color hierarchy creates a focal point (Python/Data/Machine),
-          but empty space dilutes overall composition impact
+        comment: Size+color hierarchy creates a clear focal point; reduced whitespace
+          vs attempt 1 strengthens overall composition impact
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -142,36 +142,35 @@ review:
           than algorithmic-organic
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Size-by-frequency present; 'fill available space' from spec description
-          only partially achieved
+        comment: Size-by-frequency present; canvas now much better fills available
+          space per spec intent
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: N/A axes appropriate for word cloud; word/frequency mapping is clear
-          via size+color
+        comment: No axes needed for a word cloud; word/frequency mapping clear
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend includes an unused 'Low (<15)' tier
-          with zero matching words
+        comment: Title format correct; all 4 legend tiers now have matching words
+          in the data
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 25 words (low end of the 20-200 typical range); lowest color tier
-          unpopulated
+        comment: 29 words (still low end of the 20-200 typical range) but all 4 color
+          tiers now populated
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -183,9 +182,9 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 16-95 is sensible for survey mention counts
+        comment: Frequency range 6-95 is sensible for survey mention counts
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -208,10 +207,10 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) is dead code since nothing is randomly generated
+        comment: Vestigial np.random.seed(42) dead code from attempt 1 was removed
       - id: CQ-05
         name: Output & API
         score: 1
@@ -233,7 +232,7 @@ review:
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
+        passed: false
         comment: Manually-built legend and rotated-word touch show creative adaptation
           within plotnine's grammar-of-graphics constraints
   verdict: APPROVED
@@ -247,4 +246,5 @@ impl_tags:
   dataprep:
   - normalization
   styling:
+  - minimal-chrome
   - alpha-blending
