@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 waterfall-basic: Basic Waterfall Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: pending | Updated: 2026-08-04
+Library: bokeh 3.9.2 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-08-04
 """
 
 import os
