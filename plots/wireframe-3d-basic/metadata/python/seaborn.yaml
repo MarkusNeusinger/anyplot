@@ -2,90 +2,116 @@ library: seaborn
 language: python
 specification_id: wireframe-3d-basic
 created: '2026-05-06T05:18:43Z'
-updated: '2026-05-06T05:28:47Z'
-generated_by: claude-haiku
-workflow_run: 25417802749
+updated: '2026-08-04T18:29:59Z'
+generated_by: claude-sonnet
+workflow_run: 30937412137
 issue: 1015
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 83
 review:
   strengths:
-  - Perfect text legibility in both light and dark themes with no adaptation failures
-  - Professional 3D visualization with refined line styling (antialiasing, custom
-    linewidth, controlled alpha)
-  - Complete specification compliance with correct perspective and all required features
-  - Clean, maintainable code with proper seed for reproducibility
-  - Excellent visual refinement through pane styling and appropriate grid subtlety
+  - Title now correctly reads "wireframe-3d-basic · python · seaborn · anyplot.ai",
+    fixing the missing language segment from attempt 1.
+  - Axis labels have real-world physical framing with units — "Distance East (m)",
+    "Distance North (m)", "Terrain Elevation (m)" — replacing the bare X/Y/Z from
+    attempt 1.
+  - 'Theme-adaptive chrome is executed correctly: brand-green (#009E73) wireframe
+    and imprint_seq (green->blue) surface fill are pixel-identical between renders;
+    backgrounds are the correct warm cream/near-black; all text is readable in both
+    themes with no dark-on-dark or light-on-light failures.'
+  - Dual-layer rendering (translucent height-shaded plot_surface under a crisp plot_wireframe)
+    gives real depth perception while preserving the see-through mesh character the
+    spec asks for.
+  - 3D panes are cleaned up (transparent facecolor, no pane edges), grid is very subtle
+    (alpha=0.08), view angle (elev=25, azim=45) closely matches the spec's suggested
+    elevation/azimuth and reveals the ripple topology including the corner ridges.
+  - Canvas is exactly 3200x1800 with no bbox_inches='tight' drift; code is a clean,
+    flat, fully deterministic KISS script.
   weaknesses:
-  - Design Excellence near default baseline—implementation is solid but could benefit
-    from additional visual sophistication (e.g., optional height-based coloring on
-    wireframe as mentioned in spec)
+  - The wireframe still reads as a visually tangled/moiré knot right at the central
+    dome — grid resolution was reduced from 30x30 to 24x24 but the crossing mesh lines
+    at the peak still overlap into a crosshatch pattern rather than a clean readable
+    grid; consider thinning further with rstride/cstride on plot_wireframe (e.g. stride
+    2) instead of only lowering the point count, or lower plot_surface alpha further
+    so it doesn't compound with the wireframe lines visually.
+  - Framing the sin(sqrt(x^2+y^2)) ripple as literal "terrain" with meter units is
+    still a bit of a stretch — a natural landform would not produce a perfectly periodic
+    sinusoidal ring/crater/trough pattern; the framing works but is only moderately
+    realistic.
+  - Some unused margin remains on the left and right thirds of the 3200x1800 canvas
+    even after the subplots_adjust/box_aspect tightening in this attempt — the mesh
+    could still be scaled up further to fill more of the frame.
+  - seaborn has no native 3D API, so this remains a plain matplotlib Axes3D fallback
+    with only sns.set_theme layered on top — no seaborn-distinctive feature is exercised
+    (largely unavoidable for this plot type in this library).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct specification
-      Chrome: Title "wireframe-3d-basic · seaborn · anyplot.ai" clearly readable in black (#1A1A17); X/Y/Z axis labels visible; tick labels in soft ink (#4A4A44); grid lines subtle with appropriate alpha
-      Data: Wireframe lines rendered in brand green (#009E73), standing out distinctly from light background; 3D ripple surface clearly visible with proper perspective
-      Legibility verdict: PASS - All text is readable; no legibility failures
+      Background: Warm off-white, matches #FAF8F1, not pure white and not dark.
+      Chrome: Title "wireframe-3d-basic · python · seaborn · anyplot.ai" in dark ink, fully legible and correctly formatted with the python language segment. Axis labels "Distance North (m)", "Distance East (m)", "Terrain Elevation (m)" all in dark ink, clearly readable, angled to follow their respective 3D axes. Numeric tick labels on all three axes render in the softer ink-soft gray, legible against the cream background. Pane walls are transparent (no fill/edge), a very subtle light gray grid traces the back panes.
+      Data: Brand-green (#009E73) wireframe mesh renders the sin(sqrt(x^2+y^2)) ripple surface, with a faint translucent green-to-blue (imprint_seq) surface fill underneath for height-based depth cues. Central dome/crater-rim, surrounding trough, and two lifted corner ridges are all visible, though the mesh lines cross into a somewhat tangled crosshatch right at the central peak.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct specification
-      Chrome: Title clearly readable in light text (#F0EFE8); X/Y/Z axis labels visible in light color; tick labels in soft light ink (#B8B7B0) with no dark-on-dark failures; grid lines visible and appropriate
-      Data: Brand green (#009E73) wireframe identical to light render, creating excellent contrast against dark background; 3D ripple surface clearly visible
-      Legibility verdict: PASS - All text is readable; no dark-on-dark failures detected; data colors identical to light render (only chrome adapted)
+      Background: Warm near-black, matches #1A1A17, not pure black and not light.
+      Chrome: Same title and axis/tick text now rendered in light ink (INK/INK_SOFT tokens), fully legible against the dark background — no dark-on-dark failures. Grid and pane treatment identical in structure to the light render, just theme-flipped.
+      Data: Wireframe green and surface colormap are pixel-identical to the light render — confirms only chrome (background, text, grid) flipped between themes, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes with proper
-          theme-adaptive colors
+        comment: All title/axis/tick text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no text or element collisions
+        comment: No text-on-text or text-on-data collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Wireframe lines distinctly visible; grid appropriately subtle
+        comment: Wireframe still reads as a tangled moiré knot near the central dome
+          despite grid reduction from 30x30 to 24x24
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green (#009E73) from Okabe-Ito palette; colorblind-safe
+        comment: Green wireframe + blue-shifted surface, no red-green reliance, good
+          contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Excellent proportions; 3D space well-utilized; nothing cut off
+        comment: Margins tightened this attempt but some left/right whitespace remains;
+          canvas exactly 3200x1800
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format; all axes clearly labeled
+        comment: Descriptive axis labels with units now used; title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds are #FAF8F1 (light) / #1A1A17
-          (dark); both renders theme-correct'
+        comment: 'First series #009E73, imprint_seq for continuous surface shading,
+          correct theme backgrounds'
     design_excellence:
       score: 15
       max: 20
@@ -95,22 +121,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Intentional refinement: antialiased wireframe, custom linewidth
-          (1.3), deliberate alpha (0.95), thoughtful perspective angle'
+        comment: Dual-layer surface+wireframe with box_aspect tuning, above generic
+          defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Pane edges hidden, subtle grid (alpha=0.08), clean panes with matching
-          background
+        comment: Panes hidden, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear focal point at surface center; visual hierarchy from center
-          outward; perspective guides viewer through 3D topology
+        comment: Clear central focal point, though the peak tangle partially undercuts
+          the wireframe's structure-revealing purpose
     spec_compliance:
       score: 15
       max: 15
@@ -120,50 +145,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D wireframe plot with proper mesh structure
+        comment: Correct 3D wireframe plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid lines in both x and y; consistent line color; proper 3D projection
+        comment: Grid lines in both directions, height-based color cue, spec-matching
+          elev/azim, all axes labeled with ticks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y grid and Z heights correctly mapped; all data visible
+        comment: x/y/z correctly mapped, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format specification; legend not needed for single
-          series
+        comment: Title now includes the mandated python language segment; no legend
+          needed for single series
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Ripple surface fully demonstrates wireframe visualization; shows
-          complete topology
+        comment: Full wireframe structure shown, slightly obscured by peak tangle
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Mathematical function is neutral and academically appropriate
+        comment: Now framed as terrain elevation with units; the perfectly periodic
+          ripple shape is only moderately terrain-like
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Z range (-1 to 1) sensible for sine function; 30×30 grid appropriate
-          for clarity
+        comment: Plausible small-scale hill/crater proportions (10 m span, 2 m relief)
     code_quality:
       score: 10
       max: 10
@@ -173,59 +198,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear, straightforward code; no unnecessary abstractions
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with seed(42)
+        comment: Fully deterministic (seed present though unused, no randomness needed)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used (os, matplotlib, numpy)
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Idiomatic matplotlib; no simulated UI or fake interactivity
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png; current API
+        comment: Saves plot-{THEME}.png, current matplotlib 3D API, bbox_inches left
+          default
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper use of matplotlib 3D projection; idiomatic plot_wireframe()
-          approach; correct theme token handling
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of pane styling, antialiasing, and alpha control; could
-          explore height-based coloring
+        comment: Correct sns.set_theme + matplotlib Axes3D fallback pattern, seaborn
+          has no native 3D API
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No seaborn-distinctive feature exercised, largely unavoidable for
+          3D plots in this library
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
+  - explicit-figure
   dataprep: []
   styling:
-  - publication-ready
-  - grid-styling
   - alpha-blending
+  - custom-colormap
