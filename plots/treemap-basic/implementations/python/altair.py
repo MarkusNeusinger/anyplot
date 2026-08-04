@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 treemap-basic: Basic Treemap
 Library: altair 6.2.2 | Python 3.13.14
-Quality: 83/100 | Updated: 2026-08-04
+Quality: 90/100 | Updated: 2026-08-04
 """
 
 import os
