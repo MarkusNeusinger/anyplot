@@ -54,7 +54,11 @@ const terms = [
 ];
 
 // --- Layout: font size + spiral placement -----------------------------------
-const FONT_MIN = 18;
+// ECharts has no native wordcloud series (and the echarts-wordcloud extension
+// package is disallowed), so fontSizeFor/measureWord/boxesOverlap/placeWords
+// hand-roll the frequency->size mapping and spiral collision layout that a
+// dedicated wordcloud library would otherwise provide.
+const FONT_MIN = 23;
 const FONT_MAX = 100;
 const PAD = 5; // breathing room between word boxes
 const freqs = terms.map(([, f]) => f);
@@ -65,7 +69,10 @@ const measureCanvas = document.createElement("canvas");
 const measureCtx = measureCanvas.getContext("2d");
 
 function fontSizeFor(freq) {
-  const ratio = Math.sqrt((freq - freqMin) / (freqMax - freqMin));
+  // Cube-root curve (vs. sqrt) compresses the spread so low-frequency tail
+  // words land closer to FONT_MIN while the high-frequency words still peak
+  // near FONT_MAX, keeping every word legible at mobile preview scale.
+  const ratio = Math.cbrt((freq - freqMin) / (freqMax - freqMin));
   return Math.round(FONT_MIN + (FONT_MAX - FONT_MIN) * ratio);
 }
 
