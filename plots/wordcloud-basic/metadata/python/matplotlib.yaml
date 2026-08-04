@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:51:02Z'
-updated: '2026-08-04T22:54:02Z'
+updated: '2026-08-04T23:04:33Z'
 generated_by: claude-sonnet
 workflow_run: 30957512916
 issue: 1012
@@ -12,47 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Deliberate rank-based color mapping ties the Imprint palette to data meaning
-    (highest-frequency word is always brand green #009E73, tapering through the palette
-    by rank) instead of an arbitrary hash-based coloring'
-  - Correct 3200x1800 canvas, theme-adaptive background/title driven cleanly by the
-    ANYPLOT_THEME env var, with identical data colors between light and dark renders
+  - 'Fixed both flagged weaknesses from attempt 1: min_font_size raised 14->18 for
+    small-word legibility, and 9 mid-frequency filler words added (39->48 total, with
+    the 4 least-legible terms dropped) alongside a tighter margin/relative_scaling
+    to spread density more evenly'
+  - Deliberate rank-based Imprint color mapping (not hash-based) - the highest-frequency
+    word is always brand green, tapering through the palette by rank, giving color
+    real data meaning
+  - Exact 3200x1800 canvas confirmed with zero edge clipping on any side; theme-adaptive
+    chrome correctly implemented with pixel-identical data colors between light and
+    dark renders
   - 'Idiomatic wordcloud API usage: generate_from_frequencies + recolor(color_func=...),
-    with tuned prefer_horizontal, relative_scaling, and margin parameters'
-  - Realistic, neutral tech-skill frequency data with a believable long-tail distribution
-    (150 down to 7) across 39 terms
+    with tuned prefer_horizontal, relative_scaling, and margin'
   weaknesses:
-  - 'Word placement leaves the right half of the canvas, especially the top-right
-    and bottom-right corners, noticeably sparser than the left half (grid density
-    check: ~0.00-0.04 fill fraction on the right two columns vs up to 0.13 on the
-    left) — the cloud doesn''t evenly fill the available space as the spec calls for.
-    Try increasing max_words, adding more mid-frequency filler terms, or adjusting
-    margin/min_font_size to spread density more evenly.'
-  - At the ~400px mobile thumbnail scale, the lowest-frequency terms (Documentation,
-    Debugging, Scalability, Architecture) shrink to the point of being hard to read.
-    Consider raising min_font_size slightly or trimming the longest tail of near-invisible
-    terms.
-  - Beyond color-by-rank, the implementation doesn't add another distinctive technique
-    (e.g., a custom mask/shape or highlighting a specific term) that would push Library
-    Mastery further.
+  - 'Rightmost canvas column is still measurably sparser than the rest (grid fill-fraction
+    check: ~0.01-0.04 vs ~0.05-0.12) - the words placed there (Networking, Onboarding,
+    IoT, Azure) are narrow vertical strings; try nudging a couple more mid-size horizontal
+    words toward the right edge or lowering prefer_horizontal slightly further to
+    bulk up that region'
+  - Smallest-frequency terms (Networking, Onboarding, Automation, Azure, Mentoring)
+    sit close to the min_font_size floor and become hard to read at the ~400px mobile
+    thumbnail - consider trimming the very smallest few terms or raising min_font_size
+    a bit more
+  - Only 8 Imprint hues cycle across 48 words, so words several ranks apart share
+    identical colors (e.g. Python and DevOps are both green) - compliant with the
+    palette rules but limits how far the rank-color device differentiates at this
+    word count
+  - No distinctive technique beyond color_func (e.g. a shaped mask) to further showcase
+    the library's capabilities
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "wordcloud-basic · python · matplotlib · anyplot.ai" rendered in dark ink, centered near the top, spanning ~51% of plot width — clearly readable against the light background. No axis, no legend (word cloud correctly hides both via ax.axis('off')).
-      Data: 39 tech-skill terms arranged in a packed cloud, sized by frequency (Python largest, tapering down to Documentation/Debugging smallest). Colors are drawn from the 8-hue Imprint palette assigned by frequency rank — the top word "Python" is brand green (#009E73), with JavaScript, Machine Learning, Security, Data, etc. cycling through the remaining hues. Word placement clusters more heavily on the left half of the canvas; the right half (particularly top-right and bottom-right corners) is visibly sparser.
-      Legibility verdict: PASS — all rendered words are legible at full resolution; smallest terms become hard to read only at the ~400px mobile thumbnail scale.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "wordcloud-basic · python · matplotlib · anyplot.ai" rendered in dark ink, centered near the top, spanning ~51% of plot width - clearly readable. No axes/legend (correctly hidden via ax.axis('off')).
+      Data: 48 tech-skill terms packed into an organic cloud, sized by frequency (Python largest, tapering down to Networking smallest). Colors are drawn from the 8-hue Imprint palette assigned by frequency rank - top word "Python" is brand green (#009E73), cycling through JavaScript, Data, Machine Learning, Cloud, API, Database, Security, then wrapping back to green for DevOps. Fill density is good overall; a pixel-diff grid check shows the rightmost column still sparser (~0.01-0.04 fill fraction) than the rest (~0.05-0.12), mostly narrow vertical words there (Networking, Onboarding, IoT, Azure).
+      Legibility verdict: PASS - all words legible at full resolution; smallest terms approach the readability floor at ~400px mobile thumbnail scale.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title text now rendered in light ink, fully legible against the dark background. Layout and title position match the light render exactly.
-      Data: Same word placement and same per-word colors as the light render (Python still #009E73 green, same palette cycling) — confirms only chrome (background/title ink) flipped between themes, as required. No dark-on-dark or light-on-light failures observed; every word remains clearly distinguishable from the near-black background.
-      Legibility verdict: PASS — no dark-on-dark issues; smallest terms have the same mobile-scale legibility caveat as the light render.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title now rendered in light ink, fully legible against the dark background. Layout and title position match the light render exactly.
+      Data: Same word placement and identical per-word colors as the light render (Python still #009E73 green, same palette cycling) - confirms only chrome flipped between themes. No dark-on-dark or light-on-light failures observed.
+      Legibility verdict: PASS - no dark-on-dark issues; same mobile-scale legibility caveat as the light render.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -60,70 +65,73 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title and major words crisp and readable in both themes; lowest-frequency
-          terms (Documentation, Debugging) become hard to read at ~400px mobile scale
+        comment: Title and mid/large-frequency words crisp in both themes; smallest
+          terms near the min-font floor get hard to read at ~400px mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions between words or with the title in either render
+        comment: No collisions between words or with the title in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Word density is good on the left half but the right side (esp. top-right/bottom-right)
-          is notably sparser, so the cloud doesn't fully fill the available canvas
+        comment: Density much improved vs. attempt 1, but rightmost canvas column
+          still measurably sparser (~0.01-0.04 fill fraction) than the rest (~0.05-0.12)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 8 distinct Imprint hues, no red-green-only signal, decorative but
-          consistent rank-based mapping
+        comment: 8 distinct Imprint hues, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, title within ~51% width; spatial imbalance
-          (right side sparse) keeps this from full marks
+        comment: Exact 3200x1800 canvas, no edge clipping verified on all four sides,
+          title ~51% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title formatted exactly per spec; no axes needed for a word cloud
+        comment: Title formatted exactly per spec; axes correctly omitted for a word
+          cloud
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Top-ranked word Python is #009E73 brand green; all colors from the
-          Imprint 8-hue palette; backgrounds theme-correct in both renders'
+        comment: 'Top-ranked word is #009E73 brand green; all colors from the Imprint
+          palette in canonical order; backgrounds theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
+        passed: true
         comment: Deliberate rank-based color mapping (not hash-based) ties color to
-          data meaning — above generic defaults
+          data meaning, above generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        comment: Minimal chrome (axis off) and tuned margins, but spatial fill imbalance
-          limits overall polish
+        passed: true
+        comment: Minimal chrome, tuned margin/relative_scaling spreads words more
+          evenly now, but the right-side sparse pocket keeps this short of full marks
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
+        passed: true
         comment: Size and color both reinforce the same frequency ranking, creating
-          a clear focal point (Python) and readable hierarchy
+          a clear focal point and readable hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -139,14 +147,13 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Size encodes frequency, decorative color, packed arrangement
+        comment: Size encodes frequency, decorative-but-meaningful color, packed arrangement
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Word size correctly ordered by frequency (Python > JavaScript > Data
-          > ...)
+        comment: Word size correctly ordered by frequency
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -155,14 +162,16 @@ review:
         comment: Title exactly matches 'wordcloud-basic · python · matplotlib · anyplot.ai';
           no legend needed
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: 39 terms spanning a wide frequency range shows the technique well
+        passed: true
+        comment: 48 terms across a wide frequency range (11-150) shows the technique
+          thoroughly
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -174,7 +183,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Frequency values (7-150) form a sensible long-tail distribution
+        comment: Frequency values form a sensible long-tail distribution
     code_quality:
       score: 10
       max: 10
@@ -196,7 +205,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, WordCloud — all used
+        comment: os, matplotlib.pyplot, WordCloud - all used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -210,7 +219,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png with bbox_inches left at default
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -222,10 +231,12 @@ review:
           idiomatic pattern for externally-driven word coloring
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        comment: Good tuning of prefer_horizontal, relative_scaling, margin; no further
-          distinctive technique (mask/shape) applied
+        passed: false
+        comment: Well-tuned prefer_horizontal/relative_scaling/margin and rank-based
+          recoloring, but no further distinctive technique (e.g. a custom mask/shape)
+          applied
   verdict: APPROVED
 impl_tags:
   dependencies:
