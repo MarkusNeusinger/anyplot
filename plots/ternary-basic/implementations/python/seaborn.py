@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 96/100 | Updated: 2026-05-06
+Quality: 96/100 | Updated: 2026-08-04
 """
 
 import os
@@ -37,7 +37,7 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
     },
 )
 
@@ -60,52 +60,52 @@ gypsum_norm = df["Gypsum"].values / 100
 x = 0.5 * (2 * clay_norm + gypsum_norm)
 y = sqrt3_2 * gypsum_norm
 
-# Create plot
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+# Create plot — canonical square canvas: figsize(6,6) x dpi=400 -> 2400x2400 px
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 
 # Draw triangle outline
 triangle = np.array([[0, 0], [1, 0], [0.5, sqrt3_2], [0, 0]])
-ax.plot(triangle[:, 0], triangle[:, 1], color=INK_SOFT, linewidth=2, zorder=5)
+ax.plot(triangle[:, 0], triangle[:, 1], color=INK_SOFT, linewidth=1, zorder=5)
 
 # Draw grid lines at 10% intervals
-grid_lw = 1
+grid_lw = 0.5
 
 for level in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
     # Lines parallel to bottom (constant Gypsum)
     x1, y1 = 0.5 * level, sqrt3_2 * level
     x2, y2 = 1 - 0.5 * level, sqrt3_2 * level
-    ax.plot([x1, x2], [y1, y2], color=INK, alpha=0.10, linewidth=grid_lw, zorder=1)
+    ax.plot([x1, x2], [y1, y2], color=INK, alpha=0.15, linewidth=grid_lw, zorder=1)
 
     # Lines parallel to left edge (constant Clay)
     x1, y1 = level, 0
     x2, y2 = 0.5 + 0.5 * level, sqrt3_2 * (1 - level)
-    ax.plot([x1, x2], [y1, y2], color=INK, alpha=0.10, linewidth=grid_lw, zorder=1)
+    ax.plot([x1, x2], [y1, y2], color=INK, alpha=0.15, linewidth=grid_lw, zorder=1)
 
     # Lines parallel to right edge (constant Limestone)
     x1, y1 = 0.5 * (1 - level), sqrt3_2 * (1 - level)
     x2, y2 = 1 - level, 0
-    ax.plot([x1, x2], [y1, y2], color=INK, alpha=0.10, linewidth=grid_lw, zorder=1)
+    ax.plot([x1, x2], [y1, y2], color=INK, alpha=0.15, linewidth=grid_lw, zorder=1)
 
 # Add tick marks along edges (at 20% intervals)
 tick_length = 0.02
 
 for level in [0.2, 0.4, 0.6, 0.8]:
     # Bottom edge ticks (Clay percentage increasing left to right)
-    ax.plot([level, level], [-tick_length, 0], color=INK_SOFT, linewidth=1.5, zorder=5)
-    ax.text(level, -0.05, f"{int(level * 100)}%", ha="center", va="top", fontsize=14, color=INK_SOFT)
+    ax.plot([level, level], [-tick_length, 0], color=INK_SOFT, linewidth=0.75, zorder=5)
+    ax.text(level, -0.05, f"{int(level * 100)}%", ha="center", va="top", fontsize=8, color=INK_SOFT)
 
     # Left edge ticks (Gypsum percentage)
     x_tick = 0.5 * level
     y_tick = sqrt3_2 * level
     dx, dy = -tick_length * np.cos(np.pi / 6), -tick_length * np.sin(np.pi / 6)
-    ax.plot([x_tick, x_tick + dx], [y_tick, y_tick + dy], color=INK_SOFT, linewidth=1.5, zorder=5)
+    ax.plot([x_tick, x_tick + dx], [y_tick, y_tick + dy], color=INK_SOFT, linewidth=0.75, zorder=5)
     ax.text(
         x_tick + dx - 0.03,
         y_tick + dy + 0.01,
         f"{int(level * 100)}%",
         ha="right",
         va="center",
-        fontsize=14,
+        fontsize=8,
         color=INK_SOFT,
     )
 
@@ -113,32 +113,36 @@ for level in [0.2, 0.4, 0.6, 0.8]:
     x_tick = 1 - 0.5 * level
     y_tick = sqrt3_2 * level
     dx, dy = tick_length * np.cos(np.pi / 6), -tick_length * np.sin(np.pi / 6)
-    ax.plot([x_tick, x_tick + dx], [y_tick, y_tick + dy], color=INK_SOFT, linewidth=1.5, zorder=5)
+    ax.plot([x_tick, x_tick + dx], [y_tick, y_tick + dy], color=INK_SOFT, linewidth=0.75, zorder=5)
     ax.text(
         x_tick + dx + 0.03,
         y_tick + dy + 0.01,
         f"{int(level * 100)}%",
         ha="left",
         va="center",
-        fontsize=14,
+        fontsize=8,
         color=INK_SOFT,
     )
 
 # Plot data points
 scatter_df = pd.DataFrame({"x": x, "y": y})
-ax.scatter(scatter_df["x"], scatter_df["y"], color=BRAND, s=200, alpha=0.7, edgecolor=PAGE_BG, linewidth=1.5, zorder=10)
+ax.scatter(scatter_df["x"], scatter_df["y"], color=BRAND, s=50, alpha=0.7, edgecolor=PAGE_BG, linewidth=0.75, zorder=10)
 
 # Vertex labels
 label_offset = 0.08
-ax.text(0, -label_offset, "Limestone (100%)", ha="center", va="top", fontsize=20, fontweight="bold", color=INK)
-ax.text(1, -label_offset, "Clay (100%)", ha="center", va="top", fontsize=20, fontweight="bold", color=INK)
+ax.text(0, -label_offset, "Limestone (100%)", ha="center", va="top", fontsize=10, fontweight="bold", color=INK)
+ax.text(1, -label_offset, "Clay (100%)", ha="center", va="top", fontsize=10, fontweight="bold", color=INK)
 ax.text(
-    0.5, sqrt3_2 + label_offset, "Gypsum (100%)", ha="center", va="bottom", fontsize=20, fontweight="bold", color=INK
+    0.5, sqrt3_2 + label_offset, "Gypsum (100%)", ha="center", va="bottom", fontsize=10, fontweight="bold", color=INK
 )
 
-# Title
+# Title — mandated format: {Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai
 ax.set_title(
-    "Cement Composition · ternary-basic · seaborn · pyplots.ai", fontsize=24, pad=20, color=INK, fontweight="medium"
+    "Cement Composition · ternary-basic · python · seaborn · anyplot.ai",
+    fontsize=12,
+    pad=10,
+    color=INK,
+    fontweight="medium",
 )
 
 # Clean up axes
@@ -148,4 +152,4 @@ ax.set_aspect("equal")
 ax.axis("off")
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)  # bbox_inches MUST stay default (None) — see canvas rule
