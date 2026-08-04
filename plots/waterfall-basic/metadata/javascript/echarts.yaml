@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: waterfall-basic
 created: '2026-08-04T11:32:49Z'
-updated: '2026-08-04T11:37:43Z'
+updated: '2026-08-04T11:49:59Z'
 generated_by: claude-sonnet
 workflow_run: 30904895259
 issue: 777
@@ -12,52 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Financial waterfall data is fully self-consistent — 850+320+180-95-410-145=700
-    checks out exactly against the displayed Net Profit total, and the scenario (quarterly
-    revenue → net profit) is realistic and neutral.
-  - 'Color assignment (green=Increase, red=Decrease, blue=Total) is a well-justified
-    semantic exception to the literal ''first series = #009E73'' rule — it matches
-    the spec''s own guidance (''green for positive ... blue or gray'' for totals)
-    and universal financial-chart convention, while every color still comes from the
-    Imprint palette.'
-  - 'Idiomatic ECharts waterfall technique: invisible stacked base bar + colored delta/total
-    bars + dashed step-line connector is exactly the community-standard pattern for
-    building a waterfall in ECharts (which has no native waterfall series) — clean
-    code, no fake interactivity.'
-  - 'Both light and dark renders are fully theme-correct: identical data colors, warm
-    off-white/near-black backgrounds, and no dark-on-dark or light-on-light text failures.'
-  - +/- sign prefixes on bar labels supplement the green/red color coding, avoiding
-    a pure red-green-only distinguishing signal.
+  - 'Fixed all three attempt-1 weaknesses: added running-total sub-labels ("Total:
+    $Xk") beneath each delta label, added a dark-ink border + bold larger label to
+    accent the ending Net Profit bar as a focal point, and bumped the title fontSize
+    from 22 to 26.'
+  - Data is internally consistent (850+320+180-95-410-145=700) and the quarterly revenue-to-net-profit
+    scenario is realistic and neutral.
+  - Green/red/blue semantic-exception coloring (Increase/Decrease/Total) is well-justified
+    by the spec's own guidance and universal finance-chart convention, while every
+    hue still maps onto the Imprint palette; both renders are fully theme-correct
+    with identical data colors.
+  - Idiomatic ECharts waterfall technique (invisible stacked base + colored delta/total
+    bars + dashed step-line connector) is the standard community pattern given ECharts
+    has no native waterfall series.
   weaknesses:
-  - 'Design Excellence reads as ''well-executed default'' rather than exceptional:
-    the final Net Profit bar uses the exact same blue as Starting Revenue with no
-    additional emphasis, and grid/whitespace are functional but not meticulously refined.
-    Consider a subtle accent on the ending total (border highlight, slightly bolder
-    label) and tighter grid styling for a more publication-ready feel.'
-  - Bar labels show per-step delta values (+$320k, -$95k) rather than literal 'running
-    total' figures the spec calls out ('Display running total labels on or near bars
-    for clarity'). Deltas are a valid, common waterfall convention, but adding a small
-    secondary running-total figure near each bar would more literally satisfy the
-    spec wording.
-  - Title occupies only ~30% of canvas width at fontSize 22 — noticeably smaller than
-    the ~50-70% comfortable range for a title this length, giving a slightly sparse
-    header relative to the legend row beneath it. Not a hard defect (no overflow/clipping),
-    but a modest fontSize bump (24-26) would improve visual balance.
+  - 'The dashed step-line connector cuts vertically through the middle of each transition
+    bar instead of tracing the bar''s top edge: the connector line series sits at
+    category-center x-coordinates with step:''end'', so the vertical jump lands inside
+    the next bar rather than at the boundary between bars. Visible on Product Sales,
+    Service Revenue, Returns & Discounts, Operating Costs, and Taxes in both light
+    and dark renders. Fix: anchor the connector to bar-edge coordinates (e.g. a markLine/graphic
+    per boundary, or offset the line series so its step happens in the gap between
+    bars) so the dashed segments trace bar tops and only jump in the whitespace between
+    bars.'
+  - Design Excellence still reads as 'well-executed default plus one accent' rather
+    than exceptional — grid, spacing, and typography are functional but not meticulously
+    refined beyond the Net Profit callout.
+  - 'LM-02: the waterfall technique, while correctly executed, is a well-known cross-library
+    workaround (the same invisible-stacked-bar + line pattern used in matplotlib/plotly
+    waterfalls) rather than something that showcases an ECharts-distinctive capability.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
-      Chrome: Title "waterfall-basic · javascript · echarts · anyplot.ai" centered in dark ink text; legend row (Total=blue swatch, Increase=green swatch, Decrease=red swatch) below the title; y-axis title "Amount ($ thousands)" top-left; y-axis ticks $0k-$1,500k; x-axis category labels (Starting Revenue, Product Sales, Service Revenue, Returns & Discounts, Operating Costs, Taxes, Net Profit) all in soft dark ink. All fully readable.
-      Data: First (Starting Revenue) and last (Net Profit) bars are blue (Imprint palette[2], #4467A3); Product Sales and Service Revenue bars are brand green (#009E73); Returns & Discounts, Operating Costs, and Taxes bars are red (#AE3030). Dashed gray connector line steps between each bar top to the next. Delta/total labels (e.g. "$850k", "+$320k", "-$95k") sit directly above each bar.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "waterfall-basic · javascript · echarts · anyplot.ai" centered at fontSize 26 in dark ink; legend row (Total/Increase/Decrease swatches) below it; y-axis title "Amount ($ thousands)" top-left with $0k-$1,800k ticks; seven x-axis category labels (Starting Revenue -> Net Profit). All rendered in dark ink/soft-ink, clearly legible against the light background. Subtle horizontal split lines only, no vertical grid, axis lines hidden.
+      Data: Blue (#4467A3, Imprint palette[2]) marks the Starting Revenue and Net Profit total bars — the Net Profit bar additionally has a dark-ink 2.5px border and a bold 17px label ("$700k") to emphasize the ending total. Green (#009E73, palette[0]) marks increases, matte red (#AE3030, palette[4]) marks decreases. Each bar has a delta/sign label ("+$320k", "-$95k", ...) plus a smaller running-total sub-label ("Total: $1,170k", ...). A gray dashed step-connector links bar tops to show cumulative flow.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
-      Chrome: Same title, legend, axis title, ticks and category labels, all rendered in light/soft-white ink against the dark background. Grid lines are faint but visible. No dark-on-dark text anywhere.
-      Data: Bar colors are pixel-identical to the light render (blue Total, green Increase, red Decrease) — only the chrome (background, text, grid, dashed connector color) adapted to the dark theme.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, legend, axis title, ticks and category labels, now rendered in light/soft-white ink. All fully legible; no dark-on-dark failures found on any title, label, or tick.
+      Data: Data colors (blue/green/red, plus the Net Profit border/label accent) are pixel-identical to the light render — only chrome (background, text, grid) flipped for the theme, as required.
       Legibility verdict: PASS
+
+    Cross-render note: both renders show the same visual defect — the dashed connector line's vertical step segment cuts through the middle of each transition bar (Product Sales, Service Revenue, Returns & Discounts, Operating Costs, Taxes) rather than tracing the bar's top edge, because the underlying line series is anchored to category-center x-coordinates. This is a visual-refinement flaw, not a legibility or theme-correctness failure — it does not obscure any text and is identical in both themes.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,78 +65,79 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; title is
-          somewhat undersized (~30% width) relative to its comfortable range
+        comment: All font sizes explicit; readable in both themes; title fontSize
+          bumped from 22 to 26 this attempt, no overflow or squeeze
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlap between labels, legend, ticks, or data
+        comment: No text overlaps, but the dashed connector's vertical step visibly
+          cuts through the middle of each transition bar instead of tracing bar edges
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars (55% width) and dashed connectors clearly visible and well-sized
-          for 7 categories
+        comment: Bars and connector clearly visible against both backgrounds; 7 categories
+          is sparse enough for the chosen bar width
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red not sole signal — +/- prefixes and a third blue category
-          supplement hue
+        comment: +/- sign prefixes and a third blue category supplement the green/red
+          hues; not red-green-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a good majority of the canvas with balanced margins, legend
-          near the plot, nothing cut off
+        comment: Canvas gate passed; good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled 'Amount ($ thousands)' with units
+        comment: '"Amount ($ thousands)" has units; category labels descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: All colors from Imprint palette; green/red/blue is a justified semantic
-          exception matching spec guidance; theme-correct chrome in both renders
+        comment: Imprint palette throughout; green/red/blue is a justified semantic
+          exception; theme-correct backgrounds in both renders
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-executed configured default (idiomatic waterfall pattern, semantic
-          colors) but not publication-level flourish
+        passed: true
+        comment: 'Improved from attempt 1: dark-ink border + bold larger label now
+          accents the ending Net Profit bar; still a configured-default look overall'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Y-axis line hidden, subtle split lines, dashed alpha-blended connector
-          — some refinement, not exhaustive polish
+        passed: false
+        comment: Hidden y-axis line, subtle split lines, alpha-blended dashed connector
+          are refined, but the connector visibly bisects bars rather than tracing
+          their edges
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color + label hierarchy guides the reader through the bridge, but
-          no special emphasis on the ending Net Profit total
+        comment: Color hierarchy plus the new Net Profit accent give a clearer focal
+          point than attempt 1, though the rest of the chart is still evenly weighted
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,52 +145,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waterfall chart with connectors and total/increase/decrease
-          distinction
+        comment: Correct waterfall via invisible-stacked-base technique
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Colored increase/decrease, connecting lines, distinct total bars
-          all present; labels show per-step deltas rather than literal running totals
+        comment: Running-total sub-labels added this attempt, satisfying the spec's
+          "running total labels" requirement alongside delta labels, connector lines,
+          and distinct total-bar coloring
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, amounts on y-axis, all data visible
+        comment: Categories on x, cumulative $ on y, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels (Total/Increase/Decrease) correctly
-          describe the series
+        comment: Title matches "waterfall-basic · javascript · echarts · anyplot.ai";
+          legend labels match series names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows increases, decreases, and totals; could vary the increase/decrease
-          sequencing a bit more
+        comment: Shows totals, increases, decreases, connector, delta and running-total
+          labels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral quarterly revenue-to-profit breakdown
+        comment: Quarterly revenue-to-net-profit bridge is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sum correctly (850+320+180-95-410-145=700) and are plausible
-          for the domain
+        comment: 850+320+180-95-410-145=700 checks out exactly against the displayed
+          Net Profit
     code_quality:
       score: 10
       max: 10
@@ -199,31 +200,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural script, no functions/classes
+        comment: No functions/classes; straightforward loop building series arrays
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global echarts
+        comment: No imports needed; echarts global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Appropriate complexity; no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, no explicit width/height/devicePixelRatio
+        comment: 'Correct mount-node contract, animation: false'
     library_mastery:
       score: 8
       max: 10
@@ -239,18 +240,18 @@ review:
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses stack + step line + legendHoverLink, but the technique itself
-          is a well-known cross-library workaround, not unique to ECharts
-  verdict: REJECTED
+        passed: false
+        comment: Solid but the technique is a well-known cross-library workaround,
+          not unique to ECharts
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
-  - minimal-chrome
   - alpha-blending
+  - edge-highlighting

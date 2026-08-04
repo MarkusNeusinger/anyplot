@@ -1,7 +1,7 @@
 // anyplot.ai
 // waterfall-basic: Basic Waterfall Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.1
-// Quality: 87/100 | Created: 2026-08-04
+// Quality: 89/100 | Created: 2026-08-04
 
 const t = window.ANYPLOT_TOKENS;
 
