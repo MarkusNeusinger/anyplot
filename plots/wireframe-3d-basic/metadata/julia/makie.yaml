@@ -1,0 +1,265 @@
+library: makie
+language: julia
+specification_id: wireframe-3d-basic
+created: '2026-08-04T18:35:52Z'
+updated: '2026-08-04T18:55:34Z'
+generated_by: claude-sonnet
+workflow_run: 30938853841
+issue: 1015
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - 'All previous review feedback addressed: xlabelsize/ylabelsize/zlabelsize and
+    x/y/zticklabelsize are now explicitly set on Axis3, the radial oscillation is
+    damped (sin(0.55*r)/(r+1), ~1.1 periods vs. ~2.2 before) with a coarser 20x20
+    grid, and the mesh is now colored by height using the Imprint imprint_seq gradient
+    (green -> blue)'
+  - 'Height-based line coloring is a genuine design/storytelling upgrade: base of
+    the surface reads brand green and the peak transitions to blue, giving the see-through
+    wireframe a real depth cue instead of a flat single-color mesh, identical between
+    light and dark renders'
+  - 'Correct plot type: Axis3 + wireframe! produces a true 3D wireframe with grid
+    lines in both x and y directions, matching the spec exactly, with all three axes
+    labeled (X, Y, Z), visible tick marks, and a sensible perspective (elevation 30
+    deg, azimuth 135 deg)'
+  - Theme-adaptive chrome correctly threaded through Axis3 in both renders -- panels,
+    spines, grid, ticks, labels, and title all flip light/dark while the height-encoded
+    data colors stay identical
+  - 'Clean, deterministic, KISS-structured code: no functions/classes, no randomness
+    needed (pure grid math), correct save("plot-$(THEME).png", fig; px_per_unit=2)
+    call, canonical title format, no fake UI'
+  weaknesses:
+  - The peak region (top ~1/3 of the surface, roughly z=0.15-0.3) still shows dense
+    line crossing where grid lines converge toward the apex -- improved versus attempt
+    1 but the topology near the very top is still harder to read at a glance than
+    the rest of the surface; a slightly coarser grid (e.g. 16x16-18x18) or a flatter
+    peak function would fully resolve this
+  - The per-segment height coloring is built by manually decomposing line faces with
+    internal/undocumented Makie APIs (Makie.decompose, Makie.LineFace{Makie.GLIndex},
+    Makie.Tesselation) rather than a documented public parameter -- functionally correct
+    and visually verified against the peak (green at base, blue near the top), but
+    this couples the implementation to Makie internals that are more likely to change
+    between versions than the stable wireframe!/Axis3 API surface
+  - No colorbar or legend communicates that color encodes height/Z -- a reader can
+    infer it from context (green-to-blue matches the Z gradient) but an explicit colorbar
+    would make the height-coloring choice self-explanatory rather than implicit
+  - Data remains a purely abstract synthetic ripple function with no real-world framing
+    (matches the spec's own suggested example, so this is an acceptable but not maximal
+    choice for Realistic Context)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "wireframe-3d-basic · julia · makie · anyplot.ai" is bold dark text, clearly visible at top center. X/Y/Z axis labels and numeric tick labels (grid coordinates -10..10, Z values -0.1..0.3) are dark/soft-dark and legible against the light background; xlabelsize/ylabelsize/zlabelsize and per-axis ticklabelsize are all explicitly set (no longer relying on the Figure-level default). Grid lines on the three axis panels are subtle light gray, visible but not competing with the data. Panel fills match the page background so the 3D box doesn't read as a boxed frame.
+      Data: Wireframe mesh forming a symmetric ripple/sombrero shape with a central peak decaying into concentric ridges toward the domain edges. The mesh is now height-colored via the Imprint imprint_seq gradient: brand green (#009E73) at the low/base regions transitioning to blue (#4467A3) near the peak, giving a genuine depth cue. The oscillation is visibly damped compared to a sharper ripple, and the 20x20 grid keeps the mid/lower surface clearly see-through; the top third near the apex still shows a dense cluster of crossing lines but the overall topology (central peak, decaying rings, flat far corners) reads clearly.
+      Legibility verdict: PASS -- all title, axis, and tick text is clearly readable against the light surface; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title renders in light/off-white text, clearly visible at top center. X/Y/Z axis labels and tick labels are light-colored (primary text near-white, tick labels a softer light gray) and easily readable against the dark background -- no dark-on-dark failures observed. Grid lines are subtle light-gray at low opacity, visible but unobtrusive. Panel fills match the dark page background.
+      Data: Wireframe mesh renders with the identical green-to-blue height gradient as the light render -- confirmed unchanged data colors across themes, only chrome flipped. Same damped ripple topology and same peak-region line density as the light render.
+      Legibility verdict: PASS -- all text is clearly readable against the dark surface; brand green and blue both read well on the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: xlabelsize/ylabelsize/zlabelsize and x/y/zticklabelsize are now explicitly
+          set on Axis3 (fixes attempt-1 feedback); readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap with other text or data in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Damped oscillation (0.55*r vs previous 1.1x factor) plus coarser
+          20x20 grid noticeably reduces clutter versus attempt 1, but the apex region
+          still shows dense line crossing
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential gradient, no red-green reliance, good contrast
+          on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); plot fills a good portion of the
+          canvas with balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-letter X/Y/Z labels are acceptable per the spec's own request;
+          canonical title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Height coloring uses the correct imprint_seq stops (#009E73 -> #4467A3);
+          backgrounds correctly #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Height-based imprint_seq coloring is a deliberate design choice addressing
+          the attempt-1 feedback, not just a well-configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panels blended into background, spines/grid muted and theme-adaptive
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Green-to-blue height gradient gives a real depth cue and visual hierarchy;
+          no colorbar to make the mapping explicit
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D wireframe via Axis3 + wireframe!
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid lines in both x/y directions, 3D perspective with elevation/azimuth,
+          all three axes labeled with tick marks
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y/z correctly mapped, axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches canonical format exactly; single-series needs no legend
+    data_quality:
+      score: 12
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Surface shows a full peak, decaying ripples, and flattening toward
+          domain edges
+      - id: DQ-02
+        name: Realistic Context
+        score: 3
+        max: 5
+        passed: true
+        comment: Abstract synthetic math function, matches the spec's own suggested
+          ripple example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and proportions are internally consistent for an abstract
+          mathematical function
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic grid/function computation, no randomness needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie and Colors both actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Segment-color loop relies on internal Makie.decompose/LineFace/Tesselation
+          APIs instead of a documented public path -- works correctly but adds fragility
+          for a plot-quality gain that may be reachable more simply
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-$(THEME).png save with px_per_unit=2, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Axis3 + wireframe! usage is idiomatic, but the manual internal-API
+          line-face decomposition for coloring is not the library's documented pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Height-linked per-segment coloring is a genuinely distinctive touch
+          beyond a flat-color wireframe
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
+  - minimal-chrome
