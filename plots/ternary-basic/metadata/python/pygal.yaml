@@ -2,12 +2,12 @@ library: pygal
 language: python
 specification_id: ternary-basic
 created: '2025-12-24T09:54:54Z'
-updated: '2026-05-06T03:54:39Z'
-generated_by: claude-haiku
-workflow_run: 25414898498
+updated: '2026-08-04T15:48:08Z'
+generated_by: claude-sonnet
+workflow_run: 30921833198
 issue: 1001
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/pygal/plot-light.html
@@ -15,66 +15,104 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-b
 quality_score: 92
 review:
   strengths:
-  - 'Palette compliance fixed: data points now correctly render as #009E73 brand green'
-  - Perfect theme adaptation with proper chrome switching
-  - Clean, professional layout with no text overlaps
-  - Complete specification implementation with all ternary features
-  - Strong code quality with proper reproducibility and structure
-  weaknesses: []
+  - 'All four Attempt 1 weaknesses were addressed precisely: vertex labels now carry
+    the ''(%)'' unit, percentage tick labels grew from font-size 32 to 42 (near the
+    major_label_font_size=44 baseline) and are clearly legible in both themes, a size-based
+    visual hierarchy (dots_size=27 vs 14) now separates ''Named Alloys'' from ''Survey
+    Points'' so the two-category story reaches the image itself, and the two most
+    extreme synthetic points were swapped for less extreme ones.'
+  - Genuinely creative pygal workaround for a chart type the library has no native
+    support for — derives the exact data-to-pixel affine transform from pygal's own
+    rendered boundary-triangle path, then overlays vertex/tick labels precisely instead
+    of hand-calibrating offsets.
+  - 'Both renders are theme-correct: identical Imprint green (#009E73) data points
+    at identical positions, correct #FAF8F1/#1A1A17 backgrounds, all chrome (title,
+    vertex labels, tick labels, grid, boundary) flips correctly with no dark-on-dark/light-on-light
+    failures.'
+  - 'Full ternary-plot feature set: labeled vertices with explicit ''(%)'' units,
+    dashed grid at 20% intervals, tick marks along all three edges, two-group legend
+    that matches the data split.'
+  - Legend now honestly distinguishes 'Named Alloys' (real bronze/brass families,
+    all summing to 100%) from 'Survey Points' (explicitly-labeled exploratory fill
+    points) rather than implying all 16 points are real named alloys.
+  - Clean, deterministic, single-pass script with only one small helper function.
+  weaknesses:
+  - Percentage tick labels (font-size=42) are still slightly below the Style object's
+    own major_label_font_size=44 baseline — negligible in practice but not an exact
+    match.
+  - The mandated title still auto-wraps to two lines on the square canvas — cosmetic
+    only, not a clipping/overlap issue.
+  - One small helper function (to_px) still breaks the strict 'no functions' KISS
+    guideline.
+  - Some 'Survey Points' compositions (e.g. 33/34/33, 30/35/35) remain arbitrary space-filling
+    points rather than tied to any real material — acceptable since they are honestly
+    labeled as exploratory, not claimed as named alloys.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct
-      Chrome: Title in dark text #1A1A17, vertex labels bold and clear, percentage labels in muted ink #6B6A63, grid lines subtle dashed pattern
-      Data: 15 data points rendered as brand green circles #009E73, clearly visible and well-positioned
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Two-line title "Bronze Alloy Composition · ternary-basic · python · pygal · anyplot.ai" in dark ink, clearly readable. Bold vertex labels "COPPER (%)" (top), "TIN (%)" (bottom right), "ZINC (%)" (bottom left) in dark ink — unit now present, fully legible. Muted grey-brown percentage tick labels (20/40/60/80) along all three edges at font-size 42, clearly legible even zoomed in. Dashed grey grid lines at 20% intervals, subtle but visible. Solid dark boundary triangle.
+      Data: Two size-differentiated groups of solid #009E73 green dots — larger dots (dots_size=27) for "Named Alloys" clustered near the copper vertex and upper-right edge (real bronze/brass families), smaller dots (dots_size=14) for "Survey Points" filling the mid-to-lower interior. Legend at bottom-left shows both series labels with green swatches. No overlapping points found on close inspection.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correct
-      Chrome: Title in light text #F0EFE8, vertex labels visible in light text, percentage labels in light muted #A8A79F, grid lines subtle
-      Data: 15 data points remain as brand green #009E73 - identical to light render (only chrome flipped)
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Same title, vertex labels, and tick labels re-rendered in light ink/muted tan, all clearly legible against the dark surface — no dark-on-dark failures found anywhere, including in zoomed crops of the tick labels. Grid and boundary triangle switch to a light stroke, still subtle.
+      Data: The same two size-differentiated groups of #009E73 green dots at identical triangle positions as the light render — confirms only chrome flipped between themes, not data color or point positions.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
+        comment: All font sizes explicit; percentage ticks raised from 32 to 42, now
+          clearly legible in both themes — just shy of the 44 baseline
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
+        comment: No collisions between text or data points in either render, confirmed
+          via zoomed crops
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
+        comment: Size hierarchy (27 vs 14) well-adapted to the two sparse data groups;
+          no touching/overlapping markers
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
+        comment: Single strong-contrast hue, distinguished by size not color — no
+          red-green issue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
+        comment: Balanced margins, good canvas utilization, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
+        comment: Vertex labels now carry explicit '(%)' units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
+        comment: '#009E73 identical across themes; backgrounds and chrome theme-correct
+          in both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -82,16 +120,21 @@ review:
         score: 6
         max: 8
         passed: true
+        comment: Deriving the affine pixel transform from pygal's own rendered boundary
+          path is genuinely sophisticated
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
+        comment: Subtle dashed grid, tuned margins, opacity-based markers
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
+        comment: New size-based hierarchy between Named Alloys and Survey Points now
+          makes the two-category story visible in the image itself
     spec_compliance:
       score: 15
       max: 15
@@ -101,21 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
+        comment: Correct ternary plot on equilateral triangle
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
+        comment: Grid at 20% intervals, labeled vertices with units, tick marks on
+          all edges, distinct markers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
+        comment: All 16 compositions sum exactly to 100%, correctly mapped to barycentric
+          coordinates
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
+        comment: Title format correct; legend labels 'Named Alloys' / 'Survey Points'
+          now honestly match the two data groups
     data_quality:
       score: 15
       max: 15
@@ -125,69 +175,84 @@ review:
         score: 6
         max: 6
         passed: true
+        comment: Points cover near-vertex, edge, and central regions of the triangle
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
+        comment: Bronze/brass alloy composition is a real, neutral, comprehensible
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
+        comment: Named Alloys are real alloy families; Survey Points are honestly
+          labeled exploratory fill rather than falsely claimed as real, and the two
+          most extreme synthetic points were swapped for more plausible ones
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
+        comment: Mostly linear flow, but defines one small to_px helper function
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
+        comment: Complexity justified by pygal's lack of native ternary support
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
+        comment: Correct plot-{THEME}.png/.html output
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, idiomatic pygal.XY/Style/add() usage extended cleverly beyond
+          native support
+      - id: LM-02
+        name: Distinctive Features
         score: 5
         max: 5
         passed: true
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
+        comment: Deriving the pixel transform from pygal's own rendered SVG output
+          is a technique specific to pygal's SVG-based model
   verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
+  - manual-ticks
   - annotations
-  - html-export
   patterns:
-  - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
-  - custom-colormap
+  - alpha-blending
+  - publication-ready

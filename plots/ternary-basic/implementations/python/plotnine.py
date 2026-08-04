@@ -1,7 +1,7 @@
 """ anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-06
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-08-04
 """
 
 import os
@@ -23,24 +23,26 @@ from plotnine import (
     geom_text,
     ggplot,
     labs,
+    scale_color_gradient,
     theme,
     theme_void,
 )
 
 
-# Theme tokens
+# Theme tokens (Imprint)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
+BRAND = "#009E73"  # Imprint position 1
+BLUE = "#4467A3"  # Imprint position 3 — far end of imprint_seq
 
-# Data - Soil composition samples (sand, silt, clay)
+# Data - Soil composition samples (sand, silt, clay), USDA-style texture triangle
 np.random.seed(42)
 n_points = 50
 
-# Generate random ternary data with varied distributions for better spread
+# Dirichlet mixtures give a realistic spread across sand-, silt-, and clay-heavy soils
 raw1 = np.random.dirichlet(alpha=[5, 1, 1], size=n_points // 3) * 100  # Sand-heavy
 raw2 = np.random.dirichlet(alpha=[1, 5, 1], size=n_points // 3) * 100  # Silt-heavy
 raw3 = np.random.dirichlet(alpha=[1, 1, 5], size=n_points - 2 * (n_points // 3)) * 100  # Clay-heavy
@@ -50,12 +52,21 @@ sand = raw[:, 0]
 silt = raw[:, 1]
 clay = raw[:, 2]
 
-# Convert ternary coordinates to Cartesian
+# Convert ternary coordinates to Cartesian (equilateral triangle, unit height)
 total = sand + silt + clay
 x_data = 0.5 * (2 * silt + clay) / total
 y_data = (np.sqrt(3) / 2) * clay / total
 
-df = pd.DataFrame({"x": x_data, "y": y_data, "sand": sand, "silt": silt, "clay": clay})
+# Ideal loam target (USDA loam zone center: ~42% sand, 42% silt, 16% clay) — the
+# focal point every sample is compared against, encoded as a continuous gradient
+target_sand, target_silt, target_clay = 42.0, 42.0, 16.0
+x_target = 0.5 * (2 * target_silt + target_clay) / 100.0
+y_target = (np.sqrt(3) / 2) * target_clay / 100.0
+distance = np.sqrt((x_data - x_target) ** 2 + (y_data - y_target) ** 2)
+
+df = pd.DataFrame({"x": x_data, "y": y_data, "sand": sand, "silt": silt, "clay": clay, "distance": distance})
+target_df = pd.DataFrame({"x": [x_target], "y": [y_target]})
+target_label_df = pd.DataFrame({"x": [x_target + 0.1], "y": [y_target - 0.02], "label": ["Ideal loam"]})
 
 # Triangle vertices (for the frame)
 vertices = pd.DataFrame({"x": [0, 1, 0.5, 0], "y": [0, 0, np.sqrt(3) / 2, 0]})
@@ -88,7 +99,7 @@ grid_df = pd.DataFrame(grid_lines)
 
 # Tick labels along edges
 tick_labels = []
-label_offset = 0.06
+label_offset = 0.045
 for pct in [0, 20, 40, 60, 80, 100]:
     frac = pct / 100
     # Sand axis (left edge going up)
@@ -112,7 +123,7 @@ tick_df = pd.DataFrame(tick_labels)
 vertex_labels = pd.DataFrame(
     {
         "x": [0 - 0.02, 1 + 0.02, 0.5],
-        "y": [0 - 0.08, 0 - 0.08, np.sqrt(3) / 2 + 0.06],
+        "y": [0 - 0.07, 0 - 0.07, np.sqrt(3) / 2 + 0.05],
         "label": ["Sand (%)", "Silt (%)", "Clay (%)"],
     }
 )
@@ -121,28 +132,50 @@ vertex_labels = pd.DataFrame(
 plot = (
     ggplot()
     # Triangle frame
-    + geom_polygon(data=vertices, mapping=aes(x="x", y="y"), fill=PAGE_BG, color=BRAND, size=2)
+    + geom_polygon(data=vertices, mapping=aes(x="x", y="y"), fill=PAGE_BG, color=BRAND, size=1.4)
     # Grid lines
-    + geom_segment(
-        data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, size=0.7, alpha=0.15
+    + geom_segment(data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=0.4, alpha=0.15)
+    # Data points, colored by distance to the ideal-loam target — brand green (close)
+    # to blue (far), the imprint_seq sequential colormap. alpha=0.7 keeps overlapping
+    # samples in the vertex-heavy Dirichlet clusters distinguishable.
+    + geom_point(data=df, mapping=aes(x="x", y="y", color="distance"), size=3, alpha=0.7)
+    + scale_color_gradient(low=BRAND, high=BLUE, name="Distance to\nideal loam")
+    # Target marker — theme-neutral reference point, not a data series
+    + geom_point(data=target_df, mapping=aes(x="x", y="y"), color=INK, size=4.5, shape="D", stroke=1.2)
+    + geom_text(
+        data=target_label_df,
+        mapping=aes(x="x", y="y", label="label"),
+        size=3.6,
+        color=INK,
+        fontweight="bold",
+        ha="left",
     )
-    # Data points
-    + geom_point(data=df, mapping=aes(x="x", y="y"), color=BRAND, size=5, alpha=0.8)
     # Tick labels
-    + geom_text(data=tick_df, mapping=aes(x="x", y="y", label="label"), size=14, color=INK_SOFT)
+    + geom_text(data=tick_df, mapping=aes(x="x", y="y", label="label"), size=3, color=INK_SOFT)
     # Vertex labels
-    + geom_text(data=vertex_labels, mapping=aes(x="x", y="y", label="label"), size=18, fontweight="bold", color=INK)
+    + geom_text(data=vertex_labels, mapping=aes(x="x", y="y", label="label"), size=4.2, fontweight="bold", color=INK)
     # Title and theme
     + labs(title="ternary-basic · plotnine · anyplot.ai")
     + coord_fixed(ratio=1)
     + theme_void()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_title=element_text(size=24, ha="center", color=INK, weight="medium"),
+        plot_title=element_text(size=13, ha="center", color=INK, weight="medium"),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=7, color=INK_SOFT),
+        legend_title=element_text(size=8, color=INK),
+        # Inset legend (NPC coords within the panel) instead of a separate right-side
+        # column — coord_fixed already leaves whitespace beside the triangle since the
+        # panel is wider than the triangle's aspect ratio; anchoring the legend high
+        # and to the right (where the clay vertex tapers away) keeps it close to the
+        # plot, clear of the triangle frame, instead of stranded past an empty margin.
+        legend_position=(0.86, 0.86),
+        legend_direction="vertical",
+        legend_key_size=14,
         plot_margin=0.02,
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
