@@ -2,121 +2,137 @@ library: bokeh
 language: python
 specification_id: ternary-basic
 created: 2025-12-17 11:55:23+00:00
-updated: '2026-05-06T03:30:45Z'
-generated_by: claude-haiku
-workflow_run: 25414736562
+updated: '2026-08-04T15:12:59Z'
+generated_by: claude-sonnet
+workflow_run: 30921296796
 issue: 1001
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/bokeh/plot-dark.html
-quality_score: 93
+quality_score: 92
 review:
   strengths:
-  - 'Excellent theme adaptation: text colors, grid colors, and background all properly
-    swap between light and dark with zero legibility issues'
-  - Correct ternary coordinate transformation with proper triangle geometry
-  - Professional, clean design appropriate for scientific visualization
-  - 'Perfect data quality: realistic context, appropriate scale, full feature coverage'
-  - 'Strong code quality: reproducible, idiomatic, elegant, minimal'
-  - Proper implementation of the Bokeh library patterns recommended for this project
+  - Builds a true equilateral-triangle ternary projection from scratch (Bokeh has
+    no native ternary axis) via a manual ternary-to-Cartesian transform plus Label-based
+    tick/vertex annotations, with matched x/y range spans on a square canvas to keep
+    the triangle geometrically equilateral.
+  - 'Repair directly addressed both attempt-1 weaknesses: a HoverTool with formatted
+    Sand/Silt/Clay percentage tooltips is now wired into the figure for the HTML artifact,
+    and the single highest-purity sample is explicitly ringed and labeled (''81% Silt'')
+    as a concrete focal callout.'
+  - Purity-driven marker size (12-28px) and alpha (0.55-0.9), based on distance from
+    the balanced 1/3-1/3-1/3 centroid, gives near-pure samples visual prominence instead
+    of a flat uniform scatter.
+  - Theme-adaptive chrome correctly threaded through PAGE_BG/INK/INK_SOFT tokens;
+    brand-green (#009E73) data color is identical between light and dark renders,
+    and all spec-required elements (20% grid lines, vertex labels, edge tick marks)
+    are present and legible in both.
+  - 'Solid canvas discipline: toolbar disabled, min_border reserved on all sides,
+    square 2400x2400 canvas appropriate for a plot with no preferred horizontal axis,
+    no clipping in either render.'
   weaknesses:
-  - 'Design excellence slightly conservative: follows expected ternary plot conventions
-    without distinctive visual enhancements'
-  - Could explore visual emphasis techniques (color highlighting, size variation)
-    to highlight clustering or outliers in the soil composition data
+  - 'Visual refinement (DE-02) is still close to a clean-default treatment: triangle
+    border, grid, and labels are correct but a slightly more distinctive touch (e.g.
+    a soft accent on the grid intersections, or a subtly varied line weight on the
+    outer triangle vs. inner grid) would push polish further.'
+  - Data storytelling is now good (explicit focal callout) but still single-layered
+    — no soil-texture classification zone shading (e.g. loam/clay-loam/sand bands)
+    to help viewers map raw coordinates to real-world soil categories, which would
+    deepen the insight beyond the one highlighted point.
+  - A couple of markers in the low-Clay / high-Sand region sit close enough to visually
+    touch — not a legibility problem at this density, but worth a small alpha/size
+    tweak if this spec is revisited with more points.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 with excellent contrast
-      Chrome: Title (28pt dark text #1A1A17), vertex labels Sand/Silt/Clay (24pt bold dark text), tick labels (16pt secondary text #4A4A44) along all edges showing 0-100 percentages. All clearly readable.
-      Data: 50 scatter points in Okabe-Ito green (#009E73) with white edges, 70% opacity. Grid lines very subtle (0.15 alpha soft gray) at 20% intervals. Triangle outline clean and distinct.
-      Legibility verdict: PASS - All text readable with excellent contrast against light background. Data points stand out clearly.
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "Soil Composition · ternary-basic · python · bokeh · anyplot.ai" in bold dark ink, fully visible, centered, spanning ~78% of canvas width. Triangle outline and 20%-interval grid lines render in soft dark gray (INK_SOFT), subtle but legible. Vertex labels "Clay" (top), "Sand" (bottom-left), "Silt" (bottom-right) are bold dark ink, clearly readable. Edge tick labels (0/20/40/60/80/100) sit outside the triangle on all three sides in the same soft gray, evenly spaced with no collisions.
+      Data: ~50 brand-green (#009E73) circular markers scatter inside the triangle, sized/shaded by compositional purity (near-pure samples larger and more opaque, balanced/loam-like samples smaller and lighter). The single highest-purity sample is ringed in dark ink and labeled "81% Silt" as an explicit focal callout, positioned near the Silt vertex, fully inside the canvas with no clipping.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17 with excellent contrast
-      Chrome: Title and vertex labels use light text #F0EFE8, tick labels use light secondary text #B8B7B0. All clearly readable with no dark-on-dark failures. Triangle outline and grid lines are light gray, well-distinguished from background.
-      Data: Same 50 scatter points in #009E73 (Okabe-Ito green) - maintains excellent contrast and visibility on dark surface. Brand color reads beautifully.
-      Legibility verdict: PASS - All text readable with excellent contrast against dark background. No dark-on-dark failures. Data colors identical to light render.
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title now in light ink (INK), fully visible against the dark surface, same width proportion as the light render. Triangle outline and grid lines flip to a light soft-gray tone (INK_SOFT dark variant), still subtle but visible. Vertex and tick labels flip to light tones with good contrast — no dark-on-dark failures anywhere.
+      Data: Markers are identical in position, size, and opacity pattern to the light render, and remain brand-green (#009E73) — confirming only chrome (background/text/grid) flipped between themes. The focal-callout ring and "81% Silt" label flip to light ink and remain fully legible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text sizes appropriately scaled for 4800×2700 canvas; title,
-          vertex labels, and tick labels all readable in both themes
+        comment: All font sizes explicitly set (title 50pt, ticks 34pt, vertex labels
+          42pt, callout 30pt); readable and well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; labels and data points well-distributed
-          with clear spacing
+        comment: No text-on-text or text-on-data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements (grid, markers, labels) clearly visible; marker size
-          appropriate for 50-point dataset
+        comment: Purity-driven marker size/alpha (12-28px, 0.55-0.9) appropriate for
+          n=50 scatter density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series uses #009E73 (Okabe-Ito position 1), colorblind-safe
-          with excellent contrast'
+        comment: Single-hue markers with ink-colored ring for the focal callout; no
+          red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions; triangle fills space with adequate margins; nothing
-          cut off
+        comment: Balanced margins, triangle fills a healthy share of the square canvas,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive; vertex labels clear; tick labels show percentages
+        comment: Vertex labels + 0-100 tick scale match the spec's percentage components
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
-          both renders theme-correct'
+        comment: 'First series #009E73 identical across themes; backgrounds match
+          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Professional, clean ternary plot; idiomatic Bokeh; solid work but
-          follows expected design
+        comment: Purity-driven size/alpha encoding is a genuine, non-generic design
+          decision; strong but not yet publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Excellent refinement: clean lines, removed clutter, subtle grid,
-          generous whitespace'
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy; scatter clearly shows compositional distribution;
-          could emphasize patterns
+        comment: Axes hidden, custom triangle border, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Explicit focal callout (ringed + labeled extreme sample) added this
+          attempt, on top of the size/alpha purity gradient
     spec_compliance:
       score: 15
       max: 15
@@ -126,27 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary plot structure with accurate Cartesian transformation
+        comment: Correct ternary plot on an equilateral triangle
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: grid at 20%, vertex labels, tick labels, data
-          markers'
+        comment: Grid lines at 20% intervals, labeled vertices, edge tick marks, distinct
+          markers — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Transformation correct; all 50 points displayed; axes show 0-100%
-          range
+        comment: Sand/Silt/Clay correctly mapped to the three triangle axes via the
+          ternary-to-Cartesian transform
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed for single series
+        comment: Title matches mandated format with descriptive prefix; no legend
+          needed for single-series
     data_quality:
       score: 15
       max: 15
@@ -156,21 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three components represented through ternary system; grid and
-          tick labels aid interpretation
+        comment: Points spread across the full composition space, including near-pure
+          and balanced samples
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world soil composition; Dirichlet distribution generates plausible
-          data; neutral
+        comment: Soil sand/silt/clay composition is a real, neutral, textbook ternary-plot
+          use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 50 points well-chosen; 0-100% values respect compositional constraint
+        comment: Compositions sum to 100% via Dirichlet sampling, respecting the spec's
+          constant-total constraint
     code_quality:
       score: 10
       max: 10
@@ -180,57 +198,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean, straightforward; only appropriate helper function
+        comment: Imports -> data -> plot -> save; the one helper (ternary_to_cartesian)
+          is a pure coordinate transform reused ~15x, not structural over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Minimal, focused imports; all used
+        comment: Only used imports (numpy, bokeh, selenium, stdlib)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Idiomatic Bokeh patterns; no fake UI
+        comment: Clean, appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png + .html; current API
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html via current Bokeh/Selenium
+          APIs
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Proper Bokeh patterns; custom ternary transformation appropriate
+        comment: ColumnDataSource, figure(), scatter(), HoverTool — idiomatic Bokeh
+          patterns throughout
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Excellent use of Bokeh HTML + Selenium pattern; geometric transformation
-          shows mastery
+        comment: HoverTool with formatted Sand/Silt/Clay tooltips now wired in (fixes
+          attempt-1 gap), combined with a from-scratch Label-based ternary axis system
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - hover-tooltips
   - annotations
+  - manual-ticks
   - html-export
   patterns:
   - data-generation
+  - columndatasource
   dataprep: []
   styling:
-  - publication-ready
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
