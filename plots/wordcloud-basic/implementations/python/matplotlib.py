@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wordcloud-basic: Basic Word Cloud
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-04
@@ -29,11 +29,13 @@ word_frequencies = {
     "Database": 85,
     "Security": 80,
     "DevOps": 75,
+    "Java": 72,
     "Docker": 70,
     "Kubernetes": 65,
     "React": 60,
     "SQL": 58,
     "AWS": 55,
+    "Golang": 53,
     "Git": 52,
     "Agile": 50,
     "Testing": 48,
@@ -41,25 +43,31 @@ word_frequencies = {
     "TypeScript": 42,
     "Node": 40,
     "REST": 38,
+    "Rust": 36,
     "CI/CD": 35,
     "Microservices": 32,
+    "Serverless": 31,
     "Azure": 30,
     "MongoDB": 28,
+    "Encryption": 27,
     "Redis": 26,
     "GraphQL": 24,
+    "Compliance": 23,
     "Terraform": 22,
+    "Blockchain": 20,
     "Spark": 20,
+    "IoT": 18,
     "Analytics": 18,
     "Frontend": 16,
+    "Mentoring": 16,
     "Backend": 15,
+    "Code Review": 15,
     "Scalability": 14,
+    "Refactoring": 14,
     "Automation": 13,
+    "Onboarding": 13,
     "Architecture": 12,
     "Networking": 11,
-    "Performance": 10,
-    "Monitoring": 9,
-    "Debugging": 8,
-    "Documentation": 7,
 }
 
 # Assign Imprint hues by frequency rank (not by word hash) so color carries
@@ -78,12 +86,12 @@ wc = WordCloud(
     height=1800,
     background_color=PAGE_BG,
     max_words=100,
-    min_font_size=14,
+    min_font_size=18,
     max_font_size=200,
     random_state=42,
-    prefer_horizontal=0.7,
-    relative_scaling=0.6,
-    margin=7,
+    prefer_horizontal=0.6,
+    relative_scaling=0.5,
+    margin=4,
 ).generate_from_frequencies(word_frequencies)
 wc.recolor(color_func=color_func)
 
