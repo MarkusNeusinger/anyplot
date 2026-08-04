@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waterfall-basic: Basic Waterfall Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Created: 2026-08-04
@@ -73,7 +73,7 @@ for i, val in enumerate(values):
 
 df["start"] = starts
 df["end"] = ends
-df["bar_type"] = bar_types
+df["bar_type"] = pd.Categorical(bar_types, categories=["positive", "negative", "total"], ordered=True)
 df["x_pos"] = range(len(categories))
 
 # Value labels: signed deltas for changes, plain totals for start/end bars
@@ -81,13 +81,13 @@ label_offset = 45
 df["label"] = [f"{v:+,}" if t != "total" else f"{v:,}" for v, t in zip(values, bar_types, strict=True)]
 df["label_y"] = [e + label_offset if e >= s else e - label_offset for s, e in zip(starts, ends, strict=True)]
 
-# Connector lines bridging each bar's end to the next bar's start
+# Connector lines bridging each bar's running total to the next bar's start.
+# The bridging y-value is always the post-change running total after step i:
+# for a decrease bar that value lives in "start", not "end".
 connectors = []
 for i in range(len(df) - 1):
-    if i < len(df) - 2:
-        connectors.append(
-            {"x_start": df.iloc[i]["x_pos"] + 0.35, "x_end": df.iloc[i + 1]["x_pos"] - 0.35, "y": df.iloc[i]["end"]}
-        )
+    bridge_y = df.iloc[i]["start"] if bar_types[i] == "negative" else df.iloc[i]["end"]
+    connectors.append({"x_start": df.iloc[i]["x_pos"] + 0.35, "x_end": df.iloc[i + 1]["x_pos"] - 0.35, "y": bridge_y})
 connector_df = pd.DataFrame(connectors) if connectors else pd.DataFrame()
 
 colors = {"total": INK, "positive": IMPRINT_PALETTE[0], "negative": IMPRINT_PALETTE[4]}
