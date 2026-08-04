@@ -1,7 +1,7 @@
 """ anyplot.ai
 waterfall-basic: Basic Waterfall Chart
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-06
+Library: matplotlib 3.11.1 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-08-04
 """
 
 import os
@@ -18,7 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# imprint semantic anchors for waterfall categories
+# Imprint semantic anchors for waterfall categories
 INCREASE_COLOR = "#009E73"  # green — increase
 DECREASE_COLOR = "#AE3030"  # red — decrease
 TOTAL_COLOR = "#4467A3"  # blue — total/baseline
@@ -62,7 +62,7 @@ for i in range(1, n):
         current = running_total[i]
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 x = np.arange(n)
@@ -73,48 +73,42 @@ bars = ax.bar(
     x, np.abs(bar_values), width=bar_width, bottom=bar_bottom, color=bar_colors, edgecolor=INK_SOFT, linewidth=1.5
 )
 
-# Draw connecting lines between bars
+# Draw connecting lines between bars, with join markers to punctuate the running total
 for i in range(n - 1):
     ax.plot(
         [x[i] + bar_width / 2, x[i + 1] - bar_width / 2],
         [running_total[i], running_total[i]],
         color=INK_SOFT,
         linestyle="--",
-        linewidth=2,
+        linewidth=1.5,
         zorder=1,
     )
-
-# Add value labels on bars
-for i, bar in enumerate(bars):
-    height = bar.get_height()
-    y_pos = bar_bottom[i] + height / 2
-
-    # Format label
-    if values[i] is None:
-        label = f"${int(bar_values[i])}"
-    elif values[i] >= 0:
-        label = f"+${int(values[i])}"
-    else:
-        label = f"-${int(abs(values[i]))}"
-
-    ax.text(
-        bar.get_x() + bar.get_width() / 2,
-        y_pos,
-        label,
-        ha="center",
-        va="center",
-        fontsize=16,
-        fontweight="bold",
-        color=INK,
+    ax.scatter(
+        [x[i] + bar_width / 2, x[i + 1] - bar_width / 2],
+        [running_total[i], running_total[i]],
+        s=18,
+        color=INK_SOFT,
+        zorder=2,
     )
 
+# Value labels, centered inside each bar via the native bar_label API
+bar_labels = []
+for i in range(n):
+    if values[i] is None:
+        bar_labels.append(f"${int(bar_values[i])}")
+    elif values[i] >= 0:
+        bar_labels.append(f"+${int(values[i])}")
+    else:
+        bar_labels.append(f"-${int(abs(values[i]))}")
+ax.bar_label(bars, labels=bar_labels, label_type="center", fontsize=9, fontweight="bold", color=INK)
+
 # Styling
-ax.set_xlabel("Budget Component", fontsize=20, color=INK)
-ax.set_ylabel("Amount ($K)", fontsize=20, color=INK)
-ax.set_title("waterfall-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.set_xlabel("Budget Component", fontsize=10, color=INK)
+ax.set_ylabel("Amount ($K)", fontsize=10, color=INK)
+ax.set_title("waterfall-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.set_xticks(x)
-ax.set_xticklabels(categories, fontsize=16, rotation=15, ha="right", color=INK_SOFT)
-ax.tick_params(axis="y", labelsize=16, colors=INK_SOFT)
+ax.set_xticklabels(categories, fontsize=8, rotation=15, ha="right", color=INK_SOFT)
+ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
 
 # Grid
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK_SOFT)
@@ -134,11 +128,11 @@ legend_elements = [
     Patch(facecolor=INCREASE_COLOR, edgecolor=INK_SOFT, label="Increase", linewidth=1.5),
     Patch(facecolor=DECREASE_COLOR, edgecolor=INK_SOFT, label="Decrease", linewidth=1.5),
 ]
-leg = ax.legend(handles=legend_elements, fontsize=16, loc="upper right", framealpha=0.95)
+leg = ax.legend(handles=legend_elements, fontsize=8, loc="upper right", framealpha=0.95)
 if leg:
     leg.get_frame().set_facecolor(ELEVATED_BG)
     leg.get_frame().set_edgecolor(INK_SOFT)
     plt.setp(leg.get_texts(), color=INK)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

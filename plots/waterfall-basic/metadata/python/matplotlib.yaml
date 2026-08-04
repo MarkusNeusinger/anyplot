@@ -2,132 +2,134 @@ library: matplotlib
 language: python
 specification_id: waterfall-basic
 created: '2025-12-24T09:50:00Z'
-updated: '2026-05-06T01:01:01Z'
-generated_by: claude-haiku
-workflow_run: 25410641037
+updated: '2026-08-04T11:10:56Z'
+generated_by: claude-sonnet
+workflow_run: 30903062087
 issue: 777
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 90
 review:
   strengths:
-  - Flawless theme adaptation with perfectly readable text in both light and dark
-    renders
-  - Excellent waterfall implementation with proper cumulative flow visualization
-  - Semantic color design (green=increase, orange=decrease, blue=total) is intuitive
-    and follows Okabe-Ito palette
-  - 'All specification requirements fully implemented: color coding, connecting lines,
-    value labels, distinct start/end totals'
-  - Clean, refined visual design with subtle grid, proper spine removal, and well-styled
-    legend
-  - Idiomatic matplotlib usage with correct Axes methods and DPI-aware sizing
+  - 'Correct semantic color mapping (green increase / red decrease / blue total) matches
+    the spec''s explicit convention and stays within the Imprint palette (#009E73,
+    #AE3030, #4467A3)'
+  - Dashed connector lines with join-point markers clearly communicate the cumulative
+    flow between bars, satisfying the spec's 'connecting lines' requirement
+  - Theme-adaptive chrome is fully correct in both renders — no dark-on-dark or light-on-light
+    failures, identical data colors across themes
+  - Custom Patch-based legend clarifies the Total/Increase/Decrease color semantics
+    without cluttering the chart
+  - Clean KISS code structure, deterministic data, correct axes-level API usage (ax.bar,
+    ax.bar_label, ax.scatter, ax.plot) and correct save/output contract
   weaknesses:
-  - 'Design Excellence modest: solid but straightforward styling without exceptional
-    custom refinements'
-  - 'Library Mastery LM-02 low: waterfall implementation uses standard matplotlib
-    patterns without distinctive library-specific innovations'
+  - Bar labels show the per-step delta (+$100/-$150) rather than the running-total
+    value the spec calls for ('Display running total labels on or near bars for clarity')
+    — consider adding the cumulative total near each connector marker or as a secondary
+    smaller label
+  - 'Design Excellence is solid but stops short of publication-grade: grid and spine
+    treatment follow style-guide defaults closely rather than pushing further refinement
+    (e.g. slightly thinner bar edges in dark mode, more deliberate whitespace around
+    the legend)'
+  - Waterfall construction relies on generic manual cumulative-sum logic rather than
+    a matplotlib-distinctive feature; ax.bar_label is a nice idiomatic touch but the
+    overall technique is portable to any library
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title, axis labels, tick labels rendered in dark INK and INK_SOFT tokens - all clearly readable
-      Data: Blue bars for totals, green bars for increases, orange bars for decreases; Okabe-Ito colors used semantically
-      Connecting lines: Dashed lines in INK_SOFT color clearly show progression between bars
-      Value labels: Bold centered text on bars (e.g., "+$1000", "-$350") in INK color - fully readable
-      Legend: Clear styling with background and border, positioned upper right
-      Legibility verdict: PASS - all elements readable, no light-on-light failures, theme tokens properly applied
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "waterfall-basic · python · matplotlib · anyplot.ai" in dark ink at top, centered, comfortably sized without clipping. Y-axis "Amount ($K)" and X-axis "Budget Component" labels are dark and clearly legible. X-axis category tick labels (Initial Budget, Personnel, Technology, Marketing, Contingency, Savings, Final Budget) are rotated ~15°, dark gray, non-overlapping. Subtle horizontal gridlines at 15% alpha. Legend box (Total/Increase/Decrease) sits top-right with a light elevated-background frame and dark text.
+      Data: First total bar (Initial Budget) is blue (#4467A3), decreases (Personnel, Technology, Marketing) are matte red (#AE3030), increases (Contingency, Savings) are brand green (#009E73), final total bar is blue again. Dashed gray connector lines with small circular markers link each bar's running-total level to the next bar's start, clearly showing cumulative flow. Bold value labels (+$1000, -$350, -$200, -$150, +$100, +$50, $450) are centered inside each bar in dark text.
+      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title, axis labels, tick labels rendered in light text (F0EFE8 for INK, B8B7B0 for INK_SOFT) - all clearly readable
-      Data: Identical colors to light render (blue #0072B2, green #009E73, orange #D55E00) - semantic meaning preserved
-      Connecting lines: Dashed lines in light gray INK_SOFT color - clearly visible and readable
-      Value labels: Light text on bars - fully readable, no dark-on-dark failures detected
-      Legend: Proper dark theme styling with adapted colors - readable and consistent
-      Legibility verdict: PASS - all elements readable, no dark-on-dark failures, theme adaptation flawless
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink/gray, clearly legible against the dark background. Gridlines remain subtle. Legend box uses a dark elevated background (#242420-ish) with light text and a light border, matching the theme.
+      Data: Bar colors are pixel-identical to the light render — blue totals, red decreases, green increases — confirming only chrome (background/text/grid/legend) flipped. Bar edges and connector-line/markers now render in a light gray tone appropriate for the dark surface. Value labels inside bars are white/light and fully readable, including on the dark-red and dark-blue bars.
+      Legibility verdict: PASS — no dark-on-dark failures found; all text and data elements are clearly distinguishable from the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized (24pt, 20pt, 16pt) and readable in both
-          themes using proper INK tokens
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks/legend
+          8pt); readable in both themes, title fits within ~60% width without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Value labels centered on bars; rotated x-labels (15°); legend positioned
-          clearly; zero collisions
+        comment: No overlap between bars, connector labels, tick labels, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, connecting lines, grid all visible; color contrast strong (Okabe-Ito
-          palette); bar edges defined with INK_SOFT
+        comment: Bars, connector lines, and join markers are all clearly visible at
+          this data density (7 steps)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors CVD-safe; no red-green sole signaling; adequate
-          contrast
+        comment: Red/green semantic pair is redundantly encoded by bar position (above/below
+          connector line) and bold +/- text labels, not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect (4800×2700px); generous margins; tight_layout() prevents
-          clipping
+        comment: Plot fills the canvas well with balanced margins; legend sits near
+          the plot, not isolated
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title, X/Y labels descriptive with appropriate units
+        comment: '''Amount ($K)'' includes units, ''Budget Component'' is descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito colors used semantically; backgrounds correct (#FAF8F1
-          light, #1A1A17 dark); both renders theme-correct'
+        comment: 'Green/red/blue are Imprint palette members (#009E73, #AE3030, #4467A3)
+          used via the documented finance semantic exception (profit/gain→green, loss→red);
+          backgrounds correct in both themes'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Semantic color design (green=increase, orange=decrease, blue=total);
-          bar edges for definition; polished legend. Solid but not exceptional
+        comment: Thoughtful semantic color scheme and custom legend, clearly above
+          library defaults, but short of full publication polish
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; y-axis grid subtle (alpha=0.15); legend
-          styled with background/border; generous whitespace
+        comment: Top/right spines removed, subtle grid, edge-highlighted bars — good
+          refinement but close to style-guide defaults
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Color hierarchy guides understanding; dashed lines emphasize cumulative
-          flow; value labels lead from $1000 to $450. Clear narrative
+        comment: Connector lines and color-coded direction guide the reader through
+          the cumulative flow, creating clear visual hierarchy
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,27 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waterfall chart; positive/negative/total bars positioned
-          properly
+        comment: Correct waterfall chart with totals and intermediate steps
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Color coding ✓; connecting lines ✓; distinct start/end totals ✓;
-          value labels ✓
+        comment: Differentiated colors, connecting lines, and distinct total bars
+          all present; bar labels show step deltas rather than the spec's requested
+          running-total values
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: categories; Y-axis: amounts; full data range shown'
+        comment: Categories on X, amounts on Y, all steps visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match semantic meaning
+        comment: Title matches the mandated format exactly; legend labels (Total/Increase/Decrease)
+          match the data semantics
     data_quality:
       score: 15
       max: 15
@@ -165,20 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all waterfall aspects: initial, expenses, contingency, savings,
-          final'
+        comment: Shows both increases and decreases plus start/end totals — all waterfall
+          elements covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Project Budget Allocation is realistic and neutral
+        comment: Plausible, neutral project-budget-allocation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis range sensible; currency appropriate; no extreme outliers
+        comment: Values and proportions are internally consistent and realistic for
+          a budget breakdown
     code_quality:
       score: 10
       max: 10
@@ -188,31 +192,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward setup and computation
+        comment: Linear imports → data → compute → plot → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data; consistent results
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only needed imports present
+        comment: os, matplotlib.pyplot, numpy, Patch — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear waterfall logic; appropriate complexity
+        comment: Clean, appropriately complex, no fake UI elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png; uses current bar_label API, no deprecated
+          calls
     library_mastery:
       score: 8
       max: 10
@@ -222,27 +227,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Axes methods used correctly; proper figure setup; theme via environment
-          variable; idiomatic styling
+        comment: Axes-level API throughout, ax.bar_label for centered labels, Patch-based
+          custom legend handles
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom waterfall logic with proper positioning; manual connecting
-          lines; Patch-based legend. Standard but correct patterns
+        comment: Combines bar + scatter + plot layering and bar_label, but the waterfall
+          technique itself is portable to other libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - patches
   patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - cumulative-sum
   styling:
-  - publication-ready
+  - edge-highlighting
   - grid-styling
