@@ -2,125 +2,168 @@ library: pygal
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:58:23Z'
-updated: '2026-05-06T07:27:00Z'
-generated_by: claude-haiku
-workflow_run: 25421922436
+updated: '2026-08-04T23:28:19Z'
+generated_by: claude-sonnet
+workflow_run: 30958258841
 issue: 1012
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 77
 review:
   strengths:
-  - Perfect visual quality with excellent text legibility and no overlap
-  - 'Flawless theme adaptation: data colors identical between light/dark, chrome properly
-    theme-switched'
-  - Clean spiral placement algorithm with intelligent collision detection and padding
-  - 'Strong design sophistication: intentional use of theme tokens and Okabe-Ito palette
-    throughout'
-  - Realistic, neutral tech industry data with excellent frequency distribution
-  - Well-structured code with deterministic, reproducible results
+  - 'First series and highest-frequency word (Kubernetes) correctly renders in brand
+    green #009E73'
+  - Font size scales cleanly with frequency, giving an immediately readable size hierarchy
+  - Secondary opacity-tier depth cue (~0.7 to 1.0 keyed to frequency) reinforces the
+    visual hierarchy beyond size alone
+  - Theme chrome (background, title ink) flips correctly between light and dark while
+    every word's data color stays pixel-identical across renders
+  - 'Honest, well-documented workaround for pygal''s lack of a native word-cloud primitive:
+    a minimal pygal.XY canvas carries the title/background via the idiomatic Style
+    API, and only the freeform word placement uses manual SVG injection, with comments
+    explaining why'
+  - Deterministic placement (fixed spiral increments, no RNG) makes the output fully
+    reproducible run-to-run
+  - Realistic, neutral DevOps-tooling survey term set with a plausible power-law-like
+    frequency distribution (195 down to 10)
+  - 'Correct output artifacts: plot-{theme}.png/.svg/.html, no bare plot.png'
   weaknesses:
-  - 'Library mastery: pygal used minimally as SVG canvas rather than leveraging higher-level
-    features'
-  - 'Design refinement: while clean and minimal, limited visual embellishment beyond
-    necessity'
+  - 'CRITICAL — the reviewed plot-light/dark.png (and .html) still do not reflect
+    the current committed source, for the second consecutive review. Pixel-level inspection
+    of plot-light.png proves it: the current pygal.py defines an 8-color IMPRINT tuple
+    (adding lime #99B314) and assigns colors via `IMPRINT[i % len(IMPRINT)]`, so ArgoCD
+    (i=7), GitOps (i=15), and Nginx (i=23) should all render lime. Instead, un-blending
+    each word''s rendered color against its known per-word fill-opacity (computed
+    from its frequency) recovers #009E73 for ArgoCD, #C475FD for GitOps, and #4467A3
+    for Nginx — an exact match to the OLD 7-color cycle (i % 7) from before commit
+    3ef1dca1, not the current 8-color cycle. This means the render step is still not
+    picking up the latest commit before review; the repair/CI pipeline must force
+    a fresh render of the exact merged commit before the next scoring pass, or every
+    review in this cycle is scoring stale artifacts.'
+  - '''Docker'' and ''Ansible'' still touch with no visible gap — flagged in attempts
+    1 and 2 and unchanged here. Direct pixel scan across the junction (x≈1560-1650
+    at the vertical mid-line of the text) shows multiple rows with zero background
+    pixels between the last ''r'' stroke of Docker and the first ''A'' stroke of Ansible;
+    a background gap only reopens a few rows above/below. Both words stay legible,
+    but this is a real touching-with-zero-gap defect, not a false positive from crowded
+    margins. Since the width estimate `len(word) * size * 0.62` and the 40px bounding-box
+    padding have not resolved this across three attempts, add an explicit minimum
+    inter-word pixel margin measured from actual glyph edges (or increase the width
+    multiplier further, e.g. to ~0.68-0.70) specifically for this pair''s font size.'
+  - The narrow right-edge column of small words (Loki, Kibana, Vagrant, Packer, Nginx,
+    HAProxy, Zabbix, Nagios, PagerDuty) is unchanged from the previous review, still
+    leaving large empty voids in the bottom-center and bottom-right of the canvas.
+    The recentering shift added in the latest commit (shift_x/shift_y applied uniformly
+    to all words) can only translate the whole cloud's bounding box — it cannot redistribute
+    an internally lopsided spiral result, so this specific imbalance was never going
+    to be fixed by that change alone (and per the stale-render finding above, this
+    render may predate even that commit). Bias the spiral's ellipse ratio or start
+    angle more aggressively toward the emptiest quadrants for the tail third of words,
+    rather than relying solely on a global recenter.
+  - 'Only 7 of the 8 Imprint categorical colors actually appear in the rendered word
+    cloud — lime #99B314 is defined in the code''s IMPRINT tuple but never shows up
+    in the SVG/PNG, consistent with the stale-render finding above.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) – correct per style guide, not pure white
-      Chrome: Title "wordcloud-basic · pygal · anyplot.ai" centered in dark text (INK=#1A1A17), perfectly readable
-      Data: 28 tech industry words sized by frequency (Python=180 down to Build=14). Primary series (Python) rendered in brand green (#009E73). Multi-series follows Okabe-Ito order: Data=#D55E00, Machine=#0072B2, Learning=#CC79A7, Analytics=#E69F00, Cloud=#56B4E9, API=#F0E442. Each color distinct and vibrant.
-      Layout: Centered composition with even distribution across canvas. Largest words (Python, Data, Machine) draw visual attention. No overlap, excellent spacing via spiral algorithm with 50px padding.
-      Legibility verdict: **PASS** – All text perfectly readable with explicit font sizes (60-280px), dark text on light background, zero readability issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "wordcloud-basic · pygal · anyplot.ai" in dark ink, centered at top, clearly legible against the light background. No axes, ticks, or legend — correctly omitted for a word cloud.
+      Data: 28 words of varying size. Largest word "Kubernetes" (~187px) renders in brand green #009E73, confirming the mandated first-series color. "Docker" (lavender), "Ansible" (ochre), "Terraform" (blue), "Helm" (red), "Jenkins" (cyan), "GitLab" (magenta) form a large, readable core cluster center-left/center. A run of smaller words (Loki, Kibana, Vagrant, Packer, Nginx, HAProxy, Zabbix, Nagios, PagerDuty) is packed into a narrow vertical column hugging the right edge, leaving large empty voids in the bottom-center and bottom-right of the canvas. "Docker" and "Ansible" touch directly with zero visible gap between the 'r' and 'A' glyphs (confirmed via pixel inspection). Opacity fades from ~0.7 (low-frequency tail) to ~1.0 (high-frequency core), adding a secondary depth cue. Pixel-level un-blending of ArgoCD/GitOps/Nginx's rendered colors against their known opacity recovers the OLD 7-color IMPRINT cycle (green/lavender/blue) rather than the lime #99B314 the current 8-color source should produce at those indices — i.e. only 7 of the 8 Imprint hues actually appear in this artifact.
+      Legibility verdict: PASS (all title and word text clearly readable against the light background; no light-on-light issues). However, the artifact appears to be a stale render that predates the current committed source (see weaknesses) — legibility of the rendered version is fine, but it may not represent the latest code.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) – correct per style guide, not pure black
-      Chrome: Title in light text (INK=#F0EFE8), perfectly readable against dark background. No dark-on-dark failures.
-      Data: Identical color scheme to light render – Python still #009E73, Data still #D55E00, etc. All colors unchanged between themes (only chrome flips). Placement and sizing identical.
-      Layout: Same centered composition as light render. All words remain visible and well-spaced. No overlap or crowding issues.
-      Legibility verdict: **PASS** – All text perfectly readable with light colors on dark background, brand green remains vibrant and visible, zero theme-adaptation failures.
-
-    **Both renders pass the theme-readability check.** Data colors are identical between themes; only background, title text, and chrome adapted. Implementation correctly threads theme tokens throughout.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title renders in light ink, clearly legible against the dark background. Same absence of axes/ticks/legend as the light render.
+      Data: Identical word set, sizes, positions, and colors as the light render — only the background and title ink flip, as required. Same right-edge column packing, same Docker/Ansible zero-gap touch, same 7-of-8-colors limitation.
+      Legibility verdict: PASS (no dark-on-dark failures — title and every word are clearly visible against the near-black surface; brand green and all other Imprint hues used read well on this background). Same stale-render caveat as the light render applies.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: Title at 84px, words 60-280px, all explicitly set and perfectly readable
-          in both themes
+        comment: All text readable in both themes at full res; smallest tail words
+          are noticeably small and would be borderline at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
         passed: true
-        comment: Spiral algorithm with 50px collision padding ensures zero overlaps
+        comment: '''Docker'' and ''Ansible'' still touch with zero visible gap (pixel-confirmed)
+          — unresolved across three attempts; words remain individually legible so
+          this stops short of severe/unreadable overlap'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 28 words optimally sized from 60-280px based on frequency scaling
+        comment: 28 words is a reasonable medium density; smallest tail words border
+          on hard-to-see given the sparse right-column layout
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good contrast on both light/dark backgrounds
+        comment: Imprint palette is CVD-safe; color here is decorative, not a sole
+          encoding of meaning
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: 4800×2700 canvas well-utilized (60-70%), balanced margins, nothing
-          cut off
+        comment: Correct 3200x1800 canvas, nothing clipped, but visible empty voids
+          bottom-center/bottom-right from the crowded right-edge column — same imbalance
+          as the previous two reviews, unresolved in this artifact
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''wordcloud-basic · pygal · anyplot.ai'''
+        comment: Title matches the mandated format; no axes needed for a word cloud
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series in Okabe-Ito order, backgrounds
-          #FAF8F1/#1A1A17, theme-adaptive chrome'
+        comment: 'First series (Kubernetes) is #009E73; both themes'' backgrounds
+          are theme-correct; every color actually used is a canonical Imprint hue
+          (only 7 of 8 appear, but none are non-compliant)'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: intentional theme tokens, bold typography, professional
-          palette application'
+        comment: Custom palette + opacity depth cue show real polish, but the persistent
+          right-edge column and touching pair read as unresolved layout artifacts
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clean, minimal approach with excellent whitespace; limited embellishment
-          opportunity given form
+        comment: Clean, chrome-free canvas, but whitespace remains unevenly distributed
+          (large dead zones vs. a cramped right column) — no visible improvement across
+          three attempts in the reviewed artifacts
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Frequency-based sizing creates visual hierarchy; tech industry context
-          is clear and engaging
+        comment: Size + opacity clearly spotlight Kubernetes/Docker/Ansible/Terraform
+          as the dominant themes, but the sidebar-like tail column undercuts the organic
+          'cloud' read
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,27 +171,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct word cloud with frequency-based sizing
+        comment: Correctly implements a word cloud (size-encoded word frequency)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Word display, frequency mapping, size variation, color coding all
-          present
+        comment: Size-by-frequency present; 'arranged to fill available space' only
+          partially met given the persistent right-column/void imbalance
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Word→frequency mapped correctly; size linear to frequency; positions
-          calculated properly
+        comment: Font size correctly maps to frequency across the full word set
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches spec format; legend not needed for word cloud
+        comment: Title is exactly 'wordcloud-basic · pygal · anyplot.ai'; no legend
+          needed since color is decorative
     data_quality:
       score: 15
       max: 15
@@ -158,22 +201,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all word cloud aspects: frequency range, diverse tech terms,
-          realistic distribution'
+        comment: 28 words spanning a wide frequency range exercises the full size/opacity
+          mapping
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tech industry buzzwords from Python to GraphQL; neutral, professional,
-          comprehensible
+        comment: Plausible, neutral DevOps-tooling survey term set
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequencies (14-180) realistic for term counts; proportions logically
-          consistent
+        comment: Frequencies (10-195) follow a believable power-law-like distribution
     code_quality:
       score: 10
       max: 10
@@ -183,34 +224,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → algorithm → SVG → output; no functions/classes'
+        comment: Flat procedural script, no unneeded functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Deterministic: hardcoded data, no randomness, repeatable results'
+        comment: Fully deterministic data and placement (no RNG)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys (path), ET (SVG), cairosvg (rendering),
-          numpy (trig), pygal (canvas)'
+        comment: Every import (os, sys, ET, cairosvg, numpy, pygal, Style) is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-written spiral algorithm; no fake UI; appropriate complexity
+        comment: Manual SVG injection is appropriately scoped and commented given
+          pygal's lack of a word-cloud primitive; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png, plot-{THEME}.html'
+        comment: Saves plot-{theme}.png/.svg/.html correctly, no bare plot.png
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -218,16 +259,16 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct Style/render API but uses pygal minimally as SVG canvas;
-          manual ET manipulation rather than high-level text API
+        comment: Default score — Style API and chart config use pygal idiomatically
+          for chrome, though the core visualization bypasses pygal's own API
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Custom SVG manipulation and spiral algorithm distinctive; cairosvg
-          integration creative but not purely pygal
-  verdict: APPROVED
+        passed: false
+        comment: Default score — little of the final visual result comes from pygal-specific
+          capabilities since word placement is hand-rolled SVG
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - cairosvg
@@ -235,9 +276,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
-  - publication-ready
+  - alpha-blending
