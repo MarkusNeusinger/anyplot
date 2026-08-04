@@ -25,10 +25,12 @@ nickel_pct   = 100.0 .- iron_pct .- chromium_pct
 
 # --- Barycentric -> Cartesian (equilateral triangle, unit side) -------------
 # Vertices: Iron=(0,0), Chromium=(1,0), Nickel=(0.5, sqrt(3)/2)
-bary_to_xy(b, c) = (b / 100 + 0.5 * c / 100, (sqrt(3) / 2) * c / 100)
-xy = bary_to_xy.(chromium_pct, nickel_pct)
-xs = first.(xy)
-ys = last.(xy)
+bary_to_xy(b, c) = Point2f(b / 100 + 0.5 * c / 100, (sqrt(3) / 2) * c / 100)
+pts = bary_to_xy.(chromium_pct, nickel_pct)
+
+# Reference alloy: 18-8 (grade 304) stainless steel — Fe 74 / Cr 18 / Ni 8,
+# the textbook composition most readers will recognize as an anchor.
+ref_pt = bary_to_xy(18.0, 8.0)
 
 # --- Plot ---------------------------------------------------------------
 fig = Figure(
@@ -40,7 +42,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title            = "ternary-basic · julia · makie · anyplot.ai",
-    titlesize        = 20,
+    titlesize        = 22,
     titlecolor       = INK,
     backgroundcolor  = PAGE_BG,
     aspect           = DataAspect(),
@@ -49,21 +51,22 @@ hidedecorations!(ax)
 hidespines!(ax)
 
 # Triangle outline
-lines!(ax, [0.0, 1.0, 0.5, 0.0], [0.0, 0.0, sqrt(3) / 2, 0.0];
+lines!(ax, Point2f[(0.0, 0.0), (1.0, 0.0), (0.5, sqrt(3) / 2), (0.0, 0.0)];
        color = INK_SOFT, linewidth = 2.0)
 
-# Grid lines at 20% intervals — three families, each parallel to one edge
+# Grid lines at 20% intervals — three families, each parallel to one edge,
+# batched into a single linesegments! call (Makie draws disjoint segment
+# pairs in one primitive instead of many individual lines! calls).
+grid_pts = Point2f[]
 for t in 0.2:0.2:0.8
     # constant iron (parallel to the chromium-nickel edge)
-    lines!(ax, [1 - t, 0.5 * (1 - t)], [0.0, (sqrt(3) / 2) * (1 - t)];
-           color = GRID, linewidth = 1.0)
+    push!(grid_pts, Point2f(1 - t, 0.0), Point2f(0.5 * (1 - t), (sqrt(3) / 2) * (1 - t)))
     # constant chromium (parallel to the iron-nickel edge)
-    lines!(ax, [t, t + 0.5 * (1 - t)], [0.0, (sqrt(3) / 2) * (1 - t)];
-           color = GRID, linewidth = 1.0)
+    push!(grid_pts, Point2f(t, 0.0), Point2f(t + 0.5 * (1 - t), (sqrt(3) / 2) * (1 - t)))
     # constant nickel (parallel to the iron-chromium edge)
-    lines!(ax, [0.5 * t, 1 - 0.5 * t], [(sqrt(3) / 2) * t, (sqrt(3) / 2) * t];
-           color = GRID, linewidth = 1.0)
+    push!(grid_pts, Point2f(0.5 * t, (sqrt(3) / 2) * t), Point2f(1 - 0.5 * t, (sqrt(3) / 2) * t))
 end
+linesegments!(ax, grid_pts; color = GRID, linewidth = 1.0)
 
 # Vertex labels, offset outward from the centroid
 centroid = (0.5, sqrt(3) / 6)
@@ -88,8 +91,20 @@ for t in 0.2:0.2:0.8
           color = INK_SOFT, fontsize = 11, align = (:left, :center))
 end
 
-# Data points — single series, Imprint brand green
-scatter!(ax, xs, ys; color = BRAND, markersize = 12, strokewidth = 1.0, strokecolor = PAGE_BG)
+# Data points — single series, Imprint brand green; fill alpha < 1 keeps
+# overlapping points distinguishable in the densest part of the cluster.
+scatter!(ax, pts; color = (BRAND, 0.85), markersize = 12, strokewidth = 1.0, strokecolor = PAGE_BG)
+
+# Reference composition anchor — open diamond in the neutral ink tone marks
+# 18-8 (304) stainless, giving the reader a recognizable focal point to
+# compare the alloy cloud against. Leader runs into the empty mid-triangle
+# gap (chromium/nickel can't jointly reach x≈0.5 within the sampled ranges)
+# so the label never collides with the cluster.
+lines!(ax, [ref_pt, ref_pt + Point2f(0.28, 0.0)]; color = INK_SOFT, linewidth = 1.0)
+scatter!(ax, [ref_pt]; marker = :diamond, markersize = 22, color = PAGE_BG,
+         strokewidth = 2.0, strokecolor = INK)
+text!(ax, ref_pt + Point2f(0.30, 0.0); text = "304 (18-8 ref.)",
+      color = INK_SOFT, fontsize = 13, align = (:left, :center))
 
 xlims!(ax, -0.18, 1.18)
 ylims!(ax, -0.12, 1.06)
