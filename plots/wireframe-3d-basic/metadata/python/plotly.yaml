@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: wireframe-3d-basic
 created: '2025-12-24T09:50:45Z'
-updated: '2026-08-04T18:26:47Z'
+updated: '2026-08-04T18:33:42Z'
 generated_by: claude-sonnet
 workflow_run: 30937573431
 issue: 1015
@@ -12,58 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Correct plotly workaround for the missing native wireframe trace: 60 Scatter3d
-    line traces (30 rows + 30 columns) reconstruct a true wireframe mesh, matching
-    the spec''s ''grid lines in both x and y directions'' requirement.'
-  - 'Distinctive height-mapped coloring: each line segment''s color is driven by its
-    own z-values through the Imprint diverging colorscale (line.color array + colorscale),
-    giving the mesh a genuinely 3D read of the ripple shape rather than a flat single-color
-    wireframe.'
-  - 'Theme-adaptive chrome is threaded through correctly for the vast majority of
-    elements: page background, title, axis titles, tick fonts, colorbar, and annotation
-    all branch on ANYPLOT_THEME and read correctly in both renders.'
-  - Colorbar is attached to only the final trace (showscale=True once) with a shared
-    cmin/cmax=-1/1 across all 60 traces, so the color legend is accurate and non-redundant.
-  - 'Clean, deterministic, single-purpose script: no functions/classes, no randomness
-    (linspace + sin), minimal necessary imports (numpy, plotly, os), correct write_image
-    dimensions (800x450 scale=4 -> 3200x1800) plus write_html for the interactive
-    artifact.'
+  - Height-based diverging color (imprint_div) mapped per-line with a single shared
+    colorbar via the last-trace showscale trick — elegant, and the diverging polarity
+    is the right choice since height is a signed deviation around z=0
+  - 'Correct plot type: a true wireframe built from row-direction AND column-direction
+    go.Scatter3d ''lines'' traces — a see-through mesh, not a solid surface, matching
+    the spec''s definition precisely'
+  - Theme-adaptive chrome (background, ink, grid, colorbar bgcolor/outline) threaded
+    correctly through both renders — both plot-light.png and plot-dark.png are fully
+    legible with no dark-on-dark or light-on-light failures
+  - Canvas is exactly 3200x1800 (width=800, height=450, scale=4), correct PNG+HTML
+    outputs, deterministic KISS-structured code with only necessary imports (numpy,
+    plotly.graph_objects)
   weaknesses:
-  - 'Title omits the language segment: reads ''wireframe-3d-basic · plotly · anyplot.ai''
-    but SC-04 requires ''{spec-id} · {language} · {library} · anyplot.ai'' -> should
-    be ''wireframe-3d-basic · python · plotly · anyplot.ai''.'
-  - 'Dark render shows bright, high-contrast white grid/zero-lines cutting diagonally
-    through the scene box (clearly visible crossing the mesh around the vertical and
-    horizontal midplanes) that are essentially invisible in the light render -- the
-    scene''s xaxis/yaxis/zaxis dicts set gridcolor and backgroundcolor but never set
-    zerolinecolor/linecolor, so plotly''s un-themed default (near-white) blends into
-    the light #FAF8F1 background but reads as a jarring un-brand-colored streak against
-    the dark #1A1A17 background. Set zerolinecolor (and linecolor) to GRID or INK_SOFT
-    alongside gridcolor for all three scene axes.'
-  - The 30x30 grid combined with the chosen camera angle produces heavy line overlap/moiré
-    clutter near the center peak of the ripple, especially where the near and far
-    halves of the mesh cross -- a coarser grid (~22-24 per axis) or a touch thinner
-    line width in the densest region would make individual wireframe strands easier
-    to trace.
-  - No use of units or richer descriptive labels on the axes (Radius (x)/(y), Height
-    (z) are fine but generic) -- acceptable given the abstract math function, but
-    a one-line note on the domain (e.g. range -5..5) directly on the axis title could
-    tighten SC-03/VQ-06 further.
+  - 'Excessive dead whitespace around the 3D object: a large empty gap sits between
+    the title/formula annotation and the top of the wireframe, and another wide gap
+    sits between the plot''s right edge and the colorbar. The wireframe cube occupies
+    well under half the canvas area. Move the camera closer (reduce the eye-vector
+    magnitude below plotly''s default ~2.17, e.g. eye={x:1.3,y:1.3,z:0.9}) and/or
+    enlarge the scene domain and pull the annotation down closer to the plot top to
+    tighten the composition and raise canvas utilization.'
+  - The dense 24x24 line grid combined with the highly oscillatory ripple surface
+    produces a busy 'starburst' tangle of crossing lines near the plot center, which
+    mildly obscures the underlying surface topology despite the helpful diverging
+    color cue. A slightly coarser grid (e.g. 20x20, still within the spec's 20x20-50x50
+    recommendation) or marginally thinner lines would reduce clutter.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark. Matches spec.
-      Chrome: Title "wireframe-3d-basic · plotly · anyplot.ai" in dark ink, centered, fully visible and not clipped. Formula annotation "z = sin(√(x² + y²))" in soft gray, readable. Axis titles "Radius (y)", "Radius (x)", "Height (z)" rotated along their axes, dark ink, clearly legible. Tick labels on all three axes and on the colorbar are a lighter gray but still readable against the cream background. Colorbar titled "Height" with ticks 1, 0.5, 0, -0.5, -1, boxed with a subtle outline and off-white fill. Scene grid lines are faint and unobtrusive against the cream backdrop.
-      Data: Wireframe mesh transitions from matte red at the low troughs (z ≈ -1) through a near-white/cream midpoint (z ≈ 0) to blue at the central peak (z ≈ 1), using the Imprint diverging scale (#AE3030 / page-bg / #4467A3) -- correct choice for signed height data. Mesh lines are visible throughout, though dense and overlapping near the central peak.
-      Legibility verdict: PASS -- all title, axis, tick, and colorbar text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "wireframe-3d-basic · python · plotly · anyplot.ai" centered at top in dark ink, clearly legible. Formula annotation "z = sin(√(x² + y²))" in soft gray below the title. Axis titles "Radius (x)", "Radius (y)", "Height (z)" and tick labels in dark/soft-dark ink, all readable against the light background. Colorbar titled "Height" with tick labels 1, 0.5, 0, -0.5, -1, housed in a light elevated box with a subtle outline.
+      Data: A 3D wireframe mesh (grid lines in both x- and y-directions) forming a "sombrero"-like ripple surface. Lines are colored via a red-to-blue diverging scale (matte red at height -1, near-neutral at 0, blue at height +1) that matches the plot background at the zero midpoint, consistent with the Imprint `imprint_div` continuous colormap.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light. Matches spec.
-      Chrome: Title, formula annotation, axis titles, tick labels, and colorbar text all switch to light ink (white / light gray) and remain fully readable against the dark background -- no dark-on-dark failures observed. However, the scene now shows bright, near-white diagonal grid/zero lines cutting visibly through the wireframe (most obvious crossing the middle of the mesh and along the back walls) that were essentially invisible in the light render -- an un-themed zerolinecolor/linecolor default that reads correctly by coincidence in light mode but stands out as an inconsistent, un-brand-colored streak in dark mode.
-      Data: Colors are identical to the light render -- same matte-red-to-blue diverging scale with the same cmin=-1/cmax=1 range, confirming only chrome (not data colors) flips between themes, as required.
-      Legibility verdict: PASS for text; FLAG for chrome -- the un-themed zeroline/gridline artifact is a real theme-adaptation gap even though no text is unreadable.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, formula annotation, axis titles, and tick labels, now rendered in light ink (white/light-gray), clearly legible against the dark background. Colorbar box uses a darker elevated fill with a light-gray outline; "Height" title and tick labels are light-colored and readable.
+      Data: Same wireframe mesh and same red-to-blue diverging color scale as the light render — the data colors are identical between the two themes; only the chrome (background, text, grid, colorbar box) flips as expected.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/colorbar text is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 25
@@ -74,49 +62,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/axis/tick/colorbar text readable in both themes at explicit
-          font sizes.
+        comment: All font sizes explicitly set (title 16, axis titles 14, tickfonts
+          11, annotation 12, colorbar title 14/tick 11); readable in both themes at
+          full size
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; mesh density is visually
-          busy but does not overlap chrome.
+        comment: No text-text or text-data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: 30x30 grid at this camera angle creates significant line overlap/moire
-          near the central peak, reducing individual-strand traceability.
+        comment: Line width 3.5 is visible, but the dense 24x24 grid on a highly oscillatory
+          surface produces a busy crossing-line tangle near the center that reduces
+          topology clarity
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging red/blue via imprint_div, not red-green, adequate contrast
-          against both surfaces.
+        comment: Diverging red/blue via imprint_div, good contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: 3200x1800 canvas, correct margins, nothing clipped, well-proportioned.
+        comment: Wireframe object occupies a comparatively small share of the canvas
+          — large empty gaps above the plot (title/annotation to plot top) and between
+          the plot and the colorbar; not cut off and colorbar is not isolated, but
+          utilization is well under the 50% target
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All three axes labeled; formula annotation adds context.
+        comment: Descriptive axis titles (Radius (x), Radius (y), Height (z)) appropriate
+          for unitless math coordinates
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Data colors correct (imprint_div, theme-correct backgrounds), but
-          un-themed zerolinecolor/linecolor on the 3D scene axes produces a bright,
-          un-brand-colored artifact in the dark render that is absent in light.
+        passed: true
+        comment: 'imprint_div correctly used for signed-deviation height data with
+          theme-adaptive midpoint; backgrounds are #FAF8F1/#1A1A17; chrome theme-correct
+          in both renders'
     design_excellence:
       score: 14
       max: 20
@@ -126,24 +118,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Per-line diverging color mapping tied to height is a sophisticated,
-          intentional touch beyond a flat wireframe.
+        comment: Thoughtful height-encoded diverging color with shared colorbar goes
+          clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Generally refined and theme-adaptive, but the dark-mode zeroline
-          artifact and center-mesh clutter cost refinement points.
+        comment: Subtle grid (10% opacity), clean chrome, but whitespace is imbalanced
+          rather than generous-and-even
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Camera angle and color gradient communicate the ripple/sombrero shape,
-          though center density partially obscures the clean read.
+        comment: Diverging color and formula annotation create a clear focal point
+          (peak vs. trough) guiding the viewer
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -151,52 +143,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D wireframe via row+column Scatter3d line traces.
+        comment: True see-through wireframe mesh via row+column line traces, not a
+          solid surface
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid lines in both directions, height-based coloring, ~30deg/45deg
-          camera, all three axes labeled with ticks.
+        comment: Grid lines in both x and y directions, height-based coloring, ~30/45
+          deg perspective camera, all three axes labeled with ticks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y/z correctly mapped from meshgrid; axes show the full -5..5 /
-          -1..1 ranges.
+        comment: X/Y/Z correctly assigned, full grid range shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title omits the mandated language segment: reads ''{spec-id} · plotly
-          · anyplot.ai'' instead of ''{spec-id} · python · plotly · anyplot.ai''.'
+        passed: true
+        comment: Title format exactly matches mandated pattern; colorbar (serving
+          as the height legend) is correctly labeled
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full grid coverage in both directions with height coloring; center
-          clutter slightly reduces the clarity of the coverage.
+        comment: 24x24 grid within the spec's 20x20-50x50 range; ripple function shows
+          both peak and trough regions
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Classic sin(sqrt(x^2+y^2)) ripple function, neutral and textbook-standard
-          exactly as suggested by the spec.
+        comment: Canonical, neutral mathematical demonstration explicitly suggested
+          by the spec itself; inherently abstract math rather than a real-world dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: x,y in [-5,5], z in [-1,1] -- sensible, readable ranges for the function.
+        comment: Height correctly bounded to sin() range [-1,1], radius range [-5,5]
+          sensible
     code_quality:
       score: 10
       max: 10
@@ -206,33 +199,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; flat, linear script.
+        comment: No functions/classes, linear imports->data->plot->save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (linspace + sin, no randomness).
+        comment: Fully deterministic (linspace/meshgrid), no randomness to seed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, plotly.graph_objects, os -- all used, nothing extraneous.
+        comment: Only numpy and plotly.graph_objects, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the library-forced looped-trace wireframe
-          technique; no fake UI/interactivity.
+        comment: Appropriate complexity for a manual wireframe construction, no fake
+          functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image at width=800,height=450,scale=4 (3200x1800) + write_html;
-          current API usage.
+        comment: Saves plot-{THEME}.png at correct 3200x1800 dims plus plot-{THEME}.html
     library_mastery:
       score: 8
       max: 10
@@ -242,22 +234,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct idiom for plotly''s lack of a native wireframe trace: looped
-          Scatter3d line traces per row/column.'
+        comment: Standard idiomatic workaround for wireframes in plotly (no native
+          wireframe trace exists) via looped Scatter3d line traces
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Per-line continuous color-array mapping (line.color=z_values with
-          a shared colorscale/cmin/cmax) is a genuinely plotly-specific technique,
-          not generic usage.
+        comment: Per-segment array-based line coloring with a shared colorbar (showscale
+          only on the last trace) is a plotly-specific trick not easily replicated
+          elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - 3d-projection
+  - colorbar
   - annotations
   patterns:
   - data-generation
