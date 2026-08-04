@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 waterfall-basic: Basic Waterfall Chart
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 87/100 | Created: 2026-08-04
+Quality: 92/100 | Created: 2026-08-04
 """
 
 import os

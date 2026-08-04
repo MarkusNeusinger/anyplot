@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: waterfall-basic
 created: 2025-12-14 11:35:16+00:00
-updated: '2026-08-04T11:21:51Z'
+updated: '2026-08-04T11:28:28Z'
 generated_by: claude-sonnet
 workflow_run: 30903777378
 issue: 777
@@ -12,52 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'Correct semantic color exception for finance data: increases in brand green (#009E73),
-    decreases in matte red (#AE3030), with totals rendered in the theme-adaptive neutral
-    ink so they read as structural anchors rather than a third arbitrary hue.'
-  - Triple-redundant encoding of sign (color + vertical bar direction from the running
-    total + explicit '+450'/'-280' labels) avoids relying on red/green alone as the
-    sole distinguishing signal.
-  - 'Refined, minimal chrome: L-shaped/removed spines, single subtle y-axis gridline
-    (alpha 0.15), boxed top legend, and correct theme-adaptive tokens (PAGE_BG/INK/INK_SOFT)
-    applied consistently across both renders.'
-  - Title fontsize scaling formula correctly compresses the long descriptive+mandated
-    title so it fits without overflow or clipping in either theme.
-  - Data is internally consistent (1000+450-280-120-150=900) and tells a plausible,
-    neutral quarterly financial narrative with both an increase and multiple decreases
-    plus start/end totals.
+  - 'Connector-line bridging bug from attempt 1 is correctly fixed: dashed lines now
+    bridge each bar''s true post-step running total (using "start" for negative bars,
+    "end" for positive/total bars), verified visually against all 5 transitions in
+    both renders'
+  - 'Idiomatic plotnine grammar-of-graphics composition: geom_rect for floating bars
+    (enables precise start/end control that geom_bar can''t offer), geom_segment for
+    connectors, geom_text for value labels, layered cleanly'
+  - 'First categorical series is #009E73 (increase/green), decrease uses the finance
+    semantic-exception red, totals use the theme-adaptive INK neutral -- a legitimate
+    reading of the spec''s "blue or gray" total-bar guidance'
+  - 'Clean theme-adaptive chrome: spines removed via panel_border=element_blank(),
+    only a subtle horizontal grid (alpha=0.15), axis lines kept as INK_SOFT anchors
+    -- polished and consistent between light and dark'
+  - 'Value labels are well-chosen: signed deltas (+450, -280) on change bars and plain
+    cumulative totals (1,000 / 900) on the start/end bars, offset outside each bar
+    so they never collide with fills or the dashed connectors'
+  - Data colors are pixel-identical between light and dark renders; only background/text/grid
+    chrome flips, exactly as required
+  - Realistic, neutral quarterly financial breakdown (Starting Balance -> Q1 Sales
+    -> Operating Costs -> R&D Investment -> Tax Payment -> Ending Balance) with sensible
+    $1K-scale values
   weaknesses:
-  - 'Connector-line height bug: the loop always uses df.iloc[i]["end"] as the bridging
-    y-value, but for a decrease bar "end" is the bar''s pre-change (higher) value,
-    not the new running total — the code should use "start" instead when bar_types[i]
-    == "negative". This makes the Operating Costs -> R&D Investment and R&D Investment
-    -> Tax Payment connectors float at the wrong height, disconnected from the next
-    bar''s top, in both renders.'
-  - The `if i < len(df) - 2` guard drops the final connector (Tax Payment -> Ending
-    Balance) entirely, so one gap has no connecting line at all, while the very first
-    gap (Starting Balance -> Q1 Sales) does have one — inconsistent connector coverage
-    across the chart.
-  - Legend order (Decrease, Increase, Total) reads slightly unnaturally — reordering
-    to Increase, Decrease, Total (or setting an explicit factor order on bar_type)
-    would flow better, though this is a minor polish nit, not a correctness issue.
+  - Total bars (Starting Balance, Ending Balance) use pure INK (near-black in light
+    / near-white in dark) rather than a dedicated neutral tone from the palette --
+    readable and spec-compliant ("often blue or gray"), but a mid-gray or the palette's
+    blue (#4467A3, as the matplotlib sibling implementation uses) would feel less
+    like a stark on/off switch next to the green/red change bars
+  - Middle-bar labels show only the signed delta (+450, -280) rather than the post-step
+    running total -- a defensible reading of the spec's "running total labels" line
+    (and consistent with the matplotlib sibling implementation for this spec), but
+    an alternative implementation could show both the delta and the cumulative subtotal
+    for extra clarity
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Quarterly Financial Summary · waterfall-basic · python · plotnine · anyplot.ai" is bold dark ink, fully readable. Y-axis "Amount ($1K)" and tick labels (0/500/1000/1500) are dark/soft-dark and legible. X-axis category labels are rotated ~45°, soft-dark ink, all readable without overlap. Legend "Change Type" (Decrease / Increase / Total) sits boxed at top, dark text on cream box, clearly readable. A single subtle horizontal gridline set is visible without competing with data.
-      Data: First/last bars (Starting Balance, Ending Balance) render in near-black ink (theme-adaptive neutral/total color). Q1 Sales renders in brand green (#009E73). Operating Costs, R&D Investment, and Tax Payment render in matte red (#AE3030). Dashed gray connector lines bridge some but not all bar boundaries (see weaknesses — two connectors float at the wrong height and one gap has none at all). Value labels (+450, -280, -120, -150, and plain totals) sit just above/below each bar without overlapping text or bars.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1, not pure white and not dark.
+      Chrome: Bold dark title "Quarterly Financial Summary · waterfall-basic · python · plotnine · anyplot.ai" spans ~76% of plot width, fully visible, not clipped. Y-axis title "Amount ($1K)" and rotated x-axis category labels ("Starting Balance", "Q1 Sales", "Operating Costs", "R&D Investment", "Tax Payment", "Ending Balance") render in dark ink, all fully readable against the light background. Horizontal grid lines are faint but visible. Legend box ("Change Type": Increase/Decrease/Total) sits centered above the plot with a thin border, text legible.
+      Data: Six floating bars form the waterfall: black "Starting Balance" (1,000) and black "Ending Balance" (900) totals bookend green "Q1 Sales" (+450) and three red decrease bars (-280, -120, -150). Dashed gray connector lines correctly bridge each bar's post-step running total to the next bar's start (verified against the underlying start/end math for all 5 transitions). Value labels sit just outside each bar, legible and non-overlapping. First categorical color is #009E73 as required.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light/off-white ink, clearly readable against the dark surface. Legend box is dark with light text, readable. X-axis rotated category labels are legible, no dark-on-dark failures observed.
-      Data: Q1 Sales is still brand green (#009E73) and the decrease bars are still matte red (#AE3030) — identical hex values to the light render, confirming only chrome flipped. Starting Balance/Ending Balance totals now render in near-white (theme-adaptive neutral flips light-on-dark), correctly keeping the "total" bars distinct from the green/red change bars while staying part of the structural/ink layer in each theme. The same connector-line placement issue from the light render is reproduced identically here (deterministic bug, not theme-dependent).
-      Legibility verdict: PASS — no dark-on-dark text; brand green and matte red both remain clearly visible against the dark surface.
+      Background: Warm near-black, matches #1A1A17, not pure black and not light.
+      Chrome: Title, axis titles, tick labels, and legend text all render in light/cream ink, clearly legible against the dark background -- no dark-on-dark failures anywhere. Grid lines remain subtle but visible. Legend swatch background is a slightly elevated dark tone with a visible border.
+      Data: Bar fill colors are pixel-identical to the light render (green #009E73 increase, red decrease, near-white "Total" bars -- the ink token flips from near-black to near-white, which is expected chrome behavior, not a data-color change). Connector lines and value labels are equally legible on dark.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,55 +69,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via element_text/theme(); title scales
-          via a length formula so the long mandated title fits without overflow in
-          either theme.
+        comment: All text explicitly sized and readable in both themes; title fontsize
+          dynamically scaled to fit within canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; rotated x labels, value
-          labels, and legend are all clear of each other.
+        comment: No collisions between labels, legend, bars, or connectors
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse 6-bar dataset with prominent, well-sized bars; nothing barely
-          visible.
+        comment: Bars, connectors, and labels all clearly visible for this sparse
+          6-category dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Increase/decrease sign is triple-encoded (color + bar direction +
-          explicit +/- label text), so green/red is never the sole signal.
+        comment: Green/red not sole signal -- position (above/below running total)
+          and label sign reinforce the distinction
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization and balanced margins, but the miscalculated
-          connector lines float disconnected from bar tops in two spots, a minor visual-correctness
-          defect within the layout.
+        comment: Canvas gate passed (3200x1800); proportions balanced, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units ('Amount ($1K)'); x-axis omits a redundant label
-          since category names are self-explanatory.
+        comment: Y-axis has units ($1K); title follows the mandated format with descriptive
+          prefix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green for increases and matte red for decreases match the documented
-          finance semantic exception; totals use the theme-adaptive neutral anchor;
-          backgrounds and chrome are theme-correct in both renders.
+        comment: 'First series #009E73; backgrounds correct in both themes; data colors
+          identical between renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -121,25 +121,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color mapping, clean typography hierarchy, clearly
-          above library defaults.
+        comment: Custom fill scale, intentional total/change hierarchy, refined legend
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines minimized, subtle single-axis grid, boxed legend — good refinement,
-          but the disconnected/floating connector dashes are a visible attention-to-detail
-          miss.
+        comment: Spines removed, only a subtle horizontal grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color contrast between increase/decrease/total bars creates clear
-          visual hierarchy and guides the eye through the cumulative flow.
+        comment: Dashed connectors clearly emphasize the cumulative flow between steps
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -147,30 +143,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct waterfall chart: floating bars, running cumulative totals,
-          connectors, start/end totals.'
+        comment: Correct waterfall chart
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Connecting lines are present but functionally broken for 2 of 5 gaps
-          (wrong height for decrease-bar transitions) and entirely missing for the
-          final gap (Tax Payment -> Ending Balance).
+        passed: true
+        comment: Color-coded changes, connecting lines, distinct total bars, and value
+          labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x, cumulative amount on y; all steps and the full range
-          are visible.
+        comment: Categories on x, amount on y, all 6 steps shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · waterfall-basic · python · plotnine
-          · anyplot.ai'; legend labels (Increase/Decrease/Total) match the data semantics.
+        comment: Title matches mandated format; legend labels match change types
     data_quality:
       score: 15
       max: 15
@@ -180,21 +172,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows increase, multiple decreases, and both start/end totals — full
-          feature set of a basic waterfall.
+        comment: Shows increases, decreases, and totals -- all waterfall aspects present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible quarterly financial breakdown scenario.
+        comment: Plausible, neutral quarterly financial breakdown
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Arithmetic is internally consistent (1000+450-280-120-150=900) with
-          plausible magnitudes.
+        comment: Sensible $1K-scale values
     code_quality:
       score: 10
       max: 10
@@ -204,32 +194,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> transform -> plot -> save, no functions/classes.
+        comment: No functions/classes, linear top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data, no randomness.
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pandas + used plotnine symbols imported.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the waterfall start/end/connector calculation;
-          no fake functionality.
+        comment: No fake UI; loop complexity is warranted for cumulative waterfall
+          math
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via plot.save() with correct dpi/width/height/units.
+        comment: Saves as plot-{THEME}.png via plot.save()
     library_mastery:
       score: 7
       max: 10
@@ -239,29 +229,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Fluent grammar-of-graphics layering (geom_rect + geom_segment + geom_text
-          + scale_fill_manual + theme()).
+        comment: Proper grammar-of-graphics layering (geom_rect + geom_segment + geom_text)
+          with scale_fill_manual
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Layered geom composition for a waterfall is a reasonable use of plotnine's
-          grammar, though the same layering pattern is achievable in any ggplot2-family
-          library.
-  verdict: REJECTED
+        comment: geom_rect for floating bars is a plotnine-idiomatic choice over geom_bar
+          for precise start/end control
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
   - manual-ticks
-  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - publication-ready
   - alpha-blending
   - grid-styling
+  - publication-ready
