@@ -77,7 +77,13 @@ chart.setOption({
       roam: false,
       nodeClick: false,
       breadcrumb: { show: false },
-      data: divisions,
+      // Explicit per-division color (indexed by the division's position in
+      // this array, not by ECharts' default value-descending sort) so the
+      // canonical Imprint palette order is guaranteed regardless of data.
+      data: divisions.map((d, i) => ({
+        ...d,
+        itemStyle: { color: t.palette[i] },
+      })),
       itemStyle: {
         borderColor: t.pageBg,
         borderWidth: 3,
@@ -91,10 +97,15 @@ chart.setOption({
         },
         {
           // depth 1 — divisions: colored per Imprint palette above.
-          // borderColorSaturation darkens the division's own hue for the
-          // header strip, keeping it distinct from both the page background
-          // and the (lighter) project tiles nested inside it.
-          colorSaturation: [0.35, 0.55],
+          // colorSaturation here sets the *lightness* range ECharts uses to
+          // shade this division's own children (depth-2 project tiles) by
+          // relative value — capped low enough that even the largest child
+          // in a division stays dark enough for the fixed cream label to
+          // clear 4.5:1 contrast. borderColorSaturation darkens the
+          // division's own hue for the header strip, keeping it distinct
+          // from both the page background and the project tiles nested
+          // inside it.
+          colorSaturation: [0.12, 0.24],
           itemStyle: { borderColorSaturation: 0.2, gapWidth: 4 },
           upperLabel: {
             show: true,
