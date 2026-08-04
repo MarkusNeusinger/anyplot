@@ -57,7 +57,7 @@ const sentimentColor = (s) => (s === "positive" ? t.palette[0] : s === "negative
 const fontSize = d3
   .scaleSqrt()
   .domain(d3.extent(words, (d) => d.frequency))
-  .range([16, 80]);
+  .range([20, 80]);
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -98,6 +98,7 @@ const findSpot = (bw, bh) => {
 const ranked = [...words].sort((a, b) => b.frequency - a.frequency);
 
 const cloud = svg.append("g");
+const placed = [];
 for (const d of ranked) {
   const label = cloud
     .append("text")
@@ -116,6 +117,28 @@ for (const d of ranked) {
   }
   label.attr("x", spot.x).attr("y", spot.y);
   placedRects.push(spot.rect);
+  placed.push({ label, x: spot.x, y: spot.y });
+}
+
+// Stretch the placed word mass outward from its own center so it fills more
+// of the reserved bounds, scaling each axis independently and clamping so no
+// rect crosses the original bounds. Because every rect scales from the same
+// center by a factor >= 1, pairwise gaps only grow, so this never introduces
+// a new overlap between previously non-overlapping words.
+if (placed.length) {
+  const minX = d3.min(placedRects, (r) => r.x);
+  const maxX = d3.max(placedRects, (r) => r.x + r.w);
+  const minY = d3.min(placedRects, (r) => r.y);
+  const maxY = d3.max(placedRects, (r) => r.y + r.h);
+  const bcx = (minX + maxX) / 2;
+  const bcy = (minY + maxY) / 2;
+  const halfBw = (maxX - minX) / 2;
+  const halfBh = (maxY - minY) / 2;
+  const sx = Math.max(1, Math.min((bounds.xMax - bcx) / halfBw, (bcx - bounds.xMin) / halfBw));
+  const sy = Math.max(1, Math.min((bounds.yMax - bcy) / halfBh, (bcy - bounds.yMin) / halfBh));
+  for (const p of placed) {
+    p.label.attr("x", bcx + (p.x - bcx) * sx).attr("y", bcy + (p.y - bcy) * sy);
+  }
 }
 
 // --- Title ---------------------------------------------------------------
