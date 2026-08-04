@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 93/100 | Created: 2026-05-06
+Library: bokeh 3.9.2 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-08-04
 """
 
 import os
@@ -18,10 +18,9 @@ from selenium.webdriver.chrome.options import Options
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
+BRAND = "#009E73"  # Imprint palette position 1
 
 # Data - Soil composition samples (Sand, Silt, Clay)
 np.random.seed(42)
@@ -32,6 +31,15 @@ raw = np.random.dirichlet(alpha=[2, 2, 2], size=n_points) * 100
 sand = raw[:, 0]
 silt = raw[:, 1]
 clay = raw[:, 2]
+
+# Compositional "purity" (distance from the balanced 1/3-1/3-1/3 centroid) —
+# drives the size/opacity emphasis below so near-pure samples pop forward
+# and balanced (loam-like) samples recede, surfacing the clustering pattern
+# instead of a flat, uniform scatter.
+dominance = raw.max(axis=1) / 100
+purity = np.clip((dominance - 1 / 3) / (1 - 1 / 3), 0, 1)
+marker_size = 12 + purity * 16
+marker_alpha = 0.55 + purity * 0.35
 
 
 # Convert ternary coordinates to Cartesian (equilateral triangle)
@@ -54,15 +62,22 @@ x_data, y_data = ternary_to_cartesian(sand, silt, clay)
 tri_x = [0, 1, 0.5, 0]
 tri_y = [0, 0, np.sqrt(3) / 2, 0]
 
-# Create figure
+# Create figure. Square canvas: a ternary plot has no preferred horizontal
+# axis. Equal-span ranges below (x: -0.12..1.12, y: -0.15..1.09, both span
+# 1.24) paired with symmetric min_border on a square figure keep the pixel
+# scale uniform in x and y, so the triangle renders truly equilateral.
 p = figure(
-    width=4800,
-    height=2700,
-    title="Soil Composition · ternary-basic · bokeh · anyplot.ai",
-    x_range=(-0.15, 1.15),
-    y_range=(-0.15, 1.05),
+    width=2400,
+    height=2400,
+    title="Soil Composition · ternary-basic · python · bokeh · anyplot.ai",
+    x_range=(-0.12, 1.12),
+    y_range=(-0.15, 1.09),
     tools="",
-    toolbar_location=None,
+    toolbar_location=None,  # IMPORTANT: default toolbar adds ~30-50px, shrinking the saved PNG
+    min_border_left=60,
+    min_border_right=60,
+    min_border_top=60,
+    min_border_bottom=60,
 )
 
 # Theme styling
@@ -107,8 +122,8 @@ for pct in [20, 40, 60, 80]:
     p.line([x1, x2], [y1, y2], line_width=grid_width, color=grid_color, alpha=grid_alpha)
 
 # Add tick labels along each edge
-tick_font_size = "16pt"
-tick_offset = 0.04
+tick_font_size = "34pt"
+tick_offset = 0.045
 
 for pct in [0, 20, 40, 60, 80, 100]:
     frac = pct / 100
@@ -150,7 +165,7 @@ for pct in [0, 20, 40, 60, 80, 100]:
     p.add_layout(label)
 
 # Add vertex labels
-label_font_size = "24pt"
+label_font_size = "42pt"
 label_offset = 0.08
 
 sand_label = Label(
@@ -189,13 +204,25 @@ clay_label = Label(
 )
 p.add_layout(clay_label)
 
-# Plot data points
-source = ColumnDataSource(data={"x": x_data, "y": y_data, "sand": sand, "silt": silt, "clay": clay})
+# Plot data points — size and opacity scale with compositional purity so
+# near-pure (single-component-dominant) samples read as prominent, distinct
+# markers while balanced/loam-like samples recede into the cluster.
+source = ColumnDataSource(
+    data={
+        "x": x_data,
+        "y": y_data,
+        "sand": sand,
+        "silt": silt,
+        "clay": clay,
+        "size": marker_size,
+        "alpha": marker_alpha,
+    }
+)
 
-p.scatter(x="x", y="y", source=source, size=20, color=BRAND, alpha=0.7, line_color=BRAND, line_width=2)
+p.scatter(x="x", y="y", source=source, size="size", color=BRAND, fill_alpha="alpha", line_color=PAGE_BG, line_width=1.5)
 
 # Style title
-p.title.text_font_size = "28pt"
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
 p.title.align = "center"
 
@@ -204,7 +231,7 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome
-W, H = 4800, 2700
+W, H = 2400, 2400
 opts = Options()
 for arg in (
     "--headless=new",
@@ -218,6 +245,12 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# IMPORTANT: headless Chrome's --window-size sets the OUTER window, which
+# still reserves a phantom title-bar height even headless; pin the viewport
+# exactly via CDP so the screenshot matches W x H.
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
