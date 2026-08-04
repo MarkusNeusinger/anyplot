@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: waterfall-basic
 created: '2026-05-06T00:56:34Z'
-updated: '2026-08-04T11:24:16Z'
+updated: '2026-08-04T11:34:26Z'
 generated_by: claude-sonnet
 workflow_run: 30903202362
 issue: 777
@@ -12,56 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Excellent theme-adaptive chrome: both renders are fully readable, backgrounds
-    correctly match #FAF8F1 (light) / #1A1A17 (dark), and all text/grid/spine colors
-    flip correctly with no dark-on-dark or light-on-light failures'
-  - 'Correct Imprint semantic color mapping: brand green #009E73 for increases, matte
-    red #AE3030 for decreases, blue #4467A3 for start/end totals — a well-justified
-    semantic exception (finance profit/loss convention) rather than arbitrary custom
-    hexes'
-  - 'All spec-required waterfall features present: dashed connecting lines between
-    consecutive bars, visually distinct start/end total bars, and value labels on
-    every bar'
+  - 'Theme-adaptive chrome is fully correct in both renders: backgrounds match #FAF8F1
+    (light) / #1A1A17 (dark), and all text/grid/spine colors flip correctly with no
+    dark-on-dark or light-on-light failures'
+  - 'Genuine seaborn usage now present beyond styling: sns.color_palette() sources
+    the Imprint hexes, sns.lineplot() draws the cumulative-flow connector lines, and
+    sns.despine() removes spines — a real improvement over Attempt 1''s sns.set_theme()-only
+    usage'
+  - 'Correct Imprint semantic color mapping, well justified by finance convention:
+    brand green #009E73 for increases, matte red #AE3030 for decreases, blue #4467A3
+    for start/end totals'
   - 'Data is arithmetically correct and realistic: 100,000 + 150,000 - 25,000 - 60,000
     - 30,000 - 18,000 = 117,000 matches the plotted Net Profit bar exactly'
-  - Title fontsize correctly scaled down (10pt) for the long descriptive+mandated
-    title string, avoiding overflow while still filling a sensible proportion of the
-    canvas width
-  - Clean KISS code structure with deterministic data, correct save call (bbox_inches
+  - Clean KISS code structure with deterministic data and a correct save call (bbox_inches
     left at default None, dpi=400, plot-{THEME}.png naming)
   weaknesses:
-  - 'seaborn is barely used as a library: the only seaborn call in the entire file
-    is sns.set_theme() (a global rc/styling call). Every chart element — bars, connecting
-    lines, value labels, tick placement — is built with raw matplotlib (ax.bar(),
-    ax.plot(), ax.text(), ax.set_xticks()). prompts/quality-criteria.md''s AR-05 table
-    explicitly calls out ''Only sns.set_style()'' as NOT sufficient seaborn usage,
-    and sns.set_theme() is the direct successor to set_style()/set_context()/set_palette()
-    — it falls in the same category. Incorporate an actual seaborn plotting/utility
-    call (e.g. sns.despine() instead of manually toggling ax.spines[...].set_visible(),
-    or sns.color_palette() to source the Imprint hexes, or sns.barplot() for at least
-    the non-floating portions) so the implementation demonstrably uses the library
-    it''s supposed to showcase.'
-  - No legend or key clarifies the green/red/blue color convention (increase/decrease/total)
-    — a first-time viewer must infer it. A compact 3-entry legend would remove the
-    ambiguity.
-  - Bar labels show the per-step delta value (e.g. '$-25,000') rather than the spec's
-    requested 'running total' label for intermediate bars — a defensible readability
-    choice, but a literal deviation from the spec wording.
+  - 'CRITICAL - render/artifact mismatch: the current seaborn.py adds a 3-entry legend
+    (Increase/Decrease/Total via ax.legend(handles=legend_handles, ...)) and a secondary
+    ''Total: $X'' label under each intermediate bar''s delta label - both intended
+    to fix the exact SC-02/SC-04 weaknesses flagged in Attempt 1. Neither element
+    appears in the delivered plot-light.png or plot-dark.png. Independently reproduced:
+    running the exact committed script locally (seaborn 0.13.2, matching the file''s
+    documented version) DOES render both the legend and the secondary total labels.
+    This means the images attached to this review do not reflect the current source
+    - most likely a stale/cached PNG or a capture that ran before the repair commit''s
+    re-render, not a code defect. A code-only repair will not fix this; the render
+    step of the pipeline (impl-repair.yml / image-generation job) needs investigation.'
+  - Because the delivered images do not show the legend or secondary total labels,
+    SC-02 (running-total labels) and SC-04 (legend) are scored as still-unresolved
+    from Attempt 1, even though the source code now addresses both
+  - 'Minor: sizeable empty headroom above the tallest bars (~$250K) up to the y-limit
+    (~$312K) leaves roughly the top 15% of the canvas empty - a bit more than needed
+    even accounting for label space'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Quarterly Financial Breakdown · waterfall-basic · python · seaborn · anyplot.ai" is dark ink text, clearly visible; y-axis label "Amount ($)" and rotated category tick labels (Starting Balance, Sales, Returns, COGS, Operating Costs, Taxes, Net Profit) are all dark/soft-ink and readable; horizontal gridlines are faint and unobtrusive; gray dashed connector lines between bar tops are subtle but visible.
-      Data: Starting Balance and Net Profit bars are blue (#4467A3); Sales bar is brand green (#009E73); Returns, COGS, Operating Costs, and Taxes bars are matte red (#AE3030). Value labels ($100,000 / $+150,000 / $-25,000 / $-60,000 / $-30,000 / $-18,000 / $117,000) sit above each bar in dark ink with no overlap.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Chrome: Title "Quarterly Financial Breakdown · waterfall-basic · python · seaborn · anyplot.ai" is dark ink text, clearly visible; y-axis label "Amount ($)" and rotated category tick labels (Starting Balance, Sales, Returns, COGS, Operating Costs, Taxes, Net Profit) are dark/soft-ink and fully readable; horizontal gridlines are faint; gray dashed connector lines link consecutive bar tops. No legend is present in this render, despite the source code constructing one.
+      Data: Starting Balance and Net Profit bars are blue (#4467A3); Sales bar is brand green (#009E73); Returns, COGS, Operating Costs, and Taxes bars are matte red (#AE3030). Each bar shows a single value label above it ($100,000 / $+150,000 / $-25,000 / $-60,000 / $-30,000 / $-18,000 / $117,000) — the secondary "Total: $X" label the source code adds for intermediate bars is not present.
+      Legibility verdict: PASS — all text that is present is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and axis label are light/off-white text, clearly visible; tick labels use a lighter soft-ink tone, fully readable; gridlines and dashed connector lines are faint but visible against the dark surface; no dark-on-dark text anywhere.
-      Data: Bar colors are pixel-identical to the light render — blue totals, green Sales bar, red decrease bars — confirming only chrome (not data colors) changed between themes.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures observed.
+      Chrome: Title and axis label are light/off-white text, clearly visible; tick labels use a lighter soft-ink tone, fully readable; gridlines and dashed connector lines are faint but visible against the dark surface; no dark-on-dark text anywhere. Same as the light render, no legend is rendered here either.
+      Data: Bar colors are pixel-identical to the light render — blue totals, green Sales bar, red decrease bars — confirming only chrome (not data colors) changed between themes. Same single-label-per-bar layout as the light render (no secondary "Total:" labels).
+      Legibility verdict: PASS — all text that is present is clearly readable against the dark background, no dark-on-dark failures observed.
+
+    Note: I independently reproduced the implementation by running plots/waterfall-basic/implementations/python/seaborn.py locally (seaborn 0.13.2, matching the file's documented version) and it DID render both a legend (Increase/Decrease/Total) and the secondary "Total: $X" labels for intermediate bars. This confirms the two PNGs supplied for this review do not reflect the current source code — likely a render-pipeline staleness/caching issue rather than a code defect. See weaknesses for detail.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -72,8 +71,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title fontsize correctly scaled (10pt)
-          for the ~82-char descriptive+mandated title to avoid overflow; all text
+        comment: All font sizes explicitly set; title fontsize correctly scaled for
+          the long descriptive+mandated title to avoid overflow; all present text
           readable in both themes
       - id: VQ-02
         name: No Overlap
@@ -87,37 +86,35 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bar width and connector-line weight well-adapted to a 7-step waterfall;
-          nothing barely visible
+        comment: Bar width and connector-line weight well-adapted to a 7-step waterfall
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
         comment: Green/red/blue combination is CVD-safe; not relying on red-green
-          alone (blue distinguishes totals)
+          alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a balanced majority of the canvas, margins even, nothing
-          cut off
+        comment: Good canvas utilization and balanced margins; minor unused headroom
+          above tallest bars
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Amount ($)' is descriptive with units; x-axis category labels
-          are self-explanatory (no redundant axis title needed)
+        comment: Y-axis label includes unit ($); title fully descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for increases (semantic exception for finance
-          gain/loss), matte red #AE3030 for decreases, blue #4467A3 for totals; backgrounds
-          theme-correct in both renders'
+        comment: Imprint hexes via sns.color_palette(); brand green/matte red/blue
+          semantic mapping is a justified finance-convention exception; theme-correct
+          chrome in both renders
     design_excellence:
       score: 16
       max: 20
@@ -127,23 +124,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Intentional semantic palette, clean typography hierarchy — clearly
+        comment: Intentional semantic palette and clean typography hierarchy, clearly
           above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-grid, page-bg bar edges for separation,
-          dashed flow connectors — solid refinement though not every micro-detail
-          is polished
+        comment: Spines removed via sns.despine(), subtle grid, page-bg bar edges,
+          dashed flow connectors; solid but not every micro-detail polished
       - id: DE-03
         name: Data Storytelling
         score: 6
         max: 6
         passed: true
-        comment: Color-coded flow (green/red/blue) plus connector lines make the cumulative
-          narrative immediately legible — a strong focal point on the Net Profit outcome
+        comment: Color-coded flow plus connecting lines make the cumulative narrative
+          immediately legible
     spec_compliance:
       score: 13
       max: 15
@@ -153,16 +149,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waterfall chart with floating bars, connectors, and distinct
-          totals
+        comment: Correct waterfall chart with connectors and distinct total bars
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Connecting lines, distinct total bars, and value labels all present;
-          labels show per-step delta rather than the spec-requested running total
-          for intermediate bars
+        comment: 'Delivered image shows only per-step delta labels; the spec''s ''running
+          total near bars'' feature is implemented in source (secondary Total: $X
+          label) but absent from the actual rendered PNGs'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -174,8 +169,9 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Title format correct ({Descriptive Title} · {spec-id} · python ·
-          seaborn · anyplot.ai); no legend explaining the green/red/blue color convention
+        comment: Title format correct; a legend is built in source but does not appear
+          in the delivered images, so the increase/decrease/total convention is still
+          unexplained in the actual artifact
     data_quality:
       score: 15
       max: 15
@@ -185,8 +181,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows positive change, multiple negative changes of varying magnitude,
-          and both start/end totals
+        comment: Shows increases, multiple decreases of varying magnitude, and both
+          start/end totals
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -198,8 +194,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Values sum exactly (100,000+150,000-25,000-60,000-30,000-18,000=117,000),
-          realistic magnitudes
+        comment: Values and running totals are arithmetically correct and plausible
+          for a mid-size business
     code_quality:
       score: 10
       max: 10
@@ -209,7 +205,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports → data → plot → save structure, no functions/classes
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -221,14 +217,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, pyplot, ticker, pandas, seaborn all used
+        comment: All imports (os, plt, mticker, pandas, seaborn, Patch) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a chart type with no native library support;
-          no fake UI
+        comment: Appropriate complexity for a waterfall chart, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
@@ -236,30 +231,32 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png at dpi=400 with bbox_inches left at default
     library_mastery:
-      score: 2
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Only seaborn call in the whole file is sns.set_theme() (styling/rc
-          only); every chart element is built with raw matplotlib — the AR-05 table
-          explicitly flags 'only sns.set_style()' as NOT sufficient library usage,
-          and set_theme() is its direct successor
+        passed: true
+        comment: 'Genuine seaborn calls now used for real plot elements: sns.lineplot()
+          for connector lines, sns.color_palette() for Imprint hex sourcing, sns.despine()
+          for spine removal - a real step up from Attempt 1''s sns.set_theme()-only
+          usage. Core bars remain raw matplotlib ax.bar() since seaborn has no native
+          waterfall geometry'
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No seaborn-distinctive feature used (no despine, no seaborn palette
-          function, no seaborn plotting API)
-  verdict: REJECTED
+        comment: No feature unique to seaborn is leveraged; sns.lineplot() here is
+          functionally equivalent to plt.plot()
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   - manual-ticks
   patterns:
   - data-generation
@@ -268,6 +265,6 @@ impl_tags:
   dataprep:
   - cumulative-sum
   styling:
+  - alpha-blending
   - edge-highlighting
   - grid-styling
-  - alpha-blending
