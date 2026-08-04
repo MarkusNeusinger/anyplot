@@ -1,0 +1,260 @@
+library: muix
+language: javascript
+specification_id: waterfall-basic
+created: '2026-08-04T11:46:44Z'
+updated: '2026-08-04T11:53:04Z'
+generated_by: claude-sonnet
+workflow_run: 30905031348
+issue: 777
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Elegant floating-bar-stack technique (invisible transparent 'base' filler + increase/decrease/total
+    series sharing one `stack` key) reproduces a waterfall chart despite MUI X having
+    no native waterfall type
+  - 'Correct semantic color mapping per the Imprint style guide: brand green (palette[0])
+    for increases, the deferred semantic-red anchor (palette[4], #AE3030) for decreases,
+    and theme-adaptive neutral ink for totals'
+  - Theme-adaptive contrast handling on total-bar labels (fill switches to t.pageBg
+    on 'total' bars vs a fixed cream ON_COLOR_TEXT on the saturated green/red bars)
+    keeps every label readable in both renders
+  - Dashed step-line (stepAfter curve) tracing the running total reinforces the cumulative
+    flow between bars
+  - All font sizes explicitly set; deterministic, realistic quarterly cash-bridge
+    data whose deltas sum correctly to the stated closing balance
+  - Idiomatic use of the ChartContainer + BarPlot + LinePlot composition API to combine
+    bar and line series in one chart
+  weaknesses:
+  - Bar labels show the running total after each step for every bar, including the
+    intermediate increase/decrease bars (e.g. the 'Product Sales' bar reads '$205k',
+    the cumulative total after that step, not the +$85k delta it represents) — defensible
+    per the spec's 'running total labels' wording and the bar height already conveys
+    the delta, but adding the signed delta magnitude (e.g. '+$85k' / '−$18k') alongside
+    would sharpen the storytelling further
+  - Right margin (48px) is much smaller than the left margin (172px); functionally
+    justified by the y-axis tick/label width but reads slightly asymmetric — consider
+    trimming a little off the left or adding a touch to the right for visual balance
+  - Title occupies only ~35% of the canvas width at fontSize=22; there is clear headroom
+    to size it up modestly to strengthen the visual hierarchy (not a proportional
+    violation, just a minor polish opportunity)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "waterfall-basic · javascript · muix · anyplot.ai" centered at top; a 3-item swatch legend (Increase/Decrease/Total) directly below it; rotated "Cash Balance" y-axis title in dark ink at the far left; $-formatted y tick labels ($0k-$260k) and category x tick labels (Opening Balance, Product Sales, Service Revenue, Refunds, Operating Costs, Taxes, Closing Balance) in a softer ink tone. All fully readable, nothing clipped at the canvas edges.
+      Data: Floating bars — brand green (#009E73) for increase steps (Product Sales, Service Revenue), matte red (#AE3030) for decrease steps (Refunds, Operating Costs, Taxes), near-black neutral ink for the Opening/Closing total bars. A gray dashed step-line traces the running total across the tops of the bars. White/cream bold labels on each bar show the running cash balance ($120k, $205k, $247k, $229k, $164k, $143k, $143k); total bars use dark text on their neutral fill.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis title now rendered in light ink against the dark background; tick labels in a lighter soft-ink tone. All clearly legible, no clipping.
+      Data: Increase/decrease bars are the identical #009E73 green and #AE3030 red as the light render — confirmed unchanged. Total bars flip to the theme-adaptive neutral ink (near-cream #F0EFE8) with dark text labels on them, which correctly avoids a dark-on-dark failure (the fixed ON_COLOR_TEXT cream label color used on the green/red bars would fail on a cream bar, so the code branches to pageBg for the 'total' series specifically). Dashed connector line and grid remain subtle and visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; title fills
+          only ~35% of width (below the 50-70% aim) though within tolerance since
+          it's the mandated format at a naturally short spec-id
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between bar labels, connector line, legend, or axes
+          in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 floating bars sized prominently for sparse data; step-line clearly
+          visible without competing with bars
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Increase/decrease distinguished by hue, position, and legend text,
+          not red-green alone; good contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills the large majority of the canvas with justified (if asymmetric)
+          margins for the y-axis; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Cash Balance'' y-axis title plus $-formatted, unit-bearing tick
+          labels'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green for increases, semantic matte-red anchor for decreases,
+          theme-adaptive neutral for totals — textbook Imprint semantic-exception
+          usage; both renders theme-correct
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color use and typography, clearly above a configured
+          default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Horizontal-only subtle grid, rounded bar corners, generous whitespace;
+          asymmetric left/right margins keep it from top marks
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color coding + step-line clearly guide the reader through the cash
+          bridge; running-total-only labels (vs. delta+total) leave a small amount
+          of interpretation to the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct waterfall chart via floating stacked bars
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Increase/decrease color differentiation, connecting flow line, distinct
+          start/end total bars, running total labels — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on x, cash balance on y, all 7 steps visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend correctly explains
+          the three bar roles
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows increases, decreases, and distinct start/end totals
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible quarterly cash-bridge scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Deltas sum correctly to the stated closing balance; realistic small-business
+          dollar magnitudes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: As simple as this chart type allows; only the required default-export
+          component plus small data-shaping helpers
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the MUI X components actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI, appropriate complexity for a composed floating-bar
+          chart
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: default export, skipAnimation set on all
+          chart pieces'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the ChartContainer + BarPlot/LinePlot composition API, the recommended
+          pattern for combining series types
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages MUI X's stack-based composition, custom barLabel callback,
+          and per-series slotProps styling
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
