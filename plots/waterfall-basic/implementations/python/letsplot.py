@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 waterfall-basic: Basic Waterfall Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-08-04
@@ -116,10 +116,12 @@ df["tooltip_change"] = df.apply(
     lambda row: "Starting/ending total" if row["color_type"] == "total" else row["label"], axis=1
 )
 
-# Calculate connector line data (connects bars)
+# Calculate connector line data (connects bars) - connect at the edge that
+# matches the running total after this bar's change: ymin for decreases
+# (post-decrease level), ymax for increases and totals (post-increase level)
 connectors = []
 for i in range(len(categories) - 1):
-    y_val = df["ymax"].iloc[i]
+    y_val = df["ymin"].iloc[i] if df["color_type"].iloc[i] == "negative" else df["ymax"].iloc[i]
     connectors.append({"x_start": i + bar_width, "x_end": i + 1 - bar_width, "y": y_val})
 
 connector_df = pd.DataFrame(connectors)
