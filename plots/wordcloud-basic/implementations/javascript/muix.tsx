@@ -1,8 +1,7 @@
 // anyplot.ai
 // wordcloud-basic: Basic Word Cloud
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-04
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 79/100 | Created: 2026-08-04
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 
