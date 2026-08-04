@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: ternary-basic
 created: '2025-12-24T09:50:06Z'
-updated: '2026-08-04T15:00:38Z'
+updated: '2026-08-04T15:11:28Z'
 generated_by: claude-sonnet
 workflow_run: 30920761598
 issue: 1001
@@ -12,131 +12,141 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 84
 review:
   strengths:
   - 'Theme-adaptive chrome is fully correct: Imprint brand green (#009E73) markers
     are pixel-identical between renders, and background/text/grid flip correctly to
     #FAF8F1 (light) / #1A1A17 (dark) with no dark-on-dark or light-on-light failures'
+  - Correct 2400x2400 square canvas via explicit figsize=(6,6), dpi=400 — matches
+    the canonical square-format target for a symmetric plot type, fixing the sizing
+    issue from the prior attempt
   - 'Hand-built ternary geometry (matplotlib has no native ternary support) is executed
     cleanly: equilateral triangle outline, 20% dashed internal grid, and dual tick
-    labels on all three edges per the spec''s ''grid lines at regular intervals''
-    and ''tick marks along each edge'' requirements'
-  - 'Data quality is strong: Dirichlet([1,1,1]) sampling gives realistic sand/silt/clay
-    soil compositions that sum exactly to 100%, with good coverage of corners, edges,
-    and the center of the simplex'
+    labels on all three edges satisfy the spec''s ''grid lines at regular intervals''
+    and ''tick marks along each edge'' notes'
+  - Realistic, neutral soil-science dataset (sand/silt/clay) summing exactly to 100%
+    via Dirichlet([1,1,1]) sampling, giving good coverage of corners, edges, and center
+    of the simplex
   - Marker edge color set to PAGE_BG creates a halo effect that keeps overlapping
-    points visually distinct in both themes
-  - Clean KISS structure with explicit np.random.seed(42), no wasted imports, and
-    correct plot-{THEME}.png output
+    points visually distinct in both themes; clean KISS-adjacent structure with explicit
+    np.random.seed(42) and correct plot-{THEME}.png output
   weaknesses:
-  - 'Design Excellence is capped by genericness: beyond the single brand-green scatter
-    there is no visual hierarchy or focal point (e.g., highlighting a named soil-texture
-    region such as ''loam'', or encoding a 4th dimension via size/alpha) to give the
-    chart a stronger story'
-  - 'Library Mastery is low: the implementation only uses generic primitives (ax.plot/ax.text/ax.scatter)
-    that are trivially replicable in any plotting library — nothing leverages a matplotlib-distinctive
-    feature (e.g., a Polygon/PathPatch fill for the triangle interior, a soil-classification
-    background zoning via patches, or colormap-based density encoding)'
-  - Grid uses dashed lines (linestyle='--') where the default style guide recommends
-    solid subtle gridlines — likely a defensible ternary-specific convention to separate
-    the internal grid from the solid outer triangle border, but worth reconsidering
-    if it reads as busy at full resolution
+  - 'The ''Loam'' soil-classification zone (Polygon patch + italic label) added specifically
+    to address the previous review''s DE-01/DE-03/LM-02 feedback does not appear in
+    either rendered PNG. Pixel inspection at the patch''s data-space centroid (display
+    px ~(1043, 1361) on the 2400x2400 canvas) shows only the plain page background
+    or an overlapping scatter marker, never the expected ochre #BD8233-tinted fill
+    (verified: zero pixels anywhere in either image match the expected alpha-blended
+    tan/dark-brown color). ax.add_patch(loam_patch) and the ''Loam'' ax.text() call
+    are present in the code with correct facecolor/zorder/clip settings, but the intended
+    visual is invisible in the shipped artifact. Root-cause and fix: try moving add_patch/label
+    calls after ax.set_xlim/ax.set_ylim are finalized, verify the Polygon isn''t being
+    clipped or overpainted by a later-drawn artist, and confirm the patch survives
+    the actual savefig() pipeline (not just an interactive render) — then re-verify
+    the tan fill and ''Loam'' text are visible in the saved PNG at both themes.'
+  - 'Because the Loam zone doesn''t render, Data Storytelling is still generic: the
+    60-point Dirichlet scatter has no visual hierarchy or focal point — the exact
+    weakness flagged in the previous review round remains effectively unresolved in
+    the shipped image'
+  - A small to_xy() helper function is defined, a minor deviation from strict KISS
+    (imports -> data -> plot -> save, no functions/classes) — acceptable given it's
+    a tiny coordinate-conversion utility, but worth inlining if simplicity is prioritized
+  - Scatter points overlap heavily in a few dense clusters (e.g., near mid-triangle
+    and along the lower Clay-heavy edge), making individual points hard to distinguish
+    at full resolution — consider a slightly smaller marker size or lower alpha in
+    the densest region
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "ternary-basic · python · matplotlib · anyplot.ai" in dark ink at top, comfortably sized (~55-60% of canvas width), fully visible with clearance above. Bold vertex labels "Sand (%)" (top), "Silt (%)" (bottom-left), "Clay (%)" (bottom-right) in dark ink. Triangle outline in a medium-dark grey. Dashed internal grid lines at 20% intervals in a light, subtle grey. Tick labels (0/20/40/60/80/100) along all three edges in medium-grey, all clearly legible.
-      Data: 60 scatter points in Imprint brand green (#009E73), s=130, alpha=0.75, with a cream-colored marker edge that creates a halo separating overlapping points. Points cover the full simplex — corners, edges, and center.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 exactly (sampled pixel (250,248,241)) — not pure white.
+      Chrome: Title "ternary-basic · python · matplotlib · anyplot.ai" centered in dark ink, comfortably sized (~55-60% of canvas width). Bold vertex labels "Sand (%)" (top), "Silt (%)" (bottom-left), "Clay (%)" (bottom-right) in dark ink, clearly readable. Triangle outline in soft gray-ink. Dashed 20%-interval grid lines inside the triangle, subtle. Numeric tick labels (0-100 by 20) along all three edges in soft gray, readable. No orange/ochre "Loam" classification patch or italic label is visible anywhere in the triangle, despite being present in the source code (Polygon + ax.text) — confirmed by pixel search: zero pixels in the entire image match the expected alpha-blended tan color (~239,227,207) that facecolor="#BD8233", alpha=0.18 should produce.
+      Data: 60 scatter points in brand green #009E73, semi-transparent with a cream (page-background-colored) edge halo, spread across the full simplex (corners, edges, center) per Dirichlet([1,1,1]) sampling. First/only series correctly uses Imprint position 1 (#009E73).
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and vertex labels, now rendered in light/off-white ink, fully readable. Triangle outline and tick labels rendered in a lighter grey tone appropriate for the dark surface. Dashed grid lines remain subtle and visible.
+      Background: Warm near-black, matches #1A1A17 exactly (sampled pixel (26,26,23)) — not pure black.
+      Chrome: Same title and vertex labels, now rendered in light/off-white ink, fully readable. Triangle outline and tick labels rendered in a lighter gray tone appropriate for the dark surface. Dashed grid lines remain subtle and visible. The "Loam" patch/label is likewise absent here — same pixel-search method (expected blended color ~55,45,28) found zero matches anywhere in the image.
       Data: Same 60 points in identical Imprint brand green (#009E73) at the same coordinates as the light render — confirms only chrome flips, not data color.
       Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed (title, vertex labels, and tick labels all use light ink tokens).
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
         comment: All font sizes explicit (tick=10pt, vertex labels=16pt, title=12pt);
-          well-proportioned, no overflow, readable in both themes
+          well-proportioned, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; vertex/tick labels well
-          separated from the triangle and from data points
+        comment: No text overlaps other text or data; scatter overlap is a density
+          issue, not a text-overlap issue
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: n=60 points at s=130/alpha=0.75 is within the 30-100 point guideline
-          (size 100-200, alpha 0.7-0.9); markers clearly visible with halo edges
+        comment: s=130, alpha=0.75 fits the 30-100 point density guideline; a few
+          dense clusters make individual points slightly hard to distinguish
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue brand green with theme-adaptive cream/near-black marker
-          edges gives strong contrast in both themes; no red-green reliance
+        comment: Single-series brand green with cream edge halo gives strong contrast
+          on both surfaces, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas is the right format for a symmetric triangle;
-          chart + labels use a well-balanced ~70-90% of canvas area with generous,
-          even margins
+        comment: Triangle plus labels use a good share of the 2400x2400 canvas with
+          no cut-off; margins slightly generous on top/bottom
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Vertex labels descriptive with units: ''Sand (%)'', ''Silt (%)'',
-          ''Clay (%)'''
+        comment: Vertex labels are descriptive with units (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73 brand green, identical across themes;
-          backgrounds are #FAF8F1/#1A1A17; all chrome theme-correct in both renders'
+        comment: 'First series #009E73 identical across themes; background hexes exactly
+          #FAF8F1/#1A1A17; chrome fully theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean, intentional typography hierarchy and halo-edge markers put
-          it above a bare library default, but the design stays single-hue and generic
-          — no gradient, focal region, or extra polish that would reach publication-ready
-          tier
+        passed: true
+        comment: Thoughtful hand-built triangle/grid/tick system, clearly above library
+          defaults, though the intended loam-zone highlight fails to render
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines fully removed, subtle grid, generous whitespace, marker edge
-          detail — very close to perfect, minor deduction for dashed (vs. style-guide-default
-          solid) gridlines
+        comment: All spines replaced by custom triangle outline, subtle dashed grid,
+          generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: 'Default: data is displayed but not interpreted — no highlighted
-          region, classification zone, or emphasis to guide the viewer to an insight'
+        comment: Loam classification zone intended to create a focal point is invisible
+          in the shipped image, so the scatter reads as an undifferentiated data dump
+          — same gap flagged in the prior review
     spec_compliance:
       score: 15
       max: 15
@@ -146,21 +156,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary/triangle plot with proper simplex-to-Cartesian mapping
+        comment: Correct ternary/simplex plot with full triangle structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid lines at 20% intervals, all three vertices labeled, distinct
-          markers, tick marks along each edge — all present per spec Notes
+        comment: Grid at 20% intervals, labeled vertices, distinct markers, and edge
+          tick labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sand/Silt/Clay correctly mapped to the three vertices; all 60 points
-          visible within triangle bounds
+        comment: Components sum to 100%, correctly mapped to Cartesian simplex coordinates
+          for all three axes
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -169,16 +179,17 @@ review:
         comment: Title matches mandated format exactly; legend correctly omitted for
           single-series data
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Dirichlet([1,1,1]) sampling gives uniform coverage of corners, edges,
-          and center of the simplex
+        comment: Dirichlet([1,1,1]) sampling gives good coverage of corners, edges,
+          and center; would score higher with the intended classification-zone context
+          visible
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -191,18 +202,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Components sum exactly to 100% by construction; percentages are realistic
-          for soil texture analysis
+        comment: Components sum exactly to 100% by construction; realistic soil-texture
+          percentages
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: Mostly linear imports -> data -> plot -> save, but defines a small
+          to_xy() helper function
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -214,14 +226,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot, numpy, os, sys — all used
+        comment: Only os, sys, matplotlib.pyplot, numpy, Polygon — all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Manual simplex-to-Cartesian trig is appropriately complex for matplotlib's
-          lack of native ternary support; no fake UI
+        comment: No fake UI, but the Polygon/text intended to highlight the loam zone
+          doesn't produce any visible effect in the saved PNG — dead code relative
+          to its stated purpose
       - id: CQ-05
         name: Output & API
         score: 1
@@ -230,32 +243,31 @@ review:
         comment: Saves plot-{THEME}.png, no deprecated calls, bbox_inches left at
           default
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Consistent Axes-level API (ax.scatter/ax.plot/ax.text/ax.set_aspect)
-          throughout, which is exactly the recommended pattern given matplotlib has
-          no native ternary chart type
+        comment: Consistent Axes-level API (ax.scatter/ax.plot/ax.text/ax.add_patch),
+          the recommended pattern given matplotlib's lack of native ternary support
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Uses only generic Cartesian primitives (lines, text, scatter) — nothing
-          distinctive to matplotlib specifically (e.g. Polygon/PathPatch fills, colormap
-          density encoding) that couldn't be replicated with minor syntax changes
-          in another library
-  verdict: REJECTED
+        passed: true
+        comment: Uses matplotlib.patches.Polygon for the (currently non-rendering)
+          classification zone — a distinctive technique in principle, but its value
+          is unrealized since it doesn't appear in the output
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   - annotations
+  - patches
   patterns:
   - data-generation
   - explicit-figure
