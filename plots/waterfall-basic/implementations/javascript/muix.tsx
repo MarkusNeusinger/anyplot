@@ -1,3 +1,7 @@
+// anyplot.ai
+// waterfall-basic: Basic Waterfall Chart
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 92/100 | Created: 2026-08-04
 //# anyplot-orientation: landscape
 // anyplot.ai
 // waterfall-basic: Basic Waterfall Chart
