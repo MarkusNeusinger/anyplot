@@ -42,15 +42,28 @@ words = words[order]
 frequencies = Float64.(frequencies[order])
 
 # Font size scaled by sqrt(frequency) so glyph AREA tracks word frequency
-min_fs, max_fs = 16.0, 108.0
+min_fs, max_fs = 22.0, 108.0
 scaled = sqrt.(frequencies)
 fontsizes = min_fs .+
     (scaled .- minimum(scaled)) ./ (maximum(scaled) - minimum(scaled)) .* (max_fs - min_fs)
 
-# Top 8 words get the Imprint categorical palette (brand green = most frequent);
-# the long tail is muted so it recedes behind the dominant themes.
-n_top = 8
-colors = [i <= n_top ? IMPRINT_PALETTE[i] : INK_MUTED for i in 1:length(words)]
+# Color encodes sentiment polarity (not rank, which would just repeat the size
+# signal): satisfaction terms -> brand green, complaint terms -> matte red,
+# neutral/functional terms -> muted gray. This is the style guide's
+# sentiment/polarity semantic exception.
+positive_words = Set([
+    "easy", "love", "intuitive", "savings", "reliable", "helpful", "recommend", "sleek",
+])
+negative_words = Set([
+    "slow", "laggy", "bugs", "confusing", "glitch", "freeze", "restart",
+    "unresponsive", "complicated", "expensive", "disappointed", "refund",
+])
+colors = [
+    w in positive_words ? IMPRINT_PALETTE[1] :
+    w in negative_words ? IMPRINT_PALETTE[5] :
+    INK_MUTED
+    for w in words
+]
 
 # --- Plot --------------------------------------------------------------------
 fig = Figure(
