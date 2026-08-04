@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
 Library: pygal 3.1.3 | Python 3.13.14
-Quality: 73/100 | Updated: 2026-08-04
+Quality: 81/100 | Updated: 2026-08-04
 """
 
 import os

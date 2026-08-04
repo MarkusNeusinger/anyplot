@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: wireframe-3d-basic
 created: '2026-05-06T05:29:17Z'
-updated: '2026-08-04T18:38:13Z'
+updated: '2026-08-04T18:49:04Z'
 generated_by: claude-sonnet
 workflow_run: 30938217954
 issue: 1015
@@ -12,57 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/pygal/plot-dark.html
-quality_score: 73
+quality_score: 81
 review:
   strengths:
-  - Creative isometric 3D-to-2D projection technique built entirely from scratch (isometric_project
-    helper) to work around pygal's lack of native 3D support — the same class of workaround
-    the bokeh implementation of this spec used successfully.
-  - 'Correct Imprint palette usage: wireframe rendered in brand green #009E73, backgrounds
-    and text tokens correctly theme-adaptive (#FAF8F1 light / #1A1A17 dark), no dark-on-dark
-    or light-on-light failures in either render.'
-  - Title exactly matches the mandated 'wireframe-3d-basic · python · pygal · anyplot.ai'
-    format, and font sizing is scaled to the title length per the style guide.
-  - 'Clean, KISS-compliant code: fully deterministic (no seed needed, ripple function
-    is pure math), only used imports, saves plot-{theme}.png and plot-{theme}.html
-    correctly, canvas is exactly 3200×1800.'
+  - 'Repair meaningfully reduced overplotting: grid_size lowered from 30 to 20 and
+    BRAND_FADE alpha (rgba 0.55) applied to wireframe strokes — the ripple''s dome/bowl
+    topology now reads clearly instead of as a dense woven texture.'
+  - Y-axis now has genuine hand-drawn perpendicular tick marks at 5 world-Y positions
+    along its gizmo line, addressing the prior review's SC-02 finding that only X
+    and Z had real ticks.
+  - 'Correct Imprint palette usage: wireframe in brand green #009E73, theme-adaptive
+    backgrounds/text (#FAF8F1 light / #1A1A17 dark), identical data color across both
+    renders, no dark-on-dark or light-on-light failures.'
+  - 'Clean, deterministic KISS code: single-purpose isometric_project helper, only
+    used imports, canvas exactly 3200×1800, title font size scaled to title length
+    per the style guide.'
   weaknesses:
-  - 'Y-axis has no real tick marks at all — it is represented only by a diagonal gizmo
-    line and a legend entry (''Y axis''), unlike X and Z which get pygal''s native
-    numeric ticks. The spec requires ''Label all three axes (X, Y, Z) with appropriate
-    tick marks.'' Fix: add small hand-drawn perpendicular tick marks (and ideally
-    value labels) along the Y-axis gizmo line, similar to how the bokeh implementation
-    of this same spec hand-draws tick marks on all three projected axes.'
-  - 'The wireframe has no hidden-line removal, so the row/col polylines from the near
-    and far side of the ripple surface all overlap in the 2D projection, producing
-    a dense woven/crosshatch texture rather than a clearly readable surface topology
-    — the central peak and the ripple trough are recognizable but the mesh reads as
-    visually noisy up close. Fix: reduce grid_size (e.g. 20 instead of 30), add slight
-    alpha transparency to the wireframe strokes, or draw far-side lines thinner/more
-    transparent than near-side lines to fake depth ordering.'
-  - The chart's vertical axis is labeled 'Z Axis' but the plotted values are actually
-    z + (x+y)*sin(angle)*0.5 (a projected composite of Z, X and Y), not a pure Z value
-    — the axis title and tick numbers don't correspond to the true Z data range (which
-    is just sin(...) in [-1, 1]). Consider a note or different labeling so the tick
-    numbers aren't misread as literal Z heights.
-  - 'Design excellence is only moderate: DE-01/DE-02/DE-03 all land near the low-to-mid
-    defaults because the dense overplotted mesh (see above) undercuts the visual hierarchy
-    and refinement that would otherwise come from the clean brand-green wireframe.'
+  - Y-axis tick marks are unlabeled hash marks, while X and Z carry pygal's native
+    numeric tick labels — an asymmetry a careful reader will notice. Consider adding
+    small numeric text labels (e.g. via annotation-style chart.add points with value
+    labels, or manual text placement) next to each Y tick to fully match X/Z.
+  - The 'Z Axis (projected)' label is honest about not being pure Z, but the tick
+    numbers on that axis still show a projected composite (z + (x+y)*sin(angle)*0.5),
+    not the true Z range (sin(...) ∈ [-1, 1]) — data-mapping purists would want a
+    clearer decomposition or an explicit note near the axis title.
+  - 'Design excellence is solid but not exceptional: the mesh is a single flat brand-green
+    hue with no depth cueing (e.g. near/far line-weight variation) to reinforce the
+    3D illusion beyond the projection geometry itself.'
+  - The tent-shaped peak of the mesh (reaching toward Z≈3 in projected space, an artifact
+    of the (x+y) tilt term) sits close to the title in both renders — not clipped,
+    but tight vertical breathing room between data and title.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "wireframe-3d-basic · python · pygal · anyplot.ai" in dark ink at top, fully visible and not clipped. X-axis (bottom, native pygal numeric ticks -8 to 8) and "Z Axis" (left, native pygal numeric ticks -2 to 3) both have real tick marks and axis titles. A top-left legend lists "X axis / Y axis / Z axis" corresponding to three thin diagonal gizmo lines with end dots crossing through the plot at the origin — the Y axis gizmo has no numeric tick marks of its own. Grid lines are subtle dashed horizontal lines.
-      Data: The wireframe mesh (row/column polylines of an isometrically-projected sin(sqrt(x^2+y^2)) ripple surface) is rendered entirely in brand green (#009E73, Imprint position 1), forming a central peak with a bowl-shaped rim; because there is no hidden-line removal, near- and far-side mesh lines overlap into a dense woven texture in the middle of the plot. Axis gizmo lines and their end dots are dark ink, distinguishable from the green data.
-      Legibility verdict: PASS - all title/axis/tick text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "wireframe-3d-basic · python · pygal · anyplot.ai" in dark ink, fully visible and not clipped. "X Axis" (bottom) and "Z Axis (projected)" (left, rotated) axis titles in dark ink. Native pygal numeric tick labels on both the X axis (-8..8) and the Z axis (-2..3), all dark and readable. Top-left legend lists "X axis / Y axis / Z axis" tied to three thin dark diagonal gizmo lines crossing at the origin, each with end dots. The Y-axis gizmo line now carries 5 small hand-drawn perpendicular tick marks (previously it had none). Subtle dashed horizontal grid lines are visible but unobtrusive.
+      Data: The wireframe mesh (isometrically-projected sin(sqrt(x²+y²)) ripple surface, grid_size=20) renders entirely in translucent brand green (alpha ≈0.55 over #009E73), forming a dome/bowl shape. Compared to the prior denser 30×30 grid, the mesh is noticeably easier to read — individual row/column lines remain distinguishable even where they cross.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis titles and tick labels now rendered in light ink, fully legible against the dark background. Legend text and gizmo lines are also light-toned. Grid lines remain subtle and visible.
-      Data: The wireframe mesh is rendered in the identical brand green (#009E73) as the light render — confirms only chrome (background, text, grid, legend) flipped between themes, data color is unchanged. Same overlapping-mesh density issue as the light render.
-      Legibility verdict: PASS - all text is clearly readable against the dark background; no dark-on-dark failures observed anywhere (title, axis titles, tick labels, legend all use light ink).
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, tick labels, and legend, now rendered in light ink (near-white/cream) and fully legible. Grid lines remain subtle and visible at the same positions as light mode. The Y-axis gizmo tick marks are present in the same light ink as other chrome.
+      Data: The wireframe mesh is the identical translucent brand green (#009E73 at ~0.55 alpha) as the light render — confirms only chrome flipped between themes, data color is unchanged.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed anywhere (title, axis titles, tick labels, and legend text are all light-colored and distinct from the near-black background).
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -70,76 +64,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes, no dark-on-dark/light-on-light
-          issues
+        comment: All font sizes explicitly set via Style(); readable at full size
+          in both themes; title fits without clipping
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Text does not overlap; gizmo dots sit directly on top of the dense
-          mesh at intersection points, minor readability friction
+        comment: Minor overlap where gizmo dots and Y-axis tick marks cross the mesh,
+          but all text remains readable
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: No hidden-line removal on the 30x30 grid causes heavy overplotting/crosshatching
-          that obscures the surface topology
+        passed: true
+        comment: grid_size reduced 30->20 plus alpha=0.55 on wireframe strokes meaningfully
+          reduced overplotting; some crosshatching remains in the densest bowl region
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue green on light/dark neutral backgrounds, good contrast,
-          no red-green reliance
+        comment: Single-hue green mesh with alpha and ink-colored axis gizmo; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas verified exactly 3200x1800; surface peak sits close to but
-          not touching the title, minor crowding
+        comment: Canvas exactly 3200x1800; mesh peak sits close to (but does not overlap)
+          the title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X Axis / Z Axis titles present and descriptive for an abstract math
-          function
+        comment: Descriptive axis titles (X Axis, Z Axis (projected))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds match theme spec exactly, identical
-          data color across themes'
+        comment: 'Brand green #009E73 first/only series, theme-correct backgrounds
+          and chrome in both renders'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clever custom isometric projection and theme tokens, but final mesh
-          reads as cluttered rather than polished
+        passed: true
+        comment: Custom isometric projection technique now reads cleanly with reduced
+          density; clear improvement over attempt 1
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Alpha-blended strokes and lower grid density are a real refinement;
+          grid/chrome remain minimal and subtle
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Minimal chrome and subtle grid, but dense overlapping strokes reduce
-          refinement
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Overplotting obscures the ripple's focal point/hierarchy
+        comment: Ripple topology is now visible as a focal point, but there is no
+          explicit visual hierarchy or emphasis beyond the geometry itself
     spec_compliance:
-      score: 11
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -147,54 +141,53 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Genuine wireframe mesh via projection, approximates spec intent despite
-          pygal's 2D-only nature
+        comment: Legitimate isometric-projection workaround for pygal's lack of native
+          3D, consistent with prior precedent (bokeh implementation of this spec)
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Grid lines in both directions and a projection with viewing angle
-          are present, but Y axis has no real tick marks at all — spec requires all
-          three axes labeled with appropriate tick marks
+        passed: true
+        comment: Y axis now has real hand-drawn tick marks (fixed from attempt 1's
+          complete absence), but still lacks numeric value labels that X/Z carry natively
       - id: SC-03
         name: Data Mapping
         score: 2
         max: 3
         passed: true
-        comment: X axis shows true X values; 'Z Axis' actually shows a projected composite
-          of Z/X/Y, not pure Z
+        comment: X axis shows true X values; 'Z Axis' shows a projected composite
+          of Z/X/Y, not pure Z (unchanged from attempt 1)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches exactly; legend labels correspond to the axis
-          gizmo lines
+        comment: Title matches mandated format exactly; legend labels (X/Y/Z axis)
+          correct
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Overplotted mesh partially defeats the 'see-through structure' benefit
-          the spec calls out for wireframes
+        passed: true
+        comment: Reduced overplotting lets the see-through wireframe structure read
+          clearly, better satisfying the spec's core wireframe benefit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral mathematical ripple function, no controversy
+        comment: Ripple function is a real, neutral mathematical scenario exactly
+          as suggested by the spec
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30x30 grid within the spec's recommended 20x20-50x50 range, sensible
-          domain [-5,5]
+        comment: Grid range and function values are sensible and internally consistent
     code_quality:
       score: 10
       max: 10
@@ -204,32 +197,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only one small, justified projection helper function
+        comment: Single small geometry helper (isometric_project) is necessary for
+          the technique; otherwise linear imports->data->plot->save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic math, no randomness
+        comment: Fully deterministic (no randomness involved)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pygal, Style, os, sys all used
+        comment: Only numpy, pygal, pygal.style, os, sys used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity, reasonable complexity for the projection
-          technique
+        comment: Appropriate complexity for the projection technique; no fake UI or
+          interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png and plot-{theme}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 6
       max: 10
@@ -239,25 +233,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Style object well configured with theme tokens; pygal.XY used as
-          intended for the projected line data
+        comment: Correct use of pygal.XY, Style tokens, stroke_style, show_dots
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
         comment: Distinctive projection workaround, but no other pygal-specific features
-          (e.g. richer stroke styling, interactive tooltips) leveraged
-  verdict: REJECTED
+          (e.g. interactivity config) leveraged beyond the basics
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
-  - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
+  - alpha-blending
