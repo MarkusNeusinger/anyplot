@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-08-04
@@ -28,7 +28,6 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 DIV_MID = "#FAF8F1" if THEME == "light" else "#1A1A17"  # Imprint diverging-cmap midpoint
 
 # Data - ripple surface z = sin(sqrt(x^2 + y^2))
-np.random.seed(42)
 grid_size = 30
 x_vals = np.linspace(-5, 5, grid_size)
 y_vals = np.linspace(-5, 5, grid_size)
@@ -101,6 +100,21 @@ axis_x_name = pd.DataFrame([{"x_proj": xp, "y_proj": yp, "label": "X"}])
 xp, yp = isometric_projection(AXIS_OFFSET, 6.3, 0)
 axis_y_name = pd.DataFrame([{"x_proj": xp, "y_proj": yp, "label": "Y"}])
 
+# Z reference axis - vertical tick ladder at the X/Y axes' shared corner so
+# Z gets real spatial ticks like X and Y, not just the color legend
+xp0, yp0 = isometric_projection(AXIS_OFFSET, AXIS_OFFSET, -1.3)
+xp1, yp1 = isometric_projection(AXIS_OFFSET, AXIS_OFFSET, 1.3)
+z_axis_df = pd.DataFrame([{"x_proj": xp0, "y_proj": yp0, "x_proj_next": xp1, "y_proj_next": yp1}])
+
+z_ticks = []
+for t in (-1, 0, 1):
+    xp, yp = isometric_projection(AXIS_OFFSET, AXIS_OFFSET, t)
+    z_ticks.append({"x_proj": xp, "y_proj": yp, "label": str(t)})
+z_ticks_df = pd.DataFrame(z_ticks)
+
+xp, yp = isometric_projection(AXIS_OFFSET, AXIS_OFFSET, 1.6)
+axis_z_name = pd.DataFrame([{"x_proj": xp, "y_proj": yp, "label": "Z"}])
+
 title = "wireframe-3d-basic · python · altair · anyplot.ai"
 
 # Wireframe mesh - height (Z) mapped through the Imprint diverging cmap since
@@ -118,7 +132,7 @@ mesh = (
 )
 
 axes = (
-    alt.Chart(axis_df)
+    alt.Chart(pd.concat([axis_df, z_axis_df], ignore_index=True))
     .mark_line(strokeWidth=1.5, color=INK_SOFT, opacity=0.6)
     .encode(x=alt.X("x_proj:Q", axis=None), y=alt.Y("y_proj:Q", axis=None), x2="x_proj_next:Q", y2="y_proj_next:Q")
 )
@@ -129,14 +143,28 @@ tick_labels = (
     .encode(x=alt.X("x_proj:Q", axis=None), y=alt.Y("y_proj:Q", axis=None), text="label:N")
 )
 
+# Z ticks sit on a near-vertical axis line, so offset horizontally (dx)
+# rather than vertically (dy) like the X/Y ticks.
+z_tick_labels = (
+    alt.Chart(z_ticks_df)
+    .mark_text(fontSize=10, color=INK_SOFT, dx=-16)
+    .encode(x=alt.X("x_proj:Q", axis=None), y=alt.Y("y_proj:Q", axis=None), text="label:N")
+)
+
 axis_names = (
     alt.Chart(pd.concat([axis_x_name, axis_y_name], ignore_index=True))
     .mark_text(fontSize=13, fontWeight="bold", color=INK, dy=16)
     .encode(x=alt.X("x_proj:Q", axis=None), y=alt.Y("y_proj:Q", axis=None), text="label:N")
 )
 
+z_axis_name = (
+    alt.Chart(axis_z_name)
+    .mark_text(fontSize=13, fontWeight="bold", color=INK, dx=-16)
+    .encode(x=alt.X("x_proj:Q", axis=None), y=alt.Y("y_proj:Q", axis=None), text="label:N")
+)
+
 chart = (
-    alt.layer(mesh, axes, tick_labels, axis_names)
+    alt.layer(mesh, axes, tick_labels, z_tick_labels, axis_names, z_axis_name)
     .properties(width=620, height=320, background=PAGE_BG, title=alt.Title(title, fontSize=16))
     .configure_view(continuousWidth=620, continuousHeight=320, fill=PAGE_BG, strokeWidth=0)
     .configure_title(color=INK)
@@ -147,6 +175,7 @@ chart = (
         titleColor=INK,
         labelFontSize=10,
         titleFontSize=12,
+        padding=10,
     )
 )
 
