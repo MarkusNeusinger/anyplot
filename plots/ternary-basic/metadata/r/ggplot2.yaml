@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: ternary-basic
 created: '2026-08-04T15:12:13Z'
-updated: '2026-08-04T15:17:21Z'
+updated: '2026-08-04T15:31:26Z'
 generated_by: claude-sonnet
 workflow_run: 30922380763
 issue: 1001
@@ -12,51 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 92
 review:
   strengths:
   - Correct barycentric-to-Cartesian math (x = clay + 0.5*sand, y = sand*sqrt(3)/2)
-    places points accurately inside the equilateral triangle
-  - Full custom ternary scaffold built from ggplot2 primitives (geom_segment grid,
-    geom_path outline, geom_segment edge ticks) since ggplot2 has no native ternary
-    geom — idiomatic use of the grammar-of-graphics layering model
+    places all 90 points accurately inside the equilateral triangle, verified against
+    the vertex assignment
+  - Full custom ternary scaffold (grid lines, triangle outline, edge ticks, per-edge
+    percentage labels) built entirely from ggplot2 primitives (geom_segment, geom_path,
+    geom_text) since ggplot2 has no native ternary geom — correctly addresses the
+    prior review's VQ-06 weakness by adding '20%'/'40%'/... labels per edge, each
+    verified against the correct barycentric component
+  - New 'Balanced loam' focal point (the sample closest to an even 1/3-1/3-1/3 split,
+    highlighted with an ochre outlined marker and inline label) gives the plot a clear
+    visual hierarchy and narrative, directly resolving the prior review's DE-03 weakness
   - Theme-adaptive chrome correctly threaded through PAGE_BG/INK/INK_SOFT for both
-    renders; data color (#009E73) identical between light and dark
-  - 'Clean KISS structure: no functions/classes, seed set, only used imports (ggplot2,
-    dplyr, tibble, ragg), correct ragg::agg_png save at plot-{THEME}.png'
+    renders; data color (#009E73) and the ochre highlight (#BD8233) are pixel-identical
+    between light and dark, only chrome flips
+  - 'Clean KISS structure: no functions/classes, seed set, only used imports, correct
+    ragg::agg_png save at plot-{THEME}.png, both PNGs exactly 2400x2400'
+  - Realistic, neutral, spec-aligned application (USDA-style soil sand/silt/clay composition)
+    generated via a Dirichlet(1,1,1)-style construction (independent exponential draws
+    normalized to sum to 1), giving good coverage of corners, edges, and center
   - Title fontsize auto-scales via the length-based ratio formula and stays fully
-    within canvas bounds in both renders
-  - Realistic, neutral, spec-suggested application (soil sand/silt/clay composition)
-    with good coverage of the full triangle including corners, edges, and center
+    within canvas bounds in both renders — no clipping anywhere in either theme
   weaknesses:
-  - No percentage/units labeling anywhere on the grid or edges — only unlabeled tick
-    marks exist, so a viewer cannot read exact proportions (e.g. '20%', '40%') off
-    the triangle; add small numeric labels near the edge ticks to satisfy the spec's
-    'tick marks to aid reading proportions' note more fully
-  - Edge tick marks (tick_len = 0.02, alpha = 0.6) are very subtle at the 2400x2400
-    render size and easy to miss — increase tick_len and/or contrast slightly so they
-    read clearly
-  - 'No visual hierarchy or storytelling: all 90 points share identical color/size/alpha
-    with no emphasis (e.g. highlighting a texture-class region or a subset of points)
-    to guide the viewer to an insight'
-  - Title spans close to ~85-90% of the canvas width — within the tolerance for the
-    long mandated title but on the generous end; a touch more headroom would look
-    cleaner
+  - Edge percentage labels are set at size=2.3 (geom_text, mm units) — noticeably
+    smaller than the vertex labels (size=4) and on the small side for a 2400px canvas;
+    a slightly larger size (~2.8-3.0) would improve legibility without crowding the
+    ticks
+  - Only a single point ('Balanced loam') is used for visual hierarchy/storytelling
+    — a modest improvement over the flat prior version, but still a light touch; a
+    texture-class region shading or a second contrasting callout would deepen the
+    narrative further
+  - Aesthetic customization is still centered on the scaffold itself (grid/ticks/labels)
+    rather than additional refinement of the data layer (e.g. no marker-shape or size
+    variation to hint at density) — solid but not yet at a fully bespoke, editorial
+    level of polish
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — matches the Imprint light surface, not pure white.
-      Chrome: Title "Soil Texture Composition · ternary-basic · r · ggplot2 · anyplot.ai" in dark ink, clearly readable, centered above the triangle. Vertex labels "Sand" (top), "Silt" (bottom-left), "Clay" (bottom-right) are bold dark-ink text, clearly readable and well clear of the data. Triangle outline and internal grid lines render in a soft dark grey, subtle but visible; small edge tick marks are present but faint.
-      Data: 90 semi-transparent green (#009E73) points scattered across the full triangle interior, spanning corners, edges, and center, with visible overlap in denser clusters.
-      Legibility verdict: PASS
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Title "Soil Texture Composition · ternary-basic · r · ggplot2 · anyplot.ai" renders in dark ink (#1A1A17), fully visible with no clipping at any edge, centered above the triangle. Vertex labels "Sand" (top), "Silt" (bottom-left), "Clay" (bottom-right) are bold dark-ink text, clear of the data and canvas edges. Triangle outline and internal grid lines render in soft dark grey, subtle but visible. Edge tick marks are now clearly visible (increased length/contrast vs. the prior attempt) and each is paired with a "20%"/"40%"/.../"80%" numeric label in secondary grey ink, legible against the light background.
+      Data: 90 semi-transparent green (#009E73) points scatter across the full triangle interior with natural overlap in denser clusters; one point is highlighted with a larger ochre (#BD8233) outlined marker and an inline "Balanced loam" label, both fully readable against the light background.
+      Legibility verdict: PASS — all text (title, vertex labels, edge tick labels, callout label) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — matches the Imprint dark surface, not pure black.
-      Chrome: Title and vertex labels render in light off-white ink (#F0EFE8), clearly readable against the dark background — no dark-on-dark issues observed. Triangle outline and grid lines render in a light grey (INK_SOFT equivalent), visible against the dark surface. Edge ticks are present but faint, same as in the light render.
-      Data: Same 90 points in identical #009E73 green as the light render — confirmed unchanged data color, only chrome flipped between themes.
-      Legibility verdict: PASS
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Title and vertex labels render in light off-white ink (#F0EFE8), clearly readable against the dark surface — no dark-on-dark failures. Triangle outline, grid lines, and edge tick marks render in light grey, visible against the dark background; edge percentage labels are legible secondary-grey text.
+      Data: The 90 data points and the highlighted "Balanced loam" marker use the identical #009E73 green and #BD8233 ochre as the light render — confirmed only chrome flipped between themes, data/highlight colors unchanged.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark or contrast failures observed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -64,74 +71,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set and scaled by title-length ratio; readable
-          in both themes; title fits without clipping
+        comment: All text readable in both themes; edge percentage labels are a bit
+          small at size=2.3 relative to vertex labels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-to-text or text-to-data overlap; vertex labels sit clear
-          of data points
+        comment: No text-text or text-data collisions; 'Balanced loam' callout sits
+          clear of the nearest grid line and points
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size 2.5 / alpha 0.75 appropriate for 90 points, though dense
-          clusters still occlude
+        comment: Edge ticks now clearly visible after the length/contrast increase;
+          markers appropriately sized/alpha'd for 90-point density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single mono-color series, no CVD concern, good contrast on both backgrounds
+        comment: Green + ochre pairing is CVD-safe; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced square canvas, generous even margins, triangle fills
-          a good proportion, nothing cut off
+        comment: Canvas exactly 2400x2400; no clipping at any edge in either render;
+          title fits within bounds
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Vertex labels are descriptive but no percentage/unit labels along
-          the grid
+        comment: New per-edge percentage labels (20%-80%) now let readers quantify
+          compositions, resolving the prior review's VQ-06 gap
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds are
-          #FAF8F1/#1A1A17; chrome theme-correct'
+        comment: 'First series #009E73; highlight uses palette[4] ochre; backgrounds
+          correct #FAF8F1/#1A1A17; both themes correct'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
-        passed: true
-        comment: Custom ternary scaffold with subtle grid and clean typography, clearly
-          above library defaults
+        comment: Fully custom hand-built ternary scaffold with ochre focal-point accent,
+          well above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        passed: true
-        comment: theme_void removes all chrome, grid is subtle, generous whitespace,
+        comment: theme_void removes all chartjunk, subtle grid alpha, generous margins,
           detailed edge ticks
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data displayed but not interpreted; no emphasis, region highlighting,
-          or focal point
+        comment: '''Balanced loam'' highlighted point gives a clear focal point and
+          narrative — resolves the prior review''s 2/6 weakness, though still a single-point
+          emphasis'
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary plot with proper triangular coordinate system
+        comment: Correct ternary/simplex plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid lines at 20% intervals, labeled vertices, edge ticks, distinct
-          markers all present
+        comment: Grid lines at 20% intervals, labeled vertices, distinct points, edge
+          tick marks with percentage labels — all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Barycentric-to-Cartesian transform verified correct; all data visible
-          inside triangle
+        comment: Barycentric x/y mapping correct; all 90 points shown, each summing
+          to 100%
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend correctly omitted
-          for single series
+        comment: Title matches '{Descriptive Title} · spec-id · r · ggplot2 · anyplot.ai'
+          format; no legend needed (single series + inline label)
     data_quality:
       score: 15
       max: 15
@@ -171,21 +176,20 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: Points span corners, edges, and center of the full triangle
+        comment: 'Shows the full ternary plot type: vertices, grid, ticks, edge labels,
+          points, focal highlight'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Soil sand/silt/clay composition is the spec's own suggested neutral
-          application
+        comment: Soil sand/silt/clay texture composition is a real, neutral, widely-used
+          ternary-plot application
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: All compositions correctly sum to 1 (100%), no impossible values
+        comment: 90 samples within the spec's 20-200 point range; proportions correctly
+          sum to 100%
     code_quality:
       score: 10
       max: 10
@@ -194,57 +198,49 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: No functions/classes, linear imports -> data -> plot -> save
+        comment: No functions/classes, flat top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
         comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
         comment: ggplot2, dplyr, tibble, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: Appropriate complexity for the manual ternary construction, no fake
-          functionality
+        comment: Appropriate complexity for a hand-built ternary system; no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png, current API
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct dimensions
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: true
         comment: Layered geom composition + coord_fixed is the correct idiomatic route
           for a plot type ggplot2 has no native geom for
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: coord_fixed with custom xlim/ylim and theme_void combined to fabricate
-          a ternary coordinate system
-  verdict: REJECTED
+        comment: Hand-derived per-edge barycentric percentage labels and tick geometry
+          show real command of the coordinate system, beyond basic geom usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - annotations
+  - manual-ticks
   - layer-composition
   patterns:
   - data-generation
