@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:51:17Z'
-updated: '2026-08-04T08:58:43Z'
+updated: '2026-08-04T09:10:52Z'
 generated_by: claude-sonnet
 workflow_run: 30893341176
 issue: 766
@@ -12,117 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - 'Correct Imprint palette usage: first main category (SSD-1) is #009E73, remaining
-    categories follow canonical order (#C475FD, #4467A3, #BD8233, #AE3030), identical
-    across both renders'
-  - 'Genuine hierarchy technique: sns.light_palette() tints each subcategory within
-    a category from saturated (largest item) to pale (smallest item), giving a real
-    color-shading hierarchy as requested by the spec'
-  - 'Deliberate focal point: the single largest rectangle (Videos, 410GB) gets a bolder
-    ink-colored outline than the rest, guiding the eye to the dominant value first'
-  - 'Clean, realistic dataset: disk usage across 5 devices (2 SSDs, 2 HDDs, Cloud)
-    with 11 subcategories, plausible GB values and sensible category/device relationships'
-  - 'Title and legend format fully compliant: ''{Descriptive Title} · treemap-basic
-    · python · seaborn · anyplot.ai'', legend labels match the 5 top-level categories
-    exactly'
-  - Clean KISS script structure (imports → data → plot → save), squarify used correctly
-    for the treemap layout algorithm, seed set, no fake/simulated interactive elements
+  - 'Dark-theme text-contrast bug from attempt 1 is fully fixed: text_color now uses
+    a fixed literal (''#1A1A17''/''#FFFFFF'') based on per-cell shade luminance instead
+    of the theme-adaptive INK token, so every cell label is legible in both light
+    and dark renders'
+  - 'Correct Imprint palette: first category SSD-1 is #009E73, remaining categories
+    follow canonical order, identical across both renders'
+  - 'Genuine hierarchy technique: sns.light_palette() tints each subcategory from
+    saturated to pale within a category, and the largest rectangle (Videos, 410GB)
+    gets a bolder outline than the rest, creating a real focal point'
+  - Clean, realistic disk-usage dataset across 5 devices / 11 subcategories with sensible
+    GB values
+  - Title and legend format fully compliant with the anyplot title convention
+  - Canvas is exactly 3200x1800 (landscape), no bbox_inches='tight', no canvas-gate
+    failure
   weaknesses:
-  - 'Cell-label text-color bug in dark theme: the per-cell contrast decision at line
-    ~108 uses `text_color = INK if luminance > 0.5 else "#FFFFFF"`. INK is a theme-adaptive
-    token (near-black #1A1A17 in light theme, near-white #F0EFE8 in dark theme), but
-    the branch condition (rectangle luminance > 0.5, i.e. a pale/light-tinted cell)
-    is computed purely from the theme-invariant shade color and never changes between
-    renders. In the light render this coincidentally looks correct (INK resolves to
-    near-black, giving dark text on light cells). In the dark render the exact same
-    pale cells (Cache, System, Applications, Backups, Photos, Versioning, Videos —
-    i.e. every cell whose sns.light_palette shade has luminance > 0.5) get near-white
-    (#F0EFE8) text instead of a fixed dark color, producing low-contrast near-white-on-pale-tint
-    labels. Fix: replace `INK` in that branch with a fixed literal dark ink (e.g.
-    ''#1A1A17'') that does NOT flip with ANYPLOT_THEME, since the rectangle fill colors
-    themselves are theme-invariant and only need a dark/light label chosen once per
-    cell, not re-evaluated per theme.'
-  - 'Minor: labels are shown on every rectangle (area threshold of 150 is well below
-    the smallest item''s ~293 unit area), so the spec''s optional ''smaller ones may
-    omit labels for clarity'' guidance was never actually exercised — not a violation
-    but a missed opportunity to demonstrate the omission behavior on an even more
-    crowded dataset.'
-  - 'Minor: legend swatches show the fully-saturated base category color, while the
-    rendered treemap cells mostly show lighter tinted shades of that color — a small
-    (and common/acceptable) mismatch between legend chip color and the majority of
-    on-canvas cell colors that could be tightened by using a representative mid-tint
-    in the legend.'
+  - '''Documents'' cell label overflows its own rectangle and crosses the border into
+    the neighboring ''Applications'' (SSD-2) cell in BOTH renders — the thin PAGE_BG-colored
+    cell-separator line visibly passes through the ''t''/''s'' of ''Documents'', and
+    the left ''D'' also bleeds past the treemap''s own left edge into the surrounding
+    margin. Fix: shrink the label fontsize (or wrap/truncate) when the rendered text
+    width would exceed the rectangle''s dx, e.g. measure text extent with a renderer
+    bbox check before drawing, or skip the two-line label for narrow tall cells.'
+  - '''Versioning'' cell label is flush against its cell''s right border (text right
+    edge ~5px past the fill boundary) — much tighter than other labels; same narrow-cell
+    sizing issue as ''Documents'', just far less severe.'
+  - 'numpy is imported and np.random.seed(42) is called, but no np.random.* call is
+    ever made — all data is a hardcoded literal list, so the seed call is dead code.
+    Fix: drop the unused numpy import and seed call, since the data is already fully
+    deterministic.'
+  - Label-area threshold (area > 150) sits below every cell's rendered area (smallest
+    cell 'Versioning' at 40GB still renders ~324 units²), so every one of the 11 cells
+    gets a label — the spec's optional 'smaller ones may omit labels for clarity'
+    is never actually exercised.
+  - Legend swatches show the fully-saturated base category color while the on-canvas
+    cells show lighter per-subcategory tints — a minor, common mismatch between legend
+    and fill that could be tightened.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Disk Usage by Device · treemap-basic · python · seaborn · anyplot.ai" in dark ink, clearly visible above the treemap. Legend (SSD-1 green, SSD-2 lavender, HDD-1 blue, HDD-2 ochre, Cloud red) sits below the treemap in a light legend box with dark labels, clearly readable. No axis ticks (axis is off, as expected for a treemap).
-      Data: 11 nested rectangles sized by GB value (squarify layout). Each top-level category (SSD-1, SSD-2, HDD-1, HDD-2, Cloud) uses its own Imprint hue; subcategories within a category are rendered in a tint gradient from saturated (largest item) to pale (smallest item) via sns.light_palette. The single largest rectangle (Videos, 410GB) has a bold dark outline that anchors the visual hierarchy. Every cell carries a bold "{subcategory}\n{value}GB" label; text color is chosen per-cell (black or white) based on the cell's luminance. All labels are legible against their fill color in this render.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Disk Usage by Device · treemap-basic · python · seaborn · anyplot.ai" in dark ink, clearly visible above the treemap with comfortable padding. Legend below the treemap (5 device swatches: SSD-1 green, SSD-2 lavender, HDD-1 blue, HDD-2 ochre, Cloud red) in dark text on an elevated cream box. All chrome text is readable.
+      Data: 11 nested rectangles (squarify layout) grouped into 5 top-level categories, each subcategory tinted from a saturated to a pale shade of its category color via sns.light_palette. First category (SSD-1) is #009E73 as required. The largest cell (Videos, 410GB) has a bold dark outline anchoring the visual hierarchy; all other cells have thin background-colored separators. Every cell shows a "{subcategory}\n{value}GB" label; text color is chosen per-cell from the shade's own luminance (dark ink on pale/light cells, white on saturated/dark cells) and reads correctly on every cell.
+      Layout defect: the "Documents" label (leftmost, narrow SSD-1 cell) is wider than its rectangle — the word bleeds across the right border into the "Applications" (SSD-2, purple) cell, with the thin cell-separator line passing through the letters "t"/"s", and the "D" bleeds past the treemap's own left edge into the surrounding margin (still inside the canvas, not clipped at the PNG border). The "Versioning" label is also flush against its cell's right edge, tighter than the other ten labels.
+      Legibility verdict: PASS (all text is readable; the Documents/Applications overlap is a layout/overlap defect, not a contrast or legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and legend text switch to light cream, clearly legible against the dark background. Legend box uses the dark elevated surface with light text/borders — theme-correct.
-      Data: Same 11 rectangles, same fill colors as the light render (Imprint hues + light_palette tints) — confirmed identical data colors across themes, only chrome flipped, as required.
-      Legibility verdict: FAIL for a subset of cell labels — the per-cell text-color logic (`text_color = INK if luminance > 0.5 else "#FFFFFF"`) uses the theme-adaptive INK token for the "light cell" branch. INK resolves to near-white (#F0EFE8) in the dark theme, so every pale-tinted cell (Cache, System, Applications, Backups, Photos, Versioning, and the large Videos cell) renders near-white text on a pale/light-tinted fill — a low-contrast, borderline "light-on-light" condition inside the chart's primary content labels. Only the darker/base-shaded cells (Documents, Media, Archives, Sync), which always use the '#FFFFFF' branch regardless of theme, remain solidly legible in both renders.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and legend text switch to light cream ink, clearly legible against the dark background. Legend box uses the dark elevated surface (#242420) with light text.
+      Data: Same 11 rectangles, identical fill colors to the light render (verified — only chrome flipped, cell colors and category-to-color mapping are unchanged). Per-cell text color again derives from each shade's own fixed-literal luminance check (not the theme-adaptive INK token), so dark-tinted cells still get dark text and light-tinted cells still get white text correctly — the attempt-1 "dark-on-dark / pale-cell white-on-white" contrast bug is gone. No dark-on-dark or light-on-light failures found anywhere on this render.
+      Layout defect: same "Documents" label overflow into "Applications" is present here too (the separator line, now near-black like the page background, cuts through the same letters), and the "Versioning" label is similarly flush to its cell's right edge.
+      Legibility verdict: PASS (all text is readable in both themes; the attempt-1 contrast bug is fully resolved; the overlap issue above is cosmetic, not a legibility failure).
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 7
         max: 8
-        passed: false
-        comment: Cell labels readable in light render; in dark render, every pale/light-tinted
-          cell (Cache, System, Applications, Backups, Photos, Versioning, Videos)
-          gets near-white text via the theme-adaptive INK token instead of a fixed
-          dark color, producing low-contrast light-on-light labels.
+        passed: true
+        comment: All 11 cell labels readable in both themes; slightly cluttered where
+          the Documents label crosses into the neighboring cell
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: '''Documents'' label overflows its rectangle and crosses the border
+          into the ''Applications'' cell in both renders, with the cell-separator
+          line passing through the letters'
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text or data elements in either render.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: 11 rectangles clearly visible, sized appropriately for the 5-50 item
-          range specified.
+        comment: All 11 rectangles and their shading gradations clearly distinguishable
+          in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: The dark-theme text-color bug is a genuine contrast failure for a
-          subset of cells beyond palette choice itself.
+        passed: true
+        comment: 'Attempt-1 dark-theme contrast bug fixed: per-cell text color now
+          uses fixed literals based on shade luminance, correct on every cell in both
+          renders'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Treemap + legend fills roughly 65-70% of the canvas with balanced
-          margins; nothing cut off.
+        comment: Canvas exactly 3200x1800, no bbox_inches='tight', no canvas-gate
+          failure; nothing extends beyond the overall plot/canvas bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for a treemap; title and legend are descriptive
-          with units (GB) shown per cell.
+        comment: Title fully compliant with the anyplot title convention; no axes
+          needed for a treemap
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First category is #009E73, remaining categories follow canonical
-          Imprint order, backgrounds are #FAF8F1/#1A1A17, data colors identical across
-          themes.'
+        comment: 'First category #009E73, canonical Imprint order for remaining 4
+          categories, correct theme-adaptive backgrounds in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -131,20 +129,23 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Thoughtful per-subcategory tinting and a deliberate anchor-box outline
-          go clearly beyond default styling.
+        passed: true
+        comment: Thoughtful per-subcategory tinting + anchor-box outline on the largest
+          cell, clearly above generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Axis fully removed, subtle background-colored gaps between cells,
-          generous whitespace; not flawless (legend framing is fairly plain).
+        passed: true
+        comment: Axis fully removed, subtle inter-cell gaps, generous whitespace and
+          legend padding
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Bold outline on the largest cell plus graded shading within each
-          category creates real visual hierarchy and a clear focal point.
+        passed: true
+        comment: Bold outline on the largest cell (Videos) plus graded shading within
+          each category creates a genuine focal point and hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -153,25 +154,29 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct treemap with nested rectangles proportional to value.
+        passed: true
+        comment: Correct treemap via squarify + matplotlib Rectangle patches
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Distinct category colors, subtle inter-rectangle borders, hierarchy
-          shown via color-shading intensity — all spec notes covered.
+        passed: true
+        comment: Distinct category colors, hierarchy shown via shading + nesting,
+          subtle borders between rectangles
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Rectangle area correctly proportional to value via squarify; all
-          11 items shown.
+        passed: true
+        comment: Rectangle area proportional to value via squarify.normalize_sizes;
+          all 11 items shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format matches the mandated pattern; legend labels match the
-          5 categories exactly.
+        passed: true
+        comment: Title format compliant with descriptive prefix; legend labels match
+          the 5 device categories
     data_quality:
       score: 14
       max: 15
@@ -180,50 +185,56 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Good range of category sizes (2-3 subcategories each) and value spread
-          (40-410GB); shows both large and small items.
+        passed: true
+        comment: Label-area threshold (150) is below every cell's area, so the spec's
+          optional 'smaller ones may omit labels' behavior is never exercised
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Disk usage by device/data type is a real, neutral, comprehensible
-          scenario.
+        passed: true
+        comment: Plausible, neutral disk-usage-by-device dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: GB values are realistic for SSD/HDD/cloud storage tiers and their
-          relative proportions.
+        passed: true
+        comment: GB values (40-410) are sensible for the domain
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
-        comment: Single flat script, imports -> data -> plot -> save, no functions/classes.
+        passed: true
+        comment: No functions/classes, flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: np.random.seed(42) set; data itself is deterministic/hardcoded.
+        passed: true
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        comment: All imports (os, plt, np, sns, squarify, Patch/Rectangle) are used.
+        passed: false
+        comment: numpy is imported solely for np.random.seed(42), but no np.random.*
+          call is ever made since the data is a hardcoded literal list — dead code
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriately complex for a treemap built on squarify + matplotlib
-          patches, no fake UI.
+        passed: true
+        comment: No fake interactivity, appropriate complexity for a custom treemap
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-{THEME}.png with default bbox_inches, current API.
+        passed: true
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight'
     library_mastery:
       score: 7
       max: 10
@@ -232,28 +243,30 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: sns.set_theme + sns.light_palette used correctly; core rendering
-          necessarily falls back to matplotlib patches since seaborn has no native
-          treemap primitive.
+        passed: true
+        comment: Correct sns.set_theme/sns.light_palette usage; core rendering necessarily
+          falls back to matplotlib patches since seaborn has no native treemap
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        comment: sns.light_palette() is a genuine seaborn-specific feature used meaningfully
-          to generate the per-subcategory tint hierarchy.
-  verdict: REJECTED
+        passed: true
+        comment: sns.light_palette() is a genuine, meaningfully-used seaborn-specific
+          feature for the per-subcategory shading
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - squarify
   techniques:
   - annotations
-  - custom-legend
   - patches
+  - custom-legend
   patterns:
   - iteration-over-groups
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
-  - minimal-chrome
   - alpha-blending
   - edge-highlighting
+  - publication-ready
