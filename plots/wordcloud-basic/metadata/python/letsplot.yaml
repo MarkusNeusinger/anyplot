@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T10:01:35Z'
-updated: '2026-08-04T23:14:35Z'
+updated: '2026-08-04T23:27:03Z'
 generated_by: claude-sonnet
 workflow_run: 30958504907
 issue: 1012
@@ -12,64 +12,60 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/letsplot/plot-dark.html
-quality_score: 76
+quality_score: 85
 review:
   strengths:
-  - Custom collision-aware spiral placement algorithm is a legitimate, well-executed
-    substitute for letsplot's lack of a native wordcloud geom
-  - 'First/largest word (Python, freq=100) is correctly brand green #009E73, and all
-    data colors are identical between light and dark renders — only chrome flips'
-  - All 26 words from the dataset are placed and visible — none silently dropped by
-    the collision loop
-  - Frequency-driven size scaling (power curve) plus alpha fade on lower-frequency
-    words creates a clear visual focal point
-  - Rotation variety (vertical text on a subset) adds classic word-cloud texture without
-    faking interactivity
-  - Title exactly matches the mandated format and is fully legible in both themes;
-    clean code with no functions/classes, all imports used, deterministic output
+  - 'Canvas utilization dramatically improved: switched to the square 2400x2400 format,
+    and the cloud now fills ~80% of the canvas width and ~76% of the height with balanced
+    margins on all four sides (previously ~35-40% width with a skewed 29%-empty top
+    gap)'
+  - 'Full 8-hue Imprint palette now cycled (added the previously-missing lime #99B314);
+    Python (highest frequency) is still correctly brand green #009E73, and every data
+    color is identical between the light and dark renders'
+  - Minimum font-size floor raised from 4.5mm to 6.5mm, meaningfully improving legibility
+    of the smallest-frequency words at mobile scale
+  - Added a custom lets-plot layer_tooltips() (title=@word, line=Frequency|@frequency)
+    — a genuine library-distinctive interactive touch that directly addresses the
+    prior Library Mastery feedback
+  - 'Retains all prior strengths: collision-aware spiral placement algorithm, all
+    26 words placed and visible, frequency-driven size scaling with alpha fade for
+    a clear focal point, rotation variety, clean deterministic KISS code, exact mandated
+    title format'
   weaknesses:
-  - 'Large unbalanced blank canvas space: roughly 29% of the canvas height is empty
-    between the title and the top of the word cloud, and the cloud''s dense cluster
-    only spans ~35-40% of the canvas width, leaving big empty margins on both left
-    and right — the landscape 3200x1800 format doesn''t suit the naturally circular/blob-shaped
-    spiral output. Either switch to the square format (ggsize(600,600), scale=4 ->
-    2400x2400) which better matches the blob shape, or increase canvas_width/canvas_height
-    and word sizes / max spiral radius so the composition actually reaches closer
-    to the canvas edges.'
-  - Smallest-frequency words (Elixir, Lua, R, Clojure, and the vertical Haskell) use
-    min_size=4.5mm, which is borderline illegible once the 3200px-wide PNG is scaled
-    down to a ~400px mobile width — raise the size floor (e.g. min_size=6-6.5) or
-    compress the size range so low-frequency words stay legible at small display widths.
-  - 'IMPRINT color list only defines 7 of the 8 canonical Imprint hues (missing lime
-    #99B314), so the color cycle repeats one hue early across the 26 words — add the
-    8th hex for full palette variety.'
-  - 'Library Mastery is generic: no letsplot-distinctive interactive touch (e.g. a
-    custom tooltip showing the frequency value on hover) beyond the default HTML export.'
+  - Data storytelling is still driven purely by frequency (size/color/alpha) with
+    no additional layered emphasis — e.g. grouping words by language paradigm/domain
+    would add a second dimension to the hierarchy
+  - The smallest-frequency words (Elixir, Haskell, Lua, R) remain noticeably smaller
+    than the dominant terms; a slightly gentler size-scaling exponent or a marginally
+    higher floor would further improve mobile-scale legibility
+  - Distinctive lets-plot feature usage is still fairly minimal beyond the new tooltip
+    — no use of e.g. custom coordinate transforms or lets-plot-specific interactivity
+    beyond hover
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), not pure white — correct.
-      Chrome: Title "wordcloud-basic · letsplot · anyplot.ai" is centered at the top in dark ink text, clearly readable. No axes, ticks, or legend are shown (theme_void), which is correct for a word cloud. No grid lines.
-      Data: 26 programming-language words arranged in a roughly circular/blob cloud in the center of the canvas via a custom spiral placement. Python (highest frequency, 100) is the largest word and correctly colored brand green #009E73. Other words cycle through the remaining Imprint hues (lavender, blue, ochre, matte red, cyan, rose) with size scaled to frequency and a subset rendered vertically for variety. Lower-frequency words (Elixir, Lua, Clojure, R, Haskell) are noticeably faded (reduced alpha) and small. No overlaps between words were observed. The cloud cluster occupies only the middle portion of the canvas — there is a large empty gap between the title and the top of the cloud, and substantial empty margins left/right of the dense cluster.
-      Legibility verdict: PASS overall (all text is dark-on-light and readable at full resolution), though the smallest words (Elixir, Lua, R) are borderline for mobile-scale legibility — flagged as a weakness, not a hard failure.
+      Chrome: Title "wordcloud-basic · letsplot · anyplot.ai" is centered at the top in dark ink text, clearly readable, no clipping. No axes, ticks, legend, or grid (theme_void), correct for a word cloud.
+      Data: 26 programming-language words arranged in a large, well-distributed cloud via custom spiral placement — measured bounding box spans ~80% of canvas width and ~76% of canvas height, with balanced margins on all four sides (top gap below title ~9%, bottom ~10%, left ~10%, right ~9%). Python (freq=100, largest) is correctly brand green #009E73. All remaining words cycle through the full 8-hue Imprint palette (lavender, blue, ochre, matte red, cyan, rose, lime, then back to green) in frequency order, confirmed against the canonical palette. Size scales with frequency via a power curve (min 6.5mm, max 14mm), and lower-frequency words are faded via reduced alpha, creating a clear focal point on the largest/most-frequent terms. A subset of words render vertically for rotation variety. No overlaps between words were observed anywhere in the cloud, and no text touches or clips the canvas edges (checked via pixel-level crops of all four corners/edges — Elixir, GraphQL, Haskell, Shell, Lua all sit comfortably inside the frame).
+      Legibility verdict: PASS — all text is dark-on-light and readable at full resolution; smallest words (Elixir, Haskell, Lua, R) are noticeably smaller than the dominant terms but remain recognizable at mobile scale given the raised 6.5mm floor.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), not pure black — correct.
-      Chrome: Title is rendered in light/off-white text, clearly readable against the dark background. Same theme_void treatment — no axes/ticks/legend/grid.
-      Data: Identical word layout, sizes, rotations, and colors to the light render (Python still green #009E73, same hue assignment per word) — confirms only chrome (background/title color) flips between themes, data colors are constant as required. Same empty-space imbalance as the light render (large top gap, wide empty left/right margins).
-      Legibility verdict: PASS — no dark-on-dark issues detected; all title and word text is clearly visible against the near-black surface. Same mobile-scale legibility caveat for the smallest words as noted for the light render.
+      Chrome: Title rendered in light/off-white text, clearly readable against the dark background. Same theme_void treatment, no axes/ticks/legend/grid.
+      Data: Identical word layout, sizes, rotations, and colors to the light render — confirms only chrome (background/title color) flips between themes and data colors are constant as required (Python still #009E73, same hue cycle for all other words).
+      Legibility verdict: PASS — no dark-on-dark issues detected; all title and word text is clearly visible against the near-black surface. Same mobile-scale legibility note for the smallest words as in the light render.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Readable overall in both themes, but smallest words (Elixir, Lua,
-          R, Clojure, vertical Haskell) are borderline at mobile scale — min_size=4.5mm
-          floor is too low
+        comment: Min font-size floor raised 4.5mm -> 6.5mm; all sizes explicitly set.
+          All words readable in both themes; smallest words (Elixir, Haskell, Lua,
+          R) still noticeably smaller but recognizable at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -78,10 +74,11 @@ review:
         comment: No collisions between words in either render
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: All words visible at full resolution; smallest words marginal
+        comment: All words visible at full resolution; smallest words are the only
+          mildly suboptimal element
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -90,12 +87,12 @@ review:
         comment: Varied hues, decorative use, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Large unbalanced blank space: ~29% of canvas height empty above
-          the cloud, ~30%+ empty margins left/right — landscape format poorly matches
-          the blob-shaped spiral output'
+        passed: true
+        comment: Switched to square 2400x2400; measured cloud bbox now spans ~80%
+          width / ~76% height with balanced ~9-10% margins on all sides -- fixes the
+          prior 29%-empty-gap/skewed-margins issue entirely
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -108,33 +105,35 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First/largest word correctly brand green #009E73; colors identical
-          light/dark; backgrounds theme-correct; all hues drawn from Imprint palette'
+        comment: 'Full 8-hue Imprint palette now used (added missing lime #99B314);
+          first/largest word correctly brand green #009E73; colors identical light/dark;
+          backgrounds theme-correct'
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Custom spiral placement, alpha fade, rotation variety show some effort,
-          but polish undermined by uneven canvas use
+        comment: Custom spiral placement, full palette variety, alpha fade, rotation
+          variety, and a well-filled composition show clear above-default effort,
+          though not yet publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Spines/axes correctly removed, but large uncontrolled whitespace
-          reads as wasted canvas rather than intentional margin
+        passed: true
+        comment: Whitespace is now balanced and reads as intentional margin rather
+          than wasted canvas; spines/axes correctly removed
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Size/color/alpha create a focal point (Python), but hierarchy is
-          purely frequency-driven
+        comment: Size/color/alpha create a focal point on Python/JavaScript, but hierarchy
+          is still purely frequency-driven with no additional layered emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -174,7 +173,7 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers size, color, rotation variety, spiral placement
+        comment: Covers size, color, rotation variety, spiral placement, alpha hierarchy
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -208,14 +207,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used, including new layer_tooltips import
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Custom spiral is a reasonable, non-fake solution to letsplot's missing
-          wordcloud geom
+        comment: Custom spiral remains a reasonable, non-fake solution; tooltip addition
+          is clean and not over-engineered
       - id: CQ-05
         name: Output & API
         score: 1
@@ -223,7 +222,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png (scale=4) + plot-{THEME}.html correctly
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -232,22 +231,25 @@ review:
         max: 5
         passed: true
         comment: Idiomatic lets-plot/ggplot grammar (aes mapping, scale_size_identity,
-          scale_alpha_identity, theme_void)
+          scale_alpha_identity, theme_void, layer_tooltips)
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Doesn't leverage letsplot-distinctive interactive features beyond
+        comment: Now uses a custom layer_tooltips() showing word + frequency on hover,
+          a genuine lets-plot-distinctive interactive feature -- improved from generic
           default HTML export
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
