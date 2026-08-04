@@ -99,12 +99,14 @@ scatter!(ax, pts; color = (BRAND, 0.85), markersize = 12, strokewidth = 1.0, str
 # 18-8 (304) stainless, giving the reader a recognizable focal point to
 # compare the alloy cloud against. Leader runs into the empty mid-triangle
 # gap (chromium/nickel can't jointly reach x≈0.5 within the sampled ranges)
-# so the label never collides with the cluster.
-lines!(ax, [ref_pt, ref_pt + Point2f(0.28, 0.0)]; color = INK_SOFT, linewidth = 1.0)
-scatter!(ax, [ref_pt]; marker = :diamond, markersize = 22, color = PAGE_BG,
-         strokewidth = 2.0, strokecolor = INK)
+# so the label never collides with the cluster. Drawn last (on top of the
+# grid/data) with a heavier linewidth and a tinted (not pure-background)
+# fill so the anchor never blends into surrounding elements.
+lines!(ax, [ref_pt, ref_pt + Point2f(0.28, 0.0)]; color = INK_SOFT, linewidth = 1.6)
+scatter!(ax, [ref_pt]; marker = :diamond, markersize = 26, color = (INK_SOFT, 0.12),
+         strokewidth = 2.5, strokecolor = INK)
 text!(ax, ref_pt + Point2f(0.30, 0.0); text = "304 (18-8 ref.)",
-      color = INK_SOFT, fontsize = 13, align = (:left, :center))
+      color = INK_SOFT, fontsize = 14, align = (:left, :center))
 
 xlims!(ax, -0.18, 1.18)
 ylims!(ax, -0.12, 1.06)
