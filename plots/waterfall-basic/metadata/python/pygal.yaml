@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: waterfall-basic
 created: '2025-12-24T09:51:13Z'
-updated: '2026-08-04T11:29:36Z'
+updated: '2026-08-04T11:42:27Z'
 generated_by: claude-sonnet
 workflow_run: 30903920325
 issue: 777
@@ -12,39 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Correct waterfall mechanics: floating bars at accurate cumulative heights, dashed
-    connector lines, and distinct neutral "total" bars for start/end - all spec-required
-    features present'
-  - Theme-adaptive Style object with a well-reasoned semantic color exception (green=gain,
-    red=loss, neutral ink=total) that stays correct and identical in both light and
-    dark renders
-  - Creative, well-documented technique for drawing waterfall connectors on top of
-    StackedBar by reusing the library's own internal view/margin math - a genuinely
-    distinctive pygal-specific solution
-  - Deterministic, realistic quarterly-financials dataset that sums correctly to the
-    displayed net income
+  - 'Both attempt-1 fixes correctly applied: title now includes the required `python`
+    language token, and `legend_at_bottom_columns=3` cleanly puts Total/Increase/Decrease
+    on a single aligned legend row with no more collision with the ''Category'' x-axis
+    title.'
+  - 'Genuine waterfall mechanics: floating bars sit at accurate cumulative heights
+    via a `StackedBar` subclass, with dashed connector lines drawn through the library''s
+    own view/margin math so endpoints land pixel-exact on bar edges.'
+  - Well-reasoned semantic color mapping (green=gain, red=loss, theme-adaptive ink=total/baseline)
+    with clear code comments explaining the Imprint 'Semantic Exception' rationale.
+  - Deterministic, realistic quarterly-financials dataset (Q1 Revenue -> Net Income)
+    that sums correctly and displays running totals directly in the x-axis labels
+    for extra clarity.
+  - 'Clean, minimal code: one justified custom class, no fake interactivity, correct
+    file outputs (plot-{theme}.png/.html).'
   weaknesses:
-  - Title is missing the {language} token - currently "waterfall-basic · pygal · anyplot.ai"
-    instead of "waterfall-basic · python · pygal · anyplot.ai"
-  - 'Legend layout is scattered/unbalanced: the x-axis title "Category" sits directly
-    above the "Total" legend swatch (reading like a legend header), while "Increase"
-    is isolated on a separate line far to the left and "Decrease" ends up sharing
-    a row with "Total" instead of a clean single-row or aligned legend'
+  - 'Data-color fidelity bug: the custom Style() never overrides pygal''s default
+    `opacity=0.7`, so every filled series (Total/Increase/Decrease) renders as a blend
+    between its hex and the page background instead of the true color. Sampled pixels
+    confirm it: ''Increase'' green is rgb(75,185,152) on plot-light.png but rgb(8,119,87)
+    on plot-dark.png -- neither matches the mandated #009E73 (rgb 0,158,115), and
+    the two themes show visibly different greens. Same pattern on ''Decrease'' red:
+    rgb(197,107,105) light vs rgb(130,41,40) dark, true #AE3030 = rgb(174,48,48).
+    This violates the hard rule that Imprint palette data colors must be identical
+    between light and dark and must render as the canonical hex. Fix: add `opacity="1"`
+    (and `opacity_hover="1"` for consistency) to the `Style(...)` call in custom_style
+    so bar fills render at full, unblended opacity.'
+  - As a side effect of the same opacity bug, the 'Total' bars (meant to use the theme-adaptive
+    INK/neutral token) render as a washed-out mid-gray rather than the intended near-black/near-white
+    -- visually fine by coincidence (reads as 'gray', which the spec allows), but
+    not the intended token value.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec.
-      Chrome: Dark monospace title "waterfall-basic · pygal · anyplot.ai" centered at top; y-axis "Amount ($K)" and x-axis "Category" titles in dark ink; x-axis tick labels rotated ~25 degrees combining category name + running total (e.g. "Services ($730K)"); legend below the plot reads "Total"/"Increase"/"Decrease" with color swatches, though positioned in a scattered two-row layout that visually collides with the "Category" x-title. All chrome readable against the light background.
-      Data: Two neutral dark-gray "total" bars (Q1 Revenue $500K, Net Income $387K) with white value labels; three teal-green "increase" bars (+$150K, +$80K, +$25K); three brick-red "decrease" bars (-$180K, -$120K, -$68K), each with a dark value label centered on the bar; dashed gray connector lines link consecutive bar edges. First categorical data series (Increase) is #009E73 brand green.
-      Legibility verdict: PASS
+      Background: Warm off-white, sampled rgb(250,248,241) — matches #FAF8F1. Correct, not pure white.
+      Chrome: Dark monospace title "waterfall-basic · python · pygal · anyplot.ai" centered at top, fully clear of the canvas edge. Y-axis title "Amount ($K)" (rotated) and x-axis title "Category" in dark ink, both readable. Tick labels dark and legible. Dashed horizontal y-guides only (no x-guides), subtle gray. Legend below plot area reads "Total" / "Increase" / "Decrease" on one aligned row with matching color swatches — no longer collides with the "Category" x-title (attempt-1 fix confirmed working).
+      Data: Two neutral gray "total" bars (Q1 Revenue $500K, Net Income $387K) with white value labels; three green "increase" bars (+$150K/+$80K/+$25K); three red "decrease" bars (-$180K/-$120K/-$68K), each with a centered value label. Dashed connector lines link consecutive bar edges to trace the cumulative flow. X-axis tick labels rotated ~25°, combine category name + running total (e.g. "Services ($730K)"), fully visible, not clipped at either canvas edge.
+      Legibility verdict: PASS — all text readable, no light-on-light. HOWEVER pixel-sampling reveals the "Increase" green is NOT the canonical #009E73 (rgb 0,158,115) — it renders as rgb(75,185,152), a lighter/pastel teal, due to pygal's un-overridden default opacity=0.7 blending the fill toward the #FAF8F1 background. Same dilution affects the red and gray fills.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec.
-      Chrome: Same title/axis titles/tick labels/legend, now rendered in light tones against the dark background. Total bars flip to light gray (theme-adaptive ink token) so they remain visible on dark. Legend has the same scattered layout issue as the light render. No dark-on-dark failures observed.
-      Data: Green (#009E73) and red (#AE3030) bars are pixel-identical in hue to the light render - confirms only chrome flipped, not data colors, per the theme-adaptive palette rule.
-      Legibility verdict: PASS
+      Background: Warm near-black, sampled rgb(26,26,23) — matches #1A1A17. Correct, not pure black.
+      Chrome: Same title now in light monospace text, fully legible. Axis titles, tick labels, connector lines, and legend all render in light tones — no dark-on-dark failures. Legend row reads correctly, matches light render layout.
+      Data: Total bars now light gray (theme-adaptive), value labels flip to dark text on the lighter bar — readable. Increase/decrease bars occupy the same cumulative positions as the light render.
+      Legibility verdict: PASS on text — no dark-on-dark. HOWEVER this is where the palette bug becomes a hard failure: the "Increase" green here samples as rgb(8,119,87), a noticeably darker/more saturated forest green than the light render's rgb(75,185,152) — the SAME series color is NOT identical across themes. Same for "Decrease" red: rgb(130,41,40) here vs rgb(197,107,105) on light. This directly violates the mandatory rule that Imprint palette data colors (positions 1-7) must be pixel-identical between light and dark, with only chrome allowed to flip. Root cause confirmed: pygal's Style defaults to opacity=0.7 and the implementation never sets opacity="1", so every fill blends toward each theme's differing page background instead of rendering the specified hex directly.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -56,75 +68,82 @@ review:
         max: 8
         passed: true
         comment: All text readable in both themes at generous explicit font sizes;
-          rotated x-axis labels are dense but not unreadable
+          rotated x-axis labels (category + running total) are dense but not unreadable.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No literal text overlap, but legend visually collides with x-axis
-          title
+        comment: Legend now sits cleanly on its own row (legend_at_bottom_columns=3
+          fix confirmed) with no collision with the 'Category' x-title.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8 sparse bars all clearly visible, connector lines add appropriate
-          detail
+        comment: 8 sparse bars all clearly visible; dashed connector lines add flow
+          without clutter.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Every bar carries an explicit +/- and $ text label, so red/green
-          is never the sole signal
+        comment: Red/green pairing is backed by explicit +/- and $ text labels plus
+          a third neutral-gray channel for totals, so color is never the sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800; legend layout scattered (Category x-title
-          reads as legend header for Total)
+        comment: Exact 3200x1800 canvas, nothing clipped at any edge (verified via
+          pixel crops of all four borders), legend layout fixed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Amount ($K) and Category are descriptive with units
+        comment: '''Amount ($K)'' and ''Category'' are descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First series #009E73, documented semantic exception for red=loss,
-          correct theme backgrounds, identical data colors across themes'
+        passed: false
+        comment: 'Pixel-sampled: Increase-green is rgb(75,185,152) light / rgb(8,119,87)
+          dark -- neither equals #009E73 (rgb 0,158,115), and the two themes show
+          visibly different greens (same for the red). Caused by pygal''s un-overridden
+          default Style opacity=0.7 blending every fill toward the theme background.
+          Violates the hard ''data colors identical across themes'' and ''first series
+          is always #009E73'' rules.'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Theme-adaptive Style object, deliberate semantic color mapping, tuned
-          font-size hierarchy
+        comment: Theme-adaptive Style, deliberate semantic color mapping, tuned font
+          hierarchy -- but the opacity bug means the actual rendered palette is a
+          washed-out, theme-inconsistent version of the intended one, undercutting
+          the polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Dashed connectors and subtle gridlines are refined, but legend placement
-          undercuts polish
+        comment: Dashed connectors and subtle gridlines are refined; legend layout
+          issue from attempt 1 is resolved. Colors read slightly pastel/washed rather
+          than crisp due to the opacity bug.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Running totals + connectors make cumulative flow easy to follow;
-          no extra emphasis beyond standard waterfall reading
+        comment: Running totals in x-axis labels plus connector lines make the cumulative
+          flow easy to follow; no additional emphasis beyond standard waterfall reading.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,27 +151,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine waterfall via StackedBar subclass with floating bars
+        comment: Genuine waterfall via StackedBar subclass with floating bars at correct
+          cumulative heights.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color-coded pos/neg, connector lines, distinct total bars, running-total
-          + value labels all present
+        comment: Color-coded increase/decrease, dashed connectors, distinct total
+          bars, running-total + per-bar labels -- all spec-mandated features present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=category steps, Y=amount, all 8 steps shown
+        comment: X = category steps, Y = amount; all 8 steps shown.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing required {language} token - should be 'waterfall-basic
-          · python · pygal · anyplot.ai'; legend labels themselves are correct
+        passed: true
+        comment: Title now correctly reads 'waterfall-basic · python · pygal · anyplot.ai'
+          (language token fixed); legend labels Total/Increase/Decrease are correct.
     data_quality:
       score: 15
       max: 15
@@ -162,19 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Increases, decreases, totals, connectors, running totals all present
+        comment: Increases, decreases, totals, connectors, and running totals all
+          present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral quarterly financial breakdown
+        comment: Plausible, neutral quarterly financial breakdown (revenue -> product/services
+          -> COGS/opex -> other income/taxes -> net income).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible and sum correctly to stated net income
+        comment: Values ($25K-$500K) are sensible and sum correctly to the displayed
+          net income ($387K).
     code_quality:
       score: 10
       max: 10
@@ -184,32 +207,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: One justified custom class for the connector-line technique; rest
-          is flat module-level code
+        comment: Single justified custom class (WaterfallChart), otherwise flat module-level
+          code.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Fully deterministic, hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, pygal, Style - all used
+        comment: os, pygal, pygal.style.Style -- all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, clear comments on pygal quirks
+        comment: Appropriate complexity, no fake UI, comments explain non-obvious
+          pygal quirks.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html per convention
+        comment: Saves plot-{theme}.png and plot-{theme}.html per convention.
     library_mastery:
       score: 8
       max: 10
@@ -219,23 +243,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Solid Style-driven theming; connector override reaches into private
-          pygal internals
+        comment: Solid Style-driven theming and chart.add() usage; connector override
+          reaches into private internals (_bar, _len, self.view) and the Style opacity
+          default was left unexamined.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Creative reuse of StackedBar's internal view/margin math to draw
-          pixel-exact waterfall connectors
+        comment: Creative, pygal-specific solution reusing StackedBar's own view/margin
+          math to draw pixel-exact dashed connectors.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - patches
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep:
   - cumulative-sum
