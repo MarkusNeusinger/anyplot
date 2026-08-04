@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: wordcloud-basic
 created: '2026-08-04T23:17:53Z'
-updated: '2026-08-04T23:22:47Z'
+updated: '2026-08-04T23:33:22Z'
 generated_by: claude-sonnet
 workflow_run: 30958991903
 issue: 1012
@@ -15,49 +15,41 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 quality_score: 88
 review:
   strengths:
-  - Custom Vogel/Fermat golden-angle spiral placement algorithm with true rectangle-collision
-    detection built on D3's getBBox — a genuinely sophisticated word-cloud layout
-    implemented without an external d3-cloud package, correctly respecting the 'no
-    extra imports' library rule.
-  - Area-proportional sizing via d3.scaleSqrt() — perceptually correct scaling for
-    frequency-encoded size, better than a naive linear domain-to-range mapping.
-  - Thoughtful sentiment color-coding (positive/negative/neutral) with a clear legend,
-    correctly applying the Imprint semantic exception for polarity (brand green for
-    positive, matte red for negative, muted neutral) instead of blind ordinal palette
-    assignment.
-  - 'Fully deterministic and reproducible: hardcoded literal data, no RNG, and placement
-    order is stable (largest-frequency words placed first, nearest center).'
-  - Bold font-weight applied to the highest-frequency words creates a clear visual
-    hierarchy and an obvious focal point ('reliable', 'expensive', 'intuitive').
-  - 'Theme-adaptive chrome correctly threaded through every non-data element (title
-    uses t.ink, legend text uses t.inkSoft, neutral sentiment color swaps #6B6A63/#A8A79F)
-    — both renders read cleanly with no dark-on-dark or light-on-light failures.'
+  - Genuine custom Vogel/Fermat spiral placement algorithm with real getBBox-based
+    rectangle collision detection, plus a post-hoc stretch step that fills the reserved
+    bounds — not a fake or generic grid layout
+  - 'Correct Imprint palette + semantic-exception usage: brand green (#009E73) for
+    positive, matte-red semantic anchor (#AE3030) for negative, theme-adaptive muted
+    for neutral — all approved semantic mappings, with chrome (title/legend text)
+    correctly flipping between light and dark while data colors stay identical'
+  - Frequency-driven sqrt font-scale plus bold weight for top terms creates genuine
+    visual hierarchy — 'expensive', 'reliable', 'battery', 'durable', 'intuitive'
+    immediately read as the dominant themes
+  - 'Clean, deterministic, dependency-free code: hard-coded word/frequency/sentiment
+    data, no fake interactivity, legend clearly explains the color encoding and sits
+    near the word mass rather than floating isolated'
   weaknesses:
-  - The cloud fills only ~60% of the height of its own configured bounds (bounds.yMin=96
-    to bounds.yMax=height-76 in CSS px), leaving a visibly large, roughly symmetric
-    empty band above and below the word mass — the spec calls for words 'arranged
-    to fill available space'; the spiral/collision search could be tuned (e.g. larger
-    SPIRAL_STEP cap, denser packing, or pulling bounds tighter to the actual word
-    extent) to use more of the reserved area.
-  - The smallest-frequency words ('fragile', 'quiet', 'efficient', 'accurate' at the
-    low end of the 16-80px fontSize range) will be very hard to read once the plot
-    is scaled down to a ~400px mobile thumbnail — raise the fontSize.range() floor
-    (e.g. 20-22px minimum) so low-frequency words stay legible at small sizes.
-  - Sentiment is encoded by hue alone (green/red/muted) with no secondary redundant
-    cue (e.g. font-style or icon) — acceptable here since the word text itself carries
-    redundant semantic meaning, but worth noting for stricter CVD-safety contexts.
+  - Smallest-frequency words (e.g. 'quiet', 'fragile' at the ~20px floor of the fontSize.range())
+    become nearly illegible when the PNG is scaled down to ~400px mobile width — raise
+    the range floor to ~24-26px so even the least-frequent terms stay legible
+  - Positive/negative sentiment relies on green vs. red hue alone (VQ-04); this is
+    an approved semantic exception per the style guide, but a redundant cue (subtle
+    stroke, or a weight/style difference by sentiment) would help CVD readers distinguish
+    the two without relying purely on hue
+  - All words render at 0 rotation — a touch of angle variance on a few low-frequency
+    words would add typical word-cloud character (minor polish, not a defect)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "wordcloud-basic · javascript · d3 · anyplot.ai" is bold dark ink, centered top, fully legible. Legend at bottom center ("Positive" / "Negative" / "Neutral" swatches + labels) uses dark ink text on the light surface, fully legible. No axes present (correctly omitted for a word cloud).
-      Data: ~39 words sized by frequency via a square-root scale (16-80px), colored by sentiment — green (#009E73, palette[0]) for positive words ("reliable", "durable", "intuitive"), matte red (#AE3030, palette[4]) for negative words ("expensive", "sluggish", "confusing"), and gray/muted for neutral words ("support", "battery", "warranty"). Largest/boldest words sit near the visual center, smaller words radiate outward without overlapping. First categorical color used is confirmed #009E73 for the positive class.
-      Legibility verdict: PASS — all title, legend, and word text is clearly readable against the light background; no light-on-light issues.
+      Background: warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: title "wordcloud-basic · javascript · d3 · anyplot.ai" in bold dark ink, clearly visible at top-center; sentiment legend (Positive / Negative / Neutral swatches + labels) in dark-ink text at the bottom-center, fully readable.
+      Data: ~39 words placed in an organic spiral-packed cloud, sized by frequency (sqrt scale, larger/bolder for high-frequency terms like "expensive", "reliable", "battery", "durable", "intuitive"). Colors: brand green (#009E73) for positive words, matte red for negative words, neutral gray for neutral words — first series matches the mandated brand green.
+      Legibility verdict: PASS — all title/legend text is crisp and dark-on-light; the lowest-frequency words (e.g. "quiet", "fragile") are small but still legible at full resolution, though borderline at mobile thumbnail scale.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title renders in light off-white ink, clearly legible against the dark surface. Legend swatches and labels also render in light text, fully legible — no dark-on-dark failures anywhere (title, legend, or the small "Neutral" gray words, which correctly swap from #6B6A63 to the lighter #A8A79F muted token for dark theme).
-      Data: Same word set, same layout, and same data colors as the light render (green #009E73 / matte red #AE3030 / theme-adaptive muted gray) — confirms data colors are identical between themes and only chrome (background, title ink, legend ink, muted-neutral color) flips as required.
-      Legibility verdict: PASS — all text (title, legend, and every word in the cloud) is clearly readable against the dark background; no dark-on-dark or washed-out elements observed.
+      Background: warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: title renders in light/white ink, clearly visible against the dark background; legend swatches + labels use light gray text, fully readable — no dark-on-dark failures observed.
+      Data: identical word placement and identical data colors to the light render (green/red/gray) — only the neutral gray shifts to its lighter theme-adaptive tone, and chrome (title, legend text) flips to light-on-dark as expected. No pure black/white swaps of data colors.
+      Legibility verdict: PASS — title and legend are readable; same small-word caveat as light render applies equally (not a theme-specific issue).
   criteria_checklist:
     visual_quality:
       score: 26
@@ -65,87 +57,82 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: All text readable in both themes at full resolution; but low-frequency
-          words at the 16-20px end of the fontSize range will be hard to read once
-          scaled to a ~400px mobile thumbnail.
+        comment: Font sizes explicitly set via a sqrt scale + title/legend px sizes;
+          readable in both themes, but the lowest-frequency words sit at a ~20px floor
+          that becomes nearly illegible at ~400px mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Rectangle-collision spiral placement produces zero overlaps between
-          words, even where large and small words sit adjacent (e.g. 'reliable'/'battery',
-          'support'/'durable').
+        comment: Explicit BBox-based rectangle collision detection with padding guarantees
+          no overlap; visually confirmed clean in both renders
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Word sizes scale with frequency via scaleSqrt (area-proportional,
-          appropriate for ~39 items); smallest words are visible at full size but
-          marginal at mobile scale.
+        comment: Word sizes scale smoothly with frequency (sqrt scale) plus bold weight
+          for top terms — well adapted to the data
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Sentiment palette follows the documented semantic exception (green=positive,
-          matte red=negative, muted=neutral); word text itself provides redundant
-          semantic meaning beyond color alone.
+        passed: false
+        comment: Positive/negative sentiment relies on green vs. red hue alone; approved
+          semantic exception per style guide but no redundant cue (stroke/weight)
+          for CVD readers
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: No clipping or overflow, but the cloud only fills ~60% of its own
-          configured bounds height, leaving a visibly large, roughly symmetric empty
-          band above and below the word mass.
+        comment: Cloud fills ~80-90% of canvas width and a large majority of height,
+          balanced margins, legend placed near the plot, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a word cloud (correctly omitted); title matches
-          the required '{spec-id} · {language} · {library} · anyplot.ai' format exactly.
+        comment: N/A for axes (word cloud has none); title format is correct and descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series is #009E73; backgrounds are #FAF8F1/#1A1A17;
-          data colors identical between themes; chrome correctly theme-adaptive.'
+        comment: 'First series (positive) = #009E73 brand green; negative uses the
+          matte-red semantic anchor; neutral uses theme-adaptive muted; backgrounds
+          and chrome are theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom collision-avoiding spiral algorithm and sentiment-aware coloring
-          show real design effort beyond generic defaults, but the visual result is
-          fairly plain (plain colored text, no additional polish like shape masking
-          or varied typography).
+        comment: Custom organic spiral packing plus sentiment coloring goes clearly
+          beyond a library default; not quite publication-tier polish (no rotation
+          variance)
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No spines/grid needed and correctly omitted; typography consistent;
-          whitespace is generous but somewhat under-fills the reserved plot area rather
-          than reading as intentional breathing room.
+        comment: Minimal chrome (no axes/grid/spines needed), generous whitespace
+          around the cloud, subtle legend — good but margins aren't perfectly even
+          top-to-bottom
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bold weight + size on top words creates a clear focal point; sentiment
-          color adds a narrative layer (at-a-glance positive/negative balance) beyond
-          a plain monochrome cloud.
+        comment: Size-by-frequency + sentiment color create real visual hierarchy
+          and an at-a-glance takeaway (what's praised vs. criticized)
     spec_compliance:
       score: 15
       max: 15
@@ -155,30 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements a word cloud.
+        comment: Genuine word cloud with frequency-driven sizing and space-filling
+          placement
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Word size represents frequency, words are arranged to fill the plot
-          area without overlap via a spiral placement algorithm, matching the spec's
-          described techniques.
+        comment: 39 words (within the 20-200 typical range), size encodes frequency,
+          color encodes an additional dimension (sentiment) as the spec explicitly
+          allows
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: frequency -> fontSize via scaleSqrt (area-proportional, correct choice);
-          word -> displayed text.
+        comment: word -> text, frequency -> size, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'wordcloud-basic · javascript · d3 · anyplot.ai'; legend
-          labels (Positive/Negative/Neutral) match the sentiment encoding used in
-          the data.
+        comment: Title matches the mandated format exactly; legend labels (Positive/Negative/Neutral)
+          match the sentiment categories used
     data_quality:
       score: 15
       max: 15
@@ -188,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers size-by-frequency, color-by-category, and dense non-overlapping
-          layout — the three core aspects of a word cloud.
+        comment: Wide frequency range (15-142) and all three sentiment categories
+          represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product-review term frequencies (reliable, expensive, battery, shipping,
-          etc.) with plausible, neutral, non-controversial sentiment tagging.
+        comment: Product-review survey term frequencies — real, neutral, comprehensible
+          business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 15-142 gives a wide, sensible size spread across
-          39 terms.
+        comment: Frequency values and their decreasing distribution are plausible
+          for review term counts
     code_quality:
       score: 10
       max: 10
@@ -213,62 +199,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Procedural script; small helper functions (overlaps, findSpot, sentimentColor)
-          are inherent to the word-placement algorithm, not gratuitous abstraction.
+        comment: Straightforward top-to-bottom script; the few helper functions (sentimentColor,
+          overlaps, findSpot) are necessary for the placement algorithm, not over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded literal data array; no RNG; placement order is deterministic
-          (sorted by frequency).
+        comment: Fully deterministic hard-coded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global d3 bundle.
+        comment: No imports beyond the global d3
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity or simulated UI; complexity is proportional
-          to the word-cloud placement problem.
+        comment: Clean, appropriately-complex algorithm, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mounts a single svg to #container sized from window.ANYPLOT_SIZE;
-          no animation/transitions; current D3 7.x API.'
+        comment: 'Mounts correctly to #container at window.ANYPLOT_SIZE, no animation,
+          current D3 v7 API'
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Idiomatic use of d3.scaleSqrt, d3.select/append, d3.extent, and getBBox
-          for text measurement.
+        comment: Uses d3 scales (scaleSqrt) and d3-array (extent/min/max) correctly,
+          but builds marks via a manual per-word loop rather than the canonical selection.data().join()
+          pattern
       - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: Reimplements a d3-cloud-style golden-angle spiral + rectangle-collision
-          layout directly on D3 primitives (getBBox), which requires the real-browser
-          layout engine the harness provides — a genuinely distinctive, library-appropriate
-          technique.
+        comment: From-scratch spiral collision-placement algorithm using real getBBox
+          text measurement — a distinctive use of the browser-render-harness approach
+          that couldn't be replicated as easily in a canvas-based chart library
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - collision-detection
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
