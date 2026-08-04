@@ -29,17 +29,26 @@ function gaussian() {
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
-const centerCopper = 45;
-const centerZinc = 35;
-const centerTin = 20;
+// Realistic 88/2/10 Cu-Zn-Sn bronze (copper-dominant, trace zinc, tin secondary)
+const centerCopper = 88;
+const centerZinc = 2;
+const centerTin = 10;
 const samples = [];
 for (let i = 0; i < 70; i++) {
-  let copper = Math.max(centerCopper + gaussian() * 7, 2);
-  let zinc = Math.max(centerZinc + gaussian() * 6, 2);
-  let tin = Math.max(centerTin + gaussian() * 4, 2);
+  let copper = Math.max(centerCopper + gaussian() * 3, 70);
+  let zinc = Math.max(centerZinc + gaussian() * 1, 0.2);
+  let tin = Math.max(centerTin + gaussian() * 2.5, 0.5);
   const total = copper + zinc + tin;
   samples.push([(copper / total) * 100, (zinc / total) * 100, (tin / total) * 100]);
 }
+
+// Density cue: points near the batch mean get lower opacity (reduces overlap
+// in the dense core), points further out read more opaque (highlights outliers).
+const meanA = samples.reduce((s, p) => s + p[0], 0) / samples.length;
+const meanB = samples.reduce((s, p) => s + p[1], 0) / samples.length;
+const meanC = samples.reduce((s, p) => s + p[2], 0) / samples.length;
+const sampleDists = samples.map((p) => Math.hypot(p[0] - meanA, p[1] - meanB, p[2] - meanC));
+const maxDist = Math.max(...sampleDists) || 1;
 
 // --- Triangle geometry (pixel space, apex-up) -------------------------------
 const marginTop = 170;
@@ -131,6 +140,53 @@ const vertexLabels = [
   };
 });
 
+// --- Reference marker: bell-bronze target composition (higher-tin family, -----
+// well clear of the statuary-bronze sample cluster) for a real point of comparison
+const target = { a: 78, b: 0, c: 22 }; // Cu 78% / Sn 22% — classic bell bronze
+const targetPx = ternaryToPixel(target.a, target.b, target.c);
+const towardCentroid = { x: centroid.x - targetPx.x, y: centroid.y - targetPx.y };
+const towardLen = Math.hypot(towardCentroid.x, towardCentroid.y) || 1;
+const targetLeaderEnd = {
+  x: targetPx.x + (towardCentroid.x / towardLen) * 90,
+  y: targetPx.y + (towardCentroid.y / towardLen) * 90,
+};
+const targetLabelPos = {
+  x: targetPx.x + (towardCentroid.x / towardLen) * 130,
+  y: targetPx.y + (towardCentroid.y / towardLen) * 130,
+};
+const referenceMarker = [
+  {
+    type: "polygon",
+    shape: {
+      points: [
+        [targetPx.x, targetPx.y - 9],
+        [targetPx.x + 9, targetPx.y],
+        [targetPx.x, targetPx.y + 9],
+        [targetPx.x - 9, targetPx.y],
+      ],
+    },
+    style: { stroke: t.ink, lineWidth: 2, fill: "transparent" },
+  },
+  {
+    type: "line",
+    shape: { x1: targetPx.x, y1: targetPx.y, x2: targetLeaderEnd.x, y2: targetLeaderEnd.y },
+    style: { stroke: t.ink, lineWidth: 1, lineDash: [3, 3] },
+  },
+  {
+    type: "text",
+    style: {
+      text: "Reference: Bell Bronze (78/22)",
+      x: targetLabelPos.x,
+      y: targetLabelPos.y,
+      fill: t.ink,
+      fontSize: 14,
+      fontWeight: 600,
+      align: "center",
+      verticalAlign: "middle",
+    },
+  },
+];
+
 // --- Title (fontsize scales down for titles longer than the 67-char baseline)
 const title = "Bronze Alloy Composition · ternary-basic · javascript · echarts · anyplot.ai";
 const titleFontSize = Math.round(22 * Math.min(1, 67 / title.length));
@@ -169,6 +225,7 @@ chart.setOption({
       })),
       ...tickElements.map((el) => ({ ...el, z: 1 })),
       ...vertexLabels.map((el) => ({ ...el, z: 1 })),
+      ...referenceMarker.map((el) => ({ ...el, z: 3 })),
     ],
   },
   series: [
@@ -179,10 +236,11 @@ chart.setOption({
       data: samples,
       renderItem: (params, api) => {
         const p = ternaryToPixel(api.value(0), api.value(1), api.value(2));
+        const opacity = 0.5 + 0.35 * (sampleDists[params.dataIndex] / maxDist);
         return {
           type: "circle",
-          shape: { cx: p.x, cy: p.y, r: 9 },
-          style: { fill: t.palette[0], stroke: t.pageBg, lineWidth: 1, opacity: 0.8 },
+          shape: { cx: p.x, cy: p.y, r: 6.5 },
+          style: { fill: t.palette[0], stroke: t.pageBg, lineWidth: 1, opacity },
         };
       },
     },
