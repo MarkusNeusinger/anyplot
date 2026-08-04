@@ -1,7 +1,7 @@
 """ anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-06
+Library: plotly 6.9.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-08-04
 """
 
 import os
@@ -13,11 +13,12 @@ import plotly.graph_objects as go
 # Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
 
-# Okabe-Ito palette (first series is always #009E73)
+# Imprint palette (first series is always #009E73)
 IMPRINT = [
     "#009E73",  # bluish green (brand — primary)
     "#C475FD",  # vermillion (secondary)
@@ -25,146 +26,127 @@ IMPRINT = [
     "#BD8233",  # reddish purple (quaternary)
 ]
 
-# Data: Soil composition samples with meaningful clustering by soil type
+# Data: three-way market share (leader / challenger / niche player) across
+# four industries, each with a distinct competitive structure. This spreads
+# points across the full simplex — concentrated markets sit near the "Leader"
+# vertex, three-way races sit near the centroid, and duopolies sit near the
+# leader-challenger edge — rather than clustering in one corner. Per-point
+# noise is renormalized so the three shares always sum to exactly 100%.
 np.random.seed(42)
 
-# Generate clustered data representing distinct soil types
-sandy_soils = np.array(
-    [
-        [75, 15, 10],
-        [70, 20, 10],
-        [80, 12, 8],
-        [76, 14, 10],
-        [78, 16, 6],
-        [72, 18, 10],
-        [77, 15, 8],
-        [74, 19, 7],
-        [81, 13, 6],
-        [75, 17, 8],
-    ]
-)
+industries = [
+    ("Cloud Infrastructure", 65.0, 25.0, 10.0, "circle"),
+    ("Streaming Video", 40.0, 35.0, 25.0, "diamond"),
+    ("Ride-Hailing", 48.0, 45.0, 7.0, "square"),
+    ("Food Delivery", 30.0, 50.0, 20.0, "triangle-up"),
+]
 
-silty_soils = np.array(
-    [
-        [35, 55, 10],
-        [30, 60, 10],
-        [32, 58, 10],
-        [28, 62, 10],
-        [38, 52, 10],
-        [33, 57, 10],
-        [31, 59, 10],
-        [36, 54, 10],
-        [29, 61, 10],
-        [34, 56, 10],
-    ]
-)
+n_per_industry = 11
+leader_all, challenger_all, niche_all, industry_idx = [], [], [], []
+for idx, (_name, lead0, chal0, niche0, _symbol) in enumerate(industries):
+    lead = np.clip(lead0 + np.random.normal(0, 5.0, n_per_industry), 1, None)
+    chal = np.clip(chal0 + np.random.normal(0, 5.0, n_per_industry), 1, None)
+    niche = np.clip(niche0 + np.random.normal(0, 3.0, n_per_industry), 1, None)
+    total = lead + chal + niche
+    leader_all.append(lead / total * 100)
+    challenger_all.append(chal / total * 100)
+    niche_all.append(niche / total * 100)
+    industry_idx.extend([idx] * n_per_industry)
 
-clayey_soils = np.array(
-    [
-        [20, 20, 60],
-        [15, 25, 60],
-        [18, 22, 60],
-        [22, 18, 60],
-        [16, 24, 60],
-        [19, 21, 60],
-        [21, 19, 60],
-        [17, 23, 60],
-        [20, 22, 58],
-        [18, 24, 58],
-    ]
-)
+leader_all = np.concatenate(leader_all)
+challenger_all = np.concatenate(challenger_all)
+niche_all = np.concatenate(niche_all)
+industry_idx = np.array(industry_idx)
 
-loam_soils = np.array(
-    [
-        [40, 40, 20],
-        [42, 38, 20],
-        [38, 42, 20],
-        [41, 39, 20],
-        [43, 37, 20],
-        [39, 41, 20],
-        [40, 38, 22],
-        [42, 40, 18],
-        [41, 41, 18],
-        [39, 39, 22],
-    ]
-)
+title_text = "Market Share by Industry · ternary-basic · python · plotly · anyplot.ai"
+title_fontsize = round(16 * min(1.0, 67 / len(title_text)))
 
-# Combine all soil types
-compositions = np.vstack([sandy_soils, silty_soils, clayey_soils, loam_soils])
-sand = compositions[:, 0]
-silt = compositions[:, 1]
-clay = compositions[:, 2]
-
-# Soil type labels for color encoding (fourth variable)
-soil_types = (
-    ["Sandy"] * len(sandy_soils)
-    + ["Silty"] * len(silty_soils)
-    + ["Clayey"] * len(clayey_soils)
-    + ["Loam"] * len(loam_soils)
-)
-soil_type_indices = np.array(
-    [0] * len(sandy_soils) + [1] * len(silty_soils) + [2] * len(clayey_soils) + [3] * len(loam_soils)
-)
-
-# Create ternary plot with color-encoded soil type
 fig = go.Figure()
 
-# Add traces for each soil type
-for soil_idx, (name, color) in enumerate(zip(["Sandy", "Silty", "Clayey", "Loam"], IMPRINT, strict=True)):
-    mask = soil_type_indices == soil_idx
+# One trace per industry: color AND marker symbol both encode the group, so
+# the grouping reads even for viewers who can't distinguish the hues.
+for idx, (name, _lead0, _chal0, _niche0, symbol) in enumerate(industries):
+    mask = industry_idx == idx
     fig.add_trace(
         go.Scatterternary(
-            a=sand[mask],
-            b=silt[mask],
-            c=clay[mask],
+            a=leader_all[mask],
+            b=challenger_all[mask],
+            c=niche_all[mask],
             mode="markers",
             name=name,
-            marker={"size": 14, "color": color, "opacity": 0.75, "line": {"width": 1, "color": "white"}},
+            marker={
+                "symbol": symbol,
+                "size": 15,
+                "color": IMPRINT[idx],
+                "opacity": 0.82,
+                "line": {"width": 1.5, "color": PAGE_BG},
+            },
             hovertemplate=(
-                "<b>%{customdata}</b><br>Sand: %{a:.1f}%<br>Silt: %{b:.1f}%<br>Clay: %{c:.1f}%<extra></extra>"
+                "<b>%{customdata}</b><br>Leader: %{a:.1f}%<br>Challenger: %{b:.1f}%<br>Niche: %{c:.1f}%<extra></extra>"
             ),
-            customdata=soil_types,
+            customdata=[name] * int(mask.sum()),
         )
     )
 
-# Layout and styling with theme-adaptive colors
+# Reference line: the 50% "majority" threshold — above it the leader alone
+# controls the market, below it no single player commands a majority. A
+# domain-specific annotation, not just decoration.
+fig.add_trace(
+    go.Scatterternary(
+        a=[50, 50],
+        b=[50, 0],
+        c=[0, 50],
+        mode="lines",
+        line={"width": 1.5, "color": INK_SOFT, "dash": "dot"},
+        showlegend=False,
+        hoverinfo="skip",
+    )
+)
+fig.add_annotation(
+    text="- - - dashed line: 50% majority threshold",
+    xref="paper",
+    yref="paper",
+    x=0.0,
+    y=0.87,
+    xanchor="left",
+    yanchor="bottom",
+    showarrow=False,
+    font={"size": 13, "color": INK_SOFT},
+)
+
 fig.update_layout(
-    title={
-        "text": "ternary-basic · plotly · pyplots.ai",
-        "font": {"size": 28, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    autosize=False,
+    title={"text": title_text, "font": {"size": title_fontsize, "color": INK}, "x": 0.5, "xanchor": "center"},
     ternary={
         "sum": 100,
         "aaxis": {
-            "title": {"text": "Sand (%)", "font": {"size": 22, "color": INK}},
+            "title": {"text": "Market Leader (%)", "font": {"size": 12, "color": INK}},
             "tickmode": "linear",
             "tick0": 0,
             "dtick": 20,
-            "tickfont": {"size": 18, "color": INK_SOFT},
+            "tickfont": {"size": 10, "color": INK_SOFT},
             "linewidth": 2,
             "linecolor": INK_SOFT,
             "gridwidth": 1,
             "gridcolor": GRID,
         },
         "baxis": {
-            "title": {"text": "Silt (%)", "font": {"size": 22, "color": INK}},
+            "title": {"text": "Challenger (%)", "font": {"size": 12, "color": INK}},
             "tickmode": "linear",
             "tick0": 0,
             "dtick": 20,
-            "tickfont": {"size": 18, "color": INK_SOFT},
+            "tickfont": {"size": 10, "color": INK_SOFT},
             "linewidth": 2,
             "linecolor": INK_SOFT,
             "gridwidth": 1,
             "gridcolor": GRID,
         },
         "caxis": {
-            "title": {"text": "Clay (%)", "font": {"size": 22, "color": INK}},
+            "title": {"text": "Niche Player (%)", "font": {"size": 12, "color": INK}},
             "tickmode": "linear",
             "tick0": 0,
             "dtick": 20,
-            "tickfont": {"size": 18, "color": INK_SOFT},
+            "tickfont": {"size": 10, "color": INK_SOFT},
             "linewidth": 2,
             "linecolor": INK_SOFT,
             "gridwidth": 1,
@@ -174,19 +156,20 @@ fig.update_layout(
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin={"l": 100, "r": 100, "t": 150, "b": 100},
+    margin={"l": 90, "r": 90, "t": 100, "b": 80},
     legend={
+        "title": {"text": "Industry", "font": {"size": 11, "color": INK}},
         "x": 0.98,
         "y": 0.02,
         "xanchor": "right",
         "yanchor": "bottom",
-        "bgcolor": PAGE_BG,
+        "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "font": {"color": INK_SOFT, "size": 16},
+        "font": {"color": INK_SOFT, "size": 10},
     },
 )
 
-# Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Save outputs — hard target 3200x1800, see prompts/library/plotly.md "Canvas"
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
