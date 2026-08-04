@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-04
@@ -20,9 +20,9 @@ GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 # Imprint diverging colormap - height is a signed deviation around z=0
 imprint_div = [[0.0, "#AE3030"], [0.5, PAGE_BG], [1.0, "#4467A3"]]
 
-# Data - 30x30 grid with ripple function z = sin(sqrt(x^2 + y^2))
-x = np.linspace(-5, 5, 30)
-y = np.linspace(-5, 5, 30)
+# Data - 24x24 grid with ripple function z = sin(sqrt(x^2 + y^2))
+x = np.linspace(-5, 5, 24)
+y = np.linspace(-5, 5, 24)
 X, Y = np.meshgrid(x, y)
 R = np.sqrt(X**2 + Y**2)
 Z = np.sin(R)
@@ -89,7 +89,7 @@ for j in range(Z.shape[1]):
 fig.update_layout(
     autosize=False,
     title={
-        "text": "wireframe-3d-basic · plotly · anyplot.ai",
+        "text": "wireframe-3d-basic · python · plotly · anyplot.ai",
         "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
@@ -101,18 +101,24 @@ fig.update_layout(
             "title": {"text": "Radius (x)", "font": {"size": 14, "color": INK}},
             "tickfont": {"size": 11, "color": INK_SOFT},
             "gridcolor": GRID,
+            "zerolinecolor": INK_SOFT,
+            "linecolor": INK_SOFT,
             "backgroundcolor": PAGE_BG,
         },
         "yaxis": {
             "title": {"text": "Radius (y)", "font": {"size": 14, "color": INK}},
             "tickfont": {"size": 11, "color": INK_SOFT},
             "gridcolor": GRID,
+            "zerolinecolor": INK_SOFT,
+            "linecolor": INK_SOFT,
             "backgroundcolor": PAGE_BG,
         },
         "zaxis": {
             "title": {"text": "Height (z)", "font": {"size": 14, "color": INK}},
             "tickfont": {"size": 11, "color": INK_SOFT},
             "gridcolor": GRID,
+            "zerolinecolor": INK_SOFT,
+            "linecolor": INK_SOFT,
             "backgroundcolor": PAGE_BG,
         },
         "camera": {
