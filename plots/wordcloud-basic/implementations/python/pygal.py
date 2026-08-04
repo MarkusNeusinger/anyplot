@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wordcloud-basic: Basic Word Cloud
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 78/100 | Updated: 2026-08-04
@@ -138,6 +138,23 @@ for i, (word, freq) in enumerate(sorted_words):
     word_data.append(
         {"word": word, "x": x, "y": y, "size": size, "opacity": opacity, "color": IMPRINT[i % len(IMPRINT)]}
     )
+
+# Recenter the whole cloud within the safe canvas area: the spiral settles
+# wherever overlap checks first succeed, which tends to drift the bounding
+# box off-center (e.g. a large left-side void with words crowded right).
+# Shifting every word by the same offset preserves all relative spacing and
+# the zero-overlap guarantee while balancing the leftover whitespace.
+safe_left, safe_right = 67, canvas_w - 67
+safe_top, safe_bottom = 150, canvas_h - 67
+box_min_x = min(b[0] for b in placed_boxes)
+box_max_x = max(b[0] + b[2] for b in placed_boxes)
+box_min_y = min(b[1] for b in placed_boxes)
+box_max_y = max(b[1] + b[3] for b in placed_boxes)
+shift_x = (safe_left + safe_right) / 2 - (box_min_x + box_max_x) / 2
+shift_y = (safe_top + safe_bottom) / 2 - (box_min_y + box_max_y) / 2
+for item in word_data:
+    item["x"] += shift_x
+    item["y"] += shift_y
 
 # Minimal pygal chart as canvas, using pygal's own title rendering (idiomatic
 # high-level API) instead of hand-drawn SVG text; only the word placement below
