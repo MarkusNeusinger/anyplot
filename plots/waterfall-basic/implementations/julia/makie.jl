@@ -1,7 +1,7 @@
 # anyplot.ai
 # waterfall-basic: Basic Waterfall Chart
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-08-04
+# Quality: 93/100 | Created: 2026-08-04
 
 using CairoMakie
 using Colors

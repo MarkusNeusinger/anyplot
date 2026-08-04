@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: waterfall-basic
 created: '2026-08-04T11:29:00Z'
-updated: '2026-08-04T11:35:06Z'
+updated: '2026-08-04T11:51:05Z'
 generated_by: claude-sonnet
 workflow_run: 30904486628
 issue: 777
@@ -12,58 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - Correct waterfall cumulative math verified by hand (12.40 → 20.90 → 25.20 → 19.80
-    → 16.70 → 14.85), with running totals labeled clearly on each bar
-  - Uses the Imprint style guide's theme-adaptive `neutral` semantic anchor for the
-    start/end Total bars — exactly the documented use case ("totals / baseline / outline
-    / reference line"), and it stays visually distinct from the green/red data bars
-    in both themes
-  - Dotted connecting lines between each bar satisfy the spec's "show connecting lines
-    to emphasize cumulative flow" requirement, and correctly link each bar's cumulative
-    level to the next bar's start
-  - Running-total labels are intelligently placed above bars for increases/totals
-    and below bars for decreases, avoiding any overlap with bars or connector lines
-  - Legend is unobtrusive (transparent background, no frame, horizontal, tucked top-left
-    inside the plot) and its colors correctly track theme changes for the Total swatch
-  - Realistic, neutral business scenario (quarterly profit bridge) with sensible dollar
-    magnitudes and full coverage of increase/decrease/total bar types
-  - 'Clean idiomatic Makie code: `barplot!` with `fillto` for floating bars, KISS
-    top-to-bottom structure, only used imports, correct `save("plot-$(THEME).png";
-    px_per_unit=2)` API'
+  - Correct, fully-verified cumulative math (running totals match all displayed labels
+    exactly)
+  - Dotted connector lines and the bold/larger label on the largest single decrease
+    create real visual hierarchy and a clear narrative focal point
+  - rich() mixed-format subtitle is a Makie-idiomatic storytelling touch that ties
+    the headline numbers back into the chart
+  - Theme-adaptive total-bar color (INK) keeps start/end bars distinct from data bars
+    in both themes without introducing an off-palette color
+  - Canvas lands exactly on the 3200x1800 target with no clipping in either render
   weaknesses:
-  - 'Design Excellence is solid but not yet publication-tier: no visual emphasis on
-    the largest swing (Operating Costs, the biggest single decrease) or a callout
-    on the final net profit — adding a subtle size/emphasis or a short annotation
-    would sharpen the story (DE-03)'
-  - Value labels (fontsize=13) sit close in size to the axis tick labels (fontsize=12)
-    with little hierarchy — bumping label fontsize up slightly (e.g. 14-15) relative
-    to ticks would strengthen the visual hierarchy and improve mobile-scale legibility
-    (VQ-01)
-  - Overall aesthetic is clean but fairly conventional for a waterfall chart; consider
-    a touch more typographic or color-depth polish (e.g. a light subtitle summarizing
-    the bridge, or slightly bolder connector lines) to move from 'strong' to 'exceptional'
-    (DE-01)
-  - Library Mastery is correct but generic — consider Makie-distinctive touches like
-    `rich()` text formatting for the value labels or a `Label` in the GridLayout for
-    a subtitle, which would be harder to replicate in other libraries (LM-02)
+  - Total bars (Starting Balance, Net Profit) are colored via the ink/chrome token
+    rather than a dedicated categorical tone; visually distinct and legible, but leans
+    on a chrome color for a data-encoding role
+  - Design Excellence is solid but still close to the documented style-guide skeleton;
+    a bit more customization (e.g. a distinct total-bar hue, subtle bar corner rounding)
+    would push DE-01 further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "Quarterly Profit Bridge · waterfall-basic · julia · makie · anyplot.ai" centered at top, fully visible with no clipping. Y-axis label "Amount ($M)" rotated on the left in dark ink. X-axis category labels ("Starting Balance", "Product Sales", "Service Revenue", "Operating Costs", "Marketing Spend", "Taxes", "Net Profit") wrap to two lines each, dark and readable. Horizontal gridlines at 0/10/20 are subtle. Top and right spines are removed; left/bottom spines are a soft muted tone.
-      Data: Seven floating bars form the waterfall — first ("Starting Balance") and last ("Net Profit") bars are near-black (theme-adaptive neutral), two increase bars ("Product Sales", "Service Revenue") are Imprint brand green (#009E73), three decrease bars ("Operating Costs", "Marketing Spend", "Taxes") are matte red (#AE3030). Dotted connector lines link each bar's cumulative level to the next bar's base. Running-total dollar labels ($12.40M … $14.85M) sit above bars for increases/totals and below bars for decreases, with no overlap. A small horizontal legend (Increase/Decrease/Total) sits top-left inside the plot with a transparent background.
-      Legibility verdict: PASS — all title, axis, tick, and data-label text is clearly readable against the light background.
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Title "Quarterly Profit Bridge · waterfall-basic · julia · makie · anyplot.ai", rich-text subtitle, axis ticks/labels, legend (Increase/Decrease/Total) all in dark ink — all clearly readable
+      Data: First series (Increase) is Imprint #009E73 green; Decrease bars use semantic anchor #AE3030 red; Total bars (Starting Balance, Net Profit) are ink/near-black; dotted connector lines link cumulative levels between bars
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, now in light/cream text, fully visible with no clipping. Y-axis label and tick labels are light-colored and clearly legible. Gridlines remain subtle. Spines are a soft muted light tone matching the theme flip.
-      Data: The green increase bars and red decrease bars are pixel-identical to the light render (#009E73 and #AE3030 respectively) — only the chrome flipped. The Total bars (first and last) flip from near-black to near-white/cream, matching the theme-adaptive `neutral` semantic anchor definition (same hex as chrome text), which is the documented intended behavior for total/baseline series, not a compliance violation. Legend swatch for "Total" also flips to the cream color consistently.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all text and data elements are clearly distinguishable from the dark background.
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Same title/subtitle/axis/legend elements now rendered in light ink against the dark surface — no dark-on-dark issues; Total bars flip to warm off-white/cream
+      Data: Green (#009E73) and red (#AE3030) data bars are pixel-identical to the light render; only chrome (background, ink, total-bar color) adapts
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -71,76 +53,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize, ylabelsize=14, tick sizes=12,
-          label fontsize=13), well-proportioned, no overflow; value labels could use
-          slightly more size hierarchy relative to tick labels
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between bars, labels, connector lines, or legend
+        comment: No collisions between labels, connectors, subtitle, or legend
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bar width (0.62) and dotted connector lines (1.5px) are visible and
-          well-adapted; minor room to make connectors slightly more prominent
+        comment: 7 bars well-sized and separated for sparse dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red distinction is reinforced by bar direction (step up vs
-          step down) and by the connector-line reference level, not color alone
+        comment: Green/red reinforced by legend and value labels, not sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; legend sits near
-          the plot, nothing cut off
+        comment: Confirmed exact 3200x1800 canvas, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis label includes units ("Amount ($M)")
+        comment: Y-axis carries units, title matches mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series green #009E73, loss semantic anchor #AE3030 for decreases,
-          correct theme-adaptive `neutral` anchor for totals, correct #FAF8F1/#1A1A17
-          backgrounds, all chrome theme-correct in both renders'
+        comment: 'First series #009E73, semantic exception for loss, correct theme
+          backgrounds'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful semantic color choices and connector-line technique clearly
-          above defaults, but not yet full publication-level polish
+        passed: true
+        comment: Custom palette, theme-adaptive total color, rich() subtitle
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle single-axis gridlines, transparent
-          frameless legend, generous whitespace
+        comment: Spines removed, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color contrast plus dotted connector lines guide the eye through
-          the cumulative bridge; no explicit annotation calling out the biggest swing
-          or final result
+        comment: Connector lines and emphasized biggest-decrease label create a clear
+          focal point
     spec_compliance:
       score: 15
       max: 15
@@ -150,27 +123,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct floating-bar waterfall chart
+        comment: Correct waterfall/bridge chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct increase/decrease colors, connecting lines, distinct total
-          bars, running-total labels — all present
+        comment: Color coding, connector lines, total bars, running-total labels all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X, cumulative amount on Y, all steps visible
+        comment: X=category, Y=cumulative amount, all 7 steps shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels (Increase/Decrease/Total)
-          match data
+        comment: Title format matches, legend labels match encoding
     data_quality:
       score: 15
       max: 15
@@ -180,20 +152,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows increases, decreases, and totals — all waterfall aspects present
+        comment: Increases, decreases, totals, connectors, labels all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible quarterly profit bridge scenario
+        comment: Plausible neutral quarterly profit-bridge scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Dollar magnitudes and cumulative math are internally consistent and
-          realistic
+        comment: Sensible $M-range financial values
     code_quality:
       score: 10
       max: 10
@@ -203,62 +174,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward top-to-bottom script, no functions/classes
+        comment: Flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness needed
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Printf all actively used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering, appropriate complexity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct save("plot-$(THEME).png"; px_per_unit=2) API
+        comment: Saves plot-$(THEME).png with current API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/barplot!/lines!/text!/Legend composition
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of barplot! with fillto for floating bars, Axis theming,
-          Legend with PolyElement handles
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Uses some Makie-specific features (fillto floating bars, PolyElement
-          custom legend, RGBAf grid alpha) but nothing that couldn't be approximated
-          elsewhere
-  verdict: REJECTED
+        comment: Uses rich() to mix weight/color inline for subtitle
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - custom-legend
-  - manual-ticks
+  - waterfall-connectors
+  - value-labels
+  - rich-text-annotation
+  - conditional-emphasis
   patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - cumulative-sum
+  - cumulative-calculation
+  - conditional-coloring
+  dataprep: []
   styling:
-  - grid-styling
-  - minimal-chrome
+  - publication-ready
+  - theme-adaptive-chrome
