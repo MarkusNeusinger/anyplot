@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-06
+Library: altair 6.2.2 | Python 3.13.12
+Quality: 93/100 | Updated: 2026-08-04
 """
 
 import os
@@ -9,6 +9,7 @@ import sys
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Clean sys.path early to avoid importing this file as 'altair' (file naming conflict)
@@ -19,7 +20,7 @@ while _script_dir in sys.path:
 import altair as alt  # noqa: E402
 
 
-# Theme tokens
+# Theme tokens (Imprint)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
@@ -139,36 +140,36 @@ vertex_labels = pd.DataFrame(
 # Triangle outline
 triangle = (
     alt.Chart(triangle_vertices)
-    .mark_line(strokeWidth=3, color=INK_SOFT)
+    .mark_line(strokeWidth=1.5, color=INK_SOFT)
     .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), order="order:O")
 )
 
 # Grid lines
 grid = (
     alt.Chart(grid_df)
-    .mark_rule(strokeWidth=1, opacity=0.15, color=INK_SOFT)
+    .mark_rule(strokeWidth=0.5, opacity=0.15, color=INK_SOFT)
     .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
 )
 
 # Tick marks
-ticks = alt.Chart(tick_df).mark_rule(strokeWidth=2, color=INK_SOFT).encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
+ticks = alt.Chart(tick_df).mark_rule(strokeWidth=0.75, color=INK_SOFT).encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
 
 # Tick labels
 tick_labels = (
-    alt.Chart(tick_df).mark_text(fontSize=14, color=INK_SOFT).encode(x="label_x:Q", y="label_y:Q", text="label:N")
+    alt.Chart(tick_df).mark_text(fontSize=10, color=INK_SOFT).encode(x="label_x:Q", y="label_y:Q", text="label:N")
 )
 
 # Vertex labels
 vertex_text = (
     alt.Chart(vertex_labels)
-    .mark_text(fontSize=22, fontWeight="bold", color=INK)
+    .mark_text(fontSize=13, fontWeight="bold", color=INK)
     .encode(x="x:Q", y="y:Q", text="label:N")
 )
 
-# Data points - Okabe-Ito brand green
+# Data points - Okabe-Ito brand green (Imprint palette position 1)
 points = (
     alt.Chart(df)
-    .mark_point(filled=True, size=300, color=BRAND, opacity=0.8)
+    .mark_point(filled=True, size=80, color=BRAND, opacity=0.85)
     .encode(
         x="x:Q",
         y="y:Q",
@@ -184,15 +185,34 @@ points = (
 chart = (
     alt.layer(grid, triangle, ticks, tick_labels, vertex_text, points)
     .properties(
-        width=1600,
-        height=900,
+        width=500,
+        height=460,
         background=PAGE_BG,
-        title=alt.Title(text="ternary-basic · altair · anyplot.ai", fontSize=28, color=INK),
+        title=alt.Title(text="ternary-basic · altair · anyplot.ai", fontSize=16, color=INK),
     )
     .configure_axis(grid=False, domain=False, ticks=False, labels=False, title=None)
     .configure_view(strokeWidth=0, fill=PAGE_BG)
 )
 
-# Save (1600 * 3 = 4800, 900 * 3 = 2700)
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Square canvas: the triangle's natural aspect ratio (base 1.0, height sqrt(3)/2
+# plus label margins) is close to 1:1, so a square canvas wastes far less
+# horizontal space than landscape would.
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# vl-convert pads the view with title/label extents outside width/height, so the
+# saved PNG is larger than (width * scale_factor, height * scale_factor). PAD
+# (never crop) up to the exact canonical target.
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
