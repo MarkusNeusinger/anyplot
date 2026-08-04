@@ -1,0 +1,229 @@
+library: echarts
+language: javascript
+specification_id: treemap-basic
+created: '2026-08-04T09:39:38Z'
+updated: '2026-08-04T10:07:10Z'
+generated_by: claude-sonnet
+workflow_run: 30895153464
+issue: 766
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/echarts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Repair fully resolved the attempt-1 contrast failure: all 14 project-tile labels
+    now measure 5.03:1-17.32:1 against the fixed cream label, verified by direct pixel
+    sampling of both renders'
+  - Explicit per-division itemStyle.color indexed by array position removes the attempt-1
+    robustness gap - canonical Imprint order is now guaranteed regardless of ECharts'
+    default value-descending sort
+  - Correct 2-level treemap hierarchy (division -> project) with rectangle area proportional
+    to value; idiomatic, distinctive use of ECharts treemap levels[] - per-depth upperLabel
+    header bars, tuned colorSaturation/borderColorSaturation for hierarchy shading
+  - 'Clean, deterministic, minimal code - correct mount-node contract (animation:
+    false, no explicit size/devicePixelRatio)'
+  - Realistic, neutral R&D-budget dataset (19 nodes, $280k-$1850k range), well within
+    the 5-50 item spec range
+  - Both renders theme-correct, tile fills pixel-identical between light/dark, no
+    clipping at any canvas edge
+  weaknesses:
+  - Core Services (the single largest tile, division = Platform Engineering) sits
+    closest to the contrast floor at 5.03:1 - comfortably above the 4.5:1 AA minimum
+    but with less margin than every other tile; re-verify if the palette or dataset
+    changes in a future edit
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Title "treemap-basic · javascript · echarts · anyplot.ai" centered at top, dark ink, fully visible. Five division header bars (Platform Engineering, Data & AI, Product Design, Security, QA & Support) in bold cream text on their own colored strip, all clearly legible.
+      Data: Divisions colored by explicit index into canonical Imprint order: Platform Engineering=#009E73 (slot 1), Product Design=lavender family (slot 2), Data & AI=blue family (slot 3), Security=#BD8233 (slot 4), QA & Support=matte-red family (slot 5). Project tiles shaded from parent hue with narrowed brightness range vs attempt 1. Pixel-sampled WCAG contrast of all 14 project-tile labels against fixed cream text: 5.03:1 (Core Services, largest tile) to 17.32:1 (Research) - all clear the 4.5:1 AA minimum.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 (pixel-sampled)
+      Chrome: Title and all division headers correctly flip to light/cream text on dark surface. No dark-on-dark failures. Division borders correctly switch from light page bg to dark page bg.
+      Data: Tile fill colors pixel-identical to light render (verified: Core Services=(0,122,89) in both, Threat Detection=(96,66,26) in both). Same improved contrast reproduces identically since it's fill-vs-fixed-label-color, not theme chrome.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All 14 project-tile labels now clear 4.5:1 contrast; Core Services
+          closest to floor at 5.03:1
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All tiles and labels clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Measured contrast 5.03:1-17.32:1 across all sampled tiles, previously
+          1.23:1-2.54:1
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, no clipping, good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches spec format exactly
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Explicit per-division palette indexing guarantees canonical order
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Narrower, tuned colorSaturation range reads as intentional and polished
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean subtle borders/gaps, minimal chrome, consistent hierarchy shading
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Area + color + nesting clearly communicate grouping and magnitude
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2-level treemap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value correctly drives tile area
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 19 nodes, 2-level hierarchy, full feature coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral R&D budget dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $280k-$1850k range, sensible for domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Explicit per-child itemStyle.color plus tuned levels[] config robust
+          to data reordering
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Deliberate, well-tuned use of levels[]/colorSaturation/upperLabel
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns: []
+  dataprep: []
+  styling:
+  - minimal-chrome
