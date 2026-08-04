@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: wireframe-3d-basic
 created: '2026-08-04T19:03:40Z'
-updated: '2026-08-04T19:12:24Z'
+updated: '2026-08-04T19:21:57Z'
 generated_by: claude-sonnet
 workflow_run: 30939180144
 issue: 1015
@@ -12,78 +12,63 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 97
 review:
   strengths:
   - Fully custom orthographic 3D-to-2D projection built from scratch in D3 (camera
-    basis vectors via cross/normalize/dot, project()/depthOf() helpers) — a genuine,
-    mathematically correct 3D wireframe, not a simulated one
+    basis vectors via cross/normalize/dot, project()/depthOf() helpers) — a mathematically
+    correct wireframe, not a simulated one
+  - 'The corner tick-label overlap flagged in attempt 1 is now fixed: a screen-space
+    proximity guard (CORNER_PX_RADIUS) pushes any tick label that projects near the
+    shared axis corner further outward, confirmed clean in both themes at full resolution'
   - Depth-based opacity per mesh strand (painter's-algorithm sort by mean depth +
-    a 0.3-0.95 opacity scale) gives a convincing, well-executed depth cue and visual
-    hierarchy
-  - Adaptive axis-frame anchor selection picks the floor corner that projects furthest
-    screen-left so the frame traces the mesh's visual silhouette instead of a hard-coded
-    corner cutting through it — a thoughtful, non-generic solution
-  - Full theme-adaptive chrome via t.ink/t.inkSoft tokens; the green mesh color is
-    pixel-identical between light and dark renders, only chrome flips
-  - Grid lines rendered in both row and column directions as the spec requires; all
-    three axes labeled with tick marks and units-appropriate formatting (d3.format)
-  - Clean, deterministic in-memory data generation (ripple function), no imports beyond
-    the d3 global, correct mount-node/ANYPLOT_SIZE contract
-  weaknesses:
-  - 'Confirmed in BOTH renders: one axis tick label (''2'', positioned via the outwardXSign/outwardYSign
-    LABEL_LEN offset near the shared floor corner) projects almost exactly onto the
-    top of the Z-axis vertical frame line, and several green mesh strands cross directly
-    through/behind the glyph. The CORNER_GUARD filter only checks 3D data-space distance
-    to the anchor before projection, so a tick that is far from the anchor in data
-    space can still land close to the corner in 2D screen space after projection for
-    this specific camera angle (elevation 38 / azimuth 42) — it slips through the
-    guard. Fix: after projecting all tick label positions, add a screen-space proximity
-    check (or increase LABEL_LEN specifically for ticks whose projected point falls
-    within some px radius of the projected corner) so no tick label ever renders on
-    top of the mesh silhouette.'
-  - Because of the overlap above, that one tick label is harder to read than the rest
-    of the chrome — legibility is only locally affected but is a real, reproducible
-    defect, not a cosmetic nitpick.
+    0.3-0.95 opacity scale) gives a convincing, well-executed near/far depth cue
+  - Adaptive axis-frame anchor selection picks the floor corner that best traces the
+    mesh's visual silhouette instead of a hard-coded corner
+  - Full theme-adaptive chrome; green mesh color is pixel-identical between light
+    and dark renders
+  - Grid lines rendered in both row and column directions as required; all three axes
+    labeled with ticks and units-free but descriptive X/Y/Z labels
+  - Clean, idiomatic D3 data-join patterns throughout despite the bespoke 3D math
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "wireframe-3d-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. Axis frame drawn as three dark-grey (inkSoft) lines meeting at a shared floor corner (Z vertical, X and Y diagonals), with tick marks and tick labels (X: -4,-2,0; Y: -2,0,2,4; Z: 0.5,0.0,-0.5) plus bold "X"/"Y"/"Z" axis-name labels. All chrome text is dark-on-light and legible EXCEPT one tick label ("2", near the top of the Z-axis vertical line at the shared corner) which has multiple green mesh strands crossing directly through/behind it — a genuine text/data overlap, not merely tight spacing.
-      Data: Single green (#009E73) wireframe mesh forming a ripple/sombrero-like surface (z = sin(sqrt(x²+y²))), rendered as a dense 30×30 grid of lines in both row and column directions, with per-strand opacity varying by depth (fainter = farther from camera) giving a convincing sense of depth.
-      Legibility verdict: FAIL (localized) — every other text element is fully readable; the one corner tick label described above is the exception (mesh lines cross it).
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Bold dark title "wireframe-3d-basic · javascript · d3 · anyplot.ai" centered at top, fully within canvas bounds. Minimalist dark-grey axis frame (three lines meeting at a shared floor corner) with tick marks, tick labels (X: -4,-2,0; Y: -2,0,2,4; Z: 0.5,0.0,-0.5) and bold X/Y/Z axis-name labels — all clearly legible against the light background. Zoomed inspection of the previously-flagged corner region (the "2" Z-axis tick) confirms the label now sits cleanly clear of the mesh, with no crossing strands.
+      Data: Single green (#009E73) 30x30 wireframe mesh forms a ripple surface (z = sin(sqrt(x^2+y^2))), with depth-based opacity giving a convincing near/far cue.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same layout, now light-grey (inkSoft) axis frame/ticks and off-white (ink) title/axis-name labels, all clearly legible against the dark background — no dark-on-dark failures anywhere.
-      Data: Data colors are pixel-identical to the light render — same #009E73 green mesh, same depth-opacity gradient; only chrome (background, axis frame, text) flipped as required.
-      Legibility verdict: FAIL (localized) — the exact same "2" tick label at the Z-axis corner is crossed by mesh strands in this render too, confirming the issue is a systematic projection/placement bug rather than a one-off render artifact. Every other element is readable.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same layout with light-grey axis frame/ticks and off-white title/axis labels — all clearly legible, no dark-on-dark failures. The same corner region inspected at 2x zoom confirms the tick label is clear of the mesh here too.
+      Data: Colors are pixel-identical to the light render (same green, same depth-opacity gradient); only chrome flipped, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
-        passed: false
-        comment: All chrome text readable in both themes except one tick label ('2'
-          at the Z-axis corner) crossed by mesh strands in both renders
+        passed: true
+        comment: All chrome readable in both themes; the attempt-1 corner-overlap
+          defect is fixed
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: 'Confirmed real overlap: several green mesh strands cross directly
-          through/behind one axis tick label near the shared floor corner, reproducible
-          in both light and dark renders'
+        passed: true
+        comment: Zoomed inspection confirms the screen-space corner guard fixed the
+          mesh/tick-label collision from attempt 1; no other overlaps found
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Mesh line weight (1.6px) and depth-opacity scale are well matched
-          to the 30x30 grid density; no overplotting
+        comment: Mesh line weight and depth-opacity well matched to the 30x30 grid
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -96,49 +81,46 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: No clipping at any edge, generous margins, title within acceptable
-          width, well-fit 3D silhouette via the extent-fitting logic
+        comment: No clipping anywhere, generous margins, well-fit silhouette, correct
+          3200x1800 canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X/Y/Z clearly labeled with tick marks; bare letter labels are appropriate
-          for a generic mathematical surface
+        comment: X/Y/Z labeled with ticks; title matches required format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is Imprint #009E73, identical between themes; backgrounds
-          match #FAF8F1/#1A1A17'
+        comment: 'Imprint #009E73 first series, identical across themes; backgrounds
+          correct in both renders'
     design_excellence:
-      score: 15
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
         comment: Genuinely custom 3D engine (camera basis vectors, adaptive corner
-          anchor, depth opacity) — highly polished overall, undercut slightly by the
-          corner tick overlap
+          anchor, depth opacity); visual style is polished but intentionally spare
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Minimal axis frame (3 lines, not a full box), generous whitespace,
-          subtle depth-based opacity — refinement dinged by the crowded/overlapping
-          corner tick
+        passed: true
+        comment: Minimal axis frame, generous whitespace, subtle mesh strokes; the
+          corner crowding from attempt 1 is resolved
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Depth-based opacity creates a clear near/far hierarchy and a strong
-          central focal point (the ripple structure)
+        comment: Depth-based opacity gives a clear near/far hierarchy and strong central
+          focal point on the ripple
     spec_compliance:
       score: 15
       max: 15
@@ -148,27 +130,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D wireframe mesh
+        comment: Correct 3D wireframe rendering
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid lines in both x/y directions, 3D perspective (elevation 38 /
-          azimuth 42), all three axes labeled with ticks
+        comment: Grid lines in both directions, 3D perspective (elevation 38, azimuth
+          42), all three axes labeled with ticks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly mapped; axes show the full data extent
+        comment: X/Y/Z correctly mapped, full grid range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'wireframe-3d-basic · javascript · d3 · anyplot.ai';
-          no legend needed for a single series
+        comment: Title matches exact required format
     data_quality:
       score: 15
       max: 15
@@ -178,21 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows the full mesh, both grid directions, axis frame, and ticks
+        comment: Full mesh, both grid directions, all three labeled axes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ripple function z=sin(sqrt(x²+y²)) is a standard, neutral, real-world-plausible
-          mathematical demo surface
+        comment: Ripple function z=sin(sqrt(x^2+y^2)) is a standard, neutral demo
+          surface, matches spec example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30x30 grid within the spec's 20x20-50x50 recommendation; AXIS_RANGE=5.2
-          shows multiple ripples clearly
+        comment: 30x30 grid within the spec's recommended 20x20-50x50 range
     code_quality:
       score: 10
       max: 10
@@ -202,35 +182,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script; small math helper functions (cross/normalize/dot/project)
-          are necessary for the 3D-projection technique, not unnecessary abstraction
+        comment: Small math helpers are necessary for the projection technique, not
+          over-abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG
+        comment: Fully deterministic in-memory data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global is used
+        comment: No import statements; only the d3 global is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for hand-rolled 3D projection; no fake functionality
+        comment: No fake UI/interactivity; appropriate complexity for a hand-built
+          3D projection
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, sizes from ANYPLOT_SIZE, no transitions/animation,
-          current d3 v7 API
+        comment: Correct mount-node contract; harness captures plot-{theme}.png/.html
     library_mastery:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -238,16 +218,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic .selectAll().data().join(), d3.scaleLinear/d3.ticks/d3.format/d3.line/d3.mean/d3.extent
+        comment: Idiomatic d3 join patterns, d3.ticks/d3.format/d3.range/d3.mean/d3.extent
+          used throughout
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Genuinely distinctive: D3 has no native 3D support, so this hand-builds
-          a camera/projection/depth-sort system — the one flaw is the corner tick-label
-          overlap in that same custom system'
-  verdict: REJECTED
+        comment: D3 has no native 3D support; this hand-builds a camera/projection/depth-sort
+          system that is now defect-free — a strong demonstration of D3's flexibility
+          per the library's no-workarounds rule
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -259,4 +240,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - publication-ready
