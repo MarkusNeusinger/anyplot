@@ -85,11 +85,13 @@ const BOTTOM_TICKS = TICK_LEVELS.map((pct) => ({ pct, pos: toXY(0, pct / 100, 1 
 const RIGHT_TICKS = TICK_LEVELS.map((pct) => ({ pct, pos: toXY(1 - pct / 100, 0, pct / 100) }));
 
 // Half-extent margins around the [0,1] x [0, sqrt3/2] triangle. Equal x/y
-// spans (1.5) keep the triangle equilateral on the square canvas.
-const X_MIN = -0.25;
-const X_MAX = 1.25;
-const Y_MIN = -0.32;
-const Y_MAX = 1.18;
+// spans (1.12) keep the triangle equilateral while filling most of the
+// square canvas — just enough room above for the title + apex label and
+// below/beside for the tick and vertex labels.
+const X_MIN = -0.06;
+const X_MAX = 1.06;
+const Y_MIN = -0.09;
+const Y_MAX = 1.03;
 
 function TriangleGrid() {
   const xs = useXScale();
@@ -138,9 +140,9 @@ function EdgeTicks() {
   );
   return (
     <g>
-      {LEFT_TICKS.map((tk) => label(tk, -12, 0, "end"))}
+      {LEFT_TICKS.map((tk) => label(tk, -16, 0, "end"))}
       {BOTTOM_TICKS.map((tk) => label(tk, 0, 22, "middle"))}
-      {RIGHT_TICKS.map((tk) => label(tk, 12, 0, "start"))}
+      {RIGHT_TICKS.map((tk) => label(tk, 16, 0, "start"))}
     </g>
   );
 }
@@ -153,10 +155,10 @@ function VertexLabels() {
       <text x={xs(VERTEX_TOP.x)} y={ys(VERTEX_TOP.y) - 24} textAnchor="middle" dominantBaseline="baseline">
         Copper (%)
       </text>
-      <text x={xs(VERTEX_LEFT.x) - 18} y={ys(VERTEX_LEFT.y) + 34} textAnchor="end" dominantBaseline="baseline">
+      <text x={xs(VERTEX_LEFT.x)} y={ys(VERTEX_LEFT.y) + 32} textAnchor="middle" dominantBaseline="hanging">
         Tin (%)
       </text>
-      <text x={xs(VERTEX_RIGHT.x) + 18} y={ys(VERTEX_RIGHT.y) + 34} textAnchor="start" dominantBaseline="baseline">
+      <text x={xs(VERTEX_RIGHT.x)} y={ys(VERTEX_RIGHT.y) + 32} textAnchor="middle" dominantBaseline="hanging">
         Zinc (%)
       </text>
     </g>
@@ -196,7 +198,7 @@ export default function Chart() {
         {
           type: "scatter",
           label: "Alloy sample",
-          color: t.palette[0],
+          color: "rgba(0, 158, 115, 0.85)",
           markerSize: 8,
           data: points,
           valueFormatter: (_value, ctx) =>
