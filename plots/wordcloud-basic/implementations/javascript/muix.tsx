@@ -3,7 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 79/100 | Created: 2026-08-04
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ScatterChart } from "@mui/x-charts/ScatterChart";
 
 const t = window.ANYPLOT_TOKENS;
 const FONT = "Inter, system-ui, -apple-system, sans-serif";
@@ -53,8 +53,10 @@ const WORDS = [
 ];
 
 // --- Font-size scale: sqrt so rendered AREA follows frequency, not height ---
-const FONT_MIN = 16;
-const FONT_MAX = 128;
+// Range is deliberately narrower than a raw sqrt spread so the smallest words
+// stay legible once the PNG is scaled down to a mobile-width thumbnail.
+const FONT_MIN = 22;
+const FONT_MAX = 118;
 const FREQUENCIES = WORDS.map((w) => w.frequency);
 const MIN_FREQ = Math.min(...FREQUENCIES);
 const MAX_FREQ = Math.max(...FREQUENCIES);
@@ -83,15 +85,12 @@ const SIZED_WORDS = WORDS.map((w) => {
   };
 }).sort((a, b) => b.frequency - a.frequency);
 
-// --- Archimedean-spiral placement -------------------------------------------
+// --- Archimedean-spiral placement, re-centered to balance canvas fill ------
 // Biggest word first, spiraling outward until a collision-free box is found.
 // The spiral's vertical excursion is scaled by the canvas aspect ratio so the
-// cloud fills an ellipse matching the mount shape instead of a bare circle.
+// cloud fills an ellipse matching the mount shape, then the whole cloud is
+// re-centered on its own bounding box so neither side gets a lopsided margin.
 const PADDING = 7;
-
-function rectsOverlap(a, b) {
-  return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
-}
 
 function layoutWordCloud(words, width, height) {
   const centerX = width / 2;
@@ -117,7 +116,9 @@ function layoutWordCloud(words, width, height) {
         bottom: cy + boxH / 2,
       };
       const inBounds = rect.left >= 0 && rect.right <= width && rect.top >= 0 && rect.bottom <= height;
-      const collides = placed.some((p) => rectsOverlap(rect, p.rect));
+      const collides = placed.some(
+        (p) => !(rect.right < p.rect.left || rect.left > p.rect.right || rect.bottom < p.rect.top || rect.top > p.rect.bottom),
+      );
       if (inBounds && !collides) {
         placed.push({ ...word, x: cx, y: cy, rect });
         return;
@@ -129,7 +130,13 @@ function layoutWordCloud(words, width, height) {
     // drop the word rather than overlap or throw, keeping layout deterministic.
   });
 
-  return placed;
+  const left = Math.min(...placed.map((p) => p.rect.left));
+  const right = Math.max(...placed.map((p) => p.rect.right));
+  const top = Math.min(...placed.map((p) => p.rect.top));
+  const bottom = Math.max(...placed.map((p) => p.rect.bottom));
+  const dx = width / 2 - (left + right) / 2;
+  const dy = height / 2 - (top + bottom) / 2;
+  return placed.map((p) => ({ ...p, x: p.x + dx, y: p.y + dy }));
 }
 
 const TITLE_H = 64;
@@ -140,22 +147,36 @@ const CLOUD_W = W - INSET * 2;
 const CLOUD_H = H - TITLE_H - INSET * 2;
 const PLACED_WORDS = layoutWordCloud(SIZED_WORDS, CLOUD_W, CLOUD_H);
 
-// --- Custom marks — plain SVG text drawn inside the MUI X surface ----------
-function WordCloudMarks() {
+// One scatter series per word: each point's (x, y) is a real data coordinate
+// driven through MUI X's own cartesian scales (not raw pixel placement), and
+// series order (frequency-descending) drives the standard `colors` cycling.
+const SERIES = PLACED_WORDS.map((word) => ({
+  type: "scatter",
+  id: word.word,
+  label: word.word,
+  data: [{ x: word.x, y: word.y, z: word.fontSize, id: word.word }],
+}));
+
+// A word cloud has no MUI X primitive, so the mark itself is drawn by
+// overriding the `slots.scatter` component — a documented ScatterChart
+// extension point — with one that reads the real xScale/yScale instead of
+// the default circle marker. The point's `z` carries the frequency-driven
+// font size, the same role a bubble chart's z-dimension plays for radius.
+function WordMark({ series, xScale, yScale, color }) {
+  const point = series.data[0];
   return (
-    <g fontFamily={FONT} fontWeight={600} textAnchor="middle" dominantBaseline="middle">
-      {PLACED_WORDS.map((word, i) => (
-        <text
-          key={word.word}
-          x={word.x + INSET}
-          y={word.y + INSET}
-          fontSize={word.fontSize}
-          fill={t.palette[i % t.palette.length]}
-        >
-          {word.word}
-        </text>
-      ))}
-    </g>
+    <text
+      x={xScale(point.x)}
+      y={yScale(point.y)}
+      fontSize={point.z}
+      fontFamily={FONT}
+      fontWeight={600}
+      textAnchor="middle"
+      dominantBaseline="middle"
+      fill={color}
+    >
+      {series.label}
+    </text>
   );
 }
 
@@ -176,15 +197,22 @@ export default function Chart() {
           wordcloud-basic · javascript · muix · anyplot.ai
         </span>
       </div>
-      <ChartContainer
+      <ScatterChart
         width={W}
         height={H - TITLE_H}
-        series={[]}
-        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        series={SERIES}
+        colors={t.palette}
+        xAxis={[{ min: 0, max: CLOUD_W }]}
+        yAxis={[{ min: 0, max: CLOUD_H, reverse: true }]}
+        bottomAxis={null}
+        leftAxis={null}
+        margin={{ top: INSET, right: INSET, bottom: INSET, left: INSET }}
+        tooltip={{ trigger: "none" }}
+        disableVoronoi
         skipAnimation
-      >
-        <WordCloudMarks />
-      </ChartContainer>
+        slots={{ scatter: WordMark }}
+        slotProps={{ legend: { hidden: true } }}
+      />
     </div>
   );
 }
