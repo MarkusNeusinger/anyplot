@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-04
@@ -44,8 +44,14 @@ data = [
 # Create dataframe
 df = pd.DataFrame(data)
 
-# Sort by value descending for better layout
-df = df.sort_values("value", ascending=False).reset_index(drop=True)
+# Group rows by category (largest total budget first), then by value
+# descending within each category. Keeping same-category rows contiguous
+# makes the squarify layout cluster them spatially, so category membership
+# reads as a spatial grouping and not just a color coincidence.
+category_totals = df.groupby("category")["value"].sum().sort_values(ascending=False)
+category_rank = {cat: i for i, cat in enumerate(category_totals.index)}
+df["_cat_rank"] = df["category"].map(category_rank)
+df = df.sort_values(["_cat_rank", "value"], ascending=[True, False]).drop(columns="_cat_rank").reset_index(drop=True)
 
 # Map categories to colors using the Imprint palette
 unique_categories = df["category"].unique()
@@ -148,6 +154,39 @@ def squarify(sizes, x=0, y=0, w=100, h=100):
 rects = squarify(normalized)
 rects = sorted(rects, key=lambda r: r["idx"])
 
+
+def category_boundaries(rects, categories, tol=1e-6):
+    """Find shared edges between rectangles of different categories.
+
+    Returns the (x0, y0, x1, y1) segments to draw as bold divider lines —
+    the spec calls for subtle borders that "show hierarchy boundaries", so
+    only edges between two different categories get the heavier treatment.
+    """
+    segments = []
+    for i, a in enumerate(rects):
+        ax0, ay0, ax1, ay1 = a["x"], a["y"], a["x"] + a["dx"], a["y"] + a["dy"]
+        for b in rects[i + 1 :]:
+            if categories[a["idx"]] == categories[b["idx"]]:
+                continue
+            bx0, by0, bx1, by1 = b["x"], b["y"], b["x"] + b["dx"], b["y"] + b["dy"]
+
+            if abs(ax1 - bx0) < tol or abs(bx1 - ax0) < tol:
+                shared_x = ax1 if abs(ax1 - bx0) < tol else ax0
+                lo, hi = max(ay0, by0), min(ay1, by1)
+                if hi - lo > tol:
+                    segments.append((shared_x, lo, shared_x, hi))
+
+            if abs(ay1 - by0) < tol or abs(by1 - ay0) < tol:
+                shared_y = ay1 if abs(ay1 - by0) < tol else ay0
+                lo, hi = max(ax0, bx0), min(ax1, bx1)
+                if hi - lo > tol:
+                    segments.append((lo, shared_y, hi, shared_y))
+
+    return segments
+
+
+boundary_segments = category_boundaries(rects, categories)
+
 # Extract rectangle data for plotting
 x_centers = []
 y_centers = []
@@ -240,6 +279,13 @@ p.rect(
     hover_fill_alpha=1.0,
     hover_line_color=INK,
 )
+
+# Bold divider lines only where two different categories meet — reinforces
+# the hierarchy spatially (not just via color), leaving within-category
+# rectangles separated by the thin uniform border above.
+if boundary_segments:
+    bx0, by0, bx1, by1 = zip(*boundary_segments, strict=True)
+    p.segment(x0=list(bx0), y0=list(by0), x1=list(bx1), y1=list(by1), line_color=INK_SOFT, line_width=5)
 
 # Add labels
 labels_set = LabelSet(
