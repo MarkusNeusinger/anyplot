@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 79/100 | Updated: 2026-08-04
@@ -73,8 +73,11 @@ for i in range(grid_size - 1):
         )
 mesh_df = pd.DataFrame(lines_data)
 
-# X/Y reference axes - offset outside the mesh footprint so they read cleanly
-AXIS_OFFSET = -6.5
+# X/Y reference axes - offset outside the mesh footprint so they read cleanly.
+# Z gets its own, farther-out corner (AXIS_OFFSET_Z) so its ladder doesn't land
+# on top of the X-axis "0" and Y-axis "0" ticks and crowd the shared corner.
+AXIS_OFFSET = -8
+AXIS_OFFSET_Z = AXIS_OFFSET - 2.5
 axis_lines = []
 xp0, yp0 = isometric_projection(-5, AXIS_OFFSET, 0)
 xp1, yp1 = isometric_projection(5, AXIS_OFFSET, 0)
@@ -100,19 +103,20 @@ axis_x_name = pd.DataFrame([{"x_proj": xp, "y_proj": yp, "label": "X"}])
 xp, yp = isometric_projection(AXIS_OFFSET, 6.3, 0)
 axis_y_name = pd.DataFrame([{"x_proj": xp, "y_proj": yp, "label": "Y"}])
 
-# Z reference axis - vertical tick ladder at the X/Y axes' shared corner so
-# Z gets real spatial ticks like X and Y, not just the color legend
-xp0, yp0 = isometric_projection(AXIS_OFFSET, AXIS_OFFSET, -1.3)
-xp1, yp1 = isometric_projection(AXIS_OFFSET, AXIS_OFFSET, 1.3)
+# Z reference axis - vertical tick ladder at its own farther-out corner
+# (AXIS_OFFSET_Z) so Z gets real spatial ticks like X and Y, without
+# clustering on top of the X-axis "0" / Y-axis "0" tick labels
+xp0, yp0 = isometric_projection(AXIS_OFFSET_Z, AXIS_OFFSET_Z, -1.3)
+xp1, yp1 = isometric_projection(AXIS_OFFSET_Z, AXIS_OFFSET_Z, 1.3)
 z_axis_df = pd.DataFrame([{"x_proj": xp0, "y_proj": yp0, "x_proj_next": xp1, "y_proj_next": yp1}])
 
 z_ticks = []
 for t in (-1, 0, 1):
-    xp, yp = isometric_projection(AXIS_OFFSET, AXIS_OFFSET, t)
+    xp, yp = isometric_projection(AXIS_OFFSET_Z, AXIS_OFFSET_Z, t)
     z_ticks.append({"x_proj": xp, "y_proj": yp, "label": str(t)})
 z_ticks_df = pd.DataFrame(z_ticks)
 
-xp, yp = isometric_projection(AXIS_OFFSET, AXIS_OFFSET, 1.6)
+xp, yp = isometric_projection(AXIS_OFFSET_Z, AXIS_OFFSET_Z, 1.6)
 axis_z_name = pd.DataFrame([{"x_proj": xp, "y_proj": yp, "label": "Z"}])
 
 title = "wireframe-3d-basic · python · altair · anyplot.ai"
@@ -127,7 +131,11 @@ mesh = (
         y=alt.Y("y_proj:Q", axis=None),
         x2="x_proj_next:Q",
         y2="y_proj_next:Q",
-        color=alt.Color("z:Q", scale=alt.Scale(range=["#AE3030", DIV_MID, "#4467A3"], domainMid=0), title="Height (Z)"),
+        color=alt.Color(
+            "z:Q",
+            scale=alt.Scale(range=["#AE3030", DIV_MID, "#4467A3"], domainMid=0, interpolate="rgb"),
+            title="Height (Z)",
+        ),
     )
 )
 
@@ -139,15 +147,15 @@ axes = (
 
 tick_labels = (
     alt.Chart(ticks_df)
-    .mark_text(fontSize=10, color=INK_SOFT, dy=16)
+    .mark_text(fontSize=10, color=INK_SOFT, dy=18)
     .encode(x=alt.X("x_proj:Q", axis=None), y=alt.Y("y_proj:Q", axis=None), text="label:N")
 )
 
-# Z ticks sit on a near-vertical axis line, so offset horizontally (dx)
-# rather than vertically (dy) like the X/Y ticks.
+# Z ticks sit on a near-vertical axis line at its own farther-out corner, so
+# offset horizontally (dx) rather than vertically (dy) like the X/Y ticks.
 z_tick_labels = (
     alt.Chart(z_ticks_df)
-    .mark_text(fontSize=10, color=INK_SOFT, dx=-16)
+    .mark_text(fontSize=10, color=INK_SOFT, dx=-20)
     .encode(x=alt.X("x_proj:Q", axis=None), y=alt.Y("y_proj:Q", axis=None), text="label:N")
 )
 
