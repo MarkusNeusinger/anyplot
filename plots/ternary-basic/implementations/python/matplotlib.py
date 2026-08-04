@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-04
@@ -13,6 +13,7 @@ if sys.path and (sys.path[0] == "" or sys.path[0].endswith("/python")):
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Polygon
 
 
 # Theme tokens
@@ -40,6 +41,18 @@ sqrt3_2 = np.sqrt(3) / 2
 total = sand + silt + clay
 x_points = 0.5 * (2 * clay + sand) / total
 y_points = sqrt3_2 * sand / total
+
+
+def to_xy(a_sand, b_silt, c_clay):
+    t = a_sand + b_silt + c_clay
+    return 0.5 * (2 * c_clay + a_sand) / t, sqrt3_2 * a_sand / t
+
+
+# USDA-style "Loam" classification zone (sand 23-52%, silt 28-50%, clay 7-27%)
+loam_vertices = [(23, 50, 27), (45, 28, 27), (52, 28, 20), (52, 41, 7), (43, 50, 7)]
+loam_xy = [to_xy(*v) for v in loam_vertices]
+loam_cx = sum(p[0] for p in loam_xy) / len(loam_xy)
+loam_cy = sum(p[1] for p in loam_xy) / len(loam_xy)
 
 # Create figure (square format for triangle) — 6x6in @ dpi=400 -> exactly 2400x2400px
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
@@ -96,6 +109,24 @@ for level in [0, 20, 40, 60, 80, 100]:
     x_tick = 0.5 * (2 * frac + (1 - frac))
     y_tick = sqrt3_2 * (1 - frac)
     ax.text(x_tick + 0.06, y_tick, f"{level}", fontsize=tick_fontsize, ha="left", va="center", color=INK_SOFT)
+
+# Highlight the "Loam" soil-classification zone with a filled Polygon patch
+loam_patch = Polygon(
+    loam_xy, closed=True, facecolor="#BD8233", alpha=0.18, edgecolor="#BD8233", linewidth=1.0, linestyle=":", zorder=2
+)
+ax.add_patch(loam_patch)
+ax.text(
+    loam_cx,
+    loam_cy,
+    "Loam",
+    fontsize=11,
+    ha="center",
+    va="center",
+    fontstyle="italic",
+    color=INK_SOFT,
+    alpha=0.9,
+    zorder=3,
+)
 
 # Plot data points
 ax.scatter(x_points, y_points, s=130, color=BRAND, alpha=0.75, edgecolors=PAGE_BG, linewidth=0.8, zorder=5)
