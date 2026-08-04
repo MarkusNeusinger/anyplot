@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wordcloud-basic: Basic Word Cloud
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 76/100 | Updated: 2026-08-04
@@ -19,13 +19,14 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_alpha_identity,
     scale_color_manual,
     scale_size_identity,
+    scale_x_continuous,
+    scale_y_continuous,
     theme,
     theme_void,
-    xlim,
-    ylim,
 )
 from lets_plot.export import ggsave
 
@@ -39,7 +40,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint palette (first series always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data - Programming language popularity
 np.random.seed(42)
@@ -80,13 +81,16 @@ sorted_indices = np.argsort(frequencies)[::-1]
 words = [words[i] for i in sorted_indices]
 frequencies = [frequencies[i] for i in sorted_indices]
 
-# Canvas dimensions (data-space, independent of the exported pixel size)
-canvas_width = 280
-canvas_height = 140
+# Canvas dimensions (data-space, independent of the exported pixel size) -
+# square domain so the naturally circular/blob-shaped spiral fills the frame
+# evenly on all sides (landscape left large empty side margins)
+canvas_width = 150
+canvas_height = 150
 
-# Scale font sizes for readability (mm, geom_text units)
+# Scale font sizes for readability (mm, geom_text units) - floor raised so the
+# smallest-frequency words stay legible once scaled down to mobile widths
 min_freq, max_freq = min(frequencies), max(frequencies)
-min_size, max_size = 4.5, 13
+min_size, max_size = 6.5, 14
 
 sizes = []
 for freq in frequencies:
@@ -175,18 +179,20 @@ anyplot_theme = theme(
     axis_text=element_blank(),
 )
 
+word_tooltips = layer_tooltips().title("@word").line("Frequency|@frequency")
+
 plot = (
     ggplot(df, aes(x="x", y="y", label="word", size="size", color="color", angle="angle", alpha="alpha"))
-    + geom_text(fontface="bold")
+    + geom_text(fontface="bold", tooltips=word_tooltips)
     + scale_size_identity()
     + scale_alpha_identity()
     + scale_color_manual(values=df["color"].unique(), guide="none")
-    + xlim(0, canvas_width)
-    + ylim(0, canvas_height)
+    + scale_x_continuous(limits=(0, canvas_width), expand=[0, 0])
+    + scale_y_continuous(limits=(0, canvas_height), expand=[0, 0])
     + labs(title="wordcloud-basic · letsplot · anyplot.ai")
     + theme_void()
     + anyplot_theme
-    + ggsize(800, 450)
+    + ggsize(600, 600)
 )
 
 # Save
