@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 treemap-basic: Basic Treemap
-Library: seaborn 0.13.2 | Python 3.13.12
-Quality: pending | Updated: 2026-08-04
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 82/100 | Updated: 2026-08-04
 """
 
 import os
