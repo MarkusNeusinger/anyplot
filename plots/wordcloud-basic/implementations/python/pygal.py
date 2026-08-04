@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 wordcloud-basic: Basic Word Cloud
 Library: pygal 3.1.3 | Python 3.13.14
-Quality: 78/100 | Updated: 2026-08-04
+Quality: 77/100 | Updated: 2026-08-04
 """
 
 import os

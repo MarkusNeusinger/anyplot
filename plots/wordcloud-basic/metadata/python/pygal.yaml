@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:58:23Z'
-updated: '2026-08-04T23:16:46Z'
+updated: '2026-08-04T23:28:19Z'
 generated_by: claude-sonnet
 workflow_run: 30958258841
 issue: 1012
@@ -12,13 +12,13 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/pygal/plot-dark.html
-quality_score: 78
+quality_score: 77
 review:
   strengths:
   - 'First series and highest-frequency word (Kubernetes) correctly renders in brand
     green #009E73'
   - Font size scales cleanly with frequency, giving an immediately readable size hierarchy
-  - Secondary opacity-tier depth cue (0.7 to 1.0 keyed to frequency) reinforces the
+  - Secondary opacity-tier depth cue (~0.7 to 1.0 keyed to frequency) reinforces the
     visual hierarchy beyond size alone
   - Theme chrome (background, title ink) flips correctly between light and dark while
     every word's data color stays pixel-identical across renders
@@ -28,52 +28,60 @@ review:
     explaining why'
   - Deterministic placement (fixed spiral increments, no RNG) makes the output fully
     reproducible run-to-run
-  - Realistic, neutral DevOps-survey term set with a plausible power-law-like frequency
-    distribution (195 down to 10)
+  - Realistic, neutral DevOps-tooling survey term set with a plausible power-law-like
+    frequency distribution (195 down to 10)
   - 'Correct output artifacts: plot-{theme}.png/.svg/.html, no bare plot.png'
   weaknesses:
-  - 'CRITICAL — the reviewed plot-light/dark.png and .html appear to reflect the PRE-FIX
-    (attempt 1) code, not the current implementation: the current pygal.py defines
-    an 8-color IMPRINT tuple (adding lime #99B314, commit 3ef1dca1) and min_size=50,
-    but the rendered SVG cycles colors modulo 7 (e.g. ArgoCD renders #009E73 instead
-    of the expected #99B314 at its i=7 position; GitOps and PagerDuty likewise match
-    the OLD 7-color assignment) and the smallest word (PagerDuty) renders at font-size=40
-    — the OLD min_size, not the current min_size=50. This means the render step was
-    not re-run against the latest fix commit before this review; the repair/CI pipeline
-    must force a fresh render so the next review actually evaluates the current source.'
-  - '''Docker'' and ''Ansible'' still render with zero visible gap — the ''r'' of
-    Docker touches the ''A'' of Ansible, reading almost like a single fused word.
-    This was flagged in the previous review and, in the artifact reviewed here, is
-    unchanged. If a fresh render still shows this after the width-factor (0.62) and
-    padding (40) increase, the width estimate `len(word) * size * 0.62` is still underestimating
-    true bold-glyph width for this pair — increase the multiplier further or add an
-    explicit inter-word margin on top of the bounding-box padding.'
-  - Tail words (Vagrant, Packer, Nginx, HAProxy, Zabbix, Nagios, PagerDuty) remain
-    packed into a narrow near-vertical column hugging the right edge, leaving large
-    empty voids in the top-right (below the title) and bottom-right/bottom-center
-    — the same layout imbalance flagged previously. The per-word ellipse-ratio narrowing
-    (2.8→1.6 horizontal, 1.8→1.6 vertical) visible in this artifact is too subtle
-    to redirect late/small words away from the horizontal bound. Consider a stronger
-    ratio change toward the tail, jittering the ellipse orientation per word, or biasing
-    the spiral start angle toward the empty quadrants directly.
+  - 'CRITICAL — the reviewed plot-light/dark.png (and .html) still do not reflect
+    the current committed source, for the second consecutive review. Pixel-level inspection
+    of plot-light.png proves it: the current pygal.py defines an 8-color IMPRINT tuple
+    (adding lime #99B314) and assigns colors via `IMPRINT[i % len(IMPRINT)]`, so ArgoCD
+    (i=7), GitOps (i=15), and Nginx (i=23) should all render lime. Instead, un-blending
+    each word''s rendered color against its known per-word fill-opacity (computed
+    from its frequency) recovers #009E73 for ArgoCD, #C475FD for GitOps, and #4467A3
+    for Nginx — an exact match to the OLD 7-color cycle (i % 7) from before commit
+    3ef1dca1, not the current 8-color cycle. This means the render step is still not
+    picking up the latest commit before review; the repair/CI pipeline must force
+    a fresh render of the exact merged commit before the next scoring pass, or every
+    review in this cycle is scoring stale artifacts.'
+  - '''Docker'' and ''Ansible'' still touch with no visible gap — flagged in attempts
+    1 and 2 and unchanged here. Direct pixel scan across the junction (x≈1560-1650
+    at the vertical mid-line of the text) shows multiple rows with zero background
+    pixels between the last ''r'' stroke of Docker and the first ''A'' stroke of Ansible;
+    a background gap only reopens a few rows above/below. Both words stay legible,
+    but this is a real touching-with-zero-gap defect, not a false positive from crowded
+    margins. Since the width estimate `len(word) * size * 0.62` and the 40px bounding-box
+    padding have not resolved this across three attempts, add an explicit minimum
+    inter-word pixel margin measured from actual glyph edges (or increase the width
+    multiplier further, e.g. to ~0.68-0.70) specifically for this pair''s font size.'
+  - The narrow right-edge column of small words (Loki, Kibana, Vagrant, Packer, Nginx,
+    HAProxy, Zabbix, Nagios, PagerDuty) is unchanged from the previous review, still
+    leaving large empty voids in the bottom-center and bottom-right of the canvas.
+    The recentering shift added in the latest commit (shift_x/shift_y applied uniformly
+    to all words) can only translate the whole cloud's bounding box — it cannot redistribute
+    an internally lopsided spiral result, so this specific imbalance was never going
+    to be fixed by that change alone (and per the stale-render finding above, this
+    render may predate even that commit). Bias the spiral's ellipse ratio or start
+    angle more aggressively toward the emptiest quadrants for the tail third of words,
+    rather than relying solely on a global recenter.
   - 'Only 7 of the 8 Imprint categorical colors actually appear in the rendered word
     cloud — lime #99B314 is defined in the code''s IMPRINT tuple but never shows up
-    in the SVG, consistent with the stale-render finding above.'
+    in the SVG/PNG, consistent with the stale-render finding above.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "wordcloud-basic · pygal · anyplot.ai" in dark ink, centered at top, clearly legible. No axes, ticks, or legend — correctly omitted for a word cloud.
-      Data: 28 words of varying size (largest "Kubernetes" ~187px in brand green #009E73, smallest "PagerDuty"/"Nagios"/"Zabbix" ~40px on the right edge) cycling through 7 of the 8 Imprint categorical colors (green, lavender, blue, ochre, red, cyan, magenta — lime is defined in code but does not appear in this render). Opacity fades from ~0.7 (low-frequency tail) to 1.0 (high-frequency core). Large/mid words (Kubernetes, Docker, Ansible, Terraform, Helm, Jenkins, GitLab, Prometheus, Grafana, ArgoCD) cluster center-left with generous spacing; "Docker" and "Ansible" touch directly with no visible gap. A run of small words (Vagrant → PagerDuty) is packed into a narrow vertical column near the right edge, leaving visible empty voids in the top-right and bottom-right/bottom-center.
-      Legibility verdict: PASS (all title and word text clearly readable against the light background; no light-on-light issues). Font sizes and color assignments in this artifact match the SVG text attributes I inspected directly (e.g. PagerDuty font-size=40, ArgoCD fill=#009E73), which correspond to the pre-fix code (min_size=40, 7-color cycle) rather than the current source (min_size=50, 8-color IMPRINT) — see weaknesses.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "wordcloud-basic · pygal · anyplot.ai" in dark ink, centered at top, clearly legible against the light background. No axes, ticks, or legend — correctly omitted for a word cloud.
+      Data: 28 words of varying size. Largest word "Kubernetes" (~187px) renders in brand green #009E73, confirming the mandated first-series color. "Docker" (lavender), "Ansible" (ochre), "Terraform" (blue), "Helm" (red), "Jenkins" (cyan), "GitLab" (magenta) form a large, readable core cluster center-left/center. A run of smaller words (Loki, Kibana, Vagrant, Packer, Nginx, HAProxy, Zabbix, Nagios, PagerDuty) is packed into a narrow vertical column hugging the right edge, leaving large empty voids in the bottom-center and bottom-right of the canvas. "Docker" and "Ansible" touch directly with zero visible gap between the 'r' and 'A' glyphs (confirmed via pixel inspection). Opacity fades from ~0.7 (low-frequency tail) to ~1.0 (high-frequency core), adding a secondary depth cue. Pixel-level un-blending of ArgoCD/GitOps/Nginx's rendered colors against their known opacity recovers the OLD 7-color IMPRINT cycle (green/lavender/blue) rather than the lime #99B314 the current 8-color source should produce at those indices — i.e. only 7 of the 8 Imprint hues actually appear in this artifact.
+      Legibility verdict: PASS (all title and word text clearly readable against the light background; no light-on-light issues). However, the artifact appears to be a stale render that predates the current committed source (see weaknesses) — legibility of the rendered version is fine, but it may not represent the latest code.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
       Chrome: Title renders in light ink, clearly legible against the dark background. Same absence of axes/ticks/legend as the light render.
-      Data: Identical word set, sizes, positions, and colors as the light render (confirmed via SVG inspection: ArgoCD, GitOps, PagerDuty carry the same font-size/fill/fill-opacity values in both plot-light.html and plot-dark.html) — only the background and title ink flipped, as required.
-      Legibility verdict: PASS (no dark-on-dark failures — title and every word are clearly visible against the near-black surface; brand green and all other Imprint hues read well on this background). Same stale-render caveat as the light render applies.
+      Data: Identical word set, sizes, positions, and colors as the light render — only the background and title ink flip, as required. Same right-edge column packing, same Docker/Ansible zero-gap touch, same 7-of-8-colors limitation.
+      Legibility verdict: PASS (no dark-on-dark failures — title and every word are clearly visible against the near-black surface; brand green and all other Imprint hues used read well on this background). Same stale-render caveat as the light render applies.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 22
       max: 30
       items:
       - id: VQ-01
@@ -82,14 +90,15 @@ review:
         max: 8
         passed: true
         comment: All text readable in both themes at full res; smallest tail words
-          (~40px in this artifact) likely too small once scaled to 400px mobile width
+          are noticeably small and would be borderline at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No true overlap, but 'Docker' and 'Ansible' touch with zero visible
-          gap — unresolved from the previous review
+        comment: '''Docker'' and ''Ansible'' still touch with zero visible gap (pixel-confirmed)
+          — unresolved across three attempts; words remain individually legible so
+          this stops short of severe/unreadable overlap'
       - id: VQ-03
         name: Element Visibility
         score: 5
@@ -110,8 +119,8 @@ review:
         max: 4
         passed: true
         comment: Correct 3200x1800 canvas, nothing clipped, but visible empty voids
-          top-right/bottom-right from the crowded right-edge column — same imbalance
-          as the previous review, unresolved in this artifact
+          bottom-center/bottom-right from the crowded right-edge column — same imbalance
+          as the previous two reviews, unresolved in this artifact
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -124,8 +133,8 @@ review:
         max: 2
         passed: true
         comment: 'First series (Kubernetes) is #009E73; both themes'' backgrounds
-          are theme-correct; all colors used are canonical Imprint hues (only 7 of
-          8 appear, but none are non-compliant)'
+          are theme-correct; every color actually used is a canonical Imprint hue
+          (only 7 of 8 appear, but none are non-compliant)'
     design_excellence:
       score: 12
       max: 20
@@ -135,16 +144,16 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette + opacity depth cue show real polish, but the right-edge
-          column of small words still reads as an unresolved layout artifact
+        comment: Custom palette + opacity depth cue show real polish, but the persistent
+          right-edge column and touching pair read as unresolved layout artifacts
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
         comment: Clean, chrome-free canvas, but whitespace remains unevenly distributed
-          (large dead zones vs. a cramped right column) — the attempted fix does not
-          show visible improvement in this artifact
+          (large dead zones vs. a cramped right column) — no visible improvement across
+          three attempts in the reviewed artifacts
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -181,9 +190,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'wordcloud-basic · pygal · anyplot.ai', consistent
-          with this repo's pygal title convention; no legend needed since color is
-          decorative
+        comment: Title is exactly 'wordcloud-basic · pygal · anyplot.ai'; no legend
+          needed since color is decorative
     data_quality:
       score: 15
       max: 15
