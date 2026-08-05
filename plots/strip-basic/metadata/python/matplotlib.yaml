@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: strip-basic
 created: '2025-12-23T21:54:18Z'
-updated: '2026-08-05T05:38:53Z'
+updated: '2026-08-05T05:46:11Z'
 generated_by: claude-sonnet
 workflow_run: 30978262658
 issue: 975
@@ -12,103 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - 'Excellent data storytelling: the amber-flagged Line C with an annotated callout
-    immediately draws the eye to the out-of-spec production line and explains why
-    (mean offset + spread) in plain language.'
-  - 'Correct Imprint palette use, including a legitimate semantic exception (amber
-    #DDCC77 for the ''flagged/warning'' line), while the other three lines still follow
-    canonical palette order starting at brand green.'
-  - Theme-adaptive chrome is fully correct in both renders — title, axis labels, tick
-    labels, mean-line color, and annotation box all flip appropriately with no dark-on-dark
-    or light-on-light failures.
-  - Sensible reference elements (tolerance band, target dashed line, per-group mean
-    bars) give the strip plot real analytical context without cluttering the individual-point
-    encoding.
-  - Jitter width (±0.18) and marker alpha (0.65) both land inside the spec's recommended
-    ranges (0.1-0.3 jitter, 0.5-0.7 alpha), and the seed is fixed for reproducibility.
+  - 'Clear data storytelling: the flagged Line C is called out with amber color, a
+    matching mean-reference line, and a contextual callout box explaining the +0.038mm
+    drift and ~2x spread — the viewer sees the insight immediately'
+  - Correct, well-justified Imprint palette use — first three lines use canonical
+    positions 1-3 and the flagged line intentionally borrows the amber semantic anchor
+    for its 'warning/caution' role, explained in the annotation text
+  - Tolerance band (axhspan) and target reference line (axhline) give the strip plot
+    a factual frame of 'in spec' vs 'out of spec' that ties directly into the realistic
+    QC scenario
+  - Full theme-adaptive chrome — both plot-light.png and plot-dark.png are clean,
+    legible, and use identical data colors with correctly flipped background/text/grid
+  - 'Realistic, appropriately scaled manufacturing tolerance data (25.000mm +/- 0.050mm)
+    with genuine feature coverage: different means and spreads per production line,
+    including a visibly wider-spread flagged group'
+  - Correct canvas (3200x1800), explicit font sizing throughout, mandated title format,
+    no clipping at any canvas edge in either render
   weaknesses:
-  - Annotation callout text (fontsize=7.5) becomes illegible when the PNG is scaled
-    to the 400px mobile thumbnail — increase to ~9-10pt or shorten the annotation
-    so it survives the mobile-width legibility check.
-  - 'Title omits the required ''{language}'' segment: it reads ''strip-basic · matplotlib
-    · anyplot.ai'' but the spec format is ''{spec-id} · {language} · {library} · anyplot.ai''
-    — should be ''strip-basic · python · matplotlib · anyplot.ai''.'
-  - The subtle violin KDE silhouette behind the jittered points blends the strip plot
-    with the visual language of a violin plot, which the spec explicitly frames strip
-    plots as an alternative to ('Unlike box plots or violin plots that show summary
-    statistics...'). Keep it very low-emphasis (already alpha=0.15) or drop it so
-    the individual points stay the unambiguous focal encoding.
+  - Title occupies only ~48% of the plot width — on the low end of the typical range
+    for a plain mandated title; a touch more fontsize (e.g. 13-13.5pt) would balance
+    it closer to the 50-70% target without risking overflow
+  - X-axis margins are slightly asymmetric — noticeably more empty space to the right
+    of Line D than to the left of Line A; tightening set_xlim's right bound would
+    balance canvas utilization
+  - Distinctive-feature usage (annotate + axhspan) is solid but fairly replicable
+    in other libraries; a more matplotlib-specific touch (e.g. custom Path/patch for
+    the callout, or violin-style KDE outline behind the strip) would push Library
+    Mastery higher
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "strip-basic · matplotlib · anyplot.ai" in dark ink, centered and fully visible; x-axis label "Production Line" and y-axis label "Shaft Diameter (mm)" in dark ink; tick labels in a softer grey; a light shaded tolerance band (24.95-25.05mm) and a dashed target line at 25.000mm sit behind the data.
-      Data: Four production-line groups (Line A-D) shown as jittered scatter points over faint violin silhouettes, each with a solid mean-line bar. Line A is brand green (#009E73), Line B lavender (#C475FD), Line C amber (#DDCC77, semantic "flagged" color), Line D ochre (#BD8233). An annotated callout box (light elevated fill, dark border) explains why Line C is flagged, connected to the Line C violin by a thin leader line.
-      Legibility verdict: PASS for title/axis/tick text; FAIL for the small annotation text, which becomes blurry/illegible once the image is scaled down to the 400px mobile thumbnail (verified against plot-light_400.png).
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "strip-basic · python · matplotlib · anyplot.ai" in dark ink, centered top. X-axis "Production Line" with categorical ticks Line A/B/C/D; y-axis "Shaft Diameter (mm)" with numeric ticks from 24.950 to 25.100. Subtle horizontal gridlines, L-shaped spines (top/right removed). A shaded tolerance band (24.95-25.05) and a dashed target line at 25.000 sit behind the data. All text renders in dark ink, clearly legible.
+      Data: Four jittered strip columns. Line A = brand green (#009E73), Line B = lavender (#C475FD), Line C = amber (#DDCC77, semantic "warning" override in place of the canonical blue slot) with a matching amber mean line and a callout box reading "Line C: +0.038mm above target, ~2x spread — check tooling wear", Line D = ochre (#BD8233). Solid horizontal mean-reference lines sit within each column (dark ink for A/B/D, amber for C). Markers are appropriately sized (s=110) with alpha=0.65 and background-matched edges to separate overlapping points.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable; no clipping at any canvas edge; annotation box and arrow stay clear of the data cloud.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis labels in light cream ink; tick labels in a softer light grey; tolerance band and dashed target line rendered in the theme-adaptive muted tone, still visible against the dark surface.
-      Data: Same four category colors as the light render (green/lavender/amber/ochre) — confirmed identical data colors across themes, only chrome flipped. Mean-line bars are white/cream instead of black (correctly using the theme-adaptive INK token). Annotation box uses the dark elevated fill (#242420) with a light border and light text, clearly readable against the dark plot background — no dark-on-dark failure.
-      Legibility verdict: PASS for title/axis/tick text and annotation chrome contrast; FAIL for the same small annotation fontsize issue as the light render (mobile-scale legibility).
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and ticks now rendered in light ink (off-white/light-gray), clearly visible against the dark surface. Gridlines and spines flip to light, subtle tones. Tolerance band and dashed target line remain visible at low contrast, as intended.
+      Data: Identical four data colors to the light render — green, lavender, amber, ochre — confirming palette consistency across themes. Mean-reference lines are white/light for A, B, D and amber for the flagged Line C, both clearly distinguishable from the dark background. The callout box uses the dark "elevated" fill (#242420) with a light border and light text, fully legible.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every title, axis label, tick label, and annotation is clearly readable against the #1A1A17 surface.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Title/axis/tick sizes explicit and well-proportioned, but the 7.5pt
-          annotation callout is illegible at the 400px mobile thumbnail size.
+        passed: true
+        comment: All font sizes explicit (title 12pt, axis 10pt, ticks 8pt, annotation
+          10pt); readable in both themes. Title runs ~48% of plot width, slightly
+          below the 50-70% ballpark for a non-prefixed title.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render; annotation box and leader
-          line stay clear of points and axis text.
+        comment: No text-on-text or text-on-data overlap; annotation arrow terminates
+          cleanly before the data cloud.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size (s=110) and alpha (0.65) are appropriate for the 48-60
-          point medium-density groups; slightly low end of the recommended 100-200
-          range.
+        comment: s=110, alpha=0.65 matches the spec's own guidance (0.5-0.7) for 48-60
+          point groups; density-through-accumulation reads well, especially in the
+          dense Line C cluster.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; amber is used redundantly with the annotation
-          text, not as sole signal.
+        comment: Good contrast, CVD-safe Imprint hues; amber vs green is not a red-green
+          pairing.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a healthy majority of the canvas, nothing
-          cut off.
+        comment: Balanced canvas utilization, no cut-off content, annotation stays
+          near the plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels are descriptive and 'Shaft Diameter (mm)' includes
-          units.
+        comment: Y-axis has units (mm); x-axis is categorical and descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, other series follow the Imprint palette
-          (with a legitimate semantic amber exception for the flagged line), theme
-          chrome and backgrounds correct in both renders.'
+        comment: 'First series #009E73; amber used correctly as the semantic warning
+          anchor with the reason spelled out in the annotation; identical data colors
+          and theme-correct chrome in both renders; backgrounds match #FAF8F1/#1A1A17.'
     design_excellence:
       score: 17
       max: 20
@@ -118,80 +119,80 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color use, tolerance-band context, and annotated
-          callout are clearly above library defaults.
+        comment: Thoughtful semantic color use, tolerance band, and mean lines clearly
+          above library defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-only grid, generous whitespace,
-          subtle tolerance-band shading.
+        comment: Spines removed (top/right), subtle y-grid, background-matched marker
+          edges, generous margins; minor asymmetry in x-axis whitespace keeps this
+          from a perfect score.
       - id: DE-03
         name: Data Storytelling
         score: 6
         max: 6
         passed: true
-        comment: Clear focal point (flagged Line C) with color, mean-line emphasis,
-          and an explanatory annotation — the insight is immediately visible.
+        comment: Amber highlight + matching mean line + tolerance band + callout annotation
+          combine to make the tooling-wear insight immediately obvious.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: All individual jittered points are shown per spec, but the added
-          violin silhouette blends the strip plot with the visual language of the
-          violin plot the spec explicitly distinguishes it from.
+        comment: 'Correct strip plot: individual points with horizontal jitter per
+          category.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Jitter, alpha transparency, and mean reference lines (all spec-suggested
-          features) are present.
+        comment: Jitter width 0.18 (within 0.1-0.3), alpha 0.65 (within 0.5-0.7),
+          and mean reference lines all present per spec notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x-axis, numeric value on y-axis, all data visible.
+        comment: Category on x, numeric value on y, all data visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title is missing the required '{language}' segment (should be 'strip-basic
-          · python · matplotlib · anyplot.ai'); no legend needed/present, which is
-          correct for this design.
+        passed: true
+        comment: Title matches mandated format exactly; no formal legend needed since
+          categories are labeled on the x-axis and the flagged line is explained via
+          annotation.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Groups show distinct means, spreads, and an outlier on Line C; good
-          variation across categories.
+        comment: Four groups show varying means and spreads, including a visibly wider-spread
+          flagged group and natural outliers at each column's extremes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing QC scenario (shaft diameter inspection across production
-          lines) is realistic, neutral, and comprehensible.
+        comment: Neutral, plausible manufacturing QC scenario (shaft diameter inspection
+          across production lines).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Tolerance (±0.05mm), means, and spreads are physically plausible
-          for precision machining.
+        comment: Values and tolerances (25.000mm +/- 0.050mm, drift/spread magnitudes)
+          are realistic for precision machining.
     code_quality:
       score: 10
       max: 10
@@ -219,41 +220,40 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or interactivity.
+        comment: Clean, appropriately complex, no fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct facecolor, no deprecated calls.
+        comment: Saves as plot-{THEME}.png via current Axes-based API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Axes-level API throughout (ax.scatter, ax.violinplot, ax.hlines,
-          ax.annotate, ax.axhspan).
+        comment: Correct Axes-method usage throughout (scatter, hlines, axhspan, axhline,
+          annotate) but nothing beyond standard patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Layered violinplot + scatter + hlines + annotate composition is a
-          reasonable matplotlib-specific technique, though replicable in other grammar-of-graphics
+        comment: ax.annotate with arrowprops/bbox styling plus axhspan tolerance band
+          are matplotlib-specific touches, though replicable with effort in other
           libraries.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
-  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
