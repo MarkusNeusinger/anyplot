@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-horizontal: Horizontal Bar Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.1
-// Quality: 87/100 | Created: 2026-08-05
+// Quality: 93/100 | Created: 2026-08-05
 
 const t = window.ANYPLOT_TOKENS;
 
