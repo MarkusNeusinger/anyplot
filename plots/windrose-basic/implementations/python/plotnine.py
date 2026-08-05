@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 windrose-basic: Wind Rose Chart
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 86/100 | Updated: 2026-08-05
+Quality: 90/100 | Updated: 2026-08-05
 """
 
 import math
