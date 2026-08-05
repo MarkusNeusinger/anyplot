@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-05
@@ -38,6 +38,9 @@ ss_res = np.sum((y - y_pred) ** 2)
 ss_tot = np.sum((y - np.mean(y)) ** 2)
 r_squared = 1 - (ss_res / ss_tot)
 
+# Largest residual: notable outlier worth calling out
+outlier_idx = np.argmax(np.abs(y - y_pred))
+
 # Regression line and 95% confidence interval
 x_line = np.linspace(x.min() - 0.5, x.max() + 0.5, 100)
 y_line = np.polyval(coefficients, x_line)
@@ -63,10 +66,21 @@ trans_x = blended_transform_factory(ax.transData, ax.transAxes)
 ax.plot(x, np.full_like(x, 0.015), "|", transform=trans_x, color=BRAND, alpha=0.5, markersize=7, zorder=1)
 
 # Scatter points (BRAND green as first series)
-ax.scatter(x, y, s=100, alpha=0.7, color=BRAND, edgecolors=PAGE_BG, linewidth=0.5, zorder=3)
+ax.scatter(x, y, s=130, alpha=0.7, color=BRAND, edgecolors=PAGE_BG, linewidth=0.5, zorder=3)
 
 # Regression line (SECONDARY color)
 ax.plot(x_line, y_line, color=SECONDARY, linewidth=2.5, label="Regression Line", zorder=2)
+
+# Callout for the largest residual, showing how far the point strays from the fit
+ax.annotate(
+    "Largest residual",
+    xy=(x[outlier_idx], y[outlier_idx]),
+    xytext=(x[outlier_idx] + 1.4, y[outlier_idx] + 10),
+    fontsize=8,
+    color=INK_SOFT,
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "linewidth": 1},
+    zorder=4,
+)
 
 # Annotation: equation and R-squared
 equation = f"y = {slope:.2f}x + {intercept:.2f}"
@@ -83,7 +97,7 @@ ax.text(
 )
 
 # Title and axis labels (title short enough to use the default 12pt)
-title = "scatter-regression-linear · matplotlib · anyplot.ai"
+title = "scatter-regression-linear · python · matplotlib · anyplot.ai"
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
 ax.set_xlabel("Study Hours (hrs)", fontsize=10, color=INK)
 ax.set_ylabel("Exam Score (points)", fontsize=10, color=INK)
