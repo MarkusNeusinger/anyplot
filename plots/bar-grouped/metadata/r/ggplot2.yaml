@@ -1,0 +1,237 @@
+library: ggplot2
+language: r
+specification_id: bar-grouped
+created: '2026-08-05T01:15:32Z'
+updated: '2026-08-05T01:28:18Z'
+generated_by: claude-sonnet
+workflow_run: 30965716919
+issue: 1822
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Both weaknesses from Attempt 1 are directly and correctly fixed: gridlines now
+    use a baked-in ~20% alpha tint (paste0(INK, "33")) instead of solid ink, landing
+    squarely in the style guide''s 15-25% subtle target'
+  - Regions are now ordered by descending total revenue (region_order computed via
+    group_by/summarise/arrange), turning the chart into a ranking rather than an arbitrary
+    list
+  - New geom_text() value labels use the same position_dodge(width = 0.75) as the
+    bars, so labels stay correctly centered over their bar even though this is easy
+    to get misaligned
+  - Correct Imprint palette in canonical order, identical across light/dark renders;
+    fully theme-adaptive chrome
+  - Clean KISS-structured R code with set.seed(42) and realistic case_when()-based
+    per-product revenue distributions
+  weaknesses:
+  - No explicit annotation or callout highlights a specific insight (e.g., Central
+    being the only region where Hardware revenue exceeds Software) - the ordering
+    adds hierarchy but the storytelling is still implicit rather than pointed
+  - Grouped-dodge-bar-with-labels is still a fairly standard recipe; a more library-distinctive
+    flourish (e.g. geom_text() color/weight varying by series total, or a subtle annotate()
+    marking the top region) would push Library Mastery further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title fully legible; "Region" and "Revenue ($M)" axis titles in dark ink; tick labels in softer gray; gridlines now a subtle low-alpha tint (fixed from Attempt 1's solid-ink issue); borderless top-left legend with three swatches. All readable.
+      Data: First series (Software) = #009E73 brand green, second (Hardware) = #C475FD lavender, third (Services) = #4467A3 blue - correct Imprint canonical order. Bars dodge-grouped per region, background-colored bar edges for separation, dodge-aligned value labels above each bar. Regions ordered Central > West > North > East > South by descending total revenue.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Title, axis labels, and tick labels render in light ink, fully legible. Gridlines are faint light lines at the same subtle weight as the light render. No dark-on-dark failures observed.
+      Data: Colors confirmed identical to light render (#009E73 / #C475FD / #4467A3) - only chrome flipped. Value labels remain legible in the softer ink-soft tone.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes, well-proportioned, readable in both themes and
+          at mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text, bars, or labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and value labels clearly visible and appropriately sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe, not reliant on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills a healthy share of the canvas, legend
+          near plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (Revenue ($M))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint canonical order, theme-correct chrome in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Correct palette, bold title hierarchy, dodge-aligned labels, background-colored
+          bar edges - clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Gridline opacity fixed to subtle ~20% tint, L-shaped frame, generous
+          whitespace, borderless legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Descending-total ordering gives a ranking narrative; no explicit
+          annotation on a specific insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors, clear legend, consistent bar widths/spacing, meaningful
+          ordering, value labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=region, y=revenue, fill=product - correct mapping, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labels match
+          data exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows variation across regions and product lines
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral business revenue scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue values in $M plausible for a multi-region company
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, top-down script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{theme}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct dodge-matched geom_col + geom_text, scale_fill_manual, theme_minimal
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Dodge-aware geom_text value labels are a genuine ggplot2-idiomatic
+          touch, but overall recipe remains fairly standard
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - edge-highlighting
