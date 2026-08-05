@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: histogram-kde
 created: '2025-12-24T21:30:21Z'
-updated: '2026-08-05T03:48:33Z'
+updated: '2026-08-05T04:03:27Z'
 generated_by: claude-sonnet
 workflow_run: 30972973643
 issue: 1823
@@ -12,54 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - 'Correct Imprint palette with theme-adaptive chrome: brand green #009E73 histogram
-    + lavender #C475FD KDE curve are identical across renders, and both plot-light.png
-    and plot-dark.png background/text/legend colors are theme-correct and fully readable.'
-  - Creative technique for combining a step-path histogram with a continuous-scale
-    KDE overlay inside a single pygal.XY chart, working around pygal's Histogram chart
-    type not supporting an overlaid line series on the same x-scale.
-  - Realistic, neutral injection-molding QC dataset (target set-point 205C with cold-start
-    and overheat tails) that visibly shows multimodal bumps around 196C and 216C,
-    supporting good DQ-01 feature coverage.
-  - All font sizes explicitly set (title, axis, tick, legend) and legible at full
-    3200x1800 resolution in both themes.
-  - Clean KISS script structure with a fixed np.random.seed(42) for reproducibility.
+  - 'Correct plot type: histogram with density-normalized y-axis plus a smooth Gaussian
+    KDE overlay, semi-transparent bars (alpha=0.5) exactly as the spec requests.'
+  - 'Realistic, well-crafted QC data storytelling: cold-start and overheat excursions
+    create genuine tail behavior around a normal steady-state peak, and the dashed
+    ''Target Set-Point (205C)'' reference line gives the distribution a clear narrative
+    anchor.'
+  - 'Full Imprint palette compliance verified identical across both renders: brand
+    green (#009E73) histogram, lavender (#C475FD) KDE curve as series 2, and the INK-toned
+    neutral used correctly as a semantic anchor (not a categorical color) for the
+    reference line.'
+  - 'Both renders pass the theme-readability check: warm off-white (#FAF8F1) / near-black
+    (#1A1A17) backgrounds, all titles/axis labels/ticks legible, no dark-on-dark or
+    light-on-light failures.'
+  - 'Clean, reproducible KISS code: np.random.seed(42), explicit font sizing throughout
+    the Style object (title/label/major_label/legend/value all set), correct plot-{theme}.png/.html
+    output naming via render_to_png/render_to_file.'
   weaknesses:
-  - 'Design Excellence still reads close to a configured library default: nothing
-    visually calls out the target set-point (205C) or the cold-start/overheat excursions
-    that make this dataset interesting. A subtle reference line or shaded band at
-    205C would turn this into a story instead of a plain distribution (DE-01, DE-03).'
-  - The KDE curve is a thin, muted lavender line that gets visually close to lost
-    against the tall green histogram peaks (e.g. around 204-208C). Consider a heavier
-    stroke width or higher-contrast treatment to keep it prominent above the bars
-    in both themes (VQ-03).
-  - 'Library Mastery is generic: the implementation doesn''t lean on any pygal-distinctive
-    capability. Using `interpolate=''cubic''` on the KDE series (or another pygal-specific
-    feature) would smooth the curve and meaningfully improve LM-02 without affecting
-    the static PNG (LM-02).'
-  - Both show_x_guides and show_y_guides are disabled entirely; a very subtle horizontal
-    guide tied to foreground_subtle would help readers estimate density values at
-    a glance without adding clutter (DE-02).
+  - The dashed 'Target Set-Point (205C)' reference line (INK-toned, stroke width 3)
+    is quite low-contrast in the light render against the light-beige/green background
+    — consider widening the stroke slightly or nudging opacity up so it reads clearly
+    without becoming a fourth data color.
+  - Overall polish reads as a tasteful, well-configured default rather than a fully
+    bespoke design (DE-01) — e.g. no custom typography treatment beyond size, bar
+    boundary strokes are plain. A touch more refinement (softer legend box, tone-matched
+    bar edges) would lift Design Excellence further.
+  - KDE is computed with a manual Python for-loop over all 600 points times 200 grid
+    points instead of a vectorized/broadcast approach — works fine at this data size
+    but is less elegant/idiomatic than a numpy-broadcast or scipy.stats.gaussian_kde
+    implementation.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches the required light-theme surface, not pure white.
-      Chrome: Title "Injection Molding Barrel Temperature · histogram-kde · python · pygal · anyplot.ai" sits fully visible at the top with generous whitespace above and below, no clipping at the canvas edge. Axis titles "Barrel Temperature (C)" (x) and "Probability Density" (y) are dark, clearly legible. Y-axis tick labels (0, 0.01 ... 0.1) and x-axis tick labels (192, 196, ... 220) are dark ink on the light background, fully readable. Legend ("Histogram", "KDE Curve") sits at the bottom-left with dark, readable text.
-      Data: Histogram bars render as a semi-transparent brand-green (#009E73 at alpha 0.5) step-filled area over the light background, giving a muted sage-green tone from alpha compositing. The KDE curve is a thin lavender (#C475FD) line tracing over the bar tops. First series is the mandated #009E73.
-      Legibility verdict: PASS - all text is clearly readable against the light surface, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Dark, clearly legible title "Injection Molding Barrel Temperature · histogram-kde · python · pygal · anyplot.ai" across the top (~82% of canvas width, expected for the mandated title format). X-axis title "Barrel Temperature (C)" and y-axis title "Probability Density" are both dark and readable. Tick labels (192.0C ... 220.0C, 0.0000 ... 0.1000) are dark, evenly spaced, no overlap. Horizontal y-guide gridlines are subtle dashed dark-gray lines, visible but not dominant; x-guides are correctly disabled for a cleaner look.
+      Data: First series (Histogram) renders as semi-transparent brand green (#009E73, alpha 0.5) bars forming a right-skewed unimodal distribution with small secondary bumps near 196C (cold-start) and 216C (overheat) — matches the QC-monitoring scenario. Second series (KDE Curve) is a thick lavender (#C475FD) line tracing a smooth Gaussian-like envelope over the bars, clearly visible against the green fill. Third series (Target Set-Point at 205C) is a thin dark dashed vertical line near the peak — present and correctly labeled in the legend, though visually subtle against the green fill.
+      Legibility verdict: PASS (all text readable; the target line is low-contrast but is a deliberate structural/reference element, not primary text or data).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches the required dark-theme surface, not pure black.
-      Chrome: Same title, axis titles, and tick labels now render in light ink, fully legible against the dark background. No dark-on-dark text anywhere - title, axis labels, and tick labels are all clearly visible. Legend text is light-colored and readable at the bottom-left.
-      Data: Histogram bars are the same #009E73 green series, now alpha-composited against the near-black background giving a deeper forest-green tone (this is expected alpha-blending behavior, not a palette violation - the underlying series color is unchanged). The KDE curve remains the same lavender (#C475FD) line, clearly distinguishable from the green fill and the dark background.
-      Legibility verdict: PASS - all text is clearly readable against the dark surface, no dark-on-dark failures observed.
-
-    Both renders use identical data colors (#009E73 histogram, #C475FD KDE curve); only the chrome (background, text ink, legend box) flips between themes as required.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels all render in light off-white text, clearly legible against the dark background — no dark-on-dark failures. Gridlines are subtle light-gray dashed lines, visible without being distracting.
+      Data: Histogram bars remain the same underlying green (#009E73 at alpha 0.5) — they read as a deeper forest green here purely because of alpha-blending against a near-black backdrop rather than a light one; the base hex is unchanged, confirmed by identical hue/saturation. KDE curve is the same lavender (#C475FD), reading slightly more purple against the dark backdrop but unchanged in hex — smooth curve clearly visible. Target Set-Point line now renders in light gray/white (theme-adaptive INK token), consistent with the "neutral anchor" design intent, and is actually more visible here than in the light render.
+      Legibility verdict: PASS (all text and data elements legible in dark theme; data colors confirmed identical to light render modulo intentional alpha blending).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -67,52 +66,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title, axis labels, and ticks readable
-          in both themes; title width (~84%) is expected for the mandated long title
-          format
+        comment: All font sizes explicitly set via Style object; readable in both
+          themes; title fits mandated 70-85% width band
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: No overlapping text or legend collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Histogram bars clearly visible; KDE curve visible but thin/muted
-          against the tall green peaks
+        comment: Bars and KDE curve well-sized for the data density; target reference
+          line is somewhat low-contrast in light theme
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender is CVD-safe, not a red-green pairing, adequate
-          contrast
+        comment: Green/lavender combination is CVD-safe with good contrast; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills the large majority of the canvas with reasonable margins;
-          slightly asymmetric left/right whitespace
+        comment: Canvas gate passed (3200x1800); plot fills a large, balanced portion
+          of the canvas; legend anchored near plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles are descriptive and include units (C, Probability
-          Density)
+        comment: Barrel Temperature (C) has units; Probability Density is descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series #C475FD (Imprint order); backgrounds
-          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+        comment: 'First series #009E73, second #C475FD (canonical order), third is
+          theme-adaptive INK neutral anchor for the reference line; backgrounds theme-correct
+          in both renders'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -120,22 +118,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default; Imprint colors applied but no additional
-          polish
+        comment: Well-configured, tasteful use of the Imprint palette but reads as
+          a polished default rather than a fully bespoke design
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid disabled and spines minimal, some deliberate refinement beyond
-          raw defaults
+        comment: Y-guides only (x-guides disabled), semi-transparent fill, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data is displayed but not interpreted; no visual emphasis on the
-          set-point or excursion tails
+        passed: true
+        comment: Target set-point reference line creates a clear focal point / QC
+          narrative beyond a plain distribution plot
     spec_compliance:
       score: 15
       max: 15
@@ -145,52 +143,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Histogram with KDE overlay correctly implemented via step-path fill
-          + line series
+        comment: Histogram with KDE overlay via pygal.XY, correctly constructed
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent bars (alpha 0.5), density-scaled y-axis, contrasting
-          colors, appropriate bin count and bandwidth all present
+        comment: Semi-transparent bars, density y-axis, contrasting KDE color all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = temperature, Y = density, all data visible
+        comment: X = temperature, Y = density, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title matches mandated format with descriptive prefix; legend labels
-          'Histogram' and 'KDE Curve' are correct
+          match series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multimodal bumps visible from cold-start (~196C) and overheat (~216C)
-          tails, though subtle
+        comment: Main peak plus visible cold-start and overheat tail bumps demonstrate
+          skew/tail behavior
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Injection molding QC scenario is real, neutral, and comprehensible
+        comment: Injection-molding QC barrel-temperature monitoring is a real, neutral,
+          comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperatures and spread are realistic for injection molding barrel
-          processes
+        comment: 190-220C range and 205C set-point are plausible thermoplastic processing
+          temperatures
     code_quality:
       score: 10
       max: 10
@@ -200,7 +198,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear imports -> data -> plot -> save
+        comment: Linear imports -> data -> compute -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,43 +210,45 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pygal, Style used
+        comment: os, numpy, pygal, pygal.style.Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual KDE loop is a reasonable, appropriately-scoped workaround
-          given no scipy dependency
+        comment: No fake functionality; manual KDE loop is a minor inelegance but
+          not a deduction-worthy issue
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal API
+        comment: render_to_png / render_to_file with correct plot-{theme} naming
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level pygal.XY + Style usage, though KDE curve construction
+          is manual rather than library-assisted
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct usage of pygal.XY/Style, but sidesteps the native pygal.Histogram
-          chart type entirely
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: No pygal-distinctive feature used (e.g. interpolate='cubic'); generic
-          XY/Style usage
-  verdict: REJECTED
+        comment: Custom tooltip formatters (x_value_formatter/value_formatter) and
+          dasharray/linecap stroke styling leverage pygal-specific interactivity and
+          SVG stroke control
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
