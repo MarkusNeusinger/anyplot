@@ -337,23 +337,51 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
+          REPOSITORY: ${{ github.repository }}
         run: |
+          # `0` is a LEGITIMATE score, not a sentinel: the Stage 1 auto-reject
+          # gates in prompts/workflow-prompts/ai-quality-review.md mandate
+          # exactly "Score = 0, verdict = REJECTED" for AR-08 (clipped element)
+          # and AR-09 (mandatory title not visible). Conflating that with "the
+          # action produced nothing" is what deadlocked PRs #10152/#10130/
+          # #10009/#10003/#9968/#9776: a correctly-rejected plot was reported as
+          # a crashed review, so the repair that would have fixed the title was
+          # never dispatched. Whether output exists is therefore tracked
+          # separately from what the score is.
+          HAS_OUTPUT=false
           if [ -f "quality_score.txt" ]; then
             SCORE=$(cat quality_score.txt | tr -d '[:space:]')
+            HAS_OUTPUT=true
           else
-            SCORE=$(gh pr view "$PR_NUM" --json comments -q '.comments[-1].body' | grep -oP 'Score: \K\d+' | head -1 || echo "0")
+            # Fall back to the review comment. Select the last *claude[bot]*
+            # comment rather than the last comment overall — on a retry the
+            # github-actions[bot] "auto-retrying" notice lands after it, and
+            # `.comments[-1]` would then read that notice and find no score.
+            SCORE=$(gh api --paginate "repos/${REPOSITORY}/issues/${PR_NUM}/comments?per_page=100" \
+              --jq '[.[] | select(.user.login == "claude[bot]")] | last | .body // ""' 2>/dev/null \
+              | grep -oP '^###\s+Score:\s+\K\d+' | head -1 || true)
+            if [ -n "$SCORE" ]; then
+              HAS_OUTPUT=true
+              echo "::notice::quality_score.txt missing; recovered score ${SCORE} from the review comment"
+            fi
           fi
 
-          # Validate score is a number between 1-100, default to 0 if invalid
-          if ! [[ "$SCORE" =~ ^[0-9]+$ ]] || [ "$SCORE" -lt 1 ] || [ "$SCORE" -gt 100 ]; then
-            echo "::warning::Invalid quality score '$SCORE', defaulting to 0"
+          # Only a non-numeric or out-of-range value is invalid. 0 passes.
+          if [ "$HAS_OUTPUT" = "true" ] && { ! [[ "$SCORE" =~ ^[0-9]+$ ]] || [ "$SCORE" -gt 100 ]; }; then
+            echo "::warning::Invalid quality score '$SCORE' — treating as missing review output"
+            HAS_OUTPUT=false
+          fi
+
+          if [ "$HAS_OUTPUT" != "true" ]; then
             SCORE="0"
           fi
 
           echo "score=$SCORE" >> $GITHUB_OUTPUT
+          echo "has_output=$HAS_OUTPUT" >> $GITHUB_OUTPUT
+          echo "::notice::score=${SCORE} has_output=${HAS_OUTPUT}"
 
       - name: Validate review output
-        if: steps.review.conclusion == 'success' && steps.score.outputs.score == '0'
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
@@ -411,7 +439,7 @@ jobs:
           exit 1
 
       - name: Add quality score label
-        if: steps.review.conclusion == 'success' && steps.score.outputs.score != '0'
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
@@ -440,7 +468,7 @@ jobs:
           }
 
       - name: Add preliminary verdict label (early)
-        if: steps.review.conclusion == 'success' && steps.score.outputs.score != '0'
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
@@ -480,11 +508,11 @@ jobs:
           fi
 
       - name: Install Python dependencies for metadata update
-        if: steps.review.conclusion == 'success' && steps.score.outputs.score != '0'
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
         run: pip install pyyaml
 
       - name: Update metadata and implementation header
-        if: steps.review.conclusion == 'success' && steps.score.outputs.score != '0'
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -826,7 +854,7 @@ jobs:
           exit 1
 
       - name: Add verdict label and take action
-        if: steps.review.conclusion == 'success' && steps.score.outputs.score != '0'
+        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}

@@ -138,6 +138,25 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **A correctly rejected plot was reported as a crashed review, deadlocking the PR** —
+  `impl-review.yml` used quality score `0` as its sentinel for "the AI review produced no
+  output", but `0` is also a score the review prompt *mandates*: the Stage 1 auto-reject gates
+  (`AR-08` clipped element, `AR-09` mandatory title not visible) require exactly
+  "Score = 0, verdict = REJECTED". Every plot that tripped those gates therefore hit
+  `Validate review output` → `::error::AI Review did not produce valid output files` →
+  `ai-review-failed` → `exit 1`, which skipped the verdict step — the pipeline's *only*
+  hand-off point — so `impl-repair` was never dispatched and the missing title was never fixed.
+  The retry listener rescued once, the re-review scored `0` again (deterministically: the plot
+  was unchanged), and the resulting `ai-review-failed` + `ai-review-rescued` pair matches no
+  watchdog case, stranding the PR for good. Six PRs sat in exactly that state (#10152, #10130,
+  #10009, #10003, #9968, #9776), all with an `AR-09` verdict in hand. Output presence is now
+  tracked as its own `has_output` step output, so a score of `0` flows into the normal
+  rejected → repair path and only genuinely absent output raises `ai-review-failed`. The
+  comment fallback also now reads the last **`claude[bot]`** comment instead of the last comment
+  overall — on a retry the bot's own "auto-retrying" notice landed last and shadowed the score
+  it was looking for. Verified with a harness that extracts the step body verbatim from the YAML
+  and exercises 12 cases (score 0 via file and via comment fallback, normal scores, and the four
+  genuine no-output shapes) (#PRNUM).
 - **CI lint went red on every PR after a ruff minor bump** — `pyproject.toml` pins
   `ruff>=0.15.21` without an upper bound, CI resolved **0.16.0**, and that version started
   formatting Python code blocks inside Markdown: 20 tracked `.md` files suddenly "would be
