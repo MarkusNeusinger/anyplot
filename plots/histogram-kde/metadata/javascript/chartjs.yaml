@@ -1,0 +1,250 @@
+library: chartjs
+language: javascript
+specification_id: histogram-kde
+created: '2026-08-05T03:56:25Z'
+updated: '2026-08-05T04:08:59Z'
+generated_by: claude-sonnet
+workflow_run: 30973453219
+issue: 1823
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/chartjs/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - Idiomatic Chart.js mixed dataset (bar + line, controlled via `order`) is exactly
+    the recommended pattern for a histogram+KDE overlay, since Chart.js has no native
+    geom-layer composition
+  - 'Correct Imprint palette: histogram uses #009E73 (palette[0]) with alpha 0.5 fill,
+    KDE line uses palette[1] (#C475FD) — identical data colors across light and dark
+    renders, with theme-correct chrome (background, text, grid) in both'
+  - Realistic, neutral financial-returns scenario with density-normalized y-axis (not
+    raw counts) and a fat left tail from an 8% drawdown-day mixture, matching the
+    spec's stated skewness/tail-behavior application
+  - Deterministic data generation via a seeded LCG (seed=42) plus a from-scratch Gaussian
+    KDE with Silverman's-rule bandwidth — reproducible and technically correct
+  weaknesses:
+  - Design Excellence is generic — the chart reads as a well-configured default rather
+    than a polished, intentional design; add refinement (e.g. thinner/more subtle
+    bar borders, more deliberate spine/grid treatment) to lift DE-01/DE-02.
+  - No visual hierarchy or emphasis calls out the fat left tail / drawdown-day regime
+    that is the point of the financial example — consider a subtle annotation, shaded
+    region, or reference line distinguishing calm vs. drawdown days to give the plot
+    a clearer story (DE-03).
+  - The KDE grid extends 3 bandwidths past dataMin/dataMax on each side, so roughly
+    the leftmost ~15% and a smaller slice on the right of the x-axis show only a near-flat
+    curve with no histogram bars — tightening gridMin/gridMax (e.g. 1.5-2x bandwidth
+    padding) would improve canvas utilization (VQ-05).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "histogram-kde · javascript · chartjs · anyplot.ai" in bold dark ink at top, centered legend below it ("KDE" outline swatch, "Histogram (density)" filled swatch), dark axis titles ("Daily Return (%)", "Density"), medium-gray tick labels on both axes, subtle horizontal gridlines only (no vertical gridlines). All text is clearly legible against the light background.
+      Data: Histogram bars in semi-transparent brand green (#009E73, alpha ~0.5) with a solid green outline, bell-shaped with a visible fat left tail (small bump near x=-5.5). KDE line in lavender/purple (palette position 2, #C475FD), smooth, tracks the histogram shape closely with a slightly higher, smoother peak. First series correctly uses the brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and legend, now rendered in light/white text; axis titles in light ink, tick labels in light gray. Gridlines are faint light horizontal lines. No dark-on-dark text — every chrome element is clearly visible against the dark surface.
+      Data: Histogram bars render as a darker, more saturated green due to the alpha blend over a black background, but the underlying series color is identical to the light render (#009E73) — only the chrome flipped, as required. KDE line remains the same lavender purple, clearly visible against the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, axis titles 16, ticks/legend
+          14-16); readable in both themes; title comfortably within bounds
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend sits above the plot area with no collisions; no text overlaps
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and KDE line both clearly visible; alpha 0.5 fill keeps the
+          KDE curve legible where it crosses bars
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender hues are CVD-distinguishable, not a red-green
+          pairing
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the large majority of the canvas with balanced margins;
+          minor unused space at the far left/right from the extended KDE grid, but
+          not severe
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Daily Return (%)" has units, "Density" is descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series palette[1]; theme-correct backgrounds
+          and chrome in both renders'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Reads as a well-configured library default rather than a distinctive
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Y-axis-only grid and clean bar borders show some refinement, but
+          overall polish is modest
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Distribution is displayed but the fat-left-tail / drawdown-day story
+          is not visually emphasized
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Histogram + KDE overlay, both present
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent bars, density-scaled y-axis, contrasting histogram/KDE
+          colors, reasonable bin count
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = daily return, Y = density; axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels ("Histogram (density)", "KDE")
+          match the data
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows a skewed distribution with a fat left tail representing drawdown
+          days, matching the spec's application
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily portfolio returns is a real, neutral financial scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Return magnitudes (-7% to +5%) are plausible for a volatile portfolio
+          but somewhat wide for a typical daily equity return
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses several helper functions (LCG, KDE, hexToRgba) — necessary in
+          JS without a stats library, but adds structure beyond pure linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, current Chart.js
+          API'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Mixed bar+line dataset with `order` for z-index is the idiomatic
+          Chart.js approach to layered histogram+KDE
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages Chart.js's mixed dataset-type charts, a feature distinctive
+          to the library, though not pushed further with e.g. custom plugins
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
