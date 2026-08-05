@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-horizontal: Horizontal Bar Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -51,6 +51,8 @@ custom_style = Style(
     legend_font_size=44,
     value_font_size=36,
     stroke_width=2.5,
+    opacity="1",
+    opacity_hover="1",
 )
 
 # Create horizontal bar chart - ultra-minimal, no x-axis guides
