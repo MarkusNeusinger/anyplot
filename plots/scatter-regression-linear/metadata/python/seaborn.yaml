@@ -2,43 +2,54 @@ library: seaborn
 language: python
 specification_id: scatter-regression-linear
 created: '2025-12-24T21:29:45Z'
-updated: '2026-05-06T22:33:12Z'
-generated_by: claude-haiku
-workflow_run: 25464647272
+updated: '2026-08-05T13:20:48Z'
+generated_by: claude-sonnet
+workflow_run: 31008429540
 issue: 1821
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 94
 review:
   strengths:
-  - Excellent theme-aware implementation with proper color tokens for both light and
-    dark renders
-  - Strong visual hierarchy with regression line as clear focal point
-  - Professional annotation with equation and R² prominently displayed
-  - Clean code structure with proper seeding for reproducibility
-  - All spec requirements met with high visual quality
-  - Proper text legibility in both themes with no dark-on-dark failures
+  - Mandated title format now correctly applied — "scatter-regression-linear · python
+    · seaborn · anyplot.ai" — fixing the sole blocker from attempt 1
+  - Idiomatic single-call sns.regplot combining scatter, linear fit, and 95% CI band
+    — genuinely seaborn-native rather than manually composed
+  - CI band recolored to brand green (#009E73) instead of the line-color default,
+    reading as "uncertainty around the data" rather than "uncertainty around the fit
+    line"
+  - Marker size increased to s=60 (alpha=0.6), now squarely within the density-appropriate
+    50-100 range for this ~100-point scatter
+  - Marginal rug plots on both axes add a seaborn-specific density cue; y-axis rug
+    alpha reduced to 0.2 as requested, keeping it a subtle accent
+  - 'Theme-adaptive chrome correctly threaded through sns.set_theme rc params — both
+    renders are fully readable, backgrounds pixel-correct at #FAF8F1/#1A1A17, canvas
+    exactly 3200×1800 with no clipping'
+  - Realistic, well-distributed education-domain data (study hours 2-20, exam scores
+    30-100) producing a strong but imperfect R²=0.802 fit
   weaknesses:
-  - Could leverage more seaborn-specific APIs (e.g., sns.regplot or sns.scatterplot)
-    beyond matplotlib direct usage
-  - Design lacks distinctive custom touches (could explore alternative annotation
-    styles or subtle enhancements)
+  - Design excellence still reads mostly as a well-configured regplot default — a
+    highlighted focal region, secondary annotation emphasis, or subtler compositional
+    choice would push it toward publication-level polish
+  - X-axis marginal rug plot remains at alpha=0.3 while the y-axis rug was reduced
+    to alpha=0.2 for the same density concern — consider matching both to the lower
+    alpha for full consistency
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title is dark and prominent; axis labels are dark and clearly readable; tick labels are medium gray (INK_SOFT) and legible; annotation box has light background (#FFFDF6) with dark text; all text is fully readable against light background
-      Data: Scatter points are brand color (#009E73) with white edge colors; regression line is dark gray (INK_SOFT); confidence band is semi-transparent teal (same color, alpha=0.2); grid is subtle (alpha=0.15); all data elements clearly visible
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "scatter-regression-linear · python · seaborn · anyplot.ai" at top (mandated format, correctly applied); dark axis labels "Study Hours per Week" / "Exam Score (%)"; medium-gray tick labels; subtle gray gridlines (alpha ~0.15); a rounded annotation box in the top-left shows "y = 2.68x + 40.2 / R² = 0.802" in dark ink on an elevated cream fill, positioned clear of any data points.
+      Data: ~100 brand-green (#009E73) scatter points with thin white edges at alpha ~0.6; a solid dark-ink regression line; a semi-transparent brand-green confidence band around the line; thin gray marginal rug ticks along both axes.
+      Legibility verdict: PASS — all title/axis/tick/annotation text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Title is light text (#F0EFE8) on dark background, clearly visible; axis labels are light and readable; tick labels are medium gray (#B8B7B0) with no dark-on-dark failures; annotation box has dark background (#242420) with light text
-      Data: Scatter points are identical to light render (#009E73), maintaining color identity; regression line is lighter gray (#B8B7B0) and stands out; confidence band uses same teal with identical transparency; grid remains subtle and visible; brand green is clearly visible and distinct
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Identical layout, now rendered in light ink — near-white bold title, light axis labels, soft light-gray ticks; the annotation box uses the dark elevated fill with light text and a soft border.
+      Data: Same brand-green (#009E73) scatter points, same near-white regression line, same green confidence band — data colors are visually identical to the light render; only chrome (background, text, grid, annotation box) flipped as required.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title, axis, tick, and annotation text is clearly legible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,70 +60,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized and colored for both themes; proper font
-          hierarchy
+        comment: All font sizes explicitly set (title 12pt, labels 10pt, ticks 8pt,
+          annotation 9pt); readable in both themes, title ~61% width with no overflow
+          or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing throughout; no text collisions; annotation box well-positioned
+        comment: No overlap between text, data, or the annotation box in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter, regression line, and confidence band all distinct and visible
+        comment: Marker size increased to s=60/alpha=0.6, squarely within the 50-100
+          density-appropriate range for ~100 points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Strong contrast with brand color #009E73; CVD-safe palette'
+        comment: Single-hue data plus neutral line, white marker edges for contrast,
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-proportioned 16:9 figure; nothing cut off; generous margins
+        comment: Plot area fills a large, balanced majority of the 3200x1800 canvas,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title; both axes labeled with units (°C, kWh)
+        comment: Descriptive axis labels with units ("Exam Score (%)")
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 light/#1A1A17 dark; both
-          themes correct'
+        comment: 'First series #009E73 identical across themes; backgrounds pixel-correct
+          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
     design_excellence:
       score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Professional styling; statistical annotation is nice touch; lacks
-          distinctive design
+        comment: Thoughtful touches (recolored CI band, rug plots, styled annotation
+          box) above a bare default, but not yet publication-level
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed; subtle grid; white edge colors on markers;
-          good whitespace
+        comment: Spines removed, subtle grid, generous whitespace; y-axis rug clutter
+          from attempt 1 reduced via lower alpha
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear focal point via regression line; adequate narrative without
-          exceptional emphasis
+        comment: 'Clear layered hierarchy: scatter → fit line → CI band → quantified
+          annotation'
     spec_compliance:
       score: 15
       max: 15
@@ -122,25 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with linear regression
+        comment: Scatter + linear regression + CI band matches spec exactly
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: points, line, band, equation, R², axis labels'
+        comment: R²/equation annotation, contrasting regression line, semi-transparent
+          CI band, alpha ~0.6 points — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; axes show full data range
+        comment: x=study hours, y=exam score, correctly assigned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Descriptive title; statistical annotation clear
+        comment: Title now matches the mandated "{spec-id} · python · seaborn · anyplot.ai"
+          format exactly; no legend needed (single series)
     data_quality:
       score: 15
       max: 15
@@ -150,19 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of regression scatter plot type
+        comment: Scatter, regression line, CI band, marginal rug, and equation annotation
+          all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature vs energy consumption is realistic, plausible, and neutral
+        comment: Study hours vs exam score is a real, comprehensible, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values (5-35°C, 20-200 kWh) for realistic domain
+        comment: Study hours 2-20/week, scores clipped to 30-100, slope/intercept
+          plausible for the domain
     code_quality:
       score: 10
       max: 10
@@ -172,33 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct implementation; no unnecessary functions or classes
+        comment: No functions/classes, linear Imports → Data → Plot → Save flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seed (42) ensures reproducible output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: os, matplotlib.pyplot, numpy, seaborn, scipy.stats — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no simulated interactivity
+        comment: Clean, appropriately concise, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png output format
+        comment: Saves plot-{THEME}.png, no deprecated API, bbox_inches left default
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -206,26 +225,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper sns.set_theme() with rc configuration; theme tokens correctly
-          threaded
+        comment: sns.regplot + sns.rugplot + sns.despine, textbook idiomatic seaborn
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Good theme handling; scipy.stats integration; could leverage seaborn
-          APIs more
+        comment: regplot's built-in scatter+fit+CI composition and marginal rug plots
+          are genuinely seaborn-native
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
-  - edge-highlighting
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
