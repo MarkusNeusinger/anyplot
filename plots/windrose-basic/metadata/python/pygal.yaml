@@ -2,43 +2,64 @@ library: pygal
 language: python
 specification_id: windrose-basic
 created: '2025-12-24T22:22:28Z'
-updated: '2026-05-07T03:39:44Z'
-generated_by: claude-haiku
-workflow_run: 25474488450
+updated: '2026-08-05T15:41:20Z'
+generated_by: claude-sonnet
+workflow_run: 31019843111
 issue: 1880
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/pygal/plot-dark.html
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - Perfect legibility in both light and dark renders; no theme-adaptation failures
-  - Correct wind rose visualization with meteorologically sensible data (Weibull speeds,
-    realistic direction clustering)
-  - Clean, reproducible, theme-aware code with proper seed initialization
-  - 'Okabe-Ito palette correctly applied; backgrounds theme-correct (#FAF8F1 light,
-    #1A1A17 dark)'
-  - Appropriate canvas size (3600×3600 square) and layout for symmetric polar representation
+  - 'Compass direction fix confirmed correct: N is at top, and going clockwise the
+    labels read N, NE, E, SE, S, SW, W, NW exactly matching true meteorological bearing
+    (verified visually) — this resolves the attempt-1 mirrored-compass defect completely'
+  - 'Custom pygal Style is fully themed for both renders with explicit font sizes
+    (title 66, label 56, major_label 44, legend 44); pixel-sampled backgrounds match
+    the spec exactly (#FAF8F1 light, #1A1A17 dark) with no theme-adaptation failures
+    in either render'
+  - First categorical series renders in Imprint brand green (#009E73) and the remaining
+    three speed bins use the next three Imprint palette members in canonical order,
+    with identical data hues between light and dark renders
+  - Correct stacked-cumulative construction (frequencies -> cumulative dict, added
+    strongest-to-calmest) produces proper nested-area stacking across 8 direction
+    sectors and 4 speed bins with no rendering artifacts
+  - Realistic, neutral meteorological dataset (8760 simulated hourly observations,
+    prevailing SW/W wind with per-cluster exponential speed decay, np.random.seed(42));
+    title format and legend labels match the mandated convention exactly
   weaknesses:
-  - Design sophistication moderate (5/8); could elevate with intentional visual hierarchy,
-    accent colors, or subtle enhancements to stand out
-  - Library-specific features could be more pronounced (3/5 distinctive features);
-    cumulative stacking pattern is solid but not exceptional
+  - 'Speed-bin color assignment still doesn''t follow the spec''s own note that ''colors
+    traditionally progress from cool (calm) to warm (strong)'' — the calmest bin (0-5
+    m/s) renders in warm ochre/brown while the strongest bin (15+ m/s) renders in
+    green. This is optional guidance (not a hard requirement, and the mandatory ''first
+    series = #009E73'' rule constrains the choice), so no score deduction was applied,
+    but consider reassigning palette members so calm reads cooler and strong reads
+    warmer if that hierarchy matters more than which bin gets the brand color.'
+  - Direction sectors N, NE, E, and SE still collapse to almost no visible area in
+    both renders — only SW, W, and S show a meaningful stacked shape, so the full
+    8-sector x 4-speed-bin grid the spec describes isn't well demonstrated across
+    the compass.
+  - pygal's Radar chart still interpolates a smooth straight-line polygon between
+    the 8 direction points rather than rendering discrete pie-like wedge sectors,
+    so the result reads more like a star/radar chart than the 'polar stacked histogram'
+    the spec describes. This is a pygal API limitation (no native windrose/stacked-polar-bar
+    chart) rather than a coding mistake, and Radar remains the closest available substitute.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface tone
-      Chrome: Title "windrose-basic · pygal · anyplot.ai" (dark, readable); compass directions N/NE/E/SE/S/SW/W/NW clearly visible; Y-axis "Frequency (%)" legible; grid lines subtle but visible
-      Data: Stacked segments showing 5 wind speed ranges (0-3, 3-6, 6-9, 9-12, >12 m/s) using Okabe-Ito colors: green, orange, blue, purple, yellow. Dominant SW/W pattern clearly visible.
-      Legibility verdict: PASS - all text readable, no dark-on-light conflicts, data colors distinct
+      Background: Warm off-white, pixel-sampled at RGB(250,248,241) = #FAF8F1 exactly, not pure white.
+      Chrome: Title "windrose-basic · python · pygal · anyplot.ai" is fully visible at top in dark ink, spanning a comfortable width with no clipping. Compass labels N (top), NE (upper-right), E (right), SE (lower-right), S (bottom), SW (lower-left), W (left), NW (upper-left) surround the polar grid and now correctly match true compass bearing (the attempt-1 mirroring is fixed). Radial tick labels (8, 16, 24, 32) run up the N spoke, y_title "Frequency (%)" is rotated on the left edge, and the 4-swatch legend (15+ m/s green, 10-15 m/s lavender, 5-10 m/s blue, 0-5 m/s ochre) sits top-left with a comfortable margin from the canvas edge (~35px). Checked right edge crop: "E" label sits well inside the canvas with visible margin, not clipped. Checked bottom crop: "S" label sits well above the bottom edge. All chrome text is dark-on-light and clearly legible.
+      Data: Four nested/stacked polygons (green outermost/15+ m/s, lavender/10-15 m/s, blue/5-10 m/s, ochre innermost/0-5 m/s) bulge heavily toward the SW/W/S spokes, tapering to near-nothing at N/NE/E/SE. First (drawn-first, highest-speed) series is #009E73 green per the Imprint brand rule.
+      Legibility verdict: PASS — all text readable, no overlap, no clipping at the canvas border.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct surface tone
-      Chrome: Title rendered in light text, fully readable; compass directions visible; Y-axis label legible; grid lines subtle but visible against dark surface
-      Data: Identical colors to light render (green, orange, blue, purple, yellow) - only chrome flipped, confirming proper theme adaptation. SW/W dominance still apparent.
-      Legibility verdict: PASS - all text readable, no dark-on-dark conflicts, data colors identical to light render (chrome-only flip confirmed)
+      Background: Warm near-black, pixel-sampled at RGB(26,26,23) = #1A1A17 exactly, not pure black.
+      Chrome: Identical layout to the light render; title, compass labels, tick labels, y_title, and legend text all render in light ink (#F0EFE8 / #A8A79F) and are clearly legible against the dark background. No dark-on-dark failures found on any element (title, compass labels, tick labels, legend all confirmed legible).
+      Data: Same four-color stacked polygons in the identical SW/W/S-skewed shape; swatch color-sampled and confirmed unchanged from the light render (only chrome — background, text, grid tone — flips between themes, as required).
+      Legibility verdict: PASS — all text readable in the dark theme, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,45 +70,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All titles, axis labels, tick labels explicitly sized and readable
-          in both themes
+        comment: Explicit font sizes (title 66, label 56, major_label 44, legend 44,
+          value 36), all text readable in both themes, no overflow, well-proportioned
+          title
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text properly spaced, no collisions
+        comment: No text/legend/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked segments clearly distinct across radial range
+        comment: Stacked fills with stroke_width=2.5 and opacity=0.95 clearly distinguishable;
+          aggregated stacked view needs no point markers
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe
+        comment: Four hues (green/lavender/blue/ochre) well separated, no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600×3600 format ideal for symmetric radar
+        comment: Polar grid fills a large, balanced portion of the 2400x2400 canvas,
+          legend near the plot, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct; compass directions and frequency label clear
+        comment: y_title 'Frequency (%)' has units, compass direction labels are self-descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Green first series; Okabe-Ito sequence; backgrounds correct; both
-          renders theme-correct
+        comment: 'First series #009E73, remaining series canonical Imprint order,
+          backgrounds pixel-verified theme-correct (#FAF8F1/#1A1A17), identical data
+          colors across themes'
     design_excellence:
       score: 13
       max: 20
@@ -96,72 +122,84 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Custom Style with explicit font sizing; shows intent but not highly
-          sophisticated
+        passed: true
+        comment: Fully custom Style object beyond defaults (colors, sizing, stroke,
+          opacity), but not exceptional/publication-level polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Generous margins and spacing; room for additional refinement
+        passed: true
+        comment: show_x_guides=False removes spoke clutter, subtle dotted y-guides,
+          generous margin/spacing, inner_radius avoids center singularity
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Visual hierarchy clear; could benefit from stronger emphasis
+        passed: true
+        comment: Clear focal point (dominant SW/W wind cluster) creates visual hierarchy;
+          now accurately positioned since the compass fix
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct polar wind rose using Radar chart
+        passed: false
+        comment: Radar's straight-line-interpolated polygon still reads as a star/radar
+          chart rather than the spec's discrete-wedge 'polar stacked histogram'; a
+          reasonable pygal-constrained substitute but a real deviation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 8 direction sectors, 5 speed bins, legend, North at top
+        comment: 8 direction sectors, 4 meaningful speed bins, North at top, legend
+          with speed ranges/colors, radial frequency axis all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Directions and frequency mapped correctly
+        comment: 'FIXED from attempt 1: direction_labels reordered to [''N'',''NW'',''W'',''SW'',''S'',''SE'',''E'',''NE'']
+          matching pygal''s counter-clockwise category placement, so spoke positions
+          now match true compass bearing (verified visually: N top, NE upper-right,
+          E right, SE lower-right, S bottom, SW lower-left, W left, NW upper-left)'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend matches bins
+        comment: Title format exact match, legend labels descriptive with units and
+          correctly colored
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Demonstrates directional, speed, and frequency distribution
+        comment: Speed-bin stacking is clearly visible in the dominant SW/W/S sectors,
+          but N/NE/E/SE still collapse to near-zero, so the full 8-sector x 4-bin
+          grid isn't well demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 1 year hourly data, realistic Weibull speeds, realistic direction
-          clustering
+        comment: Plausible, neutral, real-world meteorological scenario (prevailing
+          SW/W wind station data)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds and percentages sensible for distribution
+        comment: Wind speeds (0-15+ m/s) and frequency percentages are realistic for
+          a real weather station's annual distribution
     code_quality:
       score: 10
       max: 10
@@ -171,49 +209,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct procedural code, no unnecessary functions
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, standard library
+        comment: math, os, sys, numpy, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Appropriate complexity for manual cumulative-stacking, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via current pygal API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Radar chart type appropriate; Style object idiomatic; cumulative
-          stacking shows understanding
+        comment: Proper use of pygal.Radar + Style object; the previous x_labels/direction-order
+          mismatch is now fixed, demonstrating full understanding of pygal's counter-clockwise
+          category placement
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Custom Style with theme-adaptive fonts; could show more distinctive
-          pygal patterns
+        passed: true
+        comment: Uses Radar-specific inner_radius, truncate_legend, legend_box_size
+          beyond generic chart setup
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -221,7 +260,9 @@ impl_tags:
   - polar-projection
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - binning
   - cumulative-sum
-  styling: []
+  styling:
+  - alpha-blending
