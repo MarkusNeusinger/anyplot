@@ -136,10 +136,14 @@ svg
   .text((d) => d.text);
 
 // --- Vertex labels --------------------------------------------------------------
+// The apex label stays centered (ample horizontal room either side), but the
+// left/right vertex labels grow inward from their vertex ("start"/"end"
+// anchors) instead of centering past the canvas edge - "Sand (%)" is wide
+// enough that a centered anchor pushed its leading "S" off the left border.
 const vertexLabels = [
-  { p: outward(apex, 78), text: "Clay (%)" },
-  { p: outward(left, 78), text: "Sand (%)" },
-  { p: outward(right, 78), text: "Silt (%)" },
+  { p: outward(apex, 78), text: "Clay (%)", anchor: "middle" },
+  { p: outward(left, 78), text: "Sand (%)", anchor: "start" },
+  { p: outward(right, 78), text: "Silt (%)", anchor: "end" },
 ];
 svg
   .selectAll(".vertex-label")
@@ -148,7 +152,7 @@ svg
   .attr("class", "vertex-label")
   .attr("x", (d) => d.p.x)
   .attr("y", (d) => d.p.y)
-  .attr("text-anchor", "middle")
+  .attr("text-anchor", (d) => d.anchor)
   .attr("dominant-baseline", "middle")
   .attr("fill", t.ink)
   .style("font-size", "20px")
