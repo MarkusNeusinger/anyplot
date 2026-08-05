@@ -2,55 +2,55 @@ library: altair
 language: python
 specification_id: bar-grouped
 created: '2025-12-24T21:28:44Z'
-updated: '2026-05-06T11:10:02Z'
-generated_by: claude-haiku
-workflow_run: 25431182733
+updated: '2026-08-05T01:17:24Z'
+generated_by: claude-sonnet
+workflow_run: 30965186146
 issue: 1822
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - Perfect technical execution across all core categories (Visual Quality 30/30,
-    Spec Compliance 15/15, Data Quality 15/15, Code Quality 10/10)
-  - Excellent theme-adaptive implementation with proper use of INK/INK_SOFT tokens
-    in both light and dark renders
-  - Clean, professional grouped bar chart with Okabe-Ito palette correctly applied
-    (green, orange, blue)
-  - Proper data selection and realistic quarterly revenue scenario demonstrating product
-    performance comparison
-  - Idiomatic altair usage with correct encodings, mark types, and configuration methods
-  - All text elements properly sized and readable at full resolution in both themes
-  - Effective use of xOffset for grouped bar positioning with appropriate spacing
-    and clarity
+  - X-axis tick labels are now horizontal (labelAngle=0), fixing the attempt-1 readability
+    issue
+  - New 'peak quarter' callout on the Q4/Software bar gives the plot an explicit,
+    legible focal point (DE-03)
+  - Correct grouped-bar encoding via xOffset (idiomatic altair pattern), not a manual
+    position workaround
+  - Layered composition (bars + mark_text value labels + callout) gives precise per-bar
+    reading without clutter
+  - 'Genuine, non-fake interactivity: alt.selection_point bound to the legend for
+    click-to-isolate filtering, using the current (non-deprecated) selection API'
+  - 'Imprint palette applied correctly in canonical order with #009E73 as the first
+    series; data colors identical between light/dark renders'
+  - 'Clean theme-adaptive chrome: subtle low-opacity gridlines, styled legend box,
+    no stray view border'
+  - Deterministic, realistic dataset (quarterly revenue by product line) with sensible
+    magnitudes and a clear growth trend
   weaknesses:
-  - 'DE-01 and DE-02 could be elevated: consider more sophisticated design elements
-    like custom typography hierarchy, visual emphasis through color intensity variation,
-    or layered visual storytelling beyond the default grouped bar structure'
-  - 'LM-02 (Distinctive Features) is minimal at 2/5: could leverage altair''s interactive
-    capabilities such as selection, interactive pan/zoom, or brushing to showcase
-    library-specific strengths'
-  - 'DE-03 (Data Storytelling) relies on natural structure rather than intentional
-    emphasis: consider adding color dominance patterns, size variation, or strategic
-    annotation to guide viewer attention more forcefully'
+  - 'Aesthetic sophistication is solid but not yet publication-tier: rounded bar corners
+    and legend styling read as ''well-executed default'' rather than a distinctive
+    custom design language'
+  - Visual refinement is good but not maximal — spines/border are gone but the plot
+    could push whitespace and typographic hierarchy further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 with subtle grid lines at 10% opacity. Clean, minimal aesthetic.
-      Chrome: Title "bar-grouped · altair · anyplot.ai" in dark (#1A1A17) at 28px, clearly visible. X-axis label "Quarter" and Y-axis label "Revenue (thousands USD)" in dark text at 22px, fully readable. Tick labels (Q1-Q4, 0-180) at 18px in secondary color (#4A4A44), legible. Legend "Product Line" with colored squares (Software/Hardware/Services) at bottom, dark text on light background.
-      Data: Three product lines rendered as grouped bars with Okabe-Ito colors: Software=#009E73 (green), Hardware=#D55E00 (orange), Services=#0072B2 (blue). Bars have subtle rounded corners. Spacing between groups is appropriate for visual separation. Data density is ideal (4 quarters × 3 products = 12 bars total).
-      Legibility verdict: PASS - All text is readable. No text-on-text collisions. Strong contrast between chrome and background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "bar-grouped · python · altair · anyplot.ai" centered at top (~67% of plot width, well within the expected range for the mandated title). Y-axis title "Revenue (thousands USD)" and X-axis title "Quarter" both bold and dark. X-axis tick labels "Q1"-"Q4" are now horizontal (fixed from attempt 1's ~90° rotation). Legend box "Product Line" bottom-left with light fill, thin border, dark-on-light swatches/labels. A green "peak quarter" callout sits above the Q4/Software bar.
+      Data: Three bars per quarter group: Software (#009E73 green), Hardware (violet #C475FD), Services (muted blue #4467A3) — matches Imprint canonical order. Black numeric value labels sit above each bar.
+      Legibility verdict: PASS — all text dark-on-light and readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 with subtle grid lines. Matches light theme aesthetic perfectly.
-      Chrome: Title in light color (#F0EFE8) at 28px, clearly visible against dark background. Axis labels in light text at 22px, fully readable. Tick labels in lighter secondary color (#B8B7B0) at 18px, legible. Legend maintains dark background with light text, proper contrast.
-      Data: The three Okabe-Ito colors (#009E73, #D55E00, #0072B2) are IDENTICAL to light render, ensuring brand consistency. Bars are clearly visible and distinguishable from dark background. Rounded corners maintain visual identity.
-      Legibility verdict: PASS - No dark-on-dark issues. All elements properly adapted for dark theme. Brand green (#009E73) is vibrant and distinct. Both renders are theme-correct.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels render in light/white text against the dark background — clearly legible. X-axis "Q1"-"Q4" labels horizontal, matching the light render. Legend box has a dark fill with a light border and light-colored text. The "peak quarter" callout remains in the same brand green, clearly visible against the dark surface.
+      Data: Bar colors are pixel-identical to the light render (green/violet/blue) — only chrome (background, gridlines, text, legend fill) flips between themes, as required. Value labels above each bar render in light-colored text, clearly legible.
+      Legibility verdict: PASS — no dark-on-dark failures; brand green callout remains highly visible on the near-black surface.
 
-    Summary: Both renders pass legibility checks. Chrome adapts properly between themes (only background/text colors flip). Data colors remain constant. Professional, readable visualization in both light and dark contexts.
+    Both renders confirmed readable in both themes; theme-adaptive chrome and the fixed tick-label orientation both work correctly.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,85 +61,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable at full resolution in both themes. Title 28px,
-          axis labels 22px, tick labels 18px. Proper use of INK and INK_SOFT tokens
-          for light/dark themes.
+        comment: Explicit fontsizes throughout, readable in both themes and at 400px
+          mobile thumbnail, title fits without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Bars properly spaced with xOffset encoding. No text collisions. Legend
-          items well-separated. Clear visual hierarchy.
+        comment: No collisions between value labels, bars, axis text, callout, or
+          legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 12 bars (3 products × 4 quarters) clearly visible. Rounded corners
-          provide subtle definition. Data density appropriate for canvas.
+        comment: 12 bars across 4 groups, well-proportioned width/spacing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette inherently CVD-safe. Adequate contrast in both
-          themes. Three colors are distinctly differentiable.
+        comment: Good contrast, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 1600×900 with scale_factor=3.0 = 4800×2700px (correct). Good
-          proportions. Margins and padding appropriate. No elements cut off.
+        comment: Nothing cut off; the attempt-1 tick-label rotation issue is fixed
+          (labelAngle=0)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Quarter'' (descriptive). Y-axis: ''Revenue (thousands
-          USD)'' (includes units). Title: ''bar-grouped · altair · anyplot.ai'' (matches
-          spec format).'
+        comment: Descriptive with units (Revenue in thousands USD)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Software=#009E73 (Okabe-Ito pos 1). Hardware=#D55E00 (pos 2). Services=#0072B2
-          (pos 3). Plot backgrounds #FAF8F1 (light) and #1A1A17 (dark). No theme-adaptation
-          failures.'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds,
+          data colors identical across themes'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: 'Clean professional design but uses default styling patterns. Okabe-Ito
-          palette (not custom). Rounded bar corners show subtle thought. No dramatic
-          visual hierarchy or focal point creation. Score: default 4 (could be higher
-          with custom typography, color intensity variation, or layered visual emphasis).'
+        comment: Rounded bar corners, styled legend chrome, layered value labels —
+          solid polish, not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: 'Grid configured with opacity=0.10 for subtlety. Legend background
-          uses ELEVATED_BG for separation. Whitespace adequate. Rounded corners show
-          refinement touch. No spines explicitly removed but design is clean. Score:
-          3 (modest customization, not highly refined).'
+        comment: Subtle gridlines, no stray view border, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: 'Grouped bar arrangement naturally guides product comparison within
-          quarters. Ascending revenue pattern visible across Q1-Q4. Color consistency
-          creates narrative. Software (green) shows clear dominance across all quarters.
-          No additional visual hierarchy or emphasis techniques applied. Score: 3
-          (good natural storytelling from structure, but could be more intentional).'
+        passed: true
+        comment: New 'peak quarter' callout on the standout Q4/Software bar gives
+          the plot an explicit, immediately-visible focal point
     spec_compliance:
       score: 15
       max: 15
@@ -149,32 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped bar chart. Uses xOffset encoding for proper side-by-side
-          positioning. Chart type implementation is accurate.
+        comment: Correct grouped bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 3 product lines displayed side-by-side for each quarter. Clear legend
-          with product names. Proper axis labels and title. Tooltips enabled for data
-          exploration.
+        comment: Distinct colors, clear legend, consistent bar widths, meaningful
+          chronological ordering, value labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Quarter (categorical, ordinal). Y: Revenue (quantitative, 0-180
-          range). Color: Product (categorical, Okabe-Ito). All data dimensions properly
-          mapped.'
+        comment: Quarter on X, Revenue on Y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format matches spec: ''bar-grouped · altair · anyplot.ai''.
-          Legend labeled ''Product Line'' with correct entries. Bottom placement is
-          standard and readable.'
+        comment: Title format correct, legend labels match Product data
     data_quality:
       score: 15
       max: 15
@@ -184,26 +164,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates core grouped bar feature with 3 product lines across
-          4 quarters. Shows product differentiation and quarterly trends. All expected
-          chart elements present.
+        comment: Shows variation across groups/categories and a clear growth trend
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Business scenario (quarterly revenue by product line) is realistic
-          and relatable. Revenue values (45-168k USD) are sensible. Product categories
-          (Software, Hardware, Services) are appropriate. Data relationships are authentic
-          and neutral.
+        comment: Neutral, comprehensible business scenario (quarterly revenue by product
+          line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis range (0-180) is proportional to data spread. No wasted canvas
-          or excessive compression. Values are well-distributed across the visual
-          range for clear comparison.
+        comment: Plausible revenue magnitudes and relative proportions
     code_quality:
       score: 10
       max: 10
@@ -213,72 +187,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct DataFrame creation and chart building. No unnecessary functions
-          or classes. Straightforward, readable code structure.
+        comment: Imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is hardcoded deterministically. No randomness or external dependencies.
-          Output is consistent across runs.
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, sys, pandas, altair. sys path manipulation
-          is needed to avoid shadowing. No extraneous imports.'
+        comment: os/sys/pandas/PIL/altair all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Uses appropriate altair patterns (mark_bar, encode, properties, configure).
-          No fake interactivity. Theme-adaptive logic is clean and clear.
+        comment: Real (non-fake) legend-bound selection interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as f'plot-{THEME}.png' and f'plot-{THEME}.html'.
-          Uses current Altair 6.1.0 API. scale_factor=3.0 is appropriate.
+        comment: Saves plot-{THEME}.png and .html, current API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Uses altair's recommended grammar of graphics. Proper mark_bar()
-          and encoding patterns. xOffset for grouping is idiomatic altair technique.
-          Proper configuration methods. Missing more advanced interactive patterns
-          (interactive(), selection()) for full mastery.
+        passed: true
+        comment: Typed encodings, xOffset grouping, configure_* chaining, correct
+          axis tick orientation
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses basic tooltips and color encoding (standard features). Rounded
-          corners show attention to detail but are minimal. Could leverage altair's
-          interactive capabilities (selection, pan/zoom) or more complex encodings
-          for distinctiveness.
-    score_caps_applied: []
+        passed: true
+        comment: Legend-bound alt.selection_point (click-to-isolate) and layer composition
+          (bars+labels+callout)
   verdict: APPROVED
 impl_tags:
   dependencies:
-  - pandas
+  - pillow
   techniques:
-  - grouped-bars
-  - color-encoding
-  - tooltips
+  - annotations
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
-  - theme-adaptation
   dataprep: []
   styling:
-  - rounded-corners
-  - theme-adaptive-chrome
   - publication-ready
+  - grid-styling
