@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: scatter-regression-linear
 created: '2026-08-05T13:35:07Z'
-updated: '2026-08-05T13:40:34Z'
+updated: '2026-08-05T13:51:29Z'
 generated_by: claude-sonnet
 workflow_run: 31010194230
 issue: 1821
@@ -12,55 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/d3/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
+  - 'Redundant unit labeling from Attempt 1 is fixed: axis titles now read plainly
+    ("Advertising Spend", "Monthly Sales Revenue") with units shown once via the $XK
+    tick formatter'
   - 'Perfect Imprint palette compliance: first series is #009E73 green, regression
-    line and CI band use Imprint blue, and both renders have theme-correct chrome
-    (cream/near-black backgrounds, correctly flipped text)'
-  - 'All spec-required features present: R² and r shown prominently in a callout box,
-    regression equation annotation, semi-transparent 95% CI band, and scatter points
-    at the spec-recommended alpha (~0.65)'
-  - 'Clean, idiomatic d3 usage: d3-scale/d3-axis/d3-shape (area + line generators)
-    combined with a manual OLS + confidence-interval calculation, seeded deterministic
-    data generation, and a proper `.data().join()` pattern'
-  - 'Legible, well-balanced layout: no clipped or overlapping elements, legend clearly
-    placed near the plot, custom legend correctly documents all three visual encodings
-    (data, fit, CI band)'
+    line/CI band use Imprint palette[2], both renders have theme-correct chrome (#FAF8F1
+    / #1A1A17)'
+  - New residual-callout technique (dashed lines to the 3 largest fit deviations,
+    built via a d3 data-join on a sorted/sliced array) adds a genuine d3-idiomatic
+    storytelling layer
+  - Stats callout box now has a subtle drop-shadow filter and left accent bar instead
+    of a flat rect, showing real visual-refinement effort
+  - 'All spec-required features present: R²/r prominently displayed, regression equation
+    annotation, semi-transparent 95% CI band, scatter points at spec-recommended alpha
+    (~0.65)'
+  - 'Clean, idiomatic d3 usage: d3-scale/d3-axis/d3-shape combined with manual OLS
+    + CI math, seeded deterministic data, proper `.data().join()` patterns throughout'
+  - 'Legible, well-balanced layout in both themes: no clipped or overlapping elements,
+    legend and stats box placed in empty regions of the data space'
   weaknesses:
-  - 'Redundant/confusing axis units: both axis titles already say "($ thousands)"
-    but the tick formatters also append a "K" suffix (e.g. y-tick shows "$1,400K").
-    Read literally, "($ thousands)" plus a "K"-suffixed tick implies the value is
-    in thousands-of-thousands, which is not the intent. Fix: either drop "($ thousands)"
-    from the axis titles (since the ticks already show "$20K" / "$1,400K" including
-    the unit) or strip the "K" from the tick formatter and keep the parenthetical
-    unit only.'
-  - 'Design Excellence is solid but not exceptional: grid, spines, and callout box
-    follow the recommended defaults competently but don''t yet show a distinctive
-    aesthetic flourish (e.g. a more refined stat-box treatment, subtler axis domain
-    lines, or additional visual hierarchy beyond line + band + annotation).'
-  - 'Library Mastery is generic: the regression/CI computation and rendering approach
-    here could be replicated in most other libraries with only minor syntax changes.
-    Consider leaning further into a d3-only capability in a future iteration.'
-  - Double-check that `t.palette[2]` truly resolves to the identical hex in both theme
-    renders — the regression line reads slightly more saturated/lighter in the dark
-    render than in the light render; likely just background-contrast perception, but
-    worth a token check.
+  - Design Excellence is improved but still incremental — the shadow/accent-bar treatment
+    on the stats box is a nice touch, but the chart's overall composition (scatter
+    + fit + CI + legend) remains a fairly standard statistical-plot layout rather
+    than a distinctive visual identity
+  - 'Library Mastery: the residual-callout lines are a good d3-specific addition,
+    but the chart could still lean further into d3''s strengths (e.g. curve interpolation,
+    richer per-datum encoding) to clearly separate itself from what other charting
+    libraries could replicate'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "scatter-regression-linear · javascript · d3 · anyplot.ai" in bold dark ink, centered top. Axis titles "Advertising Spend ($ thousands)" and "Monthly Sales Revenue ($ thousands)" in dark ink, both legible. Tick labels ($5K-$100K on x, $0K-$1,800K on y) in secondary gray, clearly readable. Light gray gridlines on both axes, subtle. Legend bottom-right with "Observed data" (green dot), "Regression fit" (blue line), "95% CI band" (light gray swatch) — all legible against the cream background.
-      Data: ~70 semi-transparent green (#009E73) scatter points with white/cream stroke, a solid blue (Imprint palette position 3) regression line, and a light gray 95% confidence band. A callout box top-left in a lighter elevated cream shows "R² = 0.84 (r = 0.92)" and "y = 12.2x + 243" in dark text, clearly readable.
-      Legibility verdict: PASS — all text is clearly readable against the light background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "scatter-regression-linear · javascript · d3 · anyplot.ai" centered at top. Axis titles "Advertising Spend" (x) and "Monthly Sales Revenue" (y) in dark ink; tick labels use "$XK" / "$X,XXXK" formatting so units appear exactly once (the Attempt-1 redundant "($ thousands)" title suffix has been removed). Subtle light-gray gridlines on both axes, thin domain lines at reduced opacity.
+      Data: ~70 semi-transparent green (#009E73) scatter points with a light-background stroke halo, a solid blue (Imprint palette[2]) regression line, a matching light-gray/blue 95% CI band, and three dashed residual-callout lines connecting the largest-deviation points to their fitted value. A stats callout (top-left, drop-shadow + left accent bar) shows "R² = 0.84 (r = 0.92)" and "y = 12.2x + 243" in dark text; a legend (bottom-right, in an empty data region) documents all three encodings.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no overlap with data or between elements.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title and axis titles now rendered in light/white ink, clearly visible against the dark background. Tick labels in light gray, readable. Gridlines are subtle light-gray-on-dark. Legend box bottom-right uses the same light text, fully legible. Callout box top-left uses a darker elevated panel (~#242420) with light text for the R²/equation annotation — clearly readable, no dark-on-dark failure.
-      Data: Same green (#009E73) scatter points, same blue regression line, same light gray CI band — colors are visually identical to the light render; only the chrome (background/text/grid/legend frame) flipped as required.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all chrome elements read clearly against the dark surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/axis titles now rendered in light/white ink, clearly legible. Tick labels light gray, gridlines subtle light-on-dark. The stats callout uses a darker elevated panel with light text — no dark-on-dark failure.
+      Data: Scatter points, regression line, CI band, and residual-callout lines are visually identical in hue/opacity to the light render — only the chrome (background, text, grid, box) flipped, as required.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark or light-on-light issues observed.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -68,52 +64,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (14/17/22px); readable at full size
-          and mobile scale in both themes; no overflow or clipping
+        comment: All font sizes explicit; readable in both themes; no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/legend/data overlap; a natural data cluster near $20K is
-          not a text-overlap issue
+        comment: Stats box and legend both sit in empty data regions; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size and alpha (0.65) well-adapted to the ~70-point density
-          per spec
+        comment: r=9 markers at 0.65 alpha well-suited to n=70 points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs blue vs gray-band are distinguishable without relying on
-          hue alone; good contrast in both themes
+        comment: Good contrast, CVD-safe green/blue distinction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins, nothing cut off,
-          legend near the plot
+        comment: Balanced margins, good canvas utilization, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Units present but redundant: axis title says "($ thousands)" while
-          tick format also appends "K" (e.g. "$1,400K") — confusing double-unit notation'
+        passed: true
+        comment: Units now shown once via $XK ticks; Attempt-1 redundancy fixed
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Imprint blue for fit/CI, correct theme-adaptive
-          backgrounds and chrome in both renders'
+        comment: 'First series #009E73; identical data colors across themes; correct
+          backgrounds'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -121,22 +111,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Clean and correct but reads as a well-configured build rather than
-          a publication-level design flourish
+        comment: Well-configured, shadow/accent added, but still reads as a standard
+          statistical-plot composition
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid and L-shaped axis frame meet the recommended defaults;
-          no extra refinement beyond that
+        passed: true
+        comment: Drop-shadow filter, rounded corners, accent bar, muted domain lines,
+          subtle grid
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Fit line + CI band + prominent R²/equation annotation give the viewer
-          a clear focal point on trend strength
+        passed: true
+        comment: Fit line + CI + R² annotation + new residual callouts give a clear,
+          layered narrative
     spec_compliance:
       score: 15
       max: 15
@@ -146,29 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter plot with fitted linear regression line
+        comment: Scatter + linear regression + CI, exactly as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: R²/r annotation, semi-transparent CI band, distinct solid fit line,
-          point alpha ~0.65, regression equation — all present
+        comment: R²/r, equation, 95% CI band, moderate alpha all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = ad spend, y = sales revenue, full data range shown on both axes
+        comment: X=ad spend, Y=sales revenue, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels match the
-          three visual encodings
+        comment: Title format correct; legend labels match encodings
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -176,23 +164,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows linear trend, noise spread, and a couple of mild outliers;
-          not extreme multimodal coverage but solid
+        comment: Shows fit, scatter spread, and outlier residuals
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Advertising spend vs. sales revenue — real, neutral, comprehensible
-          business scenario
+        comment: Ad spend vs. sales revenue is a neutral, realistic business scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Values are plausible but the implied ~14x revenue-to-ad-spend ratio
-          at the high end is on the generous side for typical ROAS, and the redundant
-          unit labeling adds ambiguity to the scale
+        passed: true
+        comment: Plausible spend/revenue ratio; redundant-unit ambiguity from Attempt
+          1 resolved
     code_quality:
       score: 10
       max: 10
@@ -202,35 +187,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear top-to-bottom script; the only closure (seeded PRNG) is a
-          necessary d3-specific workaround
+        comment: Linear top-to-bottom script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG produces deterministic data
+        comment: Seeded mulberry32 LCG, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used, no unused imports
+        comment: Only the global d3 bundle used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for OLS + CI band computation, no fake functionality
+        comment: Appropriate complexity, no fake UI/functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly builds into #container from ANYPLOT_SIZE per the mount-node
-          contract'
+        comment: 'Renders into #container per the harness contract; current d3 7.9
+          API'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -238,15 +222,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of d3-scale/d3-axis/d3-shape/d3-array and the join() pattern
+        comment: d3-scale/d3-axis/d3-shape used idiomatically with proper data joins
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Regression + CI band via d3-shape is d3-idiomatic but the overall
-          chart is replicable in most other libraries with minor changes
-  verdict: REJECTED
+        comment: New residual-callout join is d3-specific, but overall chart still
+          broadly replicable
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -260,4 +244,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
+  - publication-ready
