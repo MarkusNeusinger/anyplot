@@ -71,8 +71,6 @@ function wedge_points(center_deg, half_width_deg, r0, r1; n = 24)
     return vcat(outer, inner)
 end
 
-circle_points(r; n = 200) = [Point2f(r * cos(a), r * sin(a)) for a in range(0, 2pi, length = n)]
-
 # --- Plot -------------------------------------------------------------------
 title_str = "windrose-basic · julia · makie · anyplot.ai"
 
@@ -81,7 +79,7 @@ fig = Figure(size = (1200, 1200), fontsize = 14, backgroundcolor = PAGE_BG)
 ax = Axis(
     fig[1, 1];
     title = title_str,
-    titlesize = 20,
+    titlesize = 27,
     titlecolor = INK,
     titlegap = 22,
     backgroundcolor = PAGE_BG,
@@ -92,12 +90,14 @@ hidespines!(ax)
 
 r_max_data = maximum(sum(freq, dims = 2))
 ring_step = 5.0
-n_rings = ceil(Int, r_max_data / ring_step) + 1
+n_rings = ceil(Int, r_max_data / ring_step)
 r_axis_max = n_rings * ring_step
 
 # Radial grid rings (drawn first, beneath the data)
 for k in 1:n_rings
-    lines!(ax, circle_points(k * ring_step), color = GRID, linewidth = 1.2)
+    r = k * ring_step
+    ring = [Point2f(r * cos(a), r * sin(a)) for a in range(0, 2pi, length = 200)]
+    lines!(ax, ring, color = GRID, linewidth = 1.2)
 end
 
 # Direction spokes
@@ -131,14 +131,18 @@ for d in 1:n_dirs
     end
 end
 
-# Radial (frequency) tick labels along the smallest pair of sectors' shared
-# boundary, to minimise how much they cross over the filled wedges.
+# Radial (frequency) tick labels along the shared boundary of whichever two
+# adjacent sectors carry the least combined data, centered exactly on that
+# boundary line so the text never drifts sideways into a wedge's fill.
+sector_totals = vec(sum(freq, dims = 2))
+gap_idx = argmin([sector_totals[d] + sector_totals[mod1(d + 1, n_dirs)] for d in 1:n_dirs])
+gap_angle = compass_to_screen((gap_idx - 0.5) * sector_width)
 for k in 1:n_rings
-    a = compass_to_screen(1.5 * sector_width)
+    r = k * ring_step
     text!(
-        ax, k * ring_step * cos(a), k * ring_step * sin(a);
-        text = "$(round(Int, k * ring_step))%",
-        fontsize = 12, color = INK_SOFT, align = (:left, :bottom), offset = (4, 2),
+        ax, r * cos(gap_angle), r * sin(gap_angle);
+        text = "$(round(Int, r))%",
+        fontsize = 12, color = INK_SOFT, align = (:center, :center),
     )
 end
 
@@ -154,18 +158,21 @@ end
 
 limits!(ax, -r_axis_max * 1.28, r_axis_max * 1.28, -r_axis_max * 1.28, r_axis_max * 1.28)
 
+# Legend floats inside the axis itself (not a separate grid column) so the
+# polar chart is centered on the full square canvas; it lands in the corner
+# with the least wedge data, putting otherwise-empty space to use.
 Legend(
-    fig[1, 2],
+    fig[1, 1],
     [PolyElement(color = IMPRINT_PALETTE[s]) for s in 1:n_speed],
     speed_labels,
     "Wind Speed";
+    tellwidth = false, tellheight = false, halign = :right, valign = :top,
+    margin = (0, 24, 0, 24),
     titlecolor = INK, labelcolor = INK_SOFT,
     titlesize = 15, labelsize = 13,
     backgroundcolor = ELEVATED_BG, framevisible = false,
     patchsize = (16, 16), rowgap = 6,
 )
-
-colsize!(fig.layout, 1, Relative(0.82))
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
