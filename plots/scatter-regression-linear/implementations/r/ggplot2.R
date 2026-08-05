@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' scatter-regression-linear: Scatter Plot with Linear Regression
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: pending | Created: 2026-08-05
+#' Quality: 85/100 | Created: 2026-08-05
 
 library(ggplot2)
 library(ragg)
