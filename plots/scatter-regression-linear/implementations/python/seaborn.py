@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-06
+Quality: 93/100 | Updated: 2026-08-05
 """
 
 import os
@@ -18,9 +18,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1 — ALWAYS first series
+BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
 
-# Configure seaborn theme
+# Configure seaborn theme (see prompts/library/seaborn.md "Theme-adaptive Chrome")
 sns.set_theme(
     style="ticks",
     rc={
@@ -32,74 +32,75 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Data - Temperature vs energy consumption with realistic correlation
+# Data - Weekly study hours vs exam score, with realistic positive correlation.
+# (Domain switched from temperature/energy per cross-library diversity audit —
+# altair already covers that pairing; this keeps the same regression shape.)
 np.random.seed(42)
 n_points = 100
-temperature = np.random.uniform(5, 35, n_points)
-energy_consumption = 50 + 2.5 * temperature + np.random.normal(0, 15, n_points)
-energy_consumption = np.clip(energy_consumption, 20, 200)
+study_hours = np.random.uniform(2, 20, n_points)
+exam_score = 38 + 2.9 * study_hours + np.random.normal(0, 8, n_points)
+exam_score = np.clip(exam_score, 30, 100)
 
-# Calculate regression statistics
-slope, intercept, r_value, p_value, std_err = stats.linregress(temperature, energy_consumption)
+# Regression statistics for the annotation (sns.regplot draws the fit + CI band itself)
+slope, intercept, r_value, p_value, std_err = stats.linregress(study_hours, exam_score)
 r_squared = r_value**2
-y_pred = slope * temperature + intercept
 
-# Compute 95% confidence interval using scipy
-predict_se = np.sqrt(np.sum((energy_consumption - y_pred) ** 2) / (n_points - 2))
-confidence_interval = 1.96 * predict_se
+# Create figure and axis — canonical landscape canvas (see prompts/library/seaborn.md "Canvas")
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Create figure and axis
-fig, ax = plt.subplots(figsize=(16, 9))
+# Idiomatic seaborn regression plot: scatter + linear fit + 95% CI band in one call
+sns.regplot(
+    x=study_hours,
+    y=exam_score,
+    ax=ax,
+    ci=95,
+    scatter_kws={"s": 45, "alpha": 0.6, "color": BRAND, "edgecolor": "white", "linewidths": 0.5},
+    line_kws={"color": INK_SOFT, "linewidth": 2},
+)
+# regplot fills the CI band with the line color by default — recolor to brand teal
+# so it reads as "uncertainty around the data" rather than "uncertainty around the line".
+ax.collections[-1].set_facecolor(BRAND)
+ax.collections[-1].set_alpha(0.15)
 
-# Plot scatter points with moderate transparency
-ax.scatter(temperature, energy_consumption, s=180, alpha=0.6, color=BRAND, edgecolors="white", linewidth=1)
+# Marginal rug plot — seaborn-native touch that shows each variable's density along its axis
+sns.rugplot(x=study_hours, ax=ax, color=INK_SOFT, alpha=0.3, height=0.03)
+sns.rugplot(y=exam_score, ax=ax, color=INK_SOFT, alpha=0.3, height=0.03)
 
-# Plot regression line
-x_line = np.array([temperature.min(), temperature.max()])
-y_line = slope * x_line + intercept
-ax.plot(x_line, y_line, color=INK_SOFT, linewidth=3, linestyle="-", label="Linear Fit")
-
-# Plot confidence band
-ax.fill_between(x_line, y_line - confidence_interval, y_line + confidence_interval, alpha=0.2, color=BRAND)
-
-# Add regression equation and R² annotation
+# Regression equation + R² annotation
 equation_text = f"y = {slope:.2f}x + {intercept:.1f}\nR² = {r_squared:.3f}"
 ax.annotate(
     equation_text,
-    xy=(0.05, 0.95),
+    xy=(0.04, 0.95),
     xycoords="axes fraction",
-    fontsize=18,
+    fontsize=9,
     verticalalignment="top",
     color=INK,
-    bbox={"boxstyle": "round,pad=0.8", "facecolor": ELEVATED_BG, "alpha": 0.9, "edgecolor": INK_SOFT},
+    bbox={"boxstyle": "round,pad=0.6", "facecolor": ELEVATED_BG, "alpha": 0.9, "edgecolor": INK_SOFT, "linewidth": 0.8},
 )
 
-# Labels and styling
-ax.set_xlabel("Temperature (°C)", fontsize=20, color=INK)
-ax.set_ylabel("Energy Consumption (kWh)", fontsize=20, color=INK)
-ax.set_title("Temperature vs Energy Consumption", fontsize=24, color=INK, pad=20)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Labels and title
+ax.set_xlabel("Study Hours per Week", fontsize=10, color=INK)
+ax.set_ylabel("Exam Score (%)", fontsize=10, color=INK)
+ax.set_title("Study Hours vs Exam Score — Linear Regression", fontsize=12, color=INK, fontweight="bold", pad=12)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Grid styling
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+# Grid — both axes for scatter plots (see default-style-guide.md "Grid Guidelines")
+ax.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 ax.set_axisbelow(True)
 
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
+# Spines — L-shaped frame
+sns.despine(ax=ax)
 
-# Set axis limits with padding
-ax.set_xlim(0, 38)
-ax.set_ylim(10, 210)
+# Axis limits with padding
+ax.set_xlim(0, 22)
+ax.set_ylim(25, 105)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
 plt.close()
