@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -23,19 +24,24 @@ const IMPRINT_PALETTE = [
 batches = ["Batch A", "Batch B", "Batch C", "Batch D"]
 batch_means = [10.02, 9.97, 10.06, 9.94]
 n_per_batch = 45
+jitter_width = 0.3
 
 x = Float64[]
 diameters = Float64[]
 group = Int[]
 for (i, batch_mean) in enumerate(batch_means)
     readings = batch_mean .+ 0.09 .* randn(n_per_batch)
-    jitter = (rand(n_per_batch) .- 0.5) .* 0.5
+    jitter = (rand(n_per_batch) .- 0.5) .* (2 * jitter_width)
     append!(x, fill(Float64(i), n_per_batch) .+ jitter)
     append!(diameters, readings)
     append!(group, fill(i, n_per_batch))
 end
 
 colors = IMPRINT_PALETTE[group]
+
+# Per-batch summary stats computed from the actual sampled readings
+sample_means = [mean(diameters[group .== i]) for i in 1:length(batches)]
+sample_stds = [std(diameters[group .== i]) for i in 1:length(batches)]
 
 # --- Plot ------------------------------------------------------------------
 fig = Figure(
@@ -71,13 +77,28 @@ ax = Axis(
     xticks            = (1:length(batches), batches),
 )
 
+# Soft ±1 SD spread band per batch, drawn behind the jittered points
+rangebars!(ax, 1:length(batches), sample_means .- sample_stds, sample_means .+ sample_stds;
+    color        = [(c, 0.25) for c in IMPRINT_PALETTE],
+    linewidth    = 10,
+    whiskerwidth = 0,
+)
+
 scatter!(ax, x, diameters;
     color       = colors,
     markersize  = 10,
-    alpha       = 0.65,
+    alpha       = 0.6,
     strokewidth = 0.5,
     strokecolor = PAGE_BG,
 )
+
+# Batch mean reference tick, drawn on top so it reads clearly against the points
+mean_ticks = Point2f[]
+for (i, m) in enumerate(sample_means)
+    push!(mean_ticks, Point2f(i - jitter_width, m))
+    push!(mean_ticks, Point2f(i + jitter_width, m))
+end
+linesegments!(ax, mean_ticks; color = INK, linewidth = 3)
 
 xlims!(ax, 0.4, length(batches) + 0.6)
 
