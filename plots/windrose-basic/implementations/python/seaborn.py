@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windrose-basic: Wind Rose Chart
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 80/100 | Updated: 2026-08-05
@@ -93,7 +93,10 @@ frequencies = frequencies / n_obs * 100
 # inset sit in the corners that fall outside the circle, which the bars
 # (clipped to the radial axis limit) never reach regardless of direction.
 fig = plt.figure(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
-ax = fig.add_axes((0.06, 0.06, 0.88, 0.88), projection="polar")
+# Axes deliberately smaller than the full canvas (vs. a near-full-bleed square)
+# so the compass-label ring (just outside the circle) has real clearance from
+# the figure's literal corners before the inset/legend boxes anchored there.
+ax = fig.add_axes((0.17, 0.17, 0.66, 0.66), projection="polar")
 ax.set_facecolor(PAGE_BG)
 ax.set_theta_zero_location("N")
 ax.set_theta_direction(-1)
@@ -147,9 +150,18 @@ for spine in ax.spines.values():
     spine.set_color(INK_SOFT)
     spine.set_linewidth(1.1)
 
-# Legend stays inside the axes bounding box (bottom-right corner, outside the
-# circle) so nothing gets clipped by the fixed-size canvas.
-legend = ax.legend(title="Wind Speed", loc="lower right", fontsize=9, title_fontsize=10, framealpha=0.95)
+# Legend anchored to the figure's literal bottom-right corner (not the axes'
+# own bounding box) so it sits well beyond the SE compass-label ring instead
+# of overlapping it.
+legend = ax.legend(
+    title="Wind Speed",
+    loc="lower right",
+    bbox_to_anchor=(0.99, 0.01),
+    bbox_transform=fig.transFigure,
+    fontsize=8,
+    title_fontsize=9,
+    framealpha=0.95,
+)
 legend.get_frame().set_facecolor(ELEVATED_BG)
 legend.get_frame().set_edgecolor(INK_SOFT)
 legend.get_title().set_color(INK)
@@ -157,15 +169,17 @@ for text in legend.get_texts():
     text.set_color(INK)
 
 # Distinctive seaborn feature: a kernel-density estimate of the overall speed
-# distribution, tucked into the opposite (top-left) empty corner.
-inset = fig.add_axes((0.05, 0.72, 0.24, 0.20))
+# distribution, tucked fully into the figure's literal top-left corner (past
+# the NW compass-label ring, not just past the data wedges) so it never
+# occludes the label ring the polar axes draws around its full circle.
+inset = fig.add_axes((0.015, 0.815, 0.155, 0.155))
 sns.kdeplot(x=speeds, fill=True, color=IMPRINT[0], alpha=0.55, linewidth=1.2, ax=inset)
 inset.set_facecolor(PAGE_BG)
 inset.set_title("Speed distribution", fontsize=8, color=INK, pad=3)
-inset.set_xlabel("Wind speed (m/s)", fontsize=7, color=INK_SOFT)
+inset.set_xlabel("Wind speed (m/s)", fontsize=8, color=INK_SOFT)
 inset.set_ylabel("")
 inset.set_yticks([])
-inset.tick_params(axis="x", labelsize=6, colors=INK_SOFT)
+inset.tick_params(axis="x", labelsize=8, colors=INK_SOFT)
 sns.despine(ax=inset, left=True)
 inset.spines["bottom"].set_color(INK_SOFT)
 
