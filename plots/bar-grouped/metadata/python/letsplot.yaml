@@ -2,119 +2,134 @@ library: letsplot
 language: python
 specification_id: bar-grouped
 created: '2025-12-24T21:30:40Z'
-updated: '2026-05-06T11:12:11Z'
-generated_by: claude-haiku
-workflow_run: 25431545566
+updated: '2026-08-05T01:29:33Z'
+generated_by: claude-sonnet
+workflow_run: 30965614718
 issue: 1822
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 86
 review:
   strengths:
-  - Perfect technical execution across all visual quality criteria (30/30)
-  - Explicit font sizing ensures readability at full resolution in both light and
-    dark themes
-  - Flawless palette compliance with Okabe-Ito colors and theme-adaptive chrome in
-    both renders
-  - Clean, idiomatic lets_plot code with proper KISS structure
-  - Realistic, well-chosen example data demonstrating grouped bar chart use cases
-  - Both renders properly handle light/dark theme adaptation with zero legibility
-    failures
+  - 'Correct Imprint palette in canonical order (#009E73 Electronics, #C475FD Clothing,
+    #4467A3 Home & Garden), and the data colors are pixel-identical between the light
+    and dark renders.'
+  - Theme-adaptive chrome is threaded correctly through PAGE_BG/INK/INK_SOFT tokens
+    — both renders are fully legible with no dark-on-dark or light-on-light failures.
+  - 'Uses a genuinely distinctive lets-plot feature: layer_tooltips() with formatted
+    native tooltips (product, quarter, ''$X K'' revenue) called out explicitly in
+    the code, not just a bare default tooltip.'
+  - Direct value labels above every bar (geom_text with position_dodge) satisfy the
+    spec's 'value labels are optional but helpful' note and make cross-group comparison
+    precise.
+  - Data is realistic, neutral, and deterministic — hardcoded quarterly revenue with
+    plausible per-product patterns (Electronics steady growth, Clothing Q4 seasonal
+    spike, Home & Garden spring/summer peak) with no randomness to seed.
   weaknesses:
-  - Design Excellence could be enhanced with top/right spine removal for more polished
-    aesthetic
-  - Library Mastery could showcase additional distinctive lets_plot features beyond
-    HTML export
+  - alpha=0.9 on the bars is an unneeded transparency choice for a grouped bar chart
+    with no overlapping marks — bars would read crisper at alpha=1.
+  - Value labels (geom_text size=3.2mm, ~9pt) are noticeably smaller than the axis
+    tick text (10pt) — bump to ~3.6-4mm so they stay legible when the card is scaled
+    down to ~400px in the catalog.
+  - Design/storytelling is competent but generic — no strategic emphasis (e.g. highlighting
+    the leading product or the Q4 growth) beyond the standard dodge treatment, so
+    DE-01/DE-03 stayed close to baseline.
+  - geom_bar has no explicit color= set, yet a thin border stroke is visible around
+    each bar in both renders — confirm this is an intended anyplot-adjacent touch
+    rather than an unstyled lets-plot default.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title, axis labels, tick labels all in dark text - perfectly readable against light surface
-      Data: Okabe-Ito colors (#009E73 green, #D55E00 orange, #0072B2 blue) clearly visible and distinct
-      Legibility verdict: PASS - All text readable, no contrast failures, proper theme adaptation
+      Background: Warm off-white (#FAF8F1), consistent across the full canvas including the legend panel.
+      Chrome: Bold dark title "bar-grouped · python · letsplot · anyplot.ai" at top-left, fully visible and not clipped. Y-axis "Revenue ($ thousands)" and x-axis "Quarter" labels are dark, clearly readable. Tick labels ($0K-$240K, Q1-Q4) are dark grey and legible. Subtle horizontal-only gridlines. Legend panel on the right ("Product Category" with Electronics/Clothing/Home & Garden swatches) has a slightly elevated off-white background with a thin border.
+      Data: First series (Electronics) is #009E73 teal, second (Clothing) is #C475FD lavender, third (Home & Garden) is #4467A3 slate blue — matches the canonical Imprint order. Grouped bars per quarter, each bar labeled with its exact "$XXXK" value in small dark-grey text above the bar.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title, axis labels, tick labels all in light text - perfectly readable against dark surface
-      Data: Colors identical to light render (green, orange, blue) - only chrome flipped as expected
-      Legibility verdict: PASS - No dark-on-dark failures, all text readable, proper theme adaptation
+      Background: Warm near-black (#1A1A17), consistent across the canvas and legend panel.
+      Chrome: Title renders in a light cream color, fully visible. Axis titles and tick labels render in light grey/cream tones, clearly readable against the dark background — no dark-on-dark issues found. Gridlines are subtle light-grey horizontal lines, visible but not dominant. Legend panel has a dark-elevated background with light text, readable.
+      Data: Same three colors as the light render (#009E73 / #C475FD / #4467A3) — confirmed pixel-identical data colors, only chrome (background, text, grid) flipped. Value labels above bars render in light grey, readable against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (Title 24pt, Labels 20pt, Ticks 16pt);
-          all perfectly readable in both renders
+        comment: All text readable in both themes; value labels (9pt) are on the small
+          side relative to tick text (10pt)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all elements fully readable
+        comment: No collisions between text, bars, or legend
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bars optimally sized and clearly distinguishable; proper spacing
-          between groups
+        comment: Bars clearly visible; alpha=0.9 is an unneeded transparency choice
+          for non-overlapping solid bars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; excellent contrast; colorblind-safe
+        comment: Teal/lavender/slate-blue are mutually distinguishable, not red-green
+          reliant
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect balance; plot fills 60-70% of canvas with generous margins
+        comment: Canvas gate passed; title, axes, and legend proportions are balanced
+          with no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct title format
+        comment: Descriptive axis labels with units ('Revenue ($ thousands)', 'Quarter')
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; Okabe-Ito order maintained; correct backgrounds
-          and theme-correct chrome'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          in both renders'
     design_excellence:
       score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: true
-        comment: Well-configured library defaults; clean and professional but not
-          exceptional
+        passed: false
+        comment: Custom theme and palette applied with polish, but overall look stays
+          close to a standard grouped bar chart
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Y-axis-only grid with subtle styling; could benefit from spine removal
+        passed: false
+        comment: Y-axis-only gridlines and generous whitespace, but axis lines/spines
+          remain visible rather than fully minimal
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Strong visual hierarchy through color and positioning; demonstrates
-          clear trends
+        passed: false
+        comment: Value labels aid comparison, but no strategic emphasis or highlighted
+          focal point beyond the default dodge layout
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Grouped bar chart with correct position='dodge' implementation
+        comment: Correct grouped/dodged bar chart via geom_bar(position='dodge')
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: side-by-side bars, categories, groups,
-          color coding'
+        comment: Distinct colors per group, clear legend, consistent bar widths, adequate
+          group spacing, value labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Quarter; Y: Revenue; Fill: Product - all correct'
+        comment: x=Quarter (category), fill=Product (group), y=Revenue (value) — all
+          data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data exactly
+        comment: Title matches mandated format exactly; legend labels match Product
+          values
     data_quality:
       score: 15
       max: 15
@@ -153,20 +170,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 4 quarters, 3 product categories, realistic variation'
+        comment: 3 groups x 4 categories, within spec's 3-8 categories / 2-5 groups
+          guidance
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real business scenario (quarterly revenue tracking); neutral and
-          comprehensible
+        comment: Plausible, neutral quarterly product revenue scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually correct; proportions and seasonal patterns realistic
+        comment: Revenue values ($67K-$235K) are sensible for a product-category comparison
     code_quality:
       score: 10
       max: 10
@@ -176,52 +193,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow; no unnecessary functions
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data with hardcoded values
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (os, pandas, lets_plot)
+        comment: Only os, pandas, lets_plot — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake functionality
+        comment: Appropriate complexity, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format (plot-{THEME}.png + HTML); current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert ggplot2-style composition; idiomatic stat='identity' and position='dodge'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses HTML export and ggsave scale parameter; distinctive to lets_plot
+        comment: 'Idiomatic ggplot-grammar composition: aes/geom_bar/scale_fill_manual/labs/theme'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Native layer_tooltips() with formatted multi-line tooltips is a real
+          lets-plot-specific strength, called out in code
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
