@@ -1,0 +1,83 @@
+// anyplot.ai
+// strip-basic: Basic Strip Plot
+// Library: Highcharts 12.6.0 | Node 22
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
+// Quality: pending | Created: 2026-08-05
+
+//# anyplot-orientation: landscape
+const t = window.ANYPLOT_TOKENS;
+
+// --- Data (in-memory, deterministic LCG) -----------------------------------
+let seed = 42;
+function nextUniform() {
+  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+  return seed / 0x7fffffff;
+}
+function nextGaussian() {
+  const u1 = Math.max(nextUniform(), 1e-9);
+  const u2 = nextUniform();
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+const groups = [
+  { name: "Placebo", mean: 62, sd: 11 },
+  { name: "Low Dose", mean: 48, sd: 10 },
+  { name: "Standard Dose", mean: 35, sd: 9 },
+  { name: "High Dose", mean: 26, sd: 8 },
+];
+const pointsPerGroup = 45;
+
+const series = groups.map((group, groupIndex) => ({
+  name: group.name,
+  color: t.palette[groupIndex],
+  marker: { fillColor: hexToRgba(t.palette[groupIndex], 0.6), lineWidth: 0 },
+  data: Array.from({ length: pointsPerGroup }, () => {
+    const responseMinutes = Math.max(5, group.mean + nextGaussian() * group.sd);
+    return [groupIndex, Math.round(responseMinutes * 10) / 10];
+  }),
+}));
+
+// --- Chart -----------------------------------------------------------------
+Highcharts.chart("container", {
+  chart: {
+    type: "scatter",
+    backgroundColor: "transparent",
+    animation: false,
+    style: { fontFamily: "inherit" },
+  },
+  credits: { enabled: false },
+  colors: t.palette,
+  title: {
+    text: "strip-basic · javascript · highcharts · anyplot.ai",
+    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+  },
+  xAxis: {
+    categories: groups.map((group) => group.name),
+    lineColor: t.inkSoft,
+    tickColor: t.inkSoft,
+    labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+  },
+  yAxis: {
+    title: {
+      text: "Time to Symptom Relief (minutes)",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
+    gridLineColor: t.grid,
+    labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+  },
+  legend: { enabled: false },
+  plotOptions: {
+    series: { animation: false },
+    scatter: {
+      jitter: { x: 0.3, y: 0 },
+      marker: { radius: 6, symbol: "circle" },
+    },
+  },
+  series,
+});
