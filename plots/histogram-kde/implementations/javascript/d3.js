@@ -86,6 +86,38 @@ g.selectAll(".bar")
   .attr("fill", t.palette[0])
   .attr("fill-opacity", 0.5);
 
+// --- Rug (raw observations along the x-axis baseline) -----------------------
+g.selectAll(".rug")
+  .data(diameters)
+  .join("line")
+  .attr("class", "rug")
+  .attr("x1", (d) => x(d))
+  .attr("x2", (d) => x(d))
+  .attr("y1", ih)
+  .attr("y2", ih - 8)
+  .attr("stroke", t.palette[0])
+  .attr("stroke-width", 1)
+  .attr("stroke-opacity", 0.3);
+
+// --- Target spec reference line (12.00mm) ------------------------------
+const targetX = x(12.0);
+g.append("line")
+  .attr("x1", targetX)
+  .attr("x2", targetX)
+  .attr("y1", 0)
+  .attr("y2", ih)
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "6,4")
+  .attr("stroke-opacity", 0.55);
+g.append("text")
+  .attr("x", targetX + 8)
+  .attr("y", 16)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "12px")
+  .style("font-style", "italic")
+  .text("Target spec 12.00mm");
+
 // --- KDE curve ---------------------------------------------------------
 const line = d3
   .line()
@@ -127,9 +159,28 @@ g.append("text")
 
 // --- Legend -------------------------------------------------------------
 const legend = g.append("g").attr("transform", `translate(${iw - 210},0)`);
-legend.append("rect").attr("x", 0).attr("y", 0).attr("width", 16).attr("height", 16).attr("fill", t.palette[0]).attr("fill-opacity", 0.5);
+legend
+  .append("rect")
+  .attr("x", 0)
+  .attr("y", 0)
+  .attr("width", 16)
+  .attr("height", 16)
+  .attr("rx", 3)
+  .attr("ry", 3)
+  .attr("fill", t.palette[0])
+  .attr("fill-opacity", 0.5)
+  .attr("stroke", t.palette[0])
+  .attr("stroke-width", 1);
 legend.append("text").attr("x", 24).attr("y", 13).attr("fill", t.inkSoft).style("font-size", "14px").text("Observed frequency");
-legend.append("line").attr("x1", 0).attr("y1", 38).attr("x2", 16).attr("y2", 38).attr("stroke", t.palette[1]).attr("stroke-width", 3.5);
+legend
+  .append("line")
+  .attr("x1", 0)
+  .attr("y1", 38)
+  .attr("x2", 16)
+  .attr("y2", 38)
+  .attr("stroke", t.palette[1])
+  .attr("stroke-width", 3.5)
+  .attr("stroke-linecap", "round");
 legend.append("text").attr("x", 24).attr("y", 42).attr("fill", t.inkSoft).style("font-size", "14px").text("KDE estimate");
 
 // --- Title --------------------------------------------------------------
