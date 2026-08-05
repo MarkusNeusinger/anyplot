@@ -34,6 +34,12 @@ for (i, (drift, vol)) in enumerate(zip(drifts, vols))
     revenue_index[:, i] = 100.0 .+ cumsum(steps) .- steps[1]
 end
 
+# Headline series: the largest cumulative % change gets a bolder line and a
+# callout so the chart guides the eye instead of reading as four
+# equally-weighted lines.
+pct_change = (revenue_index[end, :] .- 100.0) ./ 100.0 .* 100.0
+headline = argmax(pct_change)
+
 # --- Plot -----------------------------------------------------------------
 title_str = "line-multi · julia · makie · anyplot.ai"
 
@@ -67,12 +73,20 @@ ax = Axis(
     bottomspinecolor   = INK_SOFT,
     xgridvisible       = false,
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    yticks             = LinearTicks(9),
 )
 
-for (i, name) in enumerate(product_lines)
-    lines!(ax, months, revenue_index[:, i];
-        color = IMPRINT_PALETTE[i], linewidth = 3.0, label = name)
-end
+series!(ax, months, revenue_index'; color = IMPRINT_PALETTE, labels = product_lines, linewidth = 2.5)
+
+# Overlay the headline series with a bolder line + endpoint callout.
+lines!(ax, months, revenue_index[:, headline]; color = IMPRINT_PALETTE[headline], linewidth = 4.5)
+text!(ax, months[end], revenue_index[end, headline];
+    text     = "$(product_lines[headline]) $(pct_change[headline] >= 0 ? "+" : "")$(round(Int, pct_change[headline]))%",
+    color    = IMPRINT_PALETTE[headline],
+    fontsize = 13,
+    align    = (:right, :bottom),
+    offset   = (-6, 8),
+)
 
 axislegend(ax; position = :lt, framevisible = true, backgroundcolor = ELEVATED_BG,
     framecolor = INK_SOFT, labelcolor = INK_SOFT, labelsize = 12, patchsize = (20, 12))
