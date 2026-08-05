@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: bar-grouped
 created: '2026-08-05T01:26:24Z'
-updated: '2026-08-05T01:30:01Z'
+updated: '2026-08-05T01:50:51Z'
 generated_by: claude-sonnet
 workflow_run: 30965821087
 issue: 1822
@@ -12,103 +12,132 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 70
 review:
   strengths:
-  - Correct, idiomatic use of Makie's dodge/dodge_gap/gap grouped-bar mechanism
-  - Theme-adaptive chrome correctly threaded through every element (title, axis, ticks,
-    spines, grid, legend) in both renders
-  - 'Clean Imprint palette usage in canonical order with the mandatory #009E73 first
-    series'
-  - Canvas lands exactly on the 3200x1800 target with no clipping or overflow
+  - Correct Imprint palette applied in canonical order (Hardware=#009E73, Software=#C475FD,
+    Services=#4467A3), identical data colors across both themes
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white/near-black
+    backgrounds, INK/INK_SOFT text tokens, subtle 15%-alpha Y-axis-only gridlines,
+    top/right spines removed'
+  - Idiomatic use of Makie's `barplot!` with `dodge`/`dodge_gap`/`gap` for grouped
+    bars, rather than manually offsetting x-positions
+  - All font sizes explicitly set (titlesize, xlabelsize, xticklabelsize, etc.), and
+    the plot remains legible when scaled down to the 400px mobile preview
+  - Clean, unframed legend with a titled swatch list, correctly positioned next to
+    the plot via the figure grid layout
+  - Categories meaningfully ordered by descending total revenue; realistic, neutral
+    business scenario (regional hardware/software/services revenue)
   weaknesses:
-  - using Random and Random.seed!(42) are unused -- the data is a hardcoded literal
-    matrix, not randomly generated. Remove the import and seed call, or actually generate
-    the data.
-  - 'Design Excellence is competent-but-safe: no deliberate storytelling device (e.g.,
-    value labels on the largest bars, a highlighted focal category, or an annotation
-    calling out the N. America lead) to lift it past a correct default execution.'
+  - 'MUST FIX: the per-region total labels ("$85M" etc.) and the "▲ leading region"
+    callout built with text!() never render in either theme — verified by pixel-level
+    inspection of both plot-light.png and plot-dark.png: zero text glyphs exist above
+    any bar in either render, including regions like MEA where the label position
+    (~13.5 on the y-axis) sits comfortably inside the visible plot area. This is dead
+    code shipped as if functional: the comment claims ''Data storytelling: per-region
+    totals, leading region called out'' but delivers nothing visible. Likely cause:
+    ylims!(ax, 0, maximum(revenue)+10) is called, but the effective rendered y-axis
+    top empirically measures to ~44 (not the coded 52), suggesting Makie recomputed
+    autolimits after the ylims! call and/or the text!() calls are not actually attaching
+    to the axis/being drawn at all — check that `text!(ax, x, y; text=str, ...)` is
+    valid for the installed CairoMakie/Makie version (some versions expect `text!(ax,
+    x, y, text = str)` as a single call vs. keyword text= colliding with positional
+    text content) and add a smoke check (print the number of plot objects on `ax.scene.plots`)
+    before shipping. Either fix the rendering or remove the dead code entirely.'
+  - DE-03 (Data Storytelling) currently defaults to 'data displayed, not interpreted'
+    since the intended focal point/annotation never reaches the viewer — once the
+    text!() bug above is fixed, this chart would gain real visual hierarchy
+  - Data pattern is fully monotonic (Hardware > Software > Services in every single
+    region) — introducing one region where the ranking differs would improve DQ-01
+    feature coverage and make the comparison less predictable/more interesting
+  - Legend swatches are plain PolyElement blocks with no stroke/edge — acceptable
+    given palette contrast is already decent, but a thin edge highlight would add
+    a touch more polish per the style guide's optional outline pattern
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white
-      Chrome: Bold dark title "bar-grouped · julia · makie · anyplot.ai" at top; "Region" x-axis label and "Revenue ($M)" y-axis label in dark ink; tick labels in softer dark gray; subtle horizontal-only gridlines; boxless "Product Line" legend at right with Hardware/Software/Services entries -- all readable
-      Data: First series (Hardware) is #009E73 brand green; Software is lavender #C475FD; Services is blue #4467A3 -- canonical Imprint order for 3 abstract product-line groups
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "bar-grouped · julia · makie · anyplot.ai" in bold dark ink, centered top. X-axis "Region" and Y-axis "Revenue ($M)" labels in dark ink. Tick labels in a softer grey. Subtle horizontal gridlines at 0/10/20/30/40 (Y-axis only, ~15% opacity). Left/bottom spines visible in soft grey, top/right spines removed. Legend "Product Line" at right with three swatches (Hardware/Software/Services), no frame. All text clearly legible against the light background.
+      Data: 5 region groups (N. America, Europe, Asia-Pacific, Latin America, MEA) each with 3 dodged bars. First series (Hardware) is #009E73 brand green, second (Software) is #C475FD lavender, third (Services) is #4467A3 blue. Bars decrease from N. America (tallest, ~42) down to MEA (shortest, ~12). No value labels or annotation text are visible anywhere above the bars, despite the source code containing a text!() loop intended to draw per-region revenue totals and a "▲ leading region" callout — pixel-level inspection at multiple bar-top positions (including well within the visible axis range) confirms this text never renders.
+      Legibility verdict: PASS (all rendered chrome is legible; the intended annotation layer is simply absent, not illegible).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black
-      Chrome: Title, axis labels, tick labels, and legend text all flipped to light ink/gray tones, fully readable against the dark surface; no dark-on-dark text found
-      Data: Bar colors (green/lavender/blue) are pixel-identical to the light render -- only chrome flipped
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same title, same "Region"/"Revenue ($M)" labels now rendered in light ink (#F0EFE8), tick labels in a lighter soft grey. Gridlines same subtle style flipped to light-on-dark. Legend flips to light title/text, still unframed, same position.
+      Data: Identical bar heights and identical data colors to the light render (#009E73 / #C475FD / #4467A3) — only the chrome flipped as expected. Same absence of any annotation text above the bars.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures; all rendered chrome is readable — the annotation layer is simply never drawn in either theme).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes
+        comment: All font sizes explicitly set; readable at full size and at 400px
+          mobile preview in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between bars, ticks, legend, or title
+        comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 5x3 bars render clearly distinguishable and appropriately wide
+        comment: Bar width/dodge/gap well-tuned for 5x3 grouped layout
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three hues perceptually distinct, no red-green-only encoding
+        comment: Distinct hues, CVD-safe, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed at 3200x1800, no clipping, comfortable margins
+        comment: Balanced margins, legend adjacent to plot, good canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Region and Revenue ($M) descriptive with units
+        comment: '''Region'' and ''Revenue ($M)'' — descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order, correct theme backgrounds'
+        comment: Canonical Imprint order, correct theme-adaptive backgrounds and chrome
+          in both renders
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Correct palette and clean baseline, nothing beyond the mandated defaults
+        passed: true
+        comment: Thoughtful typography and color, clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, frameless legend, generous colgap
+        comment: Subtle grid, spines partially removed, generous whitespace, clean
+          unframed legend
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Incidental descending sort only, no deliberate emphasis or annotation
+        comment: 'Default: intended total labels and ''leading region'' callout never
+          render in either theme, so no visual hierarchy actually reaches the viewer'
     spec_compliance:
       score: 15
       max: 15
@@ -124,43 +153,45 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend, consistent widths/spacing, meaningful ordering
+        comment: Distinct colors + legend, consistent bar widths/spacing, meaningful
+          category ordering; value labels are explicitly optional per spec
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Region on x, Revenue on y, all 15 data points shown
+        comment: Region on X, revenue on Y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format, legend labels match group names
+        comment: Title format exact; legend labels match group names
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 5 categories x 3 groups, within recommended ranges
+        comment: Good relative variation across regions, but ranking is fully monotonic
+          (Hardware > Software > Services everywhere)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Regional hardware/software/services revenue is plausible and neutral
+        comment: Neutral, plausible regional business-revenue scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $6M-$42M range sensible for regional product-line breakdown
+        comment: Plausible revenue figures and regional proportions
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -168,55 +199,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, no functions/classes
+        comment: Imports → data → plot → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed literal data
+        comment: Fully deterministic hard-coded data, no RNG needed
       - id: CQ-03
         name: Clean Imports
-        score: 1
-        max: 2
-        passed: false
-        comment: using Random and Random.seed!(42) are dead code -- no rand call anywhere
-      - id: CQ-04
-        name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: CairoMakie + Colors, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 0
+        max: 2
+        passed: false
+        comment: The text!() annotation block is dead code that never draws anything
+          in either theme despite being commented as a real feature — shipped as if
+          functional, same category as fake-functionality per the review guidance;
+          must be fixed or removed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via current save API
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of barplot! with dodge/dodge_gap/gap
+        comment: Uses barplot! with dodge/dodge_gap/gap — Makie's recommended grouped-bar
+          pattern
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: dodge is the basic expected mechanism for this plot type, not a showcase
-          feature
-  verdict: APPROVED
+        passed: true
+        comment: Uses Makie's grid-layout Legend placement and PolyElement legend
+          construction
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   patterns:
+  - data-generation
   - matrix-construction
   dataprep: []
   styling:
-  - grid-styling
+  - publication-ready
