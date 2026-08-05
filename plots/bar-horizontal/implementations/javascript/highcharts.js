@@ -6,7 +6,7 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) — most populous countries, ascending ---
-// so the largest value renders at the top of the inverted category axis.
+// renders smallest (Mexico) at top to largest (India) at bottom, matching array order.
 const countries = [
   "Mexico",
   "Russia",
@@ -20,6 +20,17 @@ const countries = [
   "India",
 ];
 const population = [130, 144, 173, 216, 227, 241, 280, 342, 1425, 1441];
+
+// Highlight the top-ranked country (India) at full brand-green; mute the rest
+// to a lower-opacity tint of the same hue so the largest value reads as the
+// chart's focal point (spec: "highlight specific bars to draw attention").
+const topIndex = population.length - 1;
+const mutedGreen = Highcharts.color(t.palette[0]).setOpacity(0.5).get();
+const seriesData = population.map((value, i) => ({
+  y: value,
+  color: i === topIndex ? t.palette[0] : mutedGreen,
+  dataLabels: i === topIndex ? { style: { fontWeight: "700" } } : undefined,
+}));
 
 // --- Chart -------------------------------------------------------------
 Highcharts.chart("container", {
@@ -76,8 +87,7 @@ Highcharts.chart("container", {
   series: [
     {
       name: "Population",
-      data: population,
-      color: t.palette[0],
+      data: seriesData,
     },
   ],
 });
