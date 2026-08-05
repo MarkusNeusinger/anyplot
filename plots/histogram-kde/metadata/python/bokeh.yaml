@@ -2,125 +2,127 @@ library: bokeh
 language: python
 specification_id: histogram-kde
 created: '2025-12-24T21:30:19Z'
-updated: '2026-05-06T17:14:54Z'
-generated_by: claude-haiku
-workflow_run: 25448934240
+updated: '2026-08-05T03:52:18Z'
+generated_by: claude-sonnet
+workflow_run: 30972691447
 issue: 1823
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/bokeh/plot-dark.html
-quality_score: 80
+quality_score: 91
 review:
   strengths:
-  - Correct plot type with well-integrated histogram and KDE overlay
-  - Excellent data quality showing realistic stock return distribution with tail events
-  - Perfect spec compliance with proper title, legend, and feature coverage
-  - Explicit font sizing (28pt title, 22pt axis labels, 18pt ticks) ensures readability
-    at high resolution
-  - Appropriate semi-transparent histogram bars (alpha 0.5) allow KDE curve visibility
-  - Clean code with reproducible seeding and no unnecessary complexity
-  - 'Okabe-Ito palette correctly applied: brand green (#009E73) for histogram, vermillion
-    (#D55E00) for KDE'
+  - Title now correctly reads "histogram-kde · python · bokeh · anyplot.ai" — the
+    attempt-1 language-segment gap is fixed
+  - New "Fat-tail events" annotation on the +9% bump adds a second focal point alongside
+    the mean-line, sharpening data storytelling
+  - Correct Imprint palette order with strong, CVD-safe contrast between the green
+    histogram and purple KDE curve
+  - Semi-transparent histogram (fill_alpha=0.5) per spec notes keeps the KDE curve
+    fully visible where it crosses bars
+  - Manual Gaussian KDE with Scott's-rule bandwidth implemented from first principles
+    (no scipy dependency)
+  - Theme-adaptive chrome correctly threaded through — both renders fully legible,
+    no dark-on-dark/light-on-light failures
+  - No canvas drift — toolbar_location=None plus generous min_border_* keeps the 3200×1800
+    PNG exactly on target
   weaknesses:
-  - 'Dark render tick labels appear dark/black instead of light gray (INK_SOFT color
-    not rendered correctly) — creates dark-on-dark contrast failure against #1A1A17
-    background'
-  - Design Excellence is generic with default-level styling — no visual hierarchy
-    or emphasis beyond correct palette application
-  - Tick label color issue suggests bokeh theme-color not properly threading through
-    to major_label_text_color in dark theme
+  - Visual hierarchy is now two focal points (mean line + fat-tail label) but the
+    grid/spine treatment still only meets the style-guide baseline without going further
+  - Histogram bar outline (line_width=3, line_alpha=0.8) is fairly bold relative to
+    the KDE line — a slightly thinner outline would let the KDE curve read as the
+    clear top layer
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle frame
-      Chrome: Title "histogram-kde · bokeh · anyplot.ai" dark/bold at top; axis labels "Daily Return (%)" and "Density" in dark ink; tick labels (0, 0.05, 0.1, 0.15) in dark gray, all clearly readable
-      Data: Green histogram bars (#009E73, alpha 0.5) show binned distribution; orange KDE curve (#D55E00) overlays smoothly across all ranges; legend "Histogram" and "KDE" in top-right with light background box
-      Layout: Plot fills ~65% of canvas with balanced margins; grid lines subtle and not distracting
-      Legibility verdict: PASS — all text legible at full size; explicit font sizing works well
+      Background: warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: bold dark title "histogram-kde · python · bokeh · anyplot.ai" top-left; italic dark axis labels ("Density" / "Daily Return (%)"); gray tick labels; subtle horizontal-only gridlines; top-right legend box (cream background, soft border) listing "Histogram" (green swatch) and "KDE" (purple line). All chrome text is clearly readable against the light background.
+      Data: green (#009E73) semi-transparent histogram bars form a right-skewed, roughly bell-shaped distribution centered near 0%, with secondary bumps around -8% and +9 to +13% (fat-tail events). A smooth purple (#C475FD) KDE curve with a faint area fill tracks the histogram closely. A dashed vertical mean-reference line near x≈0.19% carries a small "Mean: 0.19%" label, and an italic "Fat-tail events" annotation calls out the positive-tail bump. First series is #009E73 as required.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle frame
-      Chrome: Title readable in light color; axis labels visible in light text
-      Data colors: Green histogram (#009E73) and orange KDE (#D55E00) identical to light render ✓
-      CRITICAL ISSUE - Tick labels: Appear very dark/black against dark background instead of light gray — dark-on-dark contrast failure. Y-axis labels (0, 0.05, 0.1, 0.15) and X-axis labels are barely distinguishable from background
-      Legend: Same positioning as light render, readable
-      Legibility verdict: FAIL — Tick labels have unacceptable contrast; INK_SOFT color (#B8B7B0) not correctly rendered. This is a theme-adaptation chrome failure.
+      Background: warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: same layout with title/axis labels in near-white, tick labels in light gray, subtle light gridlines, legend on a dark elevated background with light border/text. No dark-on-dark failures observed — all chrome text and the "Mean: 0.19%" / "Fat-tail events" annotations remain legible against the dark background.
+      Data: histogram (#009E73) and KDE (#C475FD) colors are identical to the light render — only chrome (background, text, grid, legend frame) flips, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 7
         max: 8
-        passed: false
-        comment: Light theme explicitly sized (8pt ideal), dark theme tick labels
-          have dark-on-dark contrast issue making them hard to read
+        passed: true
+        comment: Explicit font sizes throughout; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text well-spaced, no collisions
+        comment: No collisions between title, axis labels, annotations, legend, or
+          data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram and KDE curve clearly visible and appropriately sized
+        comment: Alpha-blended bars keep the KDE curve visible; 40 bins suit ~900
+          points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors with good contrast; CVD-safe palette
+        comment: Green/purple pairing is CVD-safe with good contrast; no red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins
+        comment: Canvas gate passed at 3200x1800; nothing cut off, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Daily Return (%)'' and ''Density'''
+        comment: '"Daily Return (%)" and "Density" are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Okabe-Ito palette correct, backgrounds correct, but dark render tick
-          labels are dark-on-dark — chrome not theme-correct
+        passed: true
+        comment: 'First series #009E73, second #C475FD; correct theme backgrounds
+          in both renders'
     design_excellence:
-      score: 9
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library defaults with Okabe-Ito palette, but no exceptional
-          design or custom refinement
+        passed: true
+        comment: Semi-transparent bars, subtle KDE area fill, mean-line and fat-tail
+          annotations show intentional polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid (alpha 0.10), legend has background fill, but limited
-          customization
+        passed: true
+        comment: L-shaped frame, subtle horizontal-only grid, generous whitespace
+          meet the baseline but don't exceed it
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed correctly showing distribution + fat tails, but no
-          visual hierarchy or emphasis
+        passed: true
+        comment: Mean line plus new fat-tail annotation give two clear focal points,
+          an improvement over attempt 1's single annotation
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: histogram with KDE overlay'
+        comment: Correct histogram + KDE overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density-normalized histogram, smooth KDE curve, semi-transparent
-          bars, hover tools
+        comment: Density-normalized histogram, semi-transparent bars, contrasting
+          KDE color per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Daily Return (%), Y: Density — correctly scales and shows all
-          data'
+        comment: X/Y correctly mapped, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Title now correctly includes the "python" language segment; legend
+          labels match data series
     data_quality:
       score: 15
       max: 15
@@ -160,21 +162,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: main distribution, negative tail events, positive
-          tail events, clear peak'
+        comment: Shows central mode, skew, and both fat tails
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock returns — realistic financial domain with neutral, comprehensible
-          scenario
+        comment: Stock daily-return distribution is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Daily returns in %, proportions and distributions factually plausible
+        comment: Return magnitudes and density values are sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -184,33 +184,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Computation → Plot → Save; no functions/classes
+        comment: Flat top-to-bottom script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) for deterministic data
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused dependencies
+        comment: All imports (numpy, bokeh, selenium) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake UI
+        comment: No fake UI; appropriate complexity for manual KDE
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-light.png, plot-dark.png, plot-light.html, plot-dark.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current bokeh API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -218,28 +218,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses figure, ColumnDataSource, quad, line, HoverTools — good bokeh
-          patterns
+        comment: ColumnDataSource, figure(), quad/varea/line are idiomatic bokeh patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource and HoverTools; quad() for histogram is library-specific
-          approach
+        comment: HoverTool, Span, Label, and varea combined effectively for a richer
+          static + interactive result
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - columndatasource
   dataprep:
   - kde
   - binning
   styling:
   - alpha-blending
-  - grid-styling
+  - gradient-fill
