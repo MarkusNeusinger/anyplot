@@ -5,9 +5,6 @@
 
 using CairoMakie
 using Colors
-using Random
-
-Random.seed!(42)
 
 # --- Theme tokens -------------------------------------------------------
 const THEME    = get(ENV, "ANYPLOT_THEME", "light")
@@ -86,6 +83,32 @@ barplot!(
 )
 
 ax.xticks = (1:n_cat, categories)
+
+# --- Data storytelling: per-region totals, leading region called out -------
+totals      = vec(sum(revenue, dims = 2))
+max_per_cat = vec(maximum(revenue, dims = 2))
+top_idx     = argmax(totals)
+
+ylims!(ax, 0, maximum(revenue) + 10)
+
+for i in 1:n_cat
+    text!(
+        ax, i, max_per_cat[i] + 1.5;
+        text     = "\$$(round(Int, totals[i]))M",
+        align    = (:center, :bottom),
+        fontsize = 12,
+        color    = INK_SOFT,
+    )
+end
+
+text!(
+    ax, top_idx, max_per_cat[top_idx] + 5.5;
+    text     = "▲ leading region",
+    align    = (:center, :bottom),
+    fontsize = 12,
+    color    = INK,
+    font     = :bold,
+)
 
 legend_elements = [PolyElement(color = IMPRINT_PALETTE[i]) for i in 1:n_grp]
 Legend(
