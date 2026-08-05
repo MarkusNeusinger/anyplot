@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 78/100 | Updated: 2026-08-05
@@ -60,7 +60,10 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(IMPRINT[0], INK_MUTED, IMPRINT[1]),
+    # Series order below is [CI band, CI erase layer, Data Points, Regression
+    # Line] - see the two chart.add() calls that build the band for why the
+    # erase layer must sit between the band and the data points.
+    colors=(INK_MUTED, PAGE_BG, IMPRINT[0], IMPRINT[1]),
     title_font_size=title_font_size,
     label_font_size=56,
     major_label_font_size=44,
@@ -90,28 +93,53 @@ chart = pygal.XY(
     show_y_guides=True,
     truncate_legend=-1,
     margin_bottom=40,
-    # pygal's global `.reactive{stroke-width}` CSS rule matches every series'
-    # path directly, so it always wins over any per-series `stroke_style`
-    # (which only targets the parent <g> and loses to a rule matching the
-    # element itself, regardless of specificity). Override it with a
-    # higher-specificity inline rule scoped to the CI-band series (index 1)
-    # so its boundary reads as a soft, thin outline instead of inheriting the
-    # bold stroke_width=6 used for the regression line.
+    # pygal's own `.reactive{fill-opacity/stroke-width}` rule is emitted
+    # scoped to the chart's `#chart-<uuid>` id, which outweighs a plain
+    # `.serie-N .reactive` selector on specificity - `!important` (the same
+    # escape hatch pygal's own stylesheets use, e.g. `.always_show .guide.line`)
+    # is required for a per-series override to actually win. Soften the CI
+    # band (index 0) into translucent shading with a thin edge, and make the
+    # erase layer (index 1, see chart.add() calls) fully opaque so it cleanly
+    # carves the band's lower bound out with no visible seam of its own.
     css=(
         "file://style.css",
         "file://graph.css",
-        "inline:.serie-1 .reactive { stroke-width: 1.5; stroke-opacity: 0.4; }",
+        "inline:.serie-0 .reactive { fill-opacity: 0.3 !important; stroke-width: 1.5 !important; stroke-opacity: 0.4 !important; }"
+        " .serie-1 .reactive { fill-opacity: 1 !important; stroke-width: 0 !important; }",
     ),
 )
 
-# Scatter points
-chart.add("Data Points", [{"value": (float(xi), float(yi))} for xi, yi in zip(x, y, strict=True)])
+# 95% CI band, built from two ordinary single-curve fills instead of one
+# hand-closed upper+lower polygon: pygal's fill always splices its own
+# baseline-connector segment onto the *first and last vertex* of whatever
+# path it's given, so a closed polygon whose start/end vertex sits at the
+# plot's leftmost x (as the manual-loop version did) gets that connector
+# added twice at the same x - the stray vertical bar from attempt 2. A plain
+# open curve doesn't have this problem, since its first/last vertices are at
+# different x values, which is exactly pygal's supported fill shape.
+#
+# So: fill under the upper bound (translucent - the visible "95% CI Band"),
+# then fill under the lower bound in the page-background color (title=None -
+# a helper layer, not its own legend entry) to erase everything below it.
+# What's left visible is exactly the band between the two curves.
+chart.add(
+    "95% CI Band",
+    [(float(xi), float(yi)) for xi, yi in zip(x_line, ci_upper, strict=True)],
+    stroke=True,
+    fill=True,
+    show_dots=False,
+)
+chart.add(
+    None,
+    [(float(xi), float(yi)) for xi, yi in zip(x_line, ci_lower, strict=True)],
+    stroke=True,
+    fill=True,
+    show_dots=False,
+)
 
-# 95% CI band - muted neutral fill, sits behind the regression line
-ci_band = [(float(x_line[i]), float(ci_upper[i])) for i in range(0, len(x_line), 3)]
-ci_band += [(float(x_line[i]), float(ci_lower[i])) for i in range(len(x_line) - 1, -1, -3)]
-ci_band.append(ci_band[0])
-chart.add("95% CI Band", ci_band, stroke=True, fill=True, show_dots=False)
+# Scatter points - added after the CI band layers so dots stay visible even
+# where the opaque erase layer covers the plot area below the band's lower bound.
+chart.add("Data Points", [{"value": (float(xi), float(yi))} for xi, yi in zip(x, y, strict=True)])
 
 # Regression line - solid stroke in a contrasting color, equation in the label
 chart.add(
