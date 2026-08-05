@@ -2,100 +2,115 @@ library: plotly
 language: python
 specification_id: line-multi
 created: '2025-12-24T21:29:48Z'
-updated: '2026-05-06T15:14:21Z'
-generated_by: claude-haiku
-workflow_run: 25443699031
+updated: '2026-08-05T07:33:46Z'
+generated_by: claude-sonnet
+workflow_run: 30984653081
 issue: 1825
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 91
 review:
   strengths:
-  - Perfect text legibility with explicit font sizing across all elements
-  - Flawless theme-adaptive color and chrome implementation - both renders are readable
-    and correctly themed
-  - Excellent multi-series visual distinction using color, line style, and marker
-    symbols in combination
-  - Clean, reproducible code with proper KISS structure and random seeding
-  - Accurate palette compliance - Okabe-Ito positions 1-4 used correctly with first
-    series as brand green
-  - Complete spec compliance with all features present and properly formatted
+  - 'Imprint palette used exactly per spec: Electronics = #009E73 (brand green, always-first
+    rule), Clothing/Home & Garden/Sports follow canonical positions 2-4 (#C475FD,
+    #4467A3, #BD8233) with identical hexes across both renders.'
+  - 'Redundant encoding beyond color: each series also gets a distinct marker shape
+    (circle/square/diamond/triangle-up) and line dash (solid/solid/dash/dot), which
+    exceeds the style guide''s 3-4-series recommendation and helps CVD accessibility.'
+  - 'Theme-adaptive chrome is threaded through completely — title, axis titles, tick
+    labels, grid, legend box and annotation callout all flip correctly between the
+    #FAF8F1 light and #1A1A17 dark surfaces with no dark-on-dark or light-on-light
+    failures.'
+  - Direct end-of-line value labels (colored to match each series) plus a callout
+    annotation on the Electronics trend add genuine data storytelling value without
+    cluttering the chart.
+  - Canvas renders at the exact target 3200x1800 landscape size; margins are pinned
+    (autosize=False) so nothing drifts.
+  - 'Clean, reproducible, KISS-structured code: np.random.seed(42), only used imports,
+    no functions/classes, correct write_image/write_html output naming.'
   weaknesses:
-  - Design Excellence could be elevated - consider more sophisticated layout techniques
-    or visual emphasis to highlight key insights
-  - Library Mastery limited to standard plotly features - consider using distinctive
-    plotly capabilities like custom callbacks or dash integration for future work
+  - The 'Electronics up 52% since Jan' callout is computed from the Dec (last) value
+    (155.0 -> 235.5 = +52.0%) but the arrow is anchored to the Sep data point (225.7,
+    only +45.7% since Jan) — the labeled percentage doesn't match the point it visually
+    points at. Either move the annotation to the December endpoint or compute the
+    percentage from the Sep value so the number and the anchored point agree.
+  - Both xaxis and yaxis have showgrid=True. The style guide's Grid Guidelines call
+    for Y-axis-only grid on line/bar charts (both-axis grid is reserved for scatter
+    plots) — the vertical gridlines add clutter without encoding extra information
+    here; set xaxis showgrid=False.
+  - Y-axis range is manually clamped to [30, 300] rather than starting near zero;
+    defensible for a trend-focused line chart (all series stay well above 30) but
+    worth a second look since it does compress the visual magnitude of differences
+    between series.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and readable
-      Chrome: Title (28px), axis labels (22px), ticks (18px), legend (16px) - all explicitly sized and clearly readable against light background
-      Data: Four product lines rendered in Okabe-Ito colors (green, orange, blue, purple) with distinct line styles (solid, solid, dashed, dotted) and distinct markers (circle, square, diamond, triangle). First series is correct green (#009E73). All data points visible and well-spaced.
-      Legibility verdict: PASS - All text dark-colored, excellent contrast with warm off-white background
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "line-multi · python · plotly · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Month" and Y-axis title "Sales (Units)" in dark ink, tick labels (Jan-Dec, 50-300) in softer gray-brown ink, all clearly readable. Grid lines (both horizontal and vertical) are subtle light-gray, present but not competing with data. Legend box (top-left, cream-elevated fill with thin border) lists Electronics/Clothing/Home & Garden/Sports with matching marker+line swatches, fully readable and does not overlap any data line. A bordered callout box reads "Electronics up 52% since Jan" with an arrow pointing to the Electronics line's September point; text is dark ink on the elevated cream fill, legible. Colored end-of-line value labels (236 green, 143 lavender, 116 blue, 72 ochre) sit in the right margin, matching each line's color, not clipped by the canvas edge.
+      Data: Four lines with distinct Imprint colors (green #009E73 Electronics, lavender #C475FD Clothing, blue #4467A3 Home & Garden, ochre #BD8233 Sports), each with a distinct marker shape (circle/square/diamond/triangle) and dash pattern (solid/solid/dash/dot). Electronics is first series and is the brand green as required.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and readable
-      Chrome: Title, axis labels, ticks, and legend all rendered in light colors (INK_SOFT tokens applied). All clearly readable against dark background.
-      Data: Data colors are identical to light render (same green #009E73, orange #D55E00, blue #0072B2, purple #CC79A7). Only chrome has adapted to dark theme (light text, subtle grid).
-      Legibility verdict: PASS - All text light-colored, excellent contrast with warm near-black background. No dark-on-dark failures. Brand green remains clearly visible.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels all switch to light ink (near-white for primary text, light warm-gray for secondary/tick text) and remain fully legible against the dark surface. Grid lines are a faint light-on-dark rgba, still subtle. Legend box and annotation callout box switch to the dark-elevated fill (#242420-ish) with light text, fully readable, no dark-on-dark failures anywhere. End-of-line value labels are recolored per-series but keep the same hues as the light render, plainly visible against the dark background.
+      Data: Colors are pixel-identical to the light render (same green/lavender/blue/ochre hues, same marker shapes and dash patterns) — only chrome elements changed between renders, exactly as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px,
-          legend 16px - perfectly readable in both themes
+        comment: All text readable in both themes at target sizes matching the style-guide
+          defaults (title 16px, axis 12px, tick/legend 10px).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable; legend positioned top-left without overlap;
-          x-axis labels well-spaced
+        comment: Legend, callout, and end-of-line labels are all placed clear of the
+          data and each other in both renders.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 data points per series with 12px markers and 4px line width -
-          perfectly adapted to data density
+        comment: Sparse data (12 points/series) gets prominent 12px markers and 3.5px
+          lines — correct density adaptation.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good luminance contrast; line styles
-          and markers provide additional distinguishability
+        comment: Imprint palette (CVD-safe) plus redundant marker-shape and dash-style
+          encoding beyond color.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas; generous margins all around; legend
-          well-positioned; balanced whitespace
+        comment: Exact 3200x1800 canvas, pinned margins, no clipped or overflowing
+          elements.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Month''; Y-axis: ''Sales (Units)'' with units; title format
-          correct'
+        comment: '''Month'' and ''Sales (Units)'' are descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; subsequent positions follow Okabe-Ito order
-          (#D55E00, #0072B2, #CC79A7); backgrounds #FAF8F1 (light) and #1A1A17 (dark);
-          text colors theme-adaptive in both renders'
+        comment: 'First series #009E73, canonical order for series 2-4, correct theme-adaptive
+          backgrounds, identical data colors across themes.'
     design_excellence:
       score: 14
       max: 20
@@ -105,24 +120,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful use of Okabe-Ito palette with intentional line style variety
-          (solid, dashed, dotted) and marker diversity (circle, square, diamond, triangle);
-          clearly above defaults with professional color harmony
+        comment: Custom palette, per-series marker+dash pairing, direct end-labels
+          — well above generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid styling, refined legend with border frame, generous whitespace
-          and margins; good level of customization
+        comment: Spines implicitly L-shaped, generous whitespace, subtle grid opacity
+          — but both-axis grid (vertical gridlines) deviates from the line-chart Y-axis-only
+          grid guideline, adding avoidable clutter.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Data demonstrates diverging product trends - Electronics rising,
-          Clothing falling, Home & Garden rising, Sports stable; visual hierarchy
-          through color contrast guides viewer to main insights
+        comment: Clear focal point on Electronics via color prominence, end-labels,
+          and callout — but the callout's '52%' figure is computed from December while
+          the arrow points at September, an internal inconsistency that undercuts
+          the story.
     spec_compliance:
       score: 15
       max: 15
@@ -132,27 +148,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-line comparison plot with all subtypes present
+        comment: Correct multi-line comparison chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Four product series, distinct colors and styles, legend, markers
-          - all features present
+        comment: Distinct colors, clear legend, varying line styles, markers all present
+          per spec notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: months (sequential), Y: sales (numeric); axes show all data properly'
+        comment: X = shared months, Y = sales values, all data visible within the
+          axis range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-multi · plotly · anyplot.ai''; legend labels correct
-          for all series'
+        comment: Title exactly 'line-multi · python · plotly · anyplot.ai'; legend
+          labels match series names.
     data_quality:
       score: 15
       max: 15
@@ -162,22 +179,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of multi-line plots: multiple series with different
-          trends, correlations, and divergences'
+        comment: 4 series (within 2-6 recommended), markers + line styles + end labels
+          showcase the plot type fully.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product sales scenario is real, neutral, and comprehensible - plausible
-          business context
+        comment: Plausible, neutral monthly product-category sales in units.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values (50-250 units) reasonable; 12-month timeframe realistic;
-          proportions sensible
+        comment: Values (60-240 units) are sensible for the stated domain.
     code_quality:
       score: 10
       max: 10
@@ -187,33 +202,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save; no functions or classes'
+        comment: No functions/classes, flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; fully reproducible
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, plotly'
+        comment: Only os, numpy, plotly.graph_objects, all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake UI or over-engineering
+        comment: No fake UI, real plotly interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: write_image/write_html with plot-{THEME} naming, current API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -221,23 +236,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Excellent use of go.Figure(), go.Scatter(), add_trace(), update_layout();
-          proper parameter application; follows plotly conventions
+        comment: go.Figure + add_trace loop is the right idiomatic choice for per-series
+          marker/dash control.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
         passed: true
-        comment: Uses hovermode='x unified' and HTML export with CDN; standard plotly
-          features but not exceptionally distinctive
+        comment: hovermode='x unified', paper-coordinate end-of-line annotations,
+          and a data-driven callout are distinctive plotly-specific touches.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
-  - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - cumulative-sum
-  styling: []
+  styling:
+  - publication-ready
