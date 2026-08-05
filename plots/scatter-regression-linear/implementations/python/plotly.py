@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-06
+Library: plotly 6.9.0 | Python 3.13.12
+Quality: 94/100 | Updated: 2026-08-05
 """
 
 import os
@@ -10,16 +10,17 @@ import numpy as np
 import plotly.graph_objects as go
 
 
-# Theme tokens
+# Theme tokens (Imprint palette — prompts/default-style-guide.md "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+FONT_FAMILY = "Arial, Helvetica, sans-serif"
 
-BRAND = "#009E73"
-ACCENT = "#C475FD"
+BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
+ACCENT = "#C475FD"  # Imprint palette position 2
 
 # Data - study hours vs exam scores
 np.random.seed(42)
@@ -66,7 +67,7 @@ fig.add_trace(
         y=np.concatenate([ci_upper, ci_lower[::-1]]),
         fill="toself",
         fillcolor="rgba(0, 158, 115, 0.15)",
-        line=dict(color="rgba(0,0,0,0)"),
+        line=dict(color="rgba(0, 158, 115, 0.35)", width=1),
         hoverinfo="skip",
         name="95% CI",
         showlegend=True,
@@ -79,7 +80,7 @@ fig.add_trace(
         x=study_hours,
         y=exam_scores,
         mode="markers",
-        marker=dict(size=12, color=BRAND, opacity=0.65),
+        marker=dict(size=10, color=BRAND, opacity=0.65, line=dict(width=0.5, color=PAGE_BG)),
         name="Data points",
         hovertemplate="Study Hours: %{x:.1f}<br>Exam Score: %{y:.1f}<extra></extra>",
     )
@@ -91,7 +92,7 @@ fig.add_trace(
         x=x_line,
         y=y_line,
         mode="lines",
-        line=dict(color=ACCENT, width=4),
+        line=dict(color=ACCENT, width=3),
         name=f"Linear Regression (R² = {r_squared:.3f})",
         hoverinfo="skip",
     )
@@ -106,36 +107,49 @@ fig.add_annotation(
     yref="paper",
     text=f"{equation}<br>R² = {r_squared:.3f}",
     showarrow=False,
-    font=dict(size=18, color=INK),
+    font=dict(size=12, color=INK),
     align="right",
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
     borderwidth=1,
-    borderpad=12,
+    borderpad=8,
 )
 
 # Layout
+title_text = "scatter-regression-linear · python · plotly · anyplot.ai"
 fig.update_layout(
-    title=dict(
-        text="scatter-regression-linear · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"
-    ),
+    autosize=False,
+    font=dict(family=FONT_FAMILY, color=INK),
+    title=dict(text=title_text, font=dict(size=16, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(
-        title=dict(text="Study Hours per Day", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
+        title=dict(text="Study Hours per Day", font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
         gridcolor=GRID,
         showgrid=True,
         zeroline=False,
         linecolor=INK_SOFT,
         linewidth=1,
+        showspikes=True,
+        spikemode="across",
+        spikesnap="cursor",
+        spikedash="dot",
+        spikecolor=INK_SOFT,
+        spikethickness=1,
     ),
     yaxis=dict(
-        title=dict(text="Exam Score (%)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
+        title=dict(text="Exam Score (%)", font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
         gridcolor=GRID,
         showgrid=True,
         zeroline=False,
         linecolor=INK_SOFT,
         linewidth=1,
+        showspikes=True,
+        spikemode="across",
+        spikesnap="cursor",
+        spikedash="dot",
+        spikecolor=INK_SOFT,
+        spikethickness=1,
     ),
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
@@ -144,15 +158,15 @@ fig.update_layout(
         y=0.98,
         xanchor="left",
         yanchor="top",
-        font=dict(size=16, color=INK_SOFT),
+        font=dict(size=10, color=INK_SOFT),
         bgcolor=ELEVATED_BG,
         bordercolor=INK_SOFT,
         borderwidth=1,
     ),
-    margin=dict(l=80, r=60, t=100, b=80),
+    margin=dict(l=80, r=40, t=80, b=60),
     hovermode="closest",
 )
 
-# Save as PNG and HTML
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Save as PNG and HTML — hard target 3200x1800 (see prompts/library/plotly.md "Canvas")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
