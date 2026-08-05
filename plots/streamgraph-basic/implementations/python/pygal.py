@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 streamgraph-basic: Basic Stream Graph
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-05
@@ -128,6 +128,14 @@ custom_style = Style(
 )
 
 # Chart
+# The centered baseline has no absolute meaning (it's an invisible offset,
+# not a real per-genre value), so per streamgraph convention the y-axis
+# ticks/gridlines are hidden entirely (show_y_labels=False) rather than
+# showing numbers a viewer could misread as actual streaming hours.
+# pygal always renders a solid, non-hideable "major line" at the position-0
+# x tick regardless of show_x_guides, which left a stray vertical line at
+# the first month; the inline CSS override below removes it for a
+# chrome-free streamgraph look.
 chart = pygal.StackedLine(
     width=3200,
     height=1800,
@@ -137,7 +145,8 @@ chart = pygal.StackedLine(
     style=custom_style,
     fill=True,
     show_dots=False,
-    show_y_guides=True,
+    show_y_guides=False,
+    show_y_labels=False,
     show_x_guides=False,
     legend_at_bottom=True,
     legend_at_bottom_columns=len(genres) + 1,
@@ -150,6 +159,7 @@ chart = pygal.StackedLine(
     show_minor_x_labels=False,
     x_label_rotation=45,
     range=(-y_range, y_range),
+    css=("file://style.css", "file://graph.css", "inline:.axis.x .line { opacity: 0; }"),
 )
 
 chart.x_labels = month_labels
