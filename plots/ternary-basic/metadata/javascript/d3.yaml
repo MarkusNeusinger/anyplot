@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: ternary-basic
 created: '2026-08-04T15:21:12Z'
-updated: '2026-08-05T21:38:41Z'
+updated: '2026-08-05T21:47:22Z'
 generated_by: claude-sonnet
 workflow_run: 30922911394
 issue: 1001
@@ -12,105 +12,92 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/d3/plot-dark.html
-quality_score: 0
+quality_score: 92
 review:
   strengths:
-  - Correct barycentric-coordinate ternary geometry with a proper three-family 20%
-    grid, tick marks, and tick labels along all three edges, all aligned
-  - Marker radius scales with each sample's dominant-component purity, giving the
-    plot a genuine visual-hierarchy focal point rather than uniform dots
-  - Wide compositional data spread (raw floor lowered to 0.02) gives good feature
-    coverage from near-vertex, high-purity samples to balanced mid-triangle mixtures,
-    in a realistic, neutral soil-science (clay/sand/silt) scenario summing to exactly
-    100%
-  - Vertex tick-label doubling from the prior review was correctly deduped, and vertex
-    labels now correctly carry "(%)" units
-  - Clean idiomatic D3 data-join pattern for grid lines, ticks, labels, and points;
-    deterministic seeded LCG; correct Imprint palette/theme-adaptive chrome in both
-    renders
+  - Correct barycentric-to-pixel transform with three grid-line families and edge
+    tick marks at 20% intervals, matching the spec's 'regular interval gridlines'
+    and 'tick marks along each edge' requirements
+  - Marker radius encodes compositional purity (dominant component share), giving
+    the scatter a meaningful visual hierarchy without added chartjunk
+  - Thoughtful start/end text-anchor logic on the left/right vertex labels prevents
+    them from clipping at the canvas edges
+  - 'Fully theme-adaptive chrome — brand green #009E73 is identical and clearly legible
+    on both the light (#FAF8F1) and dark (#1A1A17) surfaces'
+  - Deterministic LCG-seeded data generation and idiomatic D3 `.data().join()` usage
+    throughout (grid lines, tick labels, vertex labels, sample points)
   weaknesses:
-  - 'AR-09 EDGE CLIPPING (unresolved from prior review): the "Sand (%)" vertex label
-    is still clipped at the left canvas border in BOTH plot-light.png and plot-dark.png
-    -- the leading curve of the "S" is chopped off flat at x=0, missing pixels for
-    good. This is the exact same defect flagged in the previous review; the last fix
-    commit addressed the Attempt-1 feedback (tick dedup, "(%)" units, data-range widening,
-    purity-based sizing) but did not touch the vertex-label positioning that causes
-    the clipping.'
-  - 'Root cause: the label is positioned with outward(left, 78) and text-anchor="middle".
-    "Sand (%)" is the widest of the three vertex labels (wide a/n/d glyphs vs. the
-    narrower glyphs in "Clay (%)"/"Silt (%)"), so its horizontally-centered left edge
-    lands at a negative x coordinate before the 2x screenshot scale, pushing part
-    of the "S" off the 1200px CSS mount. Fix: switch the left vertex label to text-anchor="start"
-    (and the right vertex label to text-anchor="end"), or increase margin.left/margin.right
-    enough to clear the widest label at its outward-push distance.'
-  - Considerable unused whitespace remains on the left/right of the square canvas
-    outside the vertex labels; worth using more of the available area once the clipping
-    fix (which likely needs larger margins anyway) is in place.
+  - Single accent color and uniform marker shape keep the design at 'strong' rather
+    than showcase-level — a secondary cue (e.g. subtle alpha/size gradient tied to
+    purity, or a couple of direct sample-group labels) would push the data storytelling
+    further
+  - No sample lands above ~65% clay, so coverage leans toward sand/silt-dominant mixtures
+    — a sample or two closer to the clay apex would balance feature coverage across
+    all three vertices
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1.
-      Chrome: Bold dark title fully visible at top. Triangle border + 20% grid subtle and correct. Tick labels (10-100) readable on all three edges, no doubled vertex ticks. "Clay (%)" and "Silt (%)" vertex labels fully clear of canvas edges. "Sand (%)" vertex label (bottom-left) is CLIPPED: leading curve of the "S" cut off flat at x=0, confirmed via 3x pixel-zoomed crop of the (0-300, 2100-2300) region -- missing pixels, not a tight margin.
-      Data: 28 green (#009E73) circles, radius scaled by compositional purity, clearly visible against background.
-      Legibility verdict: FAIL (Sand (%) label clipped at left canvas edge -- AR-09)
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "ternary-basic · javascript · d3 · anyplot.ai" centered at top in dark bold text; vertex labels "Clay (%)" (top), "Sand (%)" (bottom-left), "Silt (%)" (bottom-right) in bold dark ink; tick labels (0/20/40/60/80/100) along each edge in a softer dark gray; triangular border and gridlines in subtle gray. All chrome text is clearly readable against the light background.
+      Data: 28 circular markers in brand green (#009E73), radius scaled by compositional purity, with a subtle pale stroke for edge definition against overlapping points. Points span a broad range of clay/sand/silt mixtures, concentrated toward sand- and silt-dominant compositions with a few near-vertex and mid-triangle samples.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17.
-      Chrome: Title, grid, triangle border, and tick labels correctly flip to light ink tokens, fully legible, no dark-on-dark failures.
-      Data: Identical colors/positions/sizes to light render (#009E73), only marker stroke flips to match page background.
-      Same "Sand (%)" clipping defect reproduces identically in the equivalent pixel crop -- confirms this is a layout-math bug, not a per-theme rendering issue.
-      Legibility verdict: FAIL (Sand (%) label clipped at left canvas edge -- AR-09)
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and vertex labels now rendered in light/off-white text, tick labels in a lighter soft gray, triangular border and gridlines in a light, low-opacity gray — all fully legible against the dark surface, with no dark-on-dark text anywhere.
+      Data: Markers are identical #009E73 green to the light render — only the chrome (background, text, grid) flipped, confirming palette-token compliance.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 8
         max: 8
-        passed: false
-        comment: Explicit sizes, readable in both themes, but Sand (%) label's leading
-          S is physically clipped in both renders
+        passed: true
+        comment: All font sizes explicitly set (14px ticks, 20px vertex labels, 22px
+          title); readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Vertex tick-label dedup from the prior fix holds; no doubled labels
-          observed
+        comment: No text overlap; lv=0 duplicate-label case deliberately skipped
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Purity-scaled markers clearly visible, well-sized for the sparse
-          28-point dataset
+        comment: 28 sparse points with prominent 7-14px radius markers, purity-scaled
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe single-hue data
+        comment: Single-series green with pale stroke for definition; no CVD risk
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: 'AR-09 hard rule: clipped vertex label forces this to 0'
+        passed: true
+        comment: Triangle occupies ~60-70% of canvas, balanced top/bottom margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels correctly carry (%) units now
+        comment: 'Vertex labels descriptive with units: Clay/Sand/Silt (%)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 identical both themes; correct FAF8F1/1A1A17 backgrounds'
+        comment: 'First series #009E73, identical across themes, backgrounds and chrome
+          theme-correct'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -118,21 +105,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom triangle geometry + purity-scaled markers, above a bare default
-          but short of publication-ready polish
+        comment: Clean, intentional, but single accent color keeps it below showcase-level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, clean chrome; held back by the clipping and moderate
-          canvas fill
+        comment: Subtle gridlines, generous whitespace, custom triangular frame in
+          place of spines
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Purity-scaled marker size creates a real visual-hierarchy focal point
+        comment: Purity-scaled marker size creates a real focal point, though no explicit
+          narrative beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -142,48 +129,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary triangle
+        comment: Correct ternary/barycentric plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 20% grid, vertex labels, edge tick marks all present
+        comment: Gridlines at regular intervals, labeled vertices, edge tick marks,
+          distinct markers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct barycentric coordinates
+        comment: Barycentric transform correctly maps clay/sand/silt to all three
+          axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; no legend needed for single series
+        comment: Title format exact; single-series legend correctly omitted
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Widened data range (0.02 floor) now shows near-vertex/high-purity
-          samples alongside balanced mixtures
+        comment: Samples span near-vertex to balanced mid-triangle mixtures across
+          sand/silt/clay
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral soil-texture (clay/sand/silt) scenario
+        comment: Soil-texture clay/sand/silt scenario — neutral, comprehensible, real-world
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Every triplet normalized to sum to exactly 100%
+        comment: Each triplet normalized to sum to 100%, plausible soil-science proportions
     code_quality:
       score: 10
       max: 10
@@ -193,56 +182,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes, flat data/plot flow
+        comment: Flat top-to-bottom script; helper functions are minimal geometry
+          utilities, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Fixed-seed LCG (seed=42123)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only d3 global used
+        comment: Only the d3 global, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality
+        comment: Appropriate complexity for ternary geometry, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract usage
+        comment: Single svg sized from ANYPLOT_SIZE, correct mount-node contract,
+          no animation
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Clean selectAll().data().join() throughout
+        comment: Consistent .data().join() pattern throughout; correct token/mount
+          usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Custom barycentric math is D3-friendly but not D3-exclusive
-  verdict: REJECTED
+        score: 3
+        max: 3
+        passed: true
+        comment: Hand-rolled barycentric transform, triangular grid families, and
+          radial outward-label placement — genuinely D3-specific low-level work
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   patterns:
   - data-generation
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting

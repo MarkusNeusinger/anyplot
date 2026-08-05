@@ -1,7 +1,7 @@
 // anyplot.ai
 // ternary-basic: Basic Ternary Plot
 // Library: d3 7.9.0 | JavaScript 22.23.1
-// Quality: 0/100 | Updated: 2026-08-05
+// Quality: 92/100 | Updated: 2026-08-05
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
