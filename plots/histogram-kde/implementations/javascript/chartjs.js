@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-kde: Histogram with KDE Overlay
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-08-05
+// Library: chartjs 4.4.7 | JavaScript 22.23.1
+// Quality: 79/100 | Created: 2026-08-05
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
