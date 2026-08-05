@@ -15,6 +15,9 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 LIGHT_TEXT  <- "#FFFDF6"  # near-white overlay text for saturated red/blue cells
+# Light theme's near-white midpoint keeps mid-magnitude cells pale, so white text
+# needs a much higher |value| threshold there than on the dark theme's near-black midpoint.
+TEXT_THRESHOLD <- if (THEME == "light") 0.68 else 0.3
 
 # --- Data: correlation matrix of car performance metrics ----------------
 metrics <- mtcars %>%
@@ -34,7 +37,7 @@ corr_df <- as.data.frame(as.table(corr_matrix)) %>%
   rename(x = Var1, y = Var2, value = Freq) %>%
   mutate(
     label      = sprintf("%.2f", value),
-    text_color = ifelse(abs(value) > 0.35, LIGHT_TEXT, INK)
+    text_color = ifelse(abs(value) > TEXT_THRESHOLD, LIGHT_TEXT, INK)
   )
 
 # --- Plot -----------------------------------------------------------------
@@ -60,7 +63,7 @@ p <- ggplot(corr_df, aes(x = x, y = y, fill = value)) +
     axis.text.x       = element_text(color = INK_SOFT, size = 8, angle = 30, hjust = 0),
     axis.text.y       = element_text(color = INK_SOFT, size = 8),
     axis.title        = element_text(color = INK, size = 10),
-    plot.title        = element_text(color = INK, size = 11, hjust = 0.5),
+    plot.title        = element_text(color = INK, size = 10, hjust = 0.5),
     legend.background = element_rect(fill = PAGE_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.title      = element_text(color = INK, size = 10),
