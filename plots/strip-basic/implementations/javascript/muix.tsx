@@ -1,19 +1,14 @@
 // anyplot.ai
 // strip-basic: Basic Strip Plot
 // Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 84/100 | Created: 2026-08-05
-//# anyplot-orientation: landscape
-// anyplot.ai
-// strip-basic: Basic Strip Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-05
+// Quality: 84/100 | Updated: 2026-08-05
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -45,23 +40,59 @@ const GROUPS = [
   { name: "Drug C", mean: 11, std: 5, n: 42 },
 ];
 
-const JITTER_WIDTH = 0.18; // moderate horizontal spread within each category
+const JITTER_WIDTH = 0.27; // wide spread within each category to reduce point-on-point overlap
 const POINT_ALPHA = 0.62; // frequent overlap at n=42 per group
+const MEAN_LINE_HALF_WIDTH = 0.34; // spans slightly beyond the jittered point cloud
 
-const series = GROUPS.map((group, i) => ({
+// Each group's own observations drive its mean line, so the marker reflects
+// the actual sampled data rather than the underlying distribution parameter.
+const GROUP_DATA = GROUPS.map((group, i) => {
+  const points = Array.from({ length: group.n }, (_, j) => ({
+    x: i + (rng() * 2 - 1) * JITTER_WIDTH,
+    y: Math.max(2, group.mean + group.std * gaussian()),
+    id: `${group.name}-${j}`,
+  }));
+  const observedMean = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+  return { ...group, points, observedMean };
+});
+
+const series = GROUP_DATA.map((group, i) => ({
   type: "scatter",
   id: group.name,
   label: group.name,
   color: hexToRgba(t.palette[i], POINT_ALPHA),
-  markerSize: 11,
-  data: Array.from({ length: group.n }, (_, j) => ({
-    x: i + (rng() * 2 - 1) * JITTER_WIDTH,
-    y: Math.max(2, group.mean + group.std * gaussian()),
-    id: `${group.name}-${j}`,
-  })),
+  markerSize: 9,
+  data: group.points,
 }));
 
-const TITLE = "strip-basic · javascript · muix · anyplot.ai";
+// Short, bold underline per category at its observed mean — reinforces the
+// Control-to-Drug-C decreasing-effect story the spec asks to highlight.
+function MeanLines() {
+  const xScale = useXScale("group");
+  const yScale = useYScale("time");
+  return (
+    <g>
+      {GROUP_DATA.map((group, i) => {
+        const y = yScale(group.observedMean);
+        return (
+          <line
+            key={group.name}
+            x1={xScale(i - MEAN_LINE_HALF_WIDTH)}
+            x2={xScale(i + MEAN_LINE_HALF_WIDTH)}
+            y1={y}
+            y2={y}
+            stroke={t.palette[i]}
+            strokeWidth={3}
+            strokeLinecap="round"
+          />
+        );
+      })}
+    </g>
+  );
+}
+
+const TITLE = "Time to Symptom Relief · strip-basic · javascript · muix · anyplot.ai";
+const TITLE_FONT_SIZE = Math.round(22 * Math.min(1, 67 / TITLE.length)); // scale down past the 67-char baseline
 
 export default function Chart() {
   return (
@@ -95,6 +126,7 @@ export default function Chart() {
     >
       <ChartsGrid horizontal />
       <ScatterPlot skipAnimation />
+      <MeanLines />
       <ChartsXAxis
         axisId="group"
         tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
@@ -105,7 +137,7 @@ export default function Chart() {
         tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
         labelStyle={{ fontSize: 16, fill: t.ink }}
       />
-      <text x={width / 2} y={30} textAnchor="middle" fontSize={22} fontWeight={600} fill={t.ink}>
+      <text x={width / 2} y={30} textAnchor="middle" fontSize={TITLE_FONT_SIZE} fontWeight={600} fill={t.ink}>
         {TITLE}
       </text>
     </ChartContainer>
