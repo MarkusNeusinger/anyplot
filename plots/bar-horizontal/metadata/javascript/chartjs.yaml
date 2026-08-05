@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: bar-horizontal
 created: '2026-08-05T17:21:36Z'
-updated: '2026-08-05T17:38:00Z'
+updated: '2026-08-05T17:51:34Z'
 generated_by: claude-sonnet
 workflow_run: 31029323458
 issue: 1946
@@ -12,48 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/chartjs/plot-dark.html
-quality_score: 70
+quality_score: 90
 review:
   strengths:
+  - 'Both previously-broken features (end-of-bar value labels via the afterDatasetsDraw
+    plugin, and the muted-vs-solid top-bar highlight) now render correctly, verified
+    by direct pixel sampling: the top bar is solid #009E73 (0,158,115) and all other
+    bars are the alpha=0.55 blend over the theme background (113,199,172 on light,
+    11,98,73 on dark) in both renders'
+  - Value labels ('941M', '486M', ... '85M') are crisp, correctly positioned at each
+    bar end, fully within the canvas with comfortable margin (no AR-09 clipping),
+    and legible in both themes
   - 'Correct, idiomatic indexAxis: ''y'' horizontal-bar setup with tuned barPercentage/categoryPercentage
     for clean, evenly spaced bars'
   - 'Both renders are fully theme-correct: warm off-white/near-black backgrounds,
-    all chrome legible, identical #009E73 brand-green data color across themes'
-  - Bars sorted descending by value, giving an immediate ranking read (Mandarin Chinese
-    to Vietnamese), matching the spec's recommendation
-  - Realistic, neutral, reasonably accurate native-speaker-count data across 10 languages
+    all chrome legible, identical data colors across themes (only chrome flips)'
+  - Bars sorted descending by value plus the color highlight on the top bar creates
+    a clear, immediately readable ranking focal point
+  - Realistic, neutral, factually plausible native-speaker-count data across 10 languages
     with a sensible 0-1000 axis scale
-  - Title format, axis labeling, and single-series legend omission all correctly follow
+  - Title format, axis labeling, and single-series legend omission correctly follow
     spec/style-guide conventions
   weaknesses:
-  - 'Broken value-label plugin: the custom valueLabelsPlugin (afterDatasetsDraw hook)
-    is meant to draw ''{value}M'' text at the end of every bar, but direct pixel-inspection
-    of both plot-light.png and plot-dark.png shows no text glyphs anywhere near any
-    bar end (checked e.g. source-px ~(2966,176) for the Mandarin Chinese bar tip,
-    and the Spanish/Portuguese bar ends) - only background/bar-edge antialiasing pixels
-    are present. The plugin silently fails to render in the browser harness.'
-  - 'Broken bar-highlight coloring: barColors intends bar 0 (Mandarin Chinese) to
-    render solid #009E73 and bars 1-9 to render a muted hexToRgba(''#009E73'', 0.55)
-    overlay, but pixel-sampling every bar''s fill color returns the identical solid
-    RGB (0, 158, 115) for all 10 bars - the alpha-blended color never appears anywhere.
-    There is zero visual differentiation between the ''highlighted'' bar and the rest.'
-  - Because both newly-added features are non-functional, the rendered chart is visually
-    indistinguishable from the Attempt 1 version that already scored 84 - this repair
-    added code complexity without any corresponding visual improvement.
-  - Design still relies solely on sort order for hierarchy; no other visual-hierarchy
-    device compensates for the non-functional highlight.
+  - Design still relies on a single accent color (highlighted top bar) plus value
+    labels for hierarchy — no additional refinement like removed spines beyond the
+    default L-shape, or custom typography, that would push this into publication-ready
+    territory
+  - The custom afterDatasetsDraw plugin is a real Chart.js-specific technique, but
+    the underlying visual result (a bar chart with end labels and one highlighted
+    bar) is a pattern replicable in most other bar-chart libraries with a data-label
+    option, capping Library Mastery distinctiveness
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1. Not pure white.
-      Chrome: Title "World's Most Spoken Languages · bar-horizontal · javascript · chartjs · anyplot.ai" and X-axis title "Native Speakers (millions)" in dark ink; Y-axis category names and X-axis tick labels in medium-grey ink. All readable.
-      Data: All 10 bars are solid #009E73 (pixel-sampled at multiple bars: RGB (0,158,115) identical across every bar). Sorted descending Mandarin Chinese (~941M) to Vietnamese (~85M). No value-label text found near any bar end despite code intending to draw it via a custom plugin. No muted/alpha-blended color found on bars 1-9 despite code intending it.
-      Legibility verdict: PASS (all chrome text legible; the missing plugin output is a functional/code bug, not a legibility issue)
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "World's Most Spoken Languages · bar-horizontal · javascript · chartjs · anyplot.ai" and the X-axis title "Native Speakers (millions)" render in dark ink, fully legible. Y-axis category names (10 languages) and X-axis tick labels are medium-grey ink, crisp against the light background. Subtle vertical gridlines only (Y-axis grid hidden).
+      Data: Top bar (Mandarin Chinese, 941M) is solid #009E73 brand green (pixel-sampled RGB (0,158,115)). All other 9 bars are a muted alpha-blended version of the same green (pixel-sampled RGB (113,199,172), matching a 0.55-alpha blend of #009E73 over the #FAF8F1 background) — confirming the intended highlight-vs-muted differentiation now actually renders. Bold value labels ("941M", "486M", ... "85M") sit at the end of every bar, fully inside the canvas with comfortable margin from the right edge (checked crop at source-px x=2700-3200: "941M" fully visible, not clipped).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17. Not pure black.
-      Chrome: Title and axis title in light ink, tick/category labels in lighter grey-white. No dark-on-dark issues found.
-      Data: Identical #009E73 green as light render (only chrome flipped, correct). Same absence of value-label text and same absence of bar-color differentiation as the light render.
-      Legibility verdict: PASS (all chrome text legible; same plugin/color functional bug present)
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and axis title render in light ink, tick/category labels in lighter grey-white — no dark-on-dark issues anywhere.
+      Data: Top bar is the identical solid #009E73 (0,158,115) as the light render. Other bars are the same 0.55-alpha blend, now over the dark background (pixel-sampled RGB (11,98,73)) — data hue identity preserved, only chrome flipped as required. Value labels render in light/white text, fully legible and unclipped at the canvas edge.
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability check with no legibility failures, and both confirm the two features flagged as non-functional in Attempt 2 (end-of-bar value labels, top-bar highlight) are now genuinely rendering, verified via direct pixel sampling rather than visual impression alone.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -64,68 +66,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit sizes, readable in both themes, well-proportioned title
+        comment: All font sizes explicitly set (title 18px, ticks 14px, axis title
+          16px, value labels 13px), readable in both themes; relies on defaults for
+          weight nuance
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions
+        comment: No overlap between value labels, ticks, or bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized and spaced for 10 categories
+        comment: barPercentage/categoryPercentage tuned well for 10 categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, single-hue, no CVD issue
+        comment: Good contrast, CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins, nothing cut off
+        comment: Plot fills canvas well, balanced margins, right padding accommodates
+          value labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label descriptive with units (millions)
+        comment: Descriptive X-axis title with units (millions)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, theme-correct backgrounds and chrome in both
-          renders'
+        comment: 'First series #009E73 confirmed by pixel sampling, theme-correct
+          backgrounds in both renders'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured default; intended highlight differentiation does
-          not render
+        passed: true
+        comment: Thoughtful color highlight on the top bar plus value labels, clearly
+          above library defaults, but not yet publication-ready polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Hidden Y grid and right padding show modest refinement above baseline
+        passed: true
+        comment: Hidden Y-grid, tuned bar spacing, right-side padding show refinement
+          above baseline
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Sort order gives ranking focal point but intended highlight emphasis
-          is non-functional
+        passed: true
+        comment: Color contrast on the top bar plus explicit value labels and descending
+          sort create clear visual hierarchy guiding the reader
     spec_compliance:
       score: 15
       max: 15
@@ -135,20 +141,20 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct horizontal bar chart via indexAxis: ''y'''
+        comment: Correct horizontal bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent bar heights, sorted by value, single color, adequate spacing
-          all present
+        comment: Consistent bar heights, sorted by value, single color with highlight,
+          value labels at bar end — all spec notes addressed
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on Y, value on X, all data visible
+        comment: Category on Y-axis, value on X-axis, all 10 categories visible
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -165,21 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide range of values (85-941M) across 10 categories shows clear variation
+        comment: Full range from largest (941M) to smallest (85M), realistic spread
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world topic (native speaker counts by language)
+        comment: Neutral, real-world language demographics scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values align with known real-world native-speaker demographics
+        comment: Values align with real-world native-speaker estimates
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -187,36 +193,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports/tokens -> Data -> Mount -> Plot flow, no unnecessary classes
+        comment: Linear data -> mount -> plugin -> chart structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data arrays
+        comment: Hard-coded deterministic data arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses global Chart/tokens only
+        comment: No imports; uses only harness-provided globals
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: valueLabelsPlugin and alpha-blended barColors contain comments describing
-          behavior that does not occur in either rendered PNG - non-functional feature
+        passed: true
+        comment: Both custom features (value-label plugin, alpha-blended highlight)
+          now verified functional via pixel sampling — no longer fake/non-functional
           code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current Chart.js
-          v4 API
+        comment: 'Correct new Chart() mount-node contract, animation: false, afterRender
+          ready signal'
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -225,15 +231,15 @@ review:
         max: 5
         passed: true
         comment: 'indexAxis: ''y'' plus tuned barPercentage/categoryPercentage is
-          correct idiomatic usage'
+          correct idiomatic Chart.js usage'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Attempted custom plugin technique does not function, so no credit
-          beyond generic bar usage
-  verdict: REJECTED
+        passed: true
+        comment: Custom afterDatasetsDraw/afterRender plugin hooks are a genuine Chart.js-specific
+          technique, now confirmed working
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -243,4 +249,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - minimal-chrome
