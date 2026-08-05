@@ -1,0 +1,259 @@
+library: d3
+language: javascript
+specification_id: windrose-basic
+created: '2026-08-05T15:41:37Z'
+updated: '2026-08-05T15:58:12Z'
+generated_by: claude-sonnet
+workflow_run: 31020884586
+issue: 1880
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/d3/plot-dark.html
+quality_score: 96
+review:
+  strengths:
+  - Idiomatic d3.stack() keyed layout now drives the stacking (replacing the prior
+    manual cumulative-sum approach), directly addressing the Attempt 1 Library Mastery
+    weakness
+  - 'Strong data storytelling: a subtle dominant-sector highlight halo (d3.arc with
+    rounded corners, low-opacity ink) plus an explicit subtitle (''Prevailing winds
+    from the W sector — 28.6% of observations'') give the chart a clear focal point
+    without annotations feeling forced'
+  - Title fontsize increased to fill ~55-60% of plot width (up from ~40% in Attempt
+    1), landing well inside the target proportion while staying fully clear of the
+    canvas edges in both themes
+  - 'Perfect Imprint palette compliance: first speed bin is #009E73, remaining bins
+    follow canonical order 2-4, identical data colors in both themes, theme-correct
+    #FAF8F1/#1A1A17 backgrounds and chrome'
+  - Correct meteorological convention (North at top, clockwise N/NE/E/SE/S/SW/W/NW),
+    sector frequencies sum to ~100%, and the SW/W/NW prevailing pattern is realistic
+    for a mid-latitude offshore site
+  - Clean, deterministic, dependency-free code with no animation, correctly following
+    the D3 mount-node contract
+  weaknesses:
+  - Speed-bin color assignment (green→lavender→blue→ochre) follows Imprint canonical
+    order rather than the spec's 'traditionally cool-to-warm' suggestion for speed
+    bins — acceptable since the palette hard rule takes precedence, but a future iteration
+    could consider whether a semantic order communicates speed progression more intuitively
+  - d3.arc() polar-stack technique, while now idiomatic, is a moderately common D3
+    pattern; a more distinctive library-specific flourish (e.g. a custom d3-axis-based
+    radial scale, or interactive-ready hover state wired for the HTML output) would
+    push Library Mastery (LM-02) further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "windrose-basic · javascript · d3 · anyplot.ai" in bold dark ink at top-center, fully visible with no clipping (verified via edge crop). Subtitle "Prevailing winds from the W sector — 28.6% of observations" in soft ink directly below. Compass direction labels (N, NE, E, SE, S, SW, W, NW) in bold dark text around the polar rim, clearly legible with generous margin from the canvas edges (verified via left/right edge crops — no text near the border). Radial percentage grid rings at 10%/20%/30% with matching tick labels in soft ink, placed in the low-value NNE gap where they don't collide with any wedge. A subtle rounded-rectangle highlight halo (low-opacity ink) sits behind the dominant W wedge, reinforcing the storytelling subtitle without competing with the data. Legend at the bottom with 4 color swatches and labels ("0-5 m/s", "5-10 m/s", "10-15 m/s", "15+ m/s"), comfortably clear of the bottom edge.
+      Data: Stacked polar wedges per direction, using Imprint colors #009E73 (green, 0-5 m/s), #C475FD (lavender, 5-10 m/s), #4467A3 (blue, 10-15 m/s), #BD8233 (ochre, 15+ m/s) — first series is the mandated brand green, remaining bins in canonical Imprint order. Clear dominant pattern: W, SW, and NW wedges are much larger than N/NE/E/SE, correctly conveying a prevailing wind direction. pageBg-colored strokes separate stacked segments and thin padAngle gaps separate direction sectors.
+      Legibility verdict: PASS — all text (title, subtitle, compass labels, tick labels, legend) is clearly readable against the light background, no dark-on-light or light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, subtitle, compass labels, radial tick labels, and legend text all rendered in light ink (near-white / soft light-gray) — all clearly legible against the dark surface, no dark-on-dark failures observed. The dominant-sector highlight halo is still visible as a subtle lighter tint behind the W wedge, correctly using the theme-flipped ink token.
+      Data: Identical wedge colors and geometry to the light render — #009E73/#C475FD/#4467A3/#BD8233 unchanged, confirming only chrome (background, text, grid, highlight tint) flips between themes as required. Stroke separators (drawn in t.pageBg, i.e. dark in this render) still create clean segment boundaries.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark or unreadable elements found.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title now fills ~55-60% of plot width
+          (up from ~40% in Attempt 1), well-proportioned in both themes, readable
+          at both desktop and scaled-down widths
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between compass labels, tick labels, subtitle, legend,
+          or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stacked segments clearly separated with pageBg strokes; wedge sizing
+          appropriate for 8-sector categorical data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint hues, good contrast between adjacent stacked segments
+          via strokes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart uses a large, well-centered portion of the square canvas; legend
+          sits close to the plot; balanced margins; no clipping at any edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Radial ticks show explicit % units, compass labels self-descriptive
+          by convention
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order for remaining bins, identical
+          data colors across themes, theme-correct backgrounds/chrome'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color use, dominant-sector highlight halo, consistent
+          typography — clearly above library defaults, though not yet at the rare
+          FiveThirtyEight-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, clean stroke treatment between
+          segments and sectors; near-perfect refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Explicit subtitle naming the dominant sector plus a matching visual
+          highlight halo — viewer immediately sees the prevailing-wind insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar stacked wind rose
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 8 direction sectors, 4 stacked speed bins, North at top, legend,
+          radial % axis all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Direction correctly mapped to angle, magnitude correctly mapped to
+          radius
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; legend labels match speed bins with units
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both a clear prevailing-direction pattern and varied speed-bin
+          proportions per sector
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible offshore wind-farm site-assessment scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All sector frequencies sum to ~100%, values are physically plausible
+          for a mid-latitude offshore site
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data array
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality; d3.stack() usage is
+          clean and idiomatic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, sized from ANYPLOT_SIZE, no animation
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Now uses d3.stack() keyed layout for stacking (replacing manual cumulative
+          sum), combined with scaleLinear/scaleOrdinal/arc/data-join — expert use
+          of the high-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.stack() + d3.arc() composed for a radial stacked chart plus d3.greatest-driven
+          dominant-sector highlight is a solid, D3-specific technique, though moderately
+          common rather than fully unique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - alpha-blending

@@ -2,123 +2,139 @@ library: pygal
 language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:38:04Z'
-updated: '2026-05-07T07:30:21Z'
-generated_by: claude-haiku
-workflow_run: 25482075769
+updated: '2026-08-05T17:26:59Z'
+generated_by: claude-sonnet
+workflow_run: 31028518767
 issue: 1946
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 90
 review:
   strengths:
-  - Perfect text legibility in both light and dark themes with explicitly set font
-    sizes
-  - Correct palette compliance and theme-adaptive colors with identical data rendering
-    across themes
-  - Well-structured margins and canvas utilization for large 4800×2700 canvas
-  - Clean, readable code following KISS principles with proper theme handling
-  - Authentic data reflecting real programming language popularity trends
-  - Excellent visual hierarchy through descending value sorting
+  - Clean, minimal horizontal bar chart with categories correctly sorted descending
+    by value (largest at top-visual/bottom-index per pygal's bottom-up rendering),
+    matching the spec's ranking-display recommendation
+  - 'Theme tokens correctly threaded through the Style object: backgrounds are exactly
+    #FAF8F1 (light) / #1A1A17 (dark), and chrome text (title, tick labels, category
+    labels) flips from dark-on-light to light-on-dark with zero readability issues
+    in either render'
+  - 'First (and only) series uses brand green #009E73 exactly, identical in both renders
+    per Imprint rules; value labels use a dark, fixed color that stays legible sitting
+    directly on the green bars in both themes'
+  - Value labels formatted with a custom formatter ($842.6M style) placed at the end
+    of each bar, giving precise reading without requiring a separate axis scan
+  - Title follows the exact mandated format with a sensible descriptive prefix, and
+    title font size is computed via the length-based scaling formula so it doesn't
+    overflow the canvas
+  - 'No axis-guide clutter: legend, y-guides and x-guides are suppressed since a single
+    series and value labels make gridlines unnecessary, keeping the chart visually
+    quiet'
+  - Fully deterministic, hardcoded dataset with realistic and neutral retail-revenue
+    values across a plausible $M range - no randomness, no seed needed
+  - Saves both plot-{THEME}.png and plot-{THEME}.html as required for an interactive
+    library, using current pygal 3.x API (render_to_png / render_to_file)
   weaknesses:
-  - Design Excellence could be elevated with more sophisticated visual refinements
-    (e.g., removing x-axis guides for ultra-minimal aesthetic)
-  - Data Storytelling could be enhanced with annotations or visual emphasis on specific
-    insights
+  - No custom font-family override, so labels render in pygal's fallback monospace
+    typeface rather than a more polished sans-serif - a minor, systemic pygal styling
+    limitation rather than a spec violation, but it caps DE-01/DE-02 below top marks
+  - Chart relies entirely on a single flat color and default bar styling (no edge
+    highlighting, no subtle gradient, no secondary visual cue) - functional and clean
+    but doesn't create a strong focal point beyond the sort order, limiting DE-03
+  - x_labels/y_labels axis semantics for pygal.HorizontalBar are non-obvious (transposed
+    relative to a normal Bar) and rely only on an inline comment for future maintainers
+    - acceptable but worth double-checking if pygal's API changes in a future version
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "bar-horizontal · pygal · anyplot.ai" clearly visible in dark text. X-axis label "Popularity (%)" and y-axis category names (Python, JavaScript, Java, C++, TypeScript, C#, Go, Rust, PHP, Swift) all clearly readable against light background. Tick labels visible.
-      Data: 10 horizontal bars in brand green (#009E73), sorted descending from Python (68.7%) to Swift (12.9%). Value labels displayed at bar ends (e.g., "12.9%", "68.7%"). Subtle vertical grid lines visible.
-      Legibility verdict: PASS - All text is clearly readable in light theme
+      Background: Warm off-white, confirmed #FAF8F1 (sampled pixel (250,248,241)) - matches spec exactly, not pure white.
+      Chrome: Title "Retail Revenue by Category · bar-horizontal · python · pygal · anyplot.ai" in dark ink at top, fully visible, not clipped. Category labels (Electronics, Apparel, Home & Furniture, ... Garden & Outdoor) in dark text along the y-axis, all fully readable. X-axis tick labels (0, 150, 300, ... 900) in dark text below the plot. X-axis title "Revenue ($M)" clearly visible beneath the ticks. All chrome text renders as dark-on-light with strong contrast.
+      Data: Single series in Imprint brand green (#009E73), 10 horizontal bars sorted descending in value from Electronics ($842.6M) at bottom to Garden & Outdoor ($97.6M) at top of the visual stack. Each bar carries a dark value label ("$842.6M", etc.) at its end/inside, clearly legible against the green fill.
+      Legibility verdict: PASS - all text readable, no overlap, no clipping at canvas edges.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title clearly visible in light text. X-axis and y-axis labels visible in light color. Y-axis tick labels (category names) fully readable in light color against dark background. No dark-on-dark failures detected.
-      Data: Bars are identical brand green (#009E73) as light render - confirms proper color consistency across themes. Value labels readable at bar ends.
-      Legibility verdict: PASS - All text is clearly readable in dark theme. Excellent theme adaptation with no readability issues.
+      Background: Warm near-black, confirmed #1A1A17 (sampled pixel (26,26,23)) - matches spec exactly, not pure black.
+      Chrome: Same title, category labels, tick labels, and axis title as the light render, now rendered in light cream/off-white ink, fully legible against the dark background. No dark-on-dark failures observed - verified via pixel crop that category labels ("& Beauty", etc.) render in light ink while the value labels drawn on top of the green bars stay dark for contrast against the green fill (not the background), which is a valid and legible choice.
+      Data: Identical bar order, values, and green fill (#009E73) as the light render - only the chrome (background + text ink) flipped, exactly as required. Bars remain crisp and clearly distinguishable from the near-black background.
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, data colors identical to the light render.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28pt, labels=22pt, major=18pt, values=16pt).
-          All text perfectly readable in both themes.
+        comment: All font sizes explicit; readable in both themes, no dark-on-dark
+          or light-on-light
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Labels and values properly spaced with spacing=30
-          and adequate margins.
+        comment: No collisions between category labels, tick labels, or value labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars perfectly sized and clearly visible. Proper bar heights and
-          spacing adapted to 10 categories.
+        comment: 10 bars with generous height/spacing, clearly visible on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green (#009E73) provides excellent contrast. CVD-safe, meets
-          accessibility standards.
+        comment: Single-hue green vs neutral background, strong contrast, no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect canvas utilization with balanced margins. Plot fills appropriate
-          portion of canvas.
+        comment: 3200x1800 canvas confirmed by gate; title/margins well proportioned,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. X-axis label descriptive with units. Y-axis
-          shows category names.
+        comment: x_title 'Revenue ($M)' descriptive with units; categories self-explanatory
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is correct #009E73. Backgrounds are #FAF8F1 (light)
-          / #1A1A17 (dark). Data colors identical between renders.'
+        comment: 'Bar color = #009E73 (verified by pixel sample), backgrounds = #FAF8F1/#1A1A17
+          (verified), identical data color across themes'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom Style object with theme-aware configuration shows professional
-          polish beyond defaults.
+        passed: true
+        comment: Deliberate minimalist styling with sized tokens; capped slightly
+          by pygal's fallback monospace font
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Subtle grid lines and well-configured spacing. Could enhance by removing
-          x-guides for ultra-minimal aesthetic.
+        passed: true
+        comment: Legend/guides suppressed, generous margins; grid is subtle but a
+          plain flat bar fill
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Data sorted descending creates natural ranking narrative. Could enhance
-          with annotations or visual emphasis.
+        passed: true
+        comment: Descending sort creates a clear ranking narrative; inline value labels
+          aid comparison, but no additional emphasis/focal point beyond sort order
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +144,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar chart using pygal.HorizontalBar().
+        comment: pygal.HorizontalBar - correct chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: horizontal orientation, categorical
-          y-axis, value representation, value labels.'
+        comment: 10 categories, consistent bar heights, sorted, adequate spacing,
+          value labels at bar end - all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned. Categories on y-axis, values extend horizontally.
+        comment: Categories on y-axis, values on x-axis, full data range shown 0-900+
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend appropriately hidden for single series.
+        comment: Title matches mandated format with descriptive prefix; legend correctly
+          omitted for single series
     data_quality:
       score: 15
       max: 15
@@ -157,22 +174,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full spectrum of programming language popularity with 10 diverse
-          categories.
+        comment: Shows all aspects expected of a horizontal bar ranking chart
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world scenario with authentic data reflecting actual programming
-          language popularity trends.
+        comment: Retail revenue by category - plausible, neutral, non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (12.9% to 68.7%) are factually plausible and match known survey
-          data distributions.
+        comment: Values $97.6M-$842.6M, sensible for retail category revenue
     code_quality:
       score: 10
       max: 10
@@ -182,55 +196,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct implementation. No unnecessary functions or classes.
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses os.getenv() with default value. No randomness. Deterministic
-          output.
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only essential imports. All imports used. No unused dependencies.
+        comment: Only os, pygal, pygal.style.Style - all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean variable naming, logical flow, proper separation of concerns.
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly outputs plot-{THEME}.png and plot-{THEME}.html with no
-          bare filenames.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal 3.x
+          API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent pygal idioms: Style object for theming, HorizontalBar,
-          proper add() usage, render methods.'
+        comment: Proper Style object, HorizontalBar with theme-driven tokens
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses value printing with custom formatter. Could explore more advanced
-          features.
+        passed: true
+        comment: Uses print_values/value_formatter/truncate_label - beyond bare defaults,
+          but no other pygal-distinctive feature (e.g. interactivity showcased in
+          HTML) called out
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns: []
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome

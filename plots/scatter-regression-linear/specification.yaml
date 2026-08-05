@@ -6,7 +6,7 @@ title: Scatter Plot with Linear Regression
 
 # Specification tracking
 created: 2025-12-24T21:21:30Z
-updated: 2026-05-06T22:22:58Z
+updated: 2026-08-05T12:59:02Z
 issue: 1821
 suggested: MarkusNeusinger
 
@@ -26,4 +26,4 @@ tags:
     - regression
     - confidence-interval
     - correlation
-    - trendline
+    - trend
