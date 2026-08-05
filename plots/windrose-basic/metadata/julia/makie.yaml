@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: windrose-basic
 created: '2026-08-05T15:56:06Z'
-updated: '2026-08-05T16:04:42Z'
+updated: '2026-08-05T16:23:55Z'
 generated_by: claude-sonnet
 workflow_run: 31020534107
 issue: 1880
@@ -12,89 +12,80 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - Correct polar stacked wind rose with proper north-up meteorological convention,
-    verified by checking the compass-to-screen angle mapping against the rendered
-    label positions
-  - 'Data is realistic: a prevailing SW wind (40% weight, Gaussian around 225°) blended
-    with a uniform background (60%) — pixel-level measurement of each sector''s wedge
-    radius confirms all 8 directions carry frequencies matching the expected statistical
-    distribution (e.g. SW ~23%, S/W ~17%, SE/NW ~10%, N/E ~7%, NE ~7%), so the binning
-    and stacking logic is correct'
-  - 'Theme-adaptive chrome is implemented correctly: measured background hex values
-    are exactly #FAF8F1 (light) and #1A1A17 (dark), and the four data colors are pixel-identical
-    between renders — only chrome flips'
-  - 'First categorical series (0-5 m/s) uses Imprint brand green #009E73 as required'
-  - No edge clipping — programmatically verified zero non-background pixels touch
-    any of the four canvas borders in either render
-  - Canvas is exactly 2400×2400 (square target, passes the canvas-dimension gate)
-  - Clean, correctly-labeled legend ("Wind Speed" with matching speed-range labels
-    and swatches)
-  - Uses the current Makie API (`Figure(size = ...)`) rather than the deprecated `resolution
-    =` kwarg
-  - Custom polar geometry (wedge_points, compass_to_screen) is a legitimate, well-executed
-    use of raw Makie primitives (poly!, lines!, text!) since CairoMakie has no native
-    wind-rose recipe
+  - 'Layout imbalance from attempt 1 is fully resolved: the radial grid no longer
+    pads a spare ring past the data extent (n_rings = ceil(r_max_data / ring_step),
+    no ''+1''), and pixel-measured content is now centered within 3px of true canvas
+    center horizontally (1197 vs 1200) versus the ~109px offset previously flagged'
+  - 'The ''5%'' radial tick label no longer sits on top of the NE wedge fill — it
+    is now placed at the sector-boundary gap with the least combined frequency (argmin
+    over adjacent-pair totals), verified by cropping the region: the label sits cleanly
+    on background between two small wedges'
+  - Title size was increased from 20 to 27 as specifically requested, growing from
+    ~32% to ~43% of canvas width — better proportioned for the 2400x2400 canvas without
+    overflowing
+  - 'Correct polar stacked wind rose with proper north-up meteorological convention
+    and realistic SW-prevailing wind climatology (verified: identical binning/stacking
+    logic to the approved attempt 1 data)'
+  - 'Theme-adaptive chrome verified pixel-exact: background is exactly #FAF8F1 (light)
+    / #1A1A17 (dark), and all four data colors are pixel-identical between renders
+    (e.g. purple hub sample (196,117,253) matches in both) — only chrome flips'
+  - 'First categorical series (0-5 m/s) uses Imprint brand green #009E73; no edge
+    clipping — legend, title, and direction labels all measured within canvas bounds
+    with healthy margins'
+  - Canvas is exactly 2400x2400 (square target, passes the canvas-dimension gate)
+  - Clean, correctly labeled legend ('Wind Speed' with matching speed-range labels)
+    placed in the sparse NE quadrant, using empty space productively rather than floating
+    isolated
   weaknesses:
-  - 'Significant unused canvas space: the radial grid autoscales rings out to 30%
-    (n_rings = ceil(r_max_data/ring_step) + 1) while most sectors (N, NE, E, SE, NW)
-    only reach 7-10%, so the NE/E/SE quadrant of the circle is almost entirely empty
-    faint grid with no data. Combined with the axis being drawn off-center within
-    its column (measured hub center ~px(1091,1236) vs. true canvas center px(1200,1200)),
-    the whole chart reads visually unbalanced — all the colorful content is crowded
-    into the bottom-left while the right two-thirds of the canvas is dead space. Fix:
-    drop the extra `+ 1` padding ring (or cap r_axis_max closer to r_max_data), and
-    rebalance colsize!/Legend placement so the polar chart is centered and fills more
-    of the square canvas.'
-  - The radial '%' tick labels are placed at angle 1.5*sector_width, i.e. directly
-    in the narrow 4° gap between the NE and E sectors. At small radii (the '5%' label)
-    this gap is very thin and the label sits partly over the NE wedge's purple fill,
-    reducing contrast. Move the tick labels to the sector boundary with the least
-    data (e.g. compute the gap bracketing the two smallest total-frequency sectors)
-    or push them further outward past all wedge extents.
-  - Title is only ~32% of the canvas width on the very large 2400×2400 canvas — reads
-    a little small/underweight relative to the available space. Increase titlesize
-    modestly (e.g. from 20 to ~26-28) for better proportion at this canvas size.
-  - Script defines four small helper functions (compass_to_screen, wedge_points, circle_points,
-    speed_bin_of) rather than a flat Imports → Data → Plot → Save structure. This
-    is understandable since Makie has no native wind-rose/polar-stacked-bar recipe,
-    but it's still a deviation from the KISS single-script convention worth minimizing
-    where possible.
+  - Script still defines three small helper functions (compass_to_screen, wedge_points,
+    speed_bin_of) instead of a flat Imports -> Data -> Plot -> Save structure; largely
+    unavoidable since CairoMakie has no native wind-rose recipe, but still a KISS
+    deviation worth noting
+  - Title at ~43% of canvas width is legible and well-set (titlesize=27, explicit),
+    but still sits below the ~50-70% band that reads as fully 'comfortable' for a
+    title of this length on a square canvas — a further nudge to ~30-32pt would tighten
+    the proportion without risking overflow
+  - Color assignment to speed bins follows the canonical Imprint palette order (green,
+    purple, blue, ochre) rather than a deliberate cool-to-warm progression the spec
+    calls out as traditional; compliant and CVD-safe, but not a distinctive design
+    choice beyond the required palette order
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 exactly (pixel-verified).
-      Chrome: Dark title "windrose-basic · julia · makie · anyplot.ai" at top, clearly legible; 8 dark compass-direction labels (N, NE, E, SE, S, SW, W, NW) around the outer ring, all legible; lighter gray-brown "%" radial tick labels (5%, 10%, ... 30%) mostly on clear background, though the "5%" label sits partly over the NE wedge's purple fill (minor contrast reduction, not illegible); subtle 15%-alpha grid rings/spokes.
-      Data: Stacked polar wedges — one per compass direction, segments colored green (#009E73, 0-5 m/s) → purple (#C475FD, 5-10 m/s) → blue (#4467A3, 10-15 m/s) → gold (#BD8233, 15+ m/s), with thin PAGE_BG strokes separating segments. A clear dominant SW/S/W wind pattern is visible (largest wedges, gold-tipped), with smaller wedges toward N/NE/E/SE/NW. The right (NE-E-SE) portion of the circular grid is mostly empty, and the whole polar plot sits left-of-center within the canvas.
-      Legibility verdict: PASS (all text readable; the "5%" label overlap is a minor legibility deduction, not a failure).
+      Background: Warm off-white, pixel-verified exactly #FAF8F1 (250,248,241).
+      Chrome: Dark title "windrose-basic · julia · makie · anyplot.ai" centered at top (~43% of canvas width, titlesize=27), clearly legible; 8 dark compass-direction labels (N, NE, E, SE, S, SW, W, NW) around the outer ring, all legible and non-overlapping; lighter gray-brown "%" radial tick labels (5%, 10%, 15%, 20%, 25%) placed in the gap between the two smallest-frequency sectors (verified by crop: text sits cleanly on background, no longer overlapping the NE wedge fill as in attempt 1); subtle 15%-alpha grid rings/spokes, now scaled tightly to the data extent (no padding ring).
+      Data: Stacked polar wedges, one per compass direction, segments colored green (#009E73, 0-5 m/s) -> purple (#C475FD, 5-10 m/s) -> blue (#4467A3, 10-15 m/s) -> ochre (#BD8233, 15+ m/s), separated by thin PAGE_BG strokes. A clear dominant SW/S/W wind pattern is visible (largest, ochre-tipped wedges) with smaller wedges toward N/NE/E/SE/NW. Pixel-measured content bounding box (excluding title/legend) is centered at x=1197 vs canvas center x=1200 — the off-center imbalance from attempt 1 is resolved.
+      Legibility verdict: PASS (all text readable, no dark-on-light or overlap failures).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 exactly (pixel-verified).
-      Chrome: Same title and labels rendered in light ink (#F0EFE8 title/direction labels, #B8B7B0 for tick labels) — all clearly legible against the dark background, no dark-on-dark failures observed.
-      Data: Identical wedge geometry and colors to the light render — pixel comparison confirms the four data colors (green/purple/blue/gold) are unchanged between themes; only the chrome (background, ink, grid) flipped as required.
+      Background: Warm near-black, pixel-verified exactly #1A1A17 (26,26,23).
+      Chrome: Same title and labels rendered in light ink (~#EAE9E3 measured, matching the INK token #F0EFE8 with antialiasing) for title/direction labels, muted #B8B7B0-family for tick labels — all clearly legible against the dark background, no dark-on-dark failures observed.
+      Data: Identical wedge geometry and colors to the light render — pixel comparison confirms the hub sample color (196,117,253 = #C475FD) is unchanged between themes; only chrome (background, ink, grid) flipped as required.
       Legibility verdict: PASS (no dark-on-dark text; all chrome elements readable).
 
-    Both renders share the same layout imbalance (dead space in the NE/E/SE quadrant, off-center axis) since that is a geometry issue independent of theme.
+    Both renders show the same, now well-balanced layout (grid rings scaled to data extent, chart centered on the canvas) since the geometry fix in this repair attempt is theme-independent.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; '5%' radial tick label partially
-          overlaps the NE wedge fill, reducing contrast slightly
+        comment: All font sizes explicit (titlesize=27, direction labels 16, tick
+          labels 12); readable in both themes; title at ~43% width is a bit below
+          the ideal 50-70% band but well within acceptable range, no overflow
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor overlap between the '5%' tick label and the NE sector's colored
-          wedge; no other collisions
+        comment: Radial % tick labels relocated to the least-populated sector gap;
+          crop-verified no longer overlapping wedge fill; no other collisions found
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -107,16 +98,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; four visually distinct hues used for
-          speed bins
+        comment: Imprint palette is CVD-safe; four visually distinct hues with white
+          stroke separators
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Large unused canvas area (NE/E/SE quadrant) since grid autoscales
-          past the data extent; axis is off-center within the canvas; title reads
-          small (~32% width) for the canvas size
+        passed: true
+        comment: Chart now centered (measured center x=1197 vs canvas 1200, within
+          3px); grid rings scaled tightly to data extent, no wasted padding ring;
+          legend fills the sparse quadrant instead of floating isolated
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -128,33 +119,34 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds exactly match spec hex values
-          in both themes; data colors identical across themes'
+        comment: 'First series is #009E73; backgrounds pixel-match #FAF8F1/#1A1A17
+          exactly; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Custom polar geometry and elevated legend panel show effort, but
-          the dead-space imbalance undercuts overall polish
+        passed: true
+        comment: Custom polar geometry, elevated legend panel, and now-balanced composition
+          read as thoughtfully above default; not fully publication-grade custom treatment
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines/decorations hidden, grid subtle (15% alpha), legend frame
-          removed — good refinement details
+        comment: Spines/decorations hidden, subtle 15%-alpha grid, generous and now-balanced
+          whitespace, frameless elevated legend
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Dominant SW wind pattern reads clearly as the focal point, but the
-          large empty region doesn't reinforce the story, just reads as unused space
+        comment: Dominant SW wind pattern reads immediately as the focal point via
+          size and color-stacking; no explicit annotation calling it out, but not
+          required by spec
     spec_compliance:
       score: 15
       max: 15
@@ -177,8 +169,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direction/speed binning and stacking verified correct via pixel measurement
-          of wedge extents
+        comment: Direction/speed binning and stacking logic correct
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -217,8 +208,8 @@ review:
         score: 2
         max: 3
         passed: false
-        comment: Four small geometry helper functions used instead of a flat script;
-          largely necessary given no native Makie wind-rose recipe
+        comment: Three small geometry/binning helper functions used instead of a flat
+          script; largely necessary given no native Makie wind-rose recipe
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -262,7 +253,7 @@ review:
         passed: true
         comment: Hand-built polar wind rose from raw poly!/lines!/text! primitives
           — a genuinely distinctive, non-trivial use of the library
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
