@@ -90,7 +90,19 @@ jobs:
               return 0
             fi
 
-            err=$(printf '%s' "$err" | head -c 300 | tr '\n' ' ')
+            # Truncate with parameter expansion, never a pipeline. The obvious
+            # `printf '%s' "$err" | head -c 300 | tr '\n' ' '` reintroduces the
+            # very bug this function exists to fix: once the message exceeds
+            # the pipe buffer, `head` exits after its 300 bytes, `printf` takes
+            # SIGPIPE and returns 141, `pipefail` propagates that to the
+            # assignment, and `set -e` kills the scan — in the error path, so
+            # only a pathological message would ever expose it. Measured on
+            # this runner: 60 000 bytes survives, 70 000 exits 141. Parameter
+            # expansion forks nothing and cannot fail. `::warning::` is
+            # line-oriented, so newlines must go or everything after the first
+            # one leaks into the raw log.
+            err=${err//$'\n'/ }
+            err=${err:0:300}
             if [[ "$err" == *"disabled workflow"* ]]; then
               # Not transient and not something a retry fixes — a human turned
               # the workflow off. Report it plainly and keep scanning.

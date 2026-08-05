@@ -167,9 +167,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   disabled state, quietly for `disabled_manually` and loudly for GitHub's 60-day
   `disabled_inactivity`. Verified with harnesses that extract `dispatch()` verbatim from the YAML
   and replicate the Case 2 and Section C guards exactly: 25 cases covering a disabled target,
-  transient failure and success, counter propagation through the real
+  transient failure and success, a 100 KiB error message, counter propagation through the real
   `while ... done < <(...)` scan loop, the six Case 2 label shapes, and the full workflow-state ×
-  quiet-window × gap matrix (#10180).
+  quiet-window × gap matrix — each regression case checked to actually fail against the
+  pre-fix code (#10180).
 
 - **A correctly rejected plot was reported as a crashed review, deadlocking the PR** —
   `impl-review.yml` used quality score `0` as its sentinel for "the AI review produced no
