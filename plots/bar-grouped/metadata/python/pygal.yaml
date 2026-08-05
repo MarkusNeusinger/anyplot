@@ -2,67 +2,55 @@ library: pygal
 language: python
 specification_id: bar-grouped
 created: '2025-12-24T21:28:20Z'
-updated: '2026-05-06T11:15:39Z'
-generated_by: claude-haiku
-workflow_run: 25431367665
+updated: '2026-08-05T01:25:12Z'
+generated_by: claude-sonnet
+workflow_run: 30965401513
 issue: 1822
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - Perfect visual legibility in both light and dark themes with no contrast or readability
-    issues
-  - Correct Okabe-Ito palette implementation with brand green (#009E73) as first series;
-    theme-adaptive backgrounds and chrome working properly
-  - Proper grouped bar chart structure with clear visual separation between category
-    groups and excellent use of the 4800×2700 canvas
-  - Value labels on bars provide precise data interpretation without clutter
-  - Clean, deterministic, reproducible code with no unnecessary complexity
-  - Correct mapping of data to x-axis (quarters), y-axis (revenue), and groups (product
-    lines)
+  - Y-axis now carries a full $0.0M–$5.0M scale with clearly visible dashed gridlines
+    in both themes — the explicit chart.y_labels + y_labels_major_count and the guide_stroke_color/major_guide_stroke_color
+    override (fixing pygal's hardcoded black grid CSS) directly and correctly resolve
+    the attempt-1 weakness.
+  - Theme-adaptive Style object correctly threads PAGE_BG/INK/INK_SOFT/INK_MUTED through
+    every chrome element — title, axis titles, tick labels, legend, and gridlines
+    are all legible in both light and dark renders with no dark-on-dark or light-on-light
+    failures.
+  - value_colors=(INK,)*len(tiers) overrides pygal's default per-bar black/white print_values
+    color pick, keeping the $X.XM value labels legible above every bar regardless
+    of fill lightness or theme — a genuine library-specific gotcha caught and documented
+    in a code comment.
+  - 'Imprint palette used in correct canonical order (green/purple/blue for Starter/Professional/Enterprise),
+    pixel-identical between light and dark renders; first series is #009E73 as required.'
+  - Clean, deterministic, KISS code with realistic SaaS quarterly revenue data (3
+    tiers x 4 quarters) that tells a clear adoption story purely through the numbers,
+    and correct plot-{theme}.png/.html output pair.
   weaknesses:
-  - Design lacks visual hierarchy or emphasis - plot displays data clearly but doesn't
-    guide viewer to key insights
-  - Four-sided spines present; removing top/right spines would improve visual refinement
-    per style guide
-  - Legend labels and axis annotations could be larger and more descriptive
-  - No distinctive pygal features leveraged (interactive tooltips remain absent in
-    static output)
+  - No deliberate visual emphasis on the Enterprise tier's standout growth (1.2M ->
+    4.1M, more than 3x) beyond color and printed value labels — the story is present
+    in the data but not guided for the viewer.
+  - Layout relies on pygal.Bar defaults for bar styling (straight rectangles, standard
+    spacing) with no distinguishing aesthetic touch beyond the theme-token/grid/value-label
+    fixes already applied.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), clean and professional
-      Chrome: Title "bar-grouped · pygal · anyplot.ai" at top in dark text, clearly visible
-              Y-axis labeled "Revenue ($M)" with dark tick labels
-              X-axis labeled "Quarter" with Q1-Q4 category labels
-              Legend in top-left corner showing Software, Hardware, Services
-              Grid lines subtle and non-competing with data
-      Data: Three series shown as grouped bars:
-            - Green (#009E73) = Software (first series, brand green - correct)
-            - Orange (#D55E00) = Hardware (second series)
-            - Blue (#0072B2) = Services (third series)
-            Value labels on top of bars (e.g., "$4.2M")
-      Legibility verdict: PASS - All text clearly readable, excellent contrast, professional appearance
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "bar-grouped · python · pygal · anyplot.ai" in dark ink at a comfortable ~55-60% of canvas width. Rotated y-axis title "Quarterly Revenue ($M)" and x-axis title "Quarter" both dark and legible, similar size. Y-axis now shows a full set of major tick labels ($0.0M through $5.0M) with visible dashed horizontal gridlines at every level (fixed vs. attempt 1, which only showed "$0.0M"). X tick labels (Q1-Q4) are large and legible. Bottom legend (Starter/Professional/Enterprise) with colored swatches, 3 columns, fully legible.
+      Data: 4 quarters x 3 grouped bars (green #009E73 / purple #C475FD / blue #4467A3), each with a printed $X.XM value label in dark ink directly above it, no overlaps between labels, bars, or gridlines.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matching light theme color scheme
-      Chrome: Title in light text, clearly visible against dark background
-              Y-axis labeled "Revenue ($M)" with light tick labels
-              X-axis labeled "Quarter" with Q1-Q4 category labels
-              Legend in top-left corner with light text on dark background
-              Grid lines subtle against dark surface
-      Data: Identical colors to light render:
-            - Green (#009E73) = Software (IDENTICAL to light render)
-            - Orange (#D55E00) = Hardware (IDENTICAL to light render)
-            - Blue (#0072B2) = Services (IDENTICAL to light render)
-            Value labels readable on bars
-      Legibility verdict: PASS - No dark-on-dark failures, all text readable, proper theme adaptation with identical data colors between light/dark
-
-    Both renders successfully demonstrate theme-adaptive implementation with correct Okabe-Ito palette and theme-appropriate chrome.
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Same title, axis titles, tick labels, legend, and full $0.0M-$5.0M y-axis scale, all rendered in light ink and fully readable. Gridlines are now visible (muted light-gray dashed lines) thanks to the guide_stroke_color/major_guide_stroke_color override — no longer swallowed by the near-black background as would happen with pygal's default hardcoded black grid CSS. No dark-on-dark failures found anywhere.
+      Data: Bar colors are pixel-identical to the light render (only chrome flipped, as expected). Per-bar value labels correctly switch to light ink (value_colors=(INK,)*len(tiers)), staying legible against both the dark bars and dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -73,48 +61,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text perfectly readable in both light and dark themes with explicit
-          font sizing for large canvas
+        comment: All chrome legible in both themes; explicit font sizes throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Bars perfectly spaced with no overlapping elements or text collisions
+        comment: No collisions between labels, bars, or gridlines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars, grid lines, and labels clearly visible and appropriately
-          sized
+        comment: 12 bars (4 quarters x 3 groups) sized appropriately for sparse grouped
+          data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with high contrast between series; colorblind-safe
+        comment: Green/purple/blue are distinct hue families, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent canvas utilization with balanced margins and whitespace
+        comment: Y-axis now shows full $0.0M-$5.0M scale with visible gridlines; nothing
+          clipped, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title and axis labels present and descriptive; format follows spec
+        comment: Descriptive axis titles with units; full major tick label set (fixed
+          vs. attempt 1)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette correct with first series as #009E73; backgrounds
-          match theme tokens; chrome properly adapted'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          both renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -122,22 +111,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Professional styling with custom Style object; functional but lacks
-          distinctive design elements
+        comment: Solid theme-token discipline and value_colors/grid fixes, but still
+          a fairly standard grouped-bar look
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Grid subtly styled but all four spines retained; could be refined
-          by removing top/right spines
+        passed: true
+        comment: Grid now subtle-but-visible, generous margins, bottom legend keeps
+          plot area uncluttered
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Data clearly presented but lacks visual hierarchy or emphasis to
-          guide viewer attention
+        comment: Growth story exists in the data (Enterprise 1.2M->4.1M) but isn't
+          deliberately emphasized visually
     spec_compliance:
       score: 15
       max: 15
@@ -147,53 +136,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped bar chart implementation
+        comment: Correct grouped/clustered bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required elements present: multiple series, categories, groups,
-          distinct colors, legend'
+        comment: Distinct colors per group, clear legend, consistent spacing, optional
+          value labels included
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, values on y-axis, groups properly mapped as
-          side-by-side bars
+        comment: Category on x-axis, group as side-by-side bars, value as bar height
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows format spec; legend labels match series names
+        comment: Title matches mandated format exactly; legend labels match data series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows multiple product lines across four quarters demonstrating grouped
-          bar capability effectively
+        comment: 4 categories x 3 groups within recommended range, all bars rendered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly revenue data is realistic and neutral; values plausible
-          for business context
+        comment: Plausible, neutral SaaS quarterly revenue by subscription tier
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis range (0-6.0M) appropriate for data with sensible increments
+        comment: Revenue values ($1.2M-$4.4M) are sensible for the domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -201,55 +187,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear code: imports → data → style → chart → save'
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data ensures reproducibility
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports for pygal and Style
+        comment: Only os, pygal, Style used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Clean code but environment-variable-based theme adaptation could
-          be more explicit
+        passed: true
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Renders produce plot-light.png, plot-dark.png, and HTML files correctly
+        comment: Saves plot-{theme}.png via render_to_png and plot-{theme}.html via
+          render()
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of pygal.Bar(), .add(), Style object following standard
-          patterns; theme adaptation working
+        comment: Canonical pygal.Bar + Style pattern, all config via constructor kwargs
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses custom Style for theming but doesn't leverage pygal-specific
-          features like interactive tooltips
+        comment: value_colors, guide_stroke_color CSS-override, and explicit y_labels
+          are genuine pygal-specific gotchas correctly handled
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
