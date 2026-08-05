@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-annotated: Annotated Heatmap
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-05
@@ -44,7 +44,8 @@ corr_matrix = np.corrcoef(base_data.T)
 rows = []
 for i, row_metric in enumerate(metrics):
     for j, col_metric in enumerate(metrics):
-        rows.append({"x": col_metric, "y": row_metric, "correlation": round(corr_matrix[i, j], 2)})
+        value = round(corr_matrix[i, j], 2)
+        rows.append({"x": col_metric, "y": row_metric, "correlation": value, "abs_correlation": abs(value)})
 
 df = pd.DataFrame(rows)
 
@@ -57,15 +58,21 @@ base_chart = (
             "x:N",
             title="Business Metrics",
             sort=metrics,
-            axis=alt.Axis(labelFontSize=10, titleFontSize=12, labelAngle=-45),
+            axis=alt.Axis(labelFontSize=11, titleFontSize=12, labelAngle=-45),
         ),
-        y=alt.Y("y:N", title="Business Metrics", sort=metrics, axis=alt.Axis(labelFontSize=10, titleFontSize=12)),
+        y=alt.Y("y:N", title="Business Metrics", sort=metrics, axis=alt.Axis(labelFontSize=11, titleFontSize=12)),
         color=alt.Color(
             "correlation:Q",
             # imprint_div (Imprint diverging cmap): matte-red <-> theme-adaptive midpoint <-> blue
             scale=alt.Scale(range=["#AE3030", PAGE_BG, "#4467A3"], domain=[-1, 1], domainMid=0),
             legend=alt.Legend(
-                title="Correlation", titleFontSize=10, labelFontSize=10, fillColor=ELEVATED_BG, strokeColor=INK_SOFT
+                title="Correlation",
+                titleFontSize=10,
+                labelFontSize=10,
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+                gradientStrokeColor=INK_SOFT,
+                gradientStrokeWidth=0.5,
             ),
         ),
         tooltip=[
@@ -76,14 +83,17 @@ base_chart = (
     )
 )
 
-# Create text layer for annotations with conditional color
+# Create text layer for annotations with conditional color.
+# Annotation size scales with |correlation| so the strongest relationships
+# visually dominate the grid, while weak/near-zero cells recede further.
 text = (
     alt.Chart(df)
-    .mark_text(fontSize=12, fontWeight="bold")
+    .mark_text(fontWeight="bold")
     .encode(
         x=alt.X("x:N", sort=metrics),
         y=alt.Y("y:N", sort=metrics),
         text=alt.Text("correlation:Q", format=".2f"),
+        size=alt.Size("abs_correlation:Q", scale=alt.Scale(domain=[0, 1], range=[10, 15]), legend=None),
         color=alt.condition(
             (alt.datum.correlation > 0.5) | (alt.datum.correlation < -0.5), alt.value("white"), alt.value(INK_SOFT)
         ),
