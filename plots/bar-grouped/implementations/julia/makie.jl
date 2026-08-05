@@ -23,10 +23,12 @@ categories = ["N. America", "Europe", "Asia-Pacific", "Latin America", "MEA"]
 groups     = ["Hardware", "Software", "Services"]
 
 # rows = categories, cols = groups
+# Asia-Pacific breaks the otherwise-monotonic Hardware > Software > Services
+# ranking (Software leads there), keeping the comparison less predictable.
 revenue = [
     42.0 28.0 15.0
     35.0 31.0 18.0
-    27.0 22.0 12.0
+    20.0 29.0 12.0
     18.0 14.0  9.0
     12.0  9.0  6.0
 ]
@@ -89,11 +91,9 @@ totals      = vec(sum(revenue, dims = 2))
 max_per_cat = vec(maximum(revenue, dims = 2))
 top_idx     = argmax(totals)
 
-ylims!(ax, 0, maximum(revenue) + 10)
-
 for i in 1:n_cat
     text!(
-        ax, i, max_per_cat[i] + 1.5;
+        ax, Point2f(i, max_per_cat[i] + 1.5);
         text     = "\$$(round(Int, totals[i]))M",
         align    = (:center, :bottom),
         fontsize = 12,
@@ -102,7 +102,7 @@ for i in 1:n_cat
 end
 
 text!(
-    ax, top_idx, max_per_cat[top_idx] + 5.5;
+    ax, Point2f(top_idx, max_per_cat[top_idx] + 5.5);
     text     = "▲ leading region",
     align    = (:center, :bottom),
     fontsize = 12,
@@ -110,7 +110,14 @@ text!(
     font     = :bold,
 )
 
-legend_elements = [PolyElement(color = IMPRINT_PALETTE[i]) for i in 1:n_grp]
+# Set explicitly *after* every plot element (bars + text) has been added, so
+# no later autolimits recompute can shrink the headroom the labels need.
+ylims!(ax, 0, maximum(revenue) + 10)
+
+legend_elements = [
+    PolyElement(color = IMPRINT_PALETTE[i], strokecolor = INK, strokewidth = 1)
+    for i in 1:n_grp
+]
 Legend(
     fig[1, 2], legend_elements, groups, "Product Line";
     labelcolor      = INK_SOFT,
