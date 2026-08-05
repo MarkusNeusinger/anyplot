@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-kde: Histogram with KDE Overlay
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-06
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-08-05
 """
 
 import os
