@@ -35,17 +35,64 @@ function withAlpha(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-const datasets = categories.map((label, i) => ({
-  label,
-  data: Array.from({ length: perGroup }, () => ({
+const groupPoints = categories.map((_, i) =>
+  Array.from({ length: perGroup }, () => ({
     x: i + (rand() - 0.5) * 2 * jitterWidth,
     y: Math.max(2, groupMeans[i] + groupStd[i] * gaussian()),
   })),
-  backgroundColor: withAlpha(t.palette[i % t.palette.length], 0.65),
-  pointRadius: 6,
-  pointHoverRadius: 6,
-  pointBorderWidth: 0,
+);
+
+// Local neighbor count per point drives a Chart.js scriptable style function below —
+// denser sub-clusters render slightly more saturated, reinforcing the strip plot's
+// accumulation-by-overplotting story beyond what a static per-dataset color can show.
+const xTol = jitterWidth * 0.6;
+const yTol = 3;
+function localDensity(points, idx) {
+  const p = points[idx];
+  let count = 0;
+  for (let j = 0; j < points.length; j++) {
+    if (j === idx) continue;
+    const q = points[j];
+    if (Math.abs(q.x - p.x) < xTol && Math.abs(q.y - p.y) < yTol) count++;
+  }
+  return count;
+}
+
+const scatterDatasets = categories.map((label, i) => {
+  const points = groupPoints[i];
+  const densities = points.map((_, idx) => localDensity(points, idx));
+  const maxDensity = Math.max(1, ...densities);
+  const baseColor = t.palette[i % t.palette.length];
+  return {
+    label,
+    data: points,
+    order: 0,
+    pointBackgroundColor: (ctx) => withAlpha(baseColor, 0.5 + 0.35 * (densities[ctx.dataIndex] / maxDensity)),
+    pointRadius: 6,
+    pointHoverRadius: 6,
+    pointBorderWidth: 1,
+    pointBorderColor: t.pageBg,
+  };
+});
+
+// Dashed per-group mean reference lines (spec: "Consider adding horizontal lines for
+// group means or medians"), drawn behind the points in the chart's neutral ink tone.
+const meanLineDatasets = categories.map((label, i) => ({
+  label: `${label} mean`,
+  type: "line",
+  order: 1,
+  data: [
+    { x: i - jitterWidth - 0.06, y: groupMeans[i] },
+    { x: i + jitterWidth + 0.06, y: groupMeans[i] },
+  ],
+  borderColor: withAlpha(t.ink, 0.55),
+  borderWidth: 2,
+  borderDash: [6, 4],
+  pointRadius: 0,
+  fill: false,
 }));
+
+const datasets = [...meanLineDatasets, ...scatterDatasets];
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -65,7 +112,7 @@ new Chart(canvas, {
         display: true,
         text: "strip-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22 },
+        font: { size: 26 },
         padding: { bottom: 24 },
       },
       legend: { display: false },
