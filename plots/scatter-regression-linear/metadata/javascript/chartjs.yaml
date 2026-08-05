@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: scatter-regression-linear
 created: '2026-08-05T13:31:03Z'
-updated: '2026-08-05T13:35:21Z'
+updated: '2026-08-05T13:44:59Z'
 generated_by: claude-sonnet
 workflow_run: 31010032529
 issue: 1821
@@ -12,125 +12,118 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/chartjs/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'All spec-required features present: R² and regression equation shown prominently
-    in the subtitle, visually distinct blue regression line, semi-transparent 95%
-    CI band, and moderately transparent (alpha 0.65) scatter points'
-  - Confidence-band fill correctly uses the theme-adaptive 'muted' semantic anchor
-    per the style guide rather than an arbitrary gray or a categorical palette slot
-  - 'Clever idiomatic Chart.js technique: two zero-width line datasets with fill:
-    ''-1'' compose the CI band, with legend.filter hiding the empty-label helper dataset
-    so only three clean legend entries show'
-  - Both renders are correctly theme-adapted — background, ink, grid, and legend colors
-    all flip correctly with no dark-on-dark or light-on-light failures, and data colors
-    (green points, blue line) are identical across themes
-  - Deterministic, seeded LCG-based data generation (n=70, within the 30-300 recommended
-    range) with a realistic, neutral ad-spend-vs-revenue scenario and plausible value
-    ranges
-  - Canvas is exactly 3200×1800 landscape with comfortable margins — no clipped or
-    overflowing text in either render
+  - 'Palette fix applied correctly: regression line now uses canonical position 2
+    (#C475FD lavender) instead of skipping to position 3'
+  - New annotation callout (leader line + anchor dot + rounded box) directly visualizes
+    the regression equation on the fit line, addressing both the DE feedback and the
+    spec's annotation note
+  - Callout box is correctly theme-adaptive (t.elevatedBg fill, t.grid border, t.ink
+    text) and legible in both renders
+  - 'All spec-required features remain present: R² in subtitle, visually distinct
+    regression line, semi-transparent 95% CI band, alpha-0.65 scatter points'
+  - Both renders remain correctly theme-adapted with no dark-on-dark/light-on-light
+    failures; data colors are identical across themes
+  - Canvas is exactly 3200x1800 landscape with no clipped or overflowing chrome text
   weaknesses:
-  - Regression line uses t.palette[2] (#4467A3 blue, canonical position 3), skipping
-    canonical position 2 (#C475FD lavender) — the style guide's hard rule is to use
-    positions 1→N in order without cherry-picking; switch to t.palette[1] for the
-    line color
-  - 'Design excellence is only moderately above baseline: aside from the R²/equation
-    subtitle and the muted CI-band fill, there''s little additional visual hierarchy
-    or refinement (e.g. no callout/annotation box for the equation, no accent styling
-    to draw the eye to the trend beyond the line itself)'
-  - Three small helper functions (lcg, randNormal, withAlpha) push slightly past pure
-    KISS single-block style, though this is largely justified by the lack of a browser-native
-    seeded RNG
+  - The callout box's top-right rounded corner overlaps/clips the top portion of a
+    nearby data point in both light and dark renders; the box's collision-avoidance
+    logic does not account for nearby scatter points
+  - Design excellence is improved but still moderate - most of the chart (legend,
+    axis styling, grid) remains close to library/token defaults; the callout is currently
+    the only bespoke visual element
+  - Helper functions (lcg, randNormal, withAlpha) plus the new calloutPlugin object
+    keep the file a step above pure KISS single-block style, though largely justified
+    by the lack of a browser-native seeded RNG and the plugin API's requirements
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "scatter-regression-linear · javascript · chartjs · anyplot.ai" in bold dark ink, subtitle "R² = 0.817 · y = 1.97x + 12.3" in softer gray ink beneath it, legend row ("95% Confidence Interval", "Linear regression", "Observations") in dark ink, axis titles "Monthly Ad Spend ($1,000s)" / "Monthly Sales Revenue ($1,000s)" in dark ink, tick labels in a lighter soft-ink gray. All fully legible against the light background. Light gray gridlines are visible but subtle.
-      Data: ~70 semi-transparent brand-green (#009E73) points with a light-toned border, a solid blue regression line, and a light gray shaded confidence band behind the line. Clear upward linear trend with realistic scatter/noise.
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1), matches spec.
+      Chrome: Dark-ink title "scatter-regression-linear · javascript · chartjs · anyplot.ai", softer-ink subtitle "R² = 0.817", legend ("95% Confidence Interval", "Linear regression", "Observations") and axis titles/ticks all in dark ink / soft gray - all clearly readable.
+      Data: ~70 semi-transparent brand-green (#009E73) points with pale page-colored edge stroke; solid lavender (#C475FD, canonical palette position 2) regression line; light-gray 95% CI band; new annotation callout box "y = 1.97x + 12.3" connected via a thin lavender leader line to a point on the regression line.
+      Legibility verdict: PASS. Minor non-legibility issue: the callout box's rounded corner clips the top portion of one nearby data point (VQ-02 deduction, not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same title/subtitle/legend/axis text now rendered in light ink (near-white for title/legend/axis titles, softer light-gray for tick labels and subtitle) — clearly readable against the dark background, no dark-on-dark failures observed. Gridlines are a dim, subtle gray, visible without dominating.
-      Data: Same brand-green points and blue regression line as the light render — colors are pixel-identical between themes. Confidence band fill uses a lighter, theme-adaptive muted gray so it still reads as a subtle band against the dark surface.
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17), matches spec.
+      Chrome: Same title/subtitle/legend/axis text now rendered in light ink - clearly legible, no dark-on-dark failures. Gridlines dim but visible.
+      Data: Colors pixel-identical to the light render (green points, lavender regression line, lavender leader line); only the CI-band fill, callout box fill/border, and chrome adapt to the dark surface.
+      Legibility verdict: PASS. Same minor callout/data-point overlap present as in the light render.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; all text readable in both themes
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No collisions between text, legend, or data elements
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Point size (7px radius) and alpha (0.65) appropriate for n=70; some
-          point overlap in dense regions is expected and acceptable
+        comment: New callout annotation box clips the top of one nearby data point
+          in both themes (minor)
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Points, regression line, and CI band all clearly visible at appropriate
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue/gray combination is CVD-safe, no red-green-only signal
+        comment: Good contrast, CVD-safe green/lavender combination
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, title ~40% width, no overflow or clipping
+        comment: Canvas exactly 3200x1800, no clipping or overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units ($1,000s)
+        comment: Descriptive axis titles with units ($1,000s)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Regression line uses palette[2] (#4467A3, position 3) instead of
-          the next canonical position 2 (#C475FD) — minor cherry-picking of palette
-          order; CI band correctly uses the muted semantic anchor
+        passed: true
+        comment: 'Fixed: regression line now uses t.palette[1] (#C475FD), canonical
+          position 2'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: R²/equation subtitle and page-background marker borders add polish
-          above generic defaults, but overall styling stays close to the library skeleton
+        passed: true
+        comment: New pointer-style annotation callout adds intentional hierarchy beyond
+          the previous subtitle-only equation
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle theme-driven grid and reasonable title/subtitle padding, but
-          no further refinement beyond token defaults
+        comment: Callout box styling is a nice touch, but the rest of the chart remains
+          close to token defaults
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Regression line + CI band + R² subtitle create some hierarchy, but
-          no dedicated focal-point styling (e.g. annotation callout) beyond the plain
-          subtitle text
+        passed: true
+        comment: Callout visually anchors the regression equation to a point on the
+          fit line, creating a real focal point
     spec_compliance:
       score: 15
       max: 15
@@ -140,27 +133,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter with fitted regression line, correct chart type
+        comment: Correct scatter + regression + CI band
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: R², regression equation, distinct regression line, semi-transparent
-          CI band, alpha 0.65 points — all spec notes satisfied
+        comment: Regression equation is now a proper annotation per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, axes cover full data range
+        comment: X/Y correctly mapped, axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels are clear and
-          accurate
+        comment: Title format correct, legend labels match
     data_quality:
       score: 15
       max: 15
@@ -170,22 +161,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows scatter, regression line, CI band, and R²/equation — all plot-type
-          aspects covered
+        comment: 'Shows all aspects: scatter, regression line, CI band, R², equation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ad spend vs. sales revenue is plausible, neutral, and matches a spec-suggested
-          application
+        comment: Neutral, plausible ad-spend-vs-revenue scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ad spend $5-50k, revenue up to ~$140k — sensible business-domain
-          values
+        comment: Sensible dollar-scale values
     code_quality:
       score: 9
       max: 10
@@ -195,36 +183,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Three small helper functions (lcg, randNormal, withAlpha) — mostly
-          justified by the lack of a browser-native seeded RNG
+        comment: Helper functions plus new calloutPlugin push past pure single-block
+          style, though justified
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG(42), fully deterministic
+        comment: Deterministic seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only window globals
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity, appropriate complexity for
-          the stats involved
+        comment: calloutPlugin.afterDraw is a legitimate canvas plugin, not fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract: canvas appended to #container, animation:
-          false, no fixed sizing'
+        comment: Follows mount-node contract correctly
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -232,21 +218,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct mixed line/scatter dataset composition, proper theme-token
-          wiring throughout options
+        comment: Idiomatic Chart.js plugin API usage
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'fill: ''-1'' between two line datasets to compose the CI band, plus
-          legend.filter to hide the helper dataset, is a genuinely Chart.js-specific
-          technique'
+        comment: fill:'-1' CI band, legend.filter, and new custom afterDraw annotation
+          plugin
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
