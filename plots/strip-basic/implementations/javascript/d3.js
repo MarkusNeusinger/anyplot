@@ -75,18 +75,65 @@ for (const ax of [xAxis, yAxis]) {
 g.selectAll(".tick line").attr("stroke", t.inkSoft);
 grid.selectAll(".tick line").attr("stroke", t.grid);
 
-// --- Jittered strip points ---------------------------------------------------
+// --- Jittered strip points (D3 force-simulation beeswarm) --------------------
+// True values stay pinned on y (fy); a collision + centering force resolves x
+// so points spread just enough to avoid overlap, instead of plain uniform jitter.
+const xCenter = (name) => x(name) + x.bandwidth() / 2;
 const jitterWidth = x.bandwidth() * 0.6;
+const pointRadius = 4;
+
+const nodes = data.map((d) => ({
+  ...d,
+  x: xCenter(d.category) + (rand() - 0.5) * jitterWidth,
+  y: y(d.value),
+  fy: y(d.value),
+}));
+
+d3.forceSimulation(nodes)
+  .force("x", d3.forceX((d) => xCenter(d.category)).strength(0.08))
+  .force("collide", d3.forceCollide(pointRadius + 0.6))
+  .stop()
+  .tick(150);
+
+for (const n of nodes) {
+  const lo = xCenter(n.category) - jitterWidth / 2;
+  const hi = xCenter(n.category) + jitterWidth / 2;
+  n.x = Math.min(hi, Math.max(lo, n.x));
+}
+
 g.selectAll("circle")
-  .data(data)
+  .data(nodes)
   .join("circle")
-  .attr("cx", (d) => x(d.category) + x.bandwidth() / 2 + (rand() - 0.5) * jitterWidth)
-  .attr("cy", (d) => y(d.value))
-  .attr("r", 4.5)
+  .attr("cx", (d) => d.x)
+  .attr("cy", (d) => d.y)
+  .attr("r", pointRadius)
   .attr("fill", (d) => color(d.category))
-  .attr("fill-opacity", 0.6)
+  .attr("fill-opacity", 0.55)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 0.5);
+
+// --- Mean reference lines (data storytelling: highlights Batch 3's shift) ----
+for (const b of batches) {
+  const mean = d3.mean(data, (d) => (d.category === b.name ? d.value : undefined));
+  g.append("line")
+    .attr("x1", x(b.name) + x.bandwidth() * 0.08)
+    .attr("x2", x(b.name) + x.bandwidth() * 0.92)
+    .attr("y1", y(mean))
+    .attr("y2", y(mean))
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", 2)
+    .attr("stroke-dasharray", "6,4")
+    .attr("opacity", 0.85);
+}
+
+g.append("text")
+  .attr("x", 0)
+  .attr("y", -14)
+  .attr("text-anchor", "start")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-style", "italic")
+  .text("Dashed line = batch mean");
 
 // --- Axis labels --------------------------------------------------------------
 g.append("text")
