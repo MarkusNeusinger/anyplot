@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bar-horizontal
 created: '2026-08-05T17:15:19Z'
-updated: '2026-08-05T17:19:21Z'
+updated: '2026-08-05T17:29:21Z'
 generated_by: claude-sonnet
 workflow_run: 31028676938
 issue: 1946
@@ -12,38 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Correct, idiomatic use of Highcharts' native bar type for true horizontal bars
-    (not a rotated column workaround)
+  - Correct, idiomatic use of Highcharts' native `bar` type for true horizontal bars
+    (not a rotated column workaround).
+  - 'Deliberate visual hierarchy: the top-ranked country (India) is rendered at full
+    brand green (#009E73) with bold data-label text, while all other bars share a
+    consistent 50%-opacity tint of the same hue — creates a clear focal point per
+    the spec''s ''highlight specific bars to draw attention'' guidance.'
   - Theme tokens threaded through every chrome element correctly — both renders are
-    fully legible with zero dark-on-dark or light-on-light issues
-  - Clean, readable data labels with thousands-separator formatting ({y:,.0f}) that
-    scale well from '130' to '1,441'
-  - Sensible axis range/tick interval choice giving the largest bar (India, 1441)
-    comfortable headroom without wasting canvas
+    fully legible with zero dark-on-dark or light-on-light issues; muted bar color
+    verified pixel-identical across all non-highlighted bars.
+  - Clean, readable data labels with thousands-separator formatting (`{y:,.0f}`) that
+    scale well from '130' to '1,441', none clipped at the canvas edge.
+  - Sensible axis range/tick interval (max 1500, interval 300) gives the largest bar
+    (India, 1441) comfortable headroom without wasting canvas.
+  - Prior attempt's code-comment/behavior mismatch is fixed — the comment now accurately
+    describes the highlight/mute color logic instead of a stale claim about axis ordering.
   weaknesses:
-  - The code comment above the countries/population arrays claims the ascending sort
-    renders at the top of the inverted category axis, but the render shows the opposite
-    (ascending top-to-bottom, smallest at top) — fix the comment to match actual behavior,
-    or reverse the sort/axis if a largest-at-top ranking was the intent
-  - No visual emphasis or focal point beyond uniform bar color — consider highlighting
-    the top entry or adding a subtle callout to strengthen the data storytelling
-  - Design execution is solid but conforms closely to expected defaults; a bit more
-    distinctive polish would raise Design Excellence
+  - Design execution still leans on a single hue (green tint variations only) rather
+    than a broader custom palette or typographic hierarchy — solid but not maximal
+    aesthetic sophistication (DE-01).
+  - Only the top-ranked bar (India) is visually distinguished; the second-largest
+    (China, 1425 — nearly tied with India) reads identically to the remaining eight
+    bars despite being an order of magnitude larger, missing an opportunity to reinforce
+    the ranking story further (DE-03).
+  - No Highcharts-distinctive feature beyond a standard bar series and per-point opacity
+    coloring (e.g. custom formatter, dataLabels connector styling) — Library Mastery
+    is solid but not exceptional (LM-02).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec
-      Chrome: Title "bar-horizontal · javascript · highcharts · anyplot.ai" in bold dark ink; y-axis country labels and x-axis "Population (millions)" title in dark/soft ink; tick labels readable; subtle vertical gridlines. All readable.
-      Data: Ten bars in brand green (#009E73), sorted ascending (Mexico 130 at top to India 1441 at bottom); data labels ("130" ... "1,441") in dark text past each bar end.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 (sampled pixel confirms exact match).
+      Chrome: Bold dark-ink title "bar-horizontal · javascript · highcharts · anyplot.ai" centered at top; y-axis (category) labels for 10 countries in dark-ink; x-axis title "Population (millions)" and tick labels (0-1500, interval 300) in a softer ink tone; subtle vertical gridlines on the value axis only. All chrome text is clearly legible against the light background.
+      Data: Nine bars in a muted sage-green (sampled RGB 125,203,178 — confirmed identical across all nine muted bars including China's), the top-ranked bar (India) in full brand green #009E73 (sampled RGB 0,158,115, exact match) with a bold "1,441" data label. Value labels sit just past each bar's end in dark text, not clipped.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec
-      Chrome: Title and category labels in light ink; axis title/tick labels in softer light grey; subtle vertical gridlines. No dark-on-dark issues found.
-      Data: Identical brand-green (#009E73) bars as light render, confirming data colors are theme-independent; data labels in white text, clearly legible.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Same layout; title and category labels render in light ink, axis title/tick labels in a softer light-grey, all legible against the dark background with no dark-on-dark text anywhere.
+      Data: Confirmed the same brand-green (#009E73) highlight on India and the same muted-green tint (now reading as a deeper teal against the dark backdrop, but the underlying RGB channel relationship is preserved via opacity blending — the data hue itself is unchanged) on the other nine bars. Data labels are light/white text, fully legible.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,8 +63,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes; fully readable in both themes, no clipping on
-          large data labels
+        comment: Explicit font sizes (22px title, 16px axis title, 14px ticks/labels);
+          fully readable in both themes, no clipping on large data labels
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -67,56 +76,62 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bar padding appropriate for 10 categories
+        comment: Bar thickness/padding (pointPadding 0.15, groupPadding 0.1) appropriate
+          for 10 categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green reads with strong contrast on both surfaces
+        comment: Single-hue palette with strong contrast on both surfaces; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas measured 3200x1800, gate passed; generous margins, nothing
-          cut off
+        comment: Canvas measured 3200x1800 (gate passed, no drift file), generous
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Population (millions) is descriptive with units
+        comment: '''Population (millions)'' is descriptive with units; category axis
+          needs no title'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds match Imprint theme tokens'
+        comment: 'Highlighted series is exactly #009E73 (pixel-verified); both backgrounds
+          match Imprint theme tokens exactly'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean single-color treatment and well-formatted labels, but close
-          to expected defaults
+        comment: Deliberate highlight/mute color technique and clean data-label formatting
+          show design intent beyond generic defaults, though still single-hue
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Category-axis gridlines suppressed, subtle value gridlines, generous
-          padding
+        comment: Category-axis gridlines suppressed, subtle value-axis gridlines only,
+          generous bar/group padding
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Sorted order aids comparison but no additional focal-point emphasis
+        passed: true
+        comment: Full-brand-green highlight + bold label on the top-ranked bar creates
+          a clear focal point; second-largest bar (China) not distinguished from the
+          rest despite being close to India in value
     spec_compliance:
       score: 15
       max: 15
@@ -126,27 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Native Highcharts bar type — correct horizontal orientation
+        comment: Native Highcharts 'bar' type - correct horizontal-bar orientation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent bar heights, sorted values, single color, spacing, end-of-bar
-          labels
+        comment: Consistent bar heights, sorted values, adequate spacing, end-of-bar
+          value labels, highlighted focal bar - all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category to y-axis, value to x-axis, all data visible
+        comment: Category -> y-axis, value -> x-axis; all 10 categories/values visible
+          within axis range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend correctly omitted for single
-          series
+        comment: Title matches mandated format exactly; legend correctly omitted for
+          single series
     data_quality:
       score: 15
       max: 15
@@ -156,20 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Sorted bars, value labels, single-color styling, 10 categories within
-          recommended range
+        comment: Sorted horizontal bars, value labels, single-color-with-highlight
+          styling, 10 categories within 5-20 recommendation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world, neutral population-by-country dataset
+        comment: Real-world, neutral population-by-country dataset with plausible
+          values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Axis max and tick interval fit the data range with sensible headroom
+        comment: Axis max (1500) and tick interval (300) fit the data range (130-1441)
+          with sensible headroom
     code_quality:
       score: 10
       max: 10
@@ -191,22 +209,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond injected globals
+        comment: No imports; only the injected ANYPLOT_TOKENS global is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple; minor comment/behavior mismatch on axis ordering
-          rationale
+        comment: Appropriately simple; no fake interactivity; prior comment/behavior
+          mismatch from attempt 1 is now fixed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, credits disabled
+        comment: Highcharts.chart('container', ...) with no explicit width/height,
+          animation:false on both chart and plotOptions.series, credits disabled
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -214,14 +233,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct plotOptions.bar usage, formatted dataLabels, native bar type
+        comment: Correct use of plotOptions.bar (pointPadding/groupPadding), formatted
+          dataLabels, native bar type rather than an inverted-column workaround
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Locale-formatted labels are a nice touch but nothing more distinctive
-          to Highcharts shown
+        comment: Highcharts.color().setOpacity() utility used for the highlight/mute
+          technique is a nice library-native touch, but no other distinctive feature
+          (custom formatter, connector styling, etc.) is showcased
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -229,4 +250,5 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
