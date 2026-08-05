@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: bokeh 3.9.2 | Python 3.13.14
-Quality: 84/100 | Updated: 2026-08-05
+Quality: 93/100 | Updated: 2026-08-05
 """
 
 import os
