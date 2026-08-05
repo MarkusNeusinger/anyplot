@@ -35,6 +35,12 @@ p <- ggplot(df, aes(x = group, y = minutes, color = group)) +
   geom_jitter(width = 0.18, size = 2.5, alpha = 0.6, show.legend = FALSE) +
   stat_summary(fun = mean, geom = "crossbar", width = 0.5,
                color = INK_SOFT, linewidth = 0.5, fatten = 1) +
+  stat_summary(
+    aes(label = after_stat(sprintf("%.0f min", y))),
+    fun = mean, geom = "text", color = INK, size = 3,
+    fontface = "bold", hjust = 0, vjust = 0.5,
+    position = position_nudge(x = 0.32), show.legend = FALSE
+  ) +
   scale_color_manual(values = IMPRINT_PALETTE) +
   labs(
     x = "Treatment Group",
