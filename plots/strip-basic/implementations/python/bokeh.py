@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 strip-basic: Basic Strip Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-04
+Library: bokeh 3.9.2 | Python 3.13.14
+Quality: 94/100 | Updated: 2026-08-05
 """
 
 import os
