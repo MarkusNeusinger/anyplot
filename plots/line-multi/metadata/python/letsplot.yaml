@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: line-multi
 created: '2025-12-24T21:34:29Z'
-updated: '2026-08-05T07:42:54Z'
+updated: '2026-08-05T07:49:39Z'
 generated_by: claude-sonnet
 workflow_run: 30985452941
 issue: 1825
@@ -12,49 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mult
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
+  - 'Both fixes requested after attempt 1 are correctly applied: the title now includes
+    the language segment (''line-multi · python · letsplot · anyplot.ai''), and scale_color_manual
+    now sets breaks=["Electronics", "Clothing", "Home Goods"] so the brand-green Imprint
+    color lands on the intended hero series instead of the alphabetically-first one.'
   - 'Full Imprint palette + theme-adaptive chrome compliance across both renders:
     data colors are pixel-identical between light and dark, backgrounds match #FAF8F1/#1A1A17,
     and all text is legible on both surfaces.'
-  - Real, functioning interactive tooltips via layer_tooltips() with custom per-series
-    formatting, surfaced in the saved HTML — a genuine letsplot-specific feature,
-    not decorative fakery.
-  - 'Clean, idiomatic ggplot-grammar code: KISS top-to-bottom structure, seeded reproducible
-    data, explicit font sizing throughout, no fake UI elements.'
+  - Genuine letsplot-specific interactivity via layer_tooltips() with custom per-series
+    formatting ('^color', '@MonthLabel|@Sales' formatted as '{,.0f}k USD'), surfaced
+    in the saved HTML — not decorative fakery.
   - Realistic, appropriately-scaled monthly product-line sales data showing three
-    genuinely distinct trajectory shapes (steady growth, decline-then-recovery, flat-with-uptick)
+    genuinely distinct trajectory shapes (steady growth, decline-then-recovery, flat-with-late-uptick)
     including a natural crossover around June/July.
+  - 'With the color fix, the line-weight/alpha hierarchy now fully coheres with the
+    palette: Electronics is simultaneously the thickest, fully-opaque, brand-green,
+    top-value line — a clear, unambiguous focal point.'
   weaknesses:
-  - Title omits the language segment — currently 'line-multi · letsplot · anyplot.ai'
-    instead of the mandated 'line-multi · python · letsplot · anyplot.ai'. The sibling
-    matplotlib.py implementation for this same spec-id gets this right (title = 'line-multi
-    · python · matplotlib · anyplot.ai') — mirror that pattern.
-  - 'Color/emphasis mismatch undercuts the intended data storytelling: the ''hero''
-    series (Electronics — thickest line, full opacity, largest markers) renders in
-    blue (#4467A3), while the most eye-catching Imprint color (#009E73 green) lands
-    on Clothing, the de-emphasized thin/alpha=0.55 series. This happens because scale_color_manual
-    inherits the default alphabetical factor order (Clothing, Home Goods, Electronics)
-    instead of an order intentional for the emphasis. Fix by ordering the categorical
-    levels so Electronics maps to the first (green) palette slot — e.g. `pd.Categorical(df[''Product
-    Line''], categories=[''Electronics'', ''Clothing'', ''Home Goods''])` before building
-    the scale, or pass `breaks=[''Electronics'', ''Clothing'', ''Home Goods'']` to
-    scale_color_manual.'
-  - Aesthetic customization is limited to the mandated default Imprint array plus
-    alpha/size differentiation — solid and correct, but not distinctive enough yet
-    to read as publication-ready design.
+  - Aesthetic customization is still limited to the mandated default Imprint array
+    plus alpha/size differentiation — solid and correct, but not yet distinctive enough
+    to read as fully publication-ready design (DE-01 stays at 'well-configured default'
+    tier).
+  - Minor unused whitespace below the legend on the right side of the canvas; tightening
+    the legend box position or outer plot margins would improve canvas utilization
+    slightly (VQ-05).
+  - 'LM-02 remains mid-tier: layer_tooltips() with custom formatting is a nice letsplot-specific
+    touch, but the implementation doesn''t yet reach for a feature that''s harder
+    to replicate in other libraries (e.g. faceting, a fitted trend layer, or annotation
+    layers).'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "line-multi · letsplot · anyplot.ai" top-left in dark ink, fully readable. Axis titles "Month" (x) and "Sales (thousands USD)" (y) in dark ink; tick labels (Jan-Dec, 60-220) in medium grey — all clearly legible against the light background. Legend box "Product Line" sits to the right of the plot with a subtly elevated off-white fill and thin border, listing Clothing / Home Goods / Electronics with colored circle swatches, fully readable. No grid lines (panel_grid_major/minor intentionally blanked) — a deliberate minimalist choice, not a defect.
-      Data: Three line+marker series. Thick, fully-opaque blue line (Electronics, #4467A3) rising from ~155 to ~220 with the largest markers. Thin, alpha=0.55 green line (Clothing, #009E73) declining from ~120 to ~65 with a late partial recovery. Thin, alpha=0.55 purple line (Home Goods, #C475FD) relatively flat around 85-105 with a mild late rise. First categorical series (Clothing, alphabetically first) is the mandated #009E73 green, satisfying palette compliance, though it lands on the secondary/de-emphasized series rather than the visually "hero" one (see weaknesses).
+      Chrome: Title "line-multi · python · letsplot · anyplot.ai" top-left in dark ink, fully readable and correctly includes the language segment. Axis titles "Month" (x) and "Sales (thousands USD)" (y) in dark ink; tick labels (Jan-Dec, 60-220) in medium grey — all clearly legible against the light background. Legend box "Product Line" sits to the right of the plot with a subtly elevated off-white fill and thin border, listing Electronics / Clothing / Home Goods in that order with colored circle+line swatches, fully readable. No grid lines (panel_grid_major/minor intentionally blanked) — a deliberate minimalist choice, not a defect.
+      Data: Three line+marker series. Thick, fully-opaque brand-green line (Electronics, #009E73) rising from ~155 to ~220 with the largest markers — now correctly the visual hero, matching both emphasis and palette-position-1. Thin, alpha=0.55 lavender line (Clothing, #C475FD) declining from ~120 to ~65 with a late partial recovery. Thin, alpha=0.55 blue line (Home Goods, #4467A3) relatively flat around 85-105 with a mild late rise. Clothing and Home Goods visibly cross around June/July.
       Legibility verdict: PASS — no light-on-light issues anywhere.
 
     Dark render (plot-dark.png):
       Background: warm near-black, consistent with #1A1A17 — not pure black, not light.
       Chrome: Title, axis titles, and tick labels all render in light off-white ink, standing out clearly against the dark background. Legend box background flips to a lighter dark-elevated tone (~#242420) with a thin border; legend text stays light and readable.
-      Data: Line colors are pixel-identical to the light render (same blue/green/purple hues and alpha treatment) — only the chrome (background, text, legend box) flips with the theme, as required.
+      Data: Line colors are pixel-identical to the light render (same green/lavender/blue hues and alpha treatment, Electronics still the brand-green hero) — only the chrome (background, text, legend box) flips with the theme, as required.
       Legibility verdict: PASS — no dark-on-dark failures; all text and data remain clearly distinguishable from the near-black background.
   criteria_checklist:
     visual_quality:
@@ -79,15 +78,15 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Sparse 12-point series use prominent markers (2.5-4.5), appropriately
-          density-aware.
+        comment: Sparse 12-point series use prominent, density-appropriate markers
+          (2.5-4.5).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue distinguishable without relying on hue alone; alpha
-          adds a second distinguishing channel.
+        comment: Green/lavender/blue distinguishable without relying on hue alone;
+          alpha adds a second distinguishing channel.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
@@ -106,34 +105,37 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series (Clothing) is #009E73; other series use
-          canonical Imprint palette; both renders theme-correct; data colors identical
-          across themes.'
+        comment: 'First categorical series (Electronics) is #009E73; other series
+          follow canonical Imprint order; both renders theme-correct; data colors
+          identical across themes.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
+        passed: false
         comment: Uses the mandated default Imprint array plus alpha/size differentiation
           — well-configured but not exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
+        passed: true
         comment: Grid removed entirely, generous whitespace, refined legend box —
-          some real refinement beyond defaults.
+          real refinement beyond defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        comment: Line-weight/alpha hierarchy is a genuine storytelling attempt, but
-          the brand-green highlight color lands on the de-emphasized series, partially
-          conflicting with the intended focal point.
+        passed: true
+        comment: 'Line-weight/alpha hierarchy now fully coheres with the palette fix:
+          the brand-green hero series is simultaneously thickest, most opaque, and
+          highest-valued — a clear, unambiguous focal point.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -157,10 +159,11 @@ review:
         comment: x=Month, y=Sales, color=Product Line correctly mapped; all data visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title omits the language segment ('python'); legend labels correct.
+        passed: true
+        comment: Title now correctly includes the language segment ('line-multi ·
+          python · letsplot · anyplot.ai'); legend labels correct.
     data_quality:
       score: 14
       max: 15
@@ -169,6 +172,7 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
+        passed: true
         comment: Shows three genuinely distinct trajectory shapes plus a crossover.
       - id: DQ-02
         name: Realistic Context
@@ -226,16 +230,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of ggplot grammar: aes, layered geoms, scale_color_manual,
-          theme customization.'
+        comment: 'Expert use of ggplot grammar: aes, layered geoms, scale_color_manual
+          with breaks, theme customization.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
+        passed: false
         comment: Uses layer_tooltips() with custom formatting — a letsplot-specific
           fluent tooltip API, though hover tooltips exist in other interactive libraries
           too.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
