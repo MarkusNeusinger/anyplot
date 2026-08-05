@@ -2,49 +2,63 @@ library: plotly
 language: python
 specification_id: strip-basic
 created: '2025-12-23T21:55:17Z'
-updated: '2026-05-04T21:06:24Z'
+updated: '2026-08-05T05:50:50Z'
 generated_by: claude-sonnet
-workflow_run: 25341930491
+workflow_run: 30978479819
 issue: 975
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 89
 review:
   strengths:
-  - Switched to px.strip() — the canonical Plotly Express strip plot function, directly
-    addressing the LM-01 idiomatic usage weakness from Attempt 1
-  - 'Excellent data storytelling: subtitle + highlighted best-performer column + avg
-    annotation create a clear narrative focal point'
-  - Concrete, neutral, real-world domain (teaching method effectiveness in education
-    research) — moves from abstract Group A/B/C/D to a compelling scenario
-  - Full Okabe-Ito compliance with brand green (#009E73) first series; both light
-    and dark themes render correctly with warm/near-black backgrounds and adaptive
-    chrome
-  - Exam Score axis correctly labeled with units '(out of 100)' — improvement over
-    the original 'Response Score' with no units
+  - Composite box+strip design (transparent quartile box + dotted mean line layered
+    behind the jittered points) gives real distribution context beyond bare individual
+    points, directly elevating Design Excellence and Data Storytelling.
+  - 'Imprint palette applied correctly and in canonical order across all four categories
+    — first series (Car) is #009E73, and the data hues are pixel-identical between
+    light and dark renders.'
+  - 'Theme-adaptive chrome is fully correct in both renders: title, axis labels, tick
+    labels, grid, box outlines, and mean lines all read cleanly against both the #FAF8F1
+    and #1A1A17 surfaces with no dark-on-dark or light-on-light failures.'
+  - Density-aware styling (jitter=0.35, marker opacity=0.55, thin PAGE_BG-colored
+    marker edges) combats overplotting while still showing point accumulation, matching
+    the spec's explicit intent of 'showing density through point accumulation'.
+  - Explicit font sizing throughout (title 16px, axis 12px, ticks 10px) and correct
+    canvas math (width=800, height=450, scale=4 → 3200×1800) with no clipping at any
+    edge.
   weaknesses:
-  - 'VQ-01 minor: font size explicitness after the px.strip() refactor is uncertain
-    — verify title (28px), axis labels (22px), tick labels (18px), and legend (16px)
-    are still explicitly set in update_layout()'
-  - 'LM-02 partial: hover tooltips and HTML export are genuinely Plotly-distinctive
-    features, but the highlighted column technique is achievable in other libraries
-    too'
+  - Jitter width is set to 0.35, slightly above the spec's suggested moderate range
+    of 0.1-0.3 — consider trimming toward 0.3 for a tighter, more controlled cluster
+    width.
+  - The Bus category's interquartile band (~37-46 min) shows heavy point overlap that
+    merges into a near-solid purple mass; a slightly smaller marker size (e.g. 6-7px)
+    in that band would improve individual-point legibility without losing the density
+    signal elsewhere.
+  - The box+strip composite is hand-built from go.Box + px.strip + fig.add_shape mean
+    lines; plotly express's own px.box(..., points='all') achieves a very similar
+    box-plus-points visual with substantially less code — using it (with a manually
+    added mean marker) would be more idiomatic than merging Express and Graph Objects
+    traces onto one figure.
+  - All four category distributions are drawn from Normal noise differing only in
+    mean/std; giving one category a distinct shape (mild skew or bimodality) would
+    better showcase the strip plot's core strength of revealing distribution shape,
+    not just spread.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white
-      Chrome: Title "strip-basic · plotly · anyplot.ai" in dark ink, centered, clearly readable. Subtitle "Project-based learning achieves the highest scores with the tightest spread" below in muted dark ink, readable. X-axis label "Teaching Method" and Y-axis label "Exam Score (out of 100)" in dark ink, readable. Tick labels in muted dark ink (#4A4A44), clearly legible. Mean reference lines in dark ink.
-      Data: Four groups in Okabe-Ito order — Traditional in #009E73 (brand green), Flipped Classroom in #D55E00 (vermillion), Blended Learning in #0072B2 (blue), Project-Based in #CC79A7 (reddish purple). Markers with jitter, ~0.65 opacity, appropriately sized. Semi-transparent teal highlight on Project-Based column. Mean reference lines for all groups. "avg 80.9" annotation on Project-Based mean. Legend right-of-plot with "Method" header.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+      Background: Warm off-white, matching #FAF8F1 — not pure white, not dark.
+      Chrome: Title "strip-basic · python · plotly · anyplot.ai" in dark ink, centered, fully visible; gray subtitle "Individual commute times with per-mode quartile range and mean" beneath it; dark-ink axis titles ("Commute Time (minutes)", "Transportation Mode"); soft dark-gray tick labels; subtle horizontal gridlines only. All chrome is clearly legible against the light surface.
+      Data: Four categories (Car, Bus, Bike, Train) rendered as jittered strip points over a transparent quartile box with a dotted mean line. Car is #009E73 (brand green), Bus is #C475FD (lavender), Bike is #4467A3 (blue), Train is #BD8233 (ochre) — canonical Imprint order, first series confirmed green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title, subtitle, axis labels, tick labels in light ink (F0EFE8/B8B7B0 range), all clearly readable against the dark background. Mean reference lines in white/light color. Legend box uses elevated dark background (#242420) with light text and border. No dark-on-dark text failures detected.
-      Data: Colors are IDENTICAL to light render — Traditional #009E73, Flipped Classroom #D55E00, Blended Learning #0072B2, Project-Based #CC79A7. Project-Based column highlight uses darker teal overlay, effective contrast maintained. "avg 80.9" annotation visible.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
+      Background: Warm near-black, matching #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle rendered in light ink/gray, fully legible; axis titles in light ink; tick labels in soft light gray; box outlines and dotted mean lines in light gray/white; gridlines subtle and visible. No dark-on-dark failures anywhere — every text element flips correctly to the light-on-dark token set.
+      Data: Same four category colors as the light render — Car #009E73, Bus #C475FD, Bike #4467A3, Train #BD8233 — confirmed pixel-identical to the light version; only the chrome (background, text, grid, box/mean-line strokes) flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -52,52 +66,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; -1 because px.strip() refactor
-          may have introduced some default sizing
+        comment: All font sizes explicitly set (title 16px, axis 12px, ticks 10px);
+          title fits without clipping; readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap — subtitle, annotation, and legend all clear of data
+        comment: No text overlap with other text, data, or the (hidden) legend.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Markers well-sized for 45-60 points per group with appropriate alpha
+        comment: Density-aware jitter/alpha/edge stroke work well overall; Bus's IQR
+          band merges into a near-solid mass, slightly hurting individual-point visibility
+          there.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe; highlighted column does not encode additional
-          data
+        comment: CVD-safe Imprint hues, adequate contrast, no red-green-only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 65-70% canvas utilization, balanced margins, legend correctly anchored
+        comment: Plot area fills a healthy majority of the canvas with balanced margins;
+          nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Teaching Method (descriptive), Exam Score (out of 100) (with units),
-          title format correct
+        comment: Y-axis has units ('Commute Time (minutes)'); X-axis is descriptive
+          categorical.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, full Okabe-Ito order, correct theme backgrounds
-          and chrome'
+        comment: 'First series #009E73, canonical order for series 2-4, correct theme
+          backgrounds and chrome in both renders.'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -105,22 +121,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Concrete domain, highlighted column, subtitle, annotation — intentional
-          design hierarchy well above defaults
+        comment: Composite box+strip+mean-line layering, custom subtitle, and typography
+          hierarchy read as clearly above library defaults.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped frame, subtle y-only gridlines, transparent box fill, generous
+          margins — well refined.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Horizontal-only grid, subtle opacity, generous whitespace; highlighted
-          column adds complexity
-      - id: DE-03
-        name: Data Storytelling
-        score: 6
-        max: 6
-        passed: true
-        comment: Excellent — subtitle states finding directly, highlighted focal point,
-          avg annotation reinforces story
+        comment: Mean-line + box overlay guides the eye to compare central tendency
+          and spread across modes, without explicit annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -130,51 +146,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct strip plot using px.strip() — the canonical Plotly Express
-          function
+        comment: Correct strip plot via px.strip with individual jittered points.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Jitter, transparency ~0.65, mean reference lines all present
+        comment: Jitter, alpha transparency, and mean reference lines all present
+          (jitter slightly above suggested range, minor).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x, scores on y, y-axis bounded 0-100
+        comment: category on x, numeric value on y, all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly correct; legend labels match group names
+        comment: Title format exact; legend correctly omitted since color already
+          redundantly encodes the x-axis category.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Four groups with different means AND spreads; Project-Based has highest
-          mean and tightest spread
+        comment: Distinct means/spreads per mode; all distributions are plain Normal
+          though, no shape diversity (skew/bimodality).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Teaching method effectiveness (Traditional/Flipped Classroom/Blended
-          Learning/Project-Based) — neutral educational research domain
+        comment: Commute time by transport mode is a real, neutral, comprehensible
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Exam scores 0-100, values appear bounded within range, plausible
-          group differences
+        comment: Minute ranges and per-mode means/stds are all realistic for commuting.
     code_quality:
       score: 10
       max: 10
@@ -184,60 +200,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: px.strip() is maximally concise for this chart type; add_shape for
-          mean lines is natural
+        comment: Linear imports → data → plot → save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) maintained
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, plotly.express — all used
+        comment: Only os, numpy, pandas, plotly.express, plotly.graph_objects — all
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; px.strip() switch is the elegant idiomatic choice
+        comment: No fake UI, no over-engineering; appropriate complexity for the composite
+          plot.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html confirmed
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current write_image/write_html
+          API.
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: px.strip() is the dedicated Plotly Express strip plot API — precisely
-          the high-level idiomatic approach
+        comment: Correct usage but reimplements what px.box(..., points='all') already
+          offers more directly, mixing Express and Graph Objects traces.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Hover tooltips and HTML export are Plotly-distinctive; highlighted
-          column is library-agnostic
+        passed: true
+        comment: Uses go.Figure shape overlays and custom hovertemplate on top of
+          Express — some library-specific technique, not groundbreaking.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
-  - html-export
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
