@@ -1,0 +1,249 @@
+library: chartjs
+language: javascript
+specification_id: streamgraph-basic
+created: '2026-08-05T11:38:17Z'
+updated: '2026-08-05T11:53:41Z'
+generated_by: claude-sonnet
+workflow_run: 31001918860
+issue: 856
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Clear focal point now present: the hero genre (largest combined listening hours)
+    gets a 2px ink outline plus an explanatory subtitle, directly resolving the prior
+    "generic, no storytelling" weakness'
+  - Low-contrast palette members (lavender Hip-Hop, ochre Rock) now get a thin ink
+    stroke for edge definition against the cream background, resolving the prior WCAG-contrast
+    weakness
+  - 'Pixel-verified correct visual hierarchy: hero stroke (2px) > low-contrast stroke
+    (1px) > default (0px, clean color transition) — confirmed via crops on both themes'
+  - 'Correct streamgraph construction: symmetric baseline + cumulative fill:i stacking
+    produces an accurate, organic river-like flow'
+  - Full Imprint palette compliance in canonical order, identical between light/dark
+    renders
+  - Theme-adaptive chrome (including the new hero/low-contrast ink strokes, which
+    correctly flip color per theme) reads clearly on both backgrounds
+  - No edge clipping in either render
+  weaknesses:
+  - Y-axis remains fully hidden with zero scale/magnitude reference — an acceptable
+    streamgraph convention, but a subtle scale annotation would add information density
+    without cluttering the flow
+  - Text sizing (title 25px, legend 17px, ticks 15px) is solid but still not at the
+    generous end of the recommended range — could scale up slightly further for maximum
+    legibility at ~400px mobile width
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white — matches spec.
+      Chrome: Bold dark title "streamgraph-basic · javascript · chartjs · anyplot.ai" centered at top, fully legible, with a new soft-grey subtitle "Pop led combined listening hours across all 24 months" beneath it. Legend row with 5 swatches (Pop, Hip-Hop, Electronic, Rock, Jazz) in dark text, all readable, no overlap with subtitle. X-axis "Month" title and 12 month tick labels (Jan 24...Nov 25) in soft grey, clearly legible, no rotation needed.
+      Data: Five stacked flowing bands, symmetric centered baseline, organic river shape. Bottom-to-top: Pop (#009E73), Hip-Hop (#C475FD), Electronic (#4467A3), Rock (#BD8233), Jazz (#AE3030) — canonical Imprint order. Pixel-level crop confirms the Pop/Hip-Hop boundary carries a visibly thicker ink stroke (2px hero focal point) than the Hip-Hop/Electronic boundary (1px, low-contrast fix), while Electronic/Rock and Rock/Jazz boundaries remain borderless flat color transitions.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black — matches spec.
+      Chrome: Title and subtitle render in light/white tones, fully legible; legend and tick labels in light grey/white, fully legible against the dark background.
+      Data: Band colors identical to the light render; only chrome (background, text, and the hero/low-contrast ink strokes) adapts to the theme — confirmed the ink strokes correctly flip from black to white.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 25px, subtitle 15px, legend 17px, ticks 15px — all explicitly
+          sized, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title, subtitle, legend, ticks, and data area are all cleanly separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Flowing bands clearly distinguishable; new ink-stroke hierarchy adds
+          definition without clutter
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Low-contrast lavender/ochre now get an ink stroke for edge definition
+          against the cream background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas (gate passed), good proportions, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Month x-axis title present; y-axis intentionally omitted per streamgraph
+          convention
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, correct theme-adaptive backgrounds, data
+          colors identical across themes
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Hero ink-outline + subtitle callout adds intentional hierarchy beyond
+          a generic flat stream
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Gridlines removed, y-axis hidden, borders used purposefully rather
+          than uniformly
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear focal point: hero genre gets ink outline plus explicit subtitle
+          naming it as lead category'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct streamgraph: symmetric baseline + fill:i cumulative stacking'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth monotone interpolation, centered baseline, distinct colors,
+          legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = time (24 months), stacked Y = category values, all data represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match genre
+          names; baseline filtered from legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 categories, 24 time points — within spec's 3-8 categories / 10-100
+          points range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Music streaming hours by genre — plausible, neutral, matches spec's
+          suggested example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (~14-56 range, thousands of hours) are sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat array-based computation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic sine-based synthetic data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; uses only harness globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean baseline/cumulative/hero-index computation, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false set, current Chart.js
+          v4 API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: fill:i chaining is the recognized Chart.js technique for streamgraph-style
+          offset stacking
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: cubicInterpolationMode:'monotone' + fill-to-dataset-index + selective
+          ink-stroke hierarchy is a genuine showcase of fine-grained control
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
+  - edge-highlighting

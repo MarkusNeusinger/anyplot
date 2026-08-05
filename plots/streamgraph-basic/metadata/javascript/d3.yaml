@@ -1,0 +1,228 @@
+library: d3
+language: javascript
+specification_id: streamgraph-basic
+created: '2026-08-05T11:40:54Z'
+updated: '2026-08-05T11:45:46Z'
+generated_by: claude-sonnet
+workflow_run: 31002056640
+issue: 856
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correct streamgraph construction using d3.stack().offset(d3.stackOffsetWiggle).order(d3.stackOrderInsideOut)
+    — a genuinely idiomatic, distinctive D3 pattern for this chart type
+  - Smooth d3.curveBasis interpolation produces organic, flowing band edges as required
+    by the spec
+  - 'First categorical series (Pop) is exactly #009E73, and the remaining 5 genres
+    follow the canonical Imprint palette order (lavender, blue, ochre, red, cyan)'
+  - Theme-adaptive chrome is correctly threaded through tokens (t.ink, t.inkSoft,
+    t.grid) — both light and dark renders are fully legible with identical data colors
+  - Realistic, neutral dataset (monthly streaming hours by music genre) with plausible
+    seasonal variation and distinct per-genre trends (Hip-Hop rising, Rock declining,
+    Classical stable)
+  - Clean, KISS-structured code with a deterministic seeded LCG for reproducibility
+    and a title-fontsize scaling formula that keeps the mandated title from overflowing
+  weaknesses:
+  - No axis title on the time axis (only formatted tick labels like 'Jan 2024') —
+    add a subtle 'Month' or leave as-is but this costs VQ-06 points versus a fully
+    descriptive axis label
+  - 'Design Excellence is solid but not yet publication-tier: the visual choices (insideOut
+    ordering, curveBasis) largely satisfy spec requirements rather than adding an
+    extra layer of polish (e.g. no subtle drop shadow/separation between bands, no
+    callout on the most notable trend)'
+  - Classical (cyan) and Jazz (red) bands are thin relative to Pop/Hip-Hop at this
+    data density — still visible and distinguishable, but they are the first bands
+    that would become hard to read if the canvas were scaled down further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "Music Genre Streaming · streamgraph-basic · javascript · d3 · anyplot.ai" is dark, bold, centered at top and clearly readable. X-axis tick labels (Jan 2024 … Oct 2025) are dark gray and legible. Legend on the right (Pop, Hip-Hop, Electronic, Rock, Jazz, Classical) uses dark ink text with colored swatches, fully readable. No y-axis (intentional design choice — the wiggle baseline has no meaningful zero).
+      Data: Six flowing, organically-shaped bands stacked with a symmetric wiggle baseline and smooth curveBasis interpolation. First series (Pop) renders in #009E73 brand green; the remaining genres follow the canonical Imprint palette order (lavender Hip-Hop, blue Electronic, ochre Rock, red Jazz, cyan Classical).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, x-axis tick labels, and legend text all render in light ink (off-white/light gray) against the dark background — fully readable, no dark-on-dark failures anywhere.
+      Data: Same six bands, same wiggle-baseline shape, same curveBasis smoothing. Data colors are pixel-identical to the light render — only the chrome (background, text) flipped as expected.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (14px ticks, 15px legend, scaled title);
+          readable in both themes, title correctly shrinks via ratio formula to avoid
+          overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, axis, legend, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All six bands clearly visible and distinguishable at this data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast between adjacent bands, no red-green-only reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills the large majority of the canvas, nothing cut off,
+          legend sits close to the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Time tick labels are descriptive (formatted dates) but there is no
+          explicit axis title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, remaining series follow canonical Imprint
+          order, backgrounds theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: insideOut ordering and curveBasis smoothing show design thought beyond
+          spec minimum, but overall look stays close to a well-executed standard streamgraph
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: No grid, minimal chrome, generous whitespace, subtle single-axis
+          frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: insideOut ordering creates visual hierarchy (largest/most stable
+          genres centered) though no explicit annotation or callout
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct streamgraph with symmetric wiggle baseline
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Smooth interpolation, centered baseline, distinct colors, legend
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Time on x, stacked category values on wiggled y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title format matches spec exactly with descriptive prefix; legend
+          labels match genre data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Six genres with distinct trends, seasonality, and amplitudes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: 'Neutral, plausible scenario: monthly streaming hours by music genre'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Values and directional trends (Hip-Hop rising, Rock declining) are
+          realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Follows mount-node contract correctly, no animation
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: d3.stack, scaleTime, scaleOrdinal, area, axisBottom all used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: stackOffsetWiggle + stackOrderInsideOut is a distinctive D3-specific
+          combination not trivially replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - minimal-chrome
