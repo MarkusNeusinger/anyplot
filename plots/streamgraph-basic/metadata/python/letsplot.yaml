@@ -2,134 +2,139 @@ library: letsplot
 language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:54:23Z'
-updated: '2026-05-06T21:55:14Z'
+updated: '2026-08-05T11:40:51Z'
 generated_by: claude-sonnet
-workflow_run: 25356305149
+workflow_run: 31001503279
 issue: 856
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Correct streamgraph implementation with symmetric baseline computation and cubic
-    spline interpolation for smooth flowing curves
-  - 'Perfect Okabe-Ito palette compliance — first series is #009E73, all 5 categories
-    in canonical order'
-  - 'Thorough theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT tokens applied
-    to all text and background elements for both light and dark renders'
-  - Y-axis labels and ticks deliberately hidden (blank) — correct design choice since
-    symmetric-baseline y-values are not meaningful to readers
-  - All text sizes explicitly set (title=24, axis_title=20, axis_text=16, legend_text=16,
-    legend_title=18) for 4800×2700 output
+  - 'Correct streamgraph geometry: symmetric baseline computed from ymin/ymax with
+    a -total/2 offset, plus a cubic spline (scipy make_interp_spline) over the 24
+    monthly points for genuinely flowing, organic curves rather than a jagged stacked-area
+    look.'
+  - Theme-adaptive chrome is fully correct in both renders — backgrounds, ink, grid,
+    legend, and the ribbon-separator stroke (set to PAGE_BG so seams stay invisible
+    against either surface) all flip correctly; pixel-level check of the peak annotation
+    box confirms light-bg/dark-text in the light render and dark-bg/light-text in
+    the dark render.
+  - 'Genuine data storytelling: a peak-value annotation (geom_point + geom_segment
+    + geom_label) calls out ''Hip-Hop peaks at 187 hrs — Dec ''24'' as a concrete
+    focal point instead of five equally-weighted ribbons.'
+  - 'Distinctive lets-plot feature used meaningfully: layer_tooltips() on the ribbon
+    layer surfaces genre/month/hours on hover in the HTML export — real interactivity,
+    not decoration.'
+  - 'Clean, reproducible, KISS code: single np.random.seed(42), no unused imports,
+    no functions/classes, correct output naming (plot-{theme}.png/.html), canvas exactly
+    3200×1800 (canvas gate passed).'
   weaknesses:
-  - 'DE-03 LOW: No data storytelling or visual emphasis — all genres rendered with
-    equal visual weight, no focal point or annotation to highlight an interesting
-    trend or peak'
-  - 'DE-01 MODERATE: Aesthetic sophistication is functional but not distinctive —
-    the flowing curves are pleasant but there are no design touches that elevate this
-    above a clean default (e.g., subtle alpha gradient, thin border strokes on ribbons,
-    or typographic hierarchy in the title)'
-  - 'LM-02 LOW: lets-plot distinctive features under-exploited — interactive tooltips
-    or hover data in the HTML output would showcase what makes lets-plot different
-    from plotnine'
+  - Y-axis has no title, no ticks, and no numeric scale anywhere in the chart except
+    the single peak annotation — sibling implementations (e.g. plotnine) label the
+    y-axis 'Streaming Hours'. Add at least a y-axis title (ticks can stay hidden per
+    streamgraph convention) so absolute magnitude isn't only inferable from one annotation.
+  - The peak marker and its leader line sit exactly on the right plot border (Dec
+    '24, the last x value) — not clipped, but visually cramped against the frame.
+    Add a touch of x-axis expansion or nudge the annotation inward so the marker has
+    breathing room from the axis line.
+  - Design excellence is solid but not exceptional beyond the peak annotation and
+    the background-matched ribbon-separator trick — the rest of the composition follows
+    fairly conventional theme_minimal() overrides; a bit more typographic hierarchy
+    would push this further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — matches spec exactly, not pure white
-      Chrome: Title "streamgraph-basic · letsplot · anyplot.ai" is dark ink (#1A1A17) and clearly readable at top. X-axis label "Month" is dark and readable. Tick labels (Jan '23, Jul '23, Jan '24, Jul '24, Dec '24) rendered in INK_SOFT (#4A4A44) — legible against the light background. Legend "Genre" title and category labels (Pop, Rock, Hip-Hop, Electronic, Jazz) are readable with elevated background (#FFFDF6).
-      Data: 5 ribbon streams flowing smoothly across 24 months. First stream (Pop) is #009E73 (teal/green) at the bottom, followed by Rock (#D55E00 orange), Hip-Hop (#0072B2 blue), Electronic (#CC79A7 pink), Jazz (#E69F00 yellow) at top. Symmetric baseline creates organic river-like shape. Subtle dashed vertical grid lines at Jan/Jul intervals.
-      Legibility verdict: PASS — all text clearly readable, no light-on-light issues
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold black title "streamgraph-basic · letsplot · anyplot.ai" and gray subtitle "Monthly streaming hours by genre, 2023-2024" both clearly legible. X-axis tick labels (Jan '23, Jul '23, Jan '24, Jul '24, Dec '24) and axis title "Month" are dark and readable. Y-axis intentionally has no ticks/labels (streamgraph baseline is arbitrary). Legend "Genre" with 5 swatches (Pop, Rock, Hip-Hop, Electronic, Jazz) is readable with dark text on a light panel.
+      Data: Five smoothly interpolated ribbons stacked around a centered baseline in Pop=#009E73 (green, first series), Rock=#C475FD (purple), Hip-Hop=#4467A3 (blue), Electronic=#BD8233 (amber), Jazz=#AE3030 (red) — matches the canonical Imprint order. A peak annotation ("Hip-Hop peaks at 187 hrs — Dec '24") with a marker, leader line, and light label box (dark text) sits near the right edge.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — matches spec exactly, not pure black
-      Chrome: Title "streamgraph-basic · letsplot · anyplot.ai" is rendered in light ink (#F0EFE8) — clearly visible against the dark background. X-axis label "Month" is light-colored and readable. Tick labels are in INK_SOFT (#B8B7B0 light gray) — clearly legible against the dark background. Legend has elevated dark background (#242420) with light-colored text. No dark-on-dark failures observed.
-      Data: Identical colors to light render — Pop (#009E73), Rock (#D55E00), Hip-Hop (#0072B2), Electronic (#CC79A7), Jazz (#E69F00). Data colors are theme-independent as required. The lower corners of the plot (where no streams reach) show the #1A1A17 background.
-      Legibility verdict: PASS — all text clearly readable against the dark background, correct chrome adaptation throughout
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: White title and light-gray subtitle are clearly legible against the dark background. X-axis tick labels and "Month" title are light-colored and readable. Legend panel is dark with light text, fully readable. No dark-on-dark failures observed anywhere.
+      Data: Same five ribbon colors as the light render, confirmed identical via visual comparison — only the chrome (background, text, ribbon-separator stroke color, legend panel, annotation box fill) flips. The peak annotation box correctly switches to a dark fill with light text (confirmed via pixel-level crop comparison of both renders), so it is not a light box stranded on the dark theme.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
-          legend_text=16, legend_title=18. Readable in both themes with correct INK/INK_SOFT
-          token application.'
+        comment: Explicit font sizes, readable in both themes and at 400px thumbnail;
+          annotation label text is small but legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 5 well-spaced tick labels, legend positioned right without overlapping
-          data.
+        comment: No collisions between text, ribbons, or the annotation box.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 ribbon streams clearly visible with alpha=0.9, distinct Okabe-Ito
-          colors.
+        comment: Ribbons and the peak marker are clearly visible; smooth spline avoids
+          jagged overplotting.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; sufficient luminance contrast between
-          all adjacent streams.
+        comment: Legend labels back every color; red and green are not adjacent in
+          the stack.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 1600x900 with scale=3 produces 4800x2700. Plot fills canvas well
-          with balanced margins.
+        comment: Canvas gate passed (3200x1800); peak marker/leader line sit exactly
+          on the right plot border — cramped, not clipped.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'X: ''Month'' appropriate; Y: blank (correct — symmetric baseline
-          values are not meaningful). Title correct format.'
+        passed: false
+        comment: X-axis title present ('Month') but y-axis has no title or units anywhere
+          on the chart.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, all 5 in canonical Okabe-Ito order. Light
-          bg #FAF8F1, dark bg #1A1A17. Both renders theme-correct.'
+        comment: First series Pop=#009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds in both renders.
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: clean minimal look, deliberate y-axis hiding, warm
-          backgrounds. But no distinctive design touches elevating beyond a well-configured
-          default.'
+        comment: Background-matched ribbon separators and a themed peak annotation
+          show real design intent beyond defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: theme_minimal removes spines, y-axis fully hidden, only subtle dashed
-          x-grid retained. Good refinement choices.
+        comment: Minimal grid (dashed x-only), y ticks/text removed, generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data displayed without visual emphasis. All genres have equal visual
-          weight; no focal point, annotation, or emphasis technique to guide the viewer
-          to an insight.
+        passed: true
+        comment: Clear focal point via the peak call-out instead of five equally-weighted
+          ribbons.
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +144,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct streamgraph with symmetric baseline. Smooth flowing ribbons
-          via cubic spline interpolation.
+        comment: Correct streamgraph with symmetric centered baseline.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth interpolation (scipy spline), symmetric baseline, distinct
-          colors, legend — all present.
+        comment: Smooth spline interpolation, centered baseline, distinct harmonious
+          colors, legend all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=months (Jan '23–Dec '24), Y=stacked symmetric values. All 24 months
-          represented.
+        comment: x=month, fill=genre, ribbon stacking correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''streamgraph-basic · letsplot · anyplot.ai'' exact match.
-          Legend ''Genre'' with all 5 categories correctly labeled.'
+        comment: Title matches mandated '{spec-id} · {library} · anyplot.ai' format
+          used across sibling implementations; legend labels match genres.
     data_quality:
       score: 15
       max: 15
@@ -171,22 +174,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all streamgraph aspects: multiple categories, temporal evolution,
-          varying magnitude trends (some rising, some falling).'
+        comment: 5 genres, 24 months — within the 3-8 categories / 10-100 points spec
+          range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly streaming hours by music genre (Pop, Rock, Hip-Hop, Electronic,
-          Jazz) over 2023-2024. Neutral, plausible, non-controversial.
+        comment: Monthly streaming hours by genre — plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base ~100 hours/month per genre with trend and noise variations.
-          Realistic proportions for streaming data.
+        comment: Values (~25-200 hrs) are sensible for the illustrative domain.
     code_quality:
       score: 10
       max: 10
@@ -196,35 +197,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Procedural imports→data→plot→save with no functions or classes.
+        comment: No functions/classes, straightforward procedural flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) fixed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. noqa comments acceptable for lets_plot star import.
+        comment: All imports (os, numpy, pandas, lets_plot, ggsave, scipy) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable. No fake UI elements. Appropriate complexity for
-          streamgraph computation.
+        comment: No fake UI; annotation built from real geoms.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. Current
-          API.
+        comment: Saves plot-{THEME}.png and .html via ggsave, current lets-plot API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -232,26 +231,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of ggplot() + geom_ribbon(), scale_fill_manual, scale_x_continuous
-          with explicit breaks/labels, labs, ggsize, and theme() element system.
+        comment: Proper grammar-of-graphics composition; ribbon-separator uses a manual
+          color=PAGE_BG trick rather than a built-in option.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: HTML export is a lets-plot strength but expected by the library guide.
-          No interactive tooltip or lets-plot-specific feature beyond what plotnine
-          would also provide.
+        passed: true
+        comment: layer_tooltips() provides genuine hover interactivity unique to lets-plot
+          among the static grammar libraries.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
+  - hover-tooltips
   - html-export
-  - manual-ticks
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - interpolation
+  - time-series
+  - cumulative-sum
   styling:
+  - publication-ready
   - alpha-blending

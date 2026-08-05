@@ -1,0 +1,241 @@
+library: d3
+language: javascript
+specification_id: bar-horizontal
+created: '2026-08-05T17:24:06Z'
+updated: '2026-08-05T17:53:14Z'
+generated_by: claude-sonnet
+workflow_run: 31029478883
+issue: 1946
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Clean, idiomatic D3 usage: scaleBand/scaleLinear, selection.join(), d3.format("~s")
+    for SI-prefix ticks, .nice() domain'
+  - Value-driven opacity ramp (d3.scaleLinear on fill-opacity) creates a clear visual
+    hierarchy that draws the eye to the top-ranked bar without deviating from the
+    Imprint palette
+  - All font sizes explicitly set (16px ticks/labels, 18px axis label, 30px title)
+    and legible in both themes
+  - Bars sorted ascending so the largest value lands at the top of the reversed band
+    scale, matching the spec's ranking guidance
+  - Correct title format, single-series legend correctly omitted, subtle x-axis-only
+    gridlines, rounded bar corners, generous margins
+  weaknesses:
+  - 'DQ-03: star counts for these specific, well-known named repos deviate substantially
+    from real-world GitHub star counts and even reverse the actual relative ranking
+    (e.g. Vue is shown as the lowest bar despite having far more real stars than Node.js,
+    Bootstrap, VS Code, TensorFlow, and Flutter). Since these are real, easily-verifiable
+    public projects, either scale the values to roughly match real proportions/ranking,
+    or rename the categories to fictional entities to avoid the factual mismatch.'
+  - 'DE-01/DE-03: the opacity ramp and bold top label are a nice touch but the plot
+    still relies on a single accent-color idea for storytelling — a small callout
+    or delta annotation on the leading bar would push this toward publication-grade
+    hierarchy.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "bar-horizontal · javascript · d3 · anyplot.ai" is bold dark ink, centered, fully visible, no clipping. Y-axis category labels (Vue, Bootstrap, TensorFlow, React, Flutter, VS Code, Node.js, freeCodeCamp) are dark, legible, left-aligned with generous left margin. X-axis SI-formatted tick labels (0, 20k...120k) and "GitHub Stars" axis label are soft dark gray, clearly readable. Subtle vertical gridlines aligned to x-ticks, low-opacity, not competing with data.
+      Data: 8 horizontal bars in brand green (#009E73) with a value-driven opacity ramp — the top bar (freeCodeCamp, 119k) is full-opacity and its value label is bold, lower-ranked bars fade slightly toward 62% opacity. Value labels ("119k", "108k", "98.7k", ...) sit just past each bar's end in dark ink.
+      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, now in light/near-white ink, fully visible and centered. Y-axis category labels and x-axis tick labels render in light gray, clearly legible against the dark background. Gridlines are subtle light-toned vertical lines at low opacity, matching the light render's density.
+      Data: Same 8 bars in identical brand green (#009E73) with the identical opacity ramp — data colors are unchanged from the light render, confirming only chrome flipped. Value labels are in light ink, fully readable against the dark bars/background, with the top bar's label bold.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/value text is clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (16/18/30px); readable in both themes,
+          no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 bars, well-sized bandwidth with padding, clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single hue with opacity variation, strong contrast against both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area ~58% of canvas, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"GitHub Stars" is descriptive and self-units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both renders; theme-correct backgrounds
+          and chrome'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Opacity ramp, rounded bars, typographic hierarchy above library defaults
+          but not fully publication-grade
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle x-only gridlines, L-shaped frame, generous whitespace, y tick
+          marks removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bold full-opacity top bar guides the reader to the leader; no explicit
+          annotation/callout
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent bar heights, sorted by value, single color, value labels
+          at bar ends, adequate spacing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value on x, category on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend correctly omitted for
+          single series
+    data_quality:
+      score: 12
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 8 categories, clear monotonic ranking with good spread
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible tech/business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 2
+        max: 4
+        passed: false
+        comment: Star counts for these real, named repos deviate substantially from
+          actual GitHub star counts and reverse the real relative ranking (e.g. Vue
+          shown lowest)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Renders into #container per the mount-node contract, current D3
+          v7 API'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: scaleBand/scaleLinear, selection.join(), axis generators, .nice()
+          domain
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3-format SI-prefix formatting and a derived d3.scaleLinear opacity
+          ramp
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

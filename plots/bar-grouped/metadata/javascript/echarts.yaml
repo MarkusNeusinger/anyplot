@@ -1,0 +1,251 @@
+library: echarts
+language: javascript
+specification_id: bar-grouped
+created: '2026-08-05T01:25:11Z'
+updated: '2026-08-05T01:39:24Z'
+generated_by: claude-sonnet
+workflow_run: 30966116810
+issue: 1822
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - First-series green (#009E73) and full Imprint palette order (green, purple, blue)
+    correctly applied and identical across both themes
+  - markPoint (peak pin on East/Electronics) and markLine (dashed overall-average
+    reference) add genuine analytical value beyond a bare grouped bar chart
+  - Rounded bar corners and subtle drop shadow give the chart a polished, above-default
+    look without hurting readability
+  - 'Theme-adaptive chrome is fully correct in both renders: backgrounds match #FAF8F1/#1A1A17,
+    all text uses ink/inkSoft tokens, no dark-on-dark or light-on-light failures'
+  - 'Data tells an honest story: West region flips the usual Electronics-leads order
+    (Apparel ahead), giving DQ-01 real feature coverage instead of uniform bars'
+  - Clean KISS structure with deterministic in-memory data, no imports needed, correct
+    mount-node/animation:false contract
+  weaknesses:
+  - 'markPoint label ''$510K'' is set in a fairly large bold font relative to the
+    pin symbol (symbolSize: 46) — the ''$'' and ''K'' characters touch/slightly cross
+    the pin''s rounded outline in both themes. Increase symbolSize to ~54-58 or drop
+    label fontSize to ~11 for clean breathing room inside the pin.'
+  - The West region's Electronics/Apparel rank reversal (the dataset's most interesting
+    feature, per the code comment) is not visually called out to the viewer — only
+    the single East peak is annotated. A second markPoint or a light annotation on
+    West's Apparel bar would sharpen the data storytelling.
+  - barGap/barCategoryGap are repeated identically on all three series objects — these
+    are shared bar-layout options in ECharts and only need to be set once (e.g. on
+    the first series); harmless but slightly redundant.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "bar-grouped · javascript · echarts · anyplot.ai" is bold dark text, centered top. Legend below title with three swatches (Electronics/green, Apparel/purple, Home Goods/blue). Y-axis "Revenue ($K)" and X-axis "Region" labels are dark and readable, tick labels use a slightly softer dark gray. Subtle horizontal gridlines on the y-axis only. A dashed reference line labeled "Avg 311K" crosses the chart. All chrome renders in dark ink against the light surface.
+      Data: 5 region groups (North, South, East, West, Central) each with 3 side-by-side bars (Electronics, Apparel, Home Goods). First series (Electronics) is #009E73 green, Apparel is a purple/violet, Home Goods is a muted blue — matches Imprint categorical order. East's Electronics bar (the max, $510K) has a green pin marker with a white "$510K" label; the label text touches the pin's rounded outline slightly but stays fully legible.
+      Legibility verdict: PASS (all text clearly readable; only a minor tight fit between the pin label and its own icon boundary, not a readability failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis labels now rendered in light/white text against the dark surface. Gridlines and the dashed average line are dimmed but still visible. No dark-on-dark text anywhere — every label, tick, and title character is clearly legible.
+      Data: Bar colors are pixel-identical to the light render (green/purple/blue), confirming the palette only swaps chrome, not data colors. The peak pin and "$510K" label read the same as in light, again with the same minor label/pin-edge tightness.
+      Legibility verdict: PASS (fully readable, no theme-adaptation failures).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, labels 16px, ticks 14px);
+          readable in both themes. Minor deduction: the ''$510K'' markPoint label
+          crosses the pin''s rounded outline slightly.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between chart elements, axis labels, legend, or data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars are appropriately sized for 15 data points; markLine and markPoint
+          clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple/blue combination is CVD-safe and not reliant on red-green
+          alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a well-proportioned share of the canvas, balanced margins,
+          legend adjacent to the plot.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units ('Revenue ($K)'); X-axis 'Region' is descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; remaining series follow canonical Imprint
+          order; backgrounds and chrome theme-correct in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Rounded bar corners, subtle drop shadow, peak marker and average
+          reference line go clearly beyond a configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-axis line/ticks removed, subtle gridlines, generous whitespace;
+          x-axis baseline is kept intentionally as the bar chart's ground line.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Peak annotation + average reference line create real visual hierarchy,
+          though the more interesting West-region rank reversal isn't visually called
+          out.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped/side-by-side bar chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Category, group, and value dimensions all present with clear legend
+          and spacing.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Regions on X, revenue on Y, all 15 bars visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the exact mandated format; legend labels match the
+          three product lines.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows a clear peak, an average baseline, and a genuine rank-order
+          reversal in West rather than uniform bars.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly regional product-line revenue is a realistic, neutral business
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue figures ($175K-$510K) and category ordering are plausible
+          for a mid-size retailer.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> init -> setOption, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded data, no RNG needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; echarts global used per the mount-node contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Relies on harness capture per contract; animation:false set; current
+          setOption API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of series mapping, tooltip valueFormatter, and axisPointer
+          shadow; minor redundancy repeating barGap/barCategoryGap per series.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markPoint (pin + max) and markLine (average) are ECharts-distinctive
+          annotation features not trivially replicated in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling

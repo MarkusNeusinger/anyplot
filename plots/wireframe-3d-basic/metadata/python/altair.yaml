@@ -2,116 +2,128 @@ library: altair
 language: python
 specification_id: wireframe-3d-basic
 created: '2026-05-06T05:28:02Z'
-updated: '2026-05-06T05:35:12Z'
-generated_by: claude-haiku
-workflow_run: 25418025873
+updated: '2026-08-04T18:50:39Z'
+generated_by: claude-sonnet
+workflow_run: 30937896352
 issue: 1015
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 87
 review:
   strengths:
-  - Perfect theme-adaptive implementation with identical data colors between light
-    and dark renders
-  - Excellent legibility in both themes with proper contrast ratios and readable text
-    at all sizes
-  - 'Complete specification compliance: grid lines, axes labels, height-based coloring,
-    correct 3D projection'
-  - 'Professional code quality: clean structure, deterministic seed, appropriate complexity
-    level'
-  - Proper colormap choice (viridis) for continuous data - colorblind-safe and perceptually
-    uniform
-  - Effective isometric projection clearly demonstrates surface topology and ripple
-    structure
-  - Thoughtful design with theme tokens throughout, custom legend styling, and proper
-    spacing
-  weaknesses: []
+  - interpolate="rgb" now forces a clean red → neutral → blue diverging gradient with
+    no teal/green artifact — pixel-checked via a legend crop in both themes
+  - Z-axis tick ladder now sits at its own farther-out corner (AXIS_OFFSET_Z), resolving
+    the prior origin-corner crowding between the X, Y, and Z reference axes
+  - Legend title "Height (Z)" clears its border with proper top padding in both renders
+  - Height-mapped diverging color gives the wireframe a clear focal point (center
+    peak/trough vs. outer ring) without relying on red-green as the sole signal
+  - Isometric projection (elevation 30°, azimuth 45°) matches the spec's suggested
+    viewing angle exactly, and all three axes (X, Y, Z) get real spatial tick marks
+  - Dead np.random.seed(42) call from attempt 1 has been removed; code is fully deterministic
+    and clean
+  weaknesses:
+  - The X-axis '-5' and Y-axis '-5' tick labels, while no longer overlapping, still
+    sit moderately close together near the shared corner — a slightly larger AXIS_OFFSET
+    or extra dx/dy stagger would remove any residual first-glance ambiguity about
+    which axis each label belongs to
+  - isometric_projection is a reasonable, necessary helper for the repeated 3D→2D
+    math, but technically deviates from the strictest 'no functions' reading of CQ-01
+    KISS — not a real issue given the alternative is duplicated trig code, but noted
+    for completeness
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "wireframe-3d-basic · altair · anyplot.ai" in dark text (#1A1A17); axis labels "X Axis (horizontal)", "Y Axis (horizontal)", "Z Axis (vertical)" clearly readable; legend title "Height (Z)" and color scale labels visible in appropriate dark gray
-      Data: Wireframe mesh with viridis colormap transitioning from deep purple/blue (low heights) through cyan/green to yellow (peak); grid lines visible in both X and Y directions; ripple peak clearly emphasized
-      Legibility verdict: PASS - All text readable, no contrast issues, data distinctly visible
+      Background: Warm off-white, matches #FAF8F1 target, not pure white.
+      Chrome: Bold dark title "wireframe-3d-basic · python · altair · anyplot.ai" fully readable; X/Y reference axes with tick marks (-5, 0, 5) and bold "X"/"Y" name labels outside the mesh footprint; a separate Z reference axis (ticks -1, 0, 1, bold "Z" label) sits at its own farther-out corner, clearly distinguishable from the X/Y "-5" ticks. Legend "Height (Z)" title clears its border with proper padding.
+      Data: Wireframe mesh lines colored via a red -> neutral/cream -> blue diverging scale (first series semantics preserved through the Imprint imprint_div ramp); pixel-cropped the legend gradient and confirmed a clean linear-RGB transition with no teal/green artifact (the defect flagged in attempt 2 is gone).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title in light text (#F0EFE8) clearly readable; axis labels and legend text in appropriate light gray (#B8B7B0); no dark-on-dark issues
-      Data: Identical viridis colors to light render - purple/blue at bottom, yellow at peak; wireframe geometry equally distinct on dark surface; color gradient reads cleanly
-      Legibility verdict: PASS - All text readable against dark background, perfect theme adaptation, no legibility failures
+      Background: Warm near-black, matches #1A1A17 target, not pure black.
+      Chrome: Title, axis names, tick labels, and legend text all flip to light ink (white/light-gray) and are clearly readable; no dark-on-dark failures. Z-axis ladder remains cleanly separated from the X/Y "-5" ticks at the shared corner.
+      Data: Legend gradient re-checked via pixel crop — identical clean red -> neutral -> blue transition as the light render, confirming only chrome changed between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text clearly readable in both themes
+        comment: All font sizes explicit and readable in both themes; minor residual
+          proximity of the two '-5' ticks at the shared corner
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Clean spacing, no overlapping elements
+        comment: No literal glyph collisions; X/Y '-5' ticks sit close but distinguishable,
+          Z ladder now fully separated
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Wireframe, grid, legend all clearly visible
+        comment: 30x30 mesh at strokeWidth=1.1/opacity=0.75 stays legible without
+          becoming a solid mass
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is colorblind-safe, good contrast
+        comment: Clean red/neutral/blue diverging ramp, no teal artifact, not red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Proper proportions, nothing cut off
+        comment: Good proportions, nothing clipped; corner tick spacing improved but
+          not maximally separated
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format, descriptive axes
+        comment: X, Y, and Z all spatially plotted with tick marks per spec
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Viridis for continuous data, backgrounds correct, colors identical
-          between themes
+        comment: imprint_div range with interpolate="rgb" renders a correct linear
+          gradient; backgrounds match spec in both themes
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Professional theme handling, effective projection
+        comment: Custom isometric projection + height-mapped diverging color show
+          real design intent
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Legend styling, clean composition
+        comment: Clean chrome, no native axis clutter, legend border fixed; corner
+          spacing keeps this from a higher score
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear focal point, effective hierarchy
+        comment: Diverging color creates a clear peak/trough focal point
     spec_compliance:
       score: 15
       max: 15
@@ -121,25 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 3D wireframe correctly rendered
+        comment: Correct 3D wireframe via isometric-projected mesh
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid, axes, coloring all present
+        comment: Grid lines both directions, elevation 30/azimuth 45, height-based
+          coloring, all three axes labeled with ticks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z mapping correct
+        comment: X/Y/Z correctly mapped across full domain
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format, legend shows height
+        comment: Title matches required format exactly; legend clearly labeled
     data_quality:
       score: 15
       max: 15
@@ -149,35 +162,37 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete surface topology
+        comment: Full radial oscillation, peaks/troughs/saddles visible, 30x30 grid
+          within spec range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sensible ripple function, neutral domain
+        comment: sin(sqrt(x^2+y^2)) ripple is the spec's own suggested example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Grid size and values appropriate
+        comment: x/y domain [-5,5], z range [-1,1] internally consistent
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Simple with appropriate helper function
+        comment: One necessary helper function for projection math, otherwise linear
+          script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set
+        comment: Fully deterministic; dead random seed removed
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -189,15 +204,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI
+        comment: Clean, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct PNG/HTML output
+        comment: Saves plot-{THEME}.png/.html, correct pad-to-target canvas logic
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -205,21 +220,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Solid Altair patterns, theme-aware
+        comment: Idiomatic alt.Chart/alt.layer composition, alt.Scale for diverging
+          encoding
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom isometric projection
+        comment: Layered x2/y2 line-segment encoding to simulate 3D is a genuinely
+          Altair-idiomatic workaround
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - 3d-projection
+  - layer-composition
+  - manual-ticks
+  - annotations
   - colorbar
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap

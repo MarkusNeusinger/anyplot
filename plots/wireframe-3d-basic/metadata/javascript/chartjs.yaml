@@ -1,0 +1,260 @@
+library: chartjs
+language: javascript
+specification_id: wireframe-3d-basic
+created: '2026-08-04T18:47:50Z'
+updated: '2026-08-04T19:10:18Z'
+generated_by: claude-sonnet
+workflow_run: 30939016738
+issue: 1015
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Canvas utilization is dramatically improved over attempt 1 — the wireframe, axis
+    box, and floor plane now fill roughly 65-70% of the 2400x2400 canvas instead of
+    ~25%, directly addressing the prior review's main weakness
+  - Still a genuinely hand-built 3D wireframe renderer inside Chart.js — custom camera
+    basis, true perspective projection, and painter's-algorithm depth sorting via
+    a custom plugin, since Chart.js has no native 3D support
+  - Height-based coloring correctly uses imprint_div for the terrain's meaningful
+    z=0 midpoint (two peaks, one dip)
+  - Grid lines rendered in both x and y directions as required, with depth-scaled
+    line width for a subtle depth cue
+  - Data colors are pixel-identical between light and dark renders; only chrome (ink,
+    grid, background) adapts
+  - Exact mandated title format, fully deterministic in-memory data, zero external
+    dependencies
+  weaknesses:
+  - 'Axis-box near corner is a crowded label cluster: the Y-axis title ''Y'', the
+    Y-tick ''4'', the Z-axis end tick ''-2.1'', and the X-tick ''-4'' all converge
+    within a ~60px radius around the shared box vertex (present in both light and
+    dark renders). No pixels literally overlap, but the density makes it hard to tell
+    at a glance which label belongs to which axis. Nudge the axis-title offset further
+    from the vertex (increase the 42px offset for the label nearest the shared corner)
+    or skip drawing the endpoint tick label that sits closest to the vertex.'
+  - Canvas fill, while much improved, still leaves a sizeable visually-empty band
+    across the bottom-right (the floor plane is nearly invisible against the matching
+    background, so that region reads as empty space even though it's technically inside
+    the projected content bounds). A further MARGIN reduction or slightly larger Z_SCALE
+    could tighten this without reintroducing the attempt-1 problem.
+  - Axis titles are still bare 'X'/'Y'/'Z' with no units — acceptable for this abstract
+    mathematical surface per the spec framing, but scored conservatively
+  - At the 400px mobile thumbnail, the axis tick numbers and the crowded corner cluster
+    become difficult to read due to their small absolute size relative to the dense
+    mesh
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "wireframe-3d-basic · javascript · chartjs · anyplot.ai" at top, clearly readable. Dark ink axis box edges, tick marks, and X/Y/Z axis titles, all legible against the light background. A bottom-left "Elevation (z)" gradient color key with -2.1/0/+2.1 labels is clearly readable.
+      Data: A 28x28 terrain-like wireframe mesh with two positive peaks (blue) and one negative dip (red), colored via the red-white-blue imprint_div diverging gradient keyed to elevation. First-series brand green is not applicable here since color encodes a continuous diverging quantity, which is the correct choice per the style guide.
+      Legibility verdict: PASS overall. Minor note: the axis box's near corner is a crowded cluster where the Y-axis title, a Y tick ("4"), the Z-axis end tick ("-2.1"), and an X tick ("-4") sit close together (no direct pixel overlap, but visually dense).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis titles, tick labels, and elevation key now render in light/white ink, all clearly legible against the dark background. No dark-on-dark failures — every chrome element inverted correctly.
+      Data: The wireframe mesh and its red-white-blue diverging colors are pixel-identical to the light render — only chrome (ink, grid, background) flipped, exactly as intended.
+      Legibility verdict: PASS overall. Same corner-crowding note as the light render (Y title / "4" / "-2.1" / "-4" clustered near the shared axis-box vertex), but no theme-specific legibility failure.
+
+    Canvas utilization: Compared to attempt 1 (where the mesh occupied roughly 25% of the 3200x1800 canvas with lopsided whitespace concentrated right/bottom), this attempt fills roughly 65-70% of the 2400x2400 canvas with much more balanced margins — the repair loop's fix for the VQ-05 weakness clearly landed. A moderate amount of visually-empty space remains at the bottom-right where the floor reference plane sits nearly invisible against the matching background.
+
+    No AR-08 (fake interactivity) or AR-09 (edge clipping) issues found in either render — checked all four canvas edges (title area, left edge where the mesh approaches closest, right edge, and bottom edge/legend area) with no chopped pixels.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes, readable in both themes; larger canvas footprint
+          helps vs attempt 1, but the corner cluster and dense mesh still strain mobile-scale
+          legibility
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No literal pixel overlap, but the axis-box near corner clusters the
+          Y title, a Y tick, the Z end tick, and an X tick within a tight radius in
+          both renders
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 28x28 mesh with depth-scaled stroke width, well adapted to density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe diverging encoding, good contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas fill improved dramatically from ~25% to ~65-70%; some bottom-right
+          whitespace remains where the near-invisible floor plane sits
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: X/Y/Z correct and spec-mandated, but no units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_div correctly used for signed elevation, theme-correct chrome,
+          identical data colors across themes
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Hand-built camera/perspective/depth-sorting engine on a library with
+          zero native 3D support
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Improved balance after the canvas-fill fix; single-corner axis box
+          and subtle floor plane remain a thoughtful touch
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two-hill/one-valley terrain with elevation-keyed color gives immediate
+          visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct wireframe (edges only, no solid surface)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid in both directions, height coloring, near-spec viewing angle,
+          all axes labeled with ticks
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correctly mapped, full extent shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title format; elevation key serves as legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two distinct peaks + one dip, clear variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral terrain/topography scenario, matches spec's suggested application
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Internally consistent abstract mathematical surface per spec framing
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: No classes; several small helper functions justified by the 3D math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of Chart.js plugin hooks + scale pixel-conversion API
+          to extend beyond built-in chart types
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Full 3D wireframe engine built on Chart.js's canvas plugin system
+          — a distinctly Chart.js-shaped solution
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - manual-ticks
+  - colorbar
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - publication-ready

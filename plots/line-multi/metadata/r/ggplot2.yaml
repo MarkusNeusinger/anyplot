@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: line-multi
+created: '2026-08-05T07:39:28Z'
+updated: '2026-08-05T07:53:51Z'
+generated_by: claude-sonnet
+workflow_run: 30985584603
+issue: 1825
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Both defects flagged in Attempt 1 are verifiably fixed: IMPRINT_PALETTE now uses
+    the full canonical order (positions 1-4: green/lavender/blue/ochre) instead of
+    skipping lavender, confirmed visually against the four series in both renders.'
+  - 'Gridlines are now genuinely subtle: pixel-sampled at ~(229,228,221) on light
+    and ~(46,46,42) on dark (blended INK at low opacity via scales::alpha(INK, 0.15)),
+    a clear departure from the previous full-opacity (26,26,23)/(240,239,232) INK
+    gridlines.'
+  - 'Both backgrounds pixel-confirmed exact: light (250,248,241) = #FAF8F1, dark (26,26,23)
+    = #1A1A17 — no pure white/black, no wrong-theme chrome.'
+  - 'No edge clipping: top/bottom/right canvas borders sampled as pure background
+    with no truncated text (AR-09 clear).'
+  - Redundant color + linetype encoding (solid/dashed/dotted/dotdash) keeps all 4
+    series distinguishable without relying on hue alone — good CVD practice.
+  - Rolling-mean smoothing foregrounds the seasonal signal over daily noise, custom
+    month-abbreviation x-axis breaks replace raw day-of-year integers, realistic and
+    neutral per-city temperature data with plausible seasonal phase/scale.
+  - Font sizes explicitly set throughout (title formula-scaled, axis title/text, legend
+    text/title), reproducible via set.seed(42), correct ggsave/ragg output at the
+    exact 3200x1800 canvas.
+  weaknesses:
+  - 'DE-03 storytelling remains at default level: smoothing helps but there is no
+    explicit annotation or single focal point emphasizing an insight (e.g., calling
+    out Marrakech''s summer extreme or the Reykjavik/Berlin winter crossover).'
+  - 'CQ-01: two custom helper functions (seasonal(), roll_mean()) still deviate from
+    the strict Imports -> Data -> Plot -> Save KISS flow, though justified for DRY
+    across 4 series.'
+  - geom_line linewidth = 1.1 is on the thinner side for a 4-series comparison at
+    this canvas size; a touch thicker (~1.3-1.5) would improve prominence without
+    harming legibility.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-sampled (250,248,241) = #FAF8F1 exactly. Not pure white.
+      Chrome: Title "Average City Temperatures · line-multi · r · ggplot2 · anyplot.ai" in dark ink, spanning roughly 55-60% of canvas width. X-axis "Day of Year" with Jan/Apr/Jul/Oct/Dec tick labels; y-axis "Temperature (°C)" with 0/10/20/30 ticks. Legend titled "City" lists Reykjavik/Berlin/Marrakech/Nairobi with matching color+linetype swatches, positioned to the right of the plot area, fully within canvas bounds (no clipping). Horizontal gridlines at each y-tick are now subtle blended tones (pixel-sampled ~(229,228,221) and ~(238,236,229), close to background), a clear improvement over Attempt 1's full-opacity ink gridlines.
+      Data: Four smoothed lines — Reykjavik (solid, #009E73 green), Berlin (dashed, #C475FD lavender), Marrakech (dotted, #4467A3 blue), Nairobi (dot-dash, #BD8233 ochre) — using the full canonical Imprint order 1-4, no longer skipping lavender.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-sampled (26,26,23) = #1A1A17 exactly. Not pure black.
+      Chrome: Same layout; title/axis/tick/legend text now render in light ink (#F0EFE8) / soft grey (#B8B7B0), all clearly legible. Gridlines are subtle blended dark tones (pixel-sampled ~(46,46,42) and ~(39,39,35)), matching the light render's fix — no longer full-opacity.
+      Data: Colors pixel-identical to the light render (#009E73/#C475FD/#4467A3/#BD8233) — only chrome flipped, as required.
+      Legibility verdict: PASS — all text clearly readable against the dark background, no dark-on-dark failures.
+
+    Both renders inspected via direct pixel sampling (background corners, gridline rows, canvas edges) in addition to visual review; no edge clipping detected on either render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title formula-scaled, well-proportioned,
+          no overflow, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines clearly visible and distinguishable via color+linetype, but
+          linewidth=1.1 is on the thinner side for 4-series comparison
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant color+linetype encoding, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot + legend well utilize the canvas, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Temperature (°C), Day of Year'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed: full canonical order 1-4 (green/lavender/blue/ochre); backgrounds
+          pixel-confirmed #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Smoothing, dual color+linetype encoding, canonical palette, custom
+          axis breaks — clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Fixed: gridlines now genuinely subtle (pixel-confirmed low-opacity
+          blend); spines removed, tick marks removed, generous whitespace'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Smoothing aids the signal but no explicit annotation or single focal
+          point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-line comparison plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors, legend, varying linestyles, smoothed series all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=day of year, Y=temperature, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix, legend labels match
+          city names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows distinct seasonal shapes, phases, amplitudes across 4 climates
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, comprehensible scenario (city temperatures)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and seasonal ranges plausible for each named city
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helper functions (seasonal, roll_mean) deviate from strict flat
+          structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used packages imported
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{theme}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics usage, scale_manual functions, theme
+          composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Dual color+linetype scale, custom axis breaks
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep:
+  - rolling-window
+  styling:
+  - grid-styling

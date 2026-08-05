@@ -1,0 +1,235 @@
+library: muix
+language: javascript
+specification_id: streamgraph-basic
+created: '2026-08-05T11:47:11Z'
+updated: '2026-08-05T21:45:55Z'
+generated_by: claude-sonnet
+workflow_run: 31002324488
+issue: 856
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Correct, idiomatic MUI X streamgraph implementation (wiggle offset + insideOut
+    order + catmullRom curve) matching the library's documented recipe
+  - 'Both renders are fully theme-correct: identical data colors, correctly flipped
+    chrome, no dark-on-dark or light-on-light legibility failures'
+  - Canonical Imprint palette order across all 6 categories with brand green correctly
+    first
+  - Deterministic, realistic monthly genre-listening data well within the spec's size/category
+    ranges
+  weaknesses:
+  - Y-axis is fully hidden with no numeric scale or unit reference anywhere in the
+    chart - the title mentions Streaming Hours but the actual magnitude (in thousands,
+    per the code comment) is never surfaced to the viewer
+  - No explicit x-axis title (only bare month/year tick labels) - a short axis label
+    would remove ambiguity
+  - Design Excellence stays close to library defaults beyond the palette/curve choices
+    - no annotation or emphasis calls out the clearest trend to strengthen data storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title ("Genre Streaming Hours · streamgraph-basic · javascript · muix · anyplot.ai") and legend (6 swatches: Pop, Hip-Hop, Electronic, Rock, Jazz, Classical) in dark ink, clearly readable. X-axis tick labels (Jan 2024 ... Oct 2025, every 3rd month) in soft dark gray, readable. No y-axis (intentionally hidden).
+      Data: Six-band streamgraph with wiggle-centered baseline and smooth catmullRom curves. First series (Pop) is brand green #009E73. Full order: green, lavender, blue, ochre, red, cyan - canonical Imprint order.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title and legend text rendered in light ink, clearly readable against dark background. X-axis tick labels in soft light gray, readable. No dark-on-dark failures observed.
+      Data: Colors identical to light render (green, lavender, blue, ochre, red, cyan) - only chrome (background, text ink, axis line) flipped, as required. Brand green clearly visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/legend/ticks readable in both themes; tick label size (14px)
+          on the small side
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, bands, or tick labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 24 monthly points per band render as smooth, clearly visible shapes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; identity carried by color+position+legend
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Clean margins, nothing clipped, title width matches expected range
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Y-axis fully suppressed with no numeric/unit reference; no explicit
+          x-axis title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, correct backgrounds, identical data colors
+          across themes
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Harmonious palette, smooth curves, stroke separators; otherwise close
+          to defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Deliberately minimal chrome (no y-axis, grid, ticks), generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Shapes convey trends but no explicit emphasis or annotation
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct streamgraph via wiggle offset + insideOut order
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth curves, wiggle-centered baseline, distinct colors, legend
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 2
+        max: 3
+        passed: false
+        comment: X and stacked values correctly mapped but y-axis fully hidden, no
+          scale shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match genres
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 24 points, 6 categories - within spec range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral genre-listening trends
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible streaming-hours magnitudes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct harness contract, current MUI X API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: wiggle + insideOut + catmullRom is MUI X's documented streamgraph
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom tickLabelInterval, disableTicks, legend positioning, per-series
+          overrides
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - stacked-area
+  - wiggle-offset
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - minimal-chrome
+  - alpha-blending

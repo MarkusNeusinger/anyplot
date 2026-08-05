@@ -1,0 +1,268 @@
+library: makie
+language: julia
+specification_id: ternary-basic
+created: '2026-08-04T15:21:56Z'
+updated: '2026-08-04T16:04:03Z'
+generated_by: claude-sonnet
+workflow_run: 30922558922
+issue: 1001
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'CRITICAL FIX CONFIRMED: the reference-composition annotation (open diamond marker,
+    leader line, "304 (18-8 ref.)" text) that was completely invisible in attempt
+    2 now renders correctly in BOTH plot-light.png and plot-dark.png, verified via
+    direct pixel-cropped inspection of the marker region — this was the sole blocking
+    issue from the prior review and it is resolved'
+  - Mathematically correct barycentric-to-Cartesian ternary projection — all three
+    vertices map exactly onto the equilateral triangle corners
+  - 'Palette and theme compliance verified: data points and diamond accent read as
+    Imprint brand green #009E73 / neutral ink, backgrounds are the correct warm off-white
+    (#FAF8F1) and near-black (#1A1A17) in light and dark respectively'
+  - 'No edge clipping: pixel-level scan confirms the tightest label ("Chromium (Cr)")
+    sits ~33px inside the right canvas edge with the full closing parenthesis intact;
+    title and bottom labels have 166px/224px margins'
+  - Realistic, neutral domain (Fe-Cr-Ni stainless-steel alloy composition) directly
+    matching the spec's suggested chemical/material composition application, with
+    the 304 (18-8) reference giving the reader a recognizable anchor point
+  - 'All spec-required features present: 20% interval grid lines (batched via a single
+    linesegments! call), labeled vertices, edge tick labels for reading proportions'
+  - Clean KISS-structured single-file script, reproducible seed, correct plot-$(THEME).png
+    output in both themes, only used imports (CairoMakie, Colors, Random)
+  - 'Genuine Makie-idiomatic touches: DataAspect() for a true equilateral triangle,
+    Point2f-based geometry, linesegments! batching instead of per-line calls, custom
+    trigonometric placement for vertex/edge labels — meaningful since Makie has no
+    built-in ternary axis type'
+  weaknesses:
+  - 'Minor overlap: one or two data points sit directly beneath/against the reference
+    diamond marker (visible at the diamond''s bottom vertex) — not severe, but a tiny
+    jitter offset on the diamond or drawing it with a slightly larger halo would fully
+    separate it from the coincidentally nearby data.'
+  - Data cluster occupies a fairly tight corner of the ternary space rather than spanning
+    a broader region — realistic for stainless-steel compositions, but a slightly
+    wider synthetic range (e.g. covering a couple of related alloy families) would
+    better showcase the plot type's full 2D compositional range (DQ-01).
+  - Edge tick labels (11pt) and reference-annotation text (14pt) are both good, but
+    consider nudging the tick labels up 1-2pt for parity with the reference label's
+    visual weight — a very minor balance note, not a legibility issue.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "ternary-basic · julia · makie · anyplot.ai" centered above the triangle, fully visible with a 166px top margin. Vertex labels "Nickel (Ni)" (top), "Iron (Fe)" (bottom-left), "Chromium (Cr)" (bottom-right) all in dark ink, fully inside the canvas — pixel scan confirms the "Chromium (Cr)" label's closing parenthesis sits ~33px inside the right edge, fully intact (no clipping). Subtle low-opacity gray grid lines at 20% intervals run parallel to each edge, with numeric edge tick labels (20/40/60/80) in softer gray. Triangle outline in medium gray. Bottom labels sit ~224px above the canvas edge.
+      Data: 90 circular markers in Imprint brand green (#009E73) with light strokes, clustered in the lower-left region (high iron, moderate chromium, low-moderate nickel) — consistent with real stainless-steel compositions. The reference-composition annotation (open diamond marker, leader line, "304 (18-8 ref.)" text label) IS PRESENT and renders correctly this time — confirmed via direct pixel-cropped inspection of the marker region, resolving the critical rendering defect flagged in the attempt-2 review. One or two data points sit very close to / touching the diamond's bottom vertex — a minor, non-severe overlap.
+      Legibility verdict: PASS — all text (title, vertex labels, tick labels, reference-annotation text) is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-consistent with #1A1A17 — not pure black.
+      Chrome: Title and vertex labels flip to light ink, clearly legible — no dark-on-dark failures. Grid and triangle outline flip to a light, low-opacity gray.
+      Data: Same 90 markers, identical #009E73 green and cluster position — only chrome flipped, as required. The reference-composition annotation (diamond/leader/text) again renders correctly, with the diamond's ink stroke and label flipping to the light ink token exactly like the other chrome elements.
+      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark issues; the reference annotation reads clearly in both themes.
+
+    Both renders were inspected as full images plus targeted pixel crops (corner-label margins, title span, and the reference-marker region) before concluding the previously-missing annotation now renders correctly in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (titlesize=22, vertex labels 16, edge ticks
+          11, reference label 14); readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: One/two data points sit very close to the reference diamond's bottom
+          vertex — minor, not severe
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: markersize=12 with alpha=0.85 and PAGE_BG stroke keeps overlapping
+          points distinguishable; diamond accent clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green with contrasting stroke reads clearly on both
+          surfaces; ink-toned reference marker is shape-distinct, not color-dependent
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 canvas, no canvas-gate failure file present; comfortable
+          margins verified via pixel scan (33px right, 166px top, 224px bottom)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Vertex labels fully descriptive with element symbols
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint brand green #009E73 for data, correct theme backgrounds
+          in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Fully custom-built ternary geometry, intentional typographic hierarchy,
+          subtle grid, working reference-anchor annotation
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/decorations hidden, subtle low-alpha grid, generous whitespace,
+          stroked markers
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Reference-composition anchor now renders, giving the reader a concrete
+          focal point to compare the alloy cloud against — the intended storytelling
+          device finally works
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ternary plot on an equilateral triangle
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid lines, labeled vertices, edge tick marks all present per spec
+          Notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Barycentric-to-Cartesian conversion verified correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; single series correctly omits
+          redundant legend
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Real 2D compositional variation with a recognizable reference point,
+          though cluster is fairly tight rather than spanning a broad region
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fe-Cr-Ni stainless-steel alloy is a textbook ternary use case listed
+          in the spec's Applications, fully neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible alloy composition ranges, always summing to 100%
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straight-line Imports -> Data -> Plot -> Save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set at top of script
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Reference-annotation code now renders as intended — no more non-functional/fake
+          elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via save(...) with px_per_unit=2
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Point2f-based geometry, linesegments! batching for the grid, DataAspect(),
+          correct Axis config
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Building a ternary axis from raw Makie primitives (no built-in ternary
+          geom) plus the now-working reference-anchor annotation are genuine library-mastery
+          touches
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
+  - grid-styling
+  - alpha-blending

@@ -1,7 +1,7 @@
 """ anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-06
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-08-04
 """
 
 import os
@@ -9,6 +9,7 @@ import sys
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Clean sys.path early to avoid importing this file as 'altair' (file naming conflict)
@@ -19,12 +20,13 @@ while _script_dir in sys.path:
 import altair as alt  # noqa: E402
 
 
-# Theme tokens
+# Theme tokens (Imprint)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3"]  # Imprint positions 1-3
 
 # Data - Soil composition samples (sand, silt, clay)
 np.random.seed(42)
@@ -46,7 +48,22 @@ total = sand + silt + clay
 x = silt / total + 0.5 * clay / total
 y = clay / total * height
 
-df = pd.DataFrame({"x": x, "y": y, "Sand (%)": sand.round(1), "Silt (%)": silt.round(1), "Clay (%)": clay.round(1)})
+# Classify each sample by its dominant component -- gives the point cloud a
+# focal data story (three texture groups radiating from their vertex) instead
+# of one undifferentiated color blob.
+dominant_idx = np.argmax(np.stack([sand, silt, clay], axis=1), axis=1)
+texture = np.array(["Sand-dominant", "Silt-dominant", "Clay-dominant"])[dominant_idx]
+
+df = pd.DataFrame(
+    {
+        "x": x,
+        "y": y,
+        "Sand (%)": sand.round(1),
+        "Silt (%)": silt.round(1),
+        "Clay (%)": clay.round(1),
+        "Texture": texture,
+    }
+)
 
 # Create triangle outline
 triangle_vertices = pd.DataFrame({"x": [0, 1, 0.5, 0], "y": [0, 0, height, 0], "order": [0, 1, 2, 3]})
@@ -139,43 +156,58 @@ vertex_labels = pd.DataFrame(
 # Triangle outline
 triangle = (
     alt.Chart(triangle_vertices)
-    .mark_line(strokeWidth=3, color=INK_SOFT)
+    .mark_line(strokeWidth=1.5, color=INK_SOFT)
     .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), order="order:O")
 )
 
 # Grid lines
 grid = (
     alt.Chart(grid_df)
-    .mark_rule(strokeWidth=1, opacity=0.15, color=INK_SOFT)
+    .mark_rule(strokeWidth=0.5, opacity=0.15, color=INK_SOFT)
     .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
 )
 
 # Tick marks
-ticks = alt.Chart(tick_df).mark_rule(strokeWidth=2, color=INK_SOFT).encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
+ticks = alt.Chart(tick_df).mark_rule(strokeWidth=0.75, color=INK_SOFT).encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
 
 # Tick labels
 tick_labels = (
-    alt.Chart(tick_df).mark_text(fontSize=14, color=INK_SOFT).encode(x="label_x:Q", y="label_y:Q", text="label:N")
+    alt.Chart(tick_df).mark_text(fontSize=10, color=INK_SOFT).encode(x="label_x:Q", y="label_y:Q", text="label:N")
 )
 
 # Vertex labels
 vertex_text = (
     alt.Chart(vertex_labels)
-    .mark_text(fontSize=22, fontWeight="bold", color=INK)
+    .mark_text(fontSize=13, fontWeight="bold", color=INK)
     .encode(x="x:Q", y="y:Q", text="label:N")
 )
 
-# Data points - Okabe-Ito brand green
+# Data points - colored by dominant component, Imprint palette positions 1-3
 points = (
     alt.Chart(df)
-    .mark_point(filled=True, size=300, color=BRAND, opacity=0.8)
+    .mark_point(filled=True, size=130, opacity=0.8)
     .encode(
         x="x:Q",
         y="y:Q",
+        color=alt.Color(
+            "Texture:N",
+            scale=alt.Scale(domain=["Sand-dominant", "Silt-dominant", "Clay-dominant"], range=IMPRINT_PALETTE),
+            legend=alt.Legend(
+                title="Dominant component",
+                orient="bottom",
+                direction="horizontal",
+                titleColor=INK,
+                labelColor=INK_SOFT,
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+                symbolSize=90,
+            ),
+        ),
         tooltip=[
             alt.Tooltip("Sand (%):Q", format=".1f"),
             alt.Tooltip("Silt (%):Q", format=".1f"),
             alt.Tooltip("Clay (%):Q", format=".1f"),
+            alt.Tooltip("Texture:N"),
         ],
     )
 )
@@ -184,15 +216,34 @@ points = (
 chart = (
     alt.layer(grid, triangle, ticks, tick_labels, vertex_text, points)
     .properties(
-        width=1600,
-        height=900,
+        width=500,
+        height=460,
         background=PAGE_BG,
-        title=alt.Title(text="ternary-basic · altair · anyplot.ai", fontSize=28, color=INK),
+        title=alt.Title(text="ternary-basic · altair · anyplot.ai", fontSize=16, color=INK),
     )
     .configure_axis(grid=False, domain=False, ticks=False, labels=False, title=None)
     .configure_view(strokeWidth=0, fill=PAGE_BG)
 )
 
-# Save (1600 * 3 = 4800, 900 * 3 = 2700)
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Square canvas: the triangle's natural aspect ratio (base 1.0, height sqrt(3)/2
+# plus label margins) is close to 1:1, so a square canvas wastes far less
+# horizontal space than landscape would.
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# vl-convert pads the view with title/label extents outside width/height, so the
+# saved PNG is larger than (width * scale_factor, height * scale_factor). PAD
+# (never crop) up to the exact canonical target.
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")

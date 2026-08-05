@@ -1,0 +1,269 @@
+library: highcharts
+language: javascript
+specification_id: streamgraph-basic
+created: '2026-08-05T11:33:22Z'
+updated: '2026-08-05T11:55:53Z'
+generated_by: claude-sonnet
+workflow_run: 31001367301
+issue: 856
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/highcharts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Critical fix verified: pixel-cropped the saved PNGs at the left edge (Jan ''22)
+    and right edge (Oct ''24) and confirmed the stream envelope is now symmetric about
+    a stable vertical center (~45% down the canvas at both ends) even though the total
+    band height grows substantially left-to-right — this is a genuine wiggle/silhouette
+    streamgraph baseline, not the flat-bottom stacked-area-chart defect from attempt
+    1'
+  - 'Correct Imprint palette in canonical order in both renders — first series (Streamly)
+    is #009E73, remaining four platforms follow positions 2-5, identical hues between
+    light and dark'
+  - 'Theme chrome fully correct in both renders: #FAF8F1 light / #1A1A17 dark backgrounds,
+    readable ink-colored title/subtitle/axis text, and a nice touch where the inter-band
+    separator stroke itself flips from white to near-black with the page background'
+  - Smooth areaspline interpolation gives genuinely organic, flowing band edges as
+    the spec requests, and the now-correct centering makes the relative composition
+    shift (Wavecast's rise, Orbit's decline) visually legible at a glance
+  - Deterministic in-memory data via a small fixed-seed LCG; the five platforms show
+    real hand-off (steady grower, fast riser, fading incumbent, flat/seasonal, slow
+    climber) — good feature coverage for the plot type
+  - Clean, well-commented code explaining the manual geometry workaround required
+    by the missing core-bundle streamgraph module; no fake interactivity; correct
+    mount-node contract and output API
+  - Title format matches the mandated pattern exactly; legend labels correctly match
+    the five platform series
+  weaknesses:
+  - Y-axis is still fully hidden with no value scale or reference line anywhere in
+    the static PNG — a viewer can read relative proportions from band thickness but
+    has no way to anchor an absolute subscriber count without hovering (only available
+    in the interactive HTML, not the PNG)
+  - Design storytelling is solid but stops short of calling out the clearest insight
+    (Wavecast overtaking Orbit around mid-2023) — a subtle label or emphasis on that
+    crossover would push Data Storytelling from good to excellent
+  - Library Mastery relies on a manual per-point geometry + z-index layering + mask-series
+    workaround rather than a native primitive — understandable given only the core
+    bundle is loaded (no streamgraph/arearange module), but it means the implementation
+    doesn't showcase a feature unique to Highcharts beyond this workaround itself
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 as required — not pure white.
+      Chrome: Title "streamgraph-basic · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Monthly subscriber base by streaming platform (millions)" in softer ink below it, both clearly legible. X-axis tick labels (Jan '22 ... Oct '24) and axis title "Month (2022-2024)" are dark and legible against the light background. Legend at the bottom lists all 5 platforms with color swatches, fully readable. No text is clipped at any canvas edge (verified by cropping the leftmost 400px, rightmost 400px, top 150px, and bottom 200px strips).
+      Data: Five overlapping color bands (green Streamly, lavender Wavecast, blue Orbit, ochre Nimbus, red Pulse bottom-to-top) with thin white separator lines between bands. First series is #009E73 as required. Cropped the left edge (Jan '22) and right edge (Oct '24) columns: at the left, the envelope spans roughly the 22%-68% vertical range (midpoint ~45%); at the right, it spans roughly 11%-80% (midpoint ~46%) — despite the total band height growing substantially, the vertical center stays essentially fixed, which is the defining signature of a correctly centered/symmetric streamgraph baseline (fixed in this attempt vs. attempt 1's flat-bottom defect).
+      Legibility verdict: PASS — all text readable, and the plot's core encoding now correctly implements the spec's centered-baseline requirement.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 as required — not pure black.
+      Chrome: Title and subtitle render in light ink, fully legible against the dark background. Axis tick labels and axis title are in the correct softer light-ink tone, all readable. Legend text is light-colored and legible. No dark-on-dark or light-on-light failures anywhere.
+      Data: Confirmed identical band colors and geometry to the light render (same five hues, same wiggle shape at both crops) — only the chrome and the inter-band separator stroke (white in light, near-black in dark, since it's drawn in the page-background color) flip between themes, exactly as expected.
+      Legibility verdict: PASS — all text readable, no theme-adaptation failures, same correct symmetric-baseline geometry as the light render.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, subtitle/labels 14px,
+          axis titles 16px); readable in both themes at full size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, tick labels well spaced with tickInterval 3
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bands clearly visible with separator lines; adequate for 5-series
+          density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint palette, no red-green-only distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Layout imbalance from attempt 1 is resolved now that the baseline
+          is truly centered; canvas usage is well balanced across the time range
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: X-axis descriptive with time range; y-axis fully hidden with no unit-bearing
+          value labeling anywhere in the static PNG
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order 2-5, theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Now that the true wiggle silhouette renders correctly, the chart
+          reads as a genuinely organic, thoughtfully colored streamgraph rather than
+          a generic stacked-area chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, hidden y-axis, subtle band separators that adapt to theme
+          — clean and refined with minor room for polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy (color contrast + shifting band widths) guides the
+          reader to see the platform hand-off, though no explicit emphasis/annotation
+          calls out the clearest crossover moment
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Verified via edge-crop pixel inspection: baseline is now truly centered/symmetric
+          and wiggles with the total, a genuine streamgraph'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth interpolation, centered baseline, harmonious colors, and legend
+          are all present and working
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, band thickness=value, z-order correctly nests each series;
+          axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches the mandated pattern; legend labels
+          correctly match the 5 platform series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows rising, falling, flat/seasonal, and slow-climb trend types
+          across the 5 platforms
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Streaming platform subscriber base is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Subscriber values in millions with plausible growth/decline rates
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports -> data -> geometry -> chart structure, minimal helper
+          function for the LCG
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports, uses only the ANYPLOT_TOKENS/Highcharts globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: The per-point cumulative envelope + z-index layering + mask-series
+          workaround is now verified correct and clearly commented, a sound solution
+          given the missing streamgraph module
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Highcharts
+          API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct and working, but relies on manual low-level geometry rather
+          than a native high-level primitive (unavailable in the core bundle)
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: zIndex-based layering plus a background-color mask series is a genuinely
+          Highcharts-specific technique, though it's a workaround rather than a showcased
+          native feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - time-series
+  - cumulative-sum
+  styling:
+  - minimal-chrome

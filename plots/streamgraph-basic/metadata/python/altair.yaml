@@ -2,102 +2,102 @@ library: altair
 language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:54:28Z'
-updated: '2026-05-06T21:50:56Z'
+updated: '2026-08-05T11:35:59Z'
 generated_by: claude-sonnet
-workflow_run: 25356072521
+workflow_run: 31000958255
 issue: 856
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/altair/plot-dark.html
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - Smooth basis-spline interpolation creates authentic flowing streamgraph aesthetic
-  - Centered baseline (stack=center) correctly implements streamgraph layout
-  - Explicit font sizes set for all elements (title 28px, axis 22px, ticks 18px)
-  - 'Data is realistic and well-chosen: 6 music genres over 24 months with seasonal
-    variation'
-  - KISS code structure with no functions or classes
-  - Both light and dark renders are legible
+  - 'Both attempt-1 weaknesses fully resolved: title now includes the python language
+    segment, and each genre now has its own trend/phase/amplitude so bands show genuinely
+    independent trajectories instead of moving in lockstep'
+  - Canvas is exactly on target (3200x1800), no padding artifacts, no edge clipping
+    on title/axis/legend in either theme
+  - Theme-adaptive chrome correctly threaded through configure_axis/configure_legend/configure_view/title
+    color - both renders fully readable with identical data colors and correctly flipped
+    chrome
+  - Idiomatic, minimal-code use of Altair's stack='center' + interpolate='basis' to
+    build the streamgraph baseline and smooth curves - exactly the declarative pattern
+    the library is designed for
+  - 'Imprint palette applied correctly in canonical order with #009E73 as the first
+    series, consistent across both themes'
   weaknesses:
-  - Color palette uses Python Blue (#306998) instead of Okabe-Ito (#009E73 first)
-    — explicit VQ-07 violation
-  - Code saves to plot.png instead of plot-{THEME}.png; no ANYPLOT_THEME environment
-    variable handling
-  - Title string in code contains pyplots.ai instead of anyplot.ai
-  - No theme-adaptive chrome set in code (no background=PAGE_BG, no labelColor/titleColor
-    tokens)
-  - CVD accessibility not ensured — non-Okabe-Ito palette not designed for color-blind
-    safety
+  - 'Design Excellence remains competent-but-standard: no additional visual hierarchy
+    device beyond what the base house style and now-varied data already provide'
+  - Y-axis tick labels/ticks are hidden - a defensible and intentional choice for
+    a centered-baseline streamgraph, but worth continuing to confirm this reads as
+    intentional rather than missing
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1; not pure white.
-      Chrome: Title "streamgraph-basic · altair · anyplot.ai" in dark text at top center — clearly visible. X-axis tick labels (Jan 2022 through Nov 2023) angled at -45°, dark text, readable. Y-axis title "Streaming Hours (millions)" visible in dark text; tick values hidden (intentional streamgraph design). Legend on right side with "Genre" heading and six category labels in dark text — all legible.
-      Data: Six smooth flowing bands. Large orange-red band (Rock) dominant at top, large teal-green band (Pop) in middle, gold/yellow band (Electronic), blue band (Jazz), pink/lavender band (Classical), sky-blue band at bottom edge. Basis spline interpolation creates organic river-like appearance. Opacity 0.85 gives slight translucency.
-      Palette note: Colors do NOT follow Okabe-Ito — code specifies #306998 (Python Blue) as first series instead of required #009E73.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Bold dark title "streamgraph-basic · python · altair · anyplot.ai" centered at top; rotated y-axis title "Streaming Hours (millions)" with a plain vertical domain line (numeric y ticks intentionally hidden); x-axis titled "Time" with rotated month/year tick labels (Jan 2022 ... Nov 2023); bordered "Genre" legend at right with all 6 swatches/labels. All chrome text clearly readable against the light background.
+      Data: Six smooth basis-interpolated bands stacked symmetrically around a centered baseline (Classical/cyan, Electronic/ochre, Hip-Hop/blue, Jazz/red, Pop/green, Rock/lavender bottom-to-top). First series (Pop) renders in #009E73 as required. Bands now show genuinely divergent trajectories per genre (distinct trend/phase/amplitude), unlike attempt 1's lockstep shapes.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black consistent with #1A1A17; not pure black.
-      Chrome: Title, x-axis tick labels, y-axis label, and legend text all appear in light color against the dark background — readable. No dark-on-dark failures observed. Background appears to be applied externally by pipeline/vl-convert since code does not read ANYPLOT_THEME or set background/text colors explicitly.
-      Data: Six band colors appear identical to the light render — orange-red, teal-green, gold, blue, pink, sky-blue — confirming data palette is consistent across themes (correct behavior).
-      Legibility verdict: PASS — text is readable against dark background; theme chrome appears correct in rendered output despite missing explicit theme handling in code.
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same layout as light render; title/axis titles/tick labels render in light ink, domain/tick lines in soft light grey, legend uses dark elevated fill with light border and light text. No dark-on-dark issues found - all chrome text clearly legible.
+      Data: Colors identical to light render (same six Imprint hues in the same stacking order) - only chrome flipped as expected.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px, legend 18-20px. Readable in both renders.'
+        comment: Font sizes explicitly set, good proportions, title ~65-68% of plot
+          width; y-axis ticks intentionally hidden (appropriate for centered-baseline
+          streamgraph)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; angled x-axis labels prevent date overlap; legend
-          well-separated from plot.
+        comment: No overlap between any text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All six genre bands clearly visible with opacity=0.85; flowing curves
-          well-rendered.
+        comment: Bands well-sized for 24 time points x 6 categories, clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-Okabe-Ito palette not designed for CVD safety; #2CA02C green
-          adjacent to other hues could cause issues.'
+        passed: true
+        comment: Imprint palette is CVD-optimized; adjacent bands distinguished by
+          legend + position, not hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well; legend positioned near plot; balanced margins.
+        comment: Content covers vast majority of the 3200x1800 canvas, balanced margins,
+          legend near plot, canvas gate confirms exact target dims
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis has units: Streaming Hours (millions); X-axis labeled Time.'
+        comment: '"Time" and "Streaming Hours (millions)" - descriptive with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses #306998 (Python Blue) as first series — explicitly called
-          out as 0-point condition. Full palette is non-Okabe-Ito custom hexes. No
-          theme-adaptive chrome in code.'
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for all 6 genres,
+          theme-correct backgrounds and chrome in both renders'
     design_excellence:
       score: 12
       max: 20
@@ -107,27 +107,25 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default appearance. Non-standard palette weakens
-          design coherence. Smooth curves and clean layout are positive, but no exceptional
-          design choices.
+        comment: Correctly applies mandated Imprint palette + theme chrome, but this
+          is the required house style rather than extra creative polish beyond it
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Grid removed (grid=False), view border removed (strokeWidth=0), y-axis
-          ticks/labels hidden for streamgraph aesthetic. Good refinement but no spine
-          removal or further customization.
+        comment: Grid off, L-shaped domain lines, generous whitespace - solid but
+          standard-guide-compliant, not exceptional beyond the default recipe
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Streamgraph naturally creates visual hierarchy through band widths
-          — Pop (base 150) dominates, seasonal patterns emerge. No explicit annotations
-          but natural emphasis present.
+        passed: true
+        comment: 'Fixed since attempt 1: per-genre trend/phase/amplitude now make
+          bands genuinely diverge, creating real visual hierarchy alongside Pop''s
+          dominant focal band; still no explicit annotation device'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -135,29 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct streamgraph with center baseline (stack=center) and basis
-          spline interpolation.
+        comment: 'Correct streamgraph: mark_area with stack=''center'' and basis interpolation'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth interpolation, centered baseline, multiple categories, legend
-          all present.
+        comment: Smooth basis interpolation, centered baseline, distinct Imprint colors,
+          legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x-axis, value stacked on y-axis, color maps to category.
+        comment: time on x, value stacked on y, category on color - correct, all data
+          visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Code contains pyplots.ai instead of anyplot.ai in title string. Rendered
-          image appears to show anyplot.ai (possible pipeline patching). Legend labels
-          correct.
+        passed: true
+        comment: 'Fixed since attempt 1: title now includes the mandated {language}
+          segment (''python''); legend fully correct'
     data_quality:
       score: 15
       max: 15
@@ -167,24 +164,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 6 genres with different popularity levels, seasonal variation,
-          and growth trends.
+        comment: 'Fixed since attempt 1: per-genre trend/phase/amplitude give each
+          genre a genuinely independent trajectory instead of a shared trend+seasonal
+          signal'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly streaming hours by music genre (2022-2023) is a real-world,
-          neutral, plausible scenario.
+        comment: Music streaming hours by genre over time - real, neutral, comprehensible
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Pop highest (base 150), Classical lowest (base 30), realistic proportions
-          with seasonal noise.
+        comment: Base values 30-150M hours, plausible magnitudes and growth/decline
+          per genre, values clipped to stay positive
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -192,63 +190,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save. No functions or
-          classes.'
+        comment: Imports -> theme setup -> data generation -> chart -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only alt, numpy, pandas imported; all used.
+        comment: os, altair, numpy, pandas, PIL.Image all used (PIL for the mandatory
+          canvas padding step)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; no fake functionality; appropriate complexity.
+        comment: Clean, appropriate complexity, no fake UI elements
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to plot.png and plot.html, not plot-{THEME}.png / plot-{THEME}.html.
-          Missing ANYPLOT_THEME handling entirely.
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, current Altair API
+          (mark_area, alt.Title, alt.Legend)
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct Altair declarative API usage with encode(), mark_area(),
-          configure_axis(). Missing the standard ANYPLOT_THEME pattern recommended
-          by library guide.
+        passed: true
+        comment: High-level declarative alt.Chart().mark_area().encode() with stack/order/scale/legend
+          configuration - textbook idiomatic Altair
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses stack=center for streamgraph, interpolate=basis, alt.Order()
-          for stacking, alt.Tooltip with format, interactive HTML export — these are
-          Altair/Vega-Lite-distinctive features.
+        passed: true
+        comment: Vega-Lite's declarative stack='center' + interpolate='basis' encoding
+          is a distinctive, concise way to build a streamgraph unique to this grammar-of-graphics
+          approach
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
+  - cumulative-sum
   - time-series
   styling:
   - alpha-blending

@@ -2,47 +2,65 @@ library: letsplot
 language: python
 specification_id: heatmap-annotated
 created: '2025-12-24T21:34:55Z'
-updated: '2026-05-06T13:14:14Z'
-generated_by: claude-haiku
-workflow_run: 25437056081
+updated: '2026-08-05T09:54:48Z'
+generated_by: claude-sonnet
+workflow_run: 30993923772
 issue: 1824
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/letsplot/plot-dark.html
-quality_score: 96
+quality_score: 89
 review:
   strengths:
-  - 'Perfect theme adaptation: both light and dark renders visually correct with no
-    legibility issues'
-  - 'Excellent text contrast strategy for annotations: automatically uses white or
-    black based on cell value'
-  - Professional diverging colormap appropriate for correlation data
-  - Clean, idiomatic lets-plot code with proper sizing and formatting
-  - 'Comprehensive feature implementation: all spec requirements met'
-  - Reproducible data generation with proper seed
+  - Title now correctly follows the mandated `{spec-id} · {language} · {library} ·
+    anyplot.ai` format ("heatmap-annotated · python · letsplot · anyplot.ai"), fixing
+    the SC-04 gap from the prior review.
+  - Correlation range widened (`np.random.uniform(-0.7, 0.85, ...)`) so the red end
+    of the diverging scale is now genuinely exercised — e.g. Healthcare-Industrial
+    at -0.57 renders as a saturated red cell with white text, fixing the DQ-01 under-demonstration
+    flagged previously.
+  - 'Correct Imprint diverging colormap (`imprint_div`: #AE3030 -> theme-adaptive
+    midpoint -> #4467A3) applied to the correlation fill, with theme-correct chrome
+    (background, title, axis, legend) in both renders.'
+  - 'Smart contrast-aware annotation text color: cell labels switch between white
+    and ink based on |value| > 0.5, keeping every annotation readable regardless of
+    cell saturation.'
+  - 'Genuine data storytelling: a second `geom_tile` layer with a bold border highlights
+    the single strongest off-diagonal correlation (Finance-Consumer, 0.68), correctly
+    computed and drawn on both mirrored cells — a clear focal point beyond a plain
+    grid dump.'
+  - 'Clean, idiomatic lets-plot/grammar-of-graphics code: layered geoms, `scale_color_identity()`
+    for direct color mapping of precomputed text colors, KISS structure, reproducible
+    via `np.random.seed(42)`.'
+  - 'Correct matrix conventions: y-axis categories reversed so the diagonal reads
+    top-left to bottom-right, all 8x8 cells populated and labeled.'
   weaknesses:
-  - Design could explore more distinctive color scheme choices or visual emphasis
-    techniques to enhance aesthetic sophistication
-  - Data storytelling could be enhanced with explicit pattern annotations or visual
-    emphasis to guide viewer attention to key correlations
+  - 'Design Excellence still has room to grow beyond a solid-but-not-exceptional level:
+    cell border weight (`geom_tile(color=INK_SOFT, size=0.3)`) and legend box framing
+    are fairly standard — consider slightly more refined borders/whitespace or an
+    added visual accent to push polish further.'
+  - The negative extreme (-0.57) is still noticeably less saturated than the positive
+    extreme (diagonal 1.00 and several 0.6+ off-diagonal values), so the diverging
+    scale reads slightly asymmetric — not a hard failure, but a wider negative tail
+    (e.g. one pair around -0.75 to -0.85) would make the diverging nature fully symmetric.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme color, professional appearance
-      Chrome: Title "heatmap-annotated · letsplot · anyplot.ai" in dark text (INK), clearly readable; axis labels "Sector" and tick labels for all 8 sectors in dark gray (INK_SOFT), all legible; legend background elevated (#FFFDF6) with "Correlation" title and scale bar
-      Data: 8×8 correlation matrix with diverging colormap (blue #2166AC to red #B2182B through white), proper symmetric structure with 1.0 diagonal; annotation values (2 decimal places) with automatic contrast (white text on dark cells, black on light cells)
-      Legibility verdict: PASS — all text elements readable, no overlap, proper contrast throughout
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "heatmap-annotated · python · letsplot · anyplot.ai" top-left in dark ink, clearly readable and now includes the required "python" language segment. "Sector" axis titles (x and y) in dark ink, clearly readable. X-axis tick labels (sector names) rotated 45° in medium-gray, no overlap with each other or the axis title. Y-axis tick labels horizontal in medium-gray, clearly readable. Colorbar legend on the right titled "Correlation" with tick labels 1 / 0.5 / 0 / -0.5 / -1, all legible against the elevated cream legend box.
+      Data: 8x8 grid of cells colored on a red-cream-blue diverging scale (diagonal = 1.00, dark blue). Each cell is annotated with its value to 2 decimal places; white text on saturated (|value| > 0.5) cells, dark ink text on lighter cells — both fully legible. The most negative cell (Healthcare-Industrial, -0.57) now renders as a clearly saturated red, showing the red end of the scale is genuinely exercised (fixed from the prior attempt's pale-pink-only red range). The strongest off-diagonal pair (Finance-Consumer, 0.68) is boxed with a bold dark border on both mirrored cells, creating a clear focal point.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme color, proper near-black (not pure black)
-      Chrome: Title in light text (INK=#F0EFE8), clearly readable; axis labels and tick labels in light gray (INK_SOFT=#B8B7B0), all legible with no dark-on-dark failures; legend background dark elevated (#242420) with light text, properly contrasted
-      Data: Identical cell colors to light render — diverging colormap colors (blue, red) preserved, only chrome adapted; annotation text maintains same contrast logic, fully readable in both light and dark cells
-      Legibility verdict: PASS — all text elements readable, colors consistent with light render, no dark-on-dark failures
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title in light cream text, clearly readable against the dark background, same corrected "python" language segment. "Sector" axis titles in light text, clearly readable. Tick labels (both axes) in light gray, legible, same rotation/layout as the light render. Colorbar legend box uses the dark elevated background with light text/ticks, fully legible.
+      Data: Same red-cream-blue diverging scale and identical cell values/colors as the light render — only the chrome (background, text, legend box, cell border color) flips. Cell annotation text remains white on saturated cells and light ink on lighter cells; no dark-on-dark or unreadable text observed anywhere. The Finance-Consumer highlight box is rendered with a near-white border so it still reads clearly against the dark cell fills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,74 +68,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (24pt), axis labels (20pt), tick labels (16pt), and annotations
-          (12pt bold) all readable in both themes with proper color contrast
+        comment: All font sizes explicitly set (title 16pt, axis 12pt, ticks 10pt,
+          annotation size=3.5), readable at full size in both themes; no overflow
+          or clipping.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Rotated x-axis labels well-spaced; annotation values fit within cells;
-          no collisions
+        comment: No overlap between tick labels, title, cell annotations, or the highlight
+          border in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Heatmap cells clearly distinct; grid borders visible; annotations
-          legible; 8×8 density appropriate
+        comment: Tiles and annotations fill the 8x8 grid well and are clearly visible;
+          annotation text could be marginally larger for extra full-resolution punch.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging blue-white-red colormap CVD-safe and appropriate for correlation
-          data
+        comment: Threshold-based white/ink text color keeps contrast strong across
+          the full range of cell saturations; diverging red-blue scale avoids red-green-only
+          signaling.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px canvas well-utilized; legend positioned clearly; generous
-          margins
+        comment: Grid + colorbar fill the 3200x1800 canvas well with balanced margins;
+          colorbar sits close to the plot, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Sector" labels on both axes; proper title format'
+        comment: '"Sector" axis labels are descriptive for categorical data; colorbar
+          legend titled "Correlation".'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Diverging BrBG-style scale correct for continuous data; backgrounds
-          (#FAF8F1 light, #1A1A17 dark) correct; both renders theme-correct'
+        comment: 'Uses imprint_div (#AE3030 -> theme-adaptive midpoint -> #4467A3)
+          correctly for diverging correlation data; theme-correct chrome in both renders.'
     design_excellence:
-      score: 17
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Professional diverging colormap and theme-adaptive implementation;
-          could explore more distinctive design choices
+        comment: Thoughtful diverging palette and contrast-aware annotation logic
+          go beyond configured defaults, but overall polish stops short of publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Clean minimal design; subtle tile borders; generous whitespace; no
-          chartjunk
+        comment: Grid removed (panel_grid=element_blank()), subtle cell borders, appropriate
+          frame for a heatmap grid; legend/cell border weights are fairly standard.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Color gradient highlights patterns; diagonal focal point clear; could
-          emphasize key patterns more explicitly
+        comment: Bold-bordered highlight on the strongest off-diagonal pair creates
+          real visual hierarchy and a clear focal point beyond a raw data dump.
     spec_compliance:
       score: 15
       max: 15
@@ -127,50 +148,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap with annotations; proper correlation matrix
+        comment: Correct annotated heatmap via geom_tile + geom_text.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: color mapping, annotations, automatic contrast,
-          colorbar'
+        comment: Contrast-aware annotations, diverging colormap for signed data, colorbar
+          legend, 2-decimal formatting — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly mapped; values correctly mapped to fill; all data
-          shown
+        comment: X/Y sector mapping correct, y-axis reversed for standard matrix orientation,
+          all cells shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Perfect title format; legend properly labeled and scaled
+        comment: Title now correctly reads "heatmap-annotated · python · letsplot
+          · anyplot.ai" — the missing language segment from the prior review is fixed.
+          Legend correct.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Complete correlation matrix for all 8 sectors; properly symmetric
+        comment: Diagonal, symmetry, and now a genuinely exercised negative range
+          (min -0.57, saturated red) are all shown, fixing the prior pale-red-only
+          issue; still slightly less saturated than the positive extreme.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock sector correlations plausible; real-world relevant; neutral
-          domain
+        comment: Stock-sector correlation matrix is a real, neutral, comprehensible
+          business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard [-1, 1] range; 8×8 size manageable; formatting appropriate
+        comment: Correlation coefficients are plausible, diagonal is exactly 1.0,
+          matrix is symmetric.
     code_quality:
       score: 10
       max: 10
@@ -180,55 +206,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct structure; no unnecessary functions
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42); deterministic output
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary dependencies
+        comment: os, numpy, pandas, lets_plot — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; clean text-color logic; no fake UI
+        comment: Clean, no over-engineering, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html; current API
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html, current lets-plot
+          API.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ggplot grammar correct; idiomatic use of geom_tile, geom_text, scale_fill_gradient2,
-          theme customization
+        comment: 'Idiomatic grammar-of-graphics composition: geom_tile + geom_text
+          layers, scale_fill_gradient2, theme().'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of scale_color_identity for dynamic text coloring; could
-          explore additional lets-plot-specific patterns
+        comment: Uses scale_color_identity() to map precomputed per-cell text colors
+          directly, plus a layered geom_tile technique for the highlight border —
+          distinctive to the grammar-of-graphics layering model.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
@@ -236,3 +265,4 @@ impl_tags:
   - correlation-matrix
   styling:
   - custom-colormap
+  - edge-highlighting

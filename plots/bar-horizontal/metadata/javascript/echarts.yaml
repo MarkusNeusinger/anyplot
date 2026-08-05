@@ -1,0 +1,237 @@
+library: echarts
+language: javascript
+specification_id: bar-horizontal
+created: '2026-08-05T17:25:54Z'
+updated: '2026-08-05T17:40:20Z'
+generated_by: claude-sonnet
+workflow_run: 31029640386
+issue: 1946
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Directly resolved all three Attempt-1 weaknesses: top-bar focal point (brand-green
+    + bold label vs. softened tint on the rest), larger title fontSize (22->26), and
+    an ECharts-distinctive markLine average benchmark'
+  - 'First series correctly uses Imprint brand green #009E73; identical hex+alpha
+    across light/dark, theme tokens threaded through title/axes/gridlines/markLine
+    so both renders are fully theme-correct'
+  - 'Descending sort with inverse: true plus the highlighted top bar and average reference
+    line together give a clear, immediate ranking narrative'
+  - Realistic, neutral business scenario (multi-select software-subscription survey)
+    with sensible value spread and a clarifying data comment
+  - 'Clean KISS structure, deterministic data, correct mount-node contract (animation:
+    false, no explicit size/DPR)'
+  weaknesses:
+  - Title still fills only ~33-35% of canvas width, below the 50-70% guideline; a
+    further fontSize bump or tighter top margin would improve VQ-01/canvas balance
+    (minor, non-blocking)
+  - Design Excellence relies on a single-hue tint (alpha variant of the same green)
+    for hierarchy rather than a more elaborate custom treatment
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "bar-horizontal · javascript · echarts · anyplot.ai" centered top in dark ink, fully legible. Y-axis category labels, x-axis title ("Respondents citing this reason (%)") and tick labels (0-80%) all readable in soft dark ink. Subtle vertical gridlines at each tick.
+      Data: 8 horizontal bars sorted descending (68% -> 18%). Top bar full-strength Imprint brand green #009E73 with bold "68%" label; remaining 7 bars use a ~60%-alpha tint of the same green. Dashed "Avg 43.5%" markLine crosses the bars with a rotated label. Value labels sit past each bar end, no overlap.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Same title/layout, rendered in light/white text - fully legible against the dark surface. Axis labels, tick labels, and value labels all light-colored, no dark-on-dark issues anywhere.
+      Data: Top bar and remaining bars use the identical hex+alpha as light render (#009E73 base + same 60% alpha tint), confirming data-color identity holds across themes; only chrome flips. Dashed average line and rotated label remain legible in muted inkSoft gray.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes, no overflow;
+          title fontSize grew 22->26 per prior feedback but still ~33-35% of canvas
+          width, under the 50-70% guideline
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions, including the new markLine label
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar thickness/gap well adapted to 8 categories; rounded end-caps
+          and highlighted top bar read clearly
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Strong contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large majority of the canvas, balanced margins, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis label descriptive with % units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/top series is #009E73, identical hex+alpha across themes,
+          correct backgrounds, theme-correct chrome'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Brand-green tint hierarchy + rounded caps + benchmark line read as
+          intentional, above a well-configured default; not yet full custom-palette/publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis gridlines, generous whitespace, tick marks removed;
+          solid but not maximally polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bold highlighted top bar plus the average benchmark line give an
+          immediate, clear insight beyond raw sort order
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted, consistent bar heights, single-color+highlight, adequate
+          spacing, value labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on y, value on x, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; legend correctly omitted for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full value range shown with ranking, highlight, and benchmark
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral business survey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic survey percentages, correct average computation
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, no explicit size/DPR'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Per-item itemStyle/label callbacks and declarative markLine show
+          fluent use of ECharts' high-level option API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Auto-computed markLine average is a genuinely ECharts-distinctive
+          feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - reference-line
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

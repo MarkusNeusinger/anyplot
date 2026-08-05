@@ -2,98 +2,108 @@ library: altair
 language: python
 specification_id: ternary-basic
 created: '2025-12-24T09:50:30Z'
-updated: '2026-05-06T03:37:09Z'
-generated_by: claude-haiku
-workflow_run: 25414898869
+updated: '2026-08-04T15:15:19Z'
+generated_by: claude-sonnet
+workflow_run: 30921477116
 issue: 1001
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/altair/plot-dark.html
-quality_score: 93
+quality_score: 90
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing across all text elements
-  - 'Flawless theme adaptation: data colors identical across light/dark, chrome properly
-    flips'
-  - Mathematically sound ternary-to-Cartesian conversion with proper grid/tick generation
-  - Clean, idiomatic altair code using layer composition and proper encoding types
-  - 'Excellent spec compliance: all required features present and working'
-  - Realistic, well-distributed soil composition data using appropriate Dirichlet
-    sampling
-  - Interactive tooltips showing component percentages add value beyond static plot
+  - 'Directly addresses both weaknesses from Attempt 1: points are now color-grouped
+    by dominant soil component (Sand/Silt/Clay-dominant), giving the chart real visual
+    hierarchy, and marker size increased from 80→130, landing in the recommended range
+    for the data density.'
+  - 'Color assignment follows canonical Imprint order (green→lavender→blue) with the
+    first series still #009E73, and the new legend clearly labels each group.'
+  - Theme-adaptive chrome remains threaded through every layer; both renders pass
+    the light/dark legibility check with no dark-on-dark or light-on-light failures,
+    and data colors are identical across themes.
+  - Canvas padding handled correctly (pad-only-to-target, never crop) per the altair
+    library rules, eliminating edge-clipping risk.
+  - Realistic, neutral dataset (sand/silt/clay soil composition) that plausibly sums
+    to 100% and covers a broad spread of the composition space.
   weaknesses:
-  - Design Excellence limited by use of single Okabe-Ito brand green (correct but
-    not distinctive)
-  - DE-03 reflects clear data display without explicit visual emphasis or storytelling
-    (appropriate for basic plot)
+  - No data points reach the extreme near-100% corners of any vertex — the composition
+    space isn't fully covered at the edges.
+  - The ternary-to-Cartesian conversion and dominant-component classification are
+    fully precomputed in pandas/numpy rather than via Altair's own transform_calculate/transform_filter.
+  - A few points still directly overlap at 80% opacity within the same color group,
+    slightly obscuring point count in dense regions.
+  - Color-by-dominant-component is a solid but fairly conventional storytelling technique;
+    an explicit callout/annotation on a notable sample would push Design Excellence
+    further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title "ternary-basic · altair · anyplot.ai" (fontSize=28, dark text), vertex labels "Sand (100%)", "Silt (100%)", "Clay (100%)" (fontSize=22, bold, dark), tick labels (fontSize=14, dark), grid lines (opacity 0.15), triangle outline (strokeWidth=3)—all clearly readable on light background
-      Data: 50 points in Okabe-Ito brand green (#009E73), size=300, opacity=0.8; well-distributed across full triangle range
-      Legibility verdict: PASS - All text fully readable, no contrast issues, proper theme coloring
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark title "ternary-basic · altair · anyplot.ai" centered at top; bold dark vertex labels "Clay (100%)", "Sand (100%)", "Silt (100%)"; dark charcoal triangle outline; subtle (~15% opacity) grid lines at 20/40/60/80% intervals; grey tick marks and percentage labels along all three edges; bordered/filled legend box at bottom titled "Dominant component". All elements clearly readable.
+      Data: 50 filled circular points (size 130, opacity 0.8) colored by dominant soil component - brand green (#009E73) for Sand-dominant, lavender (#C475FD) for Silt-dominant, blue (#4467A3) for Clay-dominant. First series is #009E73, confirmed. Groups visibly cluster toward their respective vertices.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title, vertex labels, tick labels all in light text (properly theme-adapted from INK tokens); grid lines and triangle outline in light gray—all clearly readable on dark background with no dark-on-dark failures
-      Data: 50 points in identical Okabe-Ito brand green (#009E73) as light render, confirming proper theme-only chrome flip with data colors constant
-      Legibility verdict: PASS - All text fully readable, brand green stands out well, proper theme-adaptive styling throughout
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same layout as light render - title, vertex labels, triangle outline, grid, tick marks, and legend all re-rendered in light cream / light-grey ink tokens. No dark-on-dark failures observed; all text fully legible against the dark background.
+      Data: Point colors (green/lavender/blue) are identical to the light render - only chrome (background, text, grid, legend box) flipped, confirming Imprint palette consistency across themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, vertex labels 22px, tick
-          labels 14px); readable in both themes
+        comment: Explicit font sizes throughout (title 16, vertex labels 13, ticks
+          10); readable in both themes; title compact, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements cleanly separated with zero text overlap
+        comment: No text-on-text or text-on-data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 50 data points (size=300, opacity=0.8) perfectly visible; triangle,
-          grid, ticks all clear
+        comment: Marker size raised from 80 to 130 at opacity 0.8, now in the 100-200
+          guideline range for n=50 points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito brand green (#009E73) with good contrast on both surfaces;
-          CVD-safe
+        comment: Three-hue Imprint palette, high contrast on both surfaces, no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 px; triangle fills 50-70% of canvas; balanced margins
+        comment: Triangle + labels + legend use a large, balanced share of the square
+          canvas; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; vertex labels descriptive with component names
+        comment: Vertex labels descriptive with % units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Data #009E73; backgrounds #FAF8F1/#1A1A17; all chrome theme-correct
-          in both renders'
+        comment: 'First series (Sand-dominant) is #009E73, canonical order used for
+          remaining series; identical across themes; backgrounds theme-correct'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -101,22 +111,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful theme-token design, appropriate grid opacity, intentional
-          styling; strong but not custom-palette level
+        comment: Custom ternary construction plus a semantically meaningful 3-color
+          scheme, clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle grid, good typography hierarchy, generous whitespace; polished
-          details
+        comment: Default Cartesian axes fully hidden, subtle grid, generous whitespace,
+          refined legend box
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Data clearly displayed; lacks explicit visual hierarchy or emphasis
-          (appropriate for basic plot)
+        comment: Coloring points by dominant component creates real visual hierarchy
+          - groups gravitate toward their vertices, giving a clear focal story
     spec_compliance:
       score: 15
       max: 15
@@ -126,51 +136,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct equilateral ternary triangle with proper Cartesian conversion
+        comment: Correct ternary plot via barycentric-to-Cartesian mapping
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Triangle outline, grid (20% intervals), vertex labels, tick marks,
-          data points all present
+        comment: Grid lines, vertex labels, edge tick marks, and color-grouped points
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sand→lower-left, Silt→lower-right, Clay→top; conversion mathematically
-          correct
+        comment: Conversion correctly maps sand/silt/clay to x/y; tooltip surfaces
+          original percentages
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; vertex labels serve as legend
+        comment: Title format exactly matches spec; new legend labels correctly describe
+          the color grouping
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: '50 samples show full range: sand-dominant, clay-dominant, balanced
-          mixtures'
+        comment: Points span near-vertex to near-center compositions; none reach the
+          extreme 90-100% corners
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Soil composition domain is real-world; Dirichlet sampling appropriate
-          for compositional data
+        comment: Soil science (sand/silt/clay) is a textbook, neutral ternary-plot
+          use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Components sum to 100%; proportions realistic for soil classification
+        comment: All compositions sum to 100%, plausible soil-texture ranges
     code_quality:
       score: 10
       max: 10
@@ -180,59 +191,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → geometry → chart → save; no functions/classes'
+        comment: Imports -> Data -> Plot -> Save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, numpy, pandas, altair—all used
+        comment: PIL used for canvas padding, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; ternary-to-Cartesian conversion necessary
-          and clear
+        comment: Manual barycentric geometry is verbose but necessary given Altair's
+          lack of native ternary support
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html; current altair API
+        comment: Saves plot-{THEME}.png/.html correctly
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper alt.layer(), encoding types, .properties(), .configure_*(),
-          alt.Tooltip()
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Layer composition, interactive tooltips, theme-adaptive config; mathematical
-          ternary is domain-specific
+        comment: Declarative layering (alt.layer of 6 charts), Tooltip objects, alt.Color
+          scale/domain/range, configure_* theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Layer composition, mark_rule for line segments, declarative color
+          scale + legend binding - moderately distinctive
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - hover-tooltips
-  - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - publication-ready
+  - alpha-blending
+  - minimal-chrome

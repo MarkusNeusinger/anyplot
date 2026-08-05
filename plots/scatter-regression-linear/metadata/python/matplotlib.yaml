@@ -2,42 +2,57 @@ library: matplotlib
 language: python
 specification_id: scatter-regression-linear
 created: '2025-12-24T21:29:05Z'
-updated: '2026-05-06T22:42:55Z'
-generated_by: claude-haiku
-workflow_run: 25464816048
+updated: '2026-08-05T13:15:02Z'
+generated_by: claude-sonnet
+workflow_run: 31008270400
 issue: 1821
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 92
 review:
   strengths:
-  - 'Perfect visual quality: all text explicitly sized and readable in both themes'
-  - Excellent design with intentional color choices and refined styling
-  - Complete spec compliance with all required features and statistics
-  - Realistic, neutral educational data demonstrating the plot type comprehensively
-  - Clean, reproducible code with expert-level matplotlib usage
-  - 'Perfect theme-adaptive chrome: no dark-on-dark or light-on-light failures'
-  - Strong visual hierarchy and data storytelling through color and emphasis
+  - 'Title now matches the mandated format exactly: "scatter-regression-linear · python
+    · matplotlib · anyplot.ai".'
+  - Scatter marker size bumped to s=130, comfortably inside the 100-200 recommended
+    range for 80 points, giving cleaner separation in dense clusters.
+  - New "Largest residual" callout with arrow annotation adds a genuine storytelling
+    touch on top of the equation/R² box, giving the plot a clearer point of interest.
+  - Rug plot along the bottom axis (via blended_transform_factory) remains a sophisticated,
+    distinctive matplotlib transforms technique.
+  - Confidence-interval band uses a correct t-distribution standard-error formula
+    and renders as a clean, semi-transparent lavender fill that never obscures the
+    underlying points.
+  - 'Correct Imprint palette usage: brand green (#009E73) scatter points with the
+    regression line/CI in palette position 2 (#C475FD, lavender) — identical data
+    colors across both themes.'
+  - 'Theme-adaptive chrome fully threaded through: title, axis labels, ticks, grid,
+    spines, legend frame, and both annotation boxes flip correctly between light and
+    dark with no legibility issues.'
+  - Realistic, neutral educational dataset (study hours vs. exam scores) with sensible
+    score clipping (20-100) producing a plausible R² = 0.848.
   weaknesses:
-  - 'Minor: Could explore additional distinctive matplotlib features (transformations,
-    custom artists)'
-  - 'Minor: Could push design excellence further with additional emphasis techniques'
+  - 'Design Excellence is solid but still short of publication-tier: color/typography
+    choices are thoughtful but not exceptional (DE-01), and refinement, while good
+    (spines removed, subtle grid, generous whitespace), stops short of flawless (DE-02).'
+  - Library Mastery beyond the rug-plot transform trick is fairly generic matplotlib/numpy
+    usage (scatter, fill_between, polyfit, annotate) — a second genuinely library-distinctive
+    technique would push LM-02 higher.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with excellent contrast
-      Chrome: Title "scatter-regression-linear · matplotlib · anyplot.ai" clearly visible in dark text (24pt), axis labels "Study Hours (hrs)" and "Exam Score (points)" in 20pt dark text, tick labels in 16pt dark gray — all fully readable
-      Data: Scatter points in Okabe-Ito green (#009E73) with alpha=0.7, regression line in orange (#D55E00) with linewidth=3, confidence band in light orange with alpha=0.2, annotation box with equation and R² value in upper left with refined styling
-      Legibility verdict: PASS — All text and data elements readable against light background
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "scatter-regression-linear · python · matplotlib · anyplot.ai" in dark ink, clearly readable and correctly formatted with the "python" language segment. Axis labels "Study Hours (hrs)" / "Exam Score (points)" dark and legible; tick labels soft gray. Grid lines subtle on both axes. Legend (95% CI, Regression Line) bottom-right in an elevated box, readable. Equation/R² annotation box top-left, readable. "Largest residual" callout with dark arrow pointing at the outlier point near x≈3.7, readable.
+      Data: Brand-green (#009E73) scatter points (s=130, alpha 0.7) with white-ish (page-bg) edges for definition, a lavender (#C475FD) regression line, matching translucent lavender CI band, and a green rug plot along the bottom showing the marginal x-distribution.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) matching light theme counterpart
-      Chrome: Title in light text, axis labels in light text (20pt), tick labels in soft gray (16pt) — all fully readable against dark background, no dark-on-dark failures
-      Data: Scatter points in identical green (#009E73) as light render, regression line in identical orange (#D55E00), confidence band visible and subtle, legend frame styled with elevated background color, annotation box readable and refined
-      Legibility verdict: PASS — All text and data elements readable against dark background, data colors identical to light render, only chrome changes appropriately for theme
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels render in light ink — all clearly readable, no dark-on-dark failures anywhere (title, axes, ticks, legend, both annotation boxes all pass). The "Largest residual" arrow correctly flips to a light gray (INK_SOFT dark-theme token) for visibility against the dark background.
+      Data: Colors are identical to the light render — brand-green scatter, lavender regression line and CI band, green rug ticks — confirming only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,71 +63,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title 24pt, labels 20pt, ticks 16pt, annotation
-          18pt — perfectly readable in both themes'
+        comment: All font sizes explicitly set, readable in both themes at full size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero text overlap, all elements fully readable
+        comment: No overlap between text, legend, annotations, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Optimal sizing: s=200 scatter, alpha=0.7, linewidth=3 line, all
-          clearly visible'
+        comment: Marker size bumped to s=130, now well inside the 100-200 recommended
+          range for n=80, clean point separation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) with good contrast and CVD-safety'
+        comment: Good contrast, CVD-safe green/lavender pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, balanced margins, generous whitespace
+        comment: Good proportions, nothing cut off, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Study Hours (hrs), Exam Score (points)'
+        comment: Descriptive labels with units (hrs, points)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: first series #009E73, secondary #D55E00, backgrounds #FAF8F1/#1A1A17,
-          theme-correct chrome both renders'
+        comment: Brand green first series, lavender (position 2) for regression line/CI,
+          theme-correct chrome in both renders
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: intentional color choices, refined annotation box
-          with rounded corners, thoughtful typography hierarchy'
+        comment: Thoughtful secondary color, refined annotation callouts, theme-matched
+          marker edges; above default but not publication-tier
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: spines removed, subtle y-axis grid, generous whitespace,
-          some defaults still visible'
+        comment: Spines removed, subtle grid, generous whitespace; good but not flawless
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Good storytelling: clear visual hierarchy with colored points and
-          line, focal point on regression, statistics prominent, meaningful context'
+        comment: Equation + R² box, CI shading, and the new largest-residual callout
+          together create a clear, guided narrative
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: scatter plot with linear regression and 95% CI'
+        comment: Correct scatter + regression + CI band
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: regression line, CI band, R² value, equation, scatter
-          points with transparency'
+        comment: R², equation annotation, CI band, moderate-alpha points all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct mapping: X=Study Hours, Y=Exam Score, all data visible'
+        comment: X/Y correctly assigned, full data range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Correct format and labels: title follows anyplot standard, legend
-          accurate'
+        comment: Title now matches the mandated {spec-id} · python · matplotlib ·
+          anyplot.ai format; legend labels correct
     data_quality:
       score: 15
       max: 15
@@ -152,22 +164,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: positive relationship, scatter variation, regression
-          fit, confidence band variation'
+        comment: Shows correlation strength, spread, and an outlier
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real educational scenario (study hours vs exam scores), neutral,
-          comprehensible, factually appropriate
+        comment: Neutral, realistic educational scenario (study hours vs exam scores)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic ranges: hours 1-10, scores 20-100, R²=0.848 plausible,
-          slope 6.32 proportional'
+        comment: Scores clipped to a realistic 20-100 range, plausible R²=0.848
     code_quality:
       score: 10
       max: 10
@@ -177,33 +186,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → regression → plot → save, no functions/classes'
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set, deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, matplotlib, numpy'
+        comment: Only os, matplotlib.pyplot, numpy, blended_transform_factory, all
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering or fake functionality
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct: saves as plot-{THEME}.png with dpi=300 and bbox_inches=''tight'''
+        comment: Saves plot-{THEME}.png, no deprecated calls
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -211,25 +221,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert: uses Axes-based API, proper theme token pattern, all styling
-          methods correctly applied'
+        comment: Axes-level API throughout, idiomatic matplotlib patterns
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Good: fill_between() for CI, polyfit() integration, theme-adaptive
-          environment variables, custom annotation styling'
-    score_caps:
-      applied: false
-      notes: 'No violations: VQ-02=6, VQ-03=6, SC-01=5, DQ-02=5, DE-01=6/DE-02=4,
-        CQ-04=2'
+        comment: blended_transform_factory rug plot is genuinely distinctive; rest
+          (scatter, fill_between, polyfit, annotate) is fairly generic
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - fill-between-confidence-band
   patterns:
   - data-generation
   - explicit-figure
@@ -237,5 +241,5 @@ impl_tags:
   - regression
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
-  - theme-adaptive-chrome

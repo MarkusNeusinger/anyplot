@@ -1,0 +1,258 @@
+library: d3
+language: javascript
+specification_id: histogram-kde
+created: '2026-08-05T03:59:55Z'
+updated: '2026-08-05T04:14:34Z'
+generated_by: claude-sonnet
+workflow_run: 30973549214
+issue: 1823
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Target-spec reference line (dashed, at 12.00mm, italic label) now ties the chart
+    directly to the QC narrative embedded in the data generation, directly addressing
+    the attempt-1 DE-03 feedback
+  - Rug plot along the x-axis baseline adds textural detail showing the raw 500-observation
+    density without cluttering the histogram
+  - Refined legend swatch (rounded rect with stroke matching fill) reads as more polished
+    than a flat rectangle
+  - Correct, well-implemented Gaussian KDE (manual kernel + Silverman's rule bandwidth)
+    since d3 has no built-in KDE
+  - Histogram and KDE both scaled as density so the curves are directly comparable,
+    matching the spec exactly
+  - Semi-transparent (alpha 0.5) histogram bars with a contrasting Imprint palette[1]
+    KDE line, clearly distinguishable in both themes
+  - Theme-adaptive chrome correctly implemented — identical data colors between renders,
+    correctly flipped chrome tokens
+  - Realistic, neutral QC dataset (bolt head diameter around a 12.00mm target) with
+    a plausible drift mechanism
+  - Deterministic and reproducible via a fixed-seed LCG
+  weaknesses:
+  - 'Design Excellence is improved but still moderate: the peak of the distribution
+    sits visibly left of the target line, but nothing calls out that gap as the insight
+    (e.g. an annotation like ''peak drifted 0.02mm below spec'') — the viewer has
+    to infer the story themselves'
+  - Legend and axis typography still follow template base sizes with no extra hierarchy
+    (e.g. bolding the axis titles or varying weight to draw the eye)
+  - Bin count (30) with a Silverman's-rule KDE bandwidth smooths over the secondary
+    low-diameter subpopulation baked into the data generator (10% drifted parts around
+    11.86mm) — the resulting curve reads as a single left-skewed mode rather than
+    a visible bimodal signature, so the 'early tool wear' story from the code comments
+    isn't fully legible in the chart itself
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Bold dark title "histogram-kde · javascript · d3 · anyplot.ai" centered at top; dark axis titles "Bolt Head Diameter (mm)" / "Density"; dark tick labels on both axes; subtle light-gray y-axis-only gridlines; thin bottom/left domain lines only (no full box). A dashed vertical reference line at x=12.00 is labeled "Target spec 12.00mm" in italic gray text near the top of the plot. All chrome text is clearly readable against the light background.
+      Data: Histogram bars in Imprint palette[0] green (#009E73) at ~50% opacity, bell-shaped from ~11.75-12.20mm with a mild left-skew tail and a slightly left-of-target peak (~11.98mm) against the 12.00mm target line. A smooth lavender (palette[1], #C475FD) KDE line tracks the bars closely. A green rug of short tick marks along the x-axis baseline shows the raw 500 observations. Legend top-right: rounded-rect green swatch "Observed frequency", lavender line swatch "KDE estimate".
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Same title, axis titles, tick labels, and "Target spec 12.00mm" annotation now rendered in light/white-ish text, all clearly legible against the dark background. Gridlines remain subtle but visible. No dark-on-dark failures observed anywhere (title, axes, legend, annotation all readable).
+      Data: Histogram bars, KDE line, and rug use the identical #009E73 / #C475FD colors from the light render — only chrome (background, text, grid) flipped, confirmed identical positions/shape of all data elements.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (14/16/22/12px italic), readable in both themes;
+          standard template scale leaves little headroom for mobile-thumbnail legibility
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, target-line annotation, axes,
+          or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 bins for 500 points well-chosen; 3.5px KDE stroke and rug ticks
+          read clearly at both densities
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green + lavender, not red-green dependent, distinguishable in both
+          themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); balanced margins, no overflow or
+          cut-off content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units (mm)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0]/palette[1] canonical order; correct theme-adaptive backgrounds
+          and chrome
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Rug plot and refined rounded-rect legend swatch add polish beyond
+          the attempt-1 baseline, but still short of publication-level design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Rug texture and refined legend swatch are new refinements; y-axis-only
+          grid and no full box remain solid but not exceptional
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Target-spec reference line now surfaces the QC narrative and shows
+          the peak sitting left of target; not fully annotated to call out the gap
+          explicitly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Histogram + KDE overlay, correct
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Alpha ~0.5 bars, density y-axis, chosen bin count/bandwidth, contrasting
+          colors
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=diameter, Y=density, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; legend labels correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Histogram, KDE, density scaling, sensible bin/bandwidth, rug showing
+          raw observations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral QC scenario (bolt head diameter gauge station)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible mm-scale values and tolerances for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; minimal necessary helpers only (LCG, gaussian kernel)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond global d3
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container per contract, no animation, modern .join()
+          API'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.bin(), scaleLinear, axisBottom/Left, .join(), d3.line with curveNatural
+          — solid modern d3 v7 idioms
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Manual Gaussian KDE with Silverman's rule (d3 has no built-in KDE)
+          plus rug via data-join is genuine distinctive work, though still a common
+          technique reused across libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling

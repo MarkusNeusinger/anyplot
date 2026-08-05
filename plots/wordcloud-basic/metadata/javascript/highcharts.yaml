@@ -1,0 +1,275 @@
+library: highcharts
+language: javascript
+specification_id: wordcloud-basic
+created: '2026-08-04T23:05:29Z'
+updated: '2026-08-04T23:21:56Z'
+generated_by: claude-sonnet
+workflow_run: 30958380316
+issue: 1012
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Repair directly and effectively addressed all three Attempt-1 weaknesses: MIN_FONT
+    raised 16→22 (tail words no longer mobile-illegible), marginTop/marginBottom rebalanced
+    100/30→76/44 with the spiral center nudged to (0.52, 0.55), and a rotationFor()
+    rule now tilts a subset of words (90° / -30°) instead of everything sitting perfectly
+    horizontal.'
+  - Canvas utilization is now well balanced top-to-bottom and left-to-right — the
+    top-heavy gap and sparse lower-right quadrant flagged in Attempt 1 are resolved;
+    the cloud fills ~85-90% of the canvas evenly in both renders.
+  - 'Palette compliance remains exact: terms are pre-sorted by frequency so index-based
+    coloring puts the highest-frequency word (''performance'') in brand green #009E73
+    with subsequent words following canonical Imprint order, verified pixel-identical
+    between light and dark renders.'
+  - Zero overlaps and zero edge clipping in either render despite the added rotation
+    (rotatedBounds() correctly grows the collision box for tilted words); data is
+    a realistic, neutral support-ticket term-frequency scenario with a healthy ~11x
+    frequency spread.
+  - Deterministic, no fake interactivity, no imports, mount-node contract and animation-disable
+    rules followed correctly — same clean engineering workaround for the missing wordcloud
+    module as Attempt 1.
+  weaknesses:
+  - 'The rotation rule (i % 4 === 3 → 90°, i % 6 === 1 → -30°) is deterministic on
+    array index rather than varied, so it produces a visible mechanical pattern: seven
+    words land at exactly 90° and cluster together spatially on the left column (latency,
+    documentation, usability, alerts, uptime, mobile, authentication all vertical,
+    stacked side by side) rather than being distributed organically across the cloud.
+    A more organic feel would vary the rotation set (e.g. a small discrete set of
+    angles keyed to word identity/hash) and spread verticals across more of the canvas
+    instead of one column.'
+  - 'The smallest words (freq 17-23: ''feedback'', ''notifications'', ''authentication'')
+    are still the tightest cluster at MIN_FONT=22 CSS px (~5-6px effective height
+    at the 400px mobile-preview scale) — legible but still the weakest point in an
+    otherwise strong render; a slightly gentler sqrt curve or a higher floor for the
+    bottom decile would remove the last bit of borderline-ness.'
+  - 'Library Mastery is still necessarily generic: scatter + dataLabels + a hand-rolled
+    Archimedean packer is portable to any charting library with text rendering and
+    doesn''t showcase anything unique to Highcharts. This is an unavoidable consequence
+    of the unvendored wordcloud module, not a coding mistake, but the existing SVGElement.toFront()
+    hover trick and tooltip formatter are the only Highcharts-specific touches present
+    — a richer distinctive flourish (e.g. more idiomatic dataLabel/series styling)
+    would help close this gap.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "wordcloud-basic · javascript · highcharts · anyplot.ai" is bold dark text, clearly visible top-center. No axes, grid, or legend — correct for a word cloud. All chrome text readable.
+      Data: 30 words arranged via spiral packing, sized ~22-88px CSS by sqrt-scaled frequency. "performance" (freq 187) is largest and renders in brand green #009E73. Remaining words cycle through the Imprint palette in frequency-sorted index order (reliability=purple, dashboard=blue, latency=brown, integration=red, security=cyan, etc.). Most words sit horizontal; a subset (latency, documentation, usability, alerts, uptime, mobile, authentication) are rotated 90° vertical, and a couple (reliability, automation) are rotated -30° diagonal — clearly more organic than Attempt 1's all-horizontal layout, though the verticals cluster in one left-side column rather than spreading evenly. No overlaps between words; no clipping at canvas edges. Canvas fill is well balanced top-to-bottom and left-to-right (the Attempt 1 top-heavy / sparse-lower-right issue is resolved).
+      Legibility verdict: PASS — all words readable at full resolution; smallest words ("feedback", "authentication", "notifications") are legible but remain the tightest cluster at mobile-preview scale.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title renders in light, theme-adaptive ink, clearly visible against the dark background. No dark-on-dark issues — no axis/grid/legend chrome exists by design.
+      Data: Same word set, same spiral layout, same rotations, same per-word colors as the light render — "performance" is still #009E73 green and every other word's hue matches its light-render counterpart exactly, confirming data colors are identical between themes and only the page background/title ink flipped.
+      Legibility verdict: PASS — all words readable against the dark background; no dark-on-dark or light-on-light failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: MIN_FONT raised 16→22 CSS px; explicit sizing throughout, readable
+          in both themes; smallest words still the tightest cluster at 400px mobile
+          scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Collision-detected spiral packer with rotatedBounds() correctly grows
+          boxes for tilted words — zero overlaps in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Larger font floor makes tail-end words comfortably visible for a
+          30-word density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint categorical palette, no red-green-only distinction, adequate
+          contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Rebalanced margins (76/44) and shifted spiral center (0.52, 0.55)
+          fix the prior top-heavy / sparse-lower-right imbalance; even canvas fill,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for word cloud (by design); title fully matches mandated
+          format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Highest-frequency word is #009E73; canonical Imprint order; identical
+          data colors across light/dark; theme-correct backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Added rotation clearly breaks the size-sorted look from Attempt 1,
+          but the index-modulo rotation rule is mechanical — vertical words cluster
+          in one left-side column instead of distributing organically
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean minimal chrome, generous whitespace, margins now well balanced
+          top/bottom and left/right
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size encoding creates an immediate, clear focal point ('performance'
+          dominates at a glance) — unchanged from Attempt 1, no new hierarchy device
+          added
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine word cloud: size-encoded, spatially packed, non-overlapping,
+          now with rotation variety'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Word + frequency data, 30 words within spec's 20-200 range, lowercase/no-stopwords,
+          decorative color, spiral placement
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency correctly drives word size via sqrt-scaled font mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches exact mandated format; legend correctly omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide frequency range (17-187, ~11x) produces genuine size variation
+          across the full word set
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible support-ticket term-frequency scenario for a SaaS
+          analytics product
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic counts and proportions for a ticket corpus
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few more small helper functions than Attempt 1 (fontWeightFor,
+          rotationFor, rotatedBounds), justified by the packing/rotation algorithm's
+          complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data and layout, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed, none unused
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity given the missing wordcloud module constraint;
+          no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on chart and series,
+          no deprecated API
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct, valid Highcharts.chart() + scatter series usage, but remains
+          a workaround for the unvendored wordcloud module rather than a purpose-built
+          high-level pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Scatter + dataLabels + custom packer is generic and portable to any
+          charting library; the SVGElement.toFront() hover trick and tooltip formatter
+          are the only Highcharts-specific touches
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - collision-detection
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
