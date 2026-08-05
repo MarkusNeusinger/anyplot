@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windrose-basic: Wind Rose Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 79/100 | Updated: 2026-08-05
@@ -9,7 +9,7 @@ import os
 import numpy as np
 import pandas as pd
 from lets_plot import *  # noqa: F403
-from lets_plot import element_line, element_rect, element_text, ggsave, theme
+from lets_plot import element_line, element_rect, element_text, ggsave, layer_tooltips, theme
 from PIL import Image
 
 
@@ -64,6 +64,13 @@ counts["frequency"] = counts["count"] / total_obs * 100
 # Direction as discrete variable for x-axis
 counts["direction"] = counts["direction_bin"]
 
+# Full 16-point compass labels for tooltips (axis itself only labels the 8 cardinal/intercardinal points)
+compass_16 = [
+    "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+    "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
+]  # fmt: skip
+counts["direction_label"] = counts["direction_bin"].map(dict(enumerate(compass_16)))
+
 # Speed category order for proper stacking
 speed_order = ["0-3 m/s", "3-6 m/s", "6-9 m/s", "9-12 m/s", "12-15 m/s", "15+ m/s"]
 counts["speed_bin"] = pd.Categorical(counts["speed_bin"], categories=speed_order, ordered=True)
@@ -73,9 +80,18 @@ counts = counts.sort_values(["direction_bin", "speed_bin"])
 colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Create wind rose using polar bar chart
+# Distinctive lets-plot feature: per-segment tooltips surfaced in the interactive
+# HTML export (compass direction, speed band, and exact frequency on hover).
+bar_tooltips = (
+    layer_tooltips()
+    .title("@direction_label")
+    .line("@speed_bin: @{frequency}%")
+    .format(field="@frequency", format=".1f")
+)
+
 plot = (
     ggplot(counts, aes(x="direction", y="frequency", fill="speed_bin"))  # noqa: F405
-    + geom_bar(stat="identity", width=0.9, position="stack")  # noqa: F405
+    + geom_bar(stat="identity", width=0.9, position="stack", tooltips=bar_tooltips)  # noqa: F405
     + coord_polar(start=0, direction=1)  # noqa: F405
     + scale_x_continuous(  # noqa: F405
         breaks=list(range(0, 16, 2)),
@@ -99,6 +115,9 @@ plot = (
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
+        legend_key_size=18,
+        legend_key_spacing_y=6,
+        legend_margin=10,
     )
     + ggsize(600, 600)  # noqa: F405
 )
