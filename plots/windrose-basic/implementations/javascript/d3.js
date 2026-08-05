@@ -25,14 +25,22 @@ const frequency = [
   [6.0, 5.83, 3.94, 1.37], // NW
 ];
 
-const segments = directions.flatMap((dir, i) => {
-  let cum = 0;
-  return frequency[i].map((value, b) => {
-    const seg = [cum, cum + value];
-    cum += value;
-    return { dir, i, b, seg };
-  });
+const stackKeys = d3.range(speedBins.length);
+const stackRows = directions.map((dir, i) => {
+  const row = { dir, i };
+  frequency[i].forEach((value, b) => (row[b] = value));
+  return row;
 });
+const segments = d3
+  .stack()
+  .keys(stackKeys)(stackRows)
+  .flatMap((series, b) => series.map((d) => ({ dir: d.data.dir, i: d.data.i, b, seg: [d[0], d[1]] })));
+
+// Dominant direction (highest total frequency) drives the storytelling highlight below.
+const dominant = d3.greatest(
+  directions.map((dir, i) => ({ dir, i, total: d3.sum(frequency[i]) })),
+  (d) => d.total,
+);
 
 // --- Scales --------------------------------------------------------------
 const cx = width / 2;
@@ -50,6 +58,17 @@ const color = d3.scaleOrdinal().domain(speedBins).range(t.palette.slice(0, speed
 // --- SVG mount -------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${cx},${cy})`);
+
+// --- Dominant-sector highlight (behind grid, drives the storytelling) -------
+const highlightArc = d3
+  .arc()
+  .innerRadius(innerR - 12)
+  .outerRadius(outerR + 24)
+  .cornerRadius(8)
+  .startAngle(dominant.i * angleStep - angleStep / 2)
+  .endAngle(dominant.i * angleStep + angleStep / 2);
+
+g.append("path").attr("d", highlightArc).attr("fill", t.ink).attr("opacity", 0.06);
 
 // --- Radial grid circles + percentage labels --------------------------------
 const gridGroup = g.append("g");
@@ -117,16 +136,25 @@ g.append("g")
   .style("font-weight", "600")
   .text((d) => d);
 
-// --- Title ------------------------------------------------------------------
+// --- Title + storytelling subtitle -------------------------------------------
 svg
   .append("text")
   .attr("x", width / 2)
-  .attr("y", 56)
+  .attr("y", 58)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "26px")
+  .style("font-size", "32px")
   .style("font-weight", "600")
   .text("windrose-basic · javascript · d3 · anyplot.ai");
+
+svg
+  .append("text")
+  .attr("x", width / 2)
+  .attr("y", 92)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "17px")
+  .text(`Prevailing winds from the ${dominant.dir} sector — ${dominant.total.toFixed(1)}% of observations`);
 
 // --- Legend (speed-bin swatches) --------------------------------------------
 const legendY = height - 56;
