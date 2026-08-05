@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-annotated: Annotated Heatmap
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -95,14 +95,20 @@ sns.heatmap(
     linewidths=0.6,
     linecolor=PAGE_BG,
     cbar_kws={"shrink": 0.8, "pad": 0.03, "aspect": 24, "label": "Correlation", "ticks": [-1, -0.5, 0, 0.5, 1]},
-    annot_kws={"size": 11, "weight": "bold"},
+    annot_kws={"size": 13, "weight": "bold"},
     ax=ax,
 )
+
+# Highlight the strongest off-diagonal correlation for visual hierarchy
+off_diag = np.abs(corr_matrix.copy())
+np.fill_diagonal(off_diag, 0)
+peak_i, peak_j = np.unravel_index(np.argmax(off_diag), off_diag.shape)
+for i, j in {(peak_i, peak_j), (peak_j, peak_i)}:
+    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=False, edgecolor=INK, linewidth=2.5))
 
 # Style
 ax.set_title("heatmap-annotated · seaborn · anyplot.ai", fontsize=11, pad=16, weight="bold", color=INK)
 ax.set_xlabel("Asset Class", fontsize=12, color=INK)
-ax.set_ylabel("Asset Class", fontsize=12, color=INK)
 ax.tick_params(axis="both", labelsize=10, colors=INK_SOFT)
 
 # Enclosed heatmap grid — keep all four spines, styled thin and theme-adaptive
