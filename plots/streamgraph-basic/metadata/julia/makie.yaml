@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: streamgraph-basic
 created: '2026-08-05T11:44:27Z'
-updated: '2026-08-05T11:49:45Z'
+updated: '2026-08-05T12:00:22Z'
 generated_by: claude-sonnet
 workflow_run: 31001782500
 issue: 856
@@ -15,49 +15,61 @@ preview_html_dark: null
 quality_score: 84
 review:
   strengths:
-  - Correct symmetric ('silhouette') streamgraph baseline with a genuinely smooth
-    Catmull-Rom spline interpolation between monthly samples, producing organic flowing
-    curves as required by the spec
-  - Imprint palette applied in correct canonical order (green Pop, lavender Hip-Hop,
-    blue Rock, ochre Electronic), identical across light and dark renders
-  - 'Theme-adaptive chrome is clean: spines minimized to a single bottom line, no
-    grid clutter, correct background hex in both themes, all text readable in both
+  - 'Correct streamgraph construction: symmetric silhouette baseline (baseline = -totals/2)
+    centered on zero, with a hand-rolled Catmull-Rom spline giving genuinely organic,
+    flowing layer edges rather than sharp monthly knots'
+  - 'Imprint palette applied correctly: first series is #009E73 brand green, remaining
+    three series follow canonical positions 2-4 (lavender/blue/ochre), and data colors
+    are pixel-identical between plot-light.png and plot-dark.png'
+  - 'Theme-adaptive chrome works correctly: PAGE_BG, INK, INK_SOFT all flip appropriately
+    between #FAF8F1/#1A1A17 light/dark, title and tick labels stay legible in both
     renders'
-  - 'Realistic, varied data: four genres with genuinely different trend directions
-    (Rock declining, Electronic growing strongly, Pop/Hip-Hop at different rates)
-    instead of parallel bands'
-  - Frameless legend clearly identifies all four categories; code is clean KISS structure,
-    reproducible via Random.seed!(42), and imports are all used
+  - 'Thoughtful design touch: thin background-colored strokes drawn between adjacent
+    bands sharpen the boundary where two saturated fills touch directly'
+  - 'Clean minimal chrome: top/right/left spines removed, no grid, generous whitespace,
+    legend has no frame box'
+  - Canvas is exactly 3200x1800 (landscape gate), no elements are clipped at the canvas
+    edge
+  - Realistic, neutral dataset (monthly streaming hours by music genre, 2024-2025)
+    with a clear underlying narrative (Pop dominant, Electronic growing, Rock declining)
   weaknesses:
-  - Title renders noticeably smaller than expected for the mandated string — titlesize=20
-    doesn't achieve the 'largest element, first thing readers see' typographic hierarchy
-    on a 3200px-wide canvas; increase titlesize to roughly 28-32 for stronger brand
-    presence and better proportion.
-  - 'No axis labels or units anywhere: no x-axis title (e.g. ''Month''), and nothing
-    indicates what the band thickness represents (e.g. ''Streaming hours (millions)'').
-    Hiding the y-axis is acceptable streamgraph convention given the arbitrary symmetric
-    baseline, but a short y-axis label or subtitle would still help viewers understand
-    the encoded magnitude.'
-  - Library Mastery is generic — the band! + manual cumsum stacking could be replicated
-    in matplotlib's fill_between with little change; consider leveraging a more Makie-distinctive
-    feature (e.g. richer text via `rich_text`, `Interpolations.jl`-based smoothing,
-    or custom Attributes/theme composition) to differentiate the implementation.
-  - Design Excellence is solid but conventional — the optional thin-stroke pattern
-    from the style guide (edge-highlighting) could add extra polish and layer separation
-    between adjacent bands, and one growing genre (Electronic) could be given a touch
-    more visual emphasis to sharpen the storytelling.
+  - 'Both xlabel="Month" and ylabel="Streaming Hours (millions)" are set in the Axis()
+    constructor but do NOT render in the saved PNG in either theme — pixel inspection
+    of plot-light.png and plot-dark.png shows only background color in the left margin
+    (no rotated y-label text) and below the x tick labels (no "Month" text), confirmed
+    identically in both renders. Likely cause: yticksvisible=false + yticklabelsvisible=false
+    + leftspinevisible=false collapse the left protrusion to zero and take the ylabel
+    row with it, and something equivalent is happening on the x side. Fix: explicitly
+    set xlabelvisible=true and ylabelvisible=true on the Axis, re-render, and visually
+    confirm both label strings actually appear as pixels in the saved PNG margins
+    before resubmitting — do not rely on the kwargs being set as proof they render.'
+  - Because the y-axis has no working label and no ticks at all, a viewer cannot verify
+    the absolute scale ("Streaming Hours (millions)") from the chart itself — only
+    relative proportions are readable. This is compounded by, not independent of,
+    the ylabel rendering bug above.
+  - Title occupies only ~25% of the plot width at titlesize=30 — well under the 50-70%
+    guideline. Since the title text is shorter than the ~67-char reference (no descriptive
+    prefix used), some undersizing is expected, but there is room to raise titlesize
+    a few points for a bolder focal point given the ample surrounding whitespace.
+  - Bottom margin below the x tick labels is tight (~35px of the 1800px canvas height)
+    — not clipped, but with xlabel currently invisible there is unused reserved space
+    that isn't being used productively; fixing the xlabel rendering should also rebalance
+    this margin.
+  - Data storytelling is driven entirely by the raw shape of the stream — no direct
+    annotation or callout reinforces the Pop-dominance / Electronic-growth narrative
+    that the data already contains.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "streamgraph-basic · julia · makie · anyplot.ai" at top-center, clearly legible but smaller in proportion to the canvas than expected for this title length. X-axis shows five date tick labels (Jan 2024, Jul 2024, Jan 2025, Jul 2025, Dec 2025) in soft dark ink against the light background, fully readable. No y-axis ticks/labels (intentional for a streamgraph with a symmetric, arbitrary baseline). A frameless legend sits to the right of the plot listing Pop, Hip-Hop, Rock, Electronic with color swatches, all legible.
-      Data: Four smoothly flowing, spline-interpolated bands stacked around a centered, wavy baseline. Bottom-to-top order: Pop (brand green #009E73), Hip-Hop (lavender), Rock (blue), Electronic (ochre). Electronic's band visibly widens toward the right (2025), Rock's narrows — a genuine, readable trend. No overlap or clipping observed.
-      Legibility verdict: PASS (all text readable; title proportion is smaller than ideal but not illegible).
+      Chrome: Title "streamgraph-basic · julia · makie · anyplot.ai" is bold, dark ink, clearly legible, occupies roughly 25% of the plot width. X-axis tick labels (Jan 2024, Jul 2024, Jan 2025, Jul 2025, Dec 2025) are visible in soft ink-gray below a thin bottom spine. Legend at the right lists Pop/Hip-Hop/Rock/Electronic with matching color swatches, no frame box. Pixel inspection of the left margin and the strip below the x tick labels confirms NO x-axis label ("Month") or y-axis label ("Streaming Hours (millions)") text is actually rendered anywhere, despite both being set in the Axis() call — the axis has no visible label text and no y ticks at all.
+      Data: Four smoothly-flowing stacked bands with a symmetric (silhouette) baseline centered vertically. Bottom-to-top order: Pop (#009E73, brand green), Hip-Hop (lavender #C475FD), Rock (blue #4467A3), Electronic (ochre #BD8233) — matches canonical Imprint palette order 1-4. Thin background-colored strokes separate adjacent bands. Pop is the largest/most stable band, Electronic visibly grows over the two-year span, Rock visibly shrinks.
+      Legibility verdict: PASS for all text that IS rendered (title, tick labels, legend) — but FAIL for axis labels, which are absent entirely rather than illegible (a rendering-completeness bug, not a contrast/theme bug).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light/white text, clearly legible against the dark background. X-axis tick labels are light-colored and fully readable. Legend text is also light-colored and legible against the dark surface, with swatches unchanged.
-      Data: Colors are pixel-identical to the light render — brand green, lavender, blue, ochre bands in the same stacking order and same relative shapes/trends. Only the chrome (background, text) flipped; the data-color identity check passes.
-      Legibility verdict: PASS (no dark-on-dark text found — all title, tick labels, and legend text are clearly light-colored against the near-black surface).
+      Chrome: Same title, now in light ink (#F0EFE8-equivalent), clearly legible against the dark surface. Tick labels in the lighter soft-ink tone are readable, no dark-on-dark issue. Legend swatches and text are legible with soft light-gray labels. Same pixel-level check confirms the x-axis label and y-axis label are equally absent here — this is a consistent code-level rendering bug, not a theme-specific contrast failure.
+      Data: Identical band colors and identical layer shapes to the light render — confirms data colors are held constant across themes as required; only chrome (background + text tones) flipped.
+      Legibility verdict: PASS for all rendered text (no dark-on-dark or light-on-light failures) — FAIL for axis labels for the same reason as the light render (missing, not illegible).
   criteria_checklist:
     visual_quality:
       score: 26
@@ -65,122 +77,136 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes, but the
-          mandated title renders smaller than expected proportionally for a 3200px
-          canvas.
+        comment: Title, tick labels, and legend text are crisp and readable in both
+          themes; title width sits below the 50-70% guideline for its length. Axis
+          labels don't render at all (tracked separately under VQ-06).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, ticks, legend, or data.
+        comment: No collisions between text, legend, or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four bands clearly visible with good width/contrast.
+        comment: Smooth bands are clearly distinguishable, appropriate density for
+          24 monthly points spline-interpolated
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; adjacent bands are distinguishable without
-          relying on hue alone (distinct luminance/hue families).
+        comment: Green/lavender/blue/ochre categorical set is CVD-safe; no red-green
+          as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills most of the canvas with balanced margins; undersized title
-          slightly hurts overall proportion/hierarchy.
+        comment: Correct 3200x1800 canvas, nothing clipped at the border, but bottom
+          margin below x tick labels is tight (~35px) and the unrendered axis labels
+          leave the reserved space unused
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: X tick labels give time context but there is no axis title text and
-          no unit/label for the value dimension anywhere.
+        comment: xlabel='Month' and ylabel='Streaming Hours (millions)' are both set
+          in code but confirmed absent from the rendered pixels in both plot-light.png
+          and plot-dark.png
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; remaining series follow canonical Imprint
-          order 2-4; backgrounds and chrome are theme-correct in both renders.'
+        comment: 'First series #009E73, canonical positions 1-4 for the 4 genres,
+          correct theme backgrounds, data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Hand-rolled Catmull-Rom smoothing produces a genuinely organic look
-          above a plain default, but overall presentation stays fairly conventional.
+        passed: true
+        comment: Hand-rolled Catmull-Rom spline for organic flow, inter-band background-colored
+          strokes to sharpen layer edges — real design intent beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Spines minimized to one line, no grid, frameless legend, generous
-          whitespace — solid but not maximal refinement.
+        passed: true
+        comment: Spines removed (only a subtle bottom axis kept), no grid, generous
+          whitespace, frameless legend
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: The growing Electronic band vs. shrinking Rock band creates a readable
-          trend/visual hierarchy without any explicit annotation.
+        passed: true
+        comment: The stream shape itself narrates Pop's dominance, Electronic's growth,
+          and Rock's decline, but no annotation reinforces it
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct symmetric/silhouette streamgraph baseline.
+        passed: true
+        comment: 'Correct streamgraph: symmetric silhouette baseline, smooth spline
+          curves'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Smooth spline interpolation, centered baseline, distinct harmonious
-          colors, legend — all present.
+        passed: true
+        comment: Smooth interpolation, centered baseline, distinct harmonious colors,
+          legend all present
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        comment: Time on x, stacked genre values on y, full data range shown.
+        passed: true
+        comment: X=time, Y=stacked genre values correctly encoded, but missing axis
+          labels mean a viewer can't confirm this from the axes alone
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title exactly matches 'streamgraph-basic · julia · makie · anyplot.ai';
-          legend labels match the four genres.
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match the
+          four genre categories
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        comment: Four genres with distinct trend directions and seasonal wobble, not
-          parallel/uniform bands.
+        passed: true
+        comment: 24 months x 4 genres, within spec's 10-100 points / 3-8 categories
+          range, full streamgraph feature set shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Monthly streaming hours by music genre — real, neutral, comprehensible
-          scenario.
+        passed: true
+        comment: Realistic, neutral music-streaming-hours-by-genre scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        comment: Base levels and trends are plausible relative magnitudes for streaming
-          genre popularity.
+        passed: true
+        comment: Streaming-hour magnitudes are plausible, but with no y ticks and
+          no working ylabel the absolute scale can't be verified visually
     code_quality:
       score: 10
       max: 10
@@ -189,45 +215,51 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Linear imports -> data -> plot -> save, no functions/classes.
+        passed: true
+        comment: No functions/classes, linear top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Random.seed!(42) set.
+        passed: true
+        comment: Random.seed!(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: CairoMakie, Colors, Random all used.
+        passed: true
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Manual spline loop is justified by the spec's explicit smoothing
-          requirement, not over-engineering; no fake UI.
+        passed: true
+        comment: Appropriate complexity for a manual spline smoother, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-$(THEME).png via current save() API.
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correct high-level use of Figure/Axis/band!/Legend, the idiomatic
-          Makie primitives for this plot type.
+        passed: true
+        comment: Idiomatic band!, Axis/Figure/Legend usage, PolyElement-based custom
+          legend
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        comment: band! stacking could be replicated in matplotlib's fill_between with
-          minor changes; no Makie-specific feature leveraged.
-  verdict: REJECTED
+        passed: false
+        comment: Manual spline math is a nice touch but the implementation doesn't
+          lean on any Makie-specific recipe or distinctive feature beyond band!
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -235,10 +267,11 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
+  - matrix-construction
   dataprep:
   - interpolation
   - cumulative-sum
   styling:
   - minimal-chrome
+  - edge-highlighting
