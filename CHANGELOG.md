@@ -156,7 +156,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   overall — on a retry the bot's own "auto-retrying" notice landed last and shadowed the score
   it was looking for. Verified with a harness that extracts the step body verbatim from the YAML
   and exercises 12 cases (score 0 via file and via comment fallback, normal scores, and the four
-  genuine no-output shapes) (#PRNUM).
+  genuine no-output shapes) (#10179).
 - **CI lint went red on every PR after a ruff minor bump** — `pyproject.toml` pins
   `ruff>=0.15.21` without an upper bound, CI resolved **0.16.0**, and that version started
   formatting Python code blocks inside Markdown: 20 tracked `.md` files suddenly "would be
