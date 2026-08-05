@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-regression-linear
 created: '2025-12-24T21:30:33Z'
-updated: '2026-08-05T13:28:10Z'
+updated: '2026-08-05T13:41:49Z'
 generated_by: claude-sonnet
 workflow_run: 31009235022
 issue: 1821
@@ -12,59 +12,65 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 78
 review:
   strengths:
-  - 'First categorical series is exactly #009E73 and the Imprint palette + theme-adaptive
-    chrome (background, ink, ink_muted) is applied consistently and identically across
-    light and dark renders.'
+  - 'Fixed the attempt-1 VQ-05 margin imbalance: legend moved to a 3-column row below
+    the x-axis title (legend_at_bottom), replacing the old top-left legend that left
+    a large dead-space column on the left while data crowded the right edge.'
+  - 'Fixed part of the attempt-1 SC-02 note: the CI band''s diagonal boundary stroke
+    is now thin and soft (inline CSS `.serie-1 .reactive { stroke-width: 1.5; stroke-opacity:
+    0.4; }`) instead of inheriting the bold stroke_width=6 used for the regression
+    line, so the band''s diagonal edges read as gentle shading rather than a bold
+    ribbon outline.'
+  - 'Palette and theme correctness fully maintained: first series is exactly #009E73,
+    all three series colors are pixel-identical between plot-light.png and plot-dark.png,
+    and only chrome (background #FAF8F1/#1A1A17, ink, grid) flips between themes.'
   - R² is folded prominently into the title and the fit equation into the regression-line
-    legend label — a creative solution given pygal's lack of a free-text annotation
-    API (explicitly documented in code comments).
-  - Scatter alpha (dot_opacity=0.65) matches the spec's requested moderate transparency
-    (~0.6-0.7).
-  - The 95% CI band is implemented as a single closed polygon (upper boundary + reversed
-    lower boundary) — a clever workaround for pygal's lack of a native fill-between/regression-band
-    primitive.
-  - Title font size is computed via an explicit formula scaled off the 67-char mandated-title
-    baseline, avoiding overflow for the longer descriptive-prefixed title.
-  - Clean KISS-structured code, seeded reproducible data (np.random.seed(42)), only-used
-    imports.
+    legend label — a creative, readable solution given pygal's lack of a free-text
+    annotation API.
+  - Clean KISS-structured, reproducible code (np.random.seed(42)), only-used imports,
+    saves plot-{theme}.png and plot-{theme}.html via the current pygal API.
   weaknesses:
-  - 'VQ-05: The left margin has a large dead-space column (~20-25% of canvas) below
-    the legend, running from the bottom of the legend down to the bottom-left corner,
-    while the scatter data crowds right up to the right canvas edge. Margins read
-    as imbalanced rather than centered/balanced. Consider narrowing the legend column
-    or adding matching right-side margin so the plot doesn''t read as pinned to the
-    right.'
-  - 'SC-02: The 95% CI band''s boundary stroke is quite thick and dark because it
-    inherits the global stroke_width=6 token (set high so the regression line reads
-    as bold) — this makes the band read more like a bold outlined ribbon than the
-    soft semi-transparent shading the spec asks for. Consider a dedicated lower stroke
-    width or higher fill-alpha specifically for the CI polygon so it reads as gentler
-    shading.'
-  - 'DE-01/DE-02: Overall polish is solid but still close to a well-configured default
-    rather than genuinely distinctive publication-grade design — consider more deliberate
-    visual-hierarchy choices (e.g., de-emphasizing the CI-band outline, tightening
-    the left-column whitespace) to push past ''good'' into ''excellent''.'
-  - Title spans ~87% of canvas width — comfortably under the clipping threshold but
-    close to the ~90% ceiling; if the descriptive prefix grows in a future edit, revisit
-    the font-scaling formula.
+  - 'VQ-05/DE-02 rendering bug (new, present in BOTH plot-light.png and plot-dark.png):
+    the 95% CI band''s left-edge closing segment renders as a thick, dark, opaque
+    vertical bar dropping straight down from the band''s left cap (data coords approx
+    x=5.3, y=49–62) toward the bottom axis — far past the actual ~13-unit band width
+    at that x. It sits just left of the leftmost data cluster (x≈6–9) as an unmistakable
+    stray shape with nothing behind it. The right-edge cap (mid-canvas) closes cleanly
+    with no such artifact, which points to pygal''s fill=True treating this XY series
+    as an area-to-baseline fill near the left/first point rather than purely closing
+    the drawn upper+reversed-lower polygon loop — the manual ''append ci_band[0] to
+    close'' trick isn''t fully suppressing that baseline-fill behavior. Fix ideas:
+    render the CI band as two separate stroke-only boundary lines plus a fill built
+    to avoid pygal''s baseline-fill origin (e.g. investigate `interpolate`, explicit
+    inline SVG path, or splitting the fill polygon so its start/end vertex isn''t
+    at the plot''s leftmost x), or clip/mask the fill region to the polygon''s own
+    bounding box.'
+  - 'SC-02 (partially carried over from attempt 1): the CI band fill itself still
+    reads as a fairly solid/opaque gray block rather than soft translucent shading
+    — grid lines are not visible through it. Only the boundary stroke was softened
+    this attempt; consider adding a fill-opacity token (pygal Style `opacity`) so
+    the band reads as gentler, more transparent shading per the spec''s ''95% CI recommended,
+    semi-transparent shading'' note.'
+  - 'DE-01/DE-02: overall polish is undercut specifically by the left-edge rendering
+    artifact above — otherwise the theme-adaptive chrome and now-balanced bottom-legend
+    layout are solid, publication-adjacent choices.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "Advertising Spend vs. Revenue (R² = 0.954) · scatter-regression-linear · python · pygal · anyplot.ai" in dark ink, fully visible, spans ~87% of canvas width, not clipped. X-axis title "Advertising Spend ($K)" and y-axis title "Revenue ($K)" in dark ink, clearly readable. Tick labels on both axes dark and legible. Dotted grid lines are subtle gray, visible but not dominant. Legend (top-left) lists "Data Points" (green swatch), "95% CI Band" (gray swatch), "Regression Line (y = 4.73x + 30.6)" (purple swatch), all in dark, readable text.
-      Data: Scatter dots in Imprint green #009E73 at moderate transparency, showing a clear positive linear trend with realistic noise/spread and a few mild outliers. A gray semi-opaque confidence band (with a fairly thick/dark outline) surrounds a solid purple/lavender regression line running through the point cloud.
-      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
+      Chrome: Title "Advertising Spend vs. Revenue (R² = 0.954) · scatter-regression-linear · python · pygal · anyplot.ai" in dark ink, fully visible, spans ~81% of canvas width, not clipped at top or sides. X-axis title "Advertising Spend ($K)" and y-axis title "Revenue ($K)" in dark ink, clearly readable and proportionate. Tick labels on both axes dark and legible, balanced in size. Dotted grid lines are subtle gray, visible but not dominant. Legend now sits in a 3-column row below the x-axis title: "Data Points" (green swatch), "95% CI Band" (gray swatch), "Regression Line (y = 4.73x + 30.6)" (purple swatch) - all fully visible, not clipped at the bottom edge, and better balanced than the previous top-left legend that left a dead-space column.
+      Data: Scatter dots in Imprint green #009E73 at moderate transparency, showing a clear positive linear trend with realistic noise/spread and a few mild outliers. A gray, fairly opaque confidence band with now-thin diagonal boundary lines surrounds a solid light-purple/lavender regression line running through the point cloud. DEFECT: at the band's left cap (near x≈5-9 on the x-axis, y≈20-62), a thick dark-gray vertical bar drops straight down from the band toward the bottom axis, well past the actual ~13-unit band width there - a stray rendering artifact not present at the band's right-edge cap.
+      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues. (Visual-quality defect noted above is a shape/layout artifact, not a text-legibility failure.)
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white ink, fully legible against the dark background. Grid lines remain subtle, muted gray-toned dashes, visible without dominating. Legend in the same top-left position with the same three entries, text rendered in light ink and fully readable.
-      Data: Scatter dots remain the identical Imprint green #009E73, the regression line remains the identical purple/lavender, and the CI band remains the identical muted gray fill/outline as the light render - only the chrome (background + text + grid) flipped, confirming palette consistency across themes.
-      Legibility verdict: PASS - all text is clearly readable against the dark background; no dark-on-dark failures observed.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white ink, fully legible against the dark background, not clipped. Grid lines remain subtle, muted gray-toned dashes. Legend in the same balanced bottom row, text in light ink, fully readable, not clipped at the bottom edge.
+      Data: Scatter dots remain the identical Imprint green #009E73, the regression line remains the identical light-purple, and the CI band remains the identical muted gray fill/outline as the light render - confirming palette consistency across themes. DEFECT: the same thick dark-gray vertical bar artifact at the CI band's left cap is present in the identical location, confirming this is a data/rendering issue rather than a theme-specific one.
+      Legibility verdict: PASS - all text is clearly readable against the dark background; no dark-on-dark failures observed. (Same shape/layout artifact as the light render, not a text-legibility failure.)
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -73,20 +79,22 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set via Style; readable in both themes;
-          title fills ~87% of width, close to but under the overflow ceiling
+          title fills ~81% of width, within the expected range for the long mandated
+          title
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text or legend collisions with plot/data
+        comment: No text-on-text or text-on-data collisions, but a stray vertical
+          artifact from the CI band's left cap sits in the plot area unexplained by
+          any data element
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: dots_size=14 + dot_opacity=0.65 reasonable for n=90 points, though
-          a few dense clusters overlap heavily
+        comment: dots_size=14 + dot_opacity=0.65 reasonable for n=90 points
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -96,11 +104,13 @@ review:
           alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 1
         max: 4
         passed: false
-        comment: Large dead-space column on the left below the legend while data crowds
-          the right edge - imbalanced margins
+        comment: Left-edge CI-band closing segment renders as a thick vertical bar
+          dropping to the bottom axis, well past the polygon's actual local width
+          - a clear rendering defect (see weaknesses for root-cause diagnosis); legend
+          rebalancing this attempt was otherwise a genuine fix
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -112,26 +122,26 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, chrome and data colors are identical and
-          theme-correct across both renders'
+        comment: 'First series is #009E73, chrome and data colors identical and theme-correct
+          across both renders'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful color/typography choices beyond bare defaults, but not
-          yet publication-tier
+        comment: Thoughtful color/typography and now-balanced legend layout, but the
+          left-edge artifact undercuts overall polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid, muted tick tone; left-column whitespace and thick CI-band
-          outline keep it from full marks
+        passed: false
+        comment: Subtle grid and thinner CI-band boundary stroke are good steps, but
+          the stray vertical bar reads as an unrefined rendering glitch
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -155,8 +165,8 @@ review:
         max: 4
         passed: true
         comment: R², regression line, CI band, and moderate point alpha all present;
-          CI band outline is thicker/darker than a soft 'semi-transparent shading'
-          ask
+          CI band still reads as fairly opaque fill rather than soft semi-transparent
+          shading, and has the left-edge artifact
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -230,7 +240,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -238,14 +248,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic pygal.XY + Style usage, correct add() series pattern
+        comment: Idiomatic pygal.XY + Style usage, correct add() series pattern, legend_at_bottom
+          is a sensible idiomatic choice for this layout
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
         comment: Closed-polygon fill technique for the CI band is a genuinely pygal-specific
-          workaround for its missing fill-between primitive
+          workaround for its missing fill-between primitive, but its execution has
+          the unresolved left-edge artifact bug
   verdict: REJECTED
 impl_tags:
   dependencies:
