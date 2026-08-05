@@ -1,0 +1,257 @@
+library: ggplot2
+language: r
+specification_id: windrose-basic
+created: '2026-08-05T15:32:23Z'
+updated: '2026-08-05T15:47:45Z'
+generated_by: claude-sonnet
+workflow_run: 31020362307
+issue: 1880
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Polar LCh (Lab-space) color interpolation properly fixes the attempt-1 VQ-04
+    weakness: the 5-10 and 10-15 m/s speed bins are now clearly discriminable from
+    each other and from their neighbors in both themes, instead of collapsing toward
+    a muddy middle hue'
+  - 'Correct meteorological convention: North at top, sectors offset by -pi/16 so
+    compass labels align with sector centers rather than edges'
+  - position_stack(reverse = TRUE) correctly orders speed bins with calm winds innermost
+    and strong winds outermost, matching the spec's cool-to-strong convention
+  - Fully theme-adaptive chrome with data colors verified identical between light
+    and dark renders
+  - 'Realistic, well-scaled synthetic data: Weibull speed distribution, plausible
+    SW-prevailing flow with variable background, n=4380 within the spec''s recommended
+    500-50000 range'
+  - tidyr::complete(sector, speed_bin) guarantees all 16x5 combinations exist even
+    at zero count, avoiding missing-wedge artifacts
+  weaknesses:
+  - Low-magnitude sectors (N, NNE, NE, ENE, ESE, SE, SSE, NNW) still render as extremely
+    thin arc slivers, especially their outer speed-bin segments — near the edge of
+    visibility at mobile widths despite the improved color separation. Not addressed
+    by this repair pass; consider a minimum visible arc angle/stroke for near-zero
+    segments so 'present but rare' reads clearly distinct from 'absent'.
+  - No annotation or callout marks the dominant SW/WSW/SSW direction — data storytelling
+    still relies solely on implicit color/size cues, carried over unaddressed from
+    the attempt-1 feedback.
+  - Styling is professional and on-brand (custom LCh color engineering is a genuine
+    plus) but the overall layout/typography is largely unchanged from attempt 1 —
+    still reads as 'well-executed default' rather than a visually distinctive composition.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
+      Chrome: Title "windrose-basic · r · ggplot2 · anyplot.ai" centered at top in dark ink, fully visible with clean margin above and below, spans roughly half the plot width. 16 compass direction labels (N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW) ring the plot in medium-gray text, all legible and non-overlapping. Radial percentage ticks (0%, 5%, 10%, 15%, 20%) run along the W spoke in the same gray, subtle but readable against the cream background. Legend "Wind Speed (m/s)" sits below the plot on a slightly elevated off-white card with 5 labeled color swatches (0-5, 5-10, 10-15, 15-20, 20+), all text dark and legible.
+      Data: Stacked polar bars per 16-sector compass direction. Colors progress from brand green (#009E73, calm/0-5) through teal and cyan-blue shades to a slate blue (strong/20+), calm innermost and strong outermost per position_stack(reverse=TRUE). The perceptual (LCh) interpolation now keeps the 5-10 and 10-15 m/s stops visually distinct from each other, an improvement over the earlier RGB-blend version. A clear dominant SW/WSW/SSW lobe extends to roughly 18-20%, while most other directions (N, NNE, NE, ENE, ESE, SE, SSE, NNW) show only thin slivers near the center that are difficult to make out at small sizes.
+      Legibility verdict: PASS — all text (title, compass labels, radial ticks, legend) reads clearly against the light background; no light-on-light issues. Element visibility of the smallest sectors is a lingering, non-text weakness (see VQ-03).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
+      Chrome: Same title, compass labels, and radial ticks now rendered in light gray/off-white, clearly visible against the dark background. Legend card uses a slightly elevated dark surface with light gray text, fully readable. No dark-on-dark text was found.
+      Data: Identical color progression and identical bar geometry to the light render — brand green innermost through slate blue outermost, same dominant SW/WSW/SSW lobe, same thin slivers in low-frequency sectors. Confirmed the data colors are unchanged between themes; only background/text/grid chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data segments are as distinguishable from the near-black background as their light-theme counterparts.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; readable in both themes, tight but
+          legible at 400px with 16 compass labels around the ring
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Many low-frequency sectors (N, NNE, NE, ENE, ESE, SE, SSE, NNW) render
+          as very thin slivers, borderline invisible when scaled down; unresolved
+          from attempt 1
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCh (Lab-space) interpolation fixed the prior hue-collision issue
+          between the 5-10 and 10-15 m/s stops; adjacent segments are now clearly
+          discriminable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas matches ggsave dims; title ~50% width, legend
+          well-contained, no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Percent signs on radial ticks and compass labels self-document units;
+          axis titles intentionally omitted per polar convention
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (calm) series = #009E73 exactly, imprint_seq gradient to #4467A3
+          via perceptual LCh blend; correct theme-adaptive backgrounds and chrome
+          in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Custom perceptual (LCh) color-interpolation engineering, clean legend,
+          intentional sector-centering offset — solid professional polish without
+          a broader visual redesign
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Subtle grid, no panel border/ticks, generous margins; inherent polar-plot
+          clutter (16 spokes) limits further reduction
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Clear dominant-direction focal point via color+size, but still no
+          explicit annotation calling it out — carried over from attempt 1 feedback
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar stacked histogram / wind rose
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 16 sectors, stacked speed bins, calm-to-strong progression, legend,
+          N at top all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Direction sector on theta, stacked frequency % on radius, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches exact mandated format; legend labels match speed bin
+          ranges
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All aspects shown: 16 directions, 5 speed bins, stacked frequency,
+          prevailing pattern'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Coastal station, SW-prevailing flow with Weibull speed distribution
+          — plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: n=4380 within spec's 500-50000 recommendation; speed and direction
+          ranges realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> Data -> Colors -> Plot -> Save; the one helper function
+          (imprint_seq_lch) is a well-commented, justified utility for perceptual
+          color blending, not structural over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (dplyr, tidyr, scales, ragg) actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the perceptual-color problem it solves;
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png, current ggplot2 API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: coord_polar, position_stack(reverse=TRUE), tidyr::complete, scale_x_discrete/scale_y_continuous
+          idiomatically composed
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: Bespoke Lab/LCh colorspace interpolation via base R's convertColor
+          is a genuinely R-specific technique beyond generic categorical fill usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - binning
+  styling:
+  - edge-highlighting
+  - publication-ready
