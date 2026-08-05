@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-annotated: Annotated Heatmap
 // Library: d3 7.9.0 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-08-05
+// Quality: 93/100 | Created: 2026-08-05
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;

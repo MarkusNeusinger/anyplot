@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: heatmap-annotated
 created: '2026-08-05T09:49:15Z'
-updated: '2026-08-05T09:55:57Z'
+updated: '2026-08-05T10:10:46Z'
 generated_by: claude-sonnet
 workflow_run: 30994480626
 issue: 1824
@@ -12,63 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - WCAG-luminance-based automatic text-contrast function ensures every cell's numeric
-    annotation is legible against its background color in both themes
-  - Bold font-weight on the diagonal and on |r| > 0.6 cells creates a clear visual
-    hierarchy that draws the eye to the strongest relationships
-  - 'Correct Imprint diverging palette (imprint_div: matte-red to blue with a theme-adaptive
-    neutral midpoint) — data colors are identical between light and dark renders,
-    and chrome correctly flips to #FAF8F1 / #1A1A17'
-  - 'Full spec coverage: colorbar legend labeled ''r'', 2-decimal number formatting,
-    diverging colormap for signed correlation data, and cell-size-relative dynamic
-    font sizing'
-  - Clean, KISS-structured code with a deterministic seeded LCG for reproducible data
-    and no fake interactivity
+  - 'Correct Imprint imprint_div diverging colormap for the correlation matrix, with
+    the theme-adaptive midpoint from window.ANYPLOT_TOKENS.div — endpoint colors (blue
+    #4467A3 at r=1.00, red toward r=-1) verified pixel-identical between light and
+    dark renders'
+  - Dynamic per-cell text contrast via a proper WCAG relative-luminance calculation
+    (textColor/luminance), confirmed correct in both themes down to near-neutral cells
+    that sit close to the light/dark contrast threshold
+  - Bold font-weight applied to the diagonal and to |r| > 0.6 cells creates a genuine
+    visual hierarchy that draws the eye to the strongest correlations (Cloud Cover/UV
+    Index -0.65, Rainfall/Visibility -0.63, Humidity/Rainfall 0.65)
+  - Cell font size scales with computed cell bandwidth (clamped 13-22px), and the
+    manually-built SVG gradient legend correctly mirrors the cell color scale with
+    matching axis ticks
+  - Realistic, internally-consistent weather correlation matrix (symmetric, unit diagonal,
+    plausible signs/magnitudes for every pair) built deterministically via a seeded
+    LCG
+  - Square canvas format is the right call for a symmetric 8x8 matrix; grid occupies
+    ~63% of the canvas with balanced margins and the legend sits close to the grid
+    rather than floating isolated
   weaknesses:
-  - 'Heatmap cells are not square: margin = {top:150, right:230, bottom:130, left:190}
-    on the 1200x1200 mount yields iw=780 vs ih=920 (~18% taller than wide) even though
-    x and y share the same 8-item domain — make iw equal ih (e.g. symmetric top/bottom
-    vs left/right spacing, or size the grid off min(iw, ih)) so the correlation matrix
-    reads as a proper square grid.'
-  - Correlation values are generated from an unconstrained LCG without domain calibration,
-    producing some physically implausible pairs for the chosen weather variables (e.g.
-    Temperature vs UV Index = -0.95, though these typically move together; Humidity
-    vs Rainfall = 0.99, unrealistically near-perfect for real weather data) — bias
-    the generator toward more moderate, domain-plausible magnitudes.
-  - The right margin is tightly tuned to exactly fit the colorbar + axis ticks + 'r'
-    label with little slack — worth a bit more breathing room so it doesn't get fragile
-    if tick text ever grows.
+  - Design Excellence is strong but not at the absolute publication-ready ceiling
+    — e.g. no single explicit callout/annotation pointing to the strongest correlation,
+    and the legend swatch/typography is clean but standard rather than editorial
+  - Three small helper functions (lcg, luminance, textColor) deviate from a strict
+    flat KISS Imports->Data->Plot->Save structure, though they are justified here
+    (seeded RNG is mandated by the library guide's reproducibility rule, and WCAG-based
+    contrast text is mandated by the spec's 'sufficient contrast' requirement)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "heatmap-annotated · javascript · d3 · anyplot.ai" in bold dark text at top; subtitle
-        "Pearson correlation between weather variables" in softer gray beneath it. Row labels (Temperature,
-        Humidity, Wind Speed, Pressure, Rainfall, Cloud Cover, UV Index, Visibility) run down the left side;
-        the same 8 labels repeat rotated -35° along the bottom as column labels. A vertical colorbar sits to
-        the right of the grid, labeled "r" above it, with tick labels from 1.0 down to -1.0.
-      Data: 8x8 correlation matrix. Cells are colored on the Imprint diverging scale — dark blue for strongly
-        positive r, dark matte-red for strongly negative r, pale neutral lavender-gray near r=0. Each cell shows
-        its value to 2 decimal places, with automatic dark/light text chosen per-cell for contrast, and bold
-        weight on the diagonal (r=1.00) and any |r| > 0.6 cell to highlight the strongest relationships.
-      Legibility verdict: PASS — every title, label, tick, and cell value is clearly readable against the light
-        background; no light-on-light text found.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "heatmap-annotated · javascript · d3 · anyplot.ai" and a gray subtitle "Pearson correlation between weather variables" are both crisp and fully readable against the light background. Row labels (Temperature...Visibility) sit to the left in dark gray; column labels are rotated -35° below the grid, evenly spaced with no overlap between adjacent labels or with the last data row. The colorbar on the right is labeled "r" with ticks at 1.0/0.5/0.0/-0.5/-1.0, all legible.
+      Data: 8x8 correlation matrix, diagonal cells (r=1.00) render as a medium blue (#4467A3), strongly negative cells (e.g. -0.65, -0.63) render as a saturated red, near-zero cells render as a muted rose/lavender blend toward the light page background (the documented theme-adaptive midpoint behavior of imprint_div). Per-cell text color automatically switches between near-black and near-white depending on the luminance of the cell's fill, and stays legible in every cell I sampled. Bold weight is used on the diagonal and on |r| > 0.6 cells to draw the eye to the strongest relationships.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title/subtitle now rendered in light/off-white text; row and column labels in light gray;
-        colorbar and its "r" label and tick text also in light color. Layout is otherwise identical to the
-        light render.
-      Data: Cell colors are pixel-identical to the light render (same blue/red diverging scale, same values),
-        confirming only chrome — not data color — flips between themes. Text-contrast toggling still applies
-        per-cell (dark text on the palest cells, light text on saturated cells).
-      Legibility verdict: PASS — no dark-on-dark failures found; all title, axis, tick, and cell-value text
-        reads clearly against the near-black surface.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title renders in light/off-white, subtitle in a softer gray, both fully legible against the dark background. Row/column labels and colorbar tick labels are rendered in a light gray tone that reads clearly against the dark surface — no dark-on-dark text found anywhere, including on the near-neutral cells whose fill is itself quite dark.
+      Data: The diagonal blue (r=1.00) cells sample to the exact same RGB (68,103,163 / #4467A3) as in the light render, confirming the positive/negative endpoint hues of imprint_div are identical across themes as required. Near-zero cells blend toward the dark page background instead of the light one (by design — the div token's midpoint is theme-adaptive per window.ANYPLOT_TOKENS.div), so those specific cells look darker/more saturated than their light-theme counterparts while the extreme (|r| near 1) cells stay pixel-identical. Text contrast per cell is correctly recomputed per theme and remains readable throughout.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -76,74 +64,80 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit (26/17/16/15px etc.); readable and well-proportioned
-          in both themes
+        comment: All font sizes explicitly set (title 26px, subtitle 17px, cell text
+          13-22px scaled to bandwidth, ticks 15-16px); readable in both themes, no
+          overflow/clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between rotated tick labels, cell text, or legend
+        comment: Rotated x tick labels evenly spaced, no collisions with each other,
+          the grid, or the legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 64 cells distinctly colored with legible contrast-toggled text
+        comment: Cell size and font scale together; colorbar sized and positioned
+          clearly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging scale plus redundant numeric labels in every cell
-          — not reliant on hue alone
+        comment: Diverging red/blue (not red-green), WCAG relative-luminance driving
+          per-cell text color for guaranteed contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas fill and no clipping, but cells are ~18% taller than
-          wide (iw=780 vs ih=920 from the margin object) despite a symmetric 8x8 domain
+        comment: Grid occupies ~63% of the square canvas both directions, balanced
+          margins, legend close to grid, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Row/column axes use descriptive variable names; colorbar labeled
-          with the standard 'r' correlation symbol
+        comment: Row/column category labels plus subtitle context and colorbar labeled
+          'r' — appropriate for a correlation matrix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div diverging scale, theme-adaptive midpoint, correct #FAF8F1/#1A1A17
-          backgrounds, identical data colors across themes'
+        comment: 'imprint_div used correctly; pixel-sampled diagonal fill is identical
+          #4467A3 in both renders; near-zero cells legitimately differ per theme because
+          the div token''s midpoint is intentionally theme-adaptive (pageBg) per the
+          harness/library spec, not a violation; chrome fully theme-correct in both
+          renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom WCAG-contrast text function and gradient legend show real
-          thought, but the non-square cell grid keeps it short of full publication
+        comment: Thoughtful diverging scale, computed contrast text, clear typographic
+          hierarchy — clearly above defaults but short of full editorial/publication
           polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axis domains removed, thin cell-separator strokes, clean spacing;
-          right margin feels tightly tuned
+        comment: Axis domains and tick marks removed, subtle cell separators (2px
+          stroke in pageBg), generous whitespace; minor polish still possible
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bold weighting on the diagonal and strong-correlation cells creates
-          a real focal hierarchy across the matrix
+        comment: Bold weight on diagonal and |r|>0.6 cells creates real visual hierarchy
+          pointing to the strongest correlations, though no explicit callout/annotation
     spec_compliance:
       score: 15
       max: 15
@@ -159,24 +153,24 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Text annotations, colorbar legend, diverging colormap, 2-decimal
-          formatting, contrast text, cell-relative font sizing — every spec note addressed
+        comment: Contrast-safe annotations, 2-decimal formatting, colorbar legend,
+          font size relative to cell size, diverging colormap for signed data — all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y map to column/row variable labels; value drives both color and
-          annotation; full symmetric matrix shown
+        comment: Symmetric 8x8 matrix, rows/cols correctly mapped, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'heatmap-annotated · javascript · d3 · anyplot.ai';
-          legend correctly scaled -1..1
+        comment: Title matches mandated format exactly; legend labeled 'r' matches
+          the Pearson correlation data
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -184,58 +178,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 8x8 matrix with diagonal, colorbar, and annotations — covers
-          all aspects of the plot type
+        comment: Full range of correlation strengths and both signs represented across
+          the matrix, plus unit diagonal
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Sensible weather variable names and neutral topic, but a few LCG-generated
-          pairs are physically implausible (e.g. Temperature vs UV Index = -0.95)
+        comment: Real, neutral weather-science scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Values stay within valid [-1,1] range but several pairs (0.99, -0.95)
-          are unrealistically extreme for real weather correlations
+        comment: Every pairwise sign/magnitude matches textbook-plausible weather
+          relationships (e.g. cloud cover vs UV -0.65, rainfall vs visibility -0.63)
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No classes; helper functions (lcg, luminance, textColor) are minimal
-          and justified
+        comment: Mostly linear Data->Plot flow, but adds 3 small helper functions
+          (lcg, luminance, textColor) — justified by the reproducibility and contrast
+          requirements, but not a pure flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG(42)
+        comment: Seeded LCG(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3, no unused imports
+        comment: No imports, d3 global only, nothing unused
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity
+        comment: No fake UI/interactivity, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly mounts to #container via ANYPLOT_SIZE/ANYPLOT_TOKENS,
-          no manual file output'
+        comment: 'Correctly mounts a single svg into #container per the harness contract,
+          current d3 v7 API'
     library_mastery:
       score: 9
       max: 10
@@ -245,16 +239,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic scaleBand/scaleSequential, axisBottom/axisLeft, data().join()
-          pattern throughout
+        comment: Idiomatic scaleBand/scaleSequential/interpolateRgbBasis, data-join-driven
+          rendering, axis generators
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom linearGradient-built colorbar and luminance-based contrast
-          text go beyond generic usage
-  verdict: REJECTED
+        comment: Manually-built SVG linearGradient legend driven by d3-color/d3-scale
+          plus a hand-rolled WCAG contrast function — genuinely D3-specific, though
+          not maximally unique (no d3-hierarchy/force-class feature)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -267,3 +262,4 @@ impl_tags:
   - correlation-matrix
   styling:
   - custom-colormap
+  - gradient-fill
