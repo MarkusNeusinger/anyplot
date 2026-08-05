@@ -80,17 +80,43 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-band!(ax, x_line, y_lower, y_upper; color = (IMPRINT_PALETTE[3], 0.2))
-scatter!(ax, temperature, energy_consumption;
-    color = (IMPRINT_PALETTE[1], 0.65), markersize = 12, strokewidth = 0)
-lines!(ax, x_line, y_line; color = IMPRINT_PALETTE[3], linewidth = 3)
+band_plot = band!(ax, x_line, y_lower, y_upper; color = (IMPRINT_PALETTE[3], 0.16))
+scatter_plot = scatter!(ax, temperature, energy_consumption;
+    color = (IMPRINT_PALETTE[1], 0.55), markersize = 10, strokewidth = 0)
+line_plot = lines!(ax, x_line, y_line; color = IMPRINT_PALETTE[3], linewidth = 3)
+
+# --- Equation callout card ---------------------------------------------------
+# A layered card (drop-shadow rect + bordered panel) instead of bare text-on-plot,
+# giving the annotation a distinct focal point rather than a floating label.
+card_bg = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
+poly!(ax, Point2f[(0.022, 0.975), (0.335, 0.975), (0.335, 0.815), (0.022, 0.815)];
+    space = :relative, color = (INK, 0.06), strokewidth = 0)
+poly!(ax, Point2f[(0.015, 0.985), (0.328, 0.985), (0.328, 0.825), (0.015, 0.825)];
+    space = :relative, color = (card_bg, 0.92), strokecolor = INK_SOFT, strokewidth = 1)
 
 equation_sign = intercept >= 0 ? "+" : "-"
 equation = "y = $(round(slope, digits = 2))x $equation_sign $(round(abs(intercept), digits = 1))"
 stats_label = "$equation\nR² = $(round(r_squared, digits = 3))"
 
-text!(ax, 0.03, 0.95; text = stats_label, space = :relative,
+text!(ax, 0.035, 0.955; text = stats_label, space = :relative,
     align = (:left, :top), fontsize = 16, color = INK)
+
+# --- Legend (Makie layout composition, identifies the 95% CI band) ----------
+legend_elements = [
+    MarkerElement(color = (IMPRINT_PALETTE[1], 0.55), marker = :circle, markersize = 10),
+    LineElement(color = IMPRINT_PALETTE[3], linewidth = 3),
+    PolyElement(color = (IMPRINT_PALETTE[3], 0.16)),
+]
+Legend(fig[1, 2], legend_elements, ["Observed data", "Linear fit", "95% CI band"];
+    framevisible   = false,
+    labelcolor     = INK,
+    labelsize      = 13,
+    backgroundcolor = PAGE_BG,
+    tellheight     = false,
+    valign         = :top,
+)
+colsize!(fig.layout, 2, Relative(0.13))
+colgap!(fig.layout, 1, 18)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
