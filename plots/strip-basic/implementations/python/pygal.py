@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 strip-basic: Basic Strip Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-04
 """
 
 import os
@@ -39,19 +38,19 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
     value_font_size=36,
     opacity=0.60,
-    stroke_width=0,
+    stroke_width=2.5,
 )
 
 # Chart
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     title="strip-basic · pygal · anyplot.ai",
     x_title="Department",
@@ -82,13 +81,16 @@ for i, cat in enumerate(categories, start=1):
     ]
     chart.add(cat, points)
 
-# Mean reference markers — one dot per category at the mean position (5th Okabe color: #AE3030)
-# Positioned at exact integer x (no jitter) so they stand apart from the scattered data cloud
+# Mean reference markers — one dot per category at the mean position (5th Imprint
+# color: #AE3030). Positioned at exact integer x (no jitter) so they stand apart
+# from the scattered data cloud. A larger dot plus a dashed connecting line (both
+# per-serie overrides on top of the scatter-only global style) makes the reference
+# layer unambiguous at a glance, rather than reading as a fifth data category.
 mean_points = [
     {"value": (float(i), float(np.mean(scores[cat]))), "label": f"Mean {cat}: {np.mean(scores[cat]):.2f}"}
     for i, cat in enumerate(categories, start=1)
 ]
-chart.add("─ Mean", mean_points)
+chart.add("─ Mean", mean_points, dots_size=32, stroke=True, stroke_style={"width": 4, "dasharray": "10,6"})
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
