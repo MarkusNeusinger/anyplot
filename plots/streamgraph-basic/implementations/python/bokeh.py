@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 streamgraph-basic: Basic Stream Graph
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-05
@@ -90,8 +90,8 @@ y_limit = max_disp * 1.3
 p = figure(
     width=3200,
     height=1800,
-    title="streamgraph-basic · bokeh · anyplot.ai",
-    x_axis_label="Time",
+    title="streamgraph-basic · python · bokeh · anyplot.ai",
+    x_axis_label="Month",
     y_axis_label="Streaming Hours (relative)",
     x_axis_type="datetime",
     toolbar_location=None,
@@ -113,7 +113,7 @@ p.yaxis.major_label_text_font_size = "34pt"
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_color = INK_SOFT
@@ -138,7 +138,7 @@ for i, cat in enumerate(categories):
 
     source = ColumnDataSource(data={"x": xs, "y": ys, "genre": [cat] * len(xs)})
     renderer = p.patch(
-        x="x", y="y", source=source, fill_color=COLORS[i], fill_alpha=0.85, line_color=COLORS[i], line_width=2
+        x="x", y="y", source=source, fill_color=COLORS[i], fill_alpha=0.85, line_color=PAGE_BG, line_width=1
     )
     legend_items.append((cat, [renderer]))
     hover_renderers.append(renderer)
