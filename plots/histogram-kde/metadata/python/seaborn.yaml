@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: histogram-kde
 created: '2025-12-24T21:45:08Z'
-updated: '2026-08-05T03:39:47Z'
+updated: '2026-08-05T03:46:14Z'
 generated_by: claude-sonnet
 workflow_run: 30972491413
 issue: 1823
@@ -12,9 +12,13 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
+  - 'All three Attempt 1 weaknesses are fully resolved: title now reads "histogram-kde
+    · python · seaborn · anyplot.ai" (correct 4-segment format), bins reduced from
+    35 to 26 for a smoother bar profile, and the legend now lists Histogram (primary,
+    first-drawn series) above KDE via explicit handles'
   - Multimodal test-score data (three overlapping normal components) genuinely demonstrates
     the KDE-vs-histogram value proposition from the spec — the smooth curve reveals
     the underlying trimodal shape that binning artifacts obscure
@@ -25,42 +29,32 @@ review:
     observations beneath the histogram, and sns.despine(offset=6, trim=True) gives
     trimmed, offset spines instead of a plain L-frame'
   - Theme-adaptive chrome correctly threaded through rc params, tick_params, spine
-    colors, and legend facecolor/edgecolor — both light and dark renders are fully
-    readable with identical data colors
+    colors, and legend facecolor/edgecolor — both renders fully readable with identical
+    data colors
   - 'Clean KISS script: seeded data generation, explicit fig/ax, no functions/classes,
-    correct plot-{THEME}.png output'
+    correct plot-{THEME}.png output with no bbox_inches=''tight'' canvas-drift risk'
   weaknesses:
-  - 'Title is missing the required {language} segment: code sets "histogram-kde ·
-    seaborn · anyplot.ai" but the mandated format is "{spec-id} · {language} · {library}
-    · anyplot.ai" — for this Python implementation it must read "histogram-kde · python
-    · seaborn · anyplot.ai". Fix line 83 in plots/histogram-kde/implementations/python/seaborn.py.'
-  - Legend order is visually reversed from data/plot order — "KDE" appears above "Histogram"
-    in the legend box even though the histogram (green, first Imprint series) is drawn
-    first and is the primary series; consider passing explicit handles/labels or reordering
-    so Histogram lists first for a cleaner visual hierarchy.
-  - Histogram uses 35 bins for ~420 points, producing a visibly noisy/jagged bar profile
-    in the 60-80 range; a slightly coarser bin count (e.g. 25-28) would smooth the
-    bars without losing the multimodal shape, letting the KDE and histogram tell a
-    more consistent story together.
-  - Design storytelling is good but not exceptional — no explicit visual callout (e.g.
-    subtle annotation or color emphasis) draws the eye to the three underlying subpopulations
-    (struggling / typical / high-performing) that motivated the multimodal data choice;
-    this is optional polish, not a requirement.
+  - Design storytelling is good but not exceptional — no explicit visual callout draws
+    the eye to the three underlying subpopulations (optional polish, not a requirement;
+    DE-03 remains at 4/6)
+  - Aesthetic sophistication is above library defaults (custom rug plot, trimmed/offset
+    spines) but not yet publication-tier (DE-01 5/8) — e.g. no annotation labeling
+    the low/mid/high performer clusters or callout on the bimodal tail
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches the required light-theme page surface — not pure white.
-      Chrome: Title "histogram-kde · seaborn · anyplot.ai" is dark ink, bold/medium weight, centered, clearly legible; x-axis label "Test Score (%)" and y-axis label "Density" are dark ink and clearly legible; tick labels (0.000-0.040 on y, 20-100 on x) are secondary-gray and clearly legible; y-axis gridlines are faint horizontal lines at low opacity; spines are trimmed/offset on left and bottom only, colored soft ink-gray; legend box (top right, "KDE" then "Histogram") has an off-white/cream fill with a thin gray border and dark readable text.
-      Data: First series (histogram bars) is brand green #009E73 at ~0.5 alpha with a thin lighter edge; second series (KDE line) is lavender #C475FD, a bold 3px curve tracing a trimodal density shape; a thin green rug of tick marks sits along the baseline showing individual observations.
-      Legibility verdict: PASS — no light-on-light or illegible text anywhere.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "histogram-kde · python · seaborn · anyplot.ai" is dark ink, centered, ~46 chars, comfortably proportioned (no overflow, no clipping). X-axis label "Test Score (%)" and y-axis label "Density" are dark ink and clearly readable; tick labels are secondary gray and readable. Subtle y-axis grid at low opacity. Spines are trimmed and offset (left + bottom only, sns.despine trim=True). Legend (top right, cream box, gray border) reads "Histogram" then "KDE" in correct primary-series-first order.
+      Data: Histogram bars are brand green (#009E73) at ~0.5 alpha with cream-colored edges for bar separation; KDE line is lavender (#C475FD) at 3px; a thin green rug of tick marks runs along the baseline showing individual observations (~420 points). First series confirmed #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches the required dark-theme page surface — not pure black.
-      Chrome: Title, axis labels are light ink (near-white) and clearly legible against the dark background; tick labels are light secondary-gray and clearly legible; gridlines are faint light horizontal lines; spines are trimmed/offset, colored light soft-gray; legend box has a dark-elevated fill (#242420-like) with light-gray border and light, readable text.
-      Data: Histogram bars and KDE line are the identical #009E73 and #C475FD hexes as the light render — confirmed unchanged; rug tick marks remain visible in green along the baseline.
-      Legibility verdict: PASS — no dark-on-dark failures; every text element inverts correctly with the theme.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: All chrome (title, axis labels, tick labels, spines, legend box, grid) correctly flips to light-on-dark tones — title and axis labels in light ink, tick labels in secondary light gray, legend box in dark-elevated fill with light border. No dark-on-dark failures anywhere; every text element is clearly visible against the dark background.
+      Data: Histogram bars remain #009E73, KDE line remains #C475FD, rug ticks remain green — confirmed identical to the light render; only chrome (background, text, grid, legend frame) flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -68,45 +62,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable and well-proportioned in
-          both themes
+        comment: All font sizes explicitly set (title 11pt, axis labels 10pt, ticks/legend
+          8pt); title fits without overflow after adding the 'python' segment
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data
+        comment: No overlap between title, axes, legend, and data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Histogram/KDE/rug all visible; 35 bins slightly noisy for ~420 points
+        comment: bins=26 (down from 35 in attempt 1) gives a smooth bar profile; KDE
+          linewidth=3 and rug alpha=0.3 well adapted to ~420-point density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender is CVD-safe with good contrast
+        comment: Green vs lavender, good contrast, CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, nothing cut off, canvas gate passed
+        comment: Balanced margins, legend near plot, no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Test Score (%)" and "Density" are descriptive with units'
+        comment: '"Test Score (%)" has units; "Density" is descriptive and unit-appropriate'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series #009E73, second #C475FD (Imprint position 2), theme-correct
-          chrome in both renders'
+          chrome and backgrounds in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -115,24 +110,24 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Above default: alpha blending, edge coloring, rugplot, offset spines
-          — not yet publication-tier'
+        passed: false
+        comment: Rug plot, edge coloring, offset spines are above default but not
+          yet publication-tier
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Trimmed offset spines, subtle single-axis grid, generous whitespace
+        comment: Trimmed offset spines, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Multimodal data + color contrast between hist/KDE guide the eye;
-          no explicit annotation of subpopulations
+        comment: Trimodal data plus rug/KDE layering guides the eye; no explicit annotation
+          of subpopulations
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -147,20 +142,20 @@ review:
         max: 4
         passed: true
         comment: alpha~0.5, density scale, chosen bins/bandwidth, contrasting colors
-          — all present per spec notes
+          all match spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=Test Score, y=Density, full data range shown
+        comment: Test scores on x, density on y, full data range shown
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is missing the required {language}="python" segment; legend
-          labels themselves are correct
+        passed: true
+        comment: Title now correctly reads 'histogram-kde · python · seaborn · anyplot.ai';
+          legend order fixed to Histogram-then-KDE
     data_quality:
       score: 15
       max: 15
@@ -170,19 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Trimodal distribution clearly demonstrates histogram vs KDE value
+        comment: Trimodal distribution clearly demonstrates histogram-vs-KDE value
+          proposition
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Test-score quality-control scenario, neutral and plausible
+        comment: Test-score / quality-control scenario, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100% bounded scores, sensible subgroup means/spreads
+        comment: Scores clipped to 0-100, realistic mean/spread for each student subgroup
     code_quality:
       score: 10
       max: 10
@@ -192,7 +188,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports/data/plot/save, no functions
+        comment: Imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,19 +200,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy, seaborn — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Clean, appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, no bbox_inches='tight', current API
+        comment: plot-{THEME}.png, dpi=400, no bbox_inches='tight'
     library_mastery:
       score: 8
       max: 10
@@ -232,13 +228,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.rugplot() + sns.despine(offset=, trim=True) are seaborn-distinctive
-          touches not trivially replicated elsewhere
-  verdict: REJECTED
+        comment: sns.rugplot() + sns.despine(offset=, trim=True) are genuinely seaborn-distinctive
+          touches
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - explicit-figure
