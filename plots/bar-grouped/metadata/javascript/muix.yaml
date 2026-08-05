@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: bar-grouped
 created: '2026-08-05T01:26:23Z'
-updated: '2026-08-05T01:31:00Z'
+updated: '2026-08-05T01:44:44Z'
 generated_by: claude-sonnet
 workflow_run: 30966213739
 issue: 1822
@@ -12,47 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 92
 review:
   strengths:
+  - 'Fully addressed the prior review''s core complaint: the data now has a genuine
+    rank crossover (Software overtakes Hardware in Q3; Services overtakes Hardware
+    by Q4) instead of three series rising in lockstep, and the new subtitle explicitly
+    narrates that insight'
   - 'Correct Imprint palette in canonical order (brand green #009E73 for Hardware,
-    then lavender #C475FD and blue #4467A3) — identical data colors and theme-correct
-    chrome (backgrounds, text, grid) across both light and dark renders'
-  - Accurate title format and legend labels; category/group/value mapped correctly
-    onto x-axis / series / bar height
-  - Explicit font sizing throughout (title, axis labels, ticks, legend) with no overlap,
-    no clipping, and full legibility in both themes
-  - 'Idiomatic MUI X usage: band scale x-axis, categoryGapRatio for group spacing,
-    horizontal-only grid, slotProps legend styling, valueFormatter for tooltip formatting,
-    and sx-based slot overrides for axis/grid stroke colors'
+    lavender #C475FD for Software, blue #4467A3 for Services) — identical data colors
+    and theme-correct chrome across both light and dark renders'
+  - New in-bar value labels use a contrast-aware fill color chosen per series (dark
+    ink on the green/lavender bars, light ink on the darker blue bars) rather than
+    a single fixed color — a genuinely thoughtful legibility detail
+  - Explicit font sizing throughout (title, subtitle, axis labels, ticks, legend,
+    bar labels) with no overlap, no clipping, full legibility in both themes
+  - 'Layout balance improved: CHART_TOP and margin.top were tightened, closing most
+    of the previous top-heavy gap between title and chart area'
+  - 'Idiomatic MUI X usage: barLabel + slotProps.barLabel with an ownerState-based
+    callback for per-series label styling, band-scale x-axis with categoryGapRatio,
+    horizontal-only grid, sx-based MuiChartsAxis-line/MuiChartsGrid-line overrides'
   weaknesses:
-  - Design Excellence is minimal — the chart is essentially a well-configured MUI
-    X default plus correct palette; no distinctive typography, hierarchy, or visual
-    polish beyond compliance (DE-01, DE-02 low)
-  - No data storytelling or visual hierarchy — all three series rise every quarter
-    in the same rank order (Hardware > Software > Services) with no emphasis, callout,
-    or highlighted insight (DE-03 default)
-  - 'Feature coverage is narrow: the three groups never change relative rank or dip,
-    so the example doesn''t demonstrate the comparative-crossover scenarios grouped
-    bar charts are meant to highlight (DQ-01)'
-  - Whitespace is slightly imbalanced — the gap between the title and the start of
-    the chart area is noticeably larger than the bottom margin, giving a top-heavy
-    feel (minor VQ-05 deduction)
+  - Design Excellence is solid but still mid-range — beyond the subtitle text and
+    rounded bar corners there's no additional visual emphasis (e.g., a highlighted
+    focal bar or callout at the crossover point) that would push this into publication-ready
+    territory (DE-01/DE-02)
+  - Right margin is only 28 CSS px with the legend column sitting close to the canvas
+    edge — comfortable today but leaves little breathing room; a slightly larger right
+    margin would add polish (minor VQ-05 note)
+  - The per-series conditional label-fill technique (LM-02) is a nice touch but relies
+    on a pattern (callback-based per-item styling) that's replicable in most modern
+    charting libraries, so it's only moderately distinctive to MUI X specifically
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches the #FAF8F1 Imprint light surface — not pure white.
-      Chrome: Title "bar-grouped · javascript · muix · anyplot.ai" top-left in dark ink; y-axis label "Revenue ($M)" rotated on the left, x-axis label "Fiscal Quarter" centered below the ticks; Q1–Q4 tick labels under each group; legend (Hardware / Software / Services) centered above the plot area; subtle horizontal-only gridlines. All chrome renders in dark, clearly readable text against the light background.
-      Data: Three bars per quarter (Q1–Q4) — Hardware (brand green #009E73), Software (lavender #C475FD), Services (blue #4467A3), consistent with the canonical Imprint categorical order, first series correctly brand green.
+      Chrome: Title "bar-grouped · javascript · muix · anyplot.ai" top-left in dark ink, with a new subtitle below it ("Software overtakes Hardware in Q3 as Services closes the gap by Q4") in soft gray. Y-axis label "Revenue ($M)" rotated on the left, x-axis label "Fiscal Quarter" centered below the ticks, Q1–Q4 tick labels under each group. Legend (Hardware / Software / Services) now sits vertically stacked at the right-middle of the plot, not overlapping any bar. Subtle horizontal-only gridlines. In-bar value labels ($4.2M, $3.1M, etc.) render in dark ink on the green/lavender bars and light ink on the blue bars. All chrome and labels are clearly readable against the light background.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches the #1A1A17 Imprint dark surface — not pure black.
-      Chrome: Same title, axis labels, tick labels, and legend as the light render, now rendered in light ink/text against the dark background — no dark-on-dark or low-contrast elements observed. Gridlines remain subtle and visible.
-      Data: Bar colors are pixel-identical to the light render (green / lavender / blue) — only the chrome (background, text, grid) flipped as expected.
+      Chrome: Same title, subtitle, axis labels, tick labels, and legend as the light render, now rendered in light ink against the dark background — no dark-on-dark or low-contrast elements observed. Gridlines remain subtle and visible.
+      Data: Bar colors are pixel-identical to the light render (green #009E73 / lavender #C475FD / blue #4467A3) — only the chrome (background, text, grid) flipped as expected. The in-bar value labels keep the same fixed per-series fill colors as the light render (by design, since bar fills don't change with theme) and remain fully legible on both bar surfaces.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,35 +64,36 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes for title/axis/ticks/legend; fully readable in
-          both themes, no overflow
+        comment: Explicit font sizes for title/subtitle/axis/ticks/legend/bar-labels;
+          fully readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text or data elements
+        comment: No collisions between text, legend, or data elements even with the
+          legend repositioned to the right-middle
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar widths and group spacing (categoryGapRatio) are well proportioned
-          for 4 categories x 3 groups
+        comment: Bar widths and group spacing (categoryGapRatio) well proportioned
+          for 4 categories x 3 groups; borderRadius adds subtle definition
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue are distinct hues, good contrast, no red-green
+        comment: Green/lavender/blue are distinct hues with good contrast; no red-green
           pairing
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization but top margin (title-to-chart gap) noticeably
-          larger than bottom margin
+        comment: Top-heavy imbalance from the prior review is fixed (CHART_TOP/margin.top
+          tightened); good canvas utilization, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -103,30 +108,31 @@ review:
         comment: 'Canonical Imprint order (#009E73, #C475FD, #4467A3), theme-correct
           chrome in both renders'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured library default with correct palette — no exceptional
-          custom design
+        comment: 'Above a bare default now: contrast-aware value labels, rounded bars,
+          and a narrative subtitle, but no truly distinctive layout treatment'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: 'Some refinement: horizontal-only grid, softened axis line color,
-          disableTicks — but not fully polished'
+        comment: Some refinement visible (rounded bars, horizontal-only grid, disabled
+          ticks, tightened margins) but not fully polished
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data displayed without emphasis, callouts, or hierarchy beyond default
-          color coding
+        passed: true
+        comment: Data was redesigned for a genuine rank crossover (Software over Hardware
+          in Q3, Services over Hardware by Q4) and the subtitle names the insight
+          directly
     spec_compliance:
       score: 15
       max: 15
@@ -158,16 +164,16 @@ review:
         comment: Title matches required format exactly; legend labels match series
           names
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Three groups with distinct scales/growth rates, but rank order never
-          changes across categories
+        comment: Now shows a genuine rank crossover across quarters (previously all
+          three series kept the same rank order every quarter)
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -180,7 +186,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Revenue values and growth trends are factually plausible
+        comment: Revenue values and the hardware-plateau / software-growth trend are
+          factually plausible
     code_quality:
       score: 10
       max: 10
@@ -217,24 +224,25 @@ review:
         comment: skipAnimation set, sized from window.ANYPLOT_SIZE, harness contract
           respected
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct high-level BarChart API: band scale, categoryGapRatio, grid,
-          margin, slotProps'
+        comment: barLabel + slotProps.barLabel ownerState callback, band scale, categoryGapRatio,
+          grid, margin, slotProps.legend — expert use of the high-level API
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses MUI X-specific slot styling (sx targeting MuiChartsAxis-line/MuiChartsGrid-line)
-          and valueFormatter for tooltip formatting
-  verdict: REJECTED
+        comment: Uses MUI X-specific slot styling and an ownerState-based per-series
+          label callback, but the pattern is replicable in other libraries with similar
+          callback APIs
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
