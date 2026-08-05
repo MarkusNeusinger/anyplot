@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 strip-basic: Basic Strip Plot
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 84/100 | Updated: 2026-08-05
+Quality: 90/100 | Updated: 2026-08-05
 """
 
 import os

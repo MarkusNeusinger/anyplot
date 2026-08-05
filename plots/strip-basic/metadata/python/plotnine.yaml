@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: strip-basic
 created: '2025-12-23T21:54:54Z'
-updated: '2026-08-05T05:48:59Z'
+updated: '2026-08-05T05:58:06Z'
 generated_by: claude-sonnet
 workflow_run: 30978789242
 issue: 975
@@ -12,80 +12,77 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - 'Correct Imprint palette in canonical order — first series (Placebo) is #009E73,
-    subsequent groups follow positions 2-4; identical data colors across light/dark
-    renders'
-  - 'Theme-adaptive chrome is fully threaded through: background, text, grid, panel
-    border, and the mean crossbars all flip correctly between light and dark'
-  - Mean-reference crossbars (stat_summary) plus the 'Fastest response' annotation
-    add interpretive value beyond raw points, directly answering the spec's suggestion
-    to reference group means
-  - Clean, reproducible KISS code — single seed (42) reused for both data generation
-    and jitter, no unused imports, correct file naming and canvas dimensions (3200x1800)
-  - Jitter width (0.25) and alpha (0.65) both sit within the spec's recommended ranges,
-    and data shows genuine variation in spread/outliers across the four groups
+  - Panel border removed in favor of the style guide's L-shaped left/bottom axis lines
+    only — fixes the prior Design Excellence deduction
+  - Markers now use a theme-adaptive background-colored edge stroke (color=PAGE_BG,
+    stroke=0.3) which visually separates overlapping points in dense clusters without
+    adding a harsh outline
+  - Title bumped to size=18 bold, now fills ~70-75% of plot width — well within the
+    expected proportion for the mandated title
+  - 'Correct Imprint palette in canonical order via scale_fill_manual, first series
+    is #009E73, identical data colors across light/dark renders'
+  - Theme-adaptive chrome fully threaded through (background, text, grid, axis lines,
+    crossbars, annotation all flip correctly)
+  - Mean-reference crossbars plus the 'Fastest response' annotation directly implement
+    the spec's suggested optional feature and add a clear takeaway
+  - Clean, reproducible KISS code (np.random.seed(42) + position_jitter random_state=42)
+    with correct canvas dimensions and file naming
   weaknesses:
-  - Full four-sided panel border (panel_border=element_rect(...)) is used instead
-    of the style-guide default L-shaped frame (top/right spines removed) — remove
-    panel_border or drop it to just axis_line for a cleaner, less boxed look
-  - Overlapping markers in dense clusters (e.g. bottom of Drug B / Drug C) have no
-    edge stroke for separation — a subtle white/background-colored edgecolor on geom_point
-    would improve definition where points stack
-  - Title occupies only ~35% of the plot width at the compact 12pt size — since this
-    title has no descriptive prefix and is well under the ~67-char mandated-title
-    reference, it could use a slightly larger plot_title fontsize to hit the ~50-70%
-    target and give the title more visual presence
-  - 'Design Excellence reads as a well-configured default rather than a distinctive
-    design: consider stronger typographic hierarchy (e.g. bolder title weight) or
-    a more deliberate accent on the crossbar/annotation to sharpen the storytelling
-    around the ''fastest response'' finding'
+  - Dense point clusters (bottom of Drug B / Drug C, and the tight Drug A cluster
+    around 35-40) still overlap heavily even with the new edge stroke — individual
+    points are hard to distinguish in the densest spots
+  - Design Excellence still reads as a well-executed but fairly standard strip plot
+    rather than a distinctive, publication-level design — the palette and layered
+    stat_summary are the main flourishes
+  - Data Storytelling relies only on the mean crossbars and single 'Fastest response'
+    annotation; no additional emphasis (e.g. highlighting the Placebo outliers or
+    the Drug C decreasing trend) to deepen the narrative
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "strip-basic · plotnine · anyplot.ai" in dark ink, clearly visible; axis titles "Treatment Group" / "Response Time (seconds)" in dark ink; tick labels (category names, 20/40/60) in a softer gray; subtle horizontal + vertical gridlines; full rectangular panel border in soft ink-gray.
-      Data: Four jittered strip columns (Placebo, Drug A, Drug B, Drug C) colored green/lavender/blue/ochre — first series (Placebo) is Imprint #009E73 as required, remaining series follow canonical palette order. Black-ish (INK) horizontal crossbars mark each group's mean. Bold "Fastest response" annotation sits near the bottom of the Drug C column.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Chrome: Bold size-18 title "strip-basic · plotnine · anyplot.ai" spans ~70-75% of plot width, clearly visible in dark ink. Axis titles "Treatment Group" (x) and "Response Time (seconds)" (y) render in dark ink, balanced in size. Tick labels (category names on x, numeric values 20/40/60 on y) render in a softer gray, legible. Only left/bottom axis lines are present — no full panel border (L-shaped frame, per style guide). Subtle horizontal/vertical grid lines are visible but do not compete with data.
+      Data: Four jittered strip columns (Placebo, Drug A, Drug B, Drug C) colored green/lavender/blue/ochre in canonical Imprint order, first series (Placebo) correctly #009E73. Markers have a thin background-colored edge stroke that helps separate overlapping points. Black horizontal crossbars mark each group's mean; a bold "Fastest response" annotation sits near the bottom of the Drug C column, clear of data points.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/axis/tick text now rendered in light ink (near-white for primary text, soft light gray for tick labels); gridlines and panel border still subtle and visible; crossbars now render white (INK flipped to light token) instead of black.
-      Data: Same four data colors (green/lavender/blue/ochre) as the light render — confirmed identical, only chrome flipped. "Fastest response" annotation now in light ink, still legible against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures observed; every text element is clearly readable against the near-black surface.
+      Chrome: Same title/axis/tick chrome now rendered in light ink (title, axis titles, tick labels), clearly visible against the dark background. Crossbars flip to white. The "Fastest response" annotation is light-colored and remains fully legible. No panel border, matching the light render's L-shaped frame.
+      Data: Data colors are pixel-identical to the light render (#009E73 green, lavender, blue, ochre) — only chrome flipped as required. Marker edge strokes now render as the dark background color, preserving the same separation effect.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data remain clearly distinguishable from the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Explicit sizes set, readable in both themes; title fills only ~35%
-          of width, under the ~50-70% target for a title this length
+        comment: All font sizes explicit; title now fills ~70-75% of width, balanced
+          axis label and tick sizes, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; annotation clear of data points
+        comment: No text overlap; annotation clear of data and crossbars
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible and density-appropriate but overlap heavily in dense
-          clusters without edge definition
+        comment: Edge stroke helps separate overlapping markers, but densest clusters
+          (Drug B/C low end) are still hard to fully resolve
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint hues, alpha aids overlapping-point
-          distinction
+        comment: Good contrast, CVD-safe, alpha and edge stroke aid overlap distinction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -97,7 +94,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (seconds)
+        comment: Descriptive with units (seconds)
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -106,30 +103,30 @@ review:
         comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome
           in both renders'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Reads as a well-configured library default; palette is mandated rather
-          than a distinctive design choice
+        passed: true
+        comment: Thoughtful edge-stroke technique and bold title hierarchy, above
+          a bare default but not yet publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Grid subtly tuned but full four-sided panel border deviates from
-          the L-shaped/no-spine default
+        passed: true
+        comment: L-shaped frame restored (panel border removed), subtle grid, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Mean crossbars + 'Fastest response' annotation create some visual
-          hierarchy and a clear takeaway
+        comment: Mean crossbars + 'Fastest response' annotation create a clear takeaway
+          beyond raw points
     spec_compliance:
       score: 15
       max: 15
@@ -139,49 +136,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct strip plot with jittered individual points
+        comment: Correct strip plot with per-point jitter; mean crossbars match the
+          spec's suggested optional reference lines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Jitter, transparency, and mean reference lines all present
+        comment: Jitter width 0.25 and alpha 0.65 both within spec's recommended ranges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x, numeric response time on y, all data visible
+        comment: x=treatment category, y=response_time numeric, correctly assigned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend correctly omitted since x-axis already
-          labels categories
+        comment: Title format exact match; legend correctly omitted since x-axis category
+          labels already identify groups
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows varying spread, outliers, and center across the four groups
+        comment: Differing spreads and outliers per group (Placebo high outliers,
+          Drug B/A low outliers)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible clinical response-time scenario matching the spec
-          example
+        comment: Neutral, plausible clinical scenario (patient response times across
+          drug treatments)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times and clipping (5-80s) are sensible for the domain
+        comment: Values clipped to a sensible 5-80s range, means decrease plausibly
+          across groups
     code_quality:
       score: 10
       max: 10
@@ -197,25 +197,25 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) plus random_state=42 for jitter
+        comment: np.random.seed(42) and position_jitter random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every imported symbol is used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png output, current plotnine API
+        comment: Saves as plot-{THEME}.png via ggsave-equivalent plot.save
     library_mastery:
       score: 7
       max: 10
@@ -225,15 +225,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper grammar-of-graphics layering via ggplot/geom/theme
+        comment: Grammar-of-graphics layering (geom_point + stat_summary + annotate),
+          theme_minimal base
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
         comment: stat_summary crossbar layer leverages plotnine's layered-stat model,
-          distinctive vs. simpler libraries
-  verdict: REJECTED
+          distinctive to the ggplot family
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -245,3 +246,5 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
