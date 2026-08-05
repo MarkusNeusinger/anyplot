@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-annotated: Annotated Heatmap
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-06
+Library: bokeh 3.9.2 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-08-05
 """
 
 import os
