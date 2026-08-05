@@ -38,7 +38,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = "histogram-kde · julia · makie · anyplot.ai",
-    titlesize          = 20,
+    titlesize          = 25,
     titlecolor         = INK,
     xlabel             = "Session Duration (minutes)",
     ylabel             = "Density",
@@ -73,7 +73,7 @@ hist!(
 density!(
     ax, session_minutes;
     color = :transparent,
-    strokecolor = IMPRINT_PALETTE[3],
+    strokecolor = IMPRINT_PALETTE[2],
     strokewidth = 3.5,
     label = "KDE",
 )
@@ -84,6 +84,20 @@ axislegend(
     labelcolor = INK,
     backgroundcolor = ELEVATED_BG,
     framevisible = false,
+)
+
+# --- Annotation: call out the peak session length ---------------------------
+text!(
+    ax, 4.6, 0.275;
+    text = "Peak ~2 min\nsessions",
+    color = INK_SOFT,
+    fontsize = 13,
+    align = (:left, :center),
+)
+lines!(
+    ax, [4.4, 2.3], [0.272, 0.283];
+    color = INK_SOFT,
+    linewidth = 1.2,
 )
 
 # --- Save -------------------------------------------------------------------
