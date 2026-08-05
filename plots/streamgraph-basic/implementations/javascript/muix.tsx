@@ -1,8 +1,7 @@
 // anyplot.ai
 // streamgraph-basic: Basic Stream Graph
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-05
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 0/100 | Created: 2026-08-05
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
