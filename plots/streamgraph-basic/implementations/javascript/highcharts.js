@@ -1,13 +1,8 @@
 // anyplot.ai
 // streamgraph-basic: Basic Stream Graph
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 40/100 | Created: 2026-08-05
-//# anyplot-orientation: landscape
-// anyplot.ai
-// streamgraph-basic: Basic Stream Graph
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: pending | Created: 2026-08-05
+//# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -41,7 +36,7 @@ const platformParams = [
   { base: 10, trend: 0.35, amp: 3, phase: 5.4 }, // Pulse — small, slow climb
 ];
 
-const seriesData = platformParams.map((p) => []);
+const seriesData = platformParams.map(() => []);
 for (let m = 0; m < monthCount; m++) {
   platformParams.forEach((p, i) => {
     const seasonal = p.amp * Math.sin(m / 4.5 + p.phase);
@@ -51,18 +46,56 @@ for (let m = 0; m < monthCount; m++) {
   });
 }
 
-// Hidden baseline series shifts the whole stack down by half the per-month
-// total. Core Highcharts has no built-in "stream" stacking offset (that shift
-// lives in the streamgraph module, which isn't loaded — only the core bundle
-// is vendored), so the symmetric center is faked with an invisible first
-// stacked series: its band (0 → -total/2) is fully transparent, and the real
-// platform bands stack on top of it from -total/2 up to +total/2.
-const baselineData = [];
+// --- Streamgraph geometry ------------------------------------------------
+// Only the core Highcharts bundle is loaded (no streamgraph/arearange
+// module), and plain `stacking: 'normal'` cannot combine a negative offset
+// series with positive-valued series into one continuous stack — it keeps
+// positive and negative stacks separate. So the true symmetric envelope is
+// computed by hand: `baseline[m]` is -total(m)/2 and `cumTop[i][m]` is the
+// running top edge after stacking platforms 0..i on top of that baseline.
+// Each platform is then drawn as its own NON-stacked areaspline reaching
+// from a shared low threshold up to cumTop[i], largest cumulative first so
+// each later (smaller-cumulative) layer opaquely nests over it — only the
+// thin strip between two consecutive cumulative curves stays visible, and
+// that strip is exactly that platform's value. A final background-colored
+// mask layer then erases the region below the wiggling baseline so the
+// bottom edge moves with the total too, not just the top.
+const baseline = [];
+const cumTop = platforms.map(() => []);
 for (let m = 0; m < monthCount; m++) {
   let total = 0;
   for (let i = 0; i < seriesData.length; i++) total += seriesData[i][m];
-  baselineData.push(-total / 2);
+  const base = -total / 2;
+  baseline.push(base);
+  let running = base;
+  for (let i = 0; i < seriesData.length; i++) {
+    running += seriesData[i][m];
+    cumTop[i].push(Math.round(running * 100) / 100);
+  }
 }
+const lowThreshold = Math.min(...baseline) - 20;
+
+// zIndex (not array order) controls paint order here: the platform with the
+// largest cumulative (i = platforms.length - 1, the running total of all of
+// them) must paint behind everything else, and each smaller cumulative
+// paints progressively in front of it, ending with platform 0 frontmost.
+const bandSeries = platforms.map((name, i) => ({
+  name,
+  color: t.palette[i],
+  data: cumTop[i].map((y, m) => ({ y, custom: { actual: seriesData[i][m] } })),
+  zIndex: platforms.length - i,
+}));
+
+const maskSeries = {
+  name: "__baseline_mask__",
+  data: baseline,
+  color: t.pageBg,
+  lineWidth: 0,
+  fillOpacity: 1,
+  enableMouseTracking: false,
+  showInLegend: false,
+  zIndex: platforms.length + 1,
+};
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
@@ -102,31 +135,21 @@ Highcharts.chart("container", {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
   },
-  tooltip: { shared: true, valueSuffix: "M subscribers" },
+  tooltip: {
+    shared: false,
+    formatter: function () {
+      return `<b>${this.x}</b><br/><span style="color:${this.color}">●</span> ${this.series.name}: <b>${this.point.custom.actual}M</b> subscribers`;
+    },
+  },
   plotOptions: {
     series: {
       animation: false,
-      stacking: "normal",
       marker: { enabled: false },
       lineWidth: 1.5,
       lineColor: t.pageBg,
+      threshold: lowThreshold,
+      fillOpacity: 1,
     },
-    areaspline: { fillOpacity: 0.92 },
   },
-  series: [
-    {
-      name: "baseline",
-      data: baselineData,
-      color: "transparent",
-      fillOpacity: 0,
-      lineWidth: 0,
-      enableMouseTracking: false,
-      showInLegend: false,
-    },
-    ...platforms.map((name, i) => ({
-      name,
-      data: seriesData[i],
-      color: t.palette[i],
-    })),
-  ],
+  series: [...bandSeries, maskSeries],
 });
