@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-multi: Multi-Line Comparison Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-05
@@ -72,6 +72,9 @@ df = pd.DataFrame(
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
+# Soft underlay glow behind Electronics to sharpen its lead-series hierarchy
+ax.plot(months, electronics, color=IMPRINT[0], linewidth=6, alpha=0.16, solid_capstyle="round", zorder=1)
+
 sns.lineplot(
     data=df,
     x="Month",
@@ -82,8 +85,12 @@ sns.lineplot(
     dashes=False,
     linewidth=2.5,
     markersize=8,
+    markeredgecolor=PAGE_BG,
+    markeredgewidth=1.3,
+    errorbar=None,
     palette=IMPRINT,
     ax=ax,
+    zorder=2,
 )
 
 # Callout: the holiday spike is the clearest story beat in the data
@@ -116,8 +123,8 @@ ax.xaxis.grid(False)
 # Refined L-shaped frame
 sns.despine(ax=ax, offset=6, trim=False)
 
-# Legend styling
-ax.legend(title="Product Line", title_fontsize=9, fontsize=8, loc="upper left", framealpha=0.95)
+# Legend styling — sns.move_legend repositions seaborn's auto-built hue+style legend
+sns.move_legend(ax, loc="upper left", title="Product Line", title_fontsize=9, fontsize=8, framealpha=0.95)
 
 fig.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
