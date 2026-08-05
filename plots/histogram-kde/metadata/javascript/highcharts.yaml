@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: histogram-kde
 created: '2026-08-05T03:48:16Z'
-updated: '2026-08-05T03:52:32Z'
+updated: '2026-08-05T04:01:10Z'
 generated_by: claude-sonnet
 workflow_run: 30973071085
 issue: 1823
@@ -12,44 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
+  - 'Y-axis grid density fix (tickAmount: 6) landed cleanly — six evenly-spaced horizontal
+    gridlines instead of the previous 13, giving the chart a much more polished, minimal
+    look'
+  - 'New peak annotation (dashed plotLine + "Peak: 13.7 min" label at the KDE mode)
+    adds a genuine focal point and visual hierarchy that was missing before'
   - 'Correct Imprint palette usage: brand green (#009E73) histogram at alpha 0.5 with
     lavender (#C475FD) KDE line, identical data colors across both themes'
-  - 'Statistically sound implementation: proper density-scaled histogram plus Gaussian-kernel
+  - 'Statistically sound implementation: density-scaled histogram plus Gaussian-kernel
     KDE with Silverman''s-rule bandwidth, matching the spec''s exact requirements'
-  - 'Clean theme-adaptive chrome: title/axis/tick/grid all correctly threaded from
-    ANYPLOT_TOKENS, L-shaped axis frame (bottom + left only), subtle single-axis grid'
-  - Realistic, neutral marketing-analytics scenario (right-skewed customer session
-    durations) that plausibly explains the distribution shape shown
-  - 'Correctly follows the JS/Highcharts mount-node contract: animation disabled on
-    chart and series, credits disabled, no explicit width/height, deterministic seeded
-    LCG'
+  - Clean theme-adaptive chrome (title/axis/tick/grid all threaded from ANYPLOT_TOKENS)
+    and a realistic, neutral marketing-analytics scenario (right-skewed customer session
+    durations)
   weaknesses:
-  - Title occupies only ~30% of plot width at 22px, well below the typical 50-70%
-    target for a title this length — a modest fontsize bump would strengthen visual
-    hierarchy
-  - Y-axis has 13 gridlines at a dense 0.005 step interval — set an explicit coarser
-    tickInterval for a cleaner, more polished look
-  - No visual emphasis or annotation calling out the distribution's mode/skew — a
-    subtle highlight of the peak region would elevate data storytelling beyond 'display
-    the data'
-  - Several small helper functions (LCG PRNG, quantile, hexToRgba) deviate from strict
-    linear KISS structure, though reasonably justified by the lack of a numpy-equivalent
+  - Title fontsize bump (22px -> 26px) helped but only reaches ~46% of canvas width,
+    still below the ~50-70% target for a title this length — a further bump toward
+    ~30-32px would strengthen visual hierarchy
+  - Several small helper functions (LCG PRNG, quantile, hexToRgba) still deviate from
+    strict linear KISS structure, though reasonably justified by the lack of a numpy-equivalent
     in the browser runtime
+  - Distribution is a single unimodal right-skewed shape — a slightly more complex
+    (e.g. bimodal) distribution could better showcase the KDE's smoothing behavior,
+    though not required by the spec
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "histogram-kde · javascript · highcharts · anyplot.ai" in bold dark ink, centered top. X-axis title "Session Duration (minutes)" and y-axis title "Density" in medium-gray ink, both clearly legible. Tick labels on both axes are dark gray and readable. Subtle horizontal (y-axis only) gridlines at low opacity. Legend centered at bottom with a green circle swatch for "Histogram" and a purple line swatch for "KDE".
+      Chrome: Title "histogram-kde · javascript · highcharts · anyplot.ai" in bold dark ink, centered top, now at 26px (up from 22px in the prior attempt). X-axis title "Session Duration (minutes)" and y-axis title "Density" in medium-gray ink, both clearly legible. Tick labels on both axes are dark gray and readable. Y-axis now shows a clean 6-line grid (0, 0.012, 0.024, 0.036, 0.048, 0.06) instead of the prior dense 13-line grid. A new dashed vertical plotLine at x≈13.7 min with a rotated "Peak: 13.7 min" label marks the KDE mode. Legend centered at bottom with a green circle swatch for "Histogram" and a purple line swatch for "KDE".
       Data: Right-skewed unimodal histogram in translucent brand green (#009E73 at ~0.5 alpha) with a smooth lavender/purple (#C475FD) KDE line tracing the same shape, closely following the bin heights. First series is confirmed brand green.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Legibility verdict: PASS — all text, including the new peak label, is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, tick labels, and legend now rendered in light/off-white ink, fully legible against the dark surface. Gridlines remain subtle and visible without dominating.
-      Data: Histogram and KDE line colors are identical to the light render (brand green fill, lavender KDE line) — only the chrome (background, text, grid, legend text) flipped, confirming Imprint palette identity is preserved across themes.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is clearly visible against the near-black background.
+      Chrome: Same title, axis titles, tick labels, legend, and the new peak-annotation label now rendered in light/off-white ink, fully legible against the dark surface. The 6-line grid remains subtle and visible without dominating.
+      Data: Histogram and KDE line colors are identical to the light render (brand green fill, lavender KDE line) — only the chrome (background, text, grid, legend, plotLine label) flipped, confirming Imprint palette identity is preserved across themes. Note: the composited histogram fill looks visually darker/more saturated on the dark background purely due to alpha=0.5 blending against a near-black backdrop vs. an off-white one — the underlying rgba color value is unchanged, so this is expected alpha-compositing behavior, not a palette violation.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend/annotation text is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,15 +59,18 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (22px title, 16px axis titles, 14px
-          ticks/legend); readable in both themes with no overflow or clipping. Title
-          is smaller than the typical 50-70% proportion but not a clarity issue.
+        comment: All font sizes explicitly set (26px title, 16px axis titles, 14px
+          ticks/legend, 12px peak label); readable in both themes with no overflow
+          or clipping. Title now ~46% of canvas width (up from ~30%), still short
+          of the 50-70% target.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, legend, or data elements in either render
+        comment: No overlapping text, legend, or data elements in either render; the
+          new peak label sits cleanly beside the dashed line without colliding with
+          bars or the title
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -105,33 +107,32 @@ review:
         comment: 'First series is #009E73 (brand green), second is #C475FD (lavender/position
           2), identical across themes; backgrounds are theme-correct #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful use of alpha blending and contrasting histogram/KDE colors,
-          but overall a fairly standard combo-chart composition without distinctive
-          typographic or hierarchical polish
+        passed: true
+        comment: Thoughtful alpha blending and contrasting histogram/KDE colors, plus
+          the new peak annotation, lift this above a generic combo-chart default,
+          though still short of full publication polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: L-shaped axis frame, subtle single-axis grid, generous whitespace
-          — good refinement, but the y-axis grid is denser (13 lines) than ideal for
-          a truly minimal look
+        passed: true
+        comment: L-shaped axis frame, generous whitespace, and the now-clean 6-line
+          single-axis grid (fixed from the prior dense 13-line grid) show clear refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: The KDE overlay itself creates visual hierarchy by revealing the
-          true distribution shape beyond binning artifacts, but there's no additional
-          emphasis (annotation, highlight) on the peak/skew
+        passed: true
+        comment: 'The new dashed peak plotLine with ''Peak: 13.7 min'' label gives
+          the viewer an immediate focal point on the distribution''s mode, on top
+          of the KDE overlay already revealing the shape beyond binning artifacts'
     spec_compliance:
       score: 15
       max: 15
@@ -174,8 +175,8 @@ review:
         max: 6
         passed: true
         comment: Clear unimodal right-skewed shape well captured by both histogram
-          and KDE; a slightly more complex (e.g. bimodal) distribution could better
-          showcase the KDE's smoothing behavior, though not required by spec
+          and KDE; a bimodal distribution could better showcase KDE smoothing, though
+          not required by spec
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -188,7 +189,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Log-normal distribution of session durations (0-75 min, peak ~13-15
+        comment: Log-normal distribution of session durations (0-75 min, peak ~13.7
           min) is a factually realistic model for this domain
     code_quality:
       score: 9
@@ -237,21 +238,21 @@ review:
         max: 5
         passed: true
         comment: Idiomatic Highcharts.chart config with proper series-level styling,
-          pointRange for uniform histogram bins, and correct plotOptions usage
+          pointRange for uniform histogram bins, plotLines for annotation, and correct
+          plotOptions usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Combines column + spline series types as a layered overlay (correctly
-          avoiding unavailable highcharts-more/histogram-bellcurve modules per the
-          core-bundle-only constraint) — a reasonable distinctive technique, though
-          not pushing further into Highcharts-unique capabilities
-  verdict: REJECTED
+        comment: Uses Highcharts-specific plotLines with a rotated label for the peak
+          annotation and pointRange-based histogram construction — some distinctive
+          features, not a fully generic combo chart
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:

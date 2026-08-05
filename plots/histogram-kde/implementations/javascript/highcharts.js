@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-kde: Histogram with KDE Overlay
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 87/100 | Created: 2026-08-05
+// Quality: 90/100 | Created: 2026-08-05
 
 const t = window.ANYPLOT_TOKENS;
 
