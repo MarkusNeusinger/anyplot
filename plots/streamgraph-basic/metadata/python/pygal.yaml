@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:57:05Z'
-updated: '2026-08-05T11:34:06Z'
+updated: '2026-08-05T11:43:46Z'
 generated_by: claude-sonnet
 workflow_run: 31001229155
 issue: 856
@@ -12,10 +12,10 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Genuinely implements a streamgraph in a library with no native support, via the
+  - Genuinely implements a streamgraph in a library with no native support via the
     invisible-baseline (baseline = -total/2) stacking trick on pygal.StackedLine —
     the correct technique for this constraint
   - Applies the Byron & Wattenberg inside-out layer ordering (widest-swing genre centered,
@@ -24,36 +24,39 @@ review:
   - Featured genre (strongest net growth) gets a bolder stroke width, creating an
     intentional focal point and visual hierarchy rather than flat, undifferentiated
     bands
+  - 'Fixed from the prior review round: y-axis tick labels and gridlines are now fully
+    hidden (show_y_labels=False, show_y_guides=False) so the centered-baseline offset
+    can no longer be misread as real per-genre streaming hours'
+  - 'Fixed from the prior review round: the stray non-hideable pygal ''major line''
+    at the x=0 tick is removed via an inline CSS override (.axis.x .line { opacity:
+    0 }), producing a cleaner, more chrome-free streamgraph look'
   - 'Correct Imprint palette usage (first series #009E73) and theme-adaptive chrome
     verified correct in both light and dark renders — no dark-on-dark or light-on-light
     failures'
-  - Canvas is exactly 3200x1800, title matches the mandated '{spec-id} · {language}
-    · {library} · anyplot.ai' format, and output uses the correct render_to_png +
-    render()-to-HTML save pattern
+  - Canvas is exactly 3200x1800 (canvas gate passed), title matches the mandated '{spec-id}
+    · {language} · {library} · anyplot.ai' format, and output uses the correct render_to_png
+    + render()-to-HTML save pattern
   - Data generation is seeded (np.random.seed(42)) for reproducibility, and cubic
     interpolation is used for the smooth flowing curves the spec calls for
   weaknesses:
-  - Y-axis shows numeric ticks from -100 to 100 for 'Streaming Hours', but these are
-    an artifact of the centered-baseline stacking trick, not real per-genre values
-    (actual genre values are all positive, ~5-100) — a viewer can misread the axis
-    as implying negative streaming hours. Standard streamgraph convention is to hide
-    y-axis tick labels/gridlines entirely since the centered baseline has no absolute
-    meaning; consider show_y_guides=False and dropping numeric y tick labels, or clearly
-    labeling the axis as relative.
-  - 'Visual refinement is good but not exceptional: the pygal default axis line at
-    x=0 and the left edge frame remain fairly prominent, which cuts against the ambient,
-    flowing aesthetic a streamgraph is meant to evoke — could be pushed further toward
-    a chrome-free look.'
+  - 'Design Excellence is solid but not exceptional: with the y-axis chrome removed,
+    the remaining left-edge axis line and rotated x-tick labels are clean, but the
+    overall composition still reads as a fairly standard StackedLine rather than a
+    maximally polished, gallery-grade streamgraph — further refinement (e.g. even
+    softer band edges, more generous top/bottom margins) could push this higher'
+  - Library Mastery is good (correct baseline hack, cubic interpolation, dynamic stroke-width
+    highlighting) but doesn't exploit any further pygal-distinctive capabilities beyond
+    what was already used in the prior attempt
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "streamgraph-basic · python · pygal · anyplot.ai" in dark ink, clearly legible and centered, spans ~65% of plot width. "Month" (x-axis) and "Streaming Hours" (y-axis, rotated) titles both dark and legible. Tick labels (-100 to 100 on y; "Jan 23", "Jul 23", "Jan 24", "Jul 24" rotated 45° on x) are dark and readable. Horizontal dashed gridlines are subtle but visible; no vertical gridlines (show_x_guides=False), a deliberate choice. Legend at bottom lists Jazz, Electronic, Hip-Hop, Pop, Rock with colored swatches, all legible.
-      Data: Five smoothly interpolated, symmetric stacked bands (streamgraph) centered around a baseline that shifts through the plot: Jazz (teal #009E73), Electronic (lavender #C475FD), Hip-Hop (blue #4467A3), Pop (gold/brown #BD8233), Rock (red #AE3030), stacked inside-out by volatility. First categorical series (Jazz) is #009E73 as required. Bands are clearly distinguishable from each other and from the background.
+      Chrome: Title "streamgraph-basic · python · pygal · anyplot.ai" in dark ink, clearly legible, centered, spans roughly 55-60% of plot width. "Month" (x-axis) and "Streaming Hours" (y-axis, rotated) titles both dark and legible. X tick labels ("Jan 23", "Jul 23", "Jan 24", "Jul 24") rotated 45 degrees, dark, fully readable and not clipped at the left edge. Y-axis now shows NO numeric tick labels and NO horizontal gridlines (fixed since the prior review round), removing the earlier risk of misreading the centered-baseline offset as real values. No stray vertical line at x=0 (confirmed via close crop) — the CSS override successfully removed the artifact flagged in the previous review. Legend at bottom lists Jazz, Electronic, Hip-Hop, Pop, Rock with colored swatches, all legible.
+      Data: Five smoothly interpolated, symmetric stacked bands (streamgraph) centered around a shifting baseline: Jazz (teal #009E73), Electronic (lavender #C475FD), Hip-Hop (blue #4467A3), Pop (gold/brown #BD8233), Rock (red #AE3030), stacked inside-out by volatility. First categorical series (Jazz) is #009E73 as required. Bands are clearly distinguishable from each other and from the background.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title, "Month"/"Streaming Hours" axis titles, and all tick labels render in light ink (near-white/light-gray), clearly legible against the dark background — no dark-on-dark failures observed. Gridlines and legend text remain readable, though gridlines are slightly less prominent than in the light render (still adequate, not a legibility failure).
+      Chrome: Title, "Month"/"Streaming Hours" axis titles, and all tick labels render in light ink (near-white/light-gray), clearly legible against the dark background — no dark-on-dark failures observed. Y-axis tick labels/gridlines are hidden identically to the light render. Legend text remains readable.
       Data: Same five bands in identical colors and identical inside-out stacking order as the light render — only chrome (background/text/grid) flipped, data colors unchanged as required.
       Legibility verdict: PASS
   criteria_checklist:
@@ -79,8 +82,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Smooth bands with appropriate opacity/stroke for 24-point time series,
-          no markers needed
+        comment: Smooth bands with appropriate opacity/stroke for a 24-point time
+          series, no markers needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -92,8 +95,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, no gate failure, title proportion within
-          range, nothing cut off
+        comment: Canvas exactly 3200x1800 (gate passed), title proportion within range,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -108,7 +111,7 @@ review:
         comment: 'First series #009E73, Imprint order, theme-correct backgrounds in
           both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -120,11 +123,12 @@ review:
           point show genuine design thought beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid and set margin/spacing, but default axis line/frame at
-          x=0 remains fairly prominent for a streamgraph
+        comment: 'Fixed since last review: y-axis chrome fully removed and stray x=0
+          major-line artifact suppressed via CSS, producing a noticeably cleaner,
+          more chrome-free streamgraph'
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -133,7 +137,7 @@ review:
         comment: Bolder stroke on fastest-growing genre creates a clear focal point;
           inside-out ordering guides the eye to the visual center
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -151,12 +155,11 @@ review:
           all present
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct, but y-axis numeric ticks (-100..100) are a stacking
-          artifact, not real per-genre values, which is a mild data-mapping clarity
-          issue
+        comment: 'Fixed since last review: y-axis numeric ticks (a stacking artifact,
+          not real values) are now hidden, removing the prior data-mapping ambiguity'
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -236,8 +239,8 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Baseline hack, cubic interpolation, and dynamic stroke-width highlighting
-          go beyond generic usage
+        comment: Baseline hack, cubic interpolation, dynamic stroke-width highlighting,
+          and CSS-level chrome suppression go beyond generic usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
