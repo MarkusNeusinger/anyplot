@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 strip-basic: Basic Strip Plot
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-05
@@ -49,15 +49,6 @@ for i, line in enumerate(lines):
     values = measurements[line]
     color = AMBER if line == flagged_line else IMPRINT_PALETTE[i]
 
-    # KDE silhouette gives shape context behind the raw points — a small step
-    # up from a bare scatter+jitter strip without losing the individual dots.
-    vp = ax.violinplot(values, positions=[i], widths=0.6, showmeans=False, showextrema=False, showmedians=False)
-    for body in vp["bodies"]:
-        body.set_facecolor(color)
-        body.set_edgecolor("none")
-        body.set_alpha(0.15)
-        body.set_zorder(2)
-
     jitter = np.random.uniform(-0.18, 0.18, len(values))
     ax.scatter(i + jitter, values, s=110, alpha=0.65, color=color, edgecolors=PAGE_BG, linewidth=0.5, zorder=3)
 
@@ -71,10 +62,10 @@ for i, line in enumerate(lines):
 flagged_mean = measurements[flagged_line].mean()
 flagged_i = lines.index(flagged_line)
 ax.annotate(
-    f"{flagged_line}: mean +{flagged_mean - 25.0:.3f}mm above target,\nspread ~2x baseline — check tooling wear",
+    f"{flagged_line}: +{flagged_mean - 25.0:.3f}mm above target,\n~2x spread — check tooling wear",
     xy=(flagged_i - 0.35, flagged_mean + 0.01),
     xytext=(0.35, 25.098),
-    fontsize=7.5,
+    fontsize=10,
     color=INK_SOFT,
     ha="left",
     va="center",
@@ -87,7 +78,7 @@ ax.set_xticks(range(len(lines)))
 ax.set_xticklabels(lines)
 ax.set_xlabel("Production Line", fontsize=10, color=INK)
 ax.set_ylabel("Shaft Diameter (mm)", fontsize=10, color=INK)
-ax.set_title("strip-basic · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_title("strip-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.set_xlim(-0.6, len(lines) - 0.2)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
