@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 streamgraph-basic: Basic Stream Graph
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 88/100 | Created: 2026-08-05
@@ -79,6 +79,8 @@ anyplot_theme = theme(
     text=element_text(size=7),
     axis_title=element_text(size=10, color=INK),
     axis_text=element_text(size=8, color=INK_SOFT),
+    axis_title_y=element_blank(),
+    axis_text_y=element_blank(),
     plot_title=element_text(size=12, color=INK),
     legend_text=element_text(size=8, color=INK_SOFT),
     legend_title=element_text(size=9, color=INK),
@@ -97,7 +99,7 @@ plot = (
     + geom_ribbon(alpha=0.9)
     + scale_fill_manual(values=IMPRINT_PALETTE)
     + scale_x_continuous(breaks=list(range(0, 24, 6)), labels=["Jan '23", "Jul '23", "Jan '24", "Jul '24"])
-    + labs(x="Month", y="Streaming Hours", title=title, fill="Genre")
+    + labs(x="Month", y="", title=title, fill="Genre")
     + theme_minimal()
     + anyplot_theme
 )
