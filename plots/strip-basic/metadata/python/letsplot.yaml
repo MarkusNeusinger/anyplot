@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: strip-basic
 created: '2025-12-23T21:54:35Z'
-updated: '2026-08-05T05:53:58Z'
+updated: '2026-08-05T05:59:26Z'
 generated_by: claude-sonnet
 workflow_run: 30979111258
 issue: 975
@@ -12,35 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - stat_summary(fun="mean", fun_min="lq", fun_max="uq", geom="pointrange") overlay
+  - Title now correctly follows the mandated `{spec-id} · {language} · {library} ·
+    anyplot.ai` format, fixing the attempt-1 gap.
+  - '`panel_border=element_blank()` removes the full 4-sided box, leaving only the
+    bottom/left axis lines plus a subtle horizontal-only grid — a real refinement
+    over the attempt-1 default chrome.'
+  - '`stat_summary(fun="mean", fun_min="lq", fun_max="uq", geom="pointrange")` overlay
     adds genuine analytical value and visual hierarchy on top of the raw jittered
-    points.
+    points, drawing the eye to the Engineering-vs-Sales level/spread contrast.'
   - Jitter width (0.25) and alpha (0.65) both land in the spec-recommended ranges,
-    and geom_jitter(..., seed=42) keeps the jitter itself reproducible.
-  - Correct canonical Imprint palette order and fully theme-correct chrome (mean marker
-    flips black to white, all text legible in both themes).
-  - Clean, minimal, well-organized code - flat script, only used imports, sensible
+    and `geom_jitter(..., seed=42)` keeps the jitter itself reproducible.
+  - 'Correct canonical Imprint palette order and fully theme-correct chrome (mean
+    marker flips black→white, all text legible in both themes, backgrounds match #FAF8F1/#1A1A17).'
+  - Clean, minimal, well-organized code — flat script, only used imports, sensible
     variable names.
   weaknesses:
-  - Title omits the {language} token from the mandated format - currently "strip-basic
-    · letsplot · anyplot.ai", should be "strip-basic · python · letsplot · anyplot.ai".
-  - Full 4-sided panel border (theme_minimal() default) reads as less refined than
-    a top/right-spine-removed look - consider panel_border=element_blank() or thinning
-    it via theme() to match the "spines removed" style-guide guidance.
+  - Dense point overlap in the Engineering cluster (75-90 range) still fully occludes
+    some near-identical points even at alpha=0.65 — inherent to a strip plot at this
+    density, only a minor deduction.
+  - Library usage stays fairly standard grammar-of-graphics composition (geom_jitter
+    + stat_summary + scale_color_manual); no lets-plot-distinctive feature (e.g. interactive
+    tooltips config, ggmarginal, or coord customization) is leveraged beyond what
+    other grammar-of-graphics libraries could replicate.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - correct light theme surface.
-      Chrome: Title "strip-basic · letsplot · anyplot.ai" in dark ink top-left; axis titles "Department" (x) and "Survey Score (points)" (y) in dark ink; tick labels in soft grey; horizontal-only gridlines; full rectangular panel border. All readable.
-      Data: Four departments (Marketing, Engineering, Sales, Support) with jittered points colored green/purple/blue/tan (Imprint palette, canonical order, first series #009E73). Black mean-point with interquartile (lq/uq) range bar per department.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "strip-basic · python · letsplot · anyplot.ai" in dark ink, top-left, fully visible with no clipping. Axis titles "Department" (x) and "Survey Score (points)" (y) and tick labels are dark/soft-dark and clearly legible. Only horizontal gridlines are present (no vertical), and only bottom/left axis lines remain — no full box border (panel_border removed). Black mean-point with interquartile (lq/uq) range bar overlaid per department.
+      Data: Individual jittered points colored by department using the Imprint palette in canonical order — #009E73 green (Marketing), purple (Engineering), blue (Sales), tan (Support) — at alpha≈0.65 so overlapping points blend visibly.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - correct dark theme surface.
-      Chrome: Same title/axis titles in light ink; tick labels in soft light grey; gridlines and panel border visible but subtle. All readable, no dark-on-dark issues.
-      Data: Same four department colors as light render, confirmed pixel-identical (green/purple/blue/tan). Mean/IQR overlay correctly flips from black to white for dark-theme contrast.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis titles, and tick labels now render in light ink / soft light-grey, clearly legible against the dark background — no dark-on-dark issues found. Mean/IQR overlay correctly flips from black to white (theme-adaptive, not hardcoded). Grid lines and axis lines remain visible but subtle.
+      Data: Colors are pixel-identical to the light render (verified green/purple/blue/tan hues unchanged) — only chrome flipped as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -52,46 +59,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit sizes, readable in both themes and at mobile 400px thumbnail
+        comment: Explicit sizes (axis_title=12, axis_text=10, plot_title=16), readable
+          in both themes and down to the 400px mobile thumbnail. Title fits comfortably
+          without clipping.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text collisions; dense point overlap in Engineering cluster is
-          intended density signal
+        comment: No text collisions; dense point overlap in the Engineering cluster
+          is the intended density signal of a strip plot, not a legibility failure.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: size=4, alpha=0.65 reasonable for 25-45 points/category
+        comment: size=4, alpha=0.65 reasonable for 25-45 points/category; a few near-identical
+          points in the densest cluster fully occlude each other.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, no red/green-only signaling
+        comment: Good contrast, no red/green-only signaling.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), no clipping or overflow
+        comment: Canvas gate passed (3200x1800); no clipping, no overflow, well-proportioned;
+          panel border removal improves balance further.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units
+        comment: '"Department" and "Survey Score (points)" are descriptive with units
+          where applicable.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order, correct theme backgrounds'
+        comment: 'First series #009E73, canonical Imprint order for all 4 categories,
+          correct #FAF8F1/#1A1A17 backgrounds in both themes.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -99,23 +112,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: stat_summary mean+IQR overlay adds deliberate analytical value
+        comment: 'Above generic default: stat_summary mean+IQR pointrange overlay
+          is a deliberate, well-executed design choice adding real analytical value.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Full 4-sided panel border kept from theme_minimal() defaults instead
-          of removing spines
+        passed: true
+        comment: 'Fixed from attempt 1: panel_border=element_blank() removes the full
+          box, leaving only bottom/left axis lines with subtle horizontal-only grid
+          and generous whitespace — a clear refinement over library defaults.'
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Mean/IQR overlay draws the eye to Engineering-vs-Sales spread/level
-          contrast
+        comment: The mean/IQR overlay deliberately draws the eye to the Engineering-vs-Sales
+          level/spread contrast — genuine visual hierarchy and a clear focal point
+          beyond raw scatter.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -123,26 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct strip plot
+        comment: Correct strip plot (jittered individual points along a categorical
+          axis).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Jitter width and alpha within spec ranges, plus optional mean reference
-          line
+        comment: Jitter width 0.25 (within spec's 0.1-0.3), alpha 0.65 (within spec's
+          0.5-0.7), plus mean/IQR reference lines as suggested by the spec notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: category to x, value to y as specified
+        comment: category -> x, value -> y, matches spec exactly.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing {language} segment of mandated format
+        passed: true
+        comment: 'Fixed from attempt 1: title now reads "strip-basic · python · letsplot
+          · anyplot.ai", matching the mandated format exactly. Legend appropriately
+          omitted since color already encodes the x-axis category.'
     data_quality:
       score: 15
       max: 15
@@ -152,19 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Individual points, jitter density, mean/IQR reference
+        comment: Shows individual observations, jitter-driven density, and mean/IQR
+          reference per category — full strip-plot feature set.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Survey scores by department, plausible and neutral
+        comment: Survey response scores by department; plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores clipped to [40,100], realistic per-department distributions
+        comment: Scores clipped to [40, 100], per-department means/stds are realistic
+          for a 0-100 survey scale.
     code_quality:
       score: 10
       max: 10
@@ -174,31 +195,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes
+        comment: No functions/classes, flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) plus geom_jitter seed=42
+        comment: np.random.seed(42) plus explicit geom_jitter(..., seed=42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only used imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html, current API
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html, current lets-plot
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -208,15 +230,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic geom_jitter + stat_summary layering
+        comment: Idiomatic geom_jitter + stat_summary(geom="pointrange") layering,
+          scale_color_manual, theme_minimal() customization.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses jitter seed param and stat_summary statistical layer, but overall
-          composition stays fairly standard
-  verdict: REJECTED
+        comment: Good use of lets-plot's built-in jitter seed parameter and the stat_summary
+          statistical layer, genuinely distinctive vs. hand-rolling summary stats
+          in pandas — not maxed out since the overall approach stays fairly standard
+          grammar-of-graphics composition.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
