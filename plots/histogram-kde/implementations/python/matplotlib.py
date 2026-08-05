@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-kde: Histogram with KDE Overlay
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-05
@@ -28,10 +28,15 @@ extreme_returns = np.random.normal(0.001, 0.05, 50)
 returns = np.concatenate([normal_returns, volatile_returns, extreme_returns]) * 100
 np.random.shuffle(returns)
 mean_return = returns.mean()
+var_5 = np.percentile(returns, 5)  # 5% Value-at-Risk — marks the downside tail
 
 # Plot — see default-style-guide.md "Visual Sizing Defaults" for the canvas + sizing values
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
+
+# Shade the downside tail-risk region (below the 5% VaR threshold) behind
+# everything else, using the matte-red semantic anchor reserved for loss/risk
+ax.axvspan(returns.min() - 0.5, var_5, color="#AE3030", alpha=0.08, zorder=0)
 
 # Histogram with density scaling (semi-transparent, brand color)
 ax.hist(
@@ -51,19 +56,40 @@ ax.hist(
 kde = gaussian_kde(returns)
 x_range = np.linspace(returns.min() - 0.5, returns.max() + 0.5, 500)
 kde_values = kde(x_range)
+peak_density = kde_values.max()
 ax.fill_between(x_range, kde_values, color=ACCENT, alpha=0.15, zorder=1)
 ax.plot(x_range, kde_values, color=ACCENT, linewidth=2.5, label="KDE", zorder=3)
 
-# Mean reference line — draws the eye to the distribution's center of mass
+# Headroom above the KDE peak so callouts never overlap the curve
+y_top = peak_density * 1.35
+ax.set_ylim(0, y_top)
+
+# Tail-risk callout inside the shaded region, clear of the histogram/KDE
+ax.text(
+    (returns.min() - 0.5 + var_5) / 2,
+    y_top * 0.94,
+    "tail risk\n(5% VaR)",
+    fontsize=7,
+    color="#AE3030",
+    ha="center",
+    va="top",
+    linespacing=1.3,
+)
+
+# Mean reference line — draws the eye to the distribution's center of mass.
+# The label sits well above the KDE peak with a short leader line so it
+# never crowds the curve's apex.
 ax.axvline(mean_return, color=INK_SOFT, linewidth=1.2, linestyle="--", zorder=4)
 ax.annotate(
     f"mean {mean_return:.2f}%",
-    xy=(mean_return, kde_values.max()),
-    xytext=(6, -2),
+    xy=(mean_return, peak_density),
+    xytext=(18, 30),
     textcoords="offset points",
     fontsize=8,
     color=INK_SOFT,
-    va="top",
+    ha="left",
+    va="bottom",
+    arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.8, "shrinkA": 0, "shrinkB": 3},
 )
 
 # Style
@@ -83,7 +109,6 @@ ax.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
-ax.set_ylim(bottom=0)
 
 # Save
 plt.tight_layout()
