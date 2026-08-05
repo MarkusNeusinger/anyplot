@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-grouped: Grouped Bar Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-06
+Library: plotly 6.9.0 | Python 3.13.12
+Quality: 90/100 | Updated: 2026-08-05
 """
 
 import os
@@ -15,50 +15,74 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.20)" if THEME == "light" else "rgba(240,239,232,0.20)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette
+# Imprint categorical palette — device types are abstract groups, canonical order applies
 COLORS = ["#009E73", "#C475FD", "#4467A3"]
 
-# Data: Quarterly revenue by product line
-categories = ["Q1", "Q2", "Q3", "Q4"]
-products = {"Electronics": [245, 312, 287, 398], "Clothing": [189, 156, 201, 234], "Home & Garden": [98, 145, 178, 156]}
+# Data: monthly website sessions (thousands) by traffic source, split by device type
+categories = ["Organic Search", "Direct", "Social Media", "Paid Search", "Referral"]
+devices = {"Desktop": [420, 210, 96, 185, 132], "Mobile": [312, 168, 224, 148, 90], "Tablet": [64, 47, 58, 42, 31]}
 
 # Create figure
 fig = go.Figure()
 
-# Add bars for each product group with hover templates
-for i, (product, values) in enumerate(products.items()):
+for i, (device, values) in enumerate(devices.items()):
     fig.add_trace(
         go.Bar(
-            name=product,
+            name=device,
             x=categories,
             y=values,
-            marker={"color": COLORS[i]},
+            marker={"color": COLORS[i], "line": {"color": PAGE_BG, "width": 1.5}},
             text=values,
             textposition="outside",
-            textfont={"size": 16, "color": INK},
-            hovertemplate=(f"<b>{product}</b><br>Quarter: %{{x}}<br>Revenue: $%{{y}}K<br><extra></extra>"),
+            textfont={"size": 11, "color": INK},
+            hovertemplate=(f"<b>{device}</b><br>Source: %{{x}}<br>Sessions: %{{y}}K<br><extra></extra>"),
         )
     )
 
+# Callout: Social Media is the only source where mobile sessions outpace desktop
+fig.add_annotation(
+    x="Social Media",
+    y=224,
+    text="Social skews mobile-first —<br>2.3× desktop sessions",
+    showarrow=True,
+    arrowhead=2,
+    arrowcolor=INK_SOFT,
+    ax=70,
+    ay=-55,
+    font={"size": 11, "color": INK},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=6,
+)
+
 # Layout
 fig.update_layout(
-    title={"text": "bar-grouped · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
+    autosize=False,
+    title={
+        "text": "bar-grouped · python · plotly · anyplot.ai",
+        "font": {"size": 19, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
-        "title": {"text": "Quarter", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Traffic Source", "font": {"size": 15, "color": INK}},
+        "tickfont": {"size": 12, "color": INK_SOFT},
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
+        "mirror": False,
     },
     yaxis={
-        "title": {"text": "Revenue ($ thousands)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Monthly Sessions (thousands)", "font": {"size": 15, "color": INK}},
+        "tickfont": {"size": 12, "color": INK_SOFT},
         "gridcolor": GRID,
         "gridwidth": 1,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
+        "mirror": False,
     },
     barmode="group",
     bargap=0.2,
@@ -66,7 +90,7 @@ fig.update_layout(
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     legend={
-        "font": {"size": 18, "color": INK_SOFT},
+        "font": {"size": 12, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
@@ -76,11 +100,11 @@ fig.update_layout(
         "xanchor": "center",
         "x": 0.5,
     },
-    margin={"l": 100, "r": 40, "t": 140, "b": 80},
+    margin={"l": 90, "r": 40, "t": 110, "b": 70},
     hovermode="x unified",
 )
 
 # Save outputs
 script_dir = os.path.dirname(os.path.abspath(__file__))
-fig.write_image(os.path.join(script_dir, f"plot-{THEME}.png"), width=1600, height=900, scale=3)
+fig.write_image(os.path.join(script_dir, f"plot-{THEME}.png"), width=800, height=450, scale=4)
 fig.write_html(os.path.join(script_dir, f"plot-{THEME}.html"), include_plotlyjs="cdn")
