@@ -1,0 +1,256 @@
+library: muix
+language: javascript
+specification_id: windrose-basic
+created: '2026-08-05T15:46:25Z'
+updated: '2026-08-05T16:08:04Z'
+generated_by: claude-sonnet
+workflow_run: 31021231390
+issue: 1880
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Correct meteorological convention: North at the top with a clockwise compass
+    layout (N/NNE/NE.../NNW), verified geometrically via the -90deg SVG offset and
+    confirmed visually in both renders.'
+  - 'Genuine MUI X composition instead of fake chrome: real (unrendered) `bar` series
+    drive the native <ChartsLegend> and <ChartsTooltip>, and useInteractionItemProps
+    wires the hand-drawn wedges into MUI X''s own interaction system — a faithful
+    workaround for the community package''s lack of a native polar chart.'
+  - 'Deterministic, realistic wind climatology: mulberry32-seeded 3-regime model (prevailing
+    SW, secondary NW, background noise) produces a clear multi-modal wind rose with
+    all 5 speed bins represented across all 16 directions.'
+  - 'Correct Imprint sequential palette (brand green -> blue) for the continuous speed
+    dimension, identical data colors across themes, and theme-correct chrome (backgrounds
+    #FAF8F1/#1A1A17, ink, grid) confirmed in both renders.'
+  - Thoughtful typographic hierarchy on compass labels (cardinal bold 20px > intercardinal
+    semibold 16px > secondary 13px) and a dashed frequency-tick axis placed in the
+    empty NE/ENE gap so it never collides with a data wedge.
+  weaknesses:
+  - Secondary/tertiary compass labels (13px CSS, non-cardinal/intercardinal directions)
+    are on the small side and may lose legibility once the PNG is scaled to a ~400px
+    mobile width; a bump to ~14-15px would add margin.
+  - The MIN_SLICE_PCT floor gives near-zero direction/speed cells a visible sliver
+    for legibility, which slightly exaggerates their apparent radius relative to true
+    frequency (legend/tooltip values stay honest, but a viewer reading bar length
+    alone could overestimate very rare combinations) — consider a lower floor or a
+    distinct lower-opacity treatment for floored slivers.
+  - The file carries nine small helper functions (mulberry32, randNormal, hexToRgb,
+    lerpHex, annularSectorPath, toRad, plus the three components) — justified by the
+    custom polar geometry MUI X community can't express natively, but more structure
+    than the KISS ideal; worth a light pass to see if any can be inlined.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 (not pure white).
+      Chrome: Bold black title "windrose-basic · javascript · muix · anyplot.ai" centered at top (~50% of canvas width). 16 compass labels (N at top, clockwise through NNE/NE/.../NNW) with clear typographic hierarchy (cardinal bold/largest, intercardinal semibold/medium, secondary regular/smallest) — all dark ink, fully legible. Radial grid rings at 5/10/15/20% with a dashed reference axis and percent tick labels in the empty NE/ENE gap, each on a subtle pill background so they stay readable over the grid. Legend at the bottom shows 5 swatches (0-2, 2-4, 4-6, 6-8, 8+ m/s) with dark labels.
+      Data: Stacked annular wedges concentrated toward SW (largest, dominant regime) and a secondary cluster toward NW, tapering to thin slivers toward the calm NE/ENE/E/ESE/SE arc. Colors run from brand green (#009E73, calmest bin) through teal to steel-blue (strongest bin), separated by thin white strokes; consistent within every wedge.
+      Legibility verdict: PASS — all text (title, compass labels, tick labels, legend) is clearly readable against the light background; no light-on-light issues found; no clipping at any canvas edge (verified via close crops of all four borders).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 (not pure black).
+      Chrome: Same title and compass-label layout, now rendered in light ink (#F0EFE8 primary / lighter gray secondary) against the dark background — fully legible, no dark-on-dark failures observed. Grid rings and dashed reference axis are the theme-adaptive light-on-dark grid color; percent-tick pill backgrounds correctly swap to the dark elevated tone. Legend text and swatches are readable at the bottom.
+      Data: Identical wedge geometry and identical data colors to the light render (green -> teal -> steel-blue sequential ramp), confirming the Imprint palette data hues are held constant across themes; only chrome (background, text, grid) flips as required.
+      Legibility verdict: PASS — all text is clearly readable in the dark theme; no dark-on-dark text found in title, compass labels, tick labels, or legend.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes; secondary/tertiary
+          compass labels (13px) are on the small side for mobile scaling.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between labels, wedges, ticks, or legend; verified with
+          edge/quadrant crops.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Wedges cleanly separated by gaps and white strokes; stacked speed
+          bins clearly distinguishable within each direction.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential ramp stops are visually distinct with white dividers;
+          stacking order provides redundant encoding beyond hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Polar grid/labels span most of the canvas with balanced margins;
+          legend sits directly under the plot. Empty NE/E/SE quadrant reflects the
+          real prevailing-SW data, not a layout defect.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Radial ticks labeled with % units; compass directions are the standard
+          descriptive labels for this chart type.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (brand green -> blue) used correctly for continuous speed
+          data; identical across themes; both backgrounds and all chrome theme-correct.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: 'Strong, clearly-above-default design: intentional typographic hierarchy
+          on compass labels, purposeful pill-background tick placement, wedge gap
+          styling.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Subtle single dashed reference axis, no competing spines (correct
+          for polar), generous whitespace, careful detail (tick labels placed in the
+          one empty sector gap).
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: Visual hierarchy (larger SW/NW petals vs. thin calm-sector slivers)
+          immediately communicates the prevailing wind pattern without needing annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct polar stacked-histogram wind rose with proper compass orientation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: 16 direction sectors, 5 meaningful speed bins, North at top, legend
+          with speed ranges, radial frequency-% axis — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Direction/speed/frequency correctly mapped onto angle/radius/stack;
+          all 16 directions rendered including near-calm sectors.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title matches mandated format exactly; legend labels match the 5
+          speed-bin ranges.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Multi-regime model (prevailing SW + secondary NW + background noise)
+          covers dominant, secondary, and calm directions with all speed bins represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Plausible coastal weather-station hourly dataset, neutral scientific
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Speed distribution (exponential, scaled 1.7-3.4 m/s) and direction
+          spread produce realistic coastal wind values and proportions.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        comment: Necessarily uses several small helper functions (geometry, color
+          lerp, PRNG) for the custom polar chart MUI X community can't express natively;
+          each is small and single-purpose but the count is above the KISS ideal.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Fixed-seed mulberry32 PRNG, fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: All imports (ChartContainer, useDrawingArea, ChartsLegend, ChartsTooltip,
+          useInteractionItemProps) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: No fake UI/interactivity; complexity is proportional to the real
+          polar-geometry requirement.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Default-exports the component, sizes from window.ANYPLOT_SIZE, sets
+          skipAnimation — harness contract followed correctly.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: Uses ChartContainer's composition model (children + useDrawingArea)
+          exactly as MUI X's own docs recommend for custom overlays when no native
+          chart type fits.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: useInteractionItemProps wiring hand-drawn wedges into MUI X's native
+          interaction/highlight system, plus real series feeding ChartsLegend/ChartsTooltip,
+          is distinctly MUI-X-specific and not trivially replicated in another library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  - patches
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - binning
+  - cumulative-sum
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending
