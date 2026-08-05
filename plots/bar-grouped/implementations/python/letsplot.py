@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-grouped: Grouped Bar Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-05
@@ -50,6 +50,7 @@ data = {
 }
 
 df = pd.DataFrame(data)
+df["Label"] = df["Revenue"].apply(lambda v: f"${v}K")
 
 # Theme-adaptive chrome
 anyplot_theme = theme(
@@ -75,13 +76,21 @@ anyplot_theme = theme(
 # product line and exact revenue with a "$" prefix and "K" suffix.
 revenue_tooltips = layer_tooltips().line("@Product").line("Quarter|@Quarter").line("Revenue|$@Revenue K")
 
-# Plot - Grouped bar chart
+# Plot - Grouped bar chart with direct value labels for a clearer data story
 plot = (
     ggplot(df, aes(x="Quarter", y="Revenue", fill="Product"))
     + geom_bar(stat="identity", position="dodge", width=0.7, alpha=0.9, tooltips=revenue_tooltips)
+    + geom_text(
+        aes(label="Label", group="Product"), position=position_dodge(width=0.7), vjust=-0.5, size=3.2, color=INK_SOFT
+    )
     + scale_fill_manual(values=IMPRINT)
-    + scale_y_continuous(format="${.0f}K")
-    + labs(x="Quarter", y="Revenue ($ thousands)", title="bar-grouped · letsplot · anyplot.ai", fill="Product Category")
+    + scale_y_continuous(format="${.0f}K", expand=[0.1, 0])
+    + labs(
+        x="Quarter",
+        y="Revenue ($ thousands)",
+        title="bar-grouped · python · letsplot · anyplot.ai",
+        fill="Product Category",
+    )
     + anyplot_theme
     + ggsize(800, 450)
 )
