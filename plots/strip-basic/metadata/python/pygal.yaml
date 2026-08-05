@@ -2,126 +2,146 @@ library: pygal
 language: python
 specification_id: strip-basic
 created: '2025-12-23T21:54:18Z'
-updated: '2026-05-04T21:10:45Z'
+updated: '2026-08-05T05:51:42Z'
 generated_by: claude-sonnet
-workflow_run: 25342549595
+workflow_run: 30978893960
 issue: 975
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Correct Okabe-Ito palette in canonical order, properly applied to both light and
-    dark themes with no chrome failures
-  - Mean reference markers at integer x-positions add a useful visual layer — they
-    create hierarchy without cluttering the plot
-  - Per-point tooltip dict format and HTML export make excellent use of pygal's interactive
-    capabilities
-  - Data scenario (employee satisfaction by department) is realistic, neutral, and
-    shows meaningfully different distributions
-  - Clean KISS code structure with full reproducibility (seed set) and appropriate
-    opacity (0.60) for data density
+  - 'Both renders are theme-correct: #FAF8F1 light / #1A1A17 dark backgrounds with
+    fully theme-adaptive chrome (title, axis labels, ticks, legend, grid) and identical
+    data colors across themes'
+  - Correct Imprint canonical color order across all 4 departments (green/lavender/blue/ochre)
+    plus semantic use of matte red (#AE3030) for the mean-reference layer
+  - Jitter width (uniform ±0.25) and point opacity (0.60) both land inside the spec's
+    recommended ranges (0.1-0.3 jitter, 0.5-0.7 alpha)
+  - Mean-marker overlay (larger dots + dashed connector, per-series style override)
+    creates a clear focal layer that sits visually above the jittered cloud — a genuine
+    data-storytelling touch beyond a bare strip plot
+  - Per-point dicts with descriptive `label` fields enrich the HTML tooltip output
+    beyond the PNG-only view
+  - Data shows real distribution variety across departments (tight high cluster in
+    Engineering, wide spread with a low outlier in Marketing, bimodal-looking spread
+    in Support) rather than four interchangeable clouds
+  - All font sizes explicitly set via the Style object (title/label/major_label/legend/value),
+    no reliance on pygal defaults
+  - Clean KISS structure, reproducible via np.random.seed(42), no unused imports,
+    correct plot-{THEME}.png/.html output
   weaknesses:
-  - Design sophistication is capped by pygal's defaults — no spine removal, limited
-    grid customization; the chart looks like a configured library default rather than
-    a polished publication
-  - Mean markers use the same dot shape as data points, making them visually ambiguous
-    without reading the legend; a larger marker or distinct shape would make them
-    immediately identifiable
-  - Bottom legend occupies canvas space with five small-text items that could be formatted
-    larger or simplified
+  - Title is 'strip-basic · pygal · anyplot.ai' but the mandated format is '{spec-id}
+    · {language} · {library} · anyplot.ai' — the 'python' language segment is missing;
+    should read 'strip-basic · python · pygal · anyplot.ai'
+  - The dashed line connecting mean markers across Engineering/Marketing/Sales/Support
+    visually implies an ordinal trend across what are nominal, unordered categories
+    — consider dropping the connecting line (keep only the per-category mean dots)
+    or reordering/labeling to make clear no ordinal relationship is intended
+  - Point density in the densest clusters (e.g. Marketing 6.0-7.5, Support 4.0-5.5)
+    relies entirely on default overlap + alpha=0.6 for readability; a touch more jitter
+    width (still within the 0.1-0.3 spec range, e.g. 0.28) would spread the densest
+    clusters slightly further apart
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "strip-basic · pygal · anyplot.ai" in dark text at top-center, clearly readable. Y-axis label "Satisfaction Score (1–10)" in dark text on left. X-axis label "Department" at bottom. Tick labels (3.0–10.0 on Y, category names on X) all readable dark text. Bottom legend with five items readable.
-      Data: Four jittered groups — Engineering (#009E73 teal, first series correct), Marketing (#D55E00 orange), Sales (#0072B2 blue), Support (#CC79A7 pink). Mean markers in #E69F00 (Okabe position 5) at integer x-positions. 40 pts/category with opacity=0.60. Subtle horizontal y-axis grid lines visible.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "strip-basic · pygal · anyplot.ai" centered top in dark ink; y-axis title "Satisfaction Score (1–10)" (vertical, left); x-axis title "Department" (bottom); tick labels 3.0-10.0 on y-axis and Engineering/Marketing/Sales/Support on x-axis; legend at bottom listing all 4 categories plus "Mean". All chrome text renders in dark ink, clearly legible against the light background. Horizontal dashed grid lines only (no vertical guides), subtle grey tone.
+      Data: Four jittered point clouds in Imprint canonical order — Engineering #009E73 (green), Marketing #C475FD (lavender), Sales #4467A3 (blue), Support #BD8233 (ochre) — each ~40 points at opacity 0.60 spread by random horizontal jitter. Larger red (#AE3030) mean markers per category, connected by a dashed red line, sit above the scatter cloud as a focal reference layer. First series is confirmed brand green #009E73.
+      Legibility verdict: PASS — no light-on-light or illegible text found; checked title, axis titles, tick labels, and legend individually via edge crops.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: All text (title, axis labels, tick labels, legend) renders in light color against the dark background. No dark-on-dark failures detected. Grid lines are subtle and visible against the dark surface.
-      Data: Data colors are identical to light render — Engineering (#009E73), Marketing (#D55E00), Sales (#0072B2), Support (#CC79A7), Mean (#E69F00). Only chrome (background, text) flipped; data palette unchanged.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/axis-title/tick-label/legend layout as the light render, but all rendered in light/off-white ink. Fully readable against the dark background; grid lines remain subtle.
+      Data: Identical to the light render pixel-for-pixel in hue — green/lavender/blue/ochre categorical points plus red mean markers and dashed connector — confirming only chrome (not data color) flips between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; verified via top/bottom edge crops that title, axis labels, tick labels, and legend text are all light-colored and legible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; all text readable in both themes.
-          Minor deduction: bottom legend text slightly small in rendered output.'
+        comment: All font sizes explicitly set via Style object; well-proportioned,
+          no overflow, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; jitter keeps data points spread.
+        comment: No text overlap; point-cloud overlap within categories is by design
+          for a strip plot (density via accumulation)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: dots_size=17 with opacity=0.60 well-adapted for 40 pts/category.
+        comment: dots_size=17 with opacity=0.60 is visible and appropriate for ~40
+          pts/category, though the densest sub-clusters could use slightly more spread
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe; 4 hues highly distinguishable.
+        comment: 4 distinct hue families + red mean marker, no red-green-only encoding,
+          good contrast on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Chart fills ~60-70% of canvas; minor horizontal whitespace on sides.
+        comment: Plot area fills a balanced majority of the 3200×1800 canvas, legend
+          sits close to the plot, no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Satisfaction Score (1-10) has units; Department is descriptive.
+        comment: '''Department'' and ''Satisfaction Score (1–10)'' — descriptive with
+          the scale noted'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito canonical order; backgrounds #FAF8F1 / #1A1A17 correct;
-          chrome adapts in both themes.'
+        comment: 'First series #009E73, canonical Imprint order through 4 categories
+          + semantic red mean marker, both backgrounds theme-correct, data colors
+          identical across themes'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: Well-configured library default; correct palette and explicit font
-          hierarchy, but not publication-grade polish.
+        comment: Custom Style object, density-aware opacity, and a distinct mean-overlay
+          layer go clearly beyond configured defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-axis-only grid is a good call; theme-adaptive chrome. Pygal's limited
-          customization caps the ceiling.
+        comment: Y-axis-only grid (correct choice since x is categorical/jittered),
+          generous whitespace, clean legend; some refinement visible but not maximally
+          polished
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Mean reference markers provide visual hierarchy. Data shows meaningfully
-          different spreads across departments.
+        comment: Larger red mean markers create a clear focal point for cross-department
+          comparison, though the connecting dashed line slightly overstates ordinality
+          between nominal categories
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -129,26 +149,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: pygal.XY with jitter correctly implements strip plot.
+        comment: 'Correct strip plot: individual points per category with random horizontal
+          jitter'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Individual points, random horizontal jitter, multiple categories,
-          mean reference markers all present.
+        comment: Jitter width 0.25 and alpha 0.60 both inside spec's recommended ranges;
+          mean reference layer included
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, satisfaction score on y-axis.
+        comment: X = category (integer-aligned via x_labels/xrange), Y = value; all
+          data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title matches exact format; legend labels match all series.
+        comment: Title missing the mandated 'python' language segment ('strip-basic
+          · pygal · anyplot.ai' vs required 'strip-basic · python · pygal · anyplot.ai');
+          legend labels are correct
     data_quality:
       score: 15
       max: 15
@@ -158,22 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all strip plot aspects: individual observations, density,
-          jitter, and central tendency reference.'
+        comment: Distinct spread/mean per department, including a low outlier (Marketing
+          ~2.9) and a high cluster (Support ~9.8-10)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee satisfaction by department is a real, neutral, comprehensible
-          business scenario.
+        comment: Employee satisfaction scores by department — neutral, comprehensible
+          business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1-10 survey scale correct; means 6.5-7.5 and stds 1.0-1.8 plausible
-          for workplace surveys.
+        comment: 1-10 scale, clipped to bounds, realistic per-department mean/std
+          parameters
     code_quality:
       score: 10
       max: 10
@@ -183,34 +207,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports -> tokens -> data -> style -> chart ->
-          save.'
+        comment: Linear imports → data → style → chart → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random calls.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pygal, pygal.style.Style — all used.
+        comment: Only os, numpy, pygal, Style — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic list comprehension for point dicts; zip with strict=True;
-          no over-engineering.
+        comment: Appropriate complexity, no fake functionality, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html (correct for pygal interactive
-          library).
+        comment: Saves plot-{THEME}.png via render_to_png and plot-{THEME}.html via
+          render(), current API
     library_mastery:
       score: 8
       max: 10
@@ -220,24 +242,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expertly uses pygal.XY, Style object, per-point dict format, value_formatter
-          — all idiomatic pygal patterns.
+        comment: Idiomatic pygal.XY + Style usage, per-point dicts, value_formatter
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-point tooltip dicts and interactive HTML export are distinctly
-          pygal features. Strip-plot construction itself is library-agnostic.
+        comment: Per-point label dicts for enriched HTML tooltips plus a per-series
+          style override (dots_size/stroke/dasharray) mixing scatter- and line-style
+          rendering within one XY chart — some library-specific features, not maximally
+          distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
   - hover-tooltips
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
