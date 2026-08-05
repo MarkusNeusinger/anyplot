@@ -1,0 +1,254 @@
+library: echarts
+language: javascript
+specification_id: scatter-regression-linear
+created: '2026-08-05T13:37:18Z'
+updated: '2026-08-05T13:51:53Z'
+generated_by: claude-sonnet
+workflow_run: 31010357156
+issue: 1821
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Repair loop fixes are real and visible: axis lines were dimmed from t.inkSoft
+    to the softer t.grid token, the x-axis vertical splitlines were removed, and the
+    confidence band gained a distinct dashed border (opacity 0.4, width 1) — directly
+    resolving the Review 1 weakness that axis lines stayed at full visibility and
+    the band/line shared one undifferentiated hue.'
+  - Manual OLS regression with a proper t-distribution 95% confidence band (Cornish-Fisher
+    t-quantile expansion), not a canned or fake fit.
+  - 'Correct Imprint palette application: first series #009E73 for scatter points,
+    palette[1] consistently reused across the regression line, the CI band fill, and
+    its new border.'
+  - Equation + R² annotation rendered as a theme-adaptive bordered callout box, legible
+    in both renders and positioned so nothing clips at the canvas edge.
+  - 'Full theme correctness — both renders use the correct #FAF8F1 / #1A1A17 backgrounds
+    with all chrome (title, legend, ticks) readable.'
+  weaknesses:
+  - Design excellence still reads as a fairly plain two-color composition; DE-01 would
+    benefit from an additional refinement layer (e.g. a subtle marker edge stroke
+    or a secondary accent) to move further past a well-configured library skeleton.
+  - The dense cluster of overlapping points around x=14-15 still visually merges into
+    a single blob even after the symbolSize (14→12) and alpha (0.65→0.55) reduction
+    — a thin white marker stroke (per the style guide's 'white edge' scatter recommendation)
+    would help separate overlapping observations.
+  - 'LM-02: the stacked-area CI band trick is a genuine echarts idiom but a fairly
+    common one; leaning on a more distinctive feature (e.g. visualMap, markArea, or
+    graphic-layer emphasis) would push Library Mastery higher.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Ad Spend vs Sales Revenue · scatter-regression-linear · javascript · echarts · anyplot.ai" centered top in dark ink, clearly legible, comfortably sized (~40% of canvas width, no clipping). Legend below title ("Weekly observations", "Linear fit", "95% confidence band") in soft dark gray, fully readable. X-axis "Advertising Spend ($1,000s)" and Y-axis "Weekly Sales Revenue ($1,000s)" labels dark and legible with visible units. Tick labels soft gray. Horizontal gridlines are subtle; vertical splitlines have been removed, giving a cleaner look than the previous attempt. Axis lines are now the dimmer grid-token color rather than full-strength ink. Equation callout box bottom-right ("y = 4.86x + 34.1 · R² = 0.866") uses a near-white elevated background with bold dark text and a thin border, positioned well clear of the canvas edge.
+      Data: ~70 green (#009E73) scatter points at alpha ~0.55 showing a clear positive linear trend with realistic noise; a solid purple regression line (palette[1]) cuts through the cloud; a semi-transparent purple confidence band (opacity ~0.16) surrounds the line, now with a visible dashed purple border along its edge that gives the band a distinct silhouette from the solid fit line. A small cluster of overlapping points remains around x=14-15 but is still individually distinguishable.
+      Legibility verdict: PASS — no light-on-light text anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title now in light/white ink, clearly legible against the dark background. Legend text light gray, fully readable. Axis titles and tick labels light-colored and legible; gridlines subtle but visible; vertical splitlines absent as in the light render. Equation callout box uses a darker elevated background (distinct from the page background) with light bold text and a thin border — no dark-on-dark failure.
+      Data: Data colors are identical to the light render — same green scatter points, same purple regression line, and the same dashed-border confidence band treatment (reads slightly more saturated against the dark backdrop, an expected consequence of shared opacity, not a color change).
+      Legibility verdict: PASS — all chrome elements read clearly against the dark surface; brand green remains vivid.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized (14-17px) and fully readable in both themes;
+          long mandated title is well-proportioned (~40% width), no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/legend collisions; the marker clustering around x=14-15 is
+          real data density, not text overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: symbolSize 12 + alpha 0.55 (reduced from 14/0.65 in repair) is well-suited
+          to ~70 points; CI band border now visible on both backgrounds
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs purple gives strong hue+lightness contrast, not reliant
+          on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Title, legend, axes and equation callout all within bounds, generous
+          balanced margins, nothing clipped or overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units ($1,000s)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, line/band/border reuse palette[1] consistently;
+          correct #FAF8F1/#1A1A17 backgrounds in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Bordered equation callout and deliberate two-tone accent color raise
+          it above generic defaults, but the composition remains close to a well-configured
+          library skeleton
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Improved from Review 1: axis lines now dimmed to grid-token color,
+          vertical splitlines removed, and the CI band gained a distinct border for
+          tonal separation from the fit line'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Regression line + equation callout create a clear focal point that
+          guides the eye toward the fit
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter + regression line + CI band composition
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: R²/equation annotation, contrasting fit line, semi-transparent 95%
+          CI band, alpha-blended points all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, axes cover full data range starting at 0
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows '{Descriptive Title} · spec-id · language · library
+          · anyplot.ai'; legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows scatter, regression line, CI band, R², and equation — all spec-required
+          aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ad spend vs sales revenue is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values in sensible $1,000s ranges (5-60 spend, ~8-370 revenue)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear top-to-bottom flow; the two small RNG helper functions are
+          the library-mandated deterministic-seed workaround, not incidental structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded mulberry32(42) PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only ANYPLOT_TOKENS/echarts globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Manual OLS + CI math is appropriately scoped, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract: echarts.init with no explicit size,
+          animation:false set'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Clean dual-series composition (scatter + line) using the high-level
+          option API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Stacked-area trick (invisible lower-bound line + stacked area, now
+          with a dashed border) for the CI band is echarts-specific but a fairly common
+          idiom
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - confidence-interval
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
