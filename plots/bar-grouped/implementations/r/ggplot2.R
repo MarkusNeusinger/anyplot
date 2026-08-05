@@ -14,6 +14,9 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+# element_line() has no `alpha` argument, so bake a ~20% opacity into the hex
+# itself (0x33 = 51/255) to get the style guide's "subtle" gridline.
+GRID_COLOR  <- paste0(INK, "33")
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
@@ -23,7 +26,6 @@ products <- c("Software", "Hardware", "Services")
 
 df <- expand.grid(region = regions, product = products) %>%
   mutate(
-    region  = factor(region, levels = regions),
     product = factor(product, levels = products),
     revenue = case_when(
       product == "Software" ~ round(rnorm(n(), mean = 5.8, sd = 0.9), 1),
@@ -31,6 +33,16 @@ df <- expand.grid(region = regions, product = products) %>%
       TRUE                  ~ round(rnorm(n(), mean = 3.0, sd = 0.6), 1)
     )
   )
+
+# Order regions by total revenue (descending) so the chart reads as a ranking
+# rather than an arbitrary list.
+region_order <- df %>%
+  group_by(region) %>%
+  summarise(total = sum(revenue), .groups = "drop") %>%
+  arrange(desc(total)) %>%
+  pull(region)
+
+df <- df %>% mutate(region = factor(region, levels = region_order))
 
 # --- Plot -----------------------------------------------------------------
 p <- ggplot(df, aes(x = region, y = revenue, fill = product)) +
@@ -40,8 +52,15 @@ p <- ggplot(df, aes(x = region, y = revenue, fill = product)) +
     color = PAGE_BG,
     linewidth = 0.4
   ) +
+  geom_text(
+    aes(label = sprintf("%.1f", revenue)),
+    position = position_dodge(width = 0.75),
+    vjust = -0.5,
+    size = 2.4,
+    color = INK_SOFT
+  ) +
   scale_fill_manual(values = IMPRINT_PALETTE[1:3], name = "Product Line") +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.08))) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.14))) +
   labs(
     title = "Revenue by Product Line · bar-grouped · r · ggplot2 · anyplot.ai",
     x = "Region",
@@ -54,7 +73,7 @@ p <- ggplot(df, aes(x = region, y = revenue, fill = product)) +
     panel.grid.major.x  = element_blank(),
     panel.grid.minor.x  = element_blank(),
     panel.grid.minor.y  = element_blank(),
-    panel.grid.major.y  = element_line(color = INK, linewidth = 0.25),
+    panel.grid.major.y  = element_line(color = GRID_COLOR, linewidth = 0.25),
     axis.line           = element_line(color = INK_SOFT, linewidth = 0.4),
     axis.ticks          = element_blank(),
     axis.title          = element_text(color = INK, size = 10),
