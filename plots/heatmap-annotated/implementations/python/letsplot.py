@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-annotated: Annotated Heatmap
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 96/100 | Updated: 2026-05-06
+Quality: 96/100 | Updated: 2026-08-05
 """
 
 import os
@@ -46,33 +46,43 @@ df["x"] = pd.Categorical(df["x"], categories=sectors, ordered=True)
 # Format values for annotation
 df["label"] = df["value"].apply(lambda v: f"{v:.2f}")
 
-# Determine text color based on value (dark text for light cells, light for dark)
-df["text_color"] = df["value"].apply(lambda v: "white" if abs(v) > 0.5 else "black")
+# Contrast text: white on saturated cells, theme ink near the (background-colored) midpoint
+df["text_color"] = df["value"].apply(lambda v: "white" if abs(v) > 0.5 else INK)
+
+# Highlight the strongest off-diagonal relationship to guide the eye to the key pattern
+off_diag = df[df["x"].astype(str) != df["y"].astype(str)]
+top_pair = off_diag.loc[off_diag["value"].abs().idxmax()]
+top_x, top_y = str(top_pair["x"]), str(top_pair["y"])
+highlight = df[
+    ((df["x"].astype(str) == top_x) & (df["y"].astype(str) == top_y))
+    | ((df["x"].astype(str) == top_y) & (df["y"].astype(str) == top_x))
+]
 
 # Create heatmap with annotations
 plot = (
     ggplot(df, aes(x="x", y="y", fill="value"))
     + geom_tile(color=INK_SOFT, size=0.3)
-    + geom_text(aes(label="label", color="text_color"), size=12, fontface="bold")
+    + geom_tile(data=highlight, color=INK, size=1.5)
+    + geom_text(aes(label="label", color="text_color"), size=3.5, fontface="bold")
     + scale_color_identity()
-    + scale_fill_gradient2(low="#2166AC", mid=PAGE_BG, high="#B2182B", midpoint=0, name="Correlation", limits=[-1, 1])
+    + scale_fill_gradient2(low="#AE3030", mid=PAGE_BG, high="#4467A3", midpoint=0, name="Correlation", limits=[-1, 1])
     + labs(x="Sector", y="Sector", title="heatmap-annotated · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=16, color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         axis_text_x=element_text(angle=45, hjust=1),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_title=element_text(size=11, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         panel_grid=element_blank(),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save PNG and HTML (scale 3x for 4800x2700)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# Save PNG and HTML (scale 4x for 3200x1800)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
