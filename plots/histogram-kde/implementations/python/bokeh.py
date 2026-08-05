@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-kde: Histogram with KDE Overlay
 Library: bokeh 3.9.2 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-08-05
+Quality: 91/100 | Updated: 2026-08-05
 """
 
 import os

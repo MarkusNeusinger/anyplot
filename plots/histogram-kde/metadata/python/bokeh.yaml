@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: histogram-kde
 created: '2025-12-24T21:30:19Z'
-updated: '2026-08-05T03:45:59Z'
+updated: '2026-08-05T03:52:18Z'
 generated_by: claude-sonnet
 workflow_run: 30972691447
 issue: 1823
@@ -12,44 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
+  - Title now correctly reads "histogram-kde · python · bokeh · anyplot.ai" — the
+    attempt-1 language-segment gap is fixed
+  - New "Fat-tail events" annotation on the +9% bump adds a second focal point alongside
+    the mean-line, sharpening data storytelling
   - Correct Imprint palette order with strong, CVD-safe contrast between the green
-    histogram (#009E73) and purple KDE curve (#C475FD)
-  - Semi-transparent histogram (fill_alpha=0.5) per spec notes, keeping the KDE curve
+    histogram and purple KDE curve
+  - Semi-transparent histogram (fill_alpha=0.5) per spec notes keeps the KDE curve
     fully visible where it crosses bars
-  - Mean reference line (Span) with a labeled annotation gives the reader a clear
-    focal point and adds a data-storytelling element beyond the base histogram+KDE
-  - Manual Gaussian KDE with Scott's-rule bandwidth is implemented from first principles
-    (no scipy dependency), which is solid library/statistics mastery
-  - Theme-adaptive chrome correctly threaded through INK/INK_SOFT tokens — both light
-    and dark renders are fully legible with no dark-on-dark or light-on-light failures
-  - No canvas drift — toolbar_location=None and generous min_border reservations keep
-    the 3200×1800 PNG exactly on target with no clipped text
+  - Manual Gaussian KDE with Scott's-rule bandwidth implemented from first principles
+    (no scipy dependency)
+  - Theme-adaptive chrome correctly threaded through — both renders fully legible,
+    no dark-on-dark/light-on-light failures
+  - No canvas drift — toolbar_location=None plus generous min_border_* keeps the 3200×1800
+    PNG exactly on target
   weaknesses:
-  - 'Title is "histogram-kde · bokeh · anyplot.ai" but the required format is "{spec-id}
-    · {language} · {library} · anyplot.ai" — missing the "python" language segment
-    (compare plots/bar-grouped/implementations/python/bokeh.py, which correctly includes
-    it). Fix: change title to "histogram-kde · python · bokeh · anyplot.ai".'
-  - Visual hierarchy beyond the mean-line annotation is minimal — histogram and KDE
-    compete roughly equally for attention; consider slightly muting the KDE area fill
-    or emphasizing the primary peak further to sharpen the focal point.
-  - Grid/spine treatment meets the style-guide baseline (L-shaped frame, subtle horizontal
-    grid) but doesn't go beyond it — no additional refinement (e.g. tick marks, subtle
-    shadow/depth cues) that would distinguish it as exceptionally polished.
+  - Visual hierarchy is now two focal points (mean line + fat-tail label) but the
+    grid/spine treatment still only meets the style-guide baseline without going further
+  - Histogram bar outline (line_width=3, line_alpha=0.8) is fairly bold relative to
+    the KDE line — a slightly thinner outline would let the KDE curve read as the
+    clear top layer
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "histogram-kde · bokeh · anyplot.ai" top-left, italic dark "Density" y-axis label and italic dark "Daily Return (%)" x-axis label, gray tick labels on both axes, subtle horizontal-only gridlines. A dashed vertical mean-reference line near x≈0 carries a small gray "Mean: 0.19%" label. Top-right legend box (light elevated background, thin border) lists "Histogram" (green swatch) and "KDE" (purple line swatch).
-      Data: Green (#009E73) semi-transparent histogram bars form a roughly bell-shaped, slightly right-skewed distribution centered near 0 with visible secondary bumps around -8% and +9 to +13% (fat-tail events), overlaid by a smooth purple (#C475FD) KDE line with a faint purple area fill beneath it that closely tracks the bar heights.
-      Legibility verdict: PASS — all title, axis, tick, legend, and annotation text is clearly readable against the light background; no light-on-light issues.
+      Background: warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: bold dark title "histogram-kde · python · bokeh · anyplot.ai" top-left; italic dark axis labels ("Density" / "Daily Return (%)"); gray tick labels; subtle horizontal-only gridlines; top-right legend box (cream background, soft border) listing "Histogram" (green swatch) and "KDE" (purple line). All chrome text is clearly readable against the light background.
+      Data: green (#009E73) semi-transparent histogram bars form a right-skewed, roughly bell-shaped distribution centered near 0%, with secondary bumps around -8% and +9 to +13% (fat-tail events). A smooth purple (#C475FD) KDE curve with a faint area fill tracks the histogram closely. A dashed vertical mean-reference line near x≈0.19% carries a small "Mean: 0.19%" label, and an italic "Fat-tail events" annotation calls out the positive-tail bump. First series is #009E73 as required.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same layout as the light render but title, axis labels are near-white, tick labels are light gray, gridlines are subtle light horizontal lines, and the mean-line label reads in light gray against the dark background. Legend box uses a dark elevated background with a light-gray border and label text.
-      Data: Histogram and KDE curve use the identical #009E73 green and #C475FD purple as the light render — only the chrome (background, text, grid, legend frame) flips; data colors are unchanged.
-      Legibility verdict: PASS — all title, axis, tick, and annotation text is clearly readable against the dark background; no dark-on-dark failures observed (mean-line label and tick labels both use the lighter INK_SOFT token and read fine).
+      Background: warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: same layout with title/axis labels in near-white, tick labels in light gray, subtle light gridlines, legend on a dark elevated background with light border/text. No dark-on-dark failures observed — all chrome text and the "Mean: 0.19%" / "Fat-tail events" annotations remain legible against the dark background.
+      Data: histogram (#009E73) and KDE (#C475FD) colors are identical to the light render — only chrome (background, text, grid, legend frame) flips, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,53 +57,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes with explicit font sizes (title
-          50pt, axis labels 42pt, ticks 34pt); large native-pixel sizes should scale
-          fine to mobile widths.
+        comment: Explicit font sizes throughout; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, mean-line label, or data elements
-          in either render.
+        comment: No collisions between title, axis labels, annotations, legend, or
+          data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram alpha=0.5 and 4px KDE line are well-suited to ~900 points
-          across 40 bins; nothing washed out or invisible.
+        comment: Alpha-blended bars keep the KDE curve visible; 40 bins suit ~900
+          points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple pairing has strong contrast and is CVD-safe; no red-green
-          as sole signal.
+        comment: Green/purple pairing is CVD-safe with good contrast; no red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No clipping, no overflow; canvas gate passed (no /tmp/anyplot-canvas-gate.txt);
-          title occupies a reasonable proportion of width.
+        comment: Canvas gate passed at 3200x1800; nothing cut off, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Daily Return (%)" and "Density" are descriptive with units where
-          applicable.'
+        comment: '"Daily Return (%)" and "Density" are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series #C475FD (canonical Imprint order);
-          backgrounds correct #FAF8F1/#1A1A17; both renders theme-correct.'
+        comment: 'First series #009E73, second #C475FD; correct theme backgrounds
+          in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -114,24 +107,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Semi-transparent bars, subtle area fill under the KDE, and a mean-line
-          annotation show intentional polish beyond bare defaults.
+        comment: Semi-transparent bars, subtle KDE area fill, mean-line and fat-tail
+          annotations show intentional polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped frame (no outline box), subtle horizontal-only grid, generous
-          whitespace — meets style-guide baseline well but nothing beyond it.
+        comment: L-shaped frame, subtle horizontal-only grid, generous whitespace
+          meet the baseline but don't exceed it
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Mean line gives one focal point, but histogram and KDE otherwise
-          compete for attention roughly equally; limited additional hierarchy.
+        passed: true
+        comment: Mean line plus new fat-tail annotation give two clear focal points,
+          an improvement over attempt 1's single annotation
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,30 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram + KDE overlay.
+        comment: Correct histogram + KDE overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: alpha~0.5 bars, density-normalized y-axis, appropriate bin count
-          (40) and Scott's-rule bandwidth, contrasting histogram/KDE colors — all
-          spec notes satisfied.
+        comment: Density-normalized histogram, semi-transparent bars, contrasting
+          KDE color per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = daily return (%), Y = density; axes cover the full data range
-          plus KDE tail padding.
+        comment: X/Y correctly mapped, full data range shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title is "histogram-kde · bokeh · anyplot.ai", missing the required
-          "python" language segment ("histogram-kde · python · bokeh · anyplot.ai").
-          Legend labels ("Histogram", "KDE") correctly match the data.
+        passed: true
+        comment: Title now correctly includes the "python" language segment; legend
+          labels match data series
     data_quality:
       score: 15
       max: 15
@@ -172,22 +162,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars, KDE curve, and mean marker together cover all expected
-          plot-type features.
+        comment: Shows central mode, skew, and both fat tails
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock daily returns with fat-tail events is plausible and neutral,
-          real-world-grounded.
+        comment: Stock daily-return distribution is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Return values (-12% to +17%) and density scale (0-0.16) are sensible
-          for the domain.
+        comment: Return magnitudes and density values are sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -197,32 +184,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat procedural script.
+        comment: Flat top-to-bottom script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random draws.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (numpy, bokeh submodules, selenium) are used.
+        comment: All imports (numpy, bokeh, selenium) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity or simulated UI.
+        comment: No fake UI; appropriate complexity for manual KDE
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (via Selenium screenshot) and plot-{THEME}.html
-          (via output_file/save), current bokeh 3.x API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current bokeh API
     library_mastery:
       score: 8
       max: 10
@@ -232,22 +218,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, quad/varea/line glyphs, HoverTool, Span, Label
-          — idiomatic high-level bokeh API usage.
+        comment: ColumnDataSource, figure(), quad/varea/line are idiomatic bokeh patterns
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Combines HoverTool tooltips, Span reference line, Label annotation,
-          and varea fill — several bokeh-distinctive features used together.
+        comment: HoverTool, Span, Label, and varea combined effectively for a richer
+          static + interactive result
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - hover-tooltips
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -256,5 +241,5 @@ impl_tags:
   - kde
   - binning
   styling:
-  - publication-ready
   - alpha-blending
+  - gradient-fill
