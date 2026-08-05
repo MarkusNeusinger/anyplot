@@ -2,48 +2,60 @@ library: altair
 language: python
 specification_id: windrose-basic
 created: '2025-12-24T22:24:47Z'
-updated: '2026-05-07T03:40:41Z'
-generated_by: claude-haiku
-workflow_run: 25474373583
+updated: '2026-08-05T15:51:06Z'
+generated_by: claude-sonnet
+workflow_run: 31019498380
 issue: 1880
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/altair/plot-dark.html
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Excellent text legibility in both light and dark themes with no readability failures
-  - Comprehensive realistic meteorological data with Weibull-distributed wind speeds
-    and prevailing patterns
-  - Correct wind rose geometry with North at top and frequency-based wedge sizing
-  - Proper theme tokenization throughout with correct background and text color adaptation
-  - Clean, deterministic code with good reproducibility and appropriate complexity
+  - Title now correctly reads "windrose-basic · python · altair · anyplot.ai" — the
+    attempt-1 SC-04 gap is fixed
+  - The attempt-1 "Frequency (%)" axis-title vs. "20%"/"15%" gridline-label collision
+    is resolved — those two elements no longer overlap
+  - Imprint palette in exact canonical order (green → lavender → blue → ochre → red),
+    pixel-identical across both themes
+  - 'Theme chrome fully correct in both renders: backgrounds are pixel-exact #FAF8F1/#1A1A17,
+    all text readable, no dark-on-dark or light-on-light failures'
+  - 'Clear visual hierarchy: dominant SW/W wedges communicate the prevailing wind
+    pattern at a glance'
+  - Canvas lands exactly on 2400×2400 with nothing clipped at any edge
+  - Realistic Weibull-distributed wind speeds with a plausible prevailing SW/W directional
+    skew
   weaknesses:
-  - 'Palette non-compliance: uses viridis-derived colors (#31688e, #35b779, #fde724,
-    #f8765d, #440154) instead of required Okabe-Ito (#009E73, #D55E00, #0072B2, #CC79A7,
-    #E69F00)'
-  - Color accessibility not documented; CVD-safe rendering not guaranteed
-  - Design lacks sophistication; palette choice appears arbitrary rather than intentional
-  - Limited use of altair distinctive features; manual polygon construction is verbose
+  - 'New overlap introduced: the "5%"/"10%"/"15%" frequency gridline labels sit directly
+    on top of the NW sector''s colored wedge fill instead of on empty background.
+    The label column is fixed at 115°, which falls only ~1° outside the NW wedge''s
+    edge (NW spans 116–154° given bar_width=38 against 45°-wide sectors, leaving just
+    a 7° gap). Text is still legible against the mid-tone fill colors, so this is
+    partial rather than severe, but should be fixed: widen the angular gap between
+    wedges (e.g. reduce bar_width from 38 to ~30), or choose the label column dynamically
+    to align with whichever sector has the shortest wedge at each radius, or add a
+    subtle background halo behind the percentage labels.'
+  - Wedge/circle/radial-line geometry is still built via df.iterrows() / Python for-loops
+    rather than vectorized numpy, per the attempt-1 feedback — not blocking, but keeps
+    CQ-04 and LM-01 from scoring higher.
+  - The three smallest sectors (E, NE, SE) remain visually thin, making their individual
+    speed-bin bands hard to distinguish at a glance — acceptable given the realistic
+    directional skew, not a deduction on its own.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with no pure white areas
-      Chrome: Title, compass labels (N, NE, E, SE, S, SW, W, NW), frequency percentages (15%, 20%, 25%), and legend all readable in dark text (#1A1A17)
-      Data: Stacked colored wedges representing 5 wind speed ranges (0-3, 3-6, 6-9, 9-12, >12 m/s); colors are #31688e (blue), #35b779 (green), #fde724 (yellow), #f8765d (orange), #440154 (purple)
-      Grid: Concentric circles and radial lines in subtle INK_SOFT color with low opacity
-      Legibility verdict: PASS - All text clearly visible against light background
+      Background: Warm off-white, confirmed pixel value (250,248,241) = #FAF8F1. Not pure white.
+      Chrome: Bold black title "windrose-basic · python · altair · anyplot.ai" at top-left, fully within canvas (~72% of plot width). Bold black compass labels (N, NE, E, SE, S, SW, W, NW) all readable. "Frequency (%)" axis title in black no longer overlaps the "20%"/"15%" gridline labels (attempt-1 defect fixed). However, the "5%"/"10%"/"15%" percentage labels now sit on top of the NW sector's colored wedge fill rather than empty background — text remains legible but this is a real overlap. Legend "Wind Speed" box top-right, fully inside canvas with margin to the right edge.
+      Data: Stacked polar wedges colored #009E73 (green, 0-3 m/s) → #C475FD (lavender, 3-6) → #4467A3 (blue, 6-9) → #BD8233 (ochre, 9-12) → #AE3030 (red, >12), exact Imprint canonical order, first series confirmed brand green. SW/W sectors dominant, NE/E/SE thinnest.
+      Legibility verdict: PASS (all text readable; the percentage-label/wedge overlap is a design flaw, not a legibility failure — text still reads against the mid-tone fills)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with no pure black areas
-      Chrome: Title, compass labels, frequency percentages, and legend all readable in light text (#F0EFE8); no dark-on-dark contrast failures
-      Data: Identical colors to light render - #31688e, #35b779, #fde724, #f8765d, #440154 (proves theme-independent data colors)
-      Grid: Reference circles and radial lines visible with low opacity
-      Legibility verdict: PASS - All text clearly visible against dark background; no dark-on-dark failures
-
-    Compliance Issue: Both renders use non-Okabe-Ito palette. Categorical speed ranges should use #009E73 (first, required brand green), #D55E00, #0072B2, #CC79A7, #E69F00.
+      Background: Warm near-black, confirmed pixel value (26,26,23) = #1A1A17. Not pure black.
+      Chrome: Same title, compass labels, and axis title now render in light cream/gray, clearly legible against the dark background — no dark-on-dark failures anywhere, including where percentage labels sit on the wedge fills. Legend box uses the dark elevated fill (#242420-ish) with light text, fully inside canvas bounds.
+      Data: Colors are pixel-identical to the light render (same green/lavender/blue/ochre/red sequence, same wedge shapes) — only chrome (background, text, grid, legend frame, wedge-separator stroke) flipped.
+      Legibility verdict: PASS (no dark-on-dark; same wedge-overlap caveat as light render, not a legibility failure)
   criteria_checklist:
     visual_quality:
       score: 26
@@ -51,70 +63,74 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; appropriate sizing for high-resolution
-          canvas
+        comment: All font sizes explicitly set; readable at full size in both themes;
+          title fits without clipping at ~72% width
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Clean layout with no overlapping elements; good spatial arrangement
+        passed: false
+        comment: Percentage gridline labels (5%/10%/15%) overlap the NW sector's colored
+          wedge fill; text stays legible but the collision is real
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All wedges, circles, labels distinguishable; no invisible elements
+        comment: Wedges clearly visible and adapted to frequency; smallest sectors
+          (E, NE, SE) are thin but still distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Palette not Okabe-Ito compliant; CVD-safe rendering not documented
+        passed: true
+        comment: Imprint palette gives CVD-safe contrast between adjacent speed bins
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format appropriate for polar chart; good proportions and whitespace
+        comment: Circular rose plus legend use the canvas well; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive; Frequency (%) axis labeled; units present
+        comment: Radial axis labeled 'Frequency (%)' with units; compass directions
+          standard
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Uses viridis colors instead of Okabe-Ito; first series #31688e not
-          #009E73'
+        passed: true
+        comment: 'Exact Imprint canonical order, brand green first, identical across
+          themes, backgrounds pixel-exact #FAF8F1/#1A1A17'
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 6
         max: 8
-        passed: false
-        comment: Competent but generic; palette choice violates compliance rules
+        passed: true
+        comment: Custom polar composition well above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, good use of theme tokens
+        comment: Spines removed, subtle grid, generous whitespace; held back slightly
+          by the label/wedge collision
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Wind patterns and speed distribution clear; visual hierarchy present
+        comment: Dominant SW/W wedges create immediate, clear visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -124,25 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct wind rose with stacked bars
+        comment: Correct stacked polar wind rose
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 8 directions, 5 speed ranges, frequencies, legend all present
+        comment: 8 direction sectors, 5 stacked speed bins, legend, radial frequency
+          axis, North at top
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Polar coordinates correct; North at top; all data displayed
+        comment: Direction/speed/frequency correctly mapped to angle/stack/radius
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: windrose-basic · altair · anyplot.ai format; legend shows speed ranges
+        comment: Title now correctly includes the python language segment; legend
+          labels match speed-bin ranges
     data_quality:
       score: 15
       max: 15
@@ -152,22 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete wind rose representation with 8 directions and 5 speed ranges
+        comment: Shows full range of directions and speed bins with realistic variation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Weibull-distributed speeds; realistic prevailing westerly pattern
+        comment: Realistic, neutral hourly weather-station scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible m/s values and percentage frequencies for meteorological
-          data
+        comment: Weibull-distributed speeds and plausible SW/W prevailing skew
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -175,33 +192,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward implementation; no unnecessary functions
+        comment: No functions/classes, linear top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, altair, numpy, pandas)
+        comment: os, altair, numpy, pandas, PIL.Image all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity; no fake interactivity
+        passed: false
+        comment: Still uses df.iterrows()/Python loops for arc, circle, and radial
+          geometry instead of vectorized numpy
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png/.html, canonical PAD-to-target block present
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -209,29 +227,27 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses altair API competently; manual polygon construction is functional
-          but verbose
+        comment: Correct but relies on manual cartesian-coordinate construction rather
+          than a vectorized/native pattern
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Limited use of altair-specific features; basic layer composition
-  verdict: REJECTED
+        passed: true
+        comment: Uses altair-specific Detail/Order encodings to build custom polygon
+          paths across a 6-layer composition
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - polar-projection
   - layer-composition
-  - hover-tooltips
-  - manual-ticks
-  - html-export
   patterns:
   - data-generation
-  - groupby-aggregation
-  - matrix-construction
+  - iteration-over-groups
   dataprep:
   - binning
   - cumulative-sum
   styling:
-  - theme-adaptive-chrome
-  - custom-colormap
+  - alpha-blending
