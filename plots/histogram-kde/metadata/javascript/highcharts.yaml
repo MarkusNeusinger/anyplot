@@ -1,0 +1,262 @@
+library: highcharts
+language: javascript
+specification_id: histogram-kde
+created: '2026-08-05T03:48:16Z'
+updated: '2026-08-05T04:01:10Z'
+generated_by: claude-sonnet
+workflow_run: 30973071085
+issue: 1823
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Y-axis grid density fix (tickAmount: 6) landed cleanly — six evenly-spaced horizontal
+    gridlines instead of the previous 13, giving the chart a much more polished, minimal
+    look'
+  - 'New peak annotation (dashed plotLine + "Peak: 13.7 min" label at the KDE mode)
+    adds a genuine focal point and visual hierarchy that was missing before'
+  - 'Correct Imprint palette usage: brand green (#009E73) histogram at alpha 0.5 with
+    lavender (#C475FD) KDE line, identical data colors across both themes'
+  - 'Statistically sound implementation: density-scaled histogram plus Gaussian-kernel
+    KDE with Silverman''s-rule bandwidth, matching the spec''s exact requirements'
+  - Clean theme-adaptive chrome (title/axis/tick/grid all threaded from ANYPLOT_TOKENS)
+    and a realistic, neutral marketing-analytics scenario (right-skewed customer session
+    durations)
+  weaknesses:
+  - Title fontsize bump (22px -> 26px) helped but only reaches ~46% of canvas width,
+    still below the ~50-70% target for a title this length — a further bump toward
+    ~30-32px would strengthen visual hierarchy
+  - Several small helper functions (LCG PRNG, quantile, hexToRgba) still deviate from
+    strict linear KISS structure, though reasonably justified by the lack of a numpy-equivalent
+    in the browser runtime
+  - Distribution is a single unimodal right-skewed shape — a slightly more complex
+    (e.g. bimodal) distribution could better showcase the KDE's smoothing behavior,
+    though not required by the spec
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "histogram-kde · javascript · highcharts · anyplot.ai" in bold dark ink, centered top, now at 26px (up from 22px in the prior attempt). X-axis title "Session Duration (minutes)" and y-axis title "Density" in medium-gray ink, both clearly legible. Tick labels on both axes are dark gray and readable. Y-axis now shows a clean 6-line grid (0, 0.012, 0.024, 0.036, 0.048, 0.06) instead of the prior dense 13-line grid. A new dashed vertical plotLine at x≈13.7 min with a rotated "Peak: 13.7 min" label marks the KDE mode. Legend centered at bottom with a green circle swatch for "Histogram" and a purple line swatch for "KDE".
+      Data: Right-skewed unimodal histogram in translucent brand green (#009E73 at ~0.5 alpha) with a smooth lavender/purple (#C475FD) KDE line tracing the same shape, closely following the bin heights. First series is confirmed brand green.
+      Legibility verdict: PASS — all text, including the new peak label, is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis titles, tick labels, legend, and the new peak-annotation label now rendered in light/off-white ink, fully legible against the dark surface. The 6-line grid remains subtle and visible without dominating.
+      Data: Histogram and KDE line colors are identical to the light render (brand green fill, lavender KDE line) — only the chrome (background, text, grid, legend, plotLine label) flipped, confirming Imprint palette identity is preserved across themes. Note: the composited histogram fill looks visually darker/more saturated on the dark background purely due to alpha=0.5 blending against a near-black backdrop vs. an off-white one — the underlying rgba color value is unchanged, so this is expected alpha-compositing behavior, not a palette violation.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend/annotation text is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (26px title, 16px axis titles, 14px
+          ticks/legend, 12px peak label); readable in both themes with no overflow
+          or clipping. Title now ~46% of canvas width (up from ~30%), still short
+          of the 50-70% target.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, legend, or data elements in either render; the
+          new peak label sits cleanly beside the dashed line without colliding with
+          bars or the title
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Histogram bars and KDE line (lineWidth 2.5) are clearly visible and
+          well-sized for 28 bins over 600 points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green fill vs. purple line gives strong CVD-safe contrast; alpha
+          0.5 lets the KDE line remain visible through the histogram
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills the large majority of the canvas with balanced margins;
+          legend sits directly under the plot, not isolated
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis 'Session Duration (minutes)' includes units; y-axis 'Density'
+          is the standard statistical term for this transform
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 (brand green), second is #C475FD (lavender/position
+          2), identical across themes; backgrounds are theme-correct #FAF8F1 / #1A1A17'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful alpha blending and contrasting histogram/KDE colors, plus
+          the new peak annotation, lift this above a generic combo-chart default,
+          though still short of full publication polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped axis frame, generous whitespace, and the now-clean 6-line
+          single-axis grid (fixed from the prior dense 13-line grid) show clear refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'The new dashed peak plotLine with ''Peak: 13.7 min'' label gives
+          the viewer an immediate focal point on the distribution''s mode, on top
+          of the KDE overlay already revealing the shape beyond binning artifacts'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram + KDE overlay combo chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent histogram (alpha 0.5), density-scaled y-axis, appropriate
+          bin count (28) and Silverman's-rule bandwidth, contrasting fill/line colors
+          — all spec notes satisfied
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = session duration, Y = density; full data range visible on both
+          axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels 'Histogram'
+          and 'KDE' correctly match the two series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear unimodal right-skewed shape well captured by both histogram
+          and KDE; a bimodal distribution could better showcase KDE smoothing, though
+          not required by spec
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Customer session durations in marketing analytics is a real, neutral,
+          comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Log-normal distribution of session durations (0-75 min, peak ~13.7
+          min) is a factually realistic model for this domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Overall linear Imports->Data->Plot flow, but several small helper
+          functions (LCG, randNormal, quantile, hexToRgba) are needed since the browser
+          lacks a numpy-equivalent
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a histogram+KDE combo, no fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly renders via Highcharts.chart('container', ...) with animation
+          disabled, matching the harness contract
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Highcharts.chart config with proper series-level styling,
+          pointRange for uniform histogram bins, plotLines for annotation, and correct
+          plotOptions usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Highcharts-specific plotLines with a rotated label for the peak
+          annotation and pointRange-based histogram construction — some distinctive
+          features, not a fully generic combo chart
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
