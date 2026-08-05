@@ -2,78 +2,87 @@ library: altair
 language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:36:06Z'
-updated: '2026-05-07T07:36:17Z'
-generated_by: claude-haiku
-workflow_run: 25481899088
+updated: '2026-08-05T17:22:09Z'
+generated_by: claude-sonnet
+workflow_run: 31028191243
 issue: 1946
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Perfect visual quality and palette compliance in both light and dark renders
-  - Excellent code clarity with proper theme-adaptive color configuration
-  - Data is realistic, well-sorted for comparison, and appropriately scaled
-  - Strong legibility across all text elements in both themes
-  - All Altair best practices properly applied (encode, configure, save patterns)
+  - Title now exactly matches the mandated {spec-id} · {language} · {library} · anyplot.ai
+    format
+  - Real interactivity via pointer-hover alt.selection_point and modern alt.when()
+    chaining, not simulated UI
+  - New top-bar emphasis (opacity, label size, label color) creates a clear focal
+    point and directly answers prior review feedback
+  - Careful headroom calculation (x_max = max * 1.15) keeps end-of-bar labels from
+    clipping or overlapping the axis frame
+  - Realistic, neutral dataset that sums cleanly to 100%, appropriately sized (10
+    categories)
   weaknesses:
-  - 'Design Excellence relatively low: minimal visual customization beyond defaults'
-  - Could enhance aesthetic by exploring unique Altair patterns and interactions
-  - Could improve visual refinement by removing unnecessary spines for cleaner L-shaped
-    frame
+  - '0.75-opacity on 9 of 10 bars composites differently against light (#FAF8F1) vs
+    dark (#1A1A17) backgrounds, so those bars render as visibly different colors between
+    themes (#3FB492 light vs #077D5C dark) despite an identical source color value'
+  - Design Excellence remains close to default Vega-Lite chrome outside the new top-bar
+    emphasis - grid, spines, and typography unchanged since the previous review
+  - Distinctive Altair capabilities remain underused beyond the hover highlight -
+    functionally a mark_bar + mark_text layered composition
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with no impurities
-      Chrome: Title clearly visible in dark text (#1A1A17); axis labels and tick labels all readable at 22px and 18px respectively
-      Data: All bars rendered in brand green (#009E73) with subtle rounded ends; sorted ascending (Kotlin to Python) for ranking clarity
-      Grid: Subtle vertical grid lines at 5% intervals; appropriate opacity (0.10) that guides without competing
-      Legibility verdict: PASS - All elements crisp and readable against light background
+      Background: warm off-white, sampled RGB (250,248,241) = #FAF8F1, matches spec exactly.
+      Chrome: bold dark title "bar-horizontal · python · altair · anyplot.ai" centered at top (language token now present, fixing attempt-1 gap); bold rotated Y-axis title "Programming Language"; X-axis title "Popularity (%)"; subtle 10%-opacity vertical gridlines. All text clearly readable against the light background.
+      Data: 10 horizontal bars sorted descending (Python 28.5% -> Kotlin 1.6%). Top bar (Python) samples ~#0DA379 (close to brand #009E73). Remaining 9 bars at opacity 0.75 sample ~#3FB492 - lighter/mintier than the brand hex due to alpha blending over the cream background. Value labels at bar ends: bold ink for top bar, softer gray for the rest.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) matching design system
-      Chrome: Title and labels rendered in light text (#F0EFE8 primary, #B8B7B0 secondary); all readable with excellent contrast on dark surface
-      Data: Bars identical green (#009E73) to light render - no color drift between themes; spacing and sorting consistent
-      Grid: Subtle with appropriate opacity for dark context
-      Legibility verdict: PASS - No dark-on-dark failures; brand green remains visible; all text clearly distinguishable
+      Background: warm near-black, sampled RGB (26,26,23) = #1A1A17, matches spec exactly.
+      Chrome: same layout; title and axis titles in light ink, tick/value labels in soft light gray. All text clearly legible against the dark background - no dark-on-dark failures.
+      Data: top (Python) bar samples ~#019766, consistent with the light render's top bar. The 9 non-highlighted bars sample ~#077D5C - a darker, more saturated green than their light-theme counterpart (#3FB492), because the same 0.75-opacity fill composites differently over the near-black background. Underlying source color is identical in code; the composited pixel color is not identical across themes for most bars. Flagged as a VQ-07 partial deduction, not a legibility failure.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text properly sized and colored for both themes
+        comment: Explicit font sizes throughout, balanced axis titles/ticks, no overflow;
+          non-highlighted value labels slightly small at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, clean spacing throughout
+        comment: Headroom calculation keeps end-of-bar labels from colliding with
+          gridlines or axis frame
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars and grid clearly visible
+        comment: Bar thickness/spacing appropriate for 10 categories, rounded ends
+          crisp in both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito safe with high contrast
+        comment: Adequate contrast, no red/green-as-sole-signal issue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper landscape format, nothing cut off
+        comment: Canvas gate passed, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -82,32 +91,37 @@ review:
         comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Correct colors and theme backgrounds; both renders theme-correct
+        passed: false
+        comment: Top bar and backgrounds correct, but 9/10 bars render at different
+          composited colors between light (#3FB492) and dark (#077D5C) due to opacity
+          over different theme backgrounds
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Rounded bar ends show intent but fairly generic
+        passed: true
+        comment: New secondary treatment on top bar (opacity + label size/color) is
+          a clear step up from the prior single-flat-color version
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal customization; could remove unnecessary spines
+        passed: true
+        comment: Subtle grid, ticks removed on y-axis, generous whitespace; largely
+          unchanged from prior attempt
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Ascending sort creates clear ranking narrative
+        comment: Opacity + label contrast on top bar creates a clear focal point on
+          top of the descending sort
     spec_compliance:
       score: 15
       max: 15
@@ -123,19 +137,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: All features implemented
+        comment: Consistent bar heights, sorted, single-hue with highlighted top bar,
+          end-of-bar labels, adequate spacing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct axes and scaling
+        comment: popularity on X, language on Y, all 10 categories shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format
+        comment: Title now exactly matches mandated format - python token gap from
+          attempt 1 fixed
     data_quality:
       score: 15
       max: 15
@@ -145,19 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of horizontal bar charts
+        comment: Ranking, value labels, consistent geometry, and now the optional
+          top-bar-highlight variant
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic programming language data
+        comment: Plausible, neutral programming-language popularity data summing to
+          100%
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Good value distribution
+        comment: Percentages sensible and internally consistent
     code_quality:
       score: 10
       max: 10
@@ -167,53 +185,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct implementation
+        comment: Flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Static deterministic DataFrame
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Real alt.selection_point/alt.when interactivity, not simulated UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file outputs
+        comment: Saves plot-{THEME}.png/.html, current Altair 6 API
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Excellent fluent API usage
+        comment: Proper encodings, layered marks, configure_* chrome, modern alt.when()
+          chain
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses tooltips and config methods but no advanced features
+        comment: Real hover selection is genuinely distinctive, but no further Altair-specific
+          capabilities (faceting, repeat, compound views)
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - publication-ready

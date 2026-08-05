@@ -2,123 +2,129 @@ library: letsplot
 language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:36:18Z'
-updated: '2026-05-07T07:47:03Z'
-generated_by: claude-haiku
-workflow_run: 25482247782
+updated: '2026-08-05T17:29:29Z'
+generated_by: claude-sonnet
+workflow_run: 31028837540
 issue: 1946
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Excellent theme implementation with proper light/dark adaptation - all text readable
-    in both renders with no legibility issues
-  - Clean, professional presentation with intentional data sorting (ascending by value)
-    for easy comparison
-  - Correct palette usage (#009E73 brand green) with proper theme-adaptive chrome
-    (title, labels, gridlines)
-  - Proper output format (PNG + HTML) with correct scaling (1600x900 base scaled 3x
-    = 4800x2700 px)
-  - Deterministic, reproducible data with realistic programming language popularity
-    context
+  - 'All three attempt-1 weaknesses were directly addressed: axis_line/axis_ticks
+    now removed (DE-02), a subtitle adds a data-storytelling layer (DE-03), and custom
+    layer_tooltips() add a lets-plot-distinctive interactive touch (LM-02)'
+  - 'Correct Imprint palette usage: brand green (#009E73) for all bars, position-3
+    blue (#4467A3) highlighting the leader — identical across both renders, only chrome
+    flips'
+  - Theme-adaptive chrome fully threaded (PAGE_BG, INK, INK_SOFT) — both renders pass
+    the readability check with no dark-on-dark or light-on-light text
+  - Canvas matches the 3200x1800 landscape target exactly (ggsize(800,450) + scale=4),
+    no clipping of title, ticks, or value labels
+  - Title now occupies a more balanced ~55-60% of plot width vs. attempt 1's ~45%
   weaknesses:
-  - Design Excellence is functional but not particularly sophisticated - uses default
-    styling without custom color palette or advanced visual hierarchy
-  - Limited use of letsplot distinctive features - implementation uses standard geom_bar
-    and theme without exploring more advanced capabilities
+  - Still a fairly conventional ranked bar chart at its core — DE-01/DE-02 have room
+    for one more distinctive visual touch (e.g. a subtle reference line/annotation
+    for the survey average, or a more custom bar treatment) to push aesthetic sophistication
+    further
+  - 'LM-02: tooltip customization is a good lets-plot-specific step, but could be
+    pushed further (e.g. richer tooltip formatting, or another lets-plot-only capability)
+    to fully differentiate from the plotnine/ggplot2 twins'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface color
-      Chrome: Title "bar-horizontal · letsplot · anyplot.ai" clearly visible in dark text; axis labels "Programming Language" and "Developers (%)" readable in dark INK color; tick labels (JavaScript, Python, Java, etc.) all readable with dark INK_SOFT
-      Data: 10 bars in ascending order (Rust to JavaScript) filled with #009E73 brand green; bar lengths proportional to values; x-axis gridlines subtle and helpful
-      Legibility verdict: PASS - All text readable against light background, proper color contrast, no dark-on-light failures
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "bar-horizontal · python · letsplot · anyplot.ai" and subtitle "JavaScript leads adoption, used by more than 5x as many developers as Rust" in dark ink / soft-dark gray at top-left, fully visible and not clipped. Axis titles ("Developers Using Language (%)" / "Programming Language") and tick labels clearly legible. Subtle vertical gridlines only, no y gridlines, no axis ticks marks, no axis line (spines removed).
+      Data: 10 horizontal bars, one per programming language, sorted so the largest value (JavaScript, 65.4%) is at the top and the smallest (Rust, 11.8%) at the bottom. All bars use brand green #009E73 except the top bar (JavaScript), which uses the Imprint position-3 blue #4467A3 to highlight the leader. Value labels (e.g. "65.4%") sit just past each bar's end in soft gray text, with no overlap on bars or other labels.
+      Legibility verdict: PASS — all text reads clearly against the light surface, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct surface color
-      Chrome: Title clearly visible in light INK color; axis labels readable in light text; all tick labels readable with light INK_SOFT - no dark-on-dark failures
-      Data: Bars identical in #009E73 green color (confirming theme-independent data colors); bar lengths match light render; gridlines maintain subtle appearance
-      Legibility verdict: PASS - All text readable against dark background, proper light-text-on-dark-background contrast, theme adaptation is correct
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, subtitle, axis titles, and tick labels now rendered in light ink / soft-light gray, clearly legible against the dark background. Gridlines remain subtle but visible. No dark-on-dark text found anywhere (title, subtitle, axis text, tick labels, value labels all read clearly).
+      Data: Same 10 bars in the same order and proportions as the light render. Bar colors are pixel-identical to the light render — brand green #009E73 for all bars except the JavaScript leader bar in #4467A3. Only the chrome (background/text/grid) has flipped for dark mode, confirming palette-position consistency across themes.
+      Legibility verdict: PASS — all text reads clearly against the dark surface, no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes with proper font sizes (title 24,
-          axis_title 20, axis_text 16)
+        comment: Explicit font sizes throughout; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; bars clearly separated; labels non-overlapping
+        comment: No collisions between value labels, bars, or axis text in either
+          render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 10 bars visible and clearly distinguishable; bar heights proportional
-          to data values
+        comment: Bar width (0.65) and count (10) well-suited for readability; no data-density
+          issues
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Uses #009E73 (Okabe-Ito position 1, brand green); colorblind-safe;
-          good contrast'
+        comment: Green/blue pairing has adequate contrast and is CVD-safe; not a red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions; adequate margins; nothing cut off; 1600x900 scaled
-          3x = 4800x2700 correct
+        comment: Canvas exactly 3200x1800; no clipping or overflow; title proportion
+          improved to ~55-60% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows format; axis labels descriptive with units (Developers
-          %)
+        comment: Both axis titles descriptive with units (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct (#FAF8F1 light, #1A1A17
-          dark); chrome properly theme-adaptive'
+        comment: 'First series #009E73, highlight uses Imprint position 3 #4467A3;
+          theme-correct backgrounds in both renders; data colors identical across
+          themes'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Professional but uses default styling; no custom palette or advanced
-          design elements
+        comment: Subtitle callout, single-highlight leader, and removed spines/ticks
+          lift this above generic defaults, but it's still a fairly conventional ranked
+          bar chart
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Spines removed (L-shaped); subtle grid; good whitespace
+        passed: false
+        comment: axis_line/axis_ticks now correctly removed (fixed from attempt 1),
+          grid subtle, whitespace generous
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear ranking with ascending sort; visual hierarchy guides viewer
-          to compare values
+        comment: Sorted ranking, highlighted leader, and explanatory subtitle create
+          a clear focal point and guided read
     spec_compliance:
       score: 15
       max: 15
@@ -128,25 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar chart with categories on y-axis
+        comment: Correct horizontal bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shows category and value data; single color; sorted by value as recommended
+        comment: Single-color bars with highlighted leader, sorted order, value labels
+          at bar ends, consistent bar heights, adequate spacing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; all data points represented; scale appropriate
+        comment: x=value, y=category, all 10 categories shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed for single series
+        comment: Title matches mandated format exactly; no legend needed given single-highlight
+          design
     data_quality:
       score: 15
       max: 15
@@ -156,21 +164,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates core horizontal bar chart features effectively
+        comment: Covers categories, values, sorting, labeling, and highlighting aspects
+          of the plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Programming language popularity data is realistic, from plausible
-          surveys, neutral topic
+        comment: Plausible, neutral programming-language usage survey data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scale 0-70% sensible for developer percentage data; proportional
-          representation
+        comment: Percentages (11.8-65.4%) with sensible 0-75 axis range
     code_quality:
       score: 10
       max: 10
@@ -180,55 +187,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; direct data manipulation and plotting
+        comment: Flat top-level script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data; consistent output
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pandas, lets_plot imported; all are used
+        comment: Only pandas and lets_plot, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; uses idiomatic pandas (sort_values, categorical)
+        comment: Concise, no fake UI or unnecessary complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with correct scale
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper ggplot-grammar composition, scale_fill_manual, theme() customization
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses ggplot(), geom_bar(stat='identity'), proper theme() customization,
-          correct API
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses HTML export and scale parameter but doesn't showcase more distinctive
-          letsplot features
+        comment: Custom layer_tooltips() surfaced through HTML export showcases a
+          lets-plot-specific interactive touch (fixed from attempt 1's generic-usage
+          weakness)
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - hover-tooltips
   - html-export
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
   styling:
+  - alpha-blending
+  - edge-highlighting
   - grid-styling
