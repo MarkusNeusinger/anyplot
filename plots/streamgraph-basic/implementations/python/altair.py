@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 streamgraph-basic: Basic Stream Graph
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-05
@@ -27,14 +27,26 @@ np.random.seed(42)
 months = pd.date_range(start="2022-01-01", periods=24, freq="MS")
 genres = ["Pop", "Rock", "Hip-Hop", "Electronic", "Jazz", "Classical"]
 
-# Generate smooth, realistic streaming data for each genre
+# Generate smooth, realistic streaming data for each genre - each genre gets its
+# own trend direction, seasonal phase, and amplitude so bands diverge rather than
+# swelling/shrinking in lockstep
+base_by_genre = {"Pop": 150, "Rock": 100, "Hip-Hop": 120, "Electronic": 80, "Jazz": 40, "Classical": 30}
+trend_by_genre = {"Pop": 25, "Rock": -20, "Hip-Hop": 35, "Electronic": 15, "Jazz": -5, "Classical": 5}
+phase_by_genre = {
+    "Pop": 0,
+    "Rock": np.pi / 3,
+    "Hip-Hop": np.pi / 2,
+    "Electronic": np.pi,
+    "Jazz": np.pi / 4,
+    "Classical": 3 * np.pi / 2,
+}
+amplitude_by_genre = {"Pop": 30, "Rock": 15, "Hip-Hop": 25, "Electronic": 35, "Jazz": 10, "Classical": 8}
+
 data = []
 for genre in genres:
-    # Base value varies by genre popularity
-    base = {"Pop": 150, "Rock": 100, "Hip-Hop": 120, "Electronic": 80, "Jazz": 40, "Classical": 30}[genre]
-    # Generate smooth curve with seasonal variation and organic growth
-    trend = np.linspace(0, 20, 24)  # Slight growth over time
-    seasonal = 30 * np.sin(np.linspace(0, 4 * np.pi, 24))
+    base = base_by_genre[genre]
+    trend = np.linspace(0, trend_by_genre[genre], 24)  # genre-specific growth or decline
+    seasonal = amplitude_by_genre[genre] * np.sin(np.linspace(0, 4 * np.pi, 24) + phase_by_genre[genre])
     noise = np.random.randn(24).cumsum() * 5
     values = base + trend + seasonal + noise
     values = np.maximum(values, 10)  # Ensure positive values
@@ -43,7 +55,7 @@ for genre in genres:
 
 df = pd.DataFrame(data)
 
-title = "streamgraph-basic · altair · anyplot.ai"
+title = "streamgraph-basic · python · altair · anyplot.ai"
 
 # Create streamgraph using area mark with center baseline (stack='center')
 chart = (
