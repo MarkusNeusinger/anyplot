@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bar-grouped
 created: '2025-12-24T21:28:53Z'
-updated: '2026-08-05T01:12:23Z'
+updated: '2026-08-05T01:20:14Z'
 generated_by: claude-sonnet
 workflow_run: 30965295384
 issue: 1822
@@ -12,45 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - Correct grouped-bar structure via geom_col + position_dodge, with meaningful descending-revenue
-    ordering across regions
+  - Y-axis title now reads "Revenue ($M)" with explicit units, closing the VQ-06 gap
+    from Attempt 1
+  - New subtitle ("Asia Pacific leads all groups at $162M in Electronics") gives the
+    chart a clear, explicit focal point, and the tallest bar visually confirms it
+  - geom_text value labels use position_dodge(width=0.75) to stay correctly aligned
+    above each dodged bar, with a $-prefixed format_string for readable currency labels
+  - Legend background/border now uses a single ELEVATED_BG color (fill=border), removing
+    the visible box outline flagged in Attempt 1
   - Full Imprint palette compliance (green/lavender/blue identical across themes)
     and theme-correct chrome in both light and dark renders
-  - All font sizes explicitly set via theme(); custom $M formatter on y-axis ticks
-    improves readability
-  - Realistic, neutral business dataset (regional revenue by product category) with
-    plausible scale and genuine variation (e.g. Europe's Apparel nearly matches Electronics)
-    instead of uniform bars
   - 'Clean KISS code: single chained ggplot pipeline, no unused imports, deterministic
     hand-authored data'
   weaknesses:
-  - Y-axis title 'Revenue' lacks explicit units in the axis label itself (units only
-    appear via the tick formatter '$XM') — rename to 'Revenue ($M)' for full VQ-06
-    credit
-  - 'Design Excellence is solid but not exceptional: aside from left-to-right revenue
-    ordering, there is no additional visual emphasis (e.g. highlighting the top region/category
-    or a subtle callout) to sharpen the story'
-  - Library Mastery is generic grammar-of-graphics usage — the same code pattern would
-    work almost unchanged in R ggplot2 or lets-plot; consider a plotnine-distinctive
-    technique (e.g. geom_text value labels, facet_wrap, or after_stat) to differentiate
-  - Legend is framed with a visible border box — acceptable per the library reference
-    pattern, but a borderless legend would read slightly more refined (minor DE-02
-    nit)
+  - geom_text value labels are set to size=2.8 (~8pt) — legible at full resolution
+    but will shrink to only a few px at the ~400px mobile srcset width; consider nudging
+    to ~3.2-3.5 for more mobile headroom
+  - Data storytelling relies on the subtitle text plus bar height alone — the top
+    Electronics/Asia Pacific bar isn't visually distinguished from the other Electronics
+    bars (same green), so the emphasis is textual rather than encoded in the chart
+    itself
+  - LM-02 distinctive-feature use (geom_text + format_string) is a solid plotnine
+    touch but still closely replicable in ggplot2/lets-plot with minor syntax changes
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "bar-grouped · python · plotnine · anyplot.ai" in dark ink, centered top, ~54% of plot width, fully visible with no clipping. X-axis title "Region" and y-axis title "Revenue" in dark ink; tick labels ($0M–$150M, region names) in softer grey ink, all clearly legible. A subtle horizontal-only grid is visible at low opacity. Legend "Product Category" sits in a bordered box to the right of the plot with three swatches (Electronics/Apparel/Home Goods), fully readable.
-      Data: First series (Electronics) is Imprint green #009E73, second (Apparel) is lavender #C475FD, third (Home Goods) is blue #4467A3 — correct canonical order, all clearly distinguishable from the cream background.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "bar-grouped · python · plotnine · anyplot.ai" in dark ink at top, ~54% of plot width, fully visible with no clipping. Subtitle "Asia Pacific leads all groups at $162M in Electronics" in softer grey directly below the title. Y-axis title "Revenue ($M)" and x-axis title "Region" in dark ink; tick labels ($0M-$150M, region names) in softer grey ink. Subtle horizontal-only grid at low opacity. Legend "Product Category" sits in a borderless elevated-surface box to the right with three swatches (Electronics/Apparel/Home Goods).
+      Data: Bars grouped by Region (North America, Europe, Asia Pacific, Latin America, Middle East), each with 3 dodged bars: Electronics = Imprint green #009E73 (first series, correct), Apparel = lavender #C475FD, Home Goods = blue #4467A3 — correct canonical Imprint order. Small $-prefixed value labels sit above each bar (e.g. "$162", "$145"), aligned via position_dodge to the correct bar.
+      Legibility verdict: PASS — all title, subtitle, axis, tick, legend, and value-label text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title, axis titles, and tick labels have all flipped to light ink and remain fully legible against the dark surface. Grid lines are still subtle but visible. Legend box uses the elevated dark surface with a light-ink border and readable light text.
-      Data: Bar colors are pixel-identical to the light render (#009E73 green, #C475FD lavender, #4467A3 blue) — confirms only chrome flipped, not data colors.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick/legend text is clearly visible against the near-black background, and brand green remains vivid on both surfaces.
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Title, subtitle, axis titles, and tick labels have all flipped to light ink and remain fully legible. Grid lines are still subtle but visible. Legend box uses the elevated dark surface (#242420) with light-ink text, no visible border stroke.
+      Data: Bar colors are pixel-identical to the light render (#009E73 / #C475FD / #4467A3), confirming only chrome flipped. Value labels above bars are rendered in the same soft light-grey ink as the tick labels — readable, no dark-on-dark failure.
+      Legibility verdict: PASS — no dark-on-dark text; brand green remains vivid and all chrome text is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,80 +56,79 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); readable at full size
-          in both themes; title comfortably sized (~54% width) for its shorter length;
-          no overflow or clipping
+        comment: All font sizes explicitly set via theme(); readable in both themes;
+          title fits without clipping. Value labels at size=2.8 (~8pt) are readable
+          at full res but risk shrinking too far at ~400px mobile width.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No overlap between title/subtitle, axis text, legend, and the new
+          value labels.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars are well-sized with clear dodge spacing between groups and bars;
-          nothing barely visible
+        comment: Bars well-sized with clear dodge spacing for 5 categories x 3 groups.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue hue families are well separated, CVD-safe, no
-          red-green-only encoding
+        comment: Green/lavender/blue hue families well separated, CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area and legend together use the large majority of the canvas
-          with balanced margins; legend sits adjacent to the plot, not isolated
+        comment: Plot + legend use the canvas well, balanced margins, legend adjacent
+          to plot.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive axis titles ('Region', 'Revenue') but the y-axis title
-          itself omits units — units only appear on the tick labels via the $M formatter
+        passed: true
+        comment: Y-axis now reads "Revenue ($M)" with explicit units; x-axis "Region"
+          is descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, second/third follow canonical Imprint order
-          (#C475FD, #4467A3); identical across themes; chrome is theme-correct in
-          both renders'
+        comment: 'First series #009E73, canonical Imprint order, identical across
+          themes, theme-correct chrome in both renders.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful Imprint colors, custom $M tick formatter, clean typography
-          — clearly above library defaults but not publication-level distinctive
+        passed: true
+        comment: Thoughtful Imprint colors, custom $M tick formatter, subtitle callout,
+          and value labels — clearly above defaults, though not yet publication-level
+          distinctive.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Panel border and tick marks removed, y-only grid at low alpha, generous
-          whitespace; legend retains a visible border box, a minor nit
+        comment: L-shaped spines, subtle y-only grid, generous whitespace, and legend
+          border removed (fill=border color) fixes the Attempt 1 nit.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Regions ordered by descending total revenue creates a mild left-to-right
-          narrative, but there is no additional emphasis (color contrast, callout)
-          to sharpen the insight
+        passed: true
+        comment: Subtitle explicitly states the insight and the tallest bar (Asia
+          Pacific Electronics) visually confirms it; not full marks since the top
+          bar isn't color/annotation-distinguished from the other Electronics bars.
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped (dodged) bar chart, not stacked
+        comment: Correct grouped/dodged bar chart via geom_col + position_dodge.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, clear legend, consistent bar widths/spacing, meaningful
-          ordering by total revenue
+        comment: Distinct colors, clear legend, consistent bar widths/spacing, adequate
+          group separation, optional value labels all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Region, Y=Revenue, fill=Category — axes show all 5 regions × 3
-          categories
+        comment: x=Region, y=Revenue, fill=Category; all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated '{spec-id} · {language} · {library} ·
-          anyplot.ai' format exactly; legend labels match the data categories
+        comment: Title matches mandated format exactly; legend labels match category
+          data.
     data_quality:
       score: 15
       max: 15
@@ -172,22 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 5 regions × 3 categories with genuine variation in relative ordering
-          (e.g. Europe's Apparel nearly matches Electronics), not uniform bars
+        comment: 5 regions x 3 categories with real variation (e.g. Europe Apparel
+          nearly matches Electronics), not uniform bars.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible business scenario — regional product-category
-          revenue
+        comment: Neutral, realistic regional sales-by-category business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue magnitudes and regional ordering (NA/Europe/APAC > LatAm/ME)
-          are plausible for global sales distribution
+        comment: Revenue magnitudes and category ordering are plausible for the domain.
     code_quality:
       score: 10
       max: 10
@@ -197,35 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → theme → plot → save, no functions/classes
+        comment: Single chained ggplot pipeline, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is deterministic hand-authored literals, no randomness to seed
+        comment: Fully deterministic hand-authored data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every imported name (aes, geom_col, position_dodge, scale_fill_manual,
-          scale_y_continuous, labs, theme, element_*) is used
+        comment: All imports used, including newly added geom_text.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic, appropriately concise, no fake UI
+        comment: Clean, idiomatic, no over-engineering or fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ggsave with correct dpi/width/height,
-          current API
+        comment: Saves via ggsave to plot-{THEME}.png, current API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -233,23 +225,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of the grammar-of-graphics pipeline: geom_col + position_dodge
-          for grouped bars, scale_y_continuous with a custom labeller, pandas Categorical
-          for ordering'
+        comment: 'Expert grammar-of-graphics pipeline: geom_col + position_dodge,
+          scale_y_continuous with custom labeller, pandas Categorical for ordering.'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic ggplot-style usage — the same code pattern would work nearly
-          unchanged in R ggplot2 or lets-plot; no plotnine-distinctive technique leveraged
-  verdict: REJECTED
+        passed: true
+        comment: geom_text value labels with position_dodge alignment and format_string
+          currency formatting go beyond generic usage, though the pattern is still
+          close to portable ggplot2/lets-plot code.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
+  techniques:
+  - annotations
+  patterns: []
   dataprep: []
   styling:
-  - minimal-chrome
   - grid-styling
