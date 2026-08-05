@@ -1,0 +1,256 @@
+library: echarts
+language: javascript
+specification_id: windrose-basic
+created: '2026-08-05T15:42:52Z'
+updated: '2026-08-05T16:02:58Z'
+generated_by: claude-sonnet
+workflow_run: 31021059467
+issue: 1880
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/echarts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Correct meteorological construction: 16-sector polar stacked bar chart with North
+    placed exactly at top via the computed startAngle offset, clockwise compass ordering
+    (N-E-S-W).'
+  - 'Fully Imprint-compliant color usage: the 5 stacked speed bins are sampled from
+    the imprint_seq gradient (brand green to blue), pixel-identical across light and
+    dark renders, with the calmest bin correctly landing on #009E73.'
+  - Theme-adaptive chrome is threaded correctly through title, angleAxis/radiusAxis
+    labels, gridlines, and legend in both renders - no dark-on-dark or light-on-light
+    failures.
+  - Thin borderColor stroke (using the theme page-background as separator) between
+    stacked segments now clearly delineates the 5 speed bands even in the smallest
+    sectors (E/ENE/ESE/SE) - directly resolves the Attempt 1 VQ-03 weakness.
+  - Bold formatting on the dominant-direction (SW) axis label creates a genuine focal
+    point that reinforces the bar-length encoding - directly resolves the Attempt
+    1 DE-03 weakness.
+  - Title fontsize increased (22 -> 26) giving stronger visual hierarchy, and the
+    four small color-math helper functions from Attempt 1 were inlined, tightening
+    the script to a single flat, KISS-compliant pass - resolves both the Attempt 1
+    title-weight and CQ-01 weaknesses.
+  - 'Clean, deterministic, in-memory data generation (no RNG) with a realistic coastal-station
+    wind pattern: prevailing SW/WSW/SW lobe plus a distinguishable secondary N lobe,
+    with speed-bin composition shifting between strong and calm directions.'
+  weaknesses:
+  - Title now spans ~49% of canvas width (up from ~40% in Attempt 1) - much improved
+    but still just under the 50-70% guideline; a small further fontsize bump (~28-30px)
+    would fully close the gap.
+  - The radial "15%" outer tick label sits directly on the outer axis-line stroke
+    in both renders (touching, not clipped) - nudging the radiusAxis label margin
+    outward slightly would give it cleaner separation.
+  - The right-hand quadrant (NE/E/SE) remains visually sparse/empty due to the realistic
+    prevailing-SW data distribution - expected given DQ realism, but a minor overall
+    balance nitpick versus the dense left half.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark title "windrose-basic · javascript · echarts · anyplot.ai" centered at top (~49% of canvas width, up from ~40% pre-repair). 16 compass direction labels (N, NNE, NE, ... NNW) in gray around the circle, with SW rendered bold to flag the dominant direction. Radial gridlines and %-labels (6%/9%/12%/15%) are subtle but legible; the "15%" label touches the outer axis-line stroke without being clipped. Legend at bottom lists all 5 speed bins ("0-3 m/s" ... "12+ m/s") with matching color swatches.
+      Data: Green-to-blue sequential gradient (imprint_seq) stacked across the 5 speed bins per direction sector, calmest bin = brand green #009E73. A thin cream-colored stroke now separates each stacked segment, keeping the bins visually distinguishable even in the smallest sectors (E/ENE/ESE/SE). Longest bars point SW/WSW/SW (prevailing wind) with a secondary lobe at N.
+      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, direction labels, radial %-labels, and legend text all render in light tones and remain clearly legible. Gridlines are faint but visible. The bold SW label and "15%"/outer-line touch behave identically to the light render.
+      Data: Colors are pixel-identical to the light render (same green-to-blue gradient, same segment strokes) - only chrome (background, text, grid) flips between themes, confirming the required light/dark data-color parity.
+      Legibility verdict: PASS - no dark-on-dark failures found; all text is readable against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title fontsize bumped 22->26; all text readable in both themes at
+          appropriate sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/element collisions; 15% label touches the outer axis line
+          but is not overlapping other content
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: New borderColor stroke between stacked segments keeps speed bins
+          distinguishable even in the thinnest sectors (E/ENE/ESE/SE) - resolves Attempt
+          1 weakness
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq is a CVD-safe sequential gradient; no red-green as sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400); nothing clipped at canvas edges
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Compass directions + %-frequency radial axis clearly labeled
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq correctly used for ordinal wind-speed magnitude; #FAF8F1/#1A1A17
+          backgrounds correct in both themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Continuous gradient sampling + larger title give stronger polish
+          than Attempt 1's default weighting
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: New segment stroke, subtle grid, and generous whitespace; composition
+          otherwise standard
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bold SW label now adds a deliberate focal point on top of the bar-length
+          encoding - resolves Attempt 1 weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar stacked-histogram windrose
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 16 direction sectors, 5 speed bins, legend, North at top, radial
+          frequency axis - all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Direction on angular axis, stacked speed-bin frequency on radial
+          axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels include units
+          (m/s)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Full direction/speed-bin coverage with shape variation by directional
+          strength
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral coastal weather-station wind climatology
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic frequency percentages and m/s speed bins
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Attempt 1's four helper functions were inlined into flat map/reduce
+          expressions - no functions/classes remain
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded arrays, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global echarts/ANYPLOT_TOKENS are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity for the color-sampling logic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, current ECharts API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic polar bar stack via angleAxis/radiusAxis/coordinateSystem:'polar'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Computed startAngle alignment, rich-text bold label formatter, and
+          per-segment borderColor are distinctly ECharts-flavored techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - edge-highlighting
