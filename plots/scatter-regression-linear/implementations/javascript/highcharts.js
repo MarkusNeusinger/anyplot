@@ -102,7 +102,7 @@ Highcharts.chart("container", {
   credits: { enabled: false },
   colors: t.palette,
   title: {
-    text: "scatter-regression-linear · javascript · highcharts · anyplot.ai",
+    text: "Ad Spend vs. Sales Revenue · scatter-regression-linear · javascript · highcharts · anyplot.ai",
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
   subtitle: {
@@ -167,6 +167,7 @@ Highcharts.chart("container", {
       name: "95% Confidence Interval",
       data: [],
       color: Highcharts.color(t.palette[2]).setOpacity(0.18).get(),
+      legendSymbol: "rectangle",
       showInLegend: true,
       enableMouseTracking: false,
     },
