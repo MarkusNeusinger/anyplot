@@ -2,49 +2,66 @@ library: pygal
 language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:57:05Z'
-updated: '2026-05-06T21:56:36Z'
+updated: '2026-08-05T11:43:46Z'
 generated_by: claude-sonnet
-workflow_run: 25356184730
+workflow_run: 31001229155
 issue: 856
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: symmetric streamgraph baseline correctly computed via
-    invisible series trick'
-  - Canonical Okabe-Ito palette in correct order; full theme-adaptive chrome in both
-    light and dark renders
-  - Cubic interpolation delivers authentic smooth flowing curves as specified
-  - Clean flat code structure with seed for reproducibility; saves both PNG and HTML
-    as required
-  - No dark-on-dark failures; both renders fully legible
+  - Genuinely implements a streamgraph in a library with no native support via the
+    invisible-baseline (baseline = -total/2) stacking trick on pygal.StackedLine —
+    the correct technique for this constraint
+  - Applies the Byron & Wattenberg inside-out layer ordering (widest-swing genre centered,
+    calmer genres nested outward) to minimize visual wiggle, showing real domain understanding
+    of streamgraph design
+  - Featured genre (strongest net growth) gets a bolder stroke width, creating an
+    intentional focal point and visual hierarchy rather than flat, undifferentiated
+    bands
+  - 'Fixed from the prior review round: y-axis tick labels and gridlines are now fully
+    hidden (show_y_labels=False, show_y_guides=False) so the centered-baseline offset
+    can no longer be misread as real per-genre streaming hours'
+  - 'Fixed from the prior review round: the stray non-hideable pygal ''major line''
+    at the x=0 tick is removed via an inline CSS override (.axis.x .line { opacity:
+    0 }), producing a cleaner, more chrome-free streamgraph look'
+  - 'Correct Imprint palette usage (first series #009E73) and theme-adaptive chrome
+    verified correct in both light and dark renders — no dark-on-dark or light-on-light
+    failures'
+  - Canvas is exactly 3200x1800 (canvas gate passed), title matches the mandated '{spec-id}
+    · {language} · {library} · anyplot.ai' format, and output uses the correct render_to_png
+    + render()-to-HTML save pattern
+  - Data generation is seeded (np.random.seed(42)) for reproducibility, and cubic
+    interpolation is used for the smooth flowing curves the spec calls for
   weaknesses:
-  - 'Design Excellence is modest (9/20): technically correct but visually generic
-    — no visual hierarchy, focal points, or emphasis guiding the viewer to an insight'
-  - 'No data storytelling: all 5 genres given equal visual weight; viewer cannot easily
-    discern which genre is trending up or down'
-  - Layout leaves minor wasted space in corners; refined padding/margin pass could
-    improve canvas utilization
+  - 'Design Excellence is solid but not exceptional: with the y-axis chrome removed,
+    the remaining left-edge axis line and rotated x-tick labels are clean, but the
+    overall composition still reads as a fairly standard StackedLine rather than a
+    maximally polished, gallery-grade streamgraph — further refinement (e.g. even
+    softer band edges, more generous top/bottom margins) could push this higher'
+  - Library Mastery is good (correct baseline hack, cubic interpolation, dynamic stroke-width
+    highlighting) but doesn't exploit any further pygal-distinctive capabilities beyond
+    what was already used in the prior attempt
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "streamgraph-basic · pygal · anyplot.ai" in dark text — readable; Y-axis label "Streaming Hours" and X-axis label "Month" clearly visible; major x-axis tick labels (Jan 23, Jul 23, Jan 24, Jul 24) rotated 45° — readable; y-axis numeric ticks visible; legend at bottom with all 5 genre labels
-      Data: Five stream bands in Okabe-Ito order from bottom: green (#009E73, Pop), orange-red (#D55E00, Rock), blue (#0072B2, Hip-Hop), pink (#CC79A7, Electronic), yellow (#E69F00, Jazz); smooth cubic curves; symmetric centering around y=0
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "streamgraph-basic · python · pygal · anyplot.ai" in dark ink, clearly legible, centered, spans roughly 55-60% of plot width. "Month" (x-axis) and "Streaming Hours" (y-axis, rotated) titles both dark and legible. X tick labels ("Jan 23", "Jul 23", "Jan 24", "Jul 24") rotated 45 degrees, dark, fully readable and not clipped at the left edge. Y-axis now shows NO numeric tick labels and NO horizontal gridlines (fixed since the prior review round), removing the earlier risk of misreading the centered-baseline offset as real values. No stray vertical line at x=0 (confirmed via close crop) — the CSS override successfully removed the artifact flagged in the previous review. Legend at bottom lists Jazz, Electronic, Hip-Hop, Pop, Rock with colored swatches, all legible.
+      Data: Five smoothly interpolated, symmetric stacked bands (streamgraph) centered around a shifting baseline: Jazz (teal #009E73), Electronic (lavender #C475FD), Hip-Hop (blue #4467A3), Pop (gold/brown #BD8233), Rock (red #AE3030), stacked inside-out by volatility. First categorical series (Jazz) is #009E73 as required. Bands are clearly distinguishable from each other and from the background.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, axis labels, tick labels, and legend text all appear in light off-white tones — fully readable; invisible baseline series (#1A1A17) merges with background — no visible artifact; no dark-on-dark failures detected
-      Data: Colors identical to light render — all five Okabe-Ito positions preserved; brand green #009E73 clearly visible on dark surface
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title, "Month"/"Streaming Hours" axis titles, and all tick labels render in light ink (near-white/light-gray), clearly legible against the dark background — no dark-on-dark failures observed. Y-axis tick labels/gridlines are hidden identically to the light render. Legend text remains readable.
+      Data: Same five bands in identical colors and identical inside-out stacking order as the light render — only chrome (background/text/grid) flipped, data colors unchanged as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,76 +69,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28, label=22, major_label=18,
-          legend=16); readable in both renders
+        comment: All text explicitly sized and readable in both themes; minor headroom
+          concern at mobile thumbnail scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Major-only x-axis labels with 45deg rotation prevent crowding; legend
-          at bottom has adequate spacing
+        comment: No collisions between text, legend, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stream bands clearly distinct with strong fill colors and 0.88 opacity
+        comment: Smooth bands with appropriate opacity/stroke for a 24-point time
+          series, no markers needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; all 5 bands distinguishable by hue
-          and brightness
+        comment: Imprint palette used, adequate contrast, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Chart fills ~65% of 4800x2700 canvas with balanced margins; minor
-          wasted space in upper right
+        comment: Canvas exactly 3200x1800 (gate passed), title proportion within range,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Streaming Hours and Month are descriptive labels
+        comment: Descriptive axis titles present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First real series (Pop) = #009E73; all 5 genres follow canonical
-          Okabe-Ito order; backgrounds are #FAF8F1 / #1A1A17; chrome is theme-correct
-          in both renders'
+        comment: 'First series #009E73, Imprint order, theme-correct backgrounds in
+          both renders'
     design_excellence:
-      score: 9
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured style with Okabe-Ito palette and correct chrome tokens;
-          clean and professional but no outstanding visual design choices above a
-          library default
+        passed: true
+        comment: Custom palette + inside-out layer ordering + featured-genre focal
+          point show genuine design thought beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: y-guides only (no x-guides), explicit font hierarchy, opacity softening;
-          adequate refinement but no spine treatment or advanced polish
+        passed: true
+        comment: 'Fixed since last review: y-axis chrome fully removed and stray x=0
+          major-line artifact suppressed via CSS, producing a noticeably cleaner,
+          more chrome-free streamgraph'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Five streaming genres over two years with seasonal variation; data
-          is displayed but no visual hierarchy, emphasis, or focal point guides the
-          viewer
+        passed: true
+        comment: Bolder stroke on fastest-growing genre creates a clear focal point;
+          inside-out ordering guides the eye to the visual center
     spec_compliance:
       score: 15
       max: 15
@@ -131,55 +145,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: StackedLine with fill + invisible symmetric baseline correctly implements
-          streamgraph centered around y=0
+        comment: Correct streamgraph via centered-baseline stacking trick
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cubic interpolation for smooth curves, symmetric baseline centering,
-          distinct Okabe-Ito colors per category, legend present
+        comment: Smooth cubic interpolation, centered baseline, distinct colors, legend
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time (months) on x-axis, streaming magnitude on y-axis, all 5 categories
-          visible
+        comment: 'Fixed since last review: y-axis numeric ticks (a stacking artifact,
+          not real values) are now hidden, removing the prior data-mapping ambiguity'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly streamgraph-basic · pygal · anyplot.ai; legend labels
-          match the 5 genre series
+        comment: Title matches mandated format exactly; legend labels match genre
+          names
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows 5 genres with distinct trends, seasonal oscillations, and varying
-          magnitudes; demonstrates relative flow clearly
+        comment: Time, category, value, and streamgraph shape all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Monthly music genre streaming over two years: neutral, comprehensible,
-          real-world scenario'
+        comment: Plausible, neutral music-streaming scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Base values (Pop 45, Hip-Hop 40, Rock 35, Electronic 30, Jazz 15)
-          are plausible relative proportions; y-axis shows negative values as expected
-          streamgraph artifact from symmetric centering
+        comment: Sensible streaming-hour magnitudes with trend/seasonality/noise
     code_quality:
       score: 10
       max: 10
@@ -189,8 +198,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat linear structure: imports -> theme tokens -> data generation
-          -> style -> chart -> save'
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -202,21 +210,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: numpy, pygal, pygal.style, os, sys — all used; sys needed for path
-          workaround
+        comment: Only used imports (os, sys, numpy, pygal, Style)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; invisible baseline trick for stream centering is
-          a clever workaround
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: render_to_png + render()-to-HTML, correct filenames
     library_mastery:
       score: 7
       max: 10
@@ -226,24 +232,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses StackedLine with fill, Style object for full theming, cubic
-          interpolation, legend_at_bottom, major vs minor label distinction
+        comment: Correct StackedLine/Style/fill/interpolate usage and a well-known
+          workaround for pygal's lack of native streamgraph support
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages pygal's cubic interpolation for smooth stream curves and
-          interactive HTML export; invisible baseline exploits pygal's stacking model
-          to achieve streamgraph centering
+        comment: Baseline hack, cubic interpolation, dynamic stroke-width highlighting,
+          and CSS-level chrome suppression go beyond generic usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - publication-ready
