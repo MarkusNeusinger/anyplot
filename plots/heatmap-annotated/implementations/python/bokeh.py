@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-annotated: Annotated Heatmap
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -42,7 +42,7 @@ base = np.random.randn(100, n)
 base[:, 1] = base[:, 0] * 0.8 + np.random.randn(100) * 0.5
 base[:, 5] = base[:, 1] * 0.7 + np.random.randn(100) * 0.6
 base[:, 6] = base[:, 0] * 0.6 + np.random.randn(100) * 0.7
-base[:, 3] = -base[:, 5] * 0.5 + np.random.randn(100) * 0.8
+base[:, 3] = -base[:, 5] * 1.0 + np.random.randn(100) * 0.5
 corr_matrix = np.corrcoef(base.T)
 np.fill_diagonal(corr_matrix, 1.0)
 
@@ -77,12 +77,17 @@ mapper = LinearColorMapper(palette=ANYPLOT_DIV256, low=-1, high=1)
 # Prepare data for bokeh. Text color picks the ink that contrasts with each
 # cell's ACTUAL fill (not a fixed light/dark split) — the diverging colormap's
 # midpoint equals the page background, so near-zero cells in dark mode render
-# near-black and a fixed "black" text would be invisible against them.
+# near-black and a fixed "black" text would be invisible against them. Cell
+# borders get the same near-background treatment, so |value| < 0.05 cells get
+# a faint INK_SOFT-tinted border instead of a pure PAGE_BG one to keep the grid
+# structure visible where the fill would otherwise vanish into the canvas.
+_floor_line = _lerp_hex(PAGE_BG, INK_SOFT, 0.15)
 x_coords = []
 y_coords = []
 values = []
 text_values = []
 text_colors = []
+line_colors = []
 
 for i, row_var in enumerate(variables):
     for j, col_var in enumerate(variables):
@@ -93,9 +98,17 @@ for i, row_var in enumerate(variables):
         text_values.append(f"{val:.2f}")
         fill_hex = _value_to_hex(val)
         text_colors.append("#1A1A17" if _luminance(fill_hex) > 0.5 else "#F0EFE8")
+        line_colors.append(_floor_line if abs(val) < 0.05 else PAGE_BG)
 
 source = ColumnDataSource(
-    data={"x": x_coords, "y": y_coords, "value": values, "text": text_values, "text_color": text_colors}
+    data={
+        "x": x_coords,
+        "y": y_coords,
+        "value": values,
+        "text": text_values,
+        "text_color": text_colors,
+        "line_color": line_colors,
+    }
 )
 
 # Canvas: 2400x2400 px square (hard contract — symmetric matrix, no preferred
@@ -107,7 +120,7 @@ p = figure(
     height=H,
     x_range=variables,
     y_range=list(reversed(variables)),
-    title="heatmap-annotated · bokeh · anyplot.ai",
+    title="heatmap-annotated · python · bokeh · anyplot.ai",
     x_axis_location="above",
     toolbar_location=None,  # bokeh's default toolbar shrinks the saved PNG below `height=`
     min_border_top=380,  # title (50pt) + x-axis label (42pt) + rotated x tick labels (34pt)
@@ -124,7 +137,7 @@ p.rect(
     height=1,
     source=source,
     fill_color=transform("value", mapper),
-    line_color=PAGE_BG,
+    line_color="line_color",
     line_width=3,
 )
 
