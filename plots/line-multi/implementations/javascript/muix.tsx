@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-multi: Multi-Line Comparison Plot
 // Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 89/100 | Created: 2026-08-05
+// Quality: 83/100 | Created: 2026-08-05
 //# anyplot-orientation: landscape
 // anyplot.ai
 // line-multi: Multi-Line Comparison Plot
