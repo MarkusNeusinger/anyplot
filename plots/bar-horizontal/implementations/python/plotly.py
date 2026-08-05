@@ -1,76 +1,86 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-horizontal: Horizontal Bar Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-07
+Library: plotly 6.9.0 | Python 3.13.12
+Quality: pending | Created: 2026-08-05
 """
 
 import os
-import sys
-
-
-sys.path = [p for p in sys.path if not p.endswith(os.path.dirname(__file__))]
 
 import plotly.graph_objects as go
 
 
-np = __import__("numpy")
-np.random.seed(42)
-
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND = "#009E73"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+BRAND = "#009E73"  # Imprint palette position 1 — the leading category
 
 # Data - Survey results: "What programming language do you use most?"
 categories = ["Python", "JavaScript", "TypeScript", "Java", "C++", "Go", "Rust", "Ruby", "PHP", "Swift"]
 values = [2847, 2156, 1823, 1542, 987, 756, 623, 412, 389, 298]
 
-# Create horizontal bar chart
-fig = go.Figure()
+# Emphasize the leading language, mute the rest — "highlight specific bars to
+# draw attention" per the spec's own guidance, using the muted semantic
+# anchor for the "rest" role instead of diluting the categorical palette.
+bar_colors = [BRAND if i == 0 else INK_MUTED for i in range(len(categories))]
 
+# Plot — see default-style-guide.md "Visual Sizing Defaults" for the canvas + sizing values
+fig = go.Figure()
 fig.add_trace(
     go.Bar(
         y=categories,
         x=values,
         orientation="h",
-        marker=dict(color=BRAND, line=dict(color=INK_SOFT, width=1)),
+        marker={"color": bar_colors, "line": {"color": PAGE_BG, "width": 1}},
         text=values,
         textposition="outside",
-        textfont=dict(size=24, color=INK_SOFT),
+        textfont={"size": 12, "color": INK_SOFT},
+        cliponaxis=False,
     )
 )
 
-# Layout for 4800x2700 px
+# Style — title kept at the default 16px since the mandated title is only
+# 45 chars (well under the 67-char baseline the sizing table is tuned for)
 fig.update_layout(
-    title=dict(text="bar-horizontal · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Number of Responses", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        showgrid=True,
-        gridcolor=GRID,
-        linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
-        range=[0, max(values) * 1.08],
-    ),
-    yaxis=dict(
-        title=dict(text="Programming Language", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        autorange="reversed",
-        showgrid=False,
-        linecolor=INK_SOFT,
-    ),
+    autosize=False,
+    width=800,
+    height=450,
+    margin={"l": 140, "r": 90, "t": 100, "b": 70},
+    title={
+        "text": "bar-horizontal · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={
+        "title": {"text": "Number of Responses", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "showgrid": True,
+        "gridcolor": GRID,
+        "showline": True,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+        "range": [0, max(values) * 1.1],
+    },
+    yaxis={
+        "title": {"text": "Programming Language", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "autorange": "reversed",
+        "showgrid": False,
+        "showline": True,
+        "linecolor": INK_SOFT,
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    font=dict(color=INK),
-    margin=dict(l=200, r=120, t=120, b=100),
+    font={"color": INK},
     bargap=0.3,
-    hovermode="closest",
+    showlegend=False,
 )
 
-# Save as PNG and HTML to the script's directory
-script_dir = os.path.dirname(os.path.abspath(__file__))
-fig.write_image(os.path.join(script_dir, f"plot-{THEME}.png"), width=1600, height=900, scale=3)
-fig.write_html(os.path.join(script_dir, f"plot-{THEME}.html"), include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
