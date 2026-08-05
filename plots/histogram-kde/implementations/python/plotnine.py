@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-kde: Histogram with KDE Overlay
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-05
@@ -11,6 +11,7 @@ import pandas as pd
 from plotnine import (
     aes,
     after_stat,
+    element_blank,
     element_line,
     element_rect,
     element_text,
@@ -52,7 +53,7 @@ plot = (
     + geom_histogram(aes(y=after_stat("density")), bins=35, fill=BRAND, color=BRAND, alpha=0.5, size=0.2)
     + geom_density(color=INK, size=1.1)
     + geom_vline(xintercept=mean_return, color=INK_SOFT, linetype="dashed", size=0.6)
-    + labs(x="Daily Return (%)", y="Density", title="histogram-kde · plotnine · anyplot.ai")
+    + labs(x="Daily Return (%)", y="Density", title="histogram-kde · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -60,7 +61,7 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
         panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.3),
+        panel_border=element_blank(),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.3),
