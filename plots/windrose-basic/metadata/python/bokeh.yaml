@@ -2,48 +2,62 @@ library: bokeh
 language: python
 specification_id: windrose-basic
 created: '2025-12-24T22:17:47Z'
-updated: '2026-05-07T03:31:20Z'
-generated_by: claude-haiku
-workflow_run: 25474313807
+updated: '2026-08-05T15:44:24Z'
+generated_by: claude-sonnet
+workflow_run: 31019321868
 issue: 1880
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/bokeh/plot-dark.html
-quality_score: 96
+quality_score: 94
 review:
   strengths:
-  - Excellent theme-adaptive implementation with correct colors in both light and
-    dark renders
-  - 'Perfect spec compliance: all required wind rose features correctly visualized'
-  - 'Strong visual design with proper minimalism: subtle grid lines and spokes, clear
-    wedges'
-  - 'Idiomatic bokeh usage: custom patches for wedges, proper ColumnDataSource, and
-    Selenium screenshot handling'
-  - All text elements (title, labels, legend) are readable in both themes with appropriate
-    sizing
+  - Switched from manual polygon math to bokeh's native annular_wedge() glyph — directly
+    addresses the previous review's LM-01/LM-02 feedback and produces cleaner, genuinely
+    idiomatic bokeh code
+  - Title now includes the python language token, matching the required '{spec-id}
+    · {language} · {library} · anyplot.ai' format
+  - Grid line alpha reduced to 0.15-0.2 on circles/spokes, now within the style guide's
+    15-25% subtle-grid band (was 0.3-0.4)
+  - Added a deliberate dominant-direction accent ring (p.arc around the W sector)
+    — a genuine data-storytelling emphasis technique beyond the size variation that
+    naturally falls out of the data
+  - 'Both renders are fully theme-correct: no dark-on-dark or light-on-light failures
+    anywhere, and the five speed-bin colors are pixel-identical across themes'
+  - Realistic, neutral coastal wind-station dataset (n=5000, Weibull-distributed speeds,
+    directional weighting favoring SW/W/NW) with clear directional and speed variation
+  - Clean KISS structure, seeded RNG (np.random.seed(42)), correct plot-{theme}.png/.html
+    output naming via the Selenium screenshot pattern
   weaknesses:
-  - Yellow color (#E69F00) for the highest speed bin has lower luminance on light
-    surfaces; consider using brighter legend box background or increasing emphasis
+  - The '5%' radial tick label sits directly against/overlaps the ochre (9-12 m/s)
+    band of the small NE-direction wedge in both light and dark renders — increase
+    the label offset (e.g. x=[radius+1.2] instead of radius+0.5) or skip a tick label
+    whose radius falls inside a wedge's angular+radial footprint for that direction
+  - Legend box's right border sits very close to the canvas edge (~9px margin on a
+    2400px canvas) — not clipped, but tighter than ideal; add a touch more right margin
+    or trim legend padding
+  - Design Excellence is strong but not yet publication-grade — the new dominant-sector
+    highlight ring is a good addition but subtle; a slightly bolder treatment (thicker
+    ring, or a small value callout on the dominant sector) would push the storytelling
+    further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title "windrose-basic · bokeh · anyplot.ai" is dark (#1A1A17), clearly visible at top in 28pt font. Direction labels (N, NE, E, SE, S, SW, W, NW) are positioned outside the plot in bold 22pt dark text. Frequency labels (10%, 15%, 20%, 25%) are positioned on the right side in 20pt dark text. Legend on the right with speed ranges (0-3 m/s, 3-6 m/s, 6-9 m/s, 9-12 m/s, >12 m/s) in 22pt dark text. All text is readable against light background.
-      Data: Stacked wedges showing wind speed distribution across 8 direction sectors. Colors: #009E73 (0-3 m/s, innermost), #D55E00 (3-6 m/s), #0072B2 (6-9 m/s), #CC79A7 (9-12 m/s), #E69F00 (>12 m/s, outermost). Concentric circles with subtle gray lines and spokes form the reference grid. Dominant wedges in SW and W sectors (realistic coastal pattern).
-      Legibility verdict: PASS - All text is clearly readable, good contrast between light text and light background, data colors are vibrant and distinguishable.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "windrose-basic · python · bokeh · anyplot.ai" centered at top, clearly readable. Bold dark compass labels (N, NE, E, SE, S, SW, W, NW) ring the wheel, North at top. Muted dark-gray radial "5%/10%/15%/20%/25%" tick labels sit mostly in empty grid space, though the "5%" label lightly touches the ochre rim of the small NE-direction wedge. Subtle light-gray concentric circles and spokes (alpha ~0.15-0.2) form the grid beneath the data. A thin dark accent ring highlights the dominant W sector just outside its stack. "Wind Speed (m/s)" subtitle sits below the wheel with generous margin from the canvas edge.
+      Data: Stacked annular wedges per direction use the Imprint palette in canonical order (green #009E73 → lavender → blue → ochre → matte red for the five speed bins, calm to strong), with SW/W/NW visibly larger and reaching further out than the calmer N/NE/E/SE sectors. Boxed cream legend sits at the right, close to the wheel, swatches matching wedge colors exactly; its right border has a tight (~9px) but unclipped margin to the canvas edge.
+      Legibility verdict: PASS (all text readable; one minor tick-label/wedge touch noted, not a legibility failure)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title is light (#F0EFE8), clearly visible against dark background. Direction labels are light text, positioned outside, fully readable. Frequency labels on the right in light gray (#B8B7B0). Legend on the right with light text on elevated dark background (#242420). All text colors are light-on-dark and readable.
-      Data: Identical wedge colors to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00) - confirming data colors are theme-independent. Concentric circles and spokes are visible with appropriate alpha. Same spatial distribution and proportions as light render.
-      Legibility verdict: PASS - No dark-on-dark failures. All text is light-colored for visibility on dark background. Grid lines and spokes are visible but subtle. Data colors maintain full saturation and are clearly distinguishable from dark background.
-
-    Both renders pass theme readability: all text is readable in both themes, data colors are identical between renders (only chrome adapts), backgrounds match specification (#FAF8F1 light, #1A1A17 dark).
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title and compass labels render in light/cream text, clearly legible. Radial % tick labels are light gray, same minor touch against the NE wedge's ochre rim as in the light render. Grid circles/spokes are subtle light gray at the same low alpha. The legend box uses the dark elevated fill (#242420) with light-gray text and border — fully legible, no dark-on-dark anywhere. The accent ring around the dominant W sector renders in a light gray, still visible against the dark background.
+      Data: Wedge colors are pixel-identical to the light render (same green/lavender/blue/ochre/red positions) — only the chrome (background, text, grid, legend box) flipped, as required.
+      Legibility verdict: PASS (no dark-on-dark failures; identical minor tick-label touch as light render)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,72 +65,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, direction labels, frequency labels all clearly readable at
-          28pt/22pt/20pt in both themes
+        comment: All font sizes explicitly set (title 50pt, direction labels 42pt,
+          radial/legend labels 34pt, subtitle 26pt); readable in both themes and at
+          400px mobile scale, no clipping
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Direction labels positioned outside (radius 30), frequency labels
-          on right, legend clear, no overlaps
+        comment: 'One minor overlap: the ''5%'' radial tick label touches the ochre
+          band of the small NE-direction wedge in both renders; everything else is
+          clean'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All wedges, spokes, circles visible and distinguishable at this density
+        comment: All five stacked speed-bin bands are clearly visible per direction,
+          including the small N/NE/E/SE sectors
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses Okabe-Ito palette (colorblind-safe), good contrast throughout
+        comment: Good contrast between adjacent speed-bin colors, CVD-safe Imprint
+          palette, white gap lines between wedges aid separation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600×3600px format appropriate for polar plot, good proportions,
-          nothing cut off
+        comment: 2400x2400 canvas exactly matches the square target; wheel + legend
+          use a well-balanced share of the canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, direction/frequency labels clear and descriptive
+        comment: Radial axis shows explicit '%' units; direction ring is self-explanatory
+          compass labels; 'Wind Speed (m/s)' subtitle labels the color/legend axis
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First speed bin is #009E73, follows Okabe-Ito order, backgrounds
-          correct (#FAF8F1/#1A1A17), both renders theme-correct'
+        comment: 'First (calmest) speed bin is #009E73, remaining bins follow Imprint
+          canonical order; backgrounds are #FAF8F1/#1A1A17; both renders fully theme-correct'
     design_excellence:
-      score: 17
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Excellent theme-adaptive styling, thoughtful legend placement, custom
-          element positioning beyond defaults
+        comment: Thoughtful layered composition (grid, spokes, stacked wedges, accent
+          ring, boxed legend) clearly above library defaults, though not fully publication-grade
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle spokes/circles with appropriate alpha, clean minimalist design,
-          no unnecessary decoration
+        comment: Grid alpha now within the 15-25% subtle guideline (fixed from 0.3-0.4),
+          axes fully hidden, generous whitespace around the wheel and legend
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: direction primary, speed secondary, frequency
-          via radius. Stacked wedges effectively show both dimensions simultaneously'
+        comment: New dominant-sector accent ring is a deliberate emphasis technique
+          on top of the already-clear size-based hierarchy (SW/W/NW dominance)
     spec_compliance:
       score: 15
       max: 15
@@ -126,29 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct wind rose implementation: stacked polar histogram with direction
-          sectors and speed bins'
+        comment: Correct polar stacked-histogram wind rose
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Direction (8 sectors), speed ranges (5 bins), frequency (concentric
-          circles with percentages), legend all present
+        comment: 8 direction sectors, meaningful speed-bin ranges, North at top, legend
+          with speed ranges, radial frequency axis — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Direction properly mapped to compass directions, speed binned correctly,
-          frequency shown via radius
+        comment: Direction correctly mapped to angle (N top, clockwise), speed correctly
+          mapped to stacked color bands, frequency correctly mapped to radius
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''windrose-basic · bokeh · anyplot.ai'', legend
-          accurate with speed ranges'
+        comment: Title is now 'windrose-basic · python · bokeh · anyplot.ai' matching
+          the required format; legend labels match the speed-bin ranges exactly
     data_quality:
       score: 15
       max: 15
@@ -158,22 +177,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete coverage: direction distribution, speed distribution, frequency
-          data, all shown simultaneously'
+        comment: All five speed bins represented across most directions, clear dominant-direction
+          pattern alongside calm sectors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic coastal weather station data: SW/W wind dominance, Weibull
-          speed distribution, 5000 observations'
+        comment: Neutral, realistic coastal weather-station scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Standard wind rose binning: 8 direction sectors, sensible speed
-          ranges (0-3, 3-6, 6-9, 9-12, >12 m/s)'
+        comment: Weibull-distributed speeds and directional weighting are physically
+          plausible for coastal wind climatology
     code_quality:
       score: 10
       max: 10
@@ -183,33 +201,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, straightforward procedural code, clear linear
-          flow
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic synthetic data
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, bokeh, selenium) all actually used
+        comment: Only used imports (numpy, bokeh, selenium, stdlib)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, appropriate complexity, readable well-organized
-          code
+        comment: Now uses the native annular_wedge glyph instead of manual polygon
+          construction, appropriately concise
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html, uses current API
+        comment: Correct plot-{theme}.png/.html output via output_file/save + Selenium
+          screenshot
     library_mastery:
       score: 9
       max: 10
@@ -219,27 +237,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper figure(), ColumnDataSource, patches() for custom wedges, Selenium
-          screenshot pattern, theme tokens
+        comment: Uses bokeh's native annular_wedge glyph with a vectorized ColumnDataSource
+          per speed bin — the textbook idiomatic pattern for a stacked polar chart
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses bokeh-specific patches for wedges, LegendItem construction,
-          custom data with ColumnDataSource, theme-adaptive styling
-    score_caps: []
+        comment: annular_wedge plus manually-linked Legend/LegendItem renderers are
+          genuinely bokeh-specific idioms, though conceptually replicable via other
+          libraries' polar primitives
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - patches
+  - polar-projection
+  - annotations
+  - custom-legend
   - html-export
   patterns:
   - data-generation
+  - columndatasource
   - matrix-construction
   - iteration-over-groups
   dataprep:
   - binning
-  styling: []
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - publication-ready
