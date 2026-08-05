@@ -1,0 +1,266 @@
+library: d3
+language: javascript
+specification_id: bar-grouped
+created: '2026-08-05T01:23:05Z'
+updated: '2026-08-05T01:38:33Z'
+generated_by: claude-sonnet
+workflow_run: 30966019266
+issue: 1822
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Growth annotation ("Software +51% (Q1→Q4)") with a dashed bracket and arrowhead
+    marker creates a clear visual-hierarchy focal point, directly addressing the Review-1
+    storytelling gap
+  - Custom hand-built rounded-top bar path generator plus per-series linearGradient
+    defs and a marker-based growth-arrow are genuinely low-level SVG/D3 capabilities
+    not easily replicated in a high-level charting library
+  - Correct canonical Imprint palette order (green/lavender/blue for Hardware/Software/Services),
+    identical across light and dark, with fully theme-correct chrome in both renders
+  - Clean idiomatic D3 nested-band-scale pattern (x0 category / x1 group) with selection.data().join(),
+    correct mount-node contract usage, deterministic hardcoded data
+  - Well-balanced canvas utilization (~77% of the plot area), legend positioned right
+    next to the plot, no overlap or clipping in either render
+  weaknesses:
+  - 'The per-series sheen gradients (bar-sheen-* linearGradients using brighter()/darker()
+    stops) on the bars and legend swatches conflict with the style guide''s explicit
+    "No chartjunk: ... gradient fills for style" rule under Minimalism — this reads
+    as a decorative glossy/3D effect rather than encoding data. Recommend flattening
+    bars/legend swatches to a solid Imprint fill (keep the subtle bg-colored stroke
+    for bar separation) to align with the minimalism principle.'
+  - The topRoundedRectPath helper function is a small deviation from the CQ-01 "no
+    functions/classes" KISS-structure ideal — justified here since D3 has no built-in
+    rounded-rect path primitive, but worth flattening back to inline rect marks if
+    further simplification is desired.
+  - Only one annotation focal point (Software's growth) is highlighted — Hardware's
+    non-monotonic Q3 dip or a fuller product-line comparison story isn't otherwise
+    emphasized, leaving room for DE-03 storytelling to grow further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Product Line Revenue by Quarter · bar-grouped · javascript · d3 · anyplot.ai" centered at top, clearly readable. Y-axis label "Revenue ($M)" (rotated) and x-axis label "Fiscal Quarter (2025)" both in dark ink, fully legible. Tick labels ($0M–$10M, Q1–Q4) are crisp and dark. Subtle horizontal gridlines at each $1M, y-axis only. A dashed growth-annotation bracket with an arrowhead and the text "Software +51% (Q1→Q4)" sits in the headroom above the tallest bars, clearly legible and not overlapping any bar, value label, or gridline.
+      Data: Three grouped bars per quarter with subtle top-to-bottom sheen gradients — Hardware (brand green #009E73), Software (lavender), Services (blue) — each with a small dark value label above it and rounded top corners. Legend at right with matching gradient-filled rounded swatches and group names (Hardware/Software/Services). All colors match the canonical Imprint categorical order.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, value labels, legend, annotation) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, tick labels, legend text, and the growth-annotation text all render in light color, clearly visible against the dark surface. Gridlines are subtle and light-on-dark, unobtrusive.
+      Data: Bar colors (green/lavender/blue) and their sheen gradients are visually identical to the light render, confirming only chrome flipped. Value labels above bars are light-colored and readable both on the bars and against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every text element (including the growth-annotation callout) is clearly legible, and brand green #009E73 remains vivid on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 19px, axis labels 18px, ticks
+          16px, value labels 13px, legend 16px, annotation 15px); readable at full
+          size and proportioned well in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Growth annotation sits clearly above bars/value labels with generous
+          vertical gap; no text or element collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 data points across wide bars; sizing and spacing well adapted
+          to this sparse-data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint hues, distinguishable without relying
+          on hue alone (position + legend)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area uses ~77% of canvas, balanced margins, legend adjacent
+          to plot, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis labels with units: "Revenue ($M)", "Fiscal Quarter
+          (2025)"'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order (green/lavender/blue), identical data colors
+          across themes, theme-correct backgrounds and chrome in both renders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Rounded bar tops, per-series gradients, and a refined legend clearly
+          exceed a well-configured default, but the gradient fills directly conflict
+          with the style guide's "no gradient fills for style" chartjunk rule, capping
+          the score below the "strong design" tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Y-only subtle grid, x-axis tick marks removed, generous whitespace,
+          subtle bg-colored bar stroke for separation — good refinement, but the glossy
+          sheen gradient reads as a decorative 3D-style effect rather than polished
+          minimalism
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Growth-annotation bracket + arrow explicitly narrates the Software
+          +51% insight, creating a clear focal point — a real improvement over Review
+          1's flat display, though only one series is highlighted
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped (side-by-side) bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct group colors with legend, consistent bar widths/spacing,
+          adequate category separation, optional value labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x-axis, value on y-axis, group encoded by color/position;
+          all 12 data points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format "{Descriptive Title} · bar-grouped · javascript · d3
+          · anyplot.ai" correct; legend labels (Hardware/Software/Services) match
+          the data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Groups show distinct trajectories — Software strong monotonic growth,
+          Hardware a non-monotonic dip in Q3, Services steady growth — good variation
+          for a comparative grouped-bar demo
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible business scenario (quarterly product-line revenue)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and relative proportions (Software growing fastest, Services
+          smallest but steady) are realistic for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Mostly linear imports → data → plot → save flow, but introduces a
+          small topRoundedRectPath helper function — justified (D3 has no built-in
+          rounded-rect path primitive) but a deviation from the strict no-functions
+          ideal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; d3 global only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the design goals, no fake UI/functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current d3 v7 API, no deprecated calls
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic nested scaleBand grouped-bar pattern, selection.data().join(),
+          axisBottom/axisLeft
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Hand-built SVG path generator for rounded bar tops, custom linearGradient
+          defs, and a marker-based arrowhead for the annotation are low-level D3/SVG
+          capabilities not easily replicated in a high-level charting library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - gradient-fill
+  - edge-highlighting
+  - grid-styling
