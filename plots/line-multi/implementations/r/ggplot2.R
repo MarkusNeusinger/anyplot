@@ -7,6 +7,7 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(ragg)
+library(scales)
 
 set.seed(42)
 
@@ -18,9 +19,9 @@ INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 
 IMPRINT_PALETTE <- c(
   "#009E73", # 1 — brand green, always first series
+  "#C475FD", # 2 — lavender
   "#4467A3", # 3 — blue
-  "#BD8233", # 4 — ochre
-  "#954477"  # 7 — rose
+  "#BD8233"  # 4 — ochre
 )
 
 # --- Data -----------------------------------------------------------------
@@ -84,7 +85,7 @@ p <- ggplot(df, aes(x = day, y = temp_smooth, color = city, linetype = city)) +
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major.x = element_blank(),
     panel.grid.minor   = element_blank(),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.25),
+    panel.grid.major.y = element_line(color = scales::alpha(INK, 0.15), linewidth = 0.25),
     axis.title         = element_text(color = INK, size = 10),
     axis.text          = element_text(color = INK_SOFT, size = 8),
     axis.ticks         = element_blank(),
