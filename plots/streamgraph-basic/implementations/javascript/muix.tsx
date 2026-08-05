@@ -102,7 +102,7 @@ export default function Chart() {
         ]}
         leftAxis={null}
         grid={{ horizontal: false, vertical: false }}
-        margin={{ left: 24, right: 24, top: 44, bottom: 56 }}
+        margin={{ left: 64, right: 24, top: 44, bottom: 56 }}
         slotProps={{
           legend: {
             position: { vertical: "top", horizontal: "middle" },
