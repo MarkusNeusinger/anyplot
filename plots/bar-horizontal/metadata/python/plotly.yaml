@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:37:07Z'
-updated: '2026-08-05T17:08:46Z'
+updated: '2026-08-05T17:15:43Z'
 generated_by: claude-sonnet
 workflow_run: 31027857634
 issue: 1946
@@ -12,50 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
+  - 'All three attempt-1 weaknesses were directly addressed: gridlines removed + right
+    margin tightened (VQ-05/DE-02), sample-size subtitle added for storytelling (DE-03),
+    and a custom hovertemplate added for Library Mastery.'
   - Brand green (#009E73) correctly highlights the leading category (Python), with
-    the theme-adaptive Imprint 'muted' semantic anchor used for the rest — a deliberate
-    emphasis technique that directly follows the spec's own guidance to 'highlight
-    specific bars to draw attention'.
-  - Theme-adaptive chrome is threaded through every element (title, axis labels, ticks,
-    grid, value labels) — both light and dark renders are fully readable with no dark-on-dark
-    or light-on-light failures.
-  - Clean KISS code structure with deterministic, literal data (no unnecessary randomness),
-    and every font size explicitly set.
-  - Value labels are placed outside the bars with cliponaxis=False, so even the longest
-    bar (Python, 2847) never risks edge clipping.
-  - Bars sorted descending by value, aiding rankability per the spec's own recommendation.
+    the theme-adaptive Imprint muted semantic anchor used for the rest — a deliberate
+    emphasis technique directly following the spec's own guidance to highlight specific
+    bars to draw attention.
+  - Theme-adaptive chrome is threaded through every element — both renders are fully
+    readable with no dark-on-dark/light-on-light failures.
+  - Clean KISS code structure with deterministic, literal data and every font size
+    explicitly set.
   weaknesses:
-  - Design Excellence reads as a well-configured default beyond the single-bar highlight
-    (DE-01=4/8) — no custom typography, subtitle, or additional polish pushes it into
-    'publication-ready' territory yet.
-  - Vertical gridlines plus the 10% x-axis headroom leave visible dead space to the
-    right of the longest bar; tighten the x-range/right margin, or drop the grid entirely
-    per the style guide's 'prefer no grid for simple plots with few data points' guidance,
-    to improve canvas utilization (VQ-05).
-  - Library Mastery is generic (LM-02=2/5) — consider a plotly-specific touch such
-    as a custom hovertemplate for the interactive HTML view, a texttemplate for the
-    outside labels, or an annotations layer to differentiate beyond basic go.Bar usage.
-  - Data Storytelling (DE-03=4/6) relies solely on the single-bar color contrast;
-    a short subtitle or annotation (e.g., framing the survey sample size/date) would
-    strengthen the narrative further, though it is not required by the spec.
+  - DE-01 still relies on the default plotly font family — no custom typography beyond
+    size/color adjustments, so it stops short of strong design (6+).
+  - LM-02 features (hovertemplate, texttemplate) are useful but not plotly-distinctive
+    in the sense of something unreplicable elsewhere (e.g. animation frames, 3D, faceted
+    subplots).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — not pure white, matches spec.
-      Chrome: Title "bar-horizontal · python · plotly · anyplot.ai" is centered, dark ink text, fully legible. Y-axis title "Programming Language" and x-axis title "Number of Responses" are clearly readable in dark text. Tick labels (category names: Python, JavaScript, TypeScript, Java, C++, Go, Rust, Ruby, PHP, Swift) and x-axis numeric ticks (0-3000) are all dark, legible text. Subtle vertical gridlines are visible but do not compete with the data.
-      Data: 10 horizontal bars sorted descending by value. The top bar (Python, 2847) is rendered in brand green #009E73; the remaining 9 bars are a muted warm gray (theme's INK_MUTED anchor). Value labels (2847, 2156, 1823, ...) sit just outside the end of each bar in dark gray text, all readable, none clipped even for the longest bar.
-      Legibility verdict: PASS.
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Title "bar-horizontal · python · plotly · anyplot.ai" centered, dark ink, with a new subtitle "n = 11,833 survey respondents" beneath it in smaller gray text; axis titles and tick labels dark/gray, all readable; no gridlines (removed since attempt 1)
+      Data: 10 horizontal bars sorted descending; top bar (Python, 2,847) is brand green #009E73; remaining 9 bars use the theme-adaptive Imprint "muted" anchor; value labels outside each bar, all unclipped
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — not pure black, matches spec.
-      Chrome: Title, axis titles, and tick labels all render in light ink (near-white / light gray), clearly legible against the dark background. Gridlines are faint light lines at low opacity, subtle but visible. No dark-on-dark text anywhere.
-      Data: The top bar (Python, 2847) is the identical brand green #009E73 as in the light render — confirmed unchanged across themes. The remaining bars use a lighter muted gray (theme-adaptive INK_MUTED for dark), clearly distinguishable from the near-black background. Value labels are light gray text, all readable, none clipped.
-      Legibility verdict: PASS.
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Title, subtitle, axis titles, and tick labels all light-colored and clearly legible; no dark-on-dark failures; no gridlines
+      Data: Colors identical to light render — Python bar #009E73, rest muted light gray, distinguishable from background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -63,8 +54,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 16px, axis 12px, ticks 10px,
-          value labels 12px); readable in both themes with no overflow
+        comment: All font sizes explicitly set; readable in both themes, title compact
+          at ~37% width, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -76,57 +67,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 bars with bargap=0.3, well-spaced and clearly visible
+        comment: 10 bars, well-spaced, bargap=0.3
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. neutral gray contrast, CVD-safe, no red-green reliance
+        comment: Green vs. neutral gray, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions but some wasted whitespace at right from the 10%
-          x-axis headroom + grid
+        comment: Gridlines removed and right margin tightened (90→50) since attempt
+          1, resolving prior wasted-whitespace note
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles ('Number of Responses', 'Programming Language')
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series exactly #009E73, rest uses the theme-adaptive Imprint
-          ''muted'' anchor correctly; identical across themes; backgrounds theme-correct'
+        comment: 'First series exactly #009E73; rest uses theme-adaptive Imprint muted
+          anchor; identical across themes; backgrounds theme-correct'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default beyond the single-bar highlight; no custom
-          typography or extra polish
+        passed: true
+        comment: Subtitle adds typographic hierarchy beyond the single-bar highlight;
+          still default font family
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle gridlines, reasonable whitespace
+        comment: Gridlines dropped, right margin tightened, minimal spines — clear
+          improvement over attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color-contrast highlight creates a clear focal point (leading language)
-          without requiring annotations
+        comment: Color-contrast highlight plus new sample-size subtitle strengthens
+          narrative context
     spec_compliance:
       score: 15
       max: 15
@@ -154,8 +146,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches 'bar-horizontal · python · plotly ·
-          anyplot.ai'; legend correctly omitted for single-highlight series
+        comment: Title format matches exactly; legend correctly omitted
     data_quality:
       score: 15
       max: 15
@@ -165,7 +156,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 categories with a realistic descending spread from 2847 to 298
+        comment: 10 categories with realistic descending spread (2,847 to 298)
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -177,8 +168,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Values and relative ordering plausible for a language-popularity
-          survey
+        comment: Values and ordering plausible for a language-popularity survey
     code_quality:
       score: 10
       max: 10
@@ -214,29 +204,30 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: go.Bar with per-bar marker.color list is the correct idiomatic approach
-          for the highlight technique
+        comment: go.Bar with per-bar marker.color, texttemplate, hovertemplate, cliponaxis=False,
+          reversed autorange form expert idiomatic usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses autorange='reversed' and cliponaxis=False but otherwise fairly
-          generic; no hovertemplate/annotations customization
-  verdict: REJECTED
+        passed: true
+        comment: New hovertemplate customization leverages plotly's interactive HTML
+          output; still fairly common features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - hover-tooltips
+  - html-export
   patterns: []
   dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling
