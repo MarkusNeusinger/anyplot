@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-multi: Multi-Line Comparison Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 49/100 | Updated: 2026-08-05
@@ -59,6 +59,11 @@ home_garden = 30 + 20 * np.sin(np.linspace(-np.pi / 2, 3 * np.pi / 2, 12)) + np.
 # Sports: Steady with slight seasonal variation
 sports = 35 + 5 * np.sin(np.linspace(0, 2 * np.pi, 12) + np.pi / 4) + np.cumsum(np.random.randn(12) * 2)
 
+# April (index 3): Home & Garden and Sports would otherwise sit ~2 units apart on
+# a ~140-unit axis, hiding one marker behind the other — nudge them apart
+home_garden[3] -= 6
+sports[3] += 4
+
 # Create long-format DataFrame for seaborn
 df = pd.DataFrame(
     {
@@ -97,7 +102,7 @@ sns.lineplot(
 ax.annotate(
     "Holiday season lifts\nElectronics sharply",
     xy=(12, electronics[-1]),
-    xytext=(9.3, electronics[-1] + 20),
+    xytext=(9.65, electronics[-1] + 14),
     fontsize=8,
     color=INK_SOFT,
     ha="left",
