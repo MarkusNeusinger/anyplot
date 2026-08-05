@@ -80,21 +80,61 @@ ax = Axis(
     yreversed = true,
 )
 
+# Diagonal self-correlations (always 1.00) are redundant next to the
+# off-diagonal relationships the matrix exists to reveal, so the fill mask
+# swaps them for NaN and renders them in a muted neutral tone instead of
+# solid colormap blue -- the value still prints, just visually quieted.
+const NEUTRAL_FILL = RGBA(convert(RGB, INK_SOFT), 0.12)
+display_matrix = copy(corr_matrix)
+for i in 1:n_vars
+    display_matrix[i, i] = NaN
+end
+
 hm = heatmap!(
-    ax, 1:n_vars, 1:n_vars, corr_matrix;
-    colormap = ANYPLOT_DIV, colorrange = (-1, 1),
+    ax, 1:n_vars, 1:n_vars, display_matrix;
+    colormap = ANYPLOT_DIV, colorrange = (-1, 1), nan_color = NEUTRAL_FILL,
 )
 
+# Subtle grid at cell boundaries keeps near-zero-correlation cells (whose
+# fill sits close to the theme background by design) visually separated
+# from the canvas without touching the data colors themselves.
+for k in 0.5:(n_vars + 0.5)
+    hlines!(ax, k; xmin = 0, xmax = 1, color = (INK_SOFT, 0.15), linewidth = 1)
+    vlines!(ax, k; ymin = 0, ymax = 1, color = (INK_SOFT, 0.15), linewidth = 1)
+end
+
+const STRONG_THRESHOLD = 0.5
 for i in 1:n_vars, j in 1:n_vars
     value = corr_matrix[i, j]
-    fill_color = ANYPLOT_DIV[(value + 1) / 2]
-    luminance = 0.299 * red(fill_color) + 0.587 * green(fill_color) + 0.114 * blue(fill_color)
-    text_color = luminance > 0.5 ? DARK_TEXT : LIGHT_TEXT
+    is_diagonal = i == j
+    is_strong = !is_diagonal && abs(value) >= STRONG_THRESHOLD
+
+    if is_diagonal
+        text_color = INK_SOFT
+        label_fontsize = 13
+    else
+        fill_color = ANYPLOT_DIV[(value + 1) / 2]
+        luminance = 0.299 * red(fill_color) + 0.587 * green(fill_color) + 0.114 * blue(fill_color)
+        text_color = luminance > 0.5 ? DARK_TEXT : LIGHT_TEXT
+        label_fontsize = 16
+    end
+
+    # A crisp outline calls out the strongest relationships (|r| >= 0.5) so
+    # they read as the focal point instead of competing equally with weak
+    # correlations for attention.
+    if is_strong
+        poly!(
+            ax, Rect2f(i - 0.5, j - 0.5, 1, 1);
+            color = :transparent, strokecolor = INK, strokewidth = 2.5,
+        )
+    end
+
     text!(
         ax, i, j;
         text = @sprintf("%.2f", value),
         align = (:center, :center),
-        fontsize = 16,
+        fontsize = label_fontsize,
+        font = is_strong ? :bold : :regular,
         color = text_color,
     )
 end
