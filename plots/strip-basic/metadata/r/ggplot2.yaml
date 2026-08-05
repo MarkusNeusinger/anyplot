@@ -1,0 +1,243 @@
+library: ggplot2
+language: r
+specification_id: strip-basic
+created: '2026-08-05T05:51:39Z'
+updated: '2026-08-05T06:03:57Z'
+generated_by: claude-sonnet
+workflow_run: 30979216479
+issue: 975
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Directly addresses the attempt-1 feedback: each crossbar now carries a bold numeric
+    mean label (''59 min'', ''40 min'', ''32 min'', ''27 min'') via stat_summary(aes(label=after_stat(...)),
+    geom=''text''), turning an implicit trend into an explicit, immediately readable
+    story'
+  - 'Correct Imprint palette in canonical order with the first series at #009E73,
+    theme-correct backgrounds (#FAF8F1 light / #1A1A17 dark), and identical data colors
+    across both renders'
+  - 'Idiomatic, distinctive ggplot2 layering: geom_jitter + two stacked stat_summary
+    layers (crossbar geom and computed-label text geom) computed directly from the
+    data rather than manually calculated in R'
+  - 'Full spec compliance: correct strip-plot type, correct x/y mapping, descriptive
+    axis labels with units, exact mandated title string'
+  - Clean, reproducible, minimal KISS code with a single set.seed(42), no unused imports,
+    and the correct ragg::agg_png save API
+  weaknesses:
+  - Overall composition (theme_minimal + y-only gridlines + single crossbar) still
+    stays close to the library guide's own skeleton beyond the new label flourish
+    — a further distinguishing element would push Aesthetic Sophistication higher
+  - Point size/alpha are uniform across all four groups even though Placebo shows
+    a visibly wider spread than Drug C — light density-aware tuning would sharpen
+    the densest cluster
+  - No secondary context (e.g. sample size or spread) is shown beyond the mean label;
+    a small n= or SD annotation could deepen the data storytelling further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "strip-basic · r · ggplot2 · anyplot.ai" top-left in dark ink, clearly legible. Y-axis title "Time to Symptom Relief (minutes)" and x-axis title "Treatment Group" both in dark ink, readable. Tick labels in a softer dark gray, legible. Only subtle horizontal (y-axis) gridlines; no x-gridlines or tick marks.
+      Data: Four jittered strip columns (Placebo, Drug A, Drug B, Drug C) in canonical Imprint order — green (#009E73), lavender, blue, ochre — each with a horizontal mean crossbar and a bold numeric label ("59 min", "40 min", "32 min", "27 min") positioned in the gap to the right of each crossbar, not overlapping any data points or the next category's jitter cloud.
+      Legibility verdict: PASS — all text, including the new mean labels, is clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink, all clearly legible. Gridlines flip to a light, subtle tone. Mean-value labels also flip to light ink and remain fully legible.
+      Data: Colors (green, lavender, blue, ochre) are identical to the light render — only chrome (background, text, grid) flipped, confirming correct theme-adaptive behavior.
+      Legibility verdict: PASS — no dark-on-dark failures; all text, crossbars, and labels remain visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 12pt, axis titles 10pt, tick
+          labels 8pt, mean labels ~8.5pt), readable in both themes, well-proportioned
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: New mean-value labels sit cleanly in the gap between categories,
+          no collisions with points or adjacent columns
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Jitter markers (size 2.5, alpha 0.6) well matched to ~70 points per
+          category
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint palette, no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (minutes)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Numeric mean labels directly addressing prior feedback add a genuine
+          distinguishing polish beyond the library skeleton
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/ticks removed, x-gridlines dropped, subtle y-only grid, generous
+          whitespace — unchanged from attempt 1
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Crossbars plus explicit numeric labels make the decreasing-effect
+          trend across drug groups immediately obvious
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct strip plot with jitter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Jitter width, alpha, and mean reference lines all present per spec
+          notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, numeric value on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title string; no legend needed since x-axis already
+          identifies groups
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Four groups with distinct means, spreads, and densities
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible clinical drug-trial scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Symptom-relief times and spreads are physiologically plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{theme}.png via ragg::agg_png
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: High-level grammar-of-graphics layering with stat_summary
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Computed text labels via stat_summary(aes(label=after_stat(...)))
+          is a distinctive ggplot2 pattern not trivially replicated elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
