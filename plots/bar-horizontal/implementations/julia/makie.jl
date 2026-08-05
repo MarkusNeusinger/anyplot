@@ -26,6 +26,9 @@ n          = length(countries)
 plot_countries  = reverse(countries)
 plot_population = reverse(population)
 
+# Focal-point insight for the leading country, used by the subtitle annotation below.
+leader_ratio = round(population[1] / population[end], digits = 1)
+
 # --- Plot ----------------------------------------------------------------------
 fig = Figure(
     size            = (1600, 900),
@@ -33,10 +36,20 @@ fig = Figure(
     backgroundcolor = PAGE_BG,
 )
 
+# GridLayout composition: a dedicated subtitle row above the Axis carries the
+# data-driven takeaway — a Makie-native alternative to a plain text annotation.
+Label(
+    fig[0, 1],
+    "India leads the ranking with $(leader_ratio)× the population of 10th-ranked Mexico";
+    fontsize = 13,
+    color    = INK_SOFT,
+    halign   = :center,
+)
+
 ax = Axis(
     fig[1, 1];
     title             = "bar-horizontal · julia · makie · anyplot.ai",
-    titlesize         = 20,
+    titlesize         = 22,
     titlecolor        = INK,
     xlabel            = "Population (Millions)",
     xlabelsize        = 14,
@@ -56,12 +69,22 @@ ax = Axis(
     yticks            = (1:n, plot_countries),
 )
 
-barplot!(ax, 1:n, plot_population; direction = :x, color = BRAND, width = 0.65)
+barplot!(ax, 1:n-1, plot_population[1:n-1]; direction = :x, color = BRAND, width = 0.65)
 
-# Value labels at the end of each bar
-text!(ax, plot_population .+ maximum(plot_population) * 0.02, 1:n;
-      text = string.(round.(Int, plot_population)),
+# Outline the #1 country's bar to give the leader a deliberate focal point,
+# without touching the single brand-green fill shared by every other bar.
+barplot!(ax, [n], [plot_population[end]]; direction = :x, color = BRAND, width = 0.65,
+         strokewidth = 2.5, strokecolor = INK)
+
+# Value labels at the end of each bar; the leader's label is bolder (larger,
+# full-ink) to match the outline emphasis above.
+text!(ax, plot_population[1:n-1] .+ maximum(plot_population) * 0.02, 1:n-1;
+      text = string.(round.(Int, plot_population[1:n-1])),
       align = (:left, :center), fontsize = 12, color = INK_SOFT)
+
+text!(ax, [plot_population[end] + maximum(plot_population) * 0.02], [n];
+      text = [string(round(Int, plot_population[end]))],
+      align = (:left, :center), fontsize = 14, color = INK)
 
 xlims!(ax, 0, maximum(plot_population) * 1.15)
 
