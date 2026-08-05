@@ -1,0 +1,262 @@
+library: ggplot2
+language: r
+specification_id: heatmap-annotated
+created: '2026-08-05T09:41:14Z'
+updated: '2026-08-05T09:56:54Z'
+generated_by: claude-sonnet
+workflow_run: 30994058203
+issue: 1824
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Theme-aware text-color threshold now fixes the light-theme contrast bug from
+    Attempt 1: threshold raised to |value| > 0.68 (light) vs 0.3 (dark), verified
+    programmatically that all medium-magnitude cells (e.g. 0.66, -0.71) have solid
+    contrast between the bold annotation text and its tile background in both renders'
+  - Title fontsize trimmed from 11 to 10, reducing measured title width from ~90%+
+    to ~87% of canvas width with zero clipping at any canvas edge (confirmed via pixel-level
+    edge scan)
+  - 'Correct diverging color scale using the exact imprint_div stops (#AE3030 -> theme-adaptive
+    midpoint -> #4467A3) with midpoint = 0, properly encoding both positive and negative
+    correlations'
+  - 'Thoughtful data prep: mtcars columns renamed to human-readable labels (MPG, Cylinders,
+    Displacement, Horsepower, Rear Axle, Weight, Quarter Mile) instead of raw column
+    codes'
+  - coord_fixed() keeps every cell perfectly square; tile borders colored to match
+    the page background create clean, minimal-chrome gaps between cells
+  - Colorbar legend labeled 'Correlation' with a clear -1 to 1 scale, matching the
+    spec's colorbar requirement
+  - Canvas size, title format, and theme-adaptive chrome are all correctly implemented
+    and consistent between light and dark renders
+  weaknesses:
+  - 'Design Excellence remains at default/near-default levels: no additional focal-point
+    technique beyond the diagonal labels + color/label redundancy (DE-03), and execution
+    is clean but standard rather than showing distinctive polish (DE-02)'
+  - Library Mastery is solid but generic for ggplot2 (scale_color_identity() per-cell
+    text color and background-matched tile borders are nice touches, but the overall
+    approach is a fairly standard correlation-heatmap recipe that could be replicated
+    easily in other grammar-of-graphics libraries)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "Car Performance Correlations · heatmap-annotated · r · ggplot2 · anyplot.ai" centered at top in dark ink, measured ~87% of canvas width, zero pixels clipped at the top edge. Diagonal (30 deg) column tick labels across the top and horizontal row labels down the left, both in soft dark gray (INK_SOFT). "Correlation" colorbar legend on the right with ticks -1.0 to 1.0, legend text/title readable.
+      Data: 7x7 grid of square tiles on a red <-> near-white <-> blue diverging scale (imprint_div stops #AE3030 / PAGE_BG midpoint / #4467A3), each cell annotated with its correlation value (2 decimals, bold). Verified programmatically that no canvas edge (top/bottom/left/right) contains non-background pixels, so nothing is clipped. Verified the annotation text-color threshold (|value| > 0.68 in light theme) keeps bold text on adequate-contrast backgrounds across the full value range, including the previously-problematic medium-magnitude cells (e.g. 0.66 in dark ink on medium blue, -0.71 in near-white ink on medium red) — both now read clearly.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same title, tick labels, and legend now in light ink/gray (INK / INK_SOFT for dark theme), all clearly legible against the dark background. No dark-on-dark issues found anywhere.
+      Data: Same 7x7 grid, same tile values. Confirmed the data colors (red/blue diverging endpoints) are pixel-identical to the light render — only the chrome and the theme-adaptive midpoint (near-black instead of near-white) changed, as required. The dark theme's lower text-color threshold (0.3) was already correct in Attempt 1 and remains correct here.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout (axis.text=8, axis.title=10, plot.title=10,
+          legend text/title=8/10). Attempt-1 contrast bug fixed via theme-aware threshold;
+          all annotation text is readable in both themes. Title now measures ~87%
+          of canvas width with no overflow or clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between any text elements, tiles, or legend.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles and annotation text are clearly visible and appropriately sized
+          for a 7x7 matrix.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Contrast bug from Attempt 1 resolved; red/blue diverging scale plus
+          numeric labels give redundant encoding, no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, content spans ~94% width / ~76% height of canvas,
+          zero edge clipping confirmed by pixel scan.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Row/column tick labels are descriptive (MPG, Cylinders, etc.); axis
+          titles correctly omitted as redundant for a correlation matrix; colorbar
+          legend labeled 'Correlation'.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'scale_fill_gradient2 uses exact imprint_div stops (#AE3030 / theme-adaptive
+          midpoint / #4467A3); backgrounds and chrome are theme-correct in both renders;
+          data colors identical across themes.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Theme-adaptive diverging scale, background-matched tile borders,
+          and per-cell contrast-aware text color show above-default thought, but not
+          publication-level polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean minimal chrome (no grid, no axis titles) but fairly standard
+          execution overall.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Diagonal labels plus color/label redundancy give some hierarchy,
+          but no additional focal-point technique or narrative emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct annotated heatmap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Numeric value annotations, color intensity, contrast-adaptive text
+          color, colorbar legend all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y correctly assigned, all 49 cells shown (7x7 matrix).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labeled 'Correlation'
+          matches the fill mapping.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows strong positive, strong negative, and near-zero correlations
+          across the matrix.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real, neutral scenario: car performance metrics correlation matrix
+          from mtcars.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correlation values and signs are factually consistent with known
+          mtcars relationships (e.g. weight vs MPG strongly negative).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42); data itself is deterministic (mtcars + cor()).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic, appropriately concise for the visualization.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png, current ggplot2 API (linewidth,
+          not size).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level ggplot2 API usage (geom_tile, geom_text, scale_fill_gradient2,
+          coord_fixed) but not the most advanced patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: scale_color_identity() for per-cell contrast-aware text color and
+          background-matched tile borders are nice touches, but overall a fairly standard
+          correlation-heatmap recipe.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - dataset-loading
+  - wide-to-long
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap
+  - minimal-chrome
