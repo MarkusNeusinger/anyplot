@@ -8,6 +8,7 @@ import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -199,12 +200,21 @@ export default function Chart() {
             tickLabelStyle: { fontSize: 13, fill: t.inkSoft, fontFamily: FONT },
           },
         ]}
-        margin={{ top: 24, right: 40, bottom: 80, left: 130 }}
+        margin={{ top: 44, right: 40, bottom: 80, left: 130 }}
         skipAnimation
       >
         <ChartsGrid horizontal sx={{ "& line": { stroke: t.grid, strokeWidth: 0.8 } }} />
         <HistogramBars />
         <LinePlot skipAnimation slotProps={{ line: { sx: { strokeWidth: 3.5 } } }} />
+        {/* Mean reference line — calls out where the shock-day left tail pulls
+            the average below the 0% no-change point the bulk of days cluster near. */}
+        <ChartsReferenceLine
+          x={sampleMean}
+          label={`Mean ${sampleMean.toFixed(2)}%`}
+          labelAlign="start"
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeWidth: 1.5 }}
+          labelStyle={{ fontSize: 13, fill: t.inkSoft, fontFamily: FONT }}
+        />
         <ChartsXAxis />
         {/* Explicit axisLabel x offset — the default offset formula assumes short
             tick labels and clips against our 4-char decimal density values. */}
