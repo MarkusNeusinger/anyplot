@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windrose-basic: Wind Rose Chart
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -59,6 +59,9 @@ for d in range(8):
 # Convert to percentages
 frequencies_pct = frequencies / n_observations * 100
 
+# Keep the rarest speed tier perceptible even at sub-1% frequency
+frequencies_pct = np.where((frequencies_pct > 0) & (frequencies_pct < 0.5), 0.5, frequencies_pct)
+
 # Create wind rose using barpolar
 fig = go.Figure()
 
@@ -73,7 +76,7 @@ for s in range(5):
             name=speed_labels[s],
             marker_color=speed_colors[s],
             marker_line_color=PAGE_BG,
-            marker_line_width=1.5,
+            marker_line_width=2,
             opacity=0.92,
             hovertemplate=f"<b>%{{theta}}</b><br>{speed_labels[s]}: %{{r:.1f}}%<extra></extra>",
         )
@@ -82,14 +85,14 @@ for s in range(5):
 # Update layout for proper stacking and styling
 fig.update_layout(
     autosize=False,
-    width=800,
-    height=450,
+    width=600,
+    height=600,
     title={
-        "text": "windrose-basic · plotly · anyplot.ai",
-        "font": {"size": 18, "color": INK},
+        "text": "windrose-basic · python · plotly · anyplot.ai",
+        "font": {"size": 15, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.96,
+        "y": 0.97,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
@@ -122,20 +125,21 @@ fig.update_layout(
         "bgcolor": PAGE_BG,
     },
     legend={
-        "title": {"text": "Wind Speed", "font": {"size": 13, "color": INK}},
-        "font": {"size": 11, "color": INK_SOFT},
-        "x": 1.02,
-        "y": 0.5,
-        "xanchor": "left",
-        "yanchor": "middle",
+        "title": {"text": "Wind Speed", "font": {"size": 12, "color": INK}},
+        "font": {"size": 10, "color": INK_SOFT},
+        "x": 0.5,
+        "y": -0.08,
+        "xanchor": "center",
+        "yanchor": "top",
+        "orientation": "h",
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
     barmode="stack",
-    margin={"l": 40, "r": 100, "t": 70, "b": 40},
+    margin={"l": 40, "r": 40, "t": 60, "b": 90},
 )
 
 # Save as PNG and HTML
-fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
