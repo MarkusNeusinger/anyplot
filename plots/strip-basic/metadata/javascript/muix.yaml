@@ -1,0 +1,227 @@
+library: muix
+language: javascript
+specification_id: strip-basic
+created: '2026-08-05T06:03:20Z'
+updated: '2026-08-05T06:18:32Z'
+generated_by: claude-sonnet
+workflow_run: 30979757341
+issue: 975
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/muix/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Jitter width (0.27) and point alpha (0.62) both fall within the spec's explicitly
+    recommended ranges
+  - Group mean reference lines directly implement the spec's suggestion and create
+    a clear decreasing-effect story
+  - Reproducible seeded LCG + Box-Muller sampling; clean, minimal imports
+  - Correct canonical Imprint palette order, identical data colors across light/dark
+    themes
+  - Idiomatic use of MUI X's low-level composition API (ChartContainer + useXScale/useYScale)
+    to add a custom SVG overlay
+  weaknesses:
+  - Point alpha (0.62) is a bit below the 0.7-0.9 guidance for ~42 points/group, slightly
+    washing out the densest clusters
+  - 'Overall aesthetic still reads close to a well-configured default: no custom typography
+    hierarchy or distinctive color treatment beyond straightforward palette assignment'
+  - No marker stroke on the lower-contrast lavender/ochre series against the light
+    background (optional per style guide, but would help separability)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "Time to Symptom Relief · strip-basic · javascript · muix · anyplot.ai" centered at top in bold dark text, fully visible, not clipped. Axis labels "Treatment Group" / "Time to Relief (minutes)" and tick labels all dark and clearly readable. Subtle horizontal-only grid.
+      Data: First series (Control) is brand green #009E73; Drug A/B/C follow canonical Imprint order (lavender, blue, ochre). Jittered scatter points per group with a bold mean-line per category.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Same title/axis/tick text now rendered in light ink, clearly readable against the dark background. No dark-on-dark failures observed. Grid remains subtle.
+      Data: Colors identical to the light render (green/lavender/blue/ochre unchanged) - only chrome flipped as expected.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha (0.62) slightly below 0.7-0.9 guidance for this density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint hues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good utilization, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, theme-correct chrome
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default via mean-line overlay and tuned jitter/alpha
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right axis hidden, subtle grid, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Mean lines create clear decreasing-effect hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct strip plot with jitter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Jitter width and alpha within spec ranges, mean lines added
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, value on y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend reasonably omitted
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Individual observations, jitter, varying spread/means shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral drug-trial scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible minute-scale decreasing-effect values
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Reasonable for React harness; a few justified helpers
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct harness contract
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ChartContainer + hooks composition pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Hook-driven custom overlay is MUI X-specific but usage otherwise
+          standard
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
