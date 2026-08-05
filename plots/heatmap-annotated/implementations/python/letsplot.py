@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-annotated: Annotated Heatmap
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-05
@@ -26,7 +26,7 @@ sectors = ["Tech", "Finance", "Healthcare", "Energy", "Consumer", "Industrial", 
 n = len(sectors)
 
 # Generate a realistic correlation matrix
-base_corr = np.random.uniform(-0.3, 0.8, (n, n))
+base_corr = np.random.uniform(-0.7, 0.85, (n, n))
 corr_matrix = (base_corr + base_corr.T) / 2
 np.fill_diagonal(corr_matrix, 1.0)
 corr_matrix = np.clip(corr_matrix, -1, 1)
@@ -66,7 +66,7 @@ plot = (
     + geom_text(aes(label="label", color="text_color"), size=3.5, fontface="bold")
     + scale_color_identity()
     + scale_fill_gradient2(low="#AE3030", mid=PAGE_BG, high="#4467A3", midpoint=0, name="Correlation", limits=[-1, 1])
-    + labs(x="Sector", y="Sector", title="heatmap-annotated · letsplot · anyplot.ai")
+    + labs(x="Sector", y="Sector", title="heatmap-annotated · python · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
