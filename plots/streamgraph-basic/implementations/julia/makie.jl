@@ -90,10 +90,15 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = "streamgraph-basic · julia · makie · anyplot.ai",
-    titlesize          = 20,
+    titlesize          = 30,
     titlecolor         = INK,
     titlefont          = :bold,
+    xlabel             = "Month",
+    xlabelsize         = 16,
     xlabelcolor        = INK,
+    ylabel             = "Streaming Hours (millions)",
+    ylabelsize         = 16,
+    ylabelcolor        = INK,
     xticklabelsize     = 12,
     xticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
@@ -111,6 +116,13 @@ ax = Axis(
 for g in 1:n_genres
     band!(ax, x_smooth, layer_lower[:, g], layer_upper[:, g];
         color = IMPRINT_PALETTE[g])
+end
+
+# Thin background-colored strokes between adjacent bands sharpen layer
+# separation where two saturated fills touch directly (style guide's
+# optional outline pattern, applied here as inter-band edging).
+for g in 1:(n_genres - 1)
+    lines!(ax, x_smooth, layer_upper[:, g]; color = PAGE_BG, linewidth = 1.5)
 end
 
 month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
