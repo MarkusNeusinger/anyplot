@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 strip-basic: Basic Strip Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-04
+Quality: 90/100 | Updated: 2026-08-05
 """
 
 import os
@@ -18,9 +18,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
 
-# Okabe-Ito palette — first series always #009E73
+# Imprint palette — canonical order, first series always #009E73
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 sns.set_theme(
@@ -34,7 +33,7 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
@@ -62,8 +61,8 @@ for dept in departments:
 
 df = pd.DataFrame(records)
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot — see default-style-guide.md "Visual Sizing Defaults" for canvas + sizing values
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 sns.stripplot(
@@ -73,35 +72,42 @@ sns.stripplot(
     hue="Department",
     palette=IMPRINT,
     alpha=0.7,
-    size=12,
+    size=6,
     jitter=0.25,
     edgecolor=PAGE_BG,
-    linewidth=0.5,
+    linewidth=0.4,
     ax=ax,
     legend=False,
 )
 
-# Add horizontal mean lines as reference
-means = df.groupby("Department")["Satisfaction Score"].mean()
-for i, dept in enumerate(departments):
-    ax.hlines(means[dept], i - 0.35, i + 0.35, colors=NEUTRAL, linewidth=2.5)
+# Group means as diamond markers — seaborn pointplot overlay, no connecting line/error bars
+sns.pointplot(
+    data=df,
+    x="Department",
+    y="Satisfaction Score",
+    color=INK,
+    markers="D",
+    markersize=8,
+    linestyle="none",
+    errorbar=None,
+    ax=ax,
+)
 
 # Style
-ax.set_xlabel("Department", fontsize=20, color=INK)
-ax.set_ylabel("Satisfaction Score", fontsize=20, color=INK)
-ax.set_title("strip-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.set_xlabel("Department", fontsize=10, color=INK)
+ax.set_ylabel("Satisfaction Score", fontsize=10, color=INK)
+ax.set_title("strip-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
 ax.set_ylim(35, 105)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+sns.despine(ax=ax)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
-# Legend for mean reference line
-ax.plot([], [], color=NEUTRAL, linewidth=2.5, label="Group Mean")
-ax.legend(fontsize=14, loc="upper right", framealpha=1)
+# Legend for mean reference marker
+ax.plot([], [], marker="D", linestyle="none", color=INK, markersize=8, label="Group Mean")
+ax.legend(fontsize=8, loc="upper right", framealpha=1)
 
-# Save
+# Save — bbox_inches MUST stay default (None); "tight" trims the canvas off-target
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
