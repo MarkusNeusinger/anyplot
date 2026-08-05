@@ -14,7 +14,7 @@ A strip plot displays individual data points for each category along a single ax
 ## Data
 
 - `category` (categorical) - Group labels for the x-axis (e.g., treatment groups, departments)
-- `value` (numeric) - Continuous measurement for the y-axis
+- `value` (numeric) - Numeric measurement for the y-axis
 - Size: 10-200 observations per category works best
 - Example: Survey response scores grouped by demographic category
 
