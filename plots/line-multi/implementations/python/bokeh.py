@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-multi: Multi-Line Comparison Plot
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -38,7 +38,7 @@ groceries = 55 + np.cumsum(np.random.randn(12) * 1.5)
 
 series_names = ["Electronics", "Clothing", "Furniture", "Groceries"]
 series_data = [electronics, clothing, furniture, groceries]
-line_dashes = ["solid", "solid", "dashed", "dashed"]
+line_dashes = ["solid", "solid", "dashed", "dotted"]
 
 # Electronics closes the year as the strongest performer — give it visual
 # emphasis (full opacity, thicker line) so the eye has a focal point; the
@@ -80,6 +80,24 @@ for name, data, color, dash in zip(series_names, series_data, IMPRINT_PALETTE, l
 
     hover = HoverTool(renderers=[scatter], tooltips=[("Month", "@month"), ("Sales", "$@y{0,0.0}k")])
     p.add_tools(hover)
+
+# End-of-line value annotation on the focal series — reinforces the "strongest
+# performer" story beyond what the line/marker emphasis alone conveys.
+focal_index = series_names.index(focal_series)
+focal_end_x, focal_end_y = months[-1], series_data[focal_index][-1]
+end_label = Label(
+    x=focal_end_x,
+    y=focal_end_y,
+    text=f"${focal_end_y:.0f}k",
+    text_font_size="30pt",
+    text_font_style="bold",
+    text_color=IMPRINT_PALETTE[focal_index],
+    text_align="right",
+    text_baseline="bottom",
+    x_offset=-8,
+    y_offset=-16,
+)
+p.add_layout(end_label)
 
 # Legend — inside the plot frame, click a label to hide that series
 if p.legend:
