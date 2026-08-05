@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 strip-basic: Basic Strip Plot
 Library: altair 6.2.2 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-08-05
+Quality: 91/100 | Updated: 2026-08-05
 """
 
 import os
