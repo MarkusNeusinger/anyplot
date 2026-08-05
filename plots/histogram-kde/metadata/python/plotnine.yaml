@@ -2,124 +2,134 @@ library: plotnine
 language: python
 specification_id: histogram-kde
 created: '2025-12-24T21:30:10Z'
-updated: '2026-05-06T17:02:15Z'
-generated_by: claude-haiku
-workflow_run: 25449133988
+updated: '2026-08-05T03:52:38Z'
+generated_by: claude-sonnet
+workflow_run: 30972878836
 issue: 1823
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - Perfect theme adaptation with INK token switching KDE line color (dark/light)
-    automatically
-  - Excellent use of grammar of graphics with proper aes() mapping and after_stat()
-    for density calculation
-  - Proper density scaling with semi-transparent bars allowing both histogram and
-    KDE to be visible
-  - Clean, reproducible code with explicit font sizing (24pt title, 20pt labels, 16pt
-    ticks)
-  - Realistic stock return data demonstrating multimodal distribution matching real
-    market behavior
-  - All text perfectly legible in both light and dark themes with no readability failures
+  - 'Both title-format and panel-border issues from Attempt 1 are fully fixed: title
+    now reads ''histogram-kde · python · plotnine · anyplot.ai'' and the four-sided
+    panel_border was replaced with element_blank(), leaving a clean L-shaped axis-line
+    frame'
+  - 'Histogram uses the exact #009E73 brand fill at alpha=0.5, matching the spec''s
+    ''semi-transparent bars'' requirement, with a contrasting solid ink-colored KDE
+    line (dark in light mode, white in dark mode)'
+  - Y-axis correctly mapped to density via after_stat('density') so histogram and
+    KDE sit on a directly comparable scale
+  - Realistic 3-component return mixture (calm/volatile/low-volatility regimes) produces
+    authentic skew, fat tails, and a secondary tail bump - genuinely interesting distribution
+    shape
+  - All theme font sizes explicitly set and correctly threaded through both light
+    and dark renders; no dark-on-dark or light-on-light failures
+  - Dashed mean-return reference line adds a real storytelling focal point against
+    the skewed distribution
   weaknesses:
-  - Design Excellence intentionally scored conservatively per calibration anchors
-    (DE defaults are low)
-  - Could explore more distinctive plotnine features like faceting or custom stat
-    layers, but current implementation is appropriate for spec
+  - Mean reference line (dashed) has no label or numeric annotation, so viewers can't
+    tell what it marks without reading the code - a small 'Mean' text or value annotation
+    near the line would push Data Storytelling further
+  - 'Design Excellence is solid but still close to a well-configured default: consider
+    a subtitle or small annotation calling out the skew/fat-tail behavior to add a
+    stronger custom focal point'
+  - Distinctive plotnine features are used correctly (after_stat('density'), layered
+    geoms) but modestly - no facet, no custom scale, no annotate() layer - leaving
+    Library Mastery short of a 'showcase' implementation
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle panel border
-      Chrome: Title "histogram-kde · plotnine · anyplot.ai" in dark text (24pt), axis labels "Daily Return (%)" and "Density" in dark text (20pt), tick labels in softer dark (#4A4A44, 16pt) — all clearly readable against light surface
-      Data: Teal histogram bars (#009E73) with alpha=0.5 semi-transparency, dark KDE curve (size 2.5) overlaid, showing distribution from -10% to +5% daily returns with peak around 0%
-      Grid: Subtle major and minor gridlines at 15% and 8% alpha opacity using dark ink color, not competing with visualization
-      Legibility verdict: PASS ✓
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "histogram-kde · python · plotnine · anyplot.ai" in dark ink, centered top, fully readable. Axis titles "Daily Return (%)" and "Density" in dark ink; tick labels in muted grey-ink. Subtle low-opacity gridlines. No four-sided panel border - only a clean left/bottom axis line frame (L-shaped spine), matching the style guide's minimalism convention.
+      Data: Histogram bars are semi-transparent brand green (#009E73 @ alpha 0.5) across 35 bins showing a right-of-center peaked, left-skewed, fat-tailed return distribution with a small secondary bump in the left tail (~-5%). A smooth dark (ink-colored) KDE line closely tracks the histogram shape. A grey dashed vertical line marks the mean return near x=0.
+      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle panel border
-      Chrome: Title, axis labels, and tick labels all in light colors (#F0EFE8 primary, #B8B7B0 secondary) — all clearly readable against dark surface with no dark-on-dark failures
-      Data: Identical teal histogram bars (#009E73, unchanged from light), but KDE curve now white/light colored for contrast against dark background
-      Grid: Subtle gridlines adapted to light colors at matching 15%/8% opacity, clearly visible without competing
-      Data color consistency: Histogram bars are identical #009E73 between renders (only KDE line changed for theme readability) ✓
-      Legibility verdict: PASS ✓ — no text is dark-on-dark, brand green #009E73 reads well on both surfaces
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered light/off-white and muted light-grey respectively - all legible. Gridlines are faint light lines. No panel-border box, consistent left/bottom axis-line frame.
+      Data: Histogram bars use the identical underlying #009E73 hex; alpha-blending over the darker backdrop makes them read as a deeper saturated green (expected alpha-compositing effect over a dark background, not a palette violation) - confirmed same base hue/hex as light render. KDE line is rendered in off-white/ink for strong contrast. Dashed mean-reference line is a light grey, clearly visible.
+      Legibility verdict: PASS - all text is uniformly light-colored and legible; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24/20/16pt), perfectly readable in
-          both themes
+        comment: Explicit font sizes (7/8/10/12pt); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements fully readable with no collisions
+        comment: No collisions between text, bars, KDE line, or mean line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram and KDE optimally sized for data density
+        comment: 35 bins appropriate for ~600 points; KDE line and mean line both
+          clearly distinguishable from bars in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe with strong contrast
+        comment: Green fill + dark/light line + grey dashed line give sufficient contrast;
+          no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions at 4800×2700px with balanced margins
+        comment: 3200x1800 landscape canvas, good proportions, nothing clipped, title
+          ~55-60% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels include units
+        comment: '''Daily Return (%)'' and ''Density'' are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, theme-adaptive
-          text, data colors identical'
+        comment: 'First series is #009E73; backgrounds match Imprint #FAF8F1/#1A1A17;
+          both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Professional and properly configured, but straightforward without
-          exceptional design
+        comment: Alpha-blended contrast and mean reference line are above generic
+          defaults, but not yet publication-tier
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Subtle custom grid (0.15/0.08 alpha), theme-correct elements, good
-          whitespace
+        passed: false
+        comment: Four-sided panel_border from Attempt 1 was removed and replaced with
+          element_blank(); subtle grid and generous whitespace now match the L-shaped-spine
+          convention
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: KDE overlay creates visual hierarchy; distribution pattern communicates
-          volatility
+        passed: false
+        comment: Dashed mean line creates a focal point but is unlabeled - a text/annotation
+          would strengthen the story
     spec_compliance:
       score: 15
       max: 15
@@ -129,47 +139,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram with KDE overlay
+        comment: Correct histogram + KDE overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent bars, density scaling, KDE curve present
+        comment: Semi-transparent bars, density y-axis, contrasting KDE line all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, full range visible
+        comment: x=returns correctly mapped, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend appropriate
+        comment: Title now reads 'histogram-kde · python · plotnine · anyplot.ai'
+          - Attempt 1's missing language segment is fixed; no legend needed (single
+          series)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows all histogram-kde aspects with multimodal structure
+        comment: Shows binning, density scaling, smooth KDE, and a mean reference
+          - most aspects of the plot type covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock returns is real financial scenario, properly scaled
+        comment: 3-component stock-return mixture is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions factually realistic
+        comment: Daily returns in the -9% to +7% range are sensible for equities including
+          volatile periods
     code_quality:
       score: 10
       max: 10
@@ -179,49 +193,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only used imports (os, numpy, pandas, plotnine symbols)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake functionality
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{THEME}.png via plot.save(), current plotnine API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of ggplot() + geom_* API with after_stat() and proper
-          theming
+        comment: Grammar-of-graphics layering (geom_histogram + geom_density + geom_vline)
+          is idiomatic plotnine
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses after_stat() and element_* for theme adaptation, solid but could
-          explore more distinctive features
+        comment: Uses after_stat('density'), a distinctive stat-transform feature,
+          but no facet/annotate/custom scale to fully showcase the library
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -229,7 +243,8 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - kde
+  - binning
   styling:
   - alpha-blending
-  - grid-styling
