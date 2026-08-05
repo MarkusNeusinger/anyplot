@@ -1,0 +1,255 @@
+library: makie
+language: julia
+specification_id: bar-horizontal
+created: '2026-08-05T17:31:55Z'
+updated: '2026-08-05T17:46:30Z'
+generated_by: claude-sonnet
+workflow_run: 31029986091
+issue: 1946
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - 'Addressed all three prior review weaknesses in one pass: a genuine design accent
+    on the leader bar (stroke outline + bolder value label), an explicit data-driven
+    subtitle callout, and a distinctive Makie GridLayout composition (Label in fig[0,1])
+    instead of a plain annotation'
+  - Correct horizontal bar chart, sorted descending by value (largest at top), with
+    clean end-of-bar value labels in both themes
+  - 'Theme-adaptive chrome fully correct, including the leader-bar stroke itself:
+    dark stroke on the light render, light stroke on the dark render, while the brand-green
+    fill stays identical between themes'
+  - 'Real, accurate 2024 country-population data with a wide, realistic value spread;
+    first (only) categorical series is the correct Imprint brand green #009E73, single-series
+    legend correctly omitted'
+  - Title now scaled to fill a strong proportion of the plot width, resolving the
+    prior 'title too small relative to canvas' feedback and giving the title stronger
+    visual hierarchy
+  - Clean KISS code structure, deterministic hardcoded data, correct save call and
+    file naming, current Makie API (`size=`, `barplot!(direction=:x)`)
+  weaknesses:
+  - The subtitle Label (fig[0,1]) renders above the Axis title (fig[1,1]) rather than
+    below it, so the reading order is subtitle-then-title — a slightly unconventional
+    hierarchy; consider swapping row order or de-emphasizing the subtitle further
+    so the mandated title reads first
+  - DE-01 design accent is still limited to a single stroke outline plus a font-weight/size
+    bump on the leader's value label — a small, welcome touch, but not yet a fully
+    custom/differentiated visual treatment (e.g. secondary tone, subtle gradient,
+    or icon accent) for top-tier polish
+  - 'LM-02 distinctive-feature usage remains modest: the GridLayout Label composition
+    and bar stroke are genuine Makie-native touches, but deeper Makie-only capabilities
+    (Observables, custom Theme(), recipes) are still unexercised'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: A gray subtitle row ("India leads the ranking with 11.1x the population of 10th-ranked Mexico") sits above a bold dark title "bar-horizontal · julia · makie · anyplot.ai"; x-axis label "Population (Millions)" below the tick labels (0, 500, 1000, 1500); ten y-axis country labels (India ... Mexico) in a softer dark gray; thin bottom spine only, subtle low-opacity vertical gridlines. All text (subtitle, title, axis label, tick labels, country labels, value labels) is clearly legible against the light background — no light-on-light anywhere.
+      Data: Ten horizontal bars in Imprint brand green (#009E73), sorted descending from India (1441) at top to Mexico (130) at bottom. The India (leader) bar has a solid dark stroke outline and a bolder, full-ink value label ("1441"), visually distinguishing it as the focal point; the other nine bars have soft-gray value labels just past the bar end.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same subtitle and title now rendered in light gray / near-white ink; x-axis label and country labels in light gray/off-white tones; gridlines flipped to a light, low-opacity tint; bottom spine in soft light gray. No dark-on-dark text anywhere — every chrome element reads clearly against the dark surface.
+      Data: Bars remain the identical brand green (#009E73) — confirmed unchanged from the light render. The India (leader) bar's stroke outline correctly flips to a light/near-white color (matching the dark-theme INK token) so the emphasis remains visible on the dark background; its value label is bright, full-ink; the other value labels are a muted light-gray, still legible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes; title now scaled
+          to fill a strong proportion of plot width, resolving prior undersized-title
+          feedback
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between labels, ticks, gridlines, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar width and spacing well suited to 10 categories; leader bar's
+          stroke stays crisp in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green with strong contrast on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canonical 3200x1800 canvas (gate passed), balanced margins, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Population (Millions)'' includes units; y-axis category labels
+          self-explanatory'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, theme-correct backgrounds/chrome/stroke in
+          both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Stroke-outlined leader bar plus bolder value label adds a real design
+          accent over the prior flat fill, though still a single, simple touch rather
+          than a fully custom treatment
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines mostly removed (incl. left), subtle grid correctly oriented
+          to the value axis, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Explicit data-driven subtitle plus visually emphasized leader bar
+          create a clear focal point; minor deduction for the subtitle rendering above
+          rather than below the title
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent bar heights, sorted, single color, spacing, end-of-bar
+          value labels — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on y, value on x, all 10 categories visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend correctly omitted for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide, realistic value range from 1441 down to 130
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral country population statistics
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and relative proportions match real-world 2024 population
+          estimates
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie and Colors both actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current Makie API
+          (size=, direction=:x)
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: barplot! with direction=:x and yticks categorical axis is the recommended
+          Makie idiom for horizontal bars
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: GridLayout Label composition (fig[0,1]) for the subtitle row, plus
+          strokewidth/strokecolor bar emphasis, are genuine Makie-native techniques
+          beyond the generic default
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - colors
+  techniques:
+  - annotations
+  patterns: []
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting
