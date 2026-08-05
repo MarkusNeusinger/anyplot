@@ -2,48 +2,58 @@ library: matplotlib
 language: python
 specification_id: windrose-basic
 created: '2025-12-24T22:19:07Z'
-updated: '2026-05-07T03:32:22Z'
-generated_by: claude-haiku
-workflow_run: 25474134312
+updated: '2026-08-05T15:30:26Z'
+generated_by: claude-sonnet
+workflow_run: 31018797228
 issue: 1880
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 91
 review:
   strengths:
-  - 'Perfect visual quality (30/30): all text legible, no overlaps, optimal sizing'
-  - 'Flawless spec compliance: all windrose-basic requirements met perfectly'
-  - 'Excellent data quality: realistic annual wind measurements showing meaningful
-    patterns'
-  - 'Perfect theme adaptation: both renders 100% readable with identical data colors'
-  - 'Professional Okabe-Ito palette: first series correct #009E73, multi-series in
-    order'
-  - 'Idiomatic matplotlib: polar projection and stacked bars leverage library idioms'
-  - 'Clean, reproducible code: np.random.seed(42), deterministic, KISS structure'
+  - 'Correct wind-rose construction: 16 direction sectors at 22.5°, North at top,
+    clockwise (meteorological convention)'
+  - Imprint palette in canonical order starting with brand green for the calmest bin,
+    identical across both theme renders
+  - Theme-adaptive chrome correctly threaded through title, ticks, grid, spines, and
+    legend in both renders
+  - Legend intentionally placed in the empty NE/E/SE compass quadrant, avoiding isolated
+    whitespace
+  - 'Refined details: edgecolor=PAGE_BG cleanly separates stacked segments, subtle
+    grid/spine'
+  - 'Title now correctly includes the language segment: ''windrose-basic · python
+    · matplotlib · anyplot.ai'''
+  - The 15+ m/s bin is now visibly represented (thin cyan sliver on WSW/SW/W/NW/NNW
+    petals), fully demonstrating all six advertised speed categories
+  - 'Realistic synthetic data: Weibull(k=2.2, scale=7.5) speed distribution + bimodal
+    SW-prevailing/NW-secondary directional mix tells a clear prevailing-wind story'
   weaknesses:
-  - 'DE-01 (6/8): Could achieve publication-level sophistication with additional refinement—consider
-    custom palette tweaks or more intentional typography variations'
-  - 'LM-02 (4/5): Could leverage more advanced matplotlib features—custom patches
-    for wind direction indicators or sophisticated bin alignment techniques'
+  - E/NE/SE quadrant of the canvas is still visually empty aside from grid + legend
+    — expected given the realistic prevailing-wind data, but leaves the layout slightly
+    asymmetric (minor, no fix required)
+  - 'Design excellence is solid but not yet publication-tier: could push further with
+    a stronger focal-point technique (e.g. subtle annotation calling out the dominant
+    SW/WSW sector) to lift data storytelling beyond the current visual-hierarchy-only
+    approach'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - NOT pure white, correct theme surface
-      Chrome: Title "windrose-basic · matplotlib · anyplot.ai" in bold dark text; direction labels (N, NNE, NE, etc.) in dark bold text; frequency percentages (2%, 4%, etc.) in softer dark text; all clearly readable
-      Data: Six stacked color segments using Okabe-Ito palette (#009E73 green, #D55E00 orange, #0072B2 blue, #CC79A7 purple, #E69F00 yellow, #56B4E9 sky blue); white bar edges for visual separation; prevailing SW/NW pattern dominant
-      Legibility verdict: PASS - All text readable, optimal contrast on light surface
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "windrose-basic · python · matplotlib · anyplot.ai" top-left in dark ink, fully readable and correctly includes the "python" language segment. Bold dark compass labels (N, NNE, NE, ...) around the circle. Soft dark-gray radial % tick labels (2%-18%). Legend box "Wind Speed" in elevated cream panel, dark title text, soft-ink entry labels — all clearly legible.
+      Data: 16-sector stacked polar wind rose, North at top, clockwise. Stacked bins from center outward: brand green (0-3 m/s) → lavender (3-6) → steel blue (6-9) → ochre (9-12) → matte red (12-15) → a thin cyan rim (15+ m/s) visible on the longest petals (WSW, SW, W, NW, NNW). Dominant petals point WSW/SW/W with a secondary WNW/NW/NNW cluster; E/NE/SE quadrant is nearly calm. First series is #009E73 as required, canonical Imprint order for the rest.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - NOT pure black, correct theme surface
-      Chrome: Title and direction labels in light text (#F0EFE8) with excellent contrast; frequency percentages in lighter secondary text (#B8B7B0); no dark-on-dark failures; all text clearly readable against dark background
-      Data: Six stacked segments with IDENTICAL colors to light render - confirms data colors don't flip between themes; only chrome adaptation occurs; white-ish bar edges now appear darker for contrast
-      Legibility verdict: PASS - All text readable, zero dark-on-dark failures, perfect theme adaptation
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, now in light ink, fully readable. Compass labels are bold white/light text, radial % labels soft light-gray, legend box uses the elevated dark panel (#242420-consistent) with light text. No dark-on-dark failures.
+      Data: Identical stacked-bar colors and geometry to the light render — confirms only chrome (background, text, grid, legend frame, bar edge strokes) flipped, while the six Imprint data colors (including the now-visible cyan 15+ sliver) stayed constant.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,47 +61,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 16pt, ticks 14pt);
-          readable in both themes
+        comment: All sizes explicit, readable in both themes, title fits without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 16 direction labels perfectly spaced; frequency labels clear
+        comment: No collisions between chrome and data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked bars optimally sized; white edges enhance separation
+        comment: Clean petal separation at 16 sectors, 15+ m/s bin now visibly represented
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; excellent contrast
+        comment: CVD-safe Imprint palette, edge strokes add separation
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square format ideal; balanced margins; 60-70% canvas utilization
+        comment: Full compass grid + legend use the canvas well, but the E/NE/SE quadrant
+          still reads visually empty relative to the data-heavy side
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units; compass labels; frequency percentages
+        comment: Radial % units, self-descriptive compass + legend labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series follow order; backgrounds correct;
-          theme-correct chrome'
+        comment: 'First series #009E73, canonical order, theme-correct chrome in both
+          renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -99,22 +109,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Professional; intentional hierarchy; theme tokens show thought; strong
-          above defaults
+        comment: Thoughtful legend placement, clean segment edge-highlighting — above
+          configured defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid; minimal spine; white edges; good refinement, room for
-          max polish
+        comment: Subtle grid, thin refined polar spine, elevated legend panel
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear hierarchy; prevailing winds emphasized; realistic data tells
-          story
+        comment: Bimodal prevailing-wind data creates clear visual hierarchy without
+          needing annotations
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar stacked histogram; 16 sectors; 6 speed bins
+        comment: Correct stacked polar wind-rose
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bins, speeds, compass convention, legend,
-          percentages'
+        comment: 16 sectors, meaningful speed bins, North-top, legend, radial % axis
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Direction→angle, speed→segments, frequency→radius; all visible
+        comment: Direction on theta, frequency % on radius
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct; labels precise with units
+        comment: Title now correctly reads 'windrose-basic · python · matplotlib ·
+          anyplot.ai'; legend labels correct
     data_quality:
       score: 15
       max: 15
@@ -153,19 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: directions, speeds, frequencies, realistic patterns'
+        comment: Shows calm-to-strong progression including a now-visible sliver of
+          the 15+ m/s bin
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Annual wind measurements; plausible; Weibull distribution realistic
+        comment: Plausible annual weather-station wind climatology, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Speed ranges realistic; frequency percentages correct
+        comment: Weibull(k=2.2, scale=7.5) is a standard real-world wind-speed shape;
+          realistic values
     code_quality:
       score: 10
       max: 10
@@ -175,61 +187,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean sequence: imports → data → plot → save'
+        comment: Imports -> Data -> Plot -> Save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only numpy + matplotlib used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct filename format; current API
+        comment: plot-{THEME}.png, default bbox_inches
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Polar projection idiomatically used; proper conventions
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Polar projection distinctive; meteorological conventions; theme tokens
+        comment: Correct Axes-method usage (ax.bar, set_theta_zero_location/direction)
+          — standard idiomatic pattern for a matplotlib wind rose
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Polar projection + meteorological theta convention, stacked bottom=
+          bars
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - manual-ticks
-  - custom-legend
-  - iteration-over-groups
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - binning
   styling:
-  - publication-ready
   - edge-highlighting
   - grid-styling
