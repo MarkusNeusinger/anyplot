@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: heatmap-annotated
 created: '2026-08-05T09:40:05Z'
-updated: '2026-08-05T09:44:20Z'
+updated: '2026-08-05T09:55:32Z'
 generated_by: claude-sonnet
 workflow_run: 30993781873
 issue: 1824
@@ -12,105 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Correctly worked around the missing heatmap module — the core Highcharts bundle
-    doesn't ship modules/heatmap, so the implementation draws cells, annotations,
-    and the colorbar manually via chart.renderer, exactly per the library's guidance.
-  - 'Diverging color scale follows the style guide precisely: #AE3030 (negative) →
-    theme-adaptive midpoint (#FAF8F1 light / #1A1A17 dark) → #4467A3 (positive), with
-    a WCAG relative-luminance function picking black vs. off-white text per cell for
-    guaranteed contrast.'
-  - 'Both renders are clean and theme-correct: warm off-white/near-black backgrounds,
-    identical data colors between themes (only chrome and the theme-adaptive midpoint
-    flip), no clipping, no overlap.'
-  - Custom diverging colorbar with correct labeled endpoints (1 / 0 / -1) and a 'Correlation
-    (r)' title communicates the scale clearly alongside the per-cell values.
-  - Realistic, neutral 7×7 macroeconomic correlation matrix with plausible signs and
-    magnitudes (e.g. GDP Growth vs. Unemployment strongly negative, Consumer Conf.
-    vs. GDP Growth strongly positive).
+  - 'The requested data-storytelling fix from attempt 1 landed cleanly: amber-outlined
+    focal cells plus a two-clause caption (''Strongest link... / Sharpest divide...'')
+    give the reader an immediate takeaway beyond raw color scanning.'
+  - 'Correct diverging Imprint colormap (imprint_div: matte-red -1, theme-adaptive
+    page-bg midpoint 0, blue +1), with a luminance-based per-cell text-color function
+    that keeps every annotation high-contrast in both themes.'
+  - Explicit, well-proportioned typography throughout (18px cell values, 14px axis
+    labels, 13px caption/colorbar text) with a title font size dynamically scaled
+    to the 67-char baseline so the long mandated title fits without overflow or clipping.
+  - 'Realistic, internally consistent macroeconomic correlation data: symmetric matrix,
+    diagonal = 1.00, and economically plausible relationships (e.g. unemployment vs.
+    GDP growth at -0.71, consistent with Okun''s law).'
+  - Correct title format with descriptive prefix, and a clearly labeled diverging
+    colorbar ('Correlation (r)', ticks at -1/0/1) serving as the legend the spec requires.
   weaknesses:
-  - No visual emphasis or storytelling device beyond the raw diverging color (e.g.
-    highlighting the strongest positive/negative pair, or clustering rows/columns
-    by similarity) — the matrix is left in a fixed alphabetical-ish order rather than
-    grouped by correlation structure, which is a common heatmap technique to strengthen
-    the takeaway.
-  - 'The implementation forgoes Highcharts'' series/data model entirely (empty series:
-    []) in favor of full manual SVG drawing via chart.renderer — necessary given the
-    missing heatmap module, but it means axis/tooltip/legend infrastructure that Highcharts
-    would normally provide is reimplemented by hand, adding surface area (multiple
-    helper functions) for what the criteria consider a KISS-scored plot.'
-  - Colorbar is built from 40 discrete rect segments rather than a true SVG gradient
-    — at this size banding is not visually obvious, but a linearGradient fill would
-    be smoother and is a native Highcharts renderer capability.
+  - 'Because the core highcharts bundle doesn''t include the heatmap module, the implementation
+    forgoes Highcharts'' native series/data model entirely (series: []) in favor of
+    manual SVG drawing via chart.renderer — a documented, necessary workaround, but
+    it means the plot can''t showcase the library''s high-level heatmap API and keeps
+    Library Mastery capped.'
+  - The colorbar is still built from 40 discrete rect segments rather than a true
+    SVG linearGradient fill; not visually banded at this size, but a native gradient
+    would be a more idiomatic Highcharts renderer technique.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Macroeconomic Indicator Correlations · heatmap-annotated · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible, spans roughly 70-75% of the plot width. Subtitle "Pairwise Pearson correlation across 7 quarterly macroeconomic indicators" in lighter gray, fully legible below the title. Row labels (Inflation, Unemployment, Interest Rate, GDP Growth, Consumer Conf., Stock Index, Housing Starts) right-aligned to the left of the matrix in dark-gray ink, fully readable. Column labels rotated -40° below the matrix, same styling, fully readable with no clipping. Colorbar on the right labeled "Correlation (r)" with endpoints "1" / "0" / "-1", all legible.
-      Data: 7×7 diverging heatmap, blue cells for positive correlation (#4467A3-derived), red cells for negative correlation (#AE3030-derived), near-background pale cells near zero. Diagonal is uniform deep blue (1.00). Each cell shows its numeric value to 2 decimal places, rendered in dark text on light cells and off-white text on dark/saturated cells — contrast is well chosen throughout via the luminance-based text-color function.
-      Legibility verdict: PASS — all text (title, subtitle, row/column labels, cell values, colorbar labels) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matching #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Macroeconomic Indicator Correlations · heatmap-annotated · javascript · highcharts · anyplot.ai" in bold dark ink, fully legible, spanning roughly 70-75% of plot width (expected for the long mandated title format). Subtitle "Pairwise Pearson correlation across 7 quarterly macroeconomic indicators" in soft gray beneath it. A new caption line ("Strongest link: GDP Growth ↔ Consumer Conf. (+0.74) · Sharpest divide: Unemployment ↔ GDP Growth (-0.71)") sits between the subtitle and the matrix, clearly readable and not colliding with either. Row labels (Inflation, Unemployment, Interest Rate, GDP Growth, Consumer Conf., Stock Index, Housing Starts) right-aligned left of the matrix; column labels rotated -40° below it — both fully legible with no clipping. Colorbar on the right labeled "Correlation (r)" with endpoints 1 / 0 / -1, all legible.
+      Data: 7x7 diverging heatmap — blue cells for positive correlation, red cells for negative, near-background pale cells near zero, diagonal uniform deep blue (1.00). Each cell shows its value to 2 decimal places in dark or off-white text chosen per-cell for contrast. Two symmetric cell pairs (GDP Growth/Consumer Conf. and Unemployment/GDP Growth) are outlined in amber, matching the caption above.
+      Legibility verdict: PASS — every text element (title, subtitle, caption, row/column labels, cell values, colorbar labels) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and subtitle rendered in light ink/gray, clearly legible against the dark background. Row and column labels also light-gray, fully readable, matching light-render positions and rotation. Colorbar labels and "Correlation (r)" title legible in light gray.
-      Data: Same 7×7 matrix with identical cell fill colors as the light render (blue/red saturation for each value is pixel-for-pixel the same) — confirming only chrome (background, text colors) flips between themes, as required. The diverging midpoint color is theme-adaptively swapped from #FAF8F1 to #1A1A17 per the style guide's explicit allowance for diverging-colormap midpoints. Cell value text remains high-contrast in both cases.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, label, and cell value is clearly distinguishable from the near-black surface, and the brand-adjacent blue/red data colors read well on the dark surface.
+      Background: Warm near-black, matching #1A1A17 — not pure black, not light.
+      Chrome: Title, subtitle, and caption rendered in light ink/gray, fully legible against the dark background. Row and column labels are light-gray, matching the light render's layout and rotation exactly. Colorbar labels and "Correlation (r)" title remain legible in light gray.
+      Data: Same 7x7 matrix with pixel-identical cell fill colors to the light render — confirming only chrome (background, text) flips between themes, as required. The diverging midpoint is theme-adaptively swapped from #FAF8F1 to #1A1A17 per the style guide's explicit allowance. Cell value text stays high-contrast, and the same two cell pairs are outlined in amber, matching the caption.
+      Legibility verdict: PASS — no dark-on-dark failures; every title, label, caption, and cell value is clearly distinguishable from the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text (title, subtitle, row/column labels, cell values, colorbar
-          labels) legible in both themes with good contrast; explicit font sizes throughout.
+        comment: All font sizes explicitly set (18px cell values, 14px labels, 13px
+          caption/colorbar), title dynamically scaled to fit the long mandated string
+          without overflow; readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, cells, or the colorbar in either render.
+        comment: No collisions between title/subtitle/caption, axis labels, cell text,
+          or colorbar.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cell fills and colorbar segments are clearly visible and well-sized
-          for the 7x7 grid; rounded-corner cells with subtle gaps aid readability.
+        comment: Cell fills and amber focal outlines are clearly visible; rounded
+          cell corners give clean separation.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Numeric values provide redundant encoding beyond color; luminance-based
-          text color guarantees contrast on every cell.
+        comment: Diverging red/blue (not red-green) with per-cell luminance-based
+          text contrast; no CVD-only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct square canvas for heatmap, generous margins, nothing clipped
-          or overflowing, title within expected proportion.
+        comment: Matrix + colorbar occupy roughly 65-70% of the square canvas with
+          balanced margins on all sides.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches the mandated format with a descriptive prefix; colorbar
-          clearly labeled 'Correlation (r)'.
+        comment: Descriptive row/column labels and a units-bearing colorbar title
+          'Correlation (r)'.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses imprint_div (#AE3030 / theme-adaptive midpoint / #4467A3) exactly
-          per the style guide; backgrounds match #FAF8F1 / #1A1A17.'
+        comment: 'imprint_div (t.div[0]/[1]/[2]) with theme-adaptive midpoint; backgrounds
+          match #FAF8F1/#1A1A17; chrome theme-correct in both renders.'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -118,23 +114,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom SVG-drawn cells, WCAG-aware text contrast, and a hand-built
-          colorbar show clear polish above generic defaults.
+        comment: Custom diverging palette, rounded cell corners, amber focal accents,
+          and a scaled title — thoughtful, clearly above library defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Axes hidden, subtle rounded cell corners, generous whitespace and
-          margins, restrained typography.
+        comment: No native axes/spines (fully custom-drawn chrome), generous whitespace,
+          subtle inkSoft colorbar border.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Diverging color gives a basic focal contrast (deep-blue diagonal
-          vs. red/blue off-diagonal), but there is no extra emphasis (e.g. clustering,
-          highlighting the strongest pair) to sharpen the takeaway.
+        passed: true
+        comment: Amber-outlined focal cells plus an explicit caption naming the strongest
+          positive and negative pair give an immediate, unmissable insight.
     spec_compliance:
       score: 15
       max: 15
@@ -144,28 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements an annotated heatmap.
+        comment: Correct annotated heatmap.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color mapping, per-cell numeric annotations, contrast-aware text,
-          and colorbar legend all present.
+        comment: Contrast-aware annotations, colorbar legend, diverging colormap for
+          signed data, sensible font-to-cell-size ratio all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Rows/columns correctly labeled with a symmetric correlation matrix;
-          diagonal = 1.00.
+        comment: Rows/columns correctly mapped to labels, symmetric matrix with diagonal
+          = 1.00.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows '{Descriptive Title} · heatmap-annotated · javascript
-          · highcharts · anyplot.ai'; colorbar legend present and labeled.
+        comment: Title format correct with descriptive prefix; colorbar legend correctly
+          labeled and scaled.
     data_quality:
       score: 15
       max: 15
@@ -175,22 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows color-encoded matrix, exact-value annotations, diverging polarity,
-          and a colorbar scale — all plot-type aspects covered.
+        comment: Full range of correlation strengths shown, from -0.71 to 1.00, including
+          near-zero values.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Macroeconomic indicator correlations are plausible and neutral (non-controversial
-          domain).
+        comment: Neutral, real-world macroeconomic indicators.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 7x7 matrix within spec's 5-20 range; correlation values realistically
-          bounded in [-1, 1].
+        comment: Correlation magnitudes and signs are economically plausible (e.g.
+          unemployment/GDP consistent with Okun's law).
     code_quality:
       score: 9
       max: 10
@@ -200,65 +194,66 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several small helper functions (hexToRgb, lerp, colorAt, cellBg,
-          textColorFor, drawAll) — justified by the manual-render workaround for the
-          missing heatmap module, but adds more structure than a typical KISS script.
+        comment: Several helper functions are required by the manual-renderer workaround
+          (no heatmap module available); reasonable but adds surface area beyond a
+          minimal script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hardcoded, deterministic data.
+        comment: Fully deterministic, hard-coded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the provided globals are used.
+        comment: No unused imports; only browser globals used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity or UI; complexity matches the workaround's
-          needs.
+        comment: No fake UI or simulated interactivity; complexity is proportionate
+          to the manual-draw workaround.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly hooks into the #container mount via Highcharts.chart with
-          animation disabled on both chart and series.'
+        comment: Follows the mount-node contract correctly; animation disabled on
+          both chart and series.
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Follows the library doc's explicit guidance to avoid the unloaded
-          heatmap module and instead use chart.renderer primitives — the correct idiomatic
-          path given the constraint.
+        comment: Correct given the missing heatmap module, but relies on low-level
+          chart.renderer drawing rather than Highcharts' high-level series API.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: The renderer-based cell/label/colorbar construction and luminance-based
-          contrast function are a creative workaround, but not a showcase of Highcharts-specific
-          series/plugin features since the data model is bypassed entirely.
+        passed: true
+        comment: Uses Highcharts' renderer + load/redraw event hooks to keep hand-drawn
+          shapes synced to chart geometry — a real Highcharts-specific pattern, though
+          not the library's showcase feature.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - colorbar
+  - annotations
   patterns:
+  - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep:
   - correlation-matrix
   styling:
   - custom-colormap
+  - minimal-chrome
