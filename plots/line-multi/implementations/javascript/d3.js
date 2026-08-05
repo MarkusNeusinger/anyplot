@@ -6,7 +6,7 @@
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
 
-const margin = { top: 130, right: 60, bottom: 80, left: 90 };
+const margin = { top: 130, right: 140, bottom: 80, left: 90 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -73,6 +73,17 @@ const g = svg
   .append("g")
   .attr("transform", `translate(${margin.left},${margin.top})`);
 
+// Plot-area panel — subtle elevated backdrop for depth beyond the flat page background
+g.append("rect")
+  .attr("x", 0)
+  .attr("y", 0)
+  .attr("width", iw)
+  .attr("height", ih)
+  .attr("rx", 8)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1);
+
 // Y-axis grid lines (horizontal, subtle)
 y.ticks(7).forEach((tick) => {
   g.append("line")
@@ -84,11 +95,14 @@ y.ticks(7).forEach((tick) => {
     .attr("stroke-width", 1);
 });
 
-// Lines
+// Lines — curveMonotoneX gives a smooth, overshoot-free interpolation between
+// the sparse monthly points, reading as a considered curve rather than a raw
+// point-to-point polyline
 const line = d3
   .line()
   .x((d) => x(d.month))
-  .y((d) => y(d.value));
+  .y((d) => y(d.value))
+  .curve(d3.curveMonotoneX);
 
 series.forEach((s) => {
   const points = months.map((m, i) => ({ month: m, value: s.values[i] }));
@@ -107,10 +121,22 @@ series.forEach((s) => {
     .join("circle")
     .attr("cx", (d) => x(d.month))
     .attr("cy", (d) => y(d.value))
-    .attr("r", 5)
+    .attr("r", 6)
     .attr("fill", s.color)
     .attr("stroke", t.pageBg)
     .attr("stroke-width", 1.5);
+
+  // Direct end-of-line label, positioned via the y-scale — gives each line
+  // its own focal point at a glance instead of relying solely on the legend
+  const last = points[points.length - 1];
+  g.append("text")
+    .attr("x", x(last.month) + 14)
+    .attr("y", y(last.value))
+    .attr("dy", "0.35em")
+    .attr("fill", s.color)
+    .style("font-size", "13px")
+    .style("font-weight", "600")
+    .text(s.name);
 });
 
 // X axis (bottom)
@@ -137,6 +163,7 @@ svg
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "16px")
+  .style("font-weight", "500")
   .text("Avg. Temperature (°C)");
 
 // X axis label
@@ -147,6 +174,7 @@ svg
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "16px")
+  .style("font-weight", "500")
   .text("Month");
 
 // Legend — horizontal row below the title
@@ -169,7 +197,7 @@ series.forEach((s, i) => {
     .append("circle")
     .attr("cx", lx + 14)
     .attr("cy", legendY)
-    .attr("r", 5)
+    .attr("r", 6)
     .attr("fill", s.color)
     .attr("stroke", t.pageBg)
     .attr("stroke-width", 1.5);
@@ -179,6 +207,7 @@ series.forEach((s, i) => {
     .attr("y", legendY + 5)
     .attr("fill", t.inkSoft)
     .style("font-size", "14px")
+    .style("font-weight", "500")
     .text(s.name);
 });
 
@@ -190,7 +219,8 @@ svg
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "18px")
-  .style("font-weight", "600")
+  .style("font-weight", "700")
+  .style("letter-spacing", "0.2px")
   .text(
     "Monthly Average Temperatures by City · line-multi · javascript · d3 · anyplot.ai",
   );
