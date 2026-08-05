@@ -166,8 +166,9 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `workflow_dispatch`. Section C now reads the workflow state first and skips the rescue for any
   disabled state, quietly for `disabled_manually` and loudly for GitHub's 60-day
   `disabled_inactivity`. Verified with harnesses that extract `dispatch()` verbatim from the YAML
-  and replicate the Case 2 and Section C guards exactly: 23 cases covering a disabled target,
-  transient failure and success, the six Case 2 label shapes, and the full workflow-state ×
+  and replicate the Case 2 and Section C guards exactly: 25 cases covering a disabled target,
+  transient failure and success, counter propagation through the real
+  `while ... done < <(...)` scan loop, the six Case 2 label shapes, and the full workflow-state ×
   quiet-window × gap matrix (#10180).
 
 - **A correctly rejected plot was reported as a crashed review, deadlocking the PR** —

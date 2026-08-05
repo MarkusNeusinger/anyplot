@@ -399,4 +399,15 @@ jobs:
             fi
           fi
 
-          echo "::notice::Watchdog scan complete"
+          # Surface the tally. Individual failures are warned about inline, but
+          # a scan that dispatched nothing successfully now looks identical to
+          # a quiet, healthy one unless the total is stated — and an
+          # always-green watchdog that quietly rescues nothing is the failure
+          # mode this whole PR is about. Deliberately not `exit 1`: aborting is
+          # what took the scan down in the first place, and a red run would
+          # hide the summary behind a failed step.
+          if (( DISPATCH_FAILURES > 0 )); then
+            echo "::warning::Watchdog scan complete — ${DISPATCH_FAILURES} dispatch(es) failed (see warnings above)"
+          else
+            echo "::notice::Watchdog scan complete — all dispatches succeeded"
+          fi
