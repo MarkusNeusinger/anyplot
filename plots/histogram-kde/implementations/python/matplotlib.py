@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-kde: Histogram with KDE Overlay
-Library: matplotlib 3.11.1 | Python 3.13.12
-Quality: 82/100 | Updated: 2026-08-05
+Library: matplotlib 3.11.1 | Python 3.13.14
+Quality: 85/100 | Updated: 2026-08-05
 """
 
 import os
