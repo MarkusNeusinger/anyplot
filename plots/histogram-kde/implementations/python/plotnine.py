@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-kde: Histogram with KDE Overlay
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-06
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-08-05
 """
 
 import os
@@ -16,6 +16,7 @@ from plotnine import (
     element_text,
     geom_density,
     geom_histogram,
+    geom_vline,
     ggplot,
     labs,
     theme,
@@ -23,10 +24,9 @@ from plotnine import (
 )
 
 
-# Theme tokens
+# Theme tokens (Imprint palette)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
@@ -44,27 +44,29 @@ returns = np.concatenate(
 returns = returns * 100  # Convert to percentage
 
 df = pd.DataFrame({"returns": returns})
+mean_return = returns.mean()
 
-# Plot - Histogram with KDE overlay
+# Plot - Histogram with KDE overlay, mean marked for distributional context
 plot = (
     ggplot(df, aes(x="returns"))
-    + geom_histogram(aes(y=after_stat("density")), bins=35, fill=BRAND, color=BRAND, alpha=0.5, size=0.3)
-    + geom_density(color=INK, size=2.5)
+    + geom_histogram(aes(y=after_stat("density")), bins=35, fill=BRAND, color=BRAND, alpha=0.5, size=0.2)
+    + geom_density(color=INK, size=1.1)
+    + geom_vline(xintercept=mean_return, color=INK_SOFT, linetype="dashed", size=0.6)
     + labs(x="Daily Return (%)", y="Density", title="histogram-kde · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK, size=0.4, alpha=0.15),
-        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.08),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
         panel_border=element_rect(color=INK_SOFT, fill=None, size=0.3),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.3),
-        plot_title=element_text(size=24, color=INK),
-        text=element_text(size=14),
+        plot_title=element_text(size=12, color=INK),
+        text=element_text(size=7),
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
