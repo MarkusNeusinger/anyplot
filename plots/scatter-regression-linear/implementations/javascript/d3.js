@@ -76,6 +76,23 @@ const y = d3
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
+// A soft drop-shadow filter (d3-authored SVG defs) gives the stats callout a
+// subtle elevated feel instead of a flat rect-on-rect look.
+const defs = svg.append("defs");
+defs
+  .append("filter")
+  .attr("id", "stats-shadow")
+  .attr("x", "-20%")
+  .attr("y", "-20%")
+  .attr("width", "140%")
+  .attr("height", "140%")
+  .append("feDropShadow")
+  .attr("dx", 0)
+  .attr("dy", 2)
+  .attr("stdDeviation", 3)
+  .attr("flood-color", "#000000")
+  .attr("flood-opacity", 0.28);
+
 // --- Gridlines ------------------------------------------------------------
 g.append("g")
   .attr("transform", `translate(0,${ih})`)
@@ -122,6 +139,25 @@ g.append("path")
   .attr("stroke", t.palette[2])
   .attr("stroke-width", 4);
 
+// --- Residual callouts (d3-specific: sort + join to surface the largest
+// deviations from the fit, giving the trend a concrete storytelling anchor) --
+const topResiduals = data
+  .map((d) => ({ ...d, yHat: slope * d.x + intercept }))
+  .sort((a, b) => Math.abs(b.y - b.yHat) - Math.abs(a.y - a.yHat))
+  .slice(0, 3);
+g.selectAll(".residual-line")
+  .data(topResiduals)
+  .join("line")
+  .attr("class", "residual-line")
+  .attr("x1", (d) => x(d.x))
+  .attr("y1", (d) => y(d.y))
+  .attr("x2", (d) => x(d.x))
+  .attr("y2", (d) => y(d.yHat))
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.25)
+  .attr("stroke-dasharray", "3,3")
+  .attr("stroke-opacity", 0.55);
+
 // --- Axes ---------------------------------------------------------------------
 const xAxis = g
   .append("g")
@@ -131,7 +167,7 @@ const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6).tickFormat((d) => `$${d
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
   ax.selectAll("line").attr("stroke", t.inkSoft);
-  ax.select(".domain").attr("stroke", t.inkSoft);
+  ax.select(".domain").attr("stroke", t.inkSoft).attr("stroke-opacity", 0.5);
 }
 
 // --- Axis labels ---------------------------------------------------------------
@@ -141,7 +177,7 @@ g.append("text")
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "17px")
-  .text("Advertising Spend ($ thousands)");
+  .text("Advertising Spend");
 g.append("text")
   .attr("transform", "rotate(-90)")
   .attr("x", -ih / 2)
@@ -149,7 +185,7 @@ g.append("text")
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "17px")
-  .text("Monthly Sales Revenue ($ thousands)");
+  .text("Monthly Sales Revenue");
 
 // --- Fit statistics annotation (spec asks R²/r to be shown prominently) -------
 const statsBox = g.append("g").attr("transform", "translate(16, 16)");
@@ -158,11 +194,14 @@ statsBox
   .attr("width", 250)
   .attr("height", 70)
   .attr("fill", t.elevatedBg)
-  .attr("opacity", 0.9)
-  .attr("rx", 6);
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1)
+  .attr("rx", 8)
+  .style("filter", "url(#stats-shadow)");
+statsBox.append("rect").attr("width", 4).attr("height", 70).attr("fill", t.palette[2]).attr("rx", 2);
 statsBox
   .append("text")
-  .attr("x", 16)
+  .attr("x", 20)
   .attr("y", 28)
   .attr("fill", t.ink)
   .style("font-size", "16px")
@@ -170,7 +209,7 @@ statsBox
   .text(`R² = ${rSquared.toFixed(2)}  (r = ${r.toFixed(2)})`);
 statsBox
   .append("text")
-  .attr("x", 16)
+  .attr("x", 20)
   .attr("y", 52)
   .attr("fill", t.inkSoft)
   .style("font-size", "15px")
