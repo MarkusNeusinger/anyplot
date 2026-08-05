@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-06
+Quality: 87/100 | Updated: 2026-08-05
 """
 
 import os
@@ -9,16 +9,16 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Theme tokens
+# Theme tokens (Imprint palette, see prompts/default-style-guide.md)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
-ACCENT = "#C475FD"  # Okabe-Ito position 2 (for regression line)
+BRAND = "#009E73"  # Imprint palette position 1 — always first series
+ACCENT = "#C475FD"  # Imprint palette position 2 — regression line + CI band
 
 # Data - Temperature vs Energy Consumption
 np.random.seed(42)
@@ -27,7 +27,7 @@ temperature = np.random.uniform(45, 95, n)  # Fahrenheit
 noise = np.random.normal(0, 12, n)
 energy_consumption = 0.65 * temperature + 800 + noise  # kWh
 
-# Calculate regression statistics
+# Closed-form OLS — drives the 95% CI band and the equation/R² annotation
 x_mean = np.mean(temperature)
 y_mean = np.mean(energy_consumption)
 ss_xx = np.sum((temperature - x_mean) ** 2)
@@ -35,93 +35,105 @@ ss_xy = np.sum((temperature - x_mean) * (energy_consumption - y_mean))
 slope = ss_xy / ss_xx
 intercept = y_mean - slope * x_mean
 
-# Calculate R-squared
 y_pred = slope * temperature + intercept
 ss_res = np.sum((energy_consumption - y_pred) ** 2)
 ss_tot = np.sum((energy_consumption - y_mean) ** 2)
 r_squared = 1 - (ss_res / ss_tot)
 
-# Create regression line and confidence interval
 x_line = np.linspace(temperature.min(), temperature.max(), 150)
 y_line = slope * x_line + intercept
-
-# 95% confidence interval calculation
 mse = ss_res / (n - 2)
 se_line = np.sqrt(mse * (1 / n + (x_line - x_mean) ** 2 / ss_xx))
-t_val = 1.984  # t-critical for 95% CI with df=98
+t_val = 1.984  # t-critical for 95% CI, df=98
 y_upper = y_line + t_val * se_line
 y_lower = y_line - t_val * se_line
 
-# Create dataframes
 df_scatter = pd.DataFrame({"Temperature (°F)": temperature, "Energy (kWh)": energy_consumption})
-df_line = pd.DataFrame({"Temperature (°F)": x_line, "Energy (kWh)": y_line, "y_upper": y_upper, "y_lower": y_lower})
+df_band = pd.DataFrame({"Temperature (°F)": x_line, "y_lower": y_lower, "y_upper": y_upper})
 
-# Create scatter points
-scatter = (
-    alt.Chart(df_scatter)
-    .mark_point(size=180, opacity=0.7, filled=True)
-    .encode(
-        x=alt.X("Temperature (°F):Q", scale=alt.Scale(zero=False)),
-        y=alt.Y("Energy (kWh):Q", scale=alt.Scale(zero=False)),
-        color=alt.value(BRAND),
-    )
-)
-
-# Create confidence band
-band = (
-    alt.Chart(df_line)
-    .mark_area(opacity=0.15, fillOpacity=0.15)
-    .encode(x="Temperature (°F):Q", y=alt.Y("y_lower:Q", title="Energy (kWh)"), y2="y_upper:Q", color=alt.value(ACCENT))
-)
-
-# Create regression line
-line = (
-    alt.Chart(df_line)
-    .mark_line(strokeWidth=3)
-    .encode(x="Temperature (°F):Q", y="Energy (kWh):Q", color=alt.value(ACCENT))
-)
-
-# Annotation for R² and equation
 equation_text = f"y = {slope:.2f}x + {intercept:.1f}"
 r2_text = f"R² = {r_squared:.3f}"
 annotation_df = pd.DataFrame({"equation": [equation_text], "r2": [r2_text]})
 
+# Layers
+scatter = (
+    alt.Chart(df_scatter)
+    .mark_point(size=70, opacity=0.65, filled=True)
+    .encode(
+        x=alt.X("Temperature (°F):Q", scale=alt.Scale(zero=False)),
+        y=alt.Y("Energy (kWh):Q", scale=alt.Scale(zero=False)),
+        color=alt.value(BRAND),
+        tooltip=[alt.Tooltip("Temperature (°F):Q", format=".1f"), alt.Tooltip("Energy (kWh):Q", format=".1f")],
+    )
+)
+
+band = (
+    alt.Chart(df_band)
+    .mark_area(opacity=0.18, color=ACCENT)
+    .encode(x="Temperature (°F):Q", y=alt.Y("y_lower:Q", title="Energy (kWh)"), y2="y_upper:Q")
+)
+
+# Regression line fit natively via Altair's declarative regression transform
+regression_line = (
+    alt.Chart(df_scatter)
+    .transform_regression("Temperature (°F)", "Energy (kWh)", method="linear")
+    .mark_line(strokeWidth=2.5, color=ACCENT)
+    .encode(x="Temperature (°F):Q", y="Energy (kWh):Q")
+)
+
 annotation_eq = (
     alt.Chart(annotation_df)
-    .mark_text(align="left", baseline="top", fontSize=18, fontWeight="bold", dx=20, dy=20)
+    .mark_text(align="left", baseline="top", fontSize=13, fontWeight="bold", dx=12, dy=12)
     .encode(x=alt.value(0), y=alt.value(0), text="equation:N", color=alt.value(INK))
 )
 
 annotation_r2 = (
     alt.Chart(annotation_df)
-    .mark_text(align="left", baseline="top", fontSize=18, fontWeight="bold", dx=20, dy=50)
+    .mark_text(align="left", baseline="top", fontSize=13, fontWeight="bold", dx=12, dy=32)
     .encode(x=alt.value(0), y=alt.value(0), text="r2:N", color=alt.value(INK))
 )
 
-# Combine layers
+# Title — mandated format, length-scaled fontsize (see prompts/plot-generator.md)
+title_str = "scatter-regression-linear · python · altair · anyplot.ai"
+title_fontsize = round(16 * (67 / len(title_str) if len(title_str) > 67 else 1.0))
+
 chart = (
-    alt.layer(band, line, scatter, annotation_eq, annotation_r2)
+    alt.layer(band, regression_line, scatter, annotation_eq, annotation_r2)
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title("scatter-regression-linear · altair · anyplot.ai", fontSize=28, anchor="start"),
+        width=620,
+        height=320,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
+        title=alt.Title(title_str, fontSize=title_fontsize, anchor="start"),
         background=PAGE_BG,
     )
+    .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=620, continuousHeight=320)
     .configure_axis(
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=10,
+        titleFontSize=12,
         labelColor=INK_SOFT,
         titleColor=INK,
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
-        gridOpacity=0.10,
+        gridOpacity=0.12,
         gridColor=INK,
     )
-    .configure_title(color=INK, fontSize=28, anchor="start", fontWeight="normal")
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_title(color=INK, fontSize=title_fontsize, anchor="start", fontWeight="normal")
 )
 
 # Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
