@@ -1,0 +1,234 @@
+library: muix
+language: javascript
+specification_id: bar-horizontal
+created: '2026-08-05T17:30:12Z'
+updated: '2026-08-05T17:36:11Z'
+generated_by: claude-sonnet
+workflow_run: 31029799565
+issue: 1946
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/muix/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Precise Imprint palette usage: brand green reserved for the single highlighted
+    leader bar, with the exact theme-adaptive INK_MUTED tokens (#6B6A63 light / #A8A79F
+    dark) from the style guide for the supporting bars.'
+  - Per-bar label coloring (LABEL_ON_BRAND vs. LABEL_ON_MUTED, itself theme-adaptive)
+    keeps every in-bar value label contrast-safe in both themes.
+  - 'Strong data storytelling: sorted ranking + single highlighted leader + narrative
+    subtitle gives the chart an immediate, legible point of view.'
+  - 'Fully spec-compliant: correct title format, canvas size, sorted bars, in-bar
+    value labels, and adequate spacing between the 8 categories.'
+  weaknesses:
+  - 'Dead CSS rule: sx targets .MuiChartsGrid-line but no ChartsGrid is enabled anywhere
+    in the chart, so the rule never applies.'
+  - series[0].valueFormatter ("${v} votes") is defined but the rendered barLabel="value"
+    shows only the bare number; the formatter only reaches the non-visible-in-PNG
+    tooltip.
+  - No explicit y-axis title, though the category tick labels are self-descriptive
+    so this is a minor nit.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title (dark ink) and subtitle (soft gray) top-left, fully legible. X-axis label "Customer Votes" and tick labels (0-950, step 50) in soft gray, legible. Y-axis category tick labels (8 feature names) in soft gray, legible, no truncation.
+      Data: Top bar "Dark mode support" filled brand green (#009E73) with bold dark-ink value label "842" centered inside. Remaining 7 bars filled muted olive-gray (#6B6A63-family) with white/cream value labels centered inside, sorted descending 715 -> 312.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and subtitle render in light ink / soft gray, fully legible against dark background. Axis label, tick labels, and category names all light-on-dark, legible. No dark-on-dark failures.
+      Data: Top bar identical brand green (#009E73) with the same dark-ink label, reads well on both surfaces. Remaining bars use the theme-adaptive muted gray (#A8A79F, lighter than the light-theme muted value by design per style guide's INK_MUTED token) with dark value labels that stay contrast-safe against the lighter fill. Bar colors are conceptually identical brand-vs-muted scheme across themes; only the muted tone's specific value adapts per the style guide's semantic-anchor rule, which is expected and correct (not a violation of "data colors stay identical" -- that rule applies to the 8 core categorical palette positions, not the theme-adaptive muted/neutral anchors).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, all readable in both themes; title
+          auto-shrinks for length.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, bars, or labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 categories, bars sized appropriately, clean spacing via categoryGapRatio.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green vs muted gray is a strong, non-red-green contrast; per-bar
+          label colors chosen for contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, title ~45% width, generous left margin for long
+          category labels, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Customer Votes" x-axis label descriptive; category names self-explanatory.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series exactly #009E73; muted anchor matches style guide''s
+          INK_MUTED token exactly; both backgrounds theme-correct.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate highlight-the-leader design with correct semantic-muted
+          supporting bars; polished but not maximal ornamentation.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clean chrome, generous whitespace; minor blemish: unused grid CSS
+          selector.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Sorted ranking + single highlighted leader + narrative subtitle creates
+          a clear focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted descending, consistent height, highlight scheme, adequate
+          spacing, in-bar value labels.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: category -> y, value -> x, full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend correctly hidden for single labeled series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Categories, values, ranking, and highlighting all demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral product-roadmap survey scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Vote counts sensible for the stated 1,842-respondent survey.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single component function, no unnecessary abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded, deterministic arrays.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only BarChart, Box, Typography, all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Respects harness mount contract; skipAnimation set; sized from window.ANYPLOT_SIZE.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct layout="horizontal", band scale, colorMap ordinal, barLabel,
+          margin tuning; valueFormatter never surfaces on the bar label.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-category colorMap and per-bar dynamic slotProps.barLabel style
+          function are genuinely MUI X-specific and used well.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome

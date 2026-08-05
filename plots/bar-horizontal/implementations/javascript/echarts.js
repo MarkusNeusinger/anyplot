@@ -1,0 +1,94 @@
+// anyplot.ai
+// bar-horizontal: Horizontal Bar Chart
+// Library: echarts 6.1.0 | JavaScript 22.23.1
+// Quality: 93/100 | Created: 2026-08-05
+
+const t = window.ANYPLOT_TOKENS;
+
+// --- Data (in-memory, deterministic) ----------------------------------------
+// Survey: reasons customers cited for choosing a software subscription (n=500,
+// multi-select, so shares don't sum to 100). Sorted descending for ranking.
+const reasons = [
+  "Ease of use and onboarding",
+  "Price and value for money",
+  "Customer support quality",
+  "Integration with existing tools",
+  "Feature completeness",
+  "Data security and compliance",
+  "Recommendation from a colleague",
+  "Brand reputation",
+];
+const shares = [68, 61, 54, 47, 41, 35, 24, 18];
+
+// Top-ranked reason (index 0, since shares are sorted descending) keeps
+// full-strength brand green and a bold value label as the focal point; the
+// rest are softened so the ranking hierarchy reads at a glance, not just
+// from sort order.
+const barData = shares.map((value, i) => ({
+  value,
+  itemStyle: {
+    borderRadius: [0, 4, 4, 0],
+    color: i === 0 ? t.palette[0] : `${t.palette[0]}99`,
+  },
+  label: i === 0 ? { fontWeight: 700 } : undefined,
+}));
+
+// --- Init --------------------------------------------------------------------
+const chart = echarts.init(document.getElementById("container"));
+
+// --- Option --------------------------------------------------------------------
+chart.setOption({
+  animation: false,
+  color: t.palette,
+  backgroundColor: "transparent",
+  title: {
+    text: "bar-horizontal · javascript · echarts · anyplot.ai",
+    left: "center",
+    textStyle: { color: t.ink, fontSize: 26, fontWeight: 500 },
+  },
+  grid: { left: 24, right: 90, top: 90, bottom: 70, containLabel: true },
+  xAxis: {
+    type: "value",
+    name: "Respondents citing this reason (%)",
+    nameLocation: "middle",
+    nameGap: 40,
+    nameTextStyle: { color: t.inkSoft, fontSize: 14 },
+    max: 80,
+    axisLabel: { color: t.inkSoft, fontSize: 14, formatter: "{value}%" },
+    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisTick: { show: false },
+    splitLine: { lineStyle: { color: t.grid } },
+  },
+  yAxis: {
+    type: "category",
+    data: reasons,
+    inverse: true,
+    axisLabel: { color: t.inkSoft, fontSize: 14 },
+    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisTick: { show: false },
+    splitLine: { show: false },
+  },
+  series: [
+    {
+      type: "bar",
+      data: barData,
+      barCategoryGap: "35%",
+      label: {
+        show: true,
+        position: "right",
+        formatter: "{c}%",
+        color: t.ink,
+        fontSize: 14,
+      },
+      // ECharts-distinctive touch: an auto-computed average markLine gives
+      // viewers an at-a-glance benchmark beyond the raw ranking.
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        label: { formatter: "Avg {c}%", color: t.inkSoft, fontSize: 12, position: "insideEndTop" },
+        data: [{ type: "average", name: "Average" }],
+      },
+    },
+  ],
+});
