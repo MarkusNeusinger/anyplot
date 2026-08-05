@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-annotated: Annotated Heatmap
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-06
@@ -290,21 +290,18 @@ custom_style = Style(
     font_family="sans-serif",
 )
 
-# Diverging colormap: blue (low) -> white (mid) -> red (high)
+# Diverging colormap (Imprint imprint_div): matte-red -> theme midpoint -> blue
+MIDPOINT = PAGE_BG
 diverging_colormap = [
-    "#2166ac",  # Strong blue (negative)
-    "#67a9cf",  # Light blue
-    "#d1e5f0",  # Very light blue
-    "#f7f7f7",  # White (zero/neutral)
-    "#fddbc7",  # Very light red
-    "#ef8a62",  # Light red
-    "#b2182b",  # Strong red (positive)
+    "#AE3030",  # matte red (low correlation)
+    MIDPOINT,  # theme-adaptive neutral midpoint
+    "#4467A3",  # blue (high correlation)
 ]
 
 # Create annotated heatmap
 chart = AnnotatedHeatmap(
-    width=3600,
-    height=3600,
+    width=2400,
+    height=2400,
     style=custom_style,
     title="heatmap-annotated · pygal · anyplot.ai",
     matrix_data=correlation_matrix,
