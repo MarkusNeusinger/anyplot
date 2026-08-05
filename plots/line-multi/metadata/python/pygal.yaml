@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-multi
 created: '2025-12-24T21:32:38Z'
-updated: '2026-08-05T07:36:38Z'
+updated: '2026-08-05T07:44:42Z'
 generated_by: claude-sonnet
 workflow_run: 30985181103
 issue: 1825
@@ -12,17 +12,21 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mult
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
+  - 'Repair directly addressed all three attempt-1 weaknesses: explicit Helvetica
+    Neue sans-serif font_family replaces the default monospace look, hermite/cardinal
+    interpolation gives the lines a distinctive smooth-curve treatment, and dots_size=9
+    on the Electronics hero series sharpens the focal point'
   - 'Correct Imprint palette: Electronics=#009E73 (brand green, first series), Clothing/Home
     Goods/Sports follow canonical order (#C475FD, #4467A3, #BD8233), identical across
     both themes'
-  - Canvas is exactly 3200x1800 with no clipped or overflowing elements
+  - Canvas is exactly 3200x1800 in both renders with no clipped, cropped, or overflowing
+    elements
   - 'Deliberate visual hierarchy: Electronics uses a bolder solid stroke (width=4)
-    while the other three series use distinct dasharray patterns, giving redundant
-    color+style encoding for CVD accessibility and a clear focal point on the growth
-    story'
+    and larger dots (9px) while the other three series use distinct dasharray patterns
+    at default dot size, giving redundant color+style+size encoding for CVD accessibility'
   - All chrome (title, x/y axis titles, tick labels, legend) is clearly legible with
     correct contrast in both the light (#FAF8F1) and dark (#1A1A17) renders, with
     no dark-on-dark or light-on-light failures
@@ -30,31 +34,36 @@ review:
     axis titles are descriptive and include units ('Sales (thousands USD)')
   - Clean, deterministic, KISS-structured script with no unused imports; saves both
     plot-{theme}.png and plot-{theme}.html as required for an interactive library
+  - Hermite/cardinal interpolation is a genuinely distinctive pygal-only capability
+    (curves pass exactly through every data point rather than smoothing them away)
+    and is showcased cleanly without artifacts or overshoot in either render
   weaknesses:
-  - Styling relies mostly on pygal's default monospace typography and a plain dashed
-    horizontal grid; beyond the palette and per-series dash patterns there is little
-    extra visual polish (no fills, smoothing, or refined chrome) to lift Design Excellence
-  - dots_size=7 is only moderately prominent for a sparse 12-point-per-series dataset
-    with four overlapping lines — slightly larger or emphasized markers on the hero
-    series would sharpen the focal point
-  - Library usage stays fairly standard (Style object + per-series stroke_style) without
-    showcasing more distinctive pygal-only capabilities (e.g. value labels, interpolation,
-    secondary scale)
+  - Beyond the font swap and curve interpolation, chrome is still fairly minimal (plain
+    dashed horizontal grid, standard legend swatches, no fills/gradients) — further
+    polish (e.g. a subtle area fill under the hero line, refined legend chrome) could
+    push Design Excellence higher
+  - Only the Electronics hero series received the larger dots_size=9 treatment; the
+    other three series remain at the original dots_size=7 default, which is a reasonable
+    hierarchy choice but leaves some room for a more deliberate secondary-tier sizing
+    decision
+  - Library Mastery now showcases one distinctive pygal-only feature (hermite interpolation)
+    but could go further — e.g. value labels, secondary y-range, or fancy tooltip
+    mode — to fully differentiate from a generic Line chart
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "line-multi · python · pygal · anyplot.ai" centered at top in dark monospace text, spanning ~51% of canvas width. Y-axis title "Sales (thousands USD)" rotated vertically on the far left; x-axis title "Month" centered below the tick labels. Tick labels (Jan-Dec on x, 30-110 on y) are dark and crisp. Legend in the upper-left listing Electronics/Clothing/Home Goods/Sports with small color swatches. Horizontal dashed gridlines only (no vertical guides), subtle gray, not competing with data. All chrome reads clearly against the light background.
-      Data: Four lines — Electronics (solid, bold, #009E73 green), Clothing (dashed, #C475FD lavender), Home Goods (fine-dotted, #4467A3 blue), Sports (dash-dot, #BD8233 ochre) — each with round markers at all 12 monthly points. First series is confirmed brand green.
+      Chrome: Title "line-multi · python · pygal · anyplot.ai" centered at top in dark sans-serif text (Helvetica Neue stack, no longer the default monospace look from attempt 1), spanning roughly 40% of canvas width. Y-axis title "Sales (thousands USD)" rotated vertically at far left; x-axis title "Month" centered below the Jan-Dec tick labels. Legend in the upper-left lists Electronics/Clothing/Home Goods/Sports with color swatches, sized clearly via legend_box_size=30. Horizontal dashed gridlines only (no vertical guides), subtle gray, not competing with the data. All chrome reads clearly and crisply against the light background.
+      Data: Four hermite-interpolated (cardinal-smoothed) lines, each passing exactly through its 12 monthly data points with round markers: Electronics (solid, bold width=4, larger 9px dots, #009E73 green) is visually the hero series; Clothing (dashed, #C475FD lavender), Home Goods (fine-dotted, #4467A3 blue), and Sports (dash-dot, #BD8233 ochre) use standard 7px dots. The smooth curves show no interpolation artifacts or overshoot. First series is confirmed brand green.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, and legend layout, now rendered in light/off-white text against the dark background. Gridlines flip to a subtle light-gray dashed tone. No dark-on-dark text anywhere — every label, tick, and legend entry is clearly legible.
-      Data: Identical line colors, dash patterns, and marker styles to the light render (#009E73, #C475FD, #4467A3, #BD8233) — only the chrome (background, text, grid) flipped as expected.
+      Chrome: Same title, axis titles, and legend layout, rendered in light/off-white sans-serif text against the dark background. Gridlines flip to a subtle light-gray dashed tone. No dark-on-dark text anywhere — every label, tick, and legend entry is clearly legible.
+      Data: Identical line colors, dash patterns, dot sizes, and hermite curve shapes to the light render (#009E73, #C475FD, #4467A3, #BD8233) — only chrome (background, text, grid) flipped as expected.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,7 +72,8 @@ review:
         max: 8
         passed: true
         comment: Title, axis titles, tick labels, and legend all readable in both
-          themes; no dark-on-dark or light-on-light issues
+          themes with correct contrast; sans-serif font_family now explicitly set
+          instead of relying on default monospace
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -73,25 +83,26 @@ review:
           the plot area
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 12 points per series with visible round markers and distinct dash
-          patterns; markers could be slightly more prominent for the sparse dataset
+        comment: Hero series (Electronics) now uses larger 9px dots plus bold stroke,
+          clearly distinguishable from the other three series' 7px dots and distinct
+          dash patterns on a sparse 12-point dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant color + dash-style encoding; no red-green as sole signal;
-          good contrast
+        comment: Redundant color + dash-style + size encoding; no red-green as sole
+          signal; good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, no clipping/overflow, title within comfortable
-          50-70% width band, balanced margins
+        comment: Exact 3200x1800 canvas confirmed in both renders, no clipping/overflow,
+          comfortable title width, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -106,31 +117,31 @@ review:
         comment: 'First series #009E73, remaining series follow canonical Imprint
           order, both renders theme-correct'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom palette and per-series stroke styling show intent, but overall
-          look relies heavily on pygal defaults (monospace font, plain grid) with
-          little extra polish
+        passed: true
+        comment: Explicit sans-serif font_family and hermite-smoothed curves noticeably
+          lift the polish over the attempt-1 default-monospace look; still no fills/gradients
+          or deeper chrome refinement
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid limited to subtle horizontal guides only, generous whitespace,
-          clean margins
+        comment: Subtle horizontal-only grid, generous whitespace, clean margins,
+          and smooth cardinal curves add refinement over straight polylines
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Bolder stroke on Electronics plus distinct dash patterns per series
-          create a clear focal point and hierarchy
+        comment: Bolder Electronics stroke plus larger hero dots and distinct dash
+          patterns per series create a clear, strengthened focal point and hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -218,27 +229,30 @@ review:
         passed: true
         comment: Saves plot-{theme}.png and plot-{theme}.html via current pygal API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of pygal's Style object, per-series stroke_style dicts,
+          and interpolation parameters
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper use of pygal's Style object and per-series stroke_style dicts
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Uses dasharray/stroke_width customization but doesn't showcase more
-          distinctive pygal-only capabilities
+        comment: Hermite/cardinal interpolation is a genuinely distinctive pygal-only
+          capability, cleanly showcased without artifacts; one additional distinctive
+          feature (e.g. value labels) would round this out further
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - interpolation
   patterns:
   - data-generation
   dataprep: []
