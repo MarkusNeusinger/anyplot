@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windrose-basic: Wind Rose Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-05
@@ -9,7 +9,7 @@ import os
 import numpy as np
 import pandas as pd
 from lets_plot import *  # noqa: F403
-from lets_plot import element_rect, element_text, ggsave, theme
+from lets_plot import element_line, element_rect, element_text, ggsave, theme
 from PIL import Image
 
 
@@ -47,7 +47,6 @@ speeds = np.clip(speeds, 0, 25)
 n_sectors = 16
 sector_size = 360 / n_sectors
 direction_bins = ((directions + sector_size / 2) % 360) // sector_size
-direction_labels = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
 
 # Bin speeds into categories
 speed_bins = pd.cut(
@@ -86,11 +85,13 @@ plot = (
     )
     + scale_y_continuous(expand=[0, 0])  # noqa: F405
     + scale_fill_manual(values=colors, name="Wind Speed")  # noqa: F405
-    + labs(title="windrose-basic · letsplot · anyplot.ai", x="", y="Frequency (%)")  # noqa: F405
+    + labs(title="windrose-basic · python · letsplot · anyplot.ai", x="", y="Frequency (%)")  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_minor=element_line(color=INK_SOFT, size=0.2),
         plot_title=element_text(size=16, color=INK, hjust=0.5),
         axis_text=element_text(size=10, color=INK_SOFT),
         axis_title_y=element_text(size=12, color=INK),
