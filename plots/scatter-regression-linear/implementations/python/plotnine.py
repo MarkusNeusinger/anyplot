@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-08-05
+Quality: 88/100 | Updated: 2026-08-05
 """
 
 import os
