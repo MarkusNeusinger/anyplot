@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-horizontal: Horizontal Bar Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-05
@@ -33,9 +33,12 @@ data["is_leader"] = data["language"] == data.loc[data["developers"].idxmax(), "l
 data["value_label"] = data["developers"].map(lambda v: f"{v:.1f}%")
 
 # Plot — single-color bars with the top language highlighted, value labels at bar ends
+# tooltips: lets-plot-distinctive interactive labels surfaced in the HTML export
+bar_tooltips = layer_tooltips().line("@language").line("@value_label")
+
 plot = (
     ggplot(data, aes(x="developers", y="language", fill="is_leader"))
-    + geom_bar(stat="identity", width=0.65, alpha=0.9, show_legend=False, color=PAGE_BG)
+    + geom_bar(stat="identity", width=0.65, alpha=0.9, show_legend=False, color=PAGE_BG, tooltips=bar_tooltips)
     + geom_text(aes(label="value_label"), hjust="left", nudge_x=1.5, size=4.2, color=INK_SOFT)
     + scale_fill_manual(values=[BRAND, HIGHLIGHT])
     + scale_x_continuous(limits=[0, 75], expand=[0, 0])
@@ -43,6 +46,7 @@ plot = (
         x="Developers Using Language (%)",
         y="Programming Language",
         title="bar-horizontal · python · letsplot · anyplot.ai",
+        subtitle="JavaScript leads adoption, used by more than 5x as many developers as Rust",
     )
     + ggsize(800, 450)
     + theme(
@@ -55,9 +59,10 @@ plot = (
         axis_title_y=element_text(size=12, color=INK),
         axis_text_x=element_text(size=10, color=INK_SOFT),
         axis_text_y=element_text(size=10, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT, size=0.5),
+        axis_line=element_blank(),
         axis_ticks=element_blank(),
-        plot_title=element_text(size=16, color=INK),
+        plot_title=element_text(size=19, color=INK),
+        plot_subtitle=element_text(size=11, color=INK_SOFT),
         legend_position="none",
     )
 )
