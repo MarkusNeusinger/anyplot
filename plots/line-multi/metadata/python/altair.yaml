@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: line-multi
 created: '2025-12-24T21:30:29Z'
-updated: '2026-08-05T07:36:02Z'
+updated: '2026-08-05T07:44:09Z'
 generated_by: claude-sonnet
 workflow_run: 30984917449
 issue: 1825
@@ -12,12 +12,12 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mult
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
   - 'Effective visual hierarchy: the Electronics (hero) series is emphasized via conditional
     strokeWidth (3.4 vs 1.8) and opacity (1.0 vs 0.7), plus a direct end-of-line value
-    label — creates a clear focal point without needing external annotation tools'
+    label — creates a clear focal point without external annotation tools'
   - 'Correct Imprint palette in canonical order (#009E73, #C475FD, #4467A3, #BD8233),
     first series is the mandated brand green, identical data colors across both theme
     renders'
@@ -25,90 +25,79 @@ review:
     backgrounds, readable ink-soft axis/tick colors, subtle y-axis-only grid with
     x-axis grid disabled'
   - Idiomatic altair layered composition (lines + hero_points + hero_label combined
-    via '+') with alt.condition() for data-driven conditional encoding — genuinely
-    leverages Vega-Lite's declarative grammar
-  - 'Realistic, well-differentiated data: 4 product lines with genuinely distinct
-    trend shapes (steady growth, cyclical dip, seasonal wave, gradual climb) rather
-    than parallel/near-identical lines'
-  - Canvas padding logic correctly implements the altair.md hard rule (fail-loud on
-    overshoot, pad-only on undershoot) and lands exactly on the 3200x1800 target in
-    both renders
+    via '+') with alt.condition() for data-driven conditional encoding
+  - 'Both attempt-1 weaknesses are now fixed: the ''182k'' label no longer overlaps
+    the hero marker, and the rectangular view-stroke border around the plot area is
+    removed (stroke=None)'
   weaknesses:
-  - The '182k' direct-label callout on the last Electronics point visually overlaps
-    the line's own marker dot in both light and dark renders — the marker sits directly
-    on top of the '8' in '182k'. Increase the dx/dy offset (or switch align to 'left'/dx
-    positive) so the label clears the marker entirely.
-  - configure_view keeps a full rectangular stroke (border box) around the plot area
-    in both themes — this reads as an unrefined library default rather than the removed-spines
-    look the style guide rewards. Consider dropping the view stroke (stroke=None)
-    or thinning/lightening it further for a cleaner, more polished frame.
-  - Only the hero series (Electronics) gets point markers, and it gets one at every
-    one of its 24 months rather than just the labeled endpoint — this is a deliberate
-    hierarchy choice and works, but the marker density along the hero line is a bit
-    busy next to the plain lines for the other three series; consider only marking
-    the final point if the goal is purely the end-label callout.
+  - Title omits the required {language} token — should read "line-multi · python ·
+    altair · anyplot.ai" per prompts/plot-generator.md's mandated format, not "line-multi
+    · altair · anyplot.ai"
+  - Hero series still places a marker at every one of its 24 monthly points rather
+    than just the labeled endpoint — busier than needed next to the plain lines for
+    the other three series; consider marking only the final point if the goal is purely
+    the end-label callout
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "line-multi · altair · anyplot.ai" centered at top in dark ink, bold. X-axis "Month" (Feb 2023 - Dec 2024, monthly ticks), Y-axis "Sales (thousands USD)" (0-200). Tick labels and axis titles rendered in soft dark ink, clearly legible. Subtle horizontal-only gridlines. Legend "Product Line" box on the right with 4 color swatches (Electronics/Furniture/Clothing/Books) on an elevated off-white fill with a soft border.
-      Data: Four lines — Electronics (brand green #009E73, thick/bold, with circular markers at every point and a "182k" value label near the end), Furniture (light purple), Clothing (blue), Books (ochre/tan), all thin lines without markers. First series confirmed as #009E73.
-      Legibility verdict: PASS overall, but the "182k" text label overlaps the Electronics line's own marker dot at that point (the marker sits on top of the "8" character) — a minor but real overlap defect.
+      Chrome: Title "line-multi · altair · anyplot.ai" centered at top in bold dark ink. X-axis "Month" (Feb 2023 - Dec 2024, monthly ticks), Y-axis "Sales (thousands USD)" (0-200). Tick labels and axis titles rendered in soft dark ink, clearly legible. Subtle horizontal-only gridlines. Bordered legend "Product Line" box on the right with 4 color swatches (Electronics/Furniture/Clothing/Books) on an elevated off-white fill.
+      Data: Four lines — Electronics (brand green #009E73, thick/bold, full opacity, circular markers at every point, direct "182k" end-value label positioned cleanly above the final marker with no overlap), Furniture (lavender), Clothing (blue), Books (ochre), all thinner and semi-transparent, unmarked by design. First series confirmed as #009E73.
+      Legibility verdict: PASS — all text (title, axes, ticks, legend, end-label) reads clearly against the light background; no light-on-light issues; the attempt-1 label/marker overlap defect is fixed (verified via pixel crop).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title, now in light/white ink. Axis labels and ticks rendered in light soft-ink, clearly legible against the dark background — no dark-on-dark failures observed. Gridlines subtle and still visible. Legend box now uses a dark elevated fill with light text, fully readable.
+      Chrome: Same title, now in light ink. Axis labels and ticks rendered in light soft-ink, clearly legible against the dark background — no dark-on-dark failures observed. Gridlines subtle and still visible. Legend box now uses a dark elevated fill (#242420) with light text, fully readable.
       Data: Same four line colors as light render — Electronics is still #009E73, Furniture/Clothing/Books unchanged — confirming data colors are identical across themes; only chrome (background, text, legend fill) flipped.
-      Legibility verdict: PASS overall, same "182k" label/marker overlap issue reproduces identically in this render (expected, since only chrome — not data-layer geometry — changes between themes).
+      Legibility verdict: PASS — no dark-on-dark issues; "182k" label clears the marker identically to the light render.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (labelFontSize=10, titleFontSize=12/16);
-          readable in both themes. Minor deduction only because the end-label text
-          is partly obscured by its own marker (see VQ-02).
+        comment: All font sizes explicit (labelFontSize=10, titleFontSize=12/16);
+          fully readable in both themes; prior end-label/marker overlap that partially
+          obscured text is fixed.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: The '182k' direct-label callout overlaps the Electronics series'
-          own marker dot at that point in both renders — text is still legible but
-          the marker sits on top of the '8'.
+        passed: true
+        comment: 'Fixed from attempt 1: ''182k'' callout now uses align=''center'',
+          dy=-16 and clears the Electronics marker dot cleanly in both renders (verified
+          via pixel crop).'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Hero series markers (size=70) are clearly visible; other three lines
-          are clean and unmarked by design. Slightly busy with a marker at every one
-          of the 24 hero points.
+        comment: Hero series markers (size=70) clearly visible; other three lines
+          clean and unmarked by design. Still slightly busy with a marker at every
+          one of the 24 hero points, not addressed this round.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four hues (green/purple/blue/ochre) are well-separated and CVD-safe;
-          no red-green reliance.
+        comment: Four well-separated, CVD-safe hues; no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well, legend sits directly adjacent to the
-          plot, balanced margins, exact 3200x1800 target hit.
+        comment: Exact 3200x1800 target hit, no canvas gate failure, balanced margins,
+          legend adjacent to plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units ('Sales (thousands USD)'), X-axis 'Month' is self-evident
-          for a date axis.
+        comment: Y-axis has units ('Sales (thousands USD)'); X-axis 'Month' self-evident
+          for a temporal axis.
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -117,7 +106,7 @@ review:
         comment: 'Imprint palette in canonical order, first series #009E73, backgrounds
           correct, chrome theme-correct in both renders.'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -125,17 +114,17 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Clearly above library defaults: deliberate hero-series emphasis
-          via conditional stroke/opacity, styled legend swatches, calibrated grid
-          opacity. Not quite publication-tier.'
+        comment: Deliberate hero-series emphasis via conditional stroke/opacity, styled
+          legend swatches, calibrated grid opacity — above library defaults, not quite
+          publication-tier.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: X-grid removed and y-grid softened, but a full rectangular view-stroke
-          border remains around the whole plot area in both themes — reads as an un-refined
-          default frame rather than removed chrome.
+        passed: true
+        comment: 'Fixed from attempt 1: configure_view(stroke=None) removes the rectangular
+          view-stroke border; x-grid removed, y-grid softened (verified via pixel
+          crop: only y-axis domain line remains).'
       - id: DE-03
         name: Data Storytelling
         score: 6
@@ -143,9 +132,9 @@ review:
         passed: true
         comment: Hero-series emphasis (bold stroke, full opacity, markers, direct
           end-value label) immediately draws the eye to Electronics as the leading
-          product line — clear focal point and insight.
+          product line.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -169,13 +158,11 @@ review:
         comment: X=Month (temporal), Y=Sales; all data visible within axis bounds.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title follows the established repo convention 'line-multi · altair
-          · anyplot.ai' (Python implementations omit the language token by convention,
-          confirmed against sibling matplotlib/plotly/bokeh implementations); legend
-          labels ('Electronics', 'Furniture', 'Clothing', 'Books') match the data.
+        passed: false
+        comment: Legend labels correct, but title omits the mandated {language} token
+          — should read 'line-multi · python · altair · anyplot.ai' per prompts/plot-generator.md.
     data_quality:
       score: 15
       max: 15
@@ -185,9 +172,9 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Four genuinely distinct trend shapes: steady climb w/ noise, cyclical
-          dip/rise, sinusoidal seasonality, gradual climb — not parallel/near-identical
-          lines.'
+        comment: Four genuinely distinct trend shapes (steady climb w/ noise, cyclical
+          dip/rise, sinusoidal seasonality, gradual climb), not parallel/near-identical
+          lines.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -250,7 +237,7 @@ review:
         max: 5
         passed: true
         comment: Expert use of alt.Chart layering ('+'), alt.condition(), alt.Scale/Axis/Legend
-          configuration objects, transform_filter — all high-level, recommended altair
+          configuration objects, transform_filter — high-level, recommended altair
           patterns.
       - id: LM-02
         name: Distinctive Features
@@ -259,8 +246,8 @@ review:
         passed: true
         comment: Vega-Lite's declarative conditional encoding (alt.condition on a
           datum predicate) driving strokeWidth/opacity together is genuinely distinctive
-          to altair's grammar; would need manual per-group logic to replicate elsewhere.
-  verdict: REJECTED
+          to altair's grammar.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
