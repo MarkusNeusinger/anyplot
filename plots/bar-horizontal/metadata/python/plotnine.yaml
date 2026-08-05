@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:36:09Z'
-updated: '2026-08-05T17:16:51Z'
+updated: '2026-08-05T17:26:11Z'
 generated_by: claude-sonnet
 workflow_run: 31028356325
 issue: 1946
@@ -12,124 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Correct, idiomatic horizontal bar chart via coord_flip() + geom_bar(stat='identity')
-    — clean grammar-of-graphics composition
-  - Categories sorted ascending so the flipped chart reads largest-to-smallest top-to-bottom,
-    giving an instant ranking insight
-  - Value labels placed at bar ends per the spec's suggestion, formatted to one decimal
-    with a percent sign
-  - Theme-adaptive chrome is threaded correctly through background, ink, grid, and
-    panel-border tokens — both renders are fully legible
-  - Imprint brand green (#009E73) used as the sole data color and is pixel-identical
-    between light and dark renders
-  - Clean KISS script structure with deterministic hard-coded data and theme-suffixed
-    output filenames
+  - 'Perfect Imprint palette compliance: highlighted bar samples exactly #009E73 in
+    both renders (verified via pixel sampling), background samples exactly #FAF8F1
+    (light) / #1A1A17 (dark) with fully theme-adaptive chrome.'
+  - Alpha-based emphasis (top-ranked bar at full opacity, rest at reduced alpha, single
+    hue throughout) directly implements the spec's 'use a single color for all bars,
+    or highlight specific bars to draw attention' guidance and creates a clear focal
+    point.
+  - Bars sorted descending by value (via ascending categorical + coord_flip) — the
+    recommended ranking layout for immediate readability, exactly per spec notes.
+  - Value labels placed at bar ends per spec requirement; subtle x-only grid, blank
+    y-grid, minimal ticks, and an L-shaped axis-line frame keep the chrome clean without
+    clutter.
+  - 'Idiomatic, KISS plotnine code: geom_bar + coord_flip + scale_alpha_manual + geom_text
+    layered cleanly, all font sizes explicitly set, no functions/classes, clean imports.'
   weaknesses:
-  - panel_border draws a full four-sided box around the plot area instead of the style
-    guide's default L-shaped frame (top/right spines removed) — remove panel_border
-    or set only left/bottom lines for a more polished, on-brand look
-  - geom_text value labels are quite small (size=2.8) relative to the tick-label font
-    (size=8pt) — bump slightly for better legibility once scaled down to ~400px mobile
-    width
-  - Techniques used (coord_flip, geom_text, categorical reordering) are generic ggplot2/grammar-of-graphics
-    patterns that translate directly to R ggplot2 with almost no changes — consider
-    leaning on a plotnine-distinctive touch (e.g. a themed layer or plotnine-specific
-    scale/stat) to better showcase the library
-  - Data storytelling is currently limited to sorting; the spec explicitly allows
-    'highlight specific bars to draw attention' as an alternative to single-color
-    — consider giving the top bar (JavaScript) a subtle visual accent to sharpen the
-    focal point
+  - Value labels at bar ends (geom_text size=3.5, nudge_y=1.6) become hard to read
+    once the PNG is scaled down to the ~400px mobile thumbnail — bump geom_text size
+    to ~4.5-5 (or shorten the nudge) so percentages stay legible at mobile width.
+  - 'LM-02: the alpha-highlight technique is elegant but is a fairly generic grammar-of-graphics
+    pattern (replicable with a manual color list in other libraries) — consider leaning
+    into a more plotnine-distinctive feature (e.g. labs(subtitle=...), custom scale
+    transform) to raise Library Mastery further.'
+  - Title occupies only ~53% of canvas width — safely within bounds and not a defect,
+    but there is headroom to grow the title fontsize slightly for more visual presence
+    without risking overflow (optional polish, not required).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "bar-horizontal · python · plotnine · anyplot.ai" centered at top, clearly readable. Y-axis lists 10 programming languages (JavaScript down to Swift, largest to smallest). X-axis "Developer Usage (%)" with ticks at 0/20/40/60, dark tick labels on light background. A thin four-sided panel border encloses the plot area; subtle vertical gridlines aligned to the x-axis ticks are visible but unobtrusive.
-      Data: All 10 bars rendered in Imprint brand green (#009E73), consistent width and spacing, with small dark-gray (#4A4A44) percentage value labels placed just past each bar's end (e.g. "65.6%", "6.6%").
-      Legibility verdict: PASS — title, axis titles, tick labels, and value labels are all clearly readable against the light background; no light-on-light text found.
+      Background: Warm off-white, sampled pixel = (250, 248, 241) = #FAF8F1 exactly. Matches required light surface.
+      Chrome: Bold dark title "bar-horizontal · python · plotnine · anyplot.ai" centered at top, clearly readable. Y-axis category labels (JavaScript, Python, Java, TypeScript, C#, C++, PHP, Go, Rust, Swift) in dark-gray, all legible. X-axis "Developer Usage (%)" label and 0/20/40/60 tick labels legible. Subtle vertical (x-axis) gridlines only, y-grid removed, thin L-shaped axis line (left+bottom), no tick marks. All primary/secondary text is dark-on-light and clearly readable.
+      Data: 10 horizontal bars sorted descending by value (JavaScript 65.6% at top down to Swift 6.6% at bottom). Top bar (JavaScript) rendered at full-opacity brand green, sampled pixel = (0, 158, 115) = #009E73 exactly — the ★ brand color. Remaining 9 bars are the same hue at reduced alpha (~0.45), creating a monochrome ranking with one highlighted focal point. Value-percentage labels sit just past each bar's end in soft gray text.
+      Legibility verdict: PASS. All chrome text reads cleanly at full resolution. Minor caveat: the small value-percentage labels (e.g. "65.6%") become difficult to make out once the image is scaled down to the ~400px mobile thumbnail, while all other text (title, axis labels, category names, tick labels) remains legible at that size.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and axis labels rendered in light/off-white and light-gray tones, fully legible against the dark background. The same thin panel border (now light gray) and faint gridlines are present. No dark-on-dark text was found — tick labels and value labels are light-toned and readable.
-      Data: Bars are the identical Imprint brand green (#009E73) as the light render — confirmed pixel-matched hue; only the chrome (background, text, border, grid) flipped.
-      Legibility verdict: PASS — all text elements are clearly legible against the dark background.
+      Background: Warm near-black, sampled pixel = (26, 26, 23) = #1A1A17 exactly. Matches required dark surface.
+      Chrome: Title, axis labels, category tick labels, and x-axis tick labels all render in light/off-white tones, fully readable against the dark background — no dark-on-dark failures observed. Gridlines and axis line use the same theme-adaptive soft tones as light mode, correctly inverted.
+      Data: Colors are identical to the light render — top bar (JavaScript) samples exactly (0, 158, 115) = #009E73, confirming the data hue is unchanged across themes; only the background/text/grid chrome flipped as required. The reduced-alpha bars blend against the dark background analogously to how they blend against the light background in the light render.
+      Legibility verdict: PASS. All chrome text is clearly readable against the dark surface, with the same mobile-scale value-label caveat as the light render (labels become small at ~400px, but this is a shared, theme-independent issue rather than a dark-mode-specific failure).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); readable in both themes;
-          value-label font (size=2.8) is a bit small relative to tick labels
+        comment: Explicit font sizes throughout; title/axis/tick/category labels all
+          clearly readable at full res and at ~400px mobile scale. Value-percentage
+          labels (geom_text size=3.5) become hard to read once scaled to ~400px mobile
+          width in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between labels, ticks, or value annotations
+        comment: No overlapping text or data elements; value labels sit clear of bars,
+          ticks, and the canvas edge.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 10 bars at width=0.7 are well-spaced and prominent for this sparse
-          category count
+        comment: Bar width (0.7) and spacing appropriate for 10 categories; highlighted
+          vs. non-highlighted bars clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series green reads with strong contrast on both surfaces
+        comment: Single-hue chart with alpha-based emphasis; no reliance on hue-only
+          distinctions, CVD-safe by construction.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, balanced margins, no cut-off content
+        comment: Plot fills a balanced majority of the canvas; nothing cut off (verified
+          via pixel-level crop inspection at title, left, right, bottom edges); right-side
+          whitespace is functional (reserved for value labels), not wasted.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Developer Usage (%)'' includes units; ''Programming Language''
-          is descriptive'
+        comment: '''Developer Usage (%)'' has units; ''Programming Language'' is descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds are
-          theme-correct FAF8F1/1A1A17; chrome theme-correct in both renders'
+        comment: 'Pixel-sampled: highlighted bar = #009E73 exactly in both themes;
+          background = #FAF8F1 (light) / #1A1A17 (dark) exactly; chrome fully theme-correct
+          in both renders.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above a bare library default (custom theme, subtle grid, single brand
-          accent) but not yet publication-level polish
+        comment: Thoughtful monochrome-plus-alpha-highlight design, clearly above
+          a configured-default look, though not full publication-grade elaborateness.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Grid is subtle and spines mostly hidden, but panel_border keeps a
-          full 4-sided box instead of the recommended L-shaped frame
+        comment: Subtle x-only grid at low alpha, minimal L-shaped axis line, no tick
+          marks, generous whitespace — near-perfect refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Ascending sort + end-of-bar value labels create clear ranking hierarchy,
-          though no additional focal-point emphasis is used
+        comment: Alpha-highlighted top bar plus descending sort creates an immediate,
+          clear focal point (JavaScript leads) without needing annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -138,52 +139,47 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct horizontal bar chart via coord_flip()
+        comment: Correct horizontal bar chart via geom_bar + coord_flip.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Sorting, single color, adequate bar spacing, and end-of-bar value
-          labels all present
+        comment: Consistent bar heights, sorted by value, single-color-with-highlight,
+          adequate spacing, value labels at bar ends — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: category on y-axis, value on x-axis, all 10 categories visible
+        comment: Category on y-axis, value on x-axis after flip; all 10 categories
+          and their full value range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title matches mandated format exactly; legend correctly omitted for
-          single series
+        comment: Title exactly 'bar-horizontal · python · plotnine · anyplot.ai';
+          legend correctly omitted since emphasis uses alpha, not a second series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: true
-        comment: Wide value range (6.6%-65.6%) across 10 categories shows good variation;
-          no bar highlighting alternative used
+        comment: 10 categories spanning a wide, realistic value range (6.6%-65.6%)
+          fully exercising the ranking/comparison use case.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Programming-language usage survey is a real, neutral, comprehensible
-          scenario
+        comment: Programming-language developer-usage survey — real, neutral, comprehensible
+          business/tech scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Percentages are plausible for a multi-select developer-usage survey
+        comment: Values and relative ordering are plausible and consistent with known
+          developer-survey proportions.
     code_quality:
       score: 10
       max: 10
@@ -192,57 +188,54 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: Imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Deterministic hard-coded data
+        comment: Deterministic hardcoded data, no randomness needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Only pandas + plotnine symbols actually used
+        comment: Every imported name is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No over-engineering, no fake UI elements
+        comment: Clean, appropriately complex, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves plot-{THEME}.png via plot.save() with current plotnine API
+        comment: Saves plot-{THEME}.png via current plotnine .save() API with correct
+          dpi/units.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: true
-        comment: Correct high-level ggplot()+geom_bar()+coord_flip() grammar composition
+        comment: 'Idiomatic grammar-of-graphics composition: geom_bar + coord_flip
+          + scale_alpha_manual + geom_text layering, theme_minimal + custom theme().'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: coord_flip/geom_text/categorical-ordering are generic grammar-of-graphics
-          patterns shared with R ggplot2, not plotnine-specific
-  verdict: REJECTED
+        comment: aes()-mapped alpha for emphasis is a genuine grammar-of-graphics
+          technique, though conceptually replicable in other libraries with manual
+          color assignment — not maximally distinctive to plotnine specifically.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
   - minimal-chrome

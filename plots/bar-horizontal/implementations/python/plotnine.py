@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-horizontal: Horizontal Bar Chart
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-08-05
+Quality: 91/100 | Updated: 2026-08-05
 """
 
 import os
