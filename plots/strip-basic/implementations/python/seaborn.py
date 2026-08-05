@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 strip-basic: Basic Strip Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-05
@@ -71,9 +71,9 @@ sns.stripplot(
     y="Satisfaction Score",
     hue="Department",
     palette=IMPRINT,
-    alpha=0.7,
+    alpha=0.6,
     size=6,
-    jitter=0.25,
+    jitter=0.3,
     edgecolor=PAGE_BG,
     linewidth=0.4,
     ax=ax,
@@ -81,6 +81,7 @@ sns.stripplot(
 )
 
 # Group means as diamond markers — seaborn pointplot overlay, no connecting line/error bars
+# Background-colored edge stroke keeps the diamond from swallowing points behind it
 sns.pointplot(
     data=df,
     x="Department",
@@ -88,9 +89,28 @@ sns.pointplot(
     color=INK,
     markers="D",
     markersize=8,
+    markeredgecolor=PAGE_BG,
+    markeredgewidth=1.5,
     linestyle="none",
     errorbar=None,
     ax=ax,
+)
+
+# Storytelling touch — faint overall-mean reference line + callout on the top department
+group_means = df.groupby("Department")["Satisfaction Score"].mean()
+overall_mean = df["Satisfaction Score"].mean()
+top_dept = group_means.idxmax()
+top_x = departments.index(top_dept)
+
+ax.axhline(overall_mean, color=INK_SOFT, linewidth=0.8, linestyle="--", alpha=0.4, zorder=0)
+ax.annotate(
+    f"{top_dept} leads · {group_means[top_dept]:.0f} avg",
+    xy=(top_x, group_means[top_dept]),
+    xytext=(top_x + 0.35, group_means[top_dept] + 12),
+    fontsize=8,
+    color=INK_SOFT,
+    ha="left",
+    arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.8, "alpha": 0.6},
 )
 
 # Style
