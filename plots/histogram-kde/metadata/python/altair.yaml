@@ -2,123 +2,127 @@ library: altair
 language: python
 specification_id: histogram-kde
 created: '2025-12-24T21:31:46Z'
-updated: '2026-05-06T16:59:41Z'
-generated_by: claude-haiku
-workflow_run: 25449033594
+updated: '2026-08-05T03:49:09Z'
+generated_by: claude-sonnet
+workflow_run: 30972787282
 issue: 1823
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/altair/plot-dark.html
-quality_score: 93
+quality_score: 88
 review:
   strengths:
-  - 'Perfect visual quality: all text sizes explicitly set and readable in both themes'
-  - 'Flawless theme implementation: data colors identical between light/dark, chrome
-    adapts perfectly with zero dark-on-dark failures'
-  - 'Excellent spec compliance: bimodal data effectively demonstrates histogram +
-    KDE synergy with proper density scaling'
-  - 'Clean code architecture: KISS structure, reproducible with np.random.seed(42),
-    all imports used appropriately'
-  - 'Strong color palette: Okabe-Ito colors with intentional contrast between bars
-    (#009E73) and curve (#F0E442)'
+  - 'Both prior-review weaknesses are fixed: the KDE line now uses the canonical Imprint
+    position 2 (#C475FD) instead of position 7, and the synthetic test-score data
+    is clipped to the conventional 0-100 range'
+  - Canvas is correctly sized (3200x1800 landscape, no gate flag) with the exact anyplot
+    title format
+  - Full theme-adaptive chrome — title, axis labels, ticks, and grid are legible in
+    both light and dark, and the histogram/KDE colors are pixel-identical across themes
+  - Bimodal synthetic dataset (two overlapping normal distributions) genuinely demonstrates
+    the value of the KDE overlay — it reveals the two-peak structure a coarser binning
+    could obscure
+  - 'Polished mark styling: rounded bar corners, semi-transparent histogram fill (alpha=0.6),
+    monotone-interpolated KDE line, explicit low grid opacity, and no boxed view frame'
+  - Idiomatic altair layered-chart composition (mark_bar + mark_line via x2/y2 banding)
+    with formatted tooltips on both layers
   weaknesses:
-  - 'Design Excellence could be enhanced: visual storytelling could emphasize discrete
-    vs continuous comparison through refinements like annotation hints or line styling
-    variations'
-  - 'Library Mastery could leverage interactive features: Altair''s hover tooltips
-    showing density values could enhance the HTML version'
+  - No legend distinguishes 'Histogram' from 'KDE curve' by label — the encoding is
+    visually self-evident (bars vs. line) so this is a minor nice-to-have, not a defect
+  - Aesthetic sophistication (DE-01) is solid but not yet publication-ready — a subtle
+    annotation or callout marking the two peaks would push data storytelling (DE-03)
+    further
+  - Visual refinement (DE-02) is good (explicit low-opacity grid, no view frame) but
+    stops short of 'perfect' — slightly more breathing room between the title and
+    plot area would tighten the composition
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title (28px), axis labels (22px), tick labels (18px) - all perfectly readable with dark text on light surface
-      Data: Histogram bars in Okabe-Ito green (#009E73, position 1) at 0.6 opacity; KDE line in Okabe-Ito yellow (#F0E442, position 7) with 4px stroke; bimodal distribution clearly visible with peaks around 45-50 and 70
-      Grid: Subtle at 10% opacity, provides reference without competing
-      Legibility verdict: PASS - all text elements are crisp and readable
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Bold black title "histogram-kde · altair · anyplot.ai" centered at top; dark "Test Score" x-axis title and "Density" y-axis title; secondary dark-gray tick labels along both axes; subtle light-gray gridlines at low opacity. All fully legible.
+      Data: Teal-green (#009E73, Imprint position 1) semi-transparent histogram bars showing a clearly bimodal distribution (peak near 45-50, secondary bump near 65-75); a smooth lavender (#C475FD, Imprint position 2, the canonical second-series color) KDE line traces the same bimodal shape on top, staying visible through the bar fill.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title, axis labels, tick labels rendered in light text (#F0EFE8 primary, #B8B7B0 secondary) - perfect contrast against dark surface, zero dark-on-dark failures
-      Data: Histogram bars and KDE line colors identical to light render (same green #009E73, same yellow #F0E442) confirming correct theme-adaptive chrome design where only non-data elements flip
-      Grid: Subtle and appropriate, matches light render styling
-      Legibility verdict: PASS - excellent readability with flawless theme adaptation
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Bold off-white title, light axis titles, light-gray tick labels, subtle light gridlines at low opacity against the dark surface. All fully legible -- no dark-on-dark text anywhere.
+      Data: Identical teal-green histogram bars and lavender KDE line as the light render -- same hues, same bimodal shape, confirming only chrome (not data colors) flipped between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px.
-          Perfect readability in both themes.'
+        comment: All title/axis/tick text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. All labels, ticks, and title have clear spacing.
+        comment: No text or data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Histogram bars and KDE line optimally sized and visible. Bimodal
-          distribution immediately apparent.
+        comment: 30 bins with 500 points is medium density; opacity=0.6 keeps KDE
+          line visible through bars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety. Green/yellow contrast is excellent.
+        comment: Green vs. lavender is high-contrast and CVD-distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot uses 60-70% of canvas with balanced margins. No content cut-off.
+        comment: Canvas gate did not flag drift; proportions balanced, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Test Score and Density are descriptive. Title format correct.
+        comment: Test Score / Density are descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, accent #F0E442. Backgrounds correct. Theme-adaptive
-          chrome perfect. Data colors identical across renders.'
+        comment: 'Fixed: KDE line now uses canonical Imprint position 2 (#C475FD);
+          first series correctly #009E73; theme chrome correct in both renders'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: false
-        comment: Thoughtful color pairing shows design intent. Theme-aware tokens
-          demonstrate polish. Above generic defaults but not quite publication-ready.
+        passed: true
+        comment: Rounded bar corners, monotone KDE interpolation, deliberate accent
+          color beyond bare defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid opacity at 10% appropriately subtle. Whitespace generous. Library
-          defaults with careful customization.
+        passed: true
+        comment: Explicit low-opacity grid, no view stroke/frame, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Bimodal distribution clearly visible. Bars show frequency, curve
-          shows smooth density. Visual hierarchy guides attention through color contrast.
+        passed: true
+        comment: Bimodal dataset gives the KDE overlay a genuine reason to exist --
+          it visibly resolves the two-peak structure
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram type with KDE overlay. All required subtypes present.
+        comment: Histogram + KDE overlay as required
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent bars (0.6 opacity), density scaling, KDE curve,
-          bimodal data showing all aspects.
+        comment: Semi-transparent bars, density y-axis, chosen bin count/bandwidth,
+          contrasting colors all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: continuous values. Y: density. Axes show full data range appropriately.'
+        comment: X=Test Score, Y=density, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed (two elements, visually clear).
+        comment: Title matches required format exactly; no legend needed given self-evident
+          encoding
     data_quality:
       score: 15
       max: 15
@@ -157,22 +162,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution with clear peaks, binning granularity, and smoothing.
-          All aspects demonstrated.
+        comment: Shows binning, density scaling, and smooth KDE together
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Test Score is real, neutral, and domain-appropriate. Plausible academic
-          scenario.
+        comment: Plausible bimodal test-score scenario, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Test score range ~20-110 is factually sound. Proportions realistic
-          for bimodal data.
+        comment: 'Fixed: values now clipped to the conventional 0-100 test-score range'
     code_quality:
       score: 10
       max: 10
@@ -182,56 +184,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Calculations → Chart → Save. No functions/classes.
+        comment: Flat top-to-bottom script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, altair, numpy, pandas, scipy.stats.'
+        comment: All imports used (scipy, PIL, numpy, pandas)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake functionality. Clean and readable.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png/.html, correct pad-only canvas handling
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'High-level API: alt.Chart(), mark_bar(), mark_line(), encode().
-          Proper compositional layering. Theme-aware configuration.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: false
-        comment: Excellent use of compositional approach and x2/y2 bar positioning.
-          Theme-adaptive system well-executed.
+        passed: true
+        comment: Proper layered chart via mark_bar x2/y2 banding + mark_line, configure_*
+          theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Manual KDE via scipy (altair has no built-in density transform),
+          tooltips, monotone interpolation
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
   - layer-composition
-  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
@@ -239,4 +242,3 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
-  - publication-ready
