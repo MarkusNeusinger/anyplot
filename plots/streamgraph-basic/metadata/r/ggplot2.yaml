@@ -1,0 +1,256 @@
+library: ggplot2
+language: r
+specification_id: streamgraph-basic
+created: '2026-08-05T11:35:35Z'
+updated: '2026-08-05T11:50:30Z'
+generated_by: claude-sonnet
+workflow_run: 31001640456
+issue: 856
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Canvas is exactly 3200x1800 (landscape target) — passes the dimension gate cleanly
+  - Theme-adaptive chrome correctly implemented in both light and dark renders; Imprint
+    data colors stay identical between themes, only chrome flips
+  - Natural cubic spline interpolation produces genuinely smooth, organic flowing
+    curves as required by the spec
+  - Symmetric silhouette baseline correctly centered around the x-axis
+  - 'Smart palette assignment: genres sorted by total volume, brand green (#009E73)
+    deliberately assigned to the largest genre (Pop), remaining series follow canonical
+    Imprint order'
+  - Ribbon edges stroked in the page-background color — clean, subtle separation between
+    adjacent streams without harsh borders
+  - No text overlap, no clipping at canvas edges, legend/title/axis all legible in
+    both themes
+  weaknesses:
+  - 'The Attempt-1 fixes for VQ-06 and DE-03 do not render: labs(subtitle=...), labs(y=...),
+    and axis.title.y = element_text(...) were added, but a pixel-level scan of both
+    PNGs (both themes) confirms neither the subtitle nor the y-axis title paints any
+    visible text — 0 matching pixels in the subtitle band, only anti-aliasing-level
+    noise (63px) in the y-axis-title margin. The chart is visually identical to Attempt
+    1 despite the code changes.'
+  - Y-axis still carries no visible label, ticks, or unit — a viewer can read relative
+    proportions but has zero indication of absolute magnitude/units.
+  - Data storytelling is still fairly flat beyond total-based ordering — the intended
+    subtitle callout isn't visible, so there's still no narrative focal point despite
+    the underlying trend data (Hip-Hop/Electronic rising, Rock declining) being present.
+  - With 5 series relying on color alone, adjacent Electronic (blue) and Rock (ochre)
+    bands remain in the 'borderline' distinguishability zone the style guide flags
+    for 5-6 series.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "streamgraph-basic · r · ggplot2 · anyplot.ai" in dark ink top-left, clearly readable (~44% of canvas width at 12pt). X-axis title "Month" and tick labels (Apr 2022, Aug 2022, Dec 2022, Apr 2023, Aug 2023, Dec 2023) in soft dark gray, all legible. Code adds labs(y="Streaming hours (thousands)") and axis.title.y = element_text(...), but a pixel scan of the left margin (x 0-55px, full height) found no text-density cluster — only 63px of anti-aliasing noise, far below what rendered text would produce — confirming the y-axis title does NOT actually render. Code also adds labs(subtitle="Electronic and Hip-Hop trend upward while Rock cools off"), but a pixel scan of the subtitle band (y 90-230px, full width) found 0 pixels matching the subtitle ink color (#4A4A44) — the subtitle does NOT render either. Legend at bottom titled "Genre" with 5 swatches (Pop, Hip-Hop, Electronic, Rock, Jazz), text clearly readable on an elevated cream card background.
+      Data: Five flowing, organically-shaped stream bands stacked with a symmetric centered baseline. Colors bottom-to-top: green (#009E73, Pop, largest band), lavender/purple (#C475FD, Hip-Hop), blue (#4467A3, Electronic), ochre (#BD8233, Rock), matte red (#AE3030, Jazz). Bands separated by thin background-colored strokes giving clean, non-harsh separation. Smooth spline-interpolated curves give the intended river-like appearance.
+      Legibility verdict: PASS for all elements that DO render (title, x-axis title/ticks, legend) — no light-on-light issues. FAIL for the subtitle and y-axis title, which are coded but invisible (0 rendered pixels).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title in light/off-white ink, clearly readable against the dark background. X-axis title and tick labels in light gray, all legible. Same pixel-scan check repeated with the dark-theme ink tokens: 0 subtitle-band pixels, only 63px anti-aliasing noise in the y-axis-title margin — confirms the omission is identical in both themes, not theme-specific. Legend card uses a slightly elevated dark background with light text, fully readable — no dark-on-dark failures anywhere.
+      Data: Identical five-color palette and identical stream shapes/positions as the light render — only the chrome (background, text, ribbon-edge stroke color, legend card) has flipped; the Imprint data colors are pixel-identical between renders.
+      Legibility verdict: PASS for all elements that DO render — no dark-on-dark failures observed on visible text. FAIL for the subtitle and y-axis title, which remain invisible exactly as in the light render.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text that actually renders is readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ribbon bands clearly visible with subtle background-colored edge
+          strokes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; no red-green used as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: labs(y=...) is set in code but the y-axis title does not render (verified
+          via pixel scan) — still zero indication of magnitude/units, unchanged from
+          Attempt 1
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate brand-color-to-largest-genre mapping, spline smoothing,
+          subtle ribbon edges
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, y-axis ticks removed, generous whitespace, subtle single
+          x-axis line
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: labs(subtitle=...) added to call out the Hip-Hop/Rock trend but does
+          not render (verified via pixel scan) — no visible narrative focal point,
+          unchanged from Attempt 1
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct streamgraph with symmetric silhouette baseline
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth spline interpolation, centered baseline, distinct colors,
+          legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on x, stacked value ranges on y, all 24 months x 5 genres represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match genre
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 24 time points, 5 categories, smooth curves, centered baseline —
+          covers all core streamgraph aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly streaming hours by music genre — plausible, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and trend/amplitude parameters are sensible for the streaming-hours
+          domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported packages are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: labs(subtitle=...), labs(y=...), and axis.title.y are dead code —
+          they run without error but produce zero visible pixels in either render
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_ribbon(ymin/ymax) is the correct idiomatic ggplot2 approach
+          absent a native streamgraph geom
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Manual spline-based interpolation and total-based palette assignment
+          go beyond generic usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  - cumulative-sum
+  - time-series
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome
