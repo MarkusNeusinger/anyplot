@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-multi
 created: '2026-08-05T07:42:10Z'
-updated: '2026-08-05T07:46:14Z'
+updated: '2026-08-05T07:56:59Z'
 generated_by: claude-sonnet
 workflow_run: 30985715187
 issue: 1825
@@ -12,49 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mult
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 93
 review:
   strengths:
-  - 'Imprint palette used in exact canonical order — first series is brand green #009E73,
-    followed by lavender, blue, and ochre, identical across both themes.'
-  - 'Theme-adaptive chrome is threaded correctly: PAGE_BG, INK, INK_SOFT all flip
-    between light and dark, and both renders are fully legible with no dark-on-dark
-    or light-on-light failures.'
-  - Canvas is exactly 3200x1800 (landscape gate passed), matching the Figure(resolution=(1600,900))
-    / px_per_unit=2 pairing.
-  - Legend is cleanly placed in empty upper-left space with an elevated-bg frame and
-    does not overlap any of the four lines even where they start clustered near y=100.
-  - Descriptive, unit-bearing axis labels ('Month', 'Revenue Index (base = 100)')
-    and a title matching the exact mandated format.
-  - Reproducible (Random.seed!(42)), KISS script with no functions/classes and only
-    the imports actually used (CairoMakie, Colors, Random).
+  - 'Both Attempt 1 weaknesses directly fixed: LinearTicks(9) gives dense reference
+    gridlines across the full data range, and the headline series (largest % change
+    via argmax) is bolded with an endpoint callout for a clear focal point'
+  - Switched from a manual per-series color loop to Makie's idiomatic series! primitive
+    - cleaner code and better Library Mastery
+  - 'Imprint palette in exact canonical order, first series brand green #009E73, identical
+    across both themes'
+  - Theme-adaptive chrome (PAGE_BG, INK, INK_SOFT) correctly threaded through - both
+    renders fully legible, no dark-on-dark or light-on-light failures
+  - Canvas exactly 3200x1800; reproducible (Random.seed!(42)); clean KISS script with
+    only used imports
   weaknesses:
-  - Y-axis ticks/gridlines only appear at 100, 120, 140 despite data ranging down
-    to ~72 (Analytics Suite trough) — the bottom third of the plot has no reference
-    gridline, making it hard to read values below 100. Add denser ticks, e.g. `yticks
-    = WilkinsonTicks(8)` or explicit `LinearTicks(9)`.
-  - All four lines share identical visual weight (same linewidth=3.0, all solid, no
-    markers) — there is no focal point or emphasis technique guiding the viewer to
-    the most notable trend (e.g. Mobile App's late surge or Analytics Suite's decline).
-    A slightly bolder line or a callout on the crossover point would add data storytelling.
-  - No distinctive Makie-specific technique is used beyond a basic `lines!` loop (e.g.
-    `series!`, `Cycled` color cycling, or a recipe) — functionally correct but generic
-    for library-mastery purposes.
+  - Callout text ("Mobile App +44%", fontsize 13) is noticeably smaller than tick
+    labels (12) and axis labels (14) sitting next to a much larger title (20) - a
+    slightly larger callout (14-15pt) would read more confidently as an intentional
+    annotation
+  - Data storytelling relies on a single emphasis technique - the declining Analytics
+    Suite series (from ~104 peak to ~87 trough) is an equally interesting story left
+    unaddressed; a second, lighter-weight annotation would deepen the narrative
+  - Library Mastery is solid but not yet distinctive - consider a genuinely Makie-unique
+    feature (custom Legend with GridLayout positioning, or Makie.Cycled color cycling)
+    in a future revision
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 target — not pure white.
-      Chrome: Title "line-multi · julia · makie · anyplot.ai" in bold dark ink, clearly visible top-center. Axis labels "Month" (x) and "Revenue Index (base = 100)" (y) in dark ink, fully legible. Tick labels (0/10/20/30 on x; 100/120/140 on y) in softer gray ink, legible but sparse below y=100. Legend box (top-left, elevated cream fill, thin gray frame) lists all four series names in readable gray text. Only a faint y-axis gridline at 15% opacity; no x-axis gridline. Left/bottom spines visible in soft ink, top/right spines removed.
-      Data: Four lines — Core Platform (green #009E73), Mobile App (lavender #C475FD), Analytics Suite (blue #4467A3), API Services (ochre #BD8233) — each clearly distinguishable, diverging visibly over the 36-month span. First series confirmed brand green.
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Bold dark-ink title centered at top; dark-ink axis labels; softer gray tick labels; legend box (top-left, elevated cream fill #FFFDF6, thin gray frame) lists all 4 series; y-axis gridlines now dense (88/96/104/112/120/128/136/144, via LinearTicks(9)), spanning the full data range including the Analytics Suite trough (~87) - fixes Attempt 1's sparse-tick weakness. All chrome readable.
+      Data: Four lines - Core Platform (green #009E73), Mobile App (lavender #C475FD, bolded/thickened with "Mobile App +44%" endpoint callout), Analytics Suite (blue #4467A3), API Services (ochre #BD8233). First series is the brand green as required.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 target — not pure black.
-      Chrome: Title in bold light ink (#F0EFE8), clearly visible against the dark surface. Axis labels in the same light ink, fully legible. Tick labels in lighter gray (#B8B7B0), legible against the dark background — no dark-on-dark failures observed. Legend box uses the dark elevated fill (#242420) with light gray text and a soft gray frame, fully readable. Gridline at matching low opacity, barely visible as intended.
-      Data: Same four line colors as the light render — Core Platform green, Mobile App lavender, Analytics Suite blue, API Services ochre — confirmed identical hex values, only the chrome (background/text/grid/legend) flipped between themes.
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title/axis labels flip to light ink (#F0EFE8); tick labels to lighter gray (#B8B7B0); legend uses dark elevated fill (#242420) with light gray text/frame. No dark-on-dark failures anywhere.
+      Data: Confirmed identical line colors and headline bold+callout treatment to the light render - only chrome flipped between themes.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,22 +59,21 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; fontsizes explicitly set (title
-          20, labels 14, ticks 12)
+        comment: Font sizes explicit, legible in both themes; callout text a touch
+          small relative to other chrome
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits in empty space, no collisions with lines or between text
-          elements
+        comment: Legend and callout both sit in clear space, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: linewidth=3.0 appropriate for 4 series / 36 points, all lines clearly
-          distinguishable
+        comment: Base linewidth 2.5 + 4.5 headline appropriate for 4 series over 36
+          points
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -86,11 +82,11 @@ review:
         comment: CVD-safe Imprint hues, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas exact 3200x1800, good proportions; docked 1pt for sparse y-ticks
-          leaving lower third of the plot without reference gridlines
+        comment: Canvas exact 3200x1800; LinearTicks(9) now covers full data range,
+          fixing Attempt 1 weakness
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -103,32 +99,30 @@ review:
         max: 2
         passed: true
         comment: Canonical Imprint order, first series brand green, both renders theme-correct
-          backgrounds
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom Imprint palette + theme tokens threaded throughout, but otherwise
-          standard line-chart composition
+        comment: Custom palette + theme tokens plus deliberate headline emphasis creates
+          real hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle single-axis grid, generous whitespace;
-          legend frame styled with elevated bg
+        comment: Spines removed, subtle full-range grid, generous whitespace, styled
+          legend
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: No emphasis technique or focal point — all four lines share identical
-          visual weight, missing an opportunity to guide the eye to the headline trend
+        passed: true
+        comment: Bolded headline series + endpoint callout gives a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -144,32 +138,30 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors + legend present; line-style/marker variation is
-          optional per spec and reasonably omitted for 4 well-separated colors
+        comment: Distinct colors + legend present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Month, Y=Revenue Index, all data visible within axis bounds
+        comment: X=Month, Y=Revenue Index, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact mandated format; legend labels are descriptive
-          real-world product names
+        comment: Exact mandated title format, descriptive legend labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 4 series (within recommended 2-6), 36 shared months, visible divergence
-          and crossovers
+        comment: 4 series, 36 months, divergence/crossovers, highlighted headline
+          trend
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -181,8 +173,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Random-walk index values (~72-148) are sensible for a base-100 revenue
-          index
+        comment: Random-walk index values ~87-148 sensible for base-100 index
     code_quality:
       score: 10
       max: 10
@@ -218,30 +209,31 @@ review:
         passed: true
         comment: save("plot-$(THEME).png", fig; px_per_unit=2)
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Standard idiomatic Axis + lines! + axislegend pattern
+        comment: series! is the idiomatic Makie multi-line primitive, correctly used
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: No Makie-distinctive feature used beyond a basic per-series lines!
-          loop
+        comment: series! + lines! overlay + text! callout is solid but not highly
+          distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep:
   - cumulative-sum
-  styling:
-  - grid-styling
+  styling: []
