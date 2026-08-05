@@ -83,9 +83,61 @@ function withAlpha(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 const pointColor = withAlpha(t.palette[0], 0.65);
-const lineColor = t.palette[2];
+const lineColor = t.palette[1];
 const mutedInk = t.theme === "light" ? "#6B6A63" : "#A8A79F"; // muted anchor (confidence-band fill)
 const bandColor = withAlpha(mutedInk, 0.18);
+
+// --- Regression-equation callout (annotation per spec notes) ----------------
+const equationText = `y = ${slope.toFixed(2)}x + ${intercept.toFixed(1)}`;
+const calloutAnchorIdx = Math.round(steps * 0.62);
+const calloutPlugin = {
+  id: "regressionCallout",
+  afterDraw(chart) {
+    const { ctx, chartArea } = chart;
+    const xScale = chart.scales.x;
+    const yScale = chart.scales.y;
+    const anchor = regressionPoints[calloutAnchorIdx];
+    const px = xScale.getPixelForValue(anchor.x);
+    const py = yScale.getPixelForValue(anchor.y);
+
+    const boxW = 200;
+    const boxH = 42;
+    let boxX = px + 26;
+    let boxY = py - boxH - 26;
+    if (boxX + boxW > chartArea.right) boxX = px - boxW - 26;
+    if (boxY < chartArea.top) boxY = py + 26;
+    const anchorX = boxX < px ? boxX + boxW : boxX;
+    const anchorY = boxY + boxH / 2 < py ? boxY + boxH : boxY;
+
+    ctx.save();
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(anchorX, anchorY);
+    ctx.stroke();
+
+    ctx.fillStyle = lineColor;
+    ctx.beginPath();
+    ctx.arc(px, py, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = t.elevatedBg;
+    ctx.strokeStyle = t.grid;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = t.ink;
+    ctx.font = "600 15px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(equationText, boxX + boxW / 2, boxY + boxH / 2);
+    ctx.restore();
+  },
+};
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -94,6 +146,7 @@ document.getElementById("container").appendChild(canvas);
 // --- Chart ---------------------------------------------------------------
 new Chart(canvas, {
   type: "scatter",
+  plugins: [calloutPlugin],
   data: {
     datasets: [
       {
@@ -150,9 +203,7 @@ new Chart(canvas, {
       },
       subtitle: {
         display: true,
-        text: [
-          `R² = ${rSquared.toFixed(3)}  ·  y = ${slope.toFixed(2)}x + ${intercept.toFixed(1)}`,
-        ],
+        text: [`R² = ${rSquared.toFixed(3)}`],
         color: t.inkSoft,
         font: { size: 16 },
         padding: { bottom: 16 },
