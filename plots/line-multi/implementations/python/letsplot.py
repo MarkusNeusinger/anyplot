@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-multi: Multi-Line Comparison Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-05
@@ -57,9 +57,9 @@ plot = (
     + geom_point(data=other_df, size=2.5, alpha=0.55, tooltips=line_tooltips)
     + geom_line(data=electronics_df, size=2.2, alpha=1.0, tooltips=line_tooltips)
     + geom_point(data=electronics_df, size=4.5, alpha=1.0, tooltips=line_tooltips)
-    + scale_color_manual(values=IMPRINT)
+    + scale_color_manual(values=IMPRINT, breaks=["Electronics", "Clothing", "Home Goods"])
     + scale_x_continuous(breaks=months.tolist(), labels=month_labels)
-    + labs(title="line-multi · letsplot · anyplot.ai", x="Month", y="Sales (thousands USD)")
+    + labs(title="line-multi · python · letsplot · anyplot.ai", x="Month", y="Sales (thousands USD)")
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
