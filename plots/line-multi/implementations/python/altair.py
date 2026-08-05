@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-multi: Multi-Line Comparison Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-06
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-08-05
 """
 
 import os
