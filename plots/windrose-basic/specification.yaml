@@ -6,7 +6,7 @@ title: Wind Rose Chart
 
 # Specification tracking
 created: 2025-12-24T22:10:17Z
-updated: null
+updated: 2026-08-05T00:00:00Z
 issue: 1880
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - windrose
     - polar
     - histogram
   data_type:
