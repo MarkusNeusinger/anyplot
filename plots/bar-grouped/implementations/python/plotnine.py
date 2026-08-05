@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-grouped: Grouped Bar Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-05
@@ -14,6 +14,7 @@ from plotnine import (
     element_rect,
     element_text,
     geom_col,
+    geom_text,
     ggplot,
     ggsave,
     labs,
@@ -48,6 +49,10 @@ df = pd.DataFrame(data)
 df["Region"] = pd.Categorical(df["Region"], categories=regions, ordered=True)
 df["Category"] = pd.Categorical(df["Category"], categories=["Electronics", "Apparel", "Home Goods"], ordered=True)
 
+# Highlight the single top-performing region/category pairing as the chart's focal point
+top = df.loc[df["Revenue"].idxmax()]
+subtitle = f"{top.Region} leads all groups at ${top.Revenue:.0f}M in {top.Category}"
+
 # Theme-adaptive chrome
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -62,7 +67,8 @@ anyplot_theme = theme(
     axis_title=element_text(size=10, color=INK),
     axis_text=element_text(size=8, color=INK_SOFT),
     plot_title=element_text(size=12, color=INK),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    plot_subtitle=element_text(size=9, color=INK_SOFT),
+    legend_background=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
     legend_key=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
     legend_text=element_text(size=8, color=INK_SOFT),
     legend_title=element_text(size=9, color=INK),
@@ -73,9 +79,23 @@ anyplot_theme = theme(
 plot = (
     ggplot(df, aes(x="Region", y="Revenue", fill="Category"))
     + geom_col(position=position_dodge(width=0.75), width=0.65)
+    + geom_text(
+        aes(label="Revenue"),
+        position=position_dodge(width=0.75),
+        format_string="${:.0f}",
+        va="bottom",
+        size=2.8,
+        color=INK_SOFT,
+    )
     + scale_fill_manual(values=IMPRINT)
-    + scale_y_continuous(labels=lambda ticks: [f"${v:.0f}M" for v in ticks])
-    + labs(x="Region", y="Revenue", title="bar-grouped · python · plotnine · anyplot.ai", fill="Product Category")
+    + scale_y_continuous(labels=lambda ticks: [f"${v:.0f}M" for v in ticks], expand=(0, 0, 0.12, 0))
+    + labs(
+        x="Region",
+        y="Revenue ($M)",
+        title="bar-grouped · python · plotnine · anyplot.ai",
+        subtitle=subtitle,
+        fill="Product Category",
+    )
     + anyplot_theme
 )
 
