@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: line-multi
 created: '2026-08-05T07:47:03Z'
-updated: '2026-08-05T07:51:01Z'
+updated: '2026-08-05T08:01:20Z'
 generated_by: claude-sonnet
 workflow_run: 30985972256
 issue: 1825
@@ -12,52 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mult
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/d3/plot-dark.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
+  - Direct end-of-line labels (Reykjavik, London, Cairo, Singapore) now guide the
+    reader to each series without relying solely on the legend — a genuine data-storytelling
+    improvement over attempt 1
+  - curveMonotoneX interpolation gives smooth, overshoot-free lines through the sparse
+    monthly points — a D3-distinctive technique that raises Library Mastery
+  - Markers bumped to r=6 (from r=5 in attempt 1), now appropriately prominent for
+    only 12 sparse points per series
+  - New elevated plot-area panel (rounded rect, subtle border) adds a genuine aesthetic
+    touch beyond a bare default background
   - 'Correct Imprint palette in canonical order (Reykjavik #009E73, London #C475FD,
     Cairo #4467A3, Singapore #BD8233), first series is the mandated brand green'
   - 'Theme-correct chrome in both renders: warm off-white #FAF8F1 light background
     with dark ink text, warm near-black #1A1A17 dark background with light text, data
     colors identical across themes'
   - All text explicitly sized (title 18px, axis labels 16px, ticks/legend 14px) with
-    a balanced, no-overflow layout
-  - Legend swatches replicate the exact line+dot glyph used in the chart, a nice consistency
-    touch
+    a balanced, no-overflow layout; verified no edge clipping on any side
   - Realistic, factually accurate climate data spanning four distinct climate types
     (subarctic, temperate maritime, hot desert, tropical) — strong feature coverage
     and appropriate scale
   - Clean KISS code structure with deterministic hardcoded data, correct D3 data-join
     pattern (`.data(points).join("circle")`) for markers, white-stroke edge highlighting
-    on markers/legend dots for definition
+    on markers/legend dots
   weaknesses:
-  - 'Design Excellence reads as a well-configured default rather than publication-ready:
-    palette assignment is correct but there''s no additional aesthetic sophistication
-    (e.g. refined typography weight variation, subtle background treatment, or more
-    distinctive legend/axis styling) — DE-01/DE-02 capped accordingly'
-  - 'No visual hierarchy or storytelling emphasis: all four lines carry identical
-    visual weight with no focal point — consider a technique like a subtle callout
-    on the peak/trough values, a slightly bolder stroke on the most narratively relevant
-    series, or direct end-of-line labels to guide the reader to an insight'
-  - Library Mastery is generic — the implementation uses standard d3.line/d3.axisBottom/d3.axisLeft
-    with no D3-distinctive technique (e.g. curve interpolation via d3.curveMonotoneX
-    for smoother lines, direct end-of-line labeling positioned via D3 scales, or a
-    voronoi/nearest-point hover affordance noted for the HTML view) — leverage something
-    unique to D3 to raise LM-02 above the generic-usage default
-  - Markers (r=5 in the 1600px CSS mount, ~10px final) are on the smaller side for
-    only 12 sparse points per series — the density heuristic calls for more prominent
-    markers at this sparsity; consider bumping to r=6-7
+  - Cairo and Singapore lines cross around Sep, and at r=6 the two markers partially
+    overlap right at the crossing point — minor, still distinguishable via the white
+    stroke edge and color, but a slight VQ-02 deduction
+  - 'Design Excellence is strong but still short of ''publication-ready'': the elevated
+    panel and end-labels help, but typography weight variation and further refinement
+    of the legend/axis chrome would push this further'
+  - Library Mastery is solid but not maximal — curveMonotoneX and direct end-labeling
+    are D3-appropriate, but a more distinctive technique (e.g. a voronoi-based hover
+    affordance noted for the HTML view, or annotated peak/trough callouts) would raise
+    LM-02 further
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Monthly Average Temperatures by City · line-multi · javascript · d3 · anyplot.ai" in bold dark ink, centered at top; horizontal legend row (Reykjavik/London/Cairo/Singapore) beneath the title; dark ink axis labels "Avg. Temperature (°C)" (rotated, left) and "Month" (bottom); tick labels in a slightly softer dark tone; subtle horizontal-only gridlines at low opacity. All chrome elements are clearly legible against the light background.
-      Data: Four lines with circular markers and white-stroke edge highlighting — Reykjavik in brand green #009E73 (coldest, 0-13°C), London in lavender #C475FD (mid-range, 5-19°C), Cairo in blue #4467A3 (widest swing, 14-29°C), Singapore in ochre #BD8233 (nearly flat, 27-28°C). Lines are smooth, well-separated, and clearly distinguishable by hue.
+      Chrome: Title "Monthly Average Temperatures by City · line-multi · javascript · d3 · anyplot.ai" in bold dark ink, centered at top (~55-60% of canvas width, no overflow); horizontal legend row (Reykjavik/London/Cairo/Singapore) beneath the title; dark ink axis labels "Avg. Temperature (°C)" (rotated, left) and "Month" (bottom); tick labels in a slightly softer dark tone; subtle horizontal-only gridlines at low opacity inside a lightly bordered, rounded "elevated panel" backdrop. All chrome elements are clearly legible against the light background, and no title/axis/legend text is clipped at any canvas edge (verified left, right, top, bottom).
+      Data: Four curved (curveMonotoneX) lines with r=6 circular markers and white-stroke edge highlighting — Reykjavik in brand green #009E73 (coldest, 0-13°C), London in lavender #C475FD (mid-range, 5-19°C), Cairo in blue #4467A3 (widest swing, 14-29°C), Singapore in ochre #BD8233 (nearly flat, 27-28°C). Each line ends in a direct, color-matched label (Reykjavik/London/Cairo/Singapore) placed in the right margin, giving each series its own focal point. Cairo and Singapore cross around September, where their markers partially overlap — minor, still distinguishable by color and white stroke.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, and axis label layout as the light render, now rendered in light ink (near-white) text; gridlines and axis domain lines flipped to a light, low-opacity tone. No dark-on-dark text was found — every label is clearly legible against the dark surface.
-      Data: Same four lines in identical hex colors to the light render (#009E73, #C475FD, #4467A3, #BD8233) — confirms the categorical data colors are theme-independent, only chrome flipped.
+      Chrome: Same title, legend, axis-label, and elevated-panel layout as the light render, now rendered in light ink (near-white) text; gridlines, axis domain lines, and panel border flipped to a light, low-opacity tone. No dark-on-dark text found — every label, including the direct end-of-line series labels, is clearly legible against the dark surface.
+      Data: Same four lines and markers in identical hex colors to the light render (#009E73, #C475FD, #4467A3, #BD8233) — confirms the categorical data colors are theme-independent, only chrome flipped. Same minor Cairo/Singapore marker overlap at the September crossing as in the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -73,17 +74,18 @@ review:
           14px), balanced, no overflow, readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text or data elements in either render
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible but slightly small (r=5 CSS) for only 12 sparse points
-          per series
+        comment: Cairo and Singapore markers partially overlap at the September crossing
+          point; distinguishable via color + white stroke, minor deduction
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers bumped to r=6 for only 12 sparse points per series — appropriately
+          prominent, addresses attempt-1 feedback
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -97,7 +99,7 @@ review:
         max: 4
         passed: true
         comment: Plot area uses a large majority of the canvas, balanced margins,
-          legend near the plot
+          legend near the plot, direct end-labels fit comfortably in the right margin
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -112,30 +114,32 @@ review:
         comment: 'First series #009E73, canonical Imprint order for series 2-4, theme-correct
           backgrounds and chrome in both renders'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured default: correct palette and clean legend, but no
-          additional aesthetic sophistication beyond that'
+        passed: true
+        comment: New elevated panel backdrop and direct end-labels are a clear step
+          up from a well-configured default; thoughtful colors and typography, not
+          yet fully publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Spines L-shaped by default via D3 axis generators, subtle single-axis
-          grid, generous whitespace — some refinement but not exhaustive
+        passed: true
+        comment: Subtle single-axis grid, L-shaped chrome via D3 axis generators,
+          rounded elevated panel with subtle border, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed with no emphasis technique or focal point; all four
-          lines carry equal visual weight
+        passed: true
+        comment: Direct end-of-line labels create a clear per-series focal point and
+          visual hierarchy, addressing attempt-1 feedback; all four lines still carry
+          otherwise equal visual weight
     spec_compliance:
       score: 15
       max: 15
@@ -151,8 +155,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend, optional markers all present; color-only
-          distinction is fine at n=4 series
+        comment: Distinct colors, legend, optional markers, curved line style all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -224,7 +228,7 @@ review:
         passed: true
         comment: Follows the D3 mount-node contract correctly, current API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -232,20 +236,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of d3.scalePoint, d3.line, d3.axisBottom/Left, and data-join
-          for markers
+        comment: Correct use of d3.scalePoint, d3.line with curveMonotoneX, d3.axisBottom/Left,
+          and data-join for markers
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic usage — no D3-distinctive technique like curve interpolation,
-          direct end-of-line labeling, or voronoi hover affordance
-  verdict: REJECTED
+        passed: true
+        comment: curveMonotoneX interpolation and direct end-of-line labels positioned
+          via the y-scale are D3-appropriate distinctive techniques, addressing attempt-1
+          feedback
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
