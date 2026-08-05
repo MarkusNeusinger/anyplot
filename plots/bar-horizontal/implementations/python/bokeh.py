@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-horizontal: Horizontal Bar Chart
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-05
@@ -14,7 +14,7 @@ if sys.path and sys.path[0] in ("", "."):
     sys.path.pop(0)
 
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, LabelSet, PrintfTickFormatter
+from bokeh.models import ColumnDataSource, HoverTool, LabelSet, PrintfTickFormatter
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -36,8 +36,15 @@ categories_sorted = [x[0] for x in sorted_data]
 values_sorted = [x[1] for x in sorted_data]
 labels_sorted = [f"{v:.1f}%" for v in values_sorted]
 
-# Create data source (bars + end-of-bar value labels share one source)
-source = ColumnDataSource(data={"categories": categories_sorted, "values": values_sorted, "labels": labels_sorted})
+# Split the leader (top bar, highest value) from the rest so it can carry a
+# focal-point emphasis (thicker edge stroke + bolder, larger value label)
+# without introducing a second hue into the single-series palette.
+rest_source = ColumnDataSource(
+    data={"categories": categories_sorted[:-1], "values": values_sorted[:-1], "labels": labels_sorted[:-1]}
+)
+leader_source = ColumnDataSource(
+    data={"categories": categories_sorted[-1:], "values": values_sorted[-1:], "labels": labels_sorted[-1:]}
+)
 
 # Create figure with categorical y-axis (3200 x 1800 px, the canonical landscape canvas)
 p = figure(
@@ -54,23 +61,62 @@ p = figure(
     min_border_right=80,  # room for value labels near the right edge
 )
 
-# Draw horizontal bars with Okabe-Ito color #009E73
-p.hbar(
-    y="categories", right="values", height=0.7, source=source, color="#009E73", line_color=INK, line_width=2, alpha=0.9
+# Draw horizontal bars with Okabe-Ito color #009E73; the leader (top bar) gets
+# a heavier edge stroke as a focal-point device to sharpen the ranking story
+rest_bars = p.hbar(
+    y="categories",
+    right="values",
+    height=0.7,
+    source=rest_source,
+    color="#009E73",
+    line_color=INK,
+    line_width=2,
+    alpha=0.9,
+)
+leader_bars = p.hbar(
+    y="categories",
+    right="values",
+    height=0.7,
+    source=leader_source,
+    color="#009E73",
+    line_color=INK,
+    line_width=4,
+    alpha=1.0,
 )
 
-# End-of-bar value labels for direct, at-a-glance reading of each value
+# End-of-bar value labels for direct, at-a-glance reading of each value; the
+# leader's label is bolder and larger, reinforcing it as the headline insight
 value_labels = LabelSet(
     x="values",
     y="categories",
     text="labels",
-    source=source,
+    source=rest_source,
     x_offset=12,
-    text_font_size="26pt",
+    text_font_size="28pt",
     text_color=INK_SOFT,
     text_baseline="middle",
 )
 p.add_layout(value_labels)
+
+leader_label = LabelSet(
+    x="values",
+    y="categories",
+    text="labels",
+    source=leader_source,
+    x_offset=12,
+    text_font_size="34pt",
+    text_font_style="bold",
+    text_color=INK,
+    text_baseline="middle",
+)
+p.add_layout(leader_label)
+
+# Distinctive bokeh interactivity: formatted hover tooltips on both HTML renders
+p.add_tools(
+    HoverTool(
+        renderers=[rest_bars, leader_bars], tooltips=[("Language", "@categories"), ("Popularity", "@values{0.0}%")]
+    )
+)
 
 # Style title
 p.title.text_font_size = "50pt"
@@ -102,7 +148,9 @@ p.ygrid.grid_line_alpha = 0
 # Theme-adaptive background
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+# Drop the default four-sided box outline; the x/y axis lines already draw a
+# refined L-shaped frame (left + bottom) without boxing the plot area in
+p.outline_line_color = None
 
 # Set x-axis range starting from 0, with headroom for the end-of-bar labels
 p.x_range.start = 0
