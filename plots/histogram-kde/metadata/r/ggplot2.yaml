@@ -1,0 +1,234 @@
+library: ggplot2
+language: r
+specification_id: histogram-kde
+created: '2026-08-05T03:52:07Z'
+updated: '2026-08-05T04:17:20Z'
+generated_by: claude-sonnet
+workflow_run: 30973261323
+issue: 1823
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'All three Attempt 1 weaknesses fixed: KDE line now uses canonical Imprint position
+    2 (#C475FD), grid is now a blended subtle tint, unused library(dplyr) import removed'
+  - Correct histogram + KDE overlay with y-axis scaled as density (after_stat(density)),
+    matching spec's comparable-scale requirement
+  - Realistic, neutral finance dataset (Student-t mixed with chi-squared skew) produces
+    genuine fat tails and mild negative skew plus a small secondary bump, exactly
+    what a KDE overlay is meant to reveal beyond binning artifacts
+  - Theme-adaptive chrome correctly threaded through both renders with zero dark-on-dark
+    or light-on-light failures
+  - All font sizes explicitly set via theme(); semi-transparent histogram bars (alpha
+    = 0.5) keep the KDE curve fully visible per spec notes
+  weaknesses:
+  - Design Excellence / storytelling remains at default level - distribution displayed
+    well but fat-tail/skew insight not visually emphasized (optional polish)
+  - LM-02 stays generic - the manual-legend trick via mapped constant aesthetics is
+    common ggplot2 practice, not a deeply library-distinctive feature
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1, not pure white.
+      Chrome: Bold dark title "histogram-kde · r · ggplot2 · anyplot.ai" top-left at ~50% width, no overflow. Axis titles "Daily Return (%)" and "Density" in dark ink. Tick labels in softer gray. Horizontal-only gridlines now render as a faint blended tint rather than solid ink. Legend inside plot, upper right, cream elevated box with thin border, two entries clearly labeled. All chrome readable.
+      Data: Green (#009E73) semi-transparent histogram bars (alpha ~0.5) forming a right-leaning bell with fat tails and a small secondary bump near +2.5%; lavender (#C475FD) KDE line traces the density cleanly on top, fully visible through the bars. First series is #009E73, second series is Imprint position 2 as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17, not pure black.
+      Chrome: Same title, axis titles, tick labels now in light/off-white and soft light-gray tones, fully legible - no dark-on-dark failures. Gridlines remain a faint blended tint symmetric with the light render. Legend box has dark elevated fill with lighter border, same position, no overlap.
+      Data: Confirmed pixel-identical to light render - green histogram bars, lavender KDE line - only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes, well-proportioned
+          title
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, and data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 40 bins and 1.3 linewidth KDE well-adapted to 700-point dataset
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender, distinct hue families, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, legend near plot, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Daily Return (%) has units, Density is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series now correctly Imprint position
+          2 (#C475FD); theme-correct chrome in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom theme-adaptive chrome and inside-plot legend clearly above
+          defaults, not yet publication-exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid now genuinely subtle after blending toward page background;
+          spines correctly L-shaped
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Distribution displayed but fat-tail/skew insight not visually emphasized
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram + KDE overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent bars, density scale, appropriate bin/bandwidth choice,
+          contrasting colors
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = return, Y = density, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Fat tails, mild skew, secondary bump shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral finance scenario, daily equity returns
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Return range plausible for a volatile equity index
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> Data -> Plot -> Save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Unused library(dplyr) removed; only ggplot2 and ragg imported
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png device, plot-{theme}.png, modern after_stat()
+          API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: after_stat(density), scale_fill_manual/scale_color_manual, clean
+          layer composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Manual-legend trick via mapped constant aesthetics is a nice idiom
+          but not deeply library-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
