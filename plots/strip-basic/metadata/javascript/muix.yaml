@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: strip-basic
 created: '2026-08-05T06:03:20Z'
-updated: '2026-08-05T06:07:34Z'
+updated: '2026-08-05T06:18:32Z'
 generated_by: claude-sonnet
 workflow_run: 30979757341
 issue: 975
@@ -12,47 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - Jitter width (0.18) and point alpha (0.62) both land inside the spec's recommended
-    ranges (0.1-0.3 and 0.5-0.7), producing a legible density-revealing strip plot.
-  - Idiomatic composable MUI X usage (ChartContainer + ScatterPlot + ChartsXAxis/ChartsYAxis/ChartsGrid)
-    with the Imprint palette applied via t.palette in canonical order and skipAnimation
-    set correctly.
-  - Deterministic seeded LCG + Box-Muller data generation yields a realistic, neutral
-    clinical dataset (time to symptom relief across four treatment groups) with a
-    clear decreasing-trend narrative from Control to Drug C.
-  - 'Clean theme-adaptive chrome: top/right spines hidden, subtle horizontal-only
-    gridlines, generous margins, both light and dark renders fully readable.'
+  - Jitter width (0.27) and point alpha (0.62) both fall within the spec's explicitly
+    recommended ranges
+  - Group mean reference lines directly implement the spec's suggestion and create
+    a clear decreasing-effect story
+  - Reproducible seeded LCG + Box-Muller sampling; clean, minimal imports
+  - Correct canonical Imprint palette order, identical data colors across light/dark
+    themes
+  - Idiomatic use of MUI X's low-level composition API (ChartContainer + useXScale/useYScale)
+    to add a custom SVG overlay
   weaknesses:
-  - Title omits the optional descriptive prefix, so it occupies only ~25% of the plot
-    width and reads as visually small against the generous whitespace above the plot
-    area — consider a short prefix like 'Time to Symptom Relief · strip-basic · javascript
-    · muix · anyplot.ai' to better balance the composition.
-  - No mean/median reference lines were added despite the spec's suggestion ('Consider
-    adding horizontal lines for group means or medians as reference') — a subtle per-group
-    mean tick or line would strengthen the decreasing-trend narrative and improve
-    data storytelling.
-  - Points within each category (especially Control, n=42) overlap heavily; widening
-    jitter toward the upper end of the recommended range (~0.25-0.3) or slightly reducing
-    markerSize would improve individual point distinguishability without harming category
-    identity.
+  - Point alpha (0.62) is a bit below the 0.7-0.9 guidance for ~42 points/group, slightly
+    washing out the densest clusters
+  - 'Overall aesthetic still reads close to a well-configured default: no custom typography
+    hierarchy or distinctive color treatment beyond straightforward palette assignment'
+  - No marker stroke on the lower-contrast lavender/ochre series against the light
+    background (optional per style guide, but would help separability)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold centered title "strip-basic · javascript · muix · anyplot.ai" in dark ink at the top; dark "Treatment Group" x-axis label and dark "Time to Relief (minutes)" y-axis label; soft grey tick labels on both axes; subtle horizontal-only gridlines. All chrome text is clearly readable against the light background.
-      Data: Four jittered strip columns (Control, Drug A, Drug B, Drug C) using the Imprint palette in canonical order — Control is brand green #009E73, Drug A is lavender, Drug B is blue, Drug C is ochre/amber. Points use alpha transparency (~0.62) so overlapping observations are visible as denser blobs. Values decrease from Control (highest, ~20-69 min) through Drug C (lowest, ~4-22 min), a clear treatment-effect narrative.
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "Time to Symptom Relief · strip-basic · javascript · muix · anyplot.ai" centered at top in bold dark text, fully visible, not clipped. Axis labels "Treatment Group" / "Time to Relief (minutes)" and tick labels all dark and clearly readable. Subtle horizontal-only grid.
+      Data: First series (Control) is brand green #009E73; Drug A/B/C follow canonical Imprint order (lavender, blue, ochre). Jittered scatter points per group with a bold mean-line per category.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, now in light/white ink; axis labels and tick labels flipped to light grey/white; gridlines remain subtle but visible against the dark surface.
-      Data: Same four category colors as the light render (green, lavender, blue, ochre) — data hues are identical between themes, confirming only chrome flipped. No dark-on-dark text found; all titles, axis labels, and tick labels are clearly legible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Same title/axis/tick text now rendered in light ink, clearly readable against the dark background. No dark-on-dark failures observed. Grid remains subtle.
+      Data: Colors identical to the light render (green/lavender/blue/ochre unchanged) - only chrome flipped as expected.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -60,52 +53,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (14/16/22px), fully readable in both themes;
-          title is legible but visually small relative to available width.
+        comment: All font sizes explicit, readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text collisions; data points overlap heavily within categories
-          (especially Control, n=42) but alpha blending keeps density readable.
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: markerSize=11 with alpha=0.62 for n=42/group is a reasonable density-appropriate
-          choice; individual points still distinguishable.
+        comment: Alpha (0.62) slightly below 0.7-0.9 guidance for this density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct hue families (green/purple/blue/ochre) from the Imprint
-          palette, CVD-safe, no red-green-only signal.
+        comment: CVD-safe Imprint hues
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: No clipping, generous margins; title occupies only ~25% of width
-          (no descriptive prefix used), smaller than the 50-70% guideline.
+        comment: Good utilization, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units ('Time to Relief (minutes)', 'Treatment
-          Group').
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, remaining series follow canonical Imprint
-          order; backgrounds correct in both themes.'
+        comment: Canonical Imprint order, theme-correct chrome
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -113,21 +99,19 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Modest polish via alpha-blended overlap handling and clean composable
-          layout; nothing beyond that.
+        comment: Above default via mean-line overlay and tuned jitter/alpha
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines hidden, horizontal-only subtle grid, generous whitespace.
+        comment: Top/right axis hidden, subtle grid, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Category order (Control to Drug C) tells a decreasing-effect story,
-          but no reference lines/annotations reinforce it.
+        comment: Mean lines create clear decreasing-effect hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -137,27 +121,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct strip plot with horizontal jitter to reduce overplotting.
+        comment: Correct strip plot with jitter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Jitter width 0.18 and alpha 0.62 both within spec-recommended ranges;
-          42 obs/category within 10-200 range.
+        comment: Jitter width and alpha within spec ranges, mean lines added
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: category on x-axis, value on y-axis, all data shown.
+        comment: Category on x, value on y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed since categories
-          are already labeled on the x-axis.
+        comment: Title format correct, legend reasonably omitted
     data_quality:
       score: 14
       max: 15
@@ -167,57 +149,53 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Individual points, jitter, and alpha-driven density are all shown;
-          optional mean/median reference lines from the spec notes are omitted.
+        comment: Individual observations, jitter, varying spread/means shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral clinical trial context (time to symptom relief
-          by treatment group).
+        comment: Plausible, neutral drug-trial scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-70 minute range is sensible for a symptom-relief-time domain.
+        comment: Sensible minute-scale decreasing-effect values
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat structure with small, purposeful helper functions (rng, gaussian,
-          hexToRgba).
+        comment: Reasonable for React harness; a few justified helpers
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42), fully deterministic.
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the MUI X components actually used are imported.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/interactivity.
+        comment: No fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports Chart component per harness contract; skipAnimation
-          set on ScatterPlot.
+        comment: Correct harness contract
     library_mastery:
       score: 7
       max: 10
@@ -227,25 +205,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses the ChartContainer composable pattern (recommended for custom
-          scatter/axis compositions) correctly.
+        comment: ChartContainer + hooks composition pattern
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Clever use of a continuous xAxis with fixed tickInterval + valueFormatter
-          to fake categorical positions for jitter — beyond generic usage.
+        passed: false
+        comment: Hook-driven custom overlay is MUI X-specific but usage otherwise
+          standard
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
