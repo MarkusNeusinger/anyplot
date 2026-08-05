@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-multi: Multi-Line Comparison Plot
-Library: matplotlib 3.11.1 | Python 3.13.12
-Quality: 92/100 | Updated: 2026-08-05
+Library: matplotlib 3.11.1 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-08-05
 """
 
 import os
