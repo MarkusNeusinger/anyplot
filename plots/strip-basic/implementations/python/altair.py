@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 strip-basic: Basic Strip Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -42,17 +42,20 @@ means = df.groupby("Department")["Response Score"].mean().reset_index()
 means.columns = ["Department", "Mean"]
 means["Label"] = "Group Mean"
 
+top_dept = means.loc[means["Mean"].idxmax()]
+subtitle = f"{top_dept['Department']} leads with the highest mean score ({top_dept['Mean']:.0f})"
+
 # Strip chart with Gaussian jitter via transform_calculate
 strip = (
     alt.Chart(df)
-    .mark_circle(size=70, opacity=0.65, color=BRAND)
+    .mark_circle(size=70, opacity=0.55, color=BRAND)
     .encode(
         x=alt.X("Department:N", title="Department", axis=alt.Axis(labelAngle=0)),
-        y=alt.Y("Response Score:Q", title="Response Score", scale=alt.Scale(domain=[30, 105])),
+        y=alt.Y("Response Score:Q", title="Response Score (0–100)", scale=alt.Scale(domain=[30, 105])),
         xOffset="jitter:Q",
         tooltip=["Department:N", alt.Tooltip("Response Score:Q", format=".1f")],
     )
-    .transform_calculate(jitter="sqrt(-2*log(random()))*cos(2*PI*random())*0.2")
+    .transform_calculate(jitter="sqrt(-2*log(random()))*cos(2*PI*random())*0.27")
 )
 
 # Mean reference ticks with legend entry
@@ -86,7 +89,13 @@ chart = (
         width=620,
         height=320,
         padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
-        title=alt.Title("strip-basic · python · altair · anyplot.ai", fontSize=16),
+        title=alt.Title(
+            "strip-basic · python · altair · anyplot.ai",
+            subtitle=subtitle,
+            fontSize=16,
+            subtitleFontSize=11,
+            subtitleColor=INK_SOFT,
+        ),
         background=PAGE_BG,
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=620, continuousHeight=320)
@@ -101,9 +110,7 @@ chart = (
         titleFontSize=12,
     )
     .configure_title(color=INK)
-    .configure_legend(
-        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, titleFontSize=10
-    )
+    .configure_legend(fillColor=ELEVATED_BG, labelColor=INK_SOFT, titleColor=INK, titleFontSize=10)
 )
 
 # Save — pad to the canonical 3200x1800 target (vl-convert never overshoots this small a view)
