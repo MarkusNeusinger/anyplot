@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 streamgraph-basic: Basic Stream Graph
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: 83/100 | Updated: 2026-08-05
+Quality: 89/100 | Updated: 2026-08-05
 """
 
 import os

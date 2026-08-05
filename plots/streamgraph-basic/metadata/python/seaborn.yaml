@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:55:44Z'
-updated: '2026-08-05T11:22:54Z'
+updated: '2026-08-05T11:29:32Z'
 generated_by: claude-sonnet
 workflow_run: 31000550918
 issue: 856
@@ -12,55 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - 'Genuine data storytelling: ''Hip-Hop rising ↑'' / ''Rock declining ↓'' annotations
-    with arrows plus matching dashed center-trend overlays create a clear focal point
-    instead of a flat data dump.'
+  - Title now reads 'streamgraph-basic · python · seaborn · anyplot.ai' — the missing
+    '{language}' segment flagged in attempt 1 is fixed and the title is fully visible
+    in both renders.
+  - Legend moved from an overlapping upper-left position to a clean right-side placement
+    (bbox_to_anchor=(1.01, 0.5)) — no longer hides the early months of the top stream
+    bands in either theme.
   - 'Palette compliance is perfect: canonical Imprint order across all 6 genres (green,
     lavender, blue, ochre, red, cyan), first series #009E73, identical data colors
     between light and dark renders, theme-correct chrome (background, text, legend
     box) in both.'
+  - 'Genuine data storytelling: ''Hip-Hop rising ↑'' / ''Rock declining ↓'' annotations
+    with arrows plus matching dashed center-trend overlays create a clear focal point,
+    and the annotation boxes themselves no longer sit on top of the dashed lines they
+    reference.'
   - Smooth cubic-spline interpolation gives the organic, flowing curve appearance
     the spec explicitly asks for, and the baseline is correctly centered/symmetric.
-  - 'Sensible minimalism: y-axis intentionally omitted (values are relative in a streamgraph),
-    only the bottom spine kept, subtle white band separators, no competing grid.'
   - Data shows real variety in shape (Hip-Hop growth trend, Rock decline trend, seasonal
     oscillation across all genres) rather than uniform, indistinguishable bands.
   weaknesses:
-  - Title is 'streamgraph-basic · seaborn · anyplot.ai' — missing the required '{language}'
-    segment. Spec format is '{spec-id} · {language} · {library} · anyplot.ai', so
-    it should read 'streamgraph-basic · python · seaborn · anyplot.ai'.
-  - The 'Genre' legend box (upper-left, framealpha=0.9) sits directly on top of the
-    stream area and hides the first ~2-3 months (Jan-Mar '23) of the top bands (Classical,
-    Electronic, Jazz) in both renders — move it outside the data (e.g. right side,
-    or below the plot) instead of floating over the earliest data.
-  - The bold 'Hip-Hop rising ↑' / 'Rock declining ↓' annotation text sits close enough
-    to the gray dashed center-trend lines that the dashes visually cross through the
-    second text line in places — nudge the text offsets or shorten the dashed lines
-    so they don't intersect the annotation bounding boxes.
   - The actual streamgraph geometry (the 6 fill_between bands, which is the entire
-    data encoding) is built with raw matplotlib, not a seaborn plotting call — the
-    only genuine sns.* plotting function used is the two decorative dashed center-trend
-    sns.lineplot overlays. Since seaborn has no native streamgraph API this is understandable,
-    but leaning more on seaborn idioms elsewhere (e.g. sns.lineplot for a real data
-    series, not just decoration) would strengthen Library Mastery.
+    data encoding) is still built with raw matplotlib, not a seaborn plotting call
+    — the only genuine sns.* plotting element remains the two decorative dashed center-trend
+    sns.lineplot overlays. Seaborn has no native streamgraph API so this is a library
+    limitation, but leaning further into seaborn idioms (e.g. using sns.lineplot for
+    an actual data series rather than only decoration) would strengthen Library Mastery.
+  - Title occupies roughly 65-70% of plot width, somewhat under the ~70-85% natural
+    range noted for the mandated title format at default fontsize — not a deduction
+    (readable, not cramped), but a slightly larger title fontsize would give it a
+    bit more visual presence.
+  - The two annotation arrows still visually cross through the gray dashed center-trend
+    lines near their endpoints (not through the text itself) — purely cosmetic and
+    does not impede readability, but a minor polish opportunity.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "streamgraph-basic · seaborn · anyplot.ai" in dark ink, centered, clearly readable. X-axis tick labels ("Jan '23" ... "Dec '24") and x-axis label "Month (2023–2024)" in dark/soft-dark ink, fully legible. "Genre" legend box (upper-left) has dark text on a light elevated fill, readable, but the box itself sits on top of the earliest months of the stream data.
-      Data: Six flowing, spline-smoothed bands stacked around a centered baseline — Pop (green #009E73), Rock (lavender), Hip-Hop (blue), Electronic (ochre), Classical (red), Jazz (cyan), in canonical Imprint order with thin cream-colored edges separating bands. Two bold annotations ("Hip-Hop rising ↑", "Rock declining ↓") with arrows, plus two dashed gray center-trend lines through the Hip-Hop and Rock bands.
-      Legibility verdict: PASS (all text readable; only issue is the legend box physically overlapping the leftmost ~2-3 months of the top bands, not a contrast/readability problem).
+      Chrome: Title "streamgraph-basic · python · seaborn · anyplot.ai" in dark ink, centered, fully visible and not clipped — the language segment missing in attempt 1 is now present. X-axis tick labels ("Jan '23" ... "Dec '24") and x-axis label "Month (2023–2024)" in dark/soft-dark ink, fully legible. "Genre" legend box now sits to the right of the plot area (outside the stream data), with dark text on a light elevated fill, readable and no longer overlapping any data.
+      Data: Six flowing, spline-smoothed bands stacked around a centered baseline — Pop (green #009E73), Rock (lavender), Hip-Hop (blue), Electronic (ochre), Classical (red), Jazz (cyan), in canonical Imprint order with thin cream-colored edges separating bands. Two bold annotations ("Hip-Hop rising ↑", "Rock declining ↓") with arrows, plus two dashed gray center-trend lines through the Hip-Hop and Rock bands; the annotation text boxes themselves sit clear of the dashed lines this time (only the connector arrows cross them).
+      Legibility verdict: PASS (all text readable; no overlap between legend/annotations and data).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title in light/off-white ink, clearly readable against the dark background. Tick labels and x-axis label in light gray, legible. Legend box has a dark elevated fill with light text, readable, but again overlaps the earliest months of the top bands.
-      Data: Same six bands in the identical Imprint colors as the light render (green/lavender/blue/ochre/red/cyan) — confirms data colors are unchanged between themes, only chrome flipped. Annotation text colors match their genre (blue for Hip-Hop, lavender for Rock) and remain visible against the dark background; the gray dashed center-trend lines are lighter gray here and still visible, passing close to/through the "rising"/annotation text in a couple of spots.
-      Legibility verdict: PASS (no dark-on-dark or light-on-light failures found; same legend-overlap caveat as the light render).
+      Chrome: Title in light/off-white ink, clearly readable against the dark background, same corrected "python" segment present. Tick labels and x-axis label in light gray, legible. Legend box has a dark elevated fill with light text, readable, positioned to the right of the plot with no overlap onto the stream data.
+      Data: Same six bands in the identical Imprint colors as the light render (green/lavender/blue/ochre/red/cyan) — confirms data colors are unchanged between themes, only chrome flipped. Annotation text colors match their genre (blue for Hip-Hop, lavender for Rock) and remain visible against the dark background; the gray dashed center-trend lines are lighter gray here and still visible, with the annotation boxes clear of the lines themselves.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures found; no legend/data overlap).
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,14 +69,15 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes at full size.
+        comment: All font sizes explicitly set, readable in both themes at full size;
+          title fits without clipping.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Legend box overlaps the earliest months of the top stream bands;
-          annotation text sits close to the dashed trend lines.
+        passed: true
+        comment: Legend moved outside the stream area, no longer overlaps data; annotation
+          boxes no longer sit on the dashed trend lines.
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -92,11 +94,11 @@ review:
           signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas with balanced margins; legend eating
-          into the stream area is a minor deduction.
+        comment: Plot fills most of the canvas with balanced margins; legend now sits
+          close to the plot without eating into the data area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -112,7 +114,7 @@ review:
         comment: 'Canonical Imprint order, first series #009E73, identical data colors
           across themes, theme-correct chrome.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -121,15 +123,14 @@ review:
         max: 8
         passed: true
         comment: Spline-smoothed flowing curves, harmonious palette, white band edges
-          — above a configured default, short of publication-ready due to the legend
-          overlap.
+          — above a configured default, short of full publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Minimal spines, no competing grid, but legend/annotation collide
-          slightly with data/trend lines.
+        comment: Minimal spines, no competing grid, legend and annotations no longer
+          collide with data — clean, polished layout.
       - id: DE-03
         name: Data Storytelling
         score: 5
@@ -138,7 +139,7 @@ review:
         comment: Explicit rising/declining annotations with arrows and matching dashed
           trend lines give a clear, guided narrative.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -162,11 +163,11 @@ review:
           the full range.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend is correct, but title omits the required '{language}' segment
-          ('python').
+        passed: true
+        comment: Title now includes the required '{language}' segment ('python');
+          legend labels correct and no longer overlapping data.
     data_quality:
       score: 14
       max: 15
@@ -247,7 +248,7 @@ review:
         comment: The only seaborn-specific plotting element (sns.lineplot center-trend
           overlay) is decorative, not central to the chart; seaborn has no native
           streamgraph API so this is a library limitation, but usage is still generic.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
