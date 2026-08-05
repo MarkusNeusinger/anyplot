@@ -306,6 +306,14 @@ jobs:
         run: |
           gh api "repos/$REPOSITORY/issues/$PR_NUMBER/reactions" -f content=eyes
 
+      # Marks the boundary between "review comments that already existed" and
+      # "the comment this run produced", so the score fallback below can never
+      # pick up a previous attempt's score. One second of slack absorbs clock
+      # skew between the runner and GitHub's comment timestamps.
+      - name: Record review start time
+        id: t0
+        run: echo "at=$(date -u -d '1 second ago' +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+
       - name: Run AI Quality Review
         id: review
         continue-on-error: true
@@ -338,6 +346,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           REPOSITORY: ${{ github.repository }}
+          REVIEW_STARTED_AT: ${{ steps.t0.outputs.at }}
         run: |
           # `0` is a LEGITIMATE score, not a sentinel: the Stage 1 auto-reject
           # gates in prompts/workflow-prompts/ai-quality-review.md mandate
@@ -353,16 +362,31 @@ jobs:
             SCORE=$(cat quality_score.txt | tr -d '[:space:]')
             HAS_OUTPUT=true
           else
-            # Fall back to the review comment. Select the last *claude[bot]*
-            # comment rather than the last comment overall — on a retry the
-            # github-actions[bot] "auto-retrying" notice lands after it, and
-            # `.comments[-1]` would then read that notice and find no score.
-            SCORE=$(gh api --paginate "repos/${REPOSITORY}/issues/${PR_NUM}/comments?per_page=100" \
-              --jq '[.[] | select(.user.login == "claude[bot]")] | last | .body // ""' 2>/dev/null \
+            # Fall back to the review comment, under two constraints:
+            #
+            #  1. Select the last *claude[bot]* comment, not the last comment
+            #     overall — on a retry the github-actions[bot] "auto-retrying"
+            #     notice lands after the review, and `.comments[-1]` would read
+            #     that notice and find no score.
+            #  2. Only accept a comment posted by THIS run. A PR that has
+            #     already been reviewed carries older review comments with a
+            #     stale score (PR #9948 still shows `Score: 89/100` from its
+            #     first review), and reading one of those would attach a score
+            #     the current implementation never earned. Comparing RFC 3339
+            #     UTC timestamps lexicographically is exact here: GitHub and
+            #     `date -u` emit the same fixed-width `...Z` format.
+            SCORE=$(gh api --paginate "repos/${REPOSITORY}/issues/${PR_NUM}/comments?per_page=100" 2>/dev/null \
+              | jq -s --arg since "$REVIEW_STARTED_AT" -r \
+                  'add // []
+                   | [.[] | select(.user.login == "claude[bot]")
+                          | select(.created_at >= $since)]
+                   | last | .body // ""' \
               | grep -oP '^###\s+Score:\s+\K\d+' | head -1 || true)
             if [ -n "$SCORE" ]; then
               HAS_OUTPUT=true
-              echo "::notice::quality_score.txt missing; recovered score ${SCORE} from the review comment"
+              echo "::notice::quality_score.txt missing; recovered score ${SCORE} from this run's review comment"
+            else
+              echo "::notice::quality_score.txt missing and no review comment from this run (since ${REVIEW_STARTED_AT})"
             fi
           fi
 
