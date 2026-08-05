@@ -1,9 +1,10 @@
 """ anyplot.ai
 windrose-basic: Wind Rose Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-07
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-08-05
 """
 
+import math
 import os
 import sys
 
@@ -28,8 +29,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette (positions 1-7)
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette (canonical order)
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # Data generation
 np.random.seed(42)
@@ -46,27 +47,31 @@ directions = np.concatenate(
 )
 directions = directions % 360  # Normalize to 0-360
 
-# Generate corresponding wind speeds (Weibull-like distribution)
+# Wind speeds drawn from an exponential distribution per direction cluster
+# (calm sectors decay faster, gustier sectors carry a longer tail)
 speeds = np.concatenate(
     [
-        np.random.weibull(2, int(n_observations * 0.35)) * 8,  # SW: moderate-strong
-        np.random.weibull(2.2, int(n_observations * 0.25)) * 9,  # W: stronger
-        np.random.weibull(1.8, int(n_observations * 0.15)) * 6,  # S: lighter
-        np.random.weibull(1.5, int(n_observations * 0.25)) * 5,  # Others: light
+        np.random.exponential(6.0, int(n_observations * 0.35)),  # SW: moderate-strong
+        np.random.exponential(7.0, int(n_observations * 0.25)),  # W: stronger, longer tail
+        np.random.exponential(4.0, int(n_observations * 0.15)),  # S: lighter
+        np.random.exponential(3.0, int(n_observations * 0.25)),  # Others: light
     ]
 )
 
-# Define 8 direction sectors (N, NE, E, SE, S, SW, W, NW)
-direction_labels = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+# Define 8 direction sectors. pygal's Radar places category index 0 at the
+# top and lays out subsequent categories COUNTER-clockwise, so the labels
+# must be listed counter-clockwise-in-degrees (N, then 315, 270, ...) for the
+# rendered spokes to match true (clockwise) compass bearing.
+direction_labels = ["N", "NW", "W", "SW", "S", "SE", "E", "NE"]
 
 # Define wind speed ranges (m/s)
-speed_bins = [0, 3, 6, 9, 12, np.inf]
-speed_labels = ["0-3 m/s", "3-6 m/s", "6-9 m/s", "9-12 m/s", ">12 m/s"]
+speed_bins = [0, 5, 10, 15, np.inf]
+speed_labels = ["0-5 m/s", "5-10 m/s", "10-15 m/s", "15+ m/s"]
 
 # Calculate frequencies for each direction and speed bin
 frequencies = {label: [] for label in speed_labels}
 
-for dir_center in [0, 45, 90, 135, 180, 225, 270, 315]:
+for dir_center in [0, 315, 270, 225, 180, 135, 90, 45]:
     if dir_center == 0:
         # North spans 337.5-360 and 0-22.5
         mask = (directions >= 337.5) | (directions < 22.5)
@@ -88,19 +93,25 @@ cumulative = {}
 for i, label in enumerate(speed_labels):
     cumulative[label] = [sum(frequencies[speed_labels[k]][j] for k in range(i + 1)) for j in range(8)]
 
-# Custom style for large canvas with theme-adaptive colors
+# Round the radial max up to a clean multiple of 5 for a tidier axis
+radial_max = max(cumulative[speed_labels[-1]])
+radial_max = math.ceil(radial_max / 5) * 5
+
+# Custom style — sizing tuned for the 2400x2400 square canvas (see
+# prompts/library/pygal.md "Sizing + Theme for 3200x1800 px"; same pixel
+# area as the square format, so the same unitless values apply)
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=32,
-    label_font_size=24,
-    major_label_font_size=22,
-    legend_font_size=20,
-    value_font_size=18,
+    colors=IMPRINT_PALETTE,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
     stroke_width=2.5,
     opacity=0.95,
     guide_stroke_width=1,
@@ -108,24 +119,24 @@ custom_style = Style(
 
 # Create radar chart (wind rose)
 chart = pygal.Radar(
-    width=3600,
-    height=3600,
+    width=2400,
+    height=2400,
     style=custom_style,
-    title="windrose-basic · pygal · anyplot.ai",
+    title="windrose-basic · python · pygal · anyplot.ai",
     y_title="Frequency (%)",
     show_legend=True,
     legend_at_bottom=False,
-    legend_box_size=16,
+    legend_box_size=40,
     fill=True,
     stroke=True,
     show_dots=False,
     inner_radius=0.05,
     truncate_legend=-1,
-    margin=120,
-    spacing=40,
+    margin=90,
+    spacing=30,
     show_y_guides=True,
     show_x_guides=False,
-    range=(0, None),
+    range=(0, radial_max),
 )
 
 # Set direction labels
@@ -133,7 +144,7 @@ chart.x_labels = direction_labels
 
 # Add series from strongest to calmest (drawing order)
 # This creates proper visual stacking with each layer visible
-reversed_labels = list(reversed(speed_labels))  # [">12 m/s", "9-12 m/s", ...]
+reversed_labels = list(reversed(speed_labels))  # ["15+ m/s", "10-15 m/s", ...]
 for label in reversed_labels:
     chart.add(label, cumulative[label])
 
