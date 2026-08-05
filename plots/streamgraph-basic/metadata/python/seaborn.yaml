@@ -2,128 +2,142 @@ library: seaborn
 language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:55:44Z'
-updated: '2026-05-05T03:41:36Z'
+updated: '2026-08-05T11:29:32Z'
 generated_by: claude-sonnet
-workflow_run: 25355906940
+workflow_run: 31000550918
 issue: 856
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Correct streamgraph with symmetric centered baseline (-total/2) and smooth cubic-spline
-    interpolation
-  - 'Perfect Okabe-Ito palette compliance: first series #009E73 (Pop), all six colors
-    in canonical order'
-  - 'Excellent theme-adaptive chrome: both renders pass legibility checks with no
-    dark-on-dark or light-on-light failures'
-  - Full spec compliance including all required features (smooth curves, centered
-    baseline, legend, distinct colors)
-  - 'Perfect code quality: reproducible, clean KISS structure, all imports used, correct
-    output format'
-  - Realistic neutral data context (music streaming hours) with plausible genre proportions
-    and clear trend narratives
+  - Title now reads 'streamgraph-basic · python · seaborn · anyplot.ai' — the missing
+    '{language}' segment flagged in attempt 1 is fixed and the title is fully visible
+    in both renders.
+  - Legend moved from an overlapping upper-left position to a clean right-side placement
+    (bbox_to_anchor=(1.01, 0.5)) — no longer hides the early months of the top stream
+    bands in either theme.
+  - 'Palette compliance is perfect: canonical Imprint order across all 6 genres (green,
+    lavender, blue, ochre, red, cyan), first series #009E73, identical data colors
+    between light and dark renders, theme-correct chrome (background, text, legend
+    box) in both.'
+  - 'Genuine data storytelling: ''Hip-Hop rising ↑'' / ''Rock declining ↓'' annotations
+    with arrows plus matching dashed center-trend overlays create a clear focal point,
+    and the annotation boxes themselves no longer sit on top of the dashed lines they
+    reference.'
+  - Smooth cubic-spline interpolation gives the organic, flowing curve appearance
+    the spec explicitly asks for, and the baseline is correctly centered/symmetric.
+  - Data shows real variety in shape (Hip-Hop growth trend, Rock decline trend, seasonal
+    oscillation across all genres) rather than uniform, indistinguishable bands.
   weaknesses:
-  - Dashed center-line overlays for Hip-Hop and Rock use the same Okabe-Ito color
-    as their streams, making them nearly invisible — use INK_SOFT or white for contrast
-  - Annotation fontsize=15 is below the 16pt minimum; increase to 16-18pt for 4800x2700
-    resolution legibility
-  - 'VQ-06: ''Month'' x-axis label is descriptive but lacks units context (minor)'
+  - The actual streamgraph geometry (the 6 fill_between bands, which is the entire
+    data encoding) is still built with raw matplotlib, not a seaborn plotting call
+    — the only genuine sns.* plotting element remains the two decorative dashed center-trend
+    sns.lineplot overlays. Seaborn has no native streamgraph API so this is a library
+    limitation, but leaning further into seaborn idioms (e.g. using sns.lineplot for
+    an actual data series rather than only decoration) would strengthen Library Mastery.
+  - Title occupies roughly 65-70% of plot width, somewhat under the ~70-85% natural
+    range noted for the mandated title format at default fontsize — not a deduction
+    (readable, not cramped), but a slightly larger title fontsize would give it a
+    bit more visual presence.
+  - The two annotation arrows still visually cross through the gray dashed center-trend
+    lines near their endpoints (not through the text itself) — purely cosmetic and
+    does not impede readability, but a minor polish opportunity.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "streamgraph-basic · seaborn · anyplot.ai" in dark INK (#1A1A17), clearly readable. X-axis tick labels (Jan '23 through Dec '24) in INK_SOFT (#4A4A44) gray, readable. "Month" x-axis label in INK dark, readable. Legend "Genre" with all six genre labels in dark text on #FFFDF6 elevated background, readable.
-      Data: Six smooth flowing streams — Pop (#009E73 teal-green, bottom), Rock (#D55E00 orange-red), Hip-Hop (#0072B2 blue, largest), Electronic (#CC79A7 pink), Classical (#E69F00 amber), Jazz (#56B4E9 sky blue, top). Centered baseline symmetric around chart center. Cubic spline interpolation produces smooth flowing curves. Alpha=0.85 with PAGE_BG edge separation creates band boundaries.
-      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light failures
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "streamgraph-basic · python · seaborn · anyplot.ai" in dark ink, centered, fully visible and not clipped — the language segment missing in attempt 1 is now present. X-axis tick labels ("Jan '23" ... "Dec '24") and x-axis label "Month (2023–2024)" in dark/soft-dark ink, fully legible. "Genre" legend box now sits to the right of the plot area (outside the stream data), with dark text on a light elevated fill, readable and no longer overlapping any data.
+      Data: Six flowing, spline-smoothed bands stacked around a centered baseline — Pop (green #009E73), Rock (lavender), Hip-Hop (blue), Electronic (ochre), Classical (red), Jazz (cyan), in canonical Imprint order with thin cream-colored edges separating bands. Two bold annotations ("Hip-Hop rising ↑", "Rock declining ↓") with arrows, plus two dashed gray center-trend lines through the Hip-Hop and Rock bands; the annotation text boxes themselves sit clear of the dashed lines this time (only the connector arrows cross them).
+      Legibility verdict: PASS (all text readable; no overlap between legend/annotations and data).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in #F0EFE8 (light cream), clearly readable. X-axis tick labels in #B8B7B0 (light gray, ~7:1 contrast ratio), readable. "Month" label in #F0EFE8, readable. Legend with #242420 elevated background and #B8B7B0 border, light text labels readable. Bottom spine in #B8B7B0. No dark-on-dark text failures observed.
-      Data: Stream colors are identical to light render — Okabe-Ito positions 1-6 unchanged. Pop #009E73, Rock #D55E00, Hip-Hop #0072B2, Electronic #CC79A7, Classical #E69F00, Jazz #56B4E9. Only chrome elements flip between themes.
-      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title in light/off-white ink, clearly readable against the dark background, same corrected "python" segment present. Tick labels and x-axis label in light gray, legible. Legend box has a dark elevated fill with light text, readable, positioned to the right of the plot with no overlap onto the stream data.
+      Data: Same six bands in the identical Imprint colors as the light render (green/lavender/blue/ochre/red/cyan) — confirms data colors are unchanged between themes, only chrome flipped. Annotation text colors match their genre (blue for Hip-Hop, lavender for Rock) and remain visible against the dark background; the gray dashed center-trend lines are lighter gray here and still visible, with the annotation boxes clear of the lines themselves.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures found; no legend/data overlap).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt, x-label 20pt, tick labels 16pt — all explicitly set;
-          readable in both themes
+        comment: All font sizes explicitly set, readable in both themes at full size;
+          title fits without clipping.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend box prevents overlap with stream data
+        comment: Legend moved outside the stream area, no longer overlaps data; annotation
+          boxes no longer sit on the dashed trend lines.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Streams large and clearly visible; dashed seaborn center-line overlays
-          for Hip-Hop and Rock blend into stream colors
+        comment: 24 monthly points, band widths and spline smoothing well suited to
+          the data density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe; no red-green sole signal; six streams distinguishable
-          by hue
+        comment: Distinct hues, white band edges aid separation, no red-green-only
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 format, streams fill full canvas height, balanced margins
+        comment: Plot fills most of the canvas with balanced margins; legend now sits
+          close to the plot without eating into the data area.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: '''Month'' is descriptive without units; y-axis intentionally empty
-          (appropriate for streamgraph)'
+        comment: X-axis labeled 'Month (2023–2024)'; y-axis correctly omitted since
+          the streamgraph baseline is relative.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Pop=#009E73; full Okabe-Ito order; correct #FAF8F1
-          light / #1A1A17 dark backgrounds; chrome theme-adaptive in both renders'
+        comment: 'Canonical Imprint order, first series #009E73, identical data colors
+          across themes, theme-correct chrome.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above library defaults: smooth cubic-spline interpolation, correct
-          palette, alpha+edge-color band separation, narrative annotations with arrows;
-          not quite strong design due to subtle/invisible dashed overlays'
+        comment: Spline-smoothed flowing curves, harmonious palette, white band edges
+          — above a configured default, short of full publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right/left spines removed, bottom spine styled in INK_SOFT, no
-          grid, alpha blending with PAGE_BG edge separation, generous whitespace
+        comment: Minimal spines, no competing grid, legend and annotations no longer
+          collide with data — clean, polished layout.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Annotations with arrows and dashed center-line overlays attempt storytelling;
-          narrative intent clear in code but not visually striking due to fontsize=15
-          and same-color overlays
+        comment: Explicit rising/declining annotations with arrows and matching dashed
+          trend lines give a clear, guided narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -133,54 +147,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct streamgraph with symmetric centered baseline and smooth spline
-          interpolation
+        comment: Correct streamgraph with symmetric centered baseline and smooth interpolation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth interpolation (cubic spline), centered baseline, distinct
-          Okabe-Ito colors, legend — all present
+        comment: Smooth curves, centered baseline, harmonious colors, legend all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x-axis, centered proportional values on y-axis; 6 categories
-          visible across 24 months
+        comment: Time on x, stacked category values on y; all 6 genres visible across
+          the full range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'streamgraph-basic · seaborn · anyplot.ai'; legend with correct
-          genre names and matching colors
+        comment: Title now includes the required '{language}' segment ('python');
+          legend labels correct and no longer overlapping data.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows growth trends (Hip-Hop), decline trends (Rock), stability,
-          seasonal oscillations, relative proportional changes
+        comment: Growth, decline, and seasonal-oscillation trends shown across genres,
+          not uniform bands.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly streaming hours by music genre; neutral, real-world, plausible;
-          no controversial content
+        comment: Monthly streaming hours by music genre — real, neutral, comprehensible
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base values (Pop=40, Hip-Hop=50, Classical=15, Jazz=12 hrs/month)
-          realistic; trends align with known genre dynamics
+        comment: Base levels, trend, seasonality and noise combine into plausible
+          relative streaming-hour values.
     code_quality:
       score: 10
       max: 10
@@ -190,34 +202,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → constants → data → computation → plot → style
-          → save; no functions/classes'
+        comment: No functions/classes; linear imports -> data -> plot -> save flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, matplotlib, numpy, pandas, seaborn, scipy) are used
+        comment: os, matplotlib, numpy, pandas, seaborn, scipy.interpolate all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; appropriate complexity; no over-engineering
+        comment: Appropriate complexity for a spline-smoothed streamgraph with annotations;
+          no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight', facecolor=PAGE_BG)
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight', current API.
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -225,32 +237,33 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: 'Correct seaborn patterns: sns.set_theme() with rc dict, sns.lineplot()
-          for overlays, sns.despine(); core streamgraph uses matplotlib fill_between
-          (no native seaborn streamgraph function)'
+        comment: sns.set_theme/despine/lineplot used correctly, but the core stream
+          geometry is built with raw matplotlib fill_between rather than a seaborn
+          plotting call.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: sns.lineplot() as transparent overlay on matplotlib fill patches
-          (seaborn-specific compositional pattern); sns.set_theme() with custom rc;
-          sns.despine()
+        passed: false
+        comment: The only seaborn-specific plotting element (sns.lineplot center-trend
+          overlay) is decorative, not central to the chart; seaborn has no native
+          streamgraph API so this is a library limitation, but usage is still generic.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - custom-legend
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   - explicit-figure
   dataprep:
+  - cumulative-sum
   - interpolation
   - time-series
-  - cumulative-sum
   styling:
   - alpha-blending
   - edge-highlighting
+  - publication-ready
