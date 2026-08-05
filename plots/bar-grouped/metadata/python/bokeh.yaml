@@ -2,70 +2,252 @@ library: bokeh
 language: python
 specification_id: bar-grouped
 created: '2025-12-24T21:31:03Z'
-updated: '2026-05-06T11:01:25Z'
-generated_by: claude-haiku
-workflow_run: 25431093280
+updated: '2026-08-05T01:20:08Z'
+generated_by: claude-sonnet
+workflow_run: 30965074735
 issue: 1822
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 95
 review:
   strengths:
-  - 'Perfect palette compliance: first series is #009E73, multi-series follows Okabe-Ito
-    order, both themes correctly rendered with identical data colors and theme-adaptive
-    chrome'
-  - 'Excellent text legibility: all font sizes explicitly set (title 28pt, labels
-    22pt, ticks 18pt), readable in both light and dark themes'
-  - 'Correct spec implementation: grouped bar chart with 4 categories × 3 groups,
-    value labels on bars, proper legend with correct group names'
-  - 'Clean code with proper theme tokens: uses os.getenv for ANYPLOT_THEME, applies
-    INK and INK_SOFT consistently throughout, demonstrates bokeh best practices'
-  - 'Proper use of bokeh-specific features: ColumnDataSource with color mapping, FactorRange
-    for grouped categorical axis, LegendItem indexing for custom legend, Selenium
-    screenshot workflow'
+  - 'Correct Imprint palette in canonical order (#009E73 Electronics, #C475FD Clothing,
+    #4467A3 Home & Garden) with identical data colors and theme-correct chrome across
+    both light and dark renders'
+  - Idiomatic use of bokeh's nested FactorRange (category, group) categorical axis
+    with group-level tick labels, producing clean grouped-bar layout without manual
+    x-offset math
+  - 'Strong data storytelling: the peak quarter (Q4 Electronics, $385K) is highlighted
+    with a bolded outline, a larger bold value label, and an explicit ''Peak quarter''
+    callout, creating an immediate focal point'
+  - Value labels on every bar aid precise comparison, matching the spec's optional-feature
+    note
+  - All font sizes explicitly set (title 50pt, axis labels 42pt, ticks/legend 34pt)
+    and well-proportioned; both renders are fully readable with no overlap or edge
+    clipping
   weaknesses:
-  - 'Design Excellence: Generic styling with minimal custom polish beyond correct
-    defaults. Bar borders are white (functional) but no additional design sophistication.'
-  - 'Visual Refinement: Uses library defaults with minimal customization. Y-axis grid
-    is subtle but plot could benefit from spine removal or additional visual refinement.'
-  - 'Data Storytelling: Data is displayed clearly but with no visual hierarchy or
-    emphasis to guide the viewer. Q4 Electronics (peak value) doesn''t stand out as
-    a focal point through size, color intensity, or positioning.'
+  - Leaf-level per-bar category tick labels are hidden (major_label_text_font_size='0pt');
+    readers must cross-reference the legend colors to identify which product line
+    an individual bar represents rather than reading it directly off the x-axis
+  - Aesthetic treatment (palette + single peak accent) is polished but fairly standard
+    for the chart type; a more distinctive typographic or color-hierarchy choice would
+    push Aesthetic Sophistication into publication-tier territory
+  - 'LM-02 headroom: the HTML detail view doesn''t add a HoverTool or other bokeh-distinctive
+    interactive affordance beyond the static PNG content (not penalized per the interactivity
+    fairness rules, but would strengthen Library Mastery further)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), clean and professional
-      Chrome: Title "Quarterly Revenue by Product · bar-grouped · bokeh · anyplot.ai" clearly visible in dark text (28pt). X-axis label "Quarter" and Y-axis label "Revenue ($ Thousands)" both readable in dark text (22pt). Tick labels readable in soft gray (#4A4A44, 18pt). Subtle y-axis grid lines at 10% opacity.
-      Data: 12 bars grouped in 3s (one set per quarter). Colors correct:
-        - Electronics (first series): #009E73 brand green
-        - Clothing (second series): #D55E00 vermillion
-        - Home & Garden (third series): #0072B2 blue
-        All bars have white borders for definition. Value labels ($245K, $180K, etc.) positioned above bars in 16pt dark text.
-      Legend: Top-right, three lines showing product names with color swatches. Light background frame (#FFFDF6) with dark text labels (#4A4A44).
-      Legibility verdict: PASS - All text is readable against the light background. No contrast issues. Grid is subtle but visible.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Quarterly Revenue by Product · bar-grouped · python · bokeh · anyplot.ai" is fully visible across the top. Italic axis labels ("Revenue ($ Thousands)" on Y, "Quarter" on X) render in dark ink. Y-axis tick labels (0-500) are dark gray and clearly legible. X-axis shows only the Q1-Q4 group labels (leaf-level product labels are intentionally hidden). A legend in an elevated cream box with a thin border sits top-right, listing Electronics/Clothing/Home & Garden with matching color swatches in dark-gray text.
+      Data: 12 bars in 4 clusters of 3 — green (#009E73) for Electronics, purple (#C475FD) for Clothing, blue (#4467A3) for Home & Garden — matching the Imprint canonical order, first series correctly #009E73. Each bar has a dark value label above it (e.g. "$245K"); the Q4 Electronics bar ($385K) is bolded, larger, and outlined in black with a green "Peak quarter" callout above it, creating a clear focal point. Subtle horizontal gridlines are visible but unobtrusive; no box outline, only left/bottom axis lines remain.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, value labels, legend, callout) is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title, axis labels, and tick labels all visible in light text. Background of legend is dark elevated surface (#242420) with light gray text labels (#B8B7B0). All text maintains readability against dark background.
-      Data: IDENTICAL bar colors to light render:
-        - Electronics: #009E73 (same green as light)
-        - Clothing: #D55E00 (same orange as light)
-        - Home & Garden: #0072B2 (same blue as light)
-        Value labels readable in light text. Y-axis grid lines visible and subtle.
-      Legibility verdict: PASS - All text is light-colored against dark background. No dark-on-dark failures. The ink tokens are properly applied (INK=#F0EFE8 for title, INK_SOFT=#B8B7B0 for secondary text). Brand green #009E73 is clearly visible and maintains identity.
-
-    Both renders successfully demonstrate theme-adaptive chrome with identical data colors. Theme adaptation is complete and correct.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Bold white title is fully visible. Italic light-gray axis labels and light-gray Y tick labels are legible. X-axis again shows only Q1-Q4 group labels in light text. The legend now sits in a dark charcoal elevated box with light-gray text and swatches, clearly readable against the dark canvas.
+      Data: Same 12 bars with identical green/purple/blue data colors as the light render — confirmed unchanged (only chrome flipped). Value labels are now white; the Q4 Electronics peak bar is outlined in white instead of black, with the same green "Peak quarter" callout (green remains visible and legible on the dark surface).
+      Legibility verdict: PASS — no dark-on-dark failures detected; all title/axis/tick/legend/annotation text is light-colored and clearly readable against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; hiding leaf-level
+          category ticks trades a small amount of direct legibility for cleanliness
+          (must reference legend)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between bars, labels, legend, or the peak callout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar width (0.82) and group/factor padding give clean, well-visible
+          bars with clear group separation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple/blue are mutually distinguishable, no red-green-only
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins via min_border reservations, plot fills the canvas
+          well, legend sits near the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Revenue ($ Thousands)'' includes units; ''Quarter'' is descriptive
+          for a categorical axis'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for series 2-3, correct
+          #FAF8F1/#1A1A17 backgrounds, theme-correct chrome in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful palette use, italic typography, elevated legend box —
+          clearly above defaults but not fully bespoke
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Box outline removed (L-shaped frame), single subtle y-axis grid,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak quarter is highlighted with a bolded border, larger bold label,
+          and explicit callout — the insight is immediately obvious
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped bar chart with category/group nesting
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors + legend, consistent widths/spacing, meaningful chronological
+          ordering, optional value labels present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = (category, group) factors, y = value; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive} · bar-grouped · python · bokeh · anyplot.ai';
+          legend labels match the three product groups
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Rising trend (Electronics), dip-then-rise (Clothing), rise-then-fall
+          (Home & Garden) — good variety of patterns
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral quarterly retail-revenue scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and proportions are realistic for quarterly product-line revenue
+          in thousands
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (os, time, Path, bokeh, selenium) are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png/.html via current bokeh 3.x API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Canonical bokeh pattern for grouped bars: nested FactorRange + ColumnDataSource
+          + single vbar renderer'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Nested categorical FactorRange with group-level tick styling and
+          manually indexed Legend/LegendItem — bokeh-specific features not easily
+          replicated elsewhere
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - annotations
   - custom-legend
   - html-export
   patterns:
   - columndatasource
   dataprep: []
   styling:
-  - publication-ready
+  - edge-highlighting
+  - grid-styling

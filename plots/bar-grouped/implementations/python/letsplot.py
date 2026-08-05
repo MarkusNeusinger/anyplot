@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-grouped: Grouped Bar Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-06
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-08-05
 """
 
 import os
@@ -20,7 +20,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
+# Imprint palette (positions 1-3)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Quarterly sales by product category
@@ -50,34 +50,51 @@ data = {
 }
 
 df = pd.DataFrame(data)
+df["Label"] = df["Revenue"].apply(lambda v: f"${v}K")
 
 # Theme-adaptive chrome
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid_major_y=element_line(color=INK_MUTED, size=0.3),
     panel_grid_major_x=element_blank(),
     panel_grid_minor=element_blank(),
-    axis_title=element_text(size=20, color=INK),
-    axis_text=element_text(size=16, color=INK_SOFT),
-    axis_line=element_line(color=INK_SOFT, size=0.5),
-    plot_title=element_text(size=24, color=INK, face="bold"),
+    axis_title=element_text(size=12, color=INK),
+    axis_text=element_text(size=10, color=INK_SOFT),
+    axis_line_x=element_line(color=INK_SOFT, size=0.5),
+    axis_line_y=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(size=16, color=INK, face="bold"),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(size=16, color=INK_SOFT),
-    legend_title=element_text(size=18, color=INK),
+    legend_text=element_text(size=10, color=INK_SOFT),
+    legend_title=element_text(size=11, color=INK),
     legend_position="right",
 )
 
-# Plot - Grouped bar chart
+# Distinctive lets-plot feature: rich, formatted native tooltips (beyond
+# just emitting an interactive HTML file) - each bar reports its quarter,
+# product line and exact revenue with a "$" prefix and "K" suffix.
+revenue_tooltips = layer_tooltips().line("@Product").line("Quarter|@Quarter").line("Revenue|$@Revenue K")
+
+# Plot - Grouped bar chart with direct value labels for a clearer data story
 plot = (
     ggplot(df, aes(x="Quarter", y="Revenue", fill="Product"))
-    + geom_bar(stat="identity", position="dodge", width=0.7, alpha=0.9)
+    + geom_bar(stat="identity", position="dodge", width=0.7, alpha=0.9, tooltips=revenue_tooltips)
+    + geom_text(
+        aes(label="Label", group="Product"), position=position_dodge(width=0.7), vjust=-0.5, size=3.2, color=INK_SOFT
+    )
     + scale_fill_manual(values=IMPRINT)
-    + labs(x="Quarter", y="Revenue ($ thousands)", title="bar-grouped · letsplot · anyplot.ai", fill="Product Category")
+    + scale_y_continuous(format="${.0f}K", expand=[0.1, 0])
+    + labs(
+        x="Quarter",
+        y="Revenue ($ thousands)",
+        title="bar-grouped · python · letsplot · anyplot.ai",
+        fill="Product Category",
+    )
     + anyplot_theme
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save as PNG and HTML
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
