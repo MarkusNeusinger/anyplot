@@ -20,6 +20,19 @@ const reasons = [
 ];
 const shares = [68, 61, 54, 47, 41, 35, 24, 18];
 
+// Top-ranked reason (index 0, since shares are sorted descending) keeps
+// full-strength brand green and a bold value label as the focal point; the
+// rest are softened so the ranking hierarchy reads at a glance, not just
+// from sort order.
+const barData = shares.map((value, i) => ({
+  value,
+  itemStyle: {
+    borderRadius: [0, 4, 4, 0],
+    color: i === 0 ? t.palette[0] : `${t.palette[0]}99`,
+  },
+  label: i === 0 ? { fontWeight: 700 } : undefined,
+}));
+
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -31,9 +44,9 @@ chart.setOption({
   title: {
     text: "bar-horizontal · javascript · echarts · anyplot.ai",
     left: "center",
-    textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+    textStyle: { color: t.ink, fontSize: 26, fontWeight: 500 },
   },
-  grid: { left: 24, right: 90, top: 100, bottom: 70, containLabel: true },
+  grid: { left: 24, right: 90, top: 90, bottom: 70, containLabel: true },
   xAxis: {
     type: "value",
     name: "Respondents citing this reason (%)",
@@ -58,15 +71,23 @@ chart.setOption({
   series: [
     {
       type: "bar",
-      data: shares,
+      data: barData,
       barCategoryGap: "35%",
-      itemStyle: { color: t.palette[0], borderRadius: [0, 4, 4, 0] },
       label: {
         show: true,
         position: "right",
         formatter: "{c}%",
         color: t.ink,
         fontSize: 14,
+      },
+      // ECharts-distinctive touch: an auto-computed average markLine gives
+      // viewers an at-a-glance benchmark beyond the raw ranking.
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        label: { formatter: "Avg {c}%", color: t.inkSoft, fontSize: 12, position: "insideEndTop" },
+        data: [{ type: "average", name: "Average" }],
       },
     },
   ],
