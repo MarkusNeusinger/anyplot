@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-annotated: Annotated Heatmap
-Library: plotnine 0.15.7 | Python 3.13.12
-Quality: pending | Updated: 2026-08-05
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-08-05
 """
 
 import os
