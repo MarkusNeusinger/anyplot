@@ -1,0 +1,246 @@
+library: makie
+language: julia
+specification_id: scatter-regression-linear
+created: '2026-08-05T13:30:44Z'
+updated: '2026-08-05T13:48:54Z'
+generated_by: claude-sonnet
+workflow_run: 31010173437
+issue: 1821
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Theme-adaptive chrome is correctly threaded through every element (title, axis
+    labels, ticks, spines, grid, legend, and the equation card background) in both
+    light and dark renders
+  - First categorical series is the correct Imprint brand green (#009E73); regression
+    line/band use Imprint blue (#4467A3), identical between themes
+  - Equation callout is a genuinely refined layered card (drop-shadow rect + bordered
+    panel) rather than bare floating text, giving the R²/slope readout a clear focal
+    point
+  - 'All required spec elements present: visually distinct regression line, semi-transparent
+    95% CI band, prominent R², and the regression equation as annotation'
+  - Clean KISS structure with explicit font sizes throughout, reproducible via Random.seed!(42),
+    and idiomatic Makie composition (band!/scatter!/lines! layering plus a proper
+    Legend in its own grid column)
+  - Realistic, neutral data scenario (temperature vs. energy consumption) with sensible
+    real-world scale and a believable positive correlation
+  weaknesses:
+  - Scatter point alpha is 0.55, slightly below the spec's recommended 0.6-0.7 moderate-transparency
+    range — bump to ~0.65 for closer compliance
+  - Design is solid but fairly standard for the plot type beyond the equation card;
+    a stronger typographic hierarchy or subtle emphasis on the trend (e.g. highlighting
+    the fit direction) would push Aesthetic Sophistication further toward publication-ready
+  - Legend/card layout uses Makie's grid system competently but doesn't reach for
+    a more distinctive Makie-only capability (e.g. a custom recipe or theme) that
+    would be harder to replicate in another library
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "scatter-regression-linear · julia · makie · anyplot.ai" is bold dark text, clearly legible; axis labels "Average Temperature (°C)" and "Daily Energy Consumption (kWh)" are dark and readable; tick labels are a softer dark gray; top/right spines removed; subtle horizontal/vertical gridlines visible without dominating. Equation card ("y = 3.22x + 17.1", "R² = 0.559") sits in a bordered off-white panel in the upper-left, fully legible against its own background.
+      Data: First series (scatter points) renders in Imprint brand green (#009E73) at moderate transparency; the linear fit line and 95% CI band render in Imprint blue (#4467A3); legend on the right lists "Observed data", "Linear fit", "95% CI band" matching the visual encoding.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels all render in light/white tones, clearly legible against the dark background; spines and gridlines follow the same subtle treatment as the light render; the equation card flips to a dark elevated panel with light text, fully legible with no dark-on-dark failures.
+      Data: Scatter points remain Imprint brand green (#009E73), identical to the light render; fit line and CI band remain Imprint blue (#4467A3), identical to the light render — only the chrome (background, text, grid, card, legend box) flipped.
+      Legibility verdict: PASS — all text and data elements read clearly against the dark background; no dark-on-dark or contrast failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes; well-proportioned
+          title and labels, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between card, legend, data, and text
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: markersize=10, alpha=0.55 for n=150 points; visible but some overlap
+          in dense clusters
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. blue encoding, CVD-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills most of the canvas, legend adjacent
+          not isolated
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct Imprint colors, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom equation card and intentional hierarchy, above default but
+          not fully publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, refined layered
+          card
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Equation card creates a clear focal point emphasizing fit strength
+          via R²
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter + linear regression + CI band
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present; scatter alpha 0.55 slightly below spec's suggested
+          0.6-0.7
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match encoding
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows scatter spread, fit line, CI band, and equation together
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible temperature-vs-energy scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic temperature and energy ranges, plausible positive relationship
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> regression -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: High-level band!/scatter!/lines! layering, proper Legend grid column
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses relative-space poly!/text! positioning and grid layout sizing;
+          not a fully unique Makie-only capability
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - grid-styling
+  - publication-ready
