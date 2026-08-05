@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: histogram-kde
 created: '2025-12-24T21:38:11Z'
-updated: '2026-08-05T03:42:00Z'
+updated: '2026-08-05T03:50:22Z'
 generated_by: claude-sonnet
 workflow_run: 30972593177
 issue: 1823
@@ -12,52 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Correct Imprint palette: histogram is brand green #009E73 (position 1), KDE line
-    is lavender #C475FD (position 2), identical hex values in both light and dark
-    renders'
-  - 'All spec requirements met: semi-transparent bars (opacity 0.5), y-axis normalized
-    to density (not counts), contrasting histogram/KDE colors, KDE fill (''tozeroy'')
-    that reveals the shape without hiding the bars'
-  - 'Realistic, well-scaled financial data: mixture of a main return distribution
-    plus explicit left-tail (market drops) and right-tail (gains) components, producing
-    a visible skew/shoulder that supports the spec''s ''skewness and tail behavior''
-    use case'
-  - Explicit font sizing throughout (title 16px, axis titles 12px, ticks/legend 10px)
-    and theme-adaptive chrome correctly threaded through xaxis/yaxis/legend/paper/plot
-    backgrounds for both themes
-  - Clean KISS structure, seeded RNG, only used imports, correct write_image dimensions
-    (800x450 scale=4 -> 3200x1800) and write_html output
+  - Switched to the native go.Histogram trace (histnorm="probability density", nbinsx=35)
+    instead of manually binning with np.histogram + go.Bar, directly addressing the
+    attempt-1 LM-01 feedback — bars now carry clean page-bg edge lines characteristic
+    of the built-in trace
+  - 'Correct Imprint palette in both renders: brand green #009E73 histogram, lavender
+    #C475FD KDE line, identical hex values across light/dark, theme-correct #FAF8F1/#1A1A17
+    backgrounds and fully legible chrome in both themes'
+  - KDE fill opacity was bumped for dark mode (rgba alpha 0.12 light vs 0.22 dark)
+    and the difference is visible on inspection — the fill no longer reads as near-invisible
+    on the dark surface
+  - 'Realistic, well-scaled financial return data: mixture distribution with explicit
+    left-tail (drawdowns) and right-tail (gains) components producing a genuine skew/shoulder
+    shape'
+  - Clean KISS structure, seeded RNG, explicit font sizing throughout, correct 3200x1800
+    canvas via write_image(width=800, height=450, scale=4), and both PNG + HTML outputs
+    saved
   weaknesses:
-  - Histogram + KDE is bypassed in favor of manually computing np.histogram/gaussian_kde
-    and drawing them as go.Bar + go.Scatter — plotly ships figure_factory.create_distplot
-    specifically for this histogram+curve combination, and go.Histogram is the native
-    trace type; the manual approach is valid but not the library's most idiomatic
-    pattern for this exact plot type (LM-01, LM-02).
-  - No annotation or visual callout marks the left-tail (market-drop) or right-tail
-    (gains) components the spec calls out as the analytical point of a histogram+KDE
-    (identifying skewness/tail behavior) — the shape is visible but unexplained, so
-    the plot displays the data without actively telling that specific story (DE-03).
-  - Legend keeps a full bordered box (bordercolor + borderwidth) rather than the more
-    refined borderless/minimal legend chip suggested by the style guide's decoration-removal
-    checklist — a small, easy DE-02 polish item.
-  - KDE curve's soft fill ('rgba(196,117,253,0.12)') is a good touch but is quite
-    faint at this contrast in the dark render — consider nudging the fill opacity
-    up slightly on dark so it doesn't read as almost pure background there.
+  - 'The two fig.add_annotation() calls ("Left tail: market drops" at x=-1.5 and "Right
+    tail: gains" at x=1.2) that this repair added to address the attempt-1 DE-03 feedback
+    do NOT appear in either plot-light.png or plot-dark.png — verified by cropping
+    the full plot area in horizontal strips and zooming on the expected annotation/arrow
+    coordinates: no text, no arrow line, nothing renders. The tail story is still
+    untold visually despite the code changes.'
+  - The legend still renders with a full solid border box in both themes even though
+    the code now sets legend.borderwidth=0 — the intended DE-02 fix (remove the border
+    for a more minimal legend chip) did not visually take effect either.
+  - Because both targeted repair fixes are silently non-functional in the actual rendered
+    output, DE-02 and DE-03 remain at the same level as attempt 1 — investigate why
+    kaleido's static export is dropping the annotations (check ax/ay + arrow properties,
+    or a version-specific export quirk) and why borderwidth:0 isn't suppressing the
+    legend border, then re-verify against the actual PNG pixels, not just the source
+    code, before the next submission.
+  - 'DQ-01 feature coverage is still capped by the same subtlety as attempt 1: the
+    multimodal left/right tail shoulders are present in the histogram shape but small
+    and easy to miss without the (currently invisible) callouts.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "histogram-kde · python · plotly · anyplot.ai" in dark ink, centered, fully visible, no clipping. X-axis title "Daily Return (%)" and y-axis title "Density" in dark ink, both clearly legible. Tick labels in a softer dark gray, legible. Subtle horizontal gridlines only (y-axis grid, x-axis grid off, as recommended). Legend box top-right with elevated cream fill and a thin border, both entries ("Histogram", "KDE") legible.
-      Data: Histogram bars are semi-transparent brand green (#009E73, opacity 0.5) with thin light-colored edges for bar separation; KDE line is a solid lavender/purple (#C475FD, width ~3.5) with a very light purple fill under the curve. First series is the brand green as required by the palette rule.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "histogram-kde · python · plotly · anyplot.ai" centered at top in dark ink, fully visible with no clipping. X-axis title "Daily Return (%)" and y-axis title "Density" in dark ink; tick labels in a softer dark gray. Only faint horizontal gridlines shown. Legend top-right reads "Histogram" / "KDE" inside a cream box that still has a visible solid dark border (code sets borderwidth=0 but the rendered border persists — see weaknesses).
+      Data: Semi-transparent brand-green (#009E73, opacity 0.5) histogram bars with thin page-bg edge lines from the native go.Histogram trace; a lavender (#C475FD) KDE line (width ~3.5) with a very faint lavender "tozeroy" fill tracks the density shape closely, peaking near x=0.2-0.3 with a visible left shoulder (~x=-1.5 to -2.5) and right shoulder (~x=1-1.5) corresponding to the tail mixtures. No annotation text or arrows are visible anywhere on the canvas despite two fig.add_annotation() calls in the source labeling these tails — confirmed by cropping and zooming on the exact expected coordinates.
+      Legibility verdict: PASS (all present text is readable; the missing annotations are a content-completeness issue, not a legibility one)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, and tick labels now rendered in light ink/off-white and soft light gray respectively — clearly visible against the dark background. Gridlines are still faint horizontal lines, correctly inverted-opacity for the dark surface. Legend box uses the dark elevated fill (#242420) with a light border, both entries legible.
-      Data: Histogram bars and KDE line use the identical underlying hex values (#009E73 green, #C475FD lavender) as the light render — only the perceived blended color of the semi-transparent bars differs because the alpha=0.5 fill is composited against a different (darker) background, which is expected alpha-blending behavior, not a palette violation. KDE curve and its faint fill remain visible, though the fill is quite subtle against the near-black surface.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick/legend text is light-colored and reads clearly against the near-black background.
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title/axis titles/tick labels now render in light ink / soft light-gray, clearly legible against the dark surface — no dark-on-dark failures. Legend box flips to a dark elevated fill with light text, but still shows a visible light-colored solid border (again, borderwidth=0 in code did not suppress it).
+      Data: Identical underlying hex values to the light render (#009E73 histogram, #C475FD KDE) — colors correctly did not shift with theme. The KDE fill is visibly stronger here (rgba alpha 0.22 vs 0.12 on light) and reads clearly instead of nearly disappearing into the background, confirming that particular repair fix DID land visually. Same absence of the tail-callout annotations as the light render — nothing renders near either expected tail position.
+      Legibility verdict: PASS (no dark-on-dark text; only the annotation-absence issue applies, identical to light)
   criteria_checklist:
     visual_quality:
       score: 30
@@ -68,49 +72,45 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (16/12/10/10px); readable in both themes;
-          title fits without overflow or clipping
+        comment: All font sizes explicit; readable in both themes with no overflow
+          or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits clear of the data mass; no text/data collisions in either
-          render
+        comment: No collisions between text, data, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar opacity 0.5 and 3.5px KDE line are well matched to ~550-point,
-          35-bin density
+        comment: Bar width and KDE line weight well-matched to ~550-point dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs purple gives strong hue + luminance contrast, CVD-safe,
-          no red-green reliance
+        comment: Good contrast, CVD-safe green/lavender pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills roughly 55-60% of the canvas with balanced margins;
-          nothing cut off
+        comment: Plot fills the canvas well, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Daily Return (%)'' has units; ''Density'' is descriptive and unit-appropriate'
+        comment: '"Daily Return (%)" and "Density" are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series #C475FD (canonical order), identical
-          hex in both themes, backgrounds exactly #FAF8F1/#1A1A17'
+        comment: 'First series #009E73, second #C475FD, identical across themes, correct
+          theme-adaptive chrome'
     design_excellence:
       score: 12
       max: 20
@@ -120,22 +120,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: 'Above a bare default: theme-matched bar edges, soft KDE fill for
-          depth, but not publication-grade custom composition'
+        comment: Above a bare default (theme-matched edges, soft KDE fill) but not
+          publication-grade custom composition
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: L-shaped spines, y-only grid at correct opacity, generous whitespace;
-          legend still keeps a full border box
+        comment: Correct spines/grid, but legend still shows a full solid border despite
+          borderwidth=0 in code — the intended fix did not render
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: KDE overlay creates some visual hierarchy over the raw bars, but
-          the tail/skew story the spec calls out is not called out explicitly
+        comment: Tail-callout annotations added in code to tell the skew/tail story
+          are completely absent from both rendered PNGs, so the story remains untold
+          visually
     spec_compliance:
       score: 15
       max: 15
@@ -145,28 +146,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Histogram + KDE overlay, exactly as specified
+        comment: Correct histogram + KDE overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Alpha ~0.5 bars, density-scaled y-axis, contrasting colors, reasonable
-          bin count and bandwidth all present
+        comment: Semi-transparent bars, density-normalized y-axis, contrasting KDE
+          color, all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Daily Return (%), Y = Density; KDE domain extends slightly past
-          the data range so nothing is clipped
+        comment: Return values on x, density on y, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated format; legend labels 'Histogram'/'KDE'
-          match the traces
+        comment: Title format correct; legend labels match traces
     data_quality:
       score: 14
       max: 15
@@ -176,22 +175,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Visible left-tail shoulder and right-tail extension beyond the main
-          mode, but the multimodality is subtle rather than pronounced
+        comment: Left/right tail shoulders visible in shape but subtle without the
+          (non-rendering) callouts
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily stock returns is a real, neutral, comprehensible scenario
+        comment: Neutral, plausible stock-return scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean/std and tail magnitudes are realistic for daily equity returns
+        comment: Return magnitudes and tail proportions are realistic
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -199,7 +198,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> compute -> figure -> save, no functions/classes
+        comment: Linear imports/data/plot/save script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -211,49 +210,51 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects, scipy.stats — all used
+        comment: Only os, numpy, plotly, scipy.stats, all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No over-engineering, no fake UI
+        passed: false
+        comment: Two add_annotation blocks add real complexity but produce zero visible
+          output in the exported PNGs — not fake functionality, but effectively dead
+          code as currently rendered
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image at width=800,height=450,scale=4 (3200x1800) + write_html,
-          current API
+        comment: Correct plot-{theme}.png / .html output, current API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Now uses the native go.Histogram trace with histnorm, addressing
+          attempt-1 feedback directly
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Correct go.Figure usage but manually reconstructs the histogram+curve
-          combo that plotly.figure_factory.create_distplot or go.Histogram natively
-          provide
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses plotly-distinctive hovertemplate, unified hovermode, and axis
-          spike lines, but misses the library's purpose-built distplot/native histogram
-          trace for this exact plot type
-  verdict: REJECTED
+        comment: hovertemplate, hovermode="x unified", and axis spikes are plotly-distinctive
+          touches beyond generic usage
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
-  techniques: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - kde
-  - binning
   styling:
   - alpha-blending
+  - edge-highlighting
