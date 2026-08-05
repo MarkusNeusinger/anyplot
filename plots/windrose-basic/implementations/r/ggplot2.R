@@ -50,8 +50,29 @@ wind_freq <- wind %>%
   mutate(pct = 100 * n / sum(n))
 
 # --- Colors -----------------------------------------------------------------
-# imprint_seq (single-polarity, calm -> strong): brand green -> blue
-speed_colors <- colorRampPalette(c("#009E73", "#4467A3"))(length(speed_labels))
+# imprint_seq (single-polarity, calm -> strong): brand green -> blue.
+# A straight RGB/Lab blend crosses the cyan hues on the "short way" between
+# green and blue, where the sRGB gamut is narrower - chroma dips in the
+# middle and the 5-10 / 10-15 stops become hard to tell apart. Interpolating
+# in polar LCh space (circular hue, linear L/C) keeps chroma decreasing
+# smoothly instead of dipping, while the two endpoints stay exact.
+imprint_seq_lch <- function(hex_from, hex_to, n) {
+  to_lab <- function(hex) convertColor(t(col2rgb(hex)) / 255, from = "sRGB", to = "Lab")
+  polar <- function(lab) c(L = lab[1], C = sqrt(lab[2]^2 + lab[3]^2), H = atan2(lab[3], lab[2]))
+  p1 <- polar(to_lab(hex_from))
+  p2 <- polar(to_lab(hex_to))
+  dH <- p2["H"] - p1["H"]
+  if (dH > pi) dH <- dH - 2 * pi
+  if (dH < -pi) dH <- dH + 2 * pi
+  t <- seq(0, 1, length.out = n)
+  L <- p1["L"] + t * (p2["L"] - p1["L"])
+  C <- p1["C"] + t * (p2["C"] - p1["C"])
+  H <- p1["H"] + t * dH
+  lab_mat <- cbind(L, C * cos(H), C * sin(H))
+  rgb_mat <- pmin(pmax(convertColor(lab_mat, from = "Lab", to = "sRGB"), 0), 1)
+  grDevices::rgb(rgb_mat[, 1], rgb_mat[, 2], rgb_mat[, 3])
+}
+speed_colors <- imprint_seq_lch("#009E73", "#4467A3", length(speed_labels))
 names(speed_colors) <- speed_labels
 
 # --- Plot ---------------------------------------------------------------
@@ -59,7 +80,7 @@ p <- ggplot(wind_freq, aes(x = sector, y = pct, fill = speed_bin)) +
   geom_col(
     width = 1,
     color = PAGE_BG,
-    linewidth = 0.3,
+    linewidth = 0.45,
     position = position_stack(reverse = TRUE)
   ) +
   coord_polar(start = -pi / 16) +
