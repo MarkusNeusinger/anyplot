@@ -155,7 +155,21 @@ chart.setOption({
       smooth: true,
       symbol: "none",
       lineStyle: { width: 3.5, color: t.palette[1] },
+      itemStyle: { color: t.palette[1] },
       z: 2,
+      markLine: {
+        symbol: "none",
+        silent: true,
+        animation: false,
+        label: {
+          formatter: (p) => `Mean: ${p.value.toFixed(1)} min`,
+          position: "insideEndTop",
+          color: t.inkSoft,
+          fontSize: 13,
+        },
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        data: [{ xAxis: mean }],
+      },
     },
   ],
 });
