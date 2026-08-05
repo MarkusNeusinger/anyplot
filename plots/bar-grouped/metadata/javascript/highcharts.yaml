@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bar-grouped
 created: '2026-08-05T01:12:18Z'
-updated: '2026-08-05T01:16:04Z'
+updated: '2026-08-05T01:25:58Z'
 generated_by: claude-sonnet
 workflow_run: 30965503592
 issue: 1822
@@ -12,124 +12,130 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/highcharts/plot-dark.html
-quality_score: 79
+quality_score: 87
 review:
   strengths:
-  - Correct grouped column chart with 4 regions x 3 product lines, matching the spec's
-    recommended 3-8 categories / 2-5 groups range
-  - 'Imprint palette applied correctly: first series is brand green #009E73, and data
-    colors are identical between light and dark renders'
-  - Theme-adaptive chrome correctly threaded through title/axis/tick/legend/grid tokens
-    — no dark-on-dark or light-on-light legibility failures in either render
-  - Title exactly matches the required 'bar-grouped · javascript · highcharts · anyplot.ai'
+  - 'Repair fully resolved the prior review''s sparse-layout complaint: 6 regions
+    × 3 product lines now fill the landscape canvas well, with tight groupPadding/pointPadding
+    keeping bars dense and readable'
+  - Value dataLabels added on every bar, giving precise comparison numbers without
+    harming legibility, plus a new x-axis title ("Region") that balances the existing
+    y-axis title
+  - 'Imprint palette applied correctly: first series is brand green #009E73, positions
+    2-3 follow canonical order (lavender, blue), and data colors are pixel-identical
+    between light and dark renders'
+  - Theme-adaptive chrome correctly threaded through title/axis/tick/legend/grid/data-label
+    tokens — no dark-on-dark or light-on-light legibility failures in either render
+  - Title exactly matches the required `bar-grouped · javascript · highcharts · anyplot.ai`
     format
+  - 'Subtle rounded bar corners (borderRadius: 3) and disabled borders add a small
+    but real design refinement over the bare style-guide skeleton'
   - Deterministic, hardcoded in-memory data with no imports; simple KISS structure
     with no functions/classes
-  - animation:false set on both chart and plotOptions.series per the Highcharts JS
-    contract, credits watermark disabled, borderWidth:0 on columns for a clean look
+  - 'animation: false set on both chart and plotOptions.series, credits watermark
+    disabled — clean, current Highcharts API usage'
   weaknesses:
-  - Only 4 categories spread across the full 3200x1800 landscape canvas leaves large
-    empty gaps between bar groups, making the chart read sparse — widen bars (larger
-    pointWidth or smaller groupPadding) or add 1-2 more category groups to better
-    fill the horizontal space
-  - No x-axis title (e.g. 'Region') — the y-axis carries a units-bearing title but
-    the x-axis relies solely on category labels, which is a minor axis-label asymmetry
-  - 'Minimal design distinction beyond the style-guide skeleton: the groupPadding/pointPadding
-    tweaks aside, there is no additional visual hierarchy, emphasis, or storytelling
-    device (e.g. highlighting a standout region or product) to elevate it past a competent
-    baseline implementation'
-  - Value labels are omitted — optional per spec, but with only 12 bars total, dataLabels
-    could have added precise comparison values without harming legibility
+  - Data labels are set at 11px CSS (22px source px) — noticeably smaller than the
+    14px tick/legend text; still legible at full size but the smallest text element
+    on the canvas and the first to blur when the PNG is scaled to mobile widths
+  - No storytelling device beyond the raw grouped comparison — the descending-by-magnitude
+    region order helps scanning, but there is no explicit focal point, callout, or
+    emphasis on the standout region (North America) or product line
+  - 'Design stays fairly close to the style-guide skeleton: rounded corners and dataLabels
+    are a real improvement over attempt 1, but there is still no distinctive Highcharts-specific
+    feature (e.g. plotLines/plotBands, a themed tooltip, or connector/emphasis styling)
+    that would push Library Mastery further'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold centered title "bar-grouped · javascript · highcharts · anyplot.ai" in dark ink; rotated y-axis title "Revenue ($M)"; light horizontal gridlines; dark x-axis category labels (North America, Europe, Asia Pacific, Latin America); legend below the chart with color swatches for Software/Hardware/Services in dark text.
-      Data: Three grouped columns per category — green (#009E73, Software), light purple/violet (Hardware), and muted blue (Services). First series is confirmed brand green. Bars are clean with no borders, values range roughly 7-42 ($M).
-      Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the light background; no light-on-light issues.
+      Chrome: Bold centered title "bar-grouped · javascript · highcharts · anyplot.ai" in dark ink; x-axis title "Region" and y-axis title "Revenue ($M)" in medium-gray, both readable and similarly sized; dark-gray category tick labels (North America, Europe, Asia Pacific, Latin America, Middle East & Africa, Rest of World); subtle horizontal gridlines; legend centered below the plot with round swatches for Software/Hardware/Services; small gray value labels ("43", "28", "20", ...) above every bar.
+      Data: First series (Software) is brand green #009E73, second series (Hardware) is lavender #C475FD, third series (Services) is blue #4467A3 — matches Imprint canonical order. Bars are grouped tightly per region with clear separation between region groups.
+      Legibility verdict: PASS — all text (title, axis titles, tick labels, legend, data labels) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title now in white/light text; y-axis title and tick labels in soft light gray; subtle gridlines still visible but unobtrusive; legend text in light gray, clearly legible.
-      Data: Same three bar colors as the light render (green, purple, blue) — confirmed identical data-color mapping, only chrome flipped.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed (title, axis labels, tick labels, and legend all use adequately light tones). Brand green remains vivid and distinguishable from the near-black background.
+      Chrome: Same title now rendered in light/white text; axis titles and tick labels in soft light-gray; gridlines remain subtle but visible; legend text in light gray; data labels in light gray above each bar.
+      Data: Colors are pixel-identical to the light render (green #009E73, lavender #C475FD, blue #4467A3) — only chrome flipped, as required.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed (tick labels, axis titles, data labels, and legend are all light-colored and distinct from the near-black background); brand green remains vivid on the dark surface.
+
+    Both renders pass the theme-readability check; no AR-09 edge clipping observed on either canvas.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicit (title 22px, axis titles 16px, ticks/legend 14px);
-          readable in both themes, nothing exceptional beyond the style-guide defaults
+        comment: All font sizes explicitly set (22/16/14/11px); readable in both themes;
+          data labels at 11px are the smallest element but still legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No overlap between text, bars, or legend
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars are clearly visible but appear narrow relative to the wide canvas
-          given only 4 categories
+        comment: 6 regions x 3 groups now fill the canvas well with tight, well-separated
+          bars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue combination has adequate contrast, no red-green
-          as sole signal
+        comment: Good contrast, CVD-safe, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nothing cut off, title well within bounds, but large empty gaps between
-          the 4 category groups on the landscape canvas
+        comment: Sparse-layout issue from attempt 1 resolved; balanced margins, legend
+          near plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units ($M); x-axis categories are self-descriptive region
-          names
+        comment: '"Region" and "Revenue ($M)" — y-axis carries units, x-axis title
+          now present'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, colors sourced from t.palette, identical
-          across themes, backgrounds correctly themed'
+        comment: 'First series #009E73, canonical order for series 2-3, theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Default score — follows the style-guide skeleton closely without
-          additional custom polish
+        passed: true
+        comment: Rounded bar corners and value labels add thoughtful touches above
+          bare defaults
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Default score — borderWidth:0 and subtle grid are template defaults,
-          not distinctive refinement
+        passed: true
+        comment: borderRadius, disabled borders, tight group/point padding, styled
+          data labels
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Default score — no focal point, emphasis, or hierarchy beyond the
-          raw grouped comparison
+        comment: Descending-magnitude ordering aids scanning but no explicit focal
+          point or emphasis element
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +145,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped column chart
+        comment: Correct grouped column/bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct group colors, clear legend, consistent bar widths and spacing
+        comment: Distinct colors, legend, consistent widths/spacing, meaningful ordering,
+          value labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, values on y-axis, all data represented
+        comment: Region on x, revenue on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels match product
-          line names
+        comment: Exact required title format; legend matches series names
     data_quality:
       score: 14
       max: 15
@@ -168,20 +174,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows grouped comparison across regions and product lines; only 4
-          categories limits richness somewhat
+        comment: 6 regions show real rank variation (e.g. Hardware > Software in Asia
+          Pacific), not purely monotonic
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly revenue by product line/region is plausible and neutral
+        comment: Neutral, plausible business scenario (quarterly revenue by product/region)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values ($7M-$42M) are sensible for regional product revenue
+        comment: Regional revenue proportions align with real-world business patterns
     code_quality:
       score: 10
       max: 10
@@ -191,34 +197,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hardcoded deterministic data
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided globals
+        comment: No imports needed, none present
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses Highcharts.chart('container', ...) with no explicit width/height,
-          animation disabled
+        comment: Mount-node contract respected, animation disabled, credits disabled
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,20 +231,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic column chart with correct groupPadding/pointPadding tuning
-          for grouped bars
+        comment: Correct groupPadding/pointPadding tuning, dataLabels formatting,
+          high-level chart() API
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Grouped-bar padding tuning is a real Highcharts-specific technique
-          but otherwise generic usage
+        passed: true
+        comment: Padding tuning + formatted dataLabels are real Highcharts-specific
+          techniques, though usage is still fairly generic overall
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling: []
