@@ -24,6 +24,26 @@ const CORR = [
   [-0.29, -0.66, -0.52,  0.61,  0.58,  0.49,  1.00],
 ];
 
+// --- Data storytelling: surface the single strongest off-diagonal pair in
+// each direction, so the reader has a focal point beyond raw color scanning.
+function strongestPair(matrix, n, wantMax) {
+  let best = wantMax ? -Infinity : Infinity;
+  let pair = [0, 1];
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const v = matrix[i][j];
+      if (wantMax ? v > best : v < best) {
+        best = v;
+        pair = [i, j];
+      }
+    }
+  }
+  return { value: best, pair };
+}
+
+const STRONGEST_POS = strongestPair(CORR, N, true);
+const STRONGEST_NEG = strongestPair(CORR, N, false);
+
 // --- Color: imprint_div (red -0.55, page-bg midpoint 0, blue +1) -----------
 function hexToRgb(hex) {
   return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
@@ -107,6 +127,35 @@ function drawAll() {
     }
   }
 
+  // Highlight the strongest positive and negative pair (both symmetric cells)
+  // with an amber focal outline — a storytelling device beyond raw color.
+  function outlineCell(row, col) {
+    const x = ch.plotLeft + col * cW;
+    const y = ch.plotTop + row * cH;
+    drawn.push(
+      r.rect(x + 1, y + 1, cW - 2, cH - 2, 3)
+        .attr({ fill: 'none', stroke: t.amber, 'stroke-width': 3, zIndex: 2.5 })
+        .add()
+    );
+  }
+  [STRONGEST_POS, STRONGEST_NEG].forEach(({ pair: [i, j] }) => {
+    outlineCell(i, j);
+    outlineCell(j, i);
+  });
+
+  // Caption calling out the two highlighted pairs by name and value.
+  const fmtPair = (p) => `${LABELS[p.pair[0]]} ↔ ${LABELS[p.pair[1]]}`;
+  const fmtVal = (v) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}`;
+  const caption =
+    `Strongest link: ${fmtPair(STRONGEST_POS)} (${fmtVal(STRONGEST_POS.value)})` +
+    `   ·   Sharpest divide: ${fmtPair(STRONGEST_NEG)} (${fmtVal(STRONGEST_NEG.value)})`;
+  drawn.push(
+    r.text(caption, ch.plotLeft + ch.plotWidth / 2, ch.plotTop - 14)
+      .attr({ align: 'center', zIndex: 3 })
+      .css({ color: t.inkSoft, fontSize: '13px', fontWeight: '500' })
+      .add()
+  );
+
   // Column labels (bottom, rotated for readability)
   LABELS.forEach((lbl, col) => {
     const cx = ch.plotLeft + (col + 0.5) * cW;
@@ -172,7 +221,7 @@ Highcharts.chart('container', {
     backgroundColor: 'transparent',
     animation: false,
     style: { fontFamily: 'inherit' },
-    margin: [130, 150, 210, 190],
+    margin: [152, 150, 210, 190],
     events: { load: drawAll, redraw: drawAll },
   },
   credits: { enabled: false },
