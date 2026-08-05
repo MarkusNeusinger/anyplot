@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 streamgraph-basic: Basic Stream Graph
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-08-05
@@ -119,11 +119,12 @@ hh_center = (splines[hip_hop_idx][0](hh_x) + splines[hip_hop_idx][1](hh_x)) / 2
 ax.annotate(
     "Hip-Hop\nrising ↑",
     xy=(hh_x, hh_center),
-    xytext=(hh_x - 4, hh_center + 28),
+    xytext=(hh_x - 4.5, hh_center + 38),
     fontsize=11,
     fontweight="bold",
     color=IMPRINT[hip_hop_idx],
     arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2},
+    bbox={"boxstyle": "round,pad=0.35", "facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.85},
 )
 
 # Rock center near month 18 (decline well established)
@@ -132,11 +133,12 @@ rk_center = (splines[rock_idx][0](rk_x) + splines[rock_idx][1](rk_x)) / 2
 ax.annotate(
     "Rock\ndeclining ↓",
     xy=(rk_x, rk_center),
-    xytext=(rk_x - 5, rk_center - 32),
+    xytext=(rk_x - 5.5, rk_center - 42),
     fontsize=11,
     fontweight="bold",
     color=IMPRINT[rock_idx],
     arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2},
+    bbox={"boxstyle": "round,pad=0.35", "facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.85},
 )
 
 # Style
@@ -149,10 +151,11 @@ ax.set_xlim(0, len(months) - 1)
 ax.set_yticks([])
 ax.set_ylabel("")
 ax.set_xlabel("Month (2023–2024)", fontsize=10, color=INK)
-ax.set_title("streamgraph-basic · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_title("streamgraph-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 
 ax.legend(
-    loc="upper left",
+    loc="center left",
+    bbox_to_anchor=(1.01, 0.5),
     fontsize=8,
     title="Genre",
     title_fontsize=8,
@@ -164,5 +167,5 @@ ax.legend(
 sns.despine(ax=ax, left=True, bottom=False)
 ax.spines["bottom"].set_color(INK_SOFT)
 
-plt.tight_layout()
+fig.subplots_adjust(left=0.06, right=0.85, top=0.90, bottom=0.14)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
