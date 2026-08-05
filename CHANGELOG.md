@@ -138,6 +138,30 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The pipeline's safety net had three holes, and one of them was armed** — follow-up to #10179,
+  which stopped PRs *entering* the dead-end; this stops them *staying* there.
+  (1) `watchdog-stuck-jobs.yml` called `gh workflow run` bare under `set -euo pipefail`, so a
+  single unroutable dispatch aborted the entire scan and every PR after it went unscanned — the
+  safety net failing silently, where nothing else is watching. Five of fourteen scheduled scans
+  died this way on 2026-08-02..04 with HTTP 422 `Cannot trigger a 'workflow_dispatch' on a
+  disabled workflow`, because `daily-regen.yml` is disabled manually while the watchdog's
+  cron-liveness rescue keeps trying to revive it — and the log announced `→ dispatching` *before*
+  attempting, so the run reported rescues it never performed. Dispatch failures are now counted
+  and reported, never fatal, with a disabled target called out as the non-transient case it is;
+  the log line now follows the attempt. This was live: `daily-regen` last ran 16:51 UTC against a
+  10 h liveness threshold, so the next scan after 02:51 UTC would have died again.
+  (2) `ai-rejected` + `ai-attempt-N` matched **no** watchdog case — Case 2 excluded any verdict
+  label, Case 4 excluded any attempt label — which is exactly the state `impl-review.yml` leaves
+  behind when its `impl-repair` dispatch fails, as its own comment says. PR #9949 sat in it for
+  ten days. Case 2 now excludes only `ai-approved` (Case 3's business); the existing age guard
+  and `watchdog:repair-rescued-N` marker keep it from racing an in-flight repair.
+  (3) `ai-review-rescued` was written once and cleared by nothing, so it meant "this PR was ever
+  rescued" rather than "this failure streak was already rescued" — any PR that failed review
+  twice in its life was permanently outside automation, which described 9 of the 11 PRs stuck on
+  2026-08-05. A successful review now clears it along with `ai-review-failed`. Verified with a
+  harness that extracts `dispatch()` verbatim from the YAML and exercises 11 cases (disabled
+  target, transient failure, success, and the six Case 2 label shapes) (#PRNUM2).
+
 - **A correctly rejected plot was reported as a crashed review, deadlocking the PR** —
   `impl-review.yml` used quality score `0` as its sentinel for "the AI review produced no
   output", but `0` is also a score the review prompt *mandates*: the Stage 1 auto-reject gates
