@@ -1,7 +1,7 @@
 # anyplot.ai
 # heatmap-annotated: Annotated Heatmap
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-08-05
+# Quality: 83/100 | Created: 2026-08-05
 
 using CairoMakie
 using Colors

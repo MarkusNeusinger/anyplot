@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: heatmap-annotated
 created: '2026-08-05T09:45:31Z'
-updated: '2026-08-05T09:50:21Z'
+updated: '2026-08-05T10:07:25Z'
 generated_by: claude-sonnet
 workflow_run: 30994196211
 issue: 1824
@@ -12,45 +12,73 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - Per-cell text color is computed from the fill's actual relative luminance rather
-    than a fixed threshold, keeping annotations legible across the entire diverging
-    range in both themes
-  - Theme-adaptive diverging midpoint (MIDPOINT = PAGE_BG) correctly threads through
-    both renders while keeping data colors identical between themes
-  - Clean 2400x2400 square canvas matches the symmetric-plot guidance for heatmaps
-    -- no clipping or overflow on either render
+  - Per-cell text color computed from the fill's actual relative luminance keeps annotations
+    legible across the entire diverging range in both themes.
+  - 'Theme-adaptive diverging midpoint (MIDPOINT = PAGE_BG) correctly threads through
+    both renders while data colors stay pixel-identical between themes (verified by
+    sampling — diagonal cell is exactly RGB(68,103,163) / #4467A3 in both light and
+    dark PNGs).'
+  - Clean 2400x2400 square canvas suits the symmetric matrix layout; verified via
+    edge crops that title, tick labels, and colorbar have generous margins with zero
+    clipping on any edge in either theme.
   - Weather-variable correlation matrix is realistic, neutral, and plausibly distributed
-    across the full [-1, 1] range
-  - All spines/grid removed for a minimal, focused presentation; DataAspect() keeps
-    cells perfectly square
+    across the full [-1, 1] range with a proper cor() computation.
+  - All spines and default grid removed for a minimal, focused presentation; DataAspect()
+    keeps cells perfectly square.
+  - Title format, colorbar labeling, and axis tick labels are exactly spec-compliant.
   weaknesses:
-  - Near-zero-correlation cells blend visually with the page background (especially
-    in dark mode) because the diverging colormap's midpoint equals the theme background
-    -- consider a thin, subtle cell stroke (e.g. INK_SOFT at ~15% alpha) so weak-correlation
-    cells stay visually separated from the canvas
-  - The redundant diagonal (self-correlation = 1.00) dilutes the visual hierarchy
-    -- consider masking the diagonal or using a neutral/muted fill for i == j cells
-    to sharpen focus on the genuinely informative off-diagonal relationships
-  - No visual emphasis (outline, bold text, subtle highlight) calls out the strongest
-    relationships (|r| >= 0.5) -- every cell currently competes equally for attention
+  - 'Diagonal de-emphasis does not render: the code sets display_matrix[i,i]=NaN and
+    passes nan_color=NEUTRAL_FILL to heatmap!, but pixel-sampling the saved PNG shows
+    the diagonal cells are solid RGB(68,103,163) — the exact #4467A3 blue endpoint
+    of ANYPLOT_DIV, identical to a real value=1.0 cell, not the intended muted near-transparent
+    fill. This is the same ''redundant diagonal dilutes hierarchy'' issue flagged
+    in the attempt-1 review and remains completely unresolved visually, in both themes.
+    The nan_color heatmap! keyword is not taking effect in this CairoMakie setup —
+    replace it with an approach verified to change pixel output, e.g. draw an opaque
+    poly!/Rect2f in NEUTRAL_FILL over each diagonal cell AFTER the heatmap! call,
+    rather than relying on NaN + nan_color.'
+  - 'The |r| >= 0.5 strong-correlation highlight (poly! outline with strokecolor=INK/strokewidth=2.5,
+    plus bold text) does not render at all: cropping the Humidity x Visibility cell
+    (value -0.60, which should trigger is_strong) shows zero visible border in either
+    theme, and the annotation text weight is indistinguishable from ordinary cells.
+    This is the same ''no visual hierarchy for strong correlations'' issue flagged
+    in attempt-1 — unresolved. Debug why poly!(Rect2f(i-0.5, j-0.5, 1, 1); color=:transparent,
+    strokecolor=INK, strokewidth=2.5) produces no visible stroke (check draw order
+    / z-order relative to the heatmap and text, or that Rect2f from GeometryBasics
+    isn''t being shadowed) — or replace it with a more reliably-rendered primitive
+    such as lines! tracing the cell''s closed rectangle path.'
+  - 'The subtle cell-boundary grid (hlines!/vlines! at INK_SOFT alpha=0.15) is imperceptible
+    in the saved PNG: cropping adjacent near-zero-correlation cells in the Wind Speed
+    row (-0.04 next to 0.01) shows no visible separator at all, and in the dark render
+    these cells are nearly indistinguishable from both each other and the page background.
+    This reproduces the exact ''near-zero cells blend into background, especially
+    dark mode'' VQ-03 weakness from attempt-1. 15% alpha is too subtle for a line
+    sitting between two similarly-toned heatmap fills (as opposed to a line against
+    a plain background) — raise the alpha to ~0.3-0.4 or increase linewidth, or check
+    whether heatmap! itself supports a strokewidth/strokecolor kwarg for per-cell
+    borders as a more robust alternative to a separate hlines!/vlines! overlay.'
+  - Because all three targeted fixes from the attempt-1 review are visually non-functional,
+    the rendered plot is pixel-for-pixel unchanged in intent from attempt 1 despite
+    added code complexity — the extra NaN-masking, poly! stroke loop, and grid overlay
+    logic currently cost lines of code without any corresponding visual benefit.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 -- not pure white.
-      Chrome: Title "heatmap-annotated · julia · makie · anyplot.ai" in bold dark ink, centered, ~55% of plot width. X-tick labels rotated 45 degrees, y-tick labels horizontal, both in soft-ink gray. Colorbar on the right labeled "Correlation" with ticks -1.0 to 1.0. All chrome fully readable against the light background.
-      Data: 8x8 correlation matrix, Imprint diverging colormap (matte-red #AE3030 -> cream midpoint -> blue #4467A3). Each cell annotated with a 2-decimal value; annotation text color switches between dark ink and light cream based on the cell fill's computed luminance, so contrast holds across the whole range. Diagonal reads 1.00 in solid blue.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — confirmed via pixel sampling (250,248,241 in the margins).
+      Chrome: Title "heatmap-annotated · julia · makie · anyplot.ai" in bold dark ink, centered at top, comfortably clear of the top edge (crop-verified, no clipping). X-axis tick labels (8 weather variables) rotated 45°, fully visible above the bottom canvas edge with generous margin. Y-axis tick labels horizontal on the left, fully visible with margin. Colorbar on the right labeled "Correlation" with ticks -1.0 to 1.0, fully visible, no clipping at the right edge. All chrome text is dark ink/soft-ink against the light background — clearly readable, no light-on-light issues.
+      Data: 8x8 correlation matrix filled with the Imprint diverging colormap (matte-red -> cream midpoint -> blue), annotated with 2-decimal values. First categorical/continuous mapping correctly uses imprint_div (#AE3030 <-> #4467A3). BUG: diagonal cells (self-correlation = 1.00) render as solid full-intensity blue RGB(68,103,163), pixel-identical to the colormap's +1.0 endpoint — the intended NaN + nan_color muted-fill masking does not take visible effect. BUG: cells with |r| >= 0.5 (e.g. Humidity x Visibility = -0.60) show no stroke outline and no bold-text distinction despite the code attempting both. BUG: the subtle inter-cell grid lines are imperceptible — adjacent near-zero cells (e.g. -0.04 and 0.01 in the Wind Speed row) have no visible separator.
+      Legibility verdict: PASS (all text readable) but with unresolved visual-hierarchy defects noted above.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 -- not pure black.
-      Chrome: Same title and tick labels, chrome flipped to light ink (#F0EFE8 primary / #B8B7B0 secondary) -- fully legible against the dark background, no dark-on-dark failures found (verified via direct top/bottom edge crops).
-      Data: Confirmed pixel-identical data colors to the light render (e.g. Humidity/Visibility cell -0.60 is the same deep red, Wind Speed diagonal is the same blue 1.00) -- only chrome changed between themes. One soft note: near-zero-correlation cells (e.g. Wind Speed row) are close in color to the dark page background since the diverging colormap's midpoint is theme-adaptive to match it, making cell boundaries faint there -- but annotation text remains legible throughout.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — confirmed via pixel sampling.
+      Chrome: Same title/tick-label/colorbar layout, chrome flipped to light ink (#F0EFE8 / #B8B7B0), clearly legible against the dark background with generous margins on all four edges (crop-verified, no clipping). No dark-on-dark failures.
+      Data: Data colors are pixel-identical to the light render (diagonal cell sampled at the exact same RGB(68,103,163) in both themes, confirming only chrome flips as required). Same three bugs as the light render: diagonal still solid blue instead of muted fill, no outline/bold on strong (|r|>=0.5) cells, and near-zero cells (e.g. -0.04 / 0.01) are now nearly indistinguishable from both each other and the near-black page background since the intended separator grid does not render.
+      Legibility verdict: PASS (text itself readable) but the near-zero-correlation cell separation defect is more severe here than in light mode due to lower background contrast.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -58,50 +86,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; per-cell luminance-based contrast
-          keeps annotations legible across the whole diverging range in both themes
+        comment: Explicit font sizes throughout, readable in both themes; per-cell
+          luminance-based text color keeps annotations legible across the full diverging
+          range.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 45-degree x-tick rotation avoids collisions; no overlaps anywhere
+        comment: 45-degree x-tick rotation avoids collisions; no text/data collisions
+          anywhere; edge crops confirm no clipping.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Near-zero-correlation cells blend with the page background since
-          the diverging midpoint equals it, especially in dark mode
+        passed: false
+        comment: Near-zero-correlation cells still blend into the page background
+          (especially dark mode) and into each other — the added hlines!/vlines! grid
+          at alpha=0.15 is imperceptible in the rendered PNG, reproducing the attempt-1
+          weakness unchanged.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/blue diverging pair avoids red-green confusion, adequate contrast
+        comment: Red/blue diverging pair avoids red-green confusion; adequate contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas correct for symmetric plot; no clipping confirmed
-          via edge crops
+        comment: 2400x2400 square canvas matches symmetric-plot guidance; verified
+          via crops of all four edges — no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title exact format; variable names serve as axis labels; colorbar
-          labeled
+        comment: Title exact format; row/column variable names serve as axis labels;
+          colorbar has a descriptive 'Correlation' label.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct imprint_div colormap, theme-correct backgrounds, identical
-          data colors across themes
+        comment: 'Correct imprint_div (#AE3030 -> theme-adaptive midpoint -> #4467A3),
+          theme-correct #FAF8F1/#1A1A17 backgrounds, data colors pixel-identical across
+          themes (verified by sampling).'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -109,22 +142,25 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Clean but conventional correlation-heatmap layout; contrast text
-          is a required feature, not bonus polish
+        comment: Clean, professional, conventional correlation-heatmap layout; luminance-based
+          text contrast is functional but the attempted diagonal/strong-cell emphasis
+          techniques do not visually manifest.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Spines/grid removed, generous whitespace, DataAspect for square cells
-          -- solid but not exceptional
+        comment: All spines and default grid removed, generous whitespace, DataAspect()
+          keeps cells square — solid but not exceptional.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: No emphasis technique highlights the strongest relationships; redundant
-          diagonal dilutes hierarchy
+        comment: 'No visual hierarchy actually reaches the pixels: the diagonal still
+          reads as a full-intensity 1.00 cell and no strong-correlation cell is outlined
+          or bolded, so every cell still competes equally for attention exactly as
+          in attempt 1.'
     spec_compliance:
       score: 15
       max: 15
@@ -134,25 +170,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct annotated heatmap via heatmap! + per-cell text!
+        comment: Correct annotated heatmap via heatmap! + per-cell text!.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Contrast-aware annotations, colorbar, diverging colormap all present
+        comment: Contrast-aware annotations, colorbar legend, diverging colormap for
+          signed data — all spec notes satisfied.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 8x8 matrix, all data shown
+        comment: Full 8x8 matrix, all data shown, axes correctly labeled.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; colorbar legend present
+        comment: Title matches {spec-id} . {language} . {library} . anyplot.ai exactly;
+          colorbar legend present and labeled.
     data_quality:
       score: 15
       max: 15
@@ -162,22 +200,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full symmetric matrix with diagonal, positive/negative values, colorbar,
-          annotations
+        comment: Full symmetric correlation matrix with diagonal, positive/negative
+          values, colorbar, and annotations.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Weather variables with plausible, neutral inter-correlations
+        comment: Weather variables with plausible, neutral inter-correlations built
+          from linear combinations.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values correctly bounded in [-1, 1] and plausibly distributed
+        comment: Correlation values correctly bounded in [-1, 1] and plausibly distributed.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -185,62 +224,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes, flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42)
+        comment: Random.seed!(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: CairoMakie, Colors, Random, Statistics, Printf — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake UI
+        passed: false
+        comment: Added NaN-masking, poly! stroke loop, and grid overlay logic that
+          is confirmed non-functional in the rendered output — complexity without
+          corresponding visual benefit.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via current Makie API
+        comment: Saves plot-$(THEME).png via current Makie API with px_per_unit=2.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Idiomatic Axis/heatmap!/Colorbar/text! composition, DataAspect()
-          for square cells
+        passed: false
+        comment: Axis/heatmap!/Colorbar/text! composition is idiomatic, but the nan_color
+          kwarg and poly! stroke usage do not achieve their documented effect in this
+          setup, indicating non-idiomatic or incorrect application.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Luminance-based contrast text and theme-adaptive midpoint are nice
-          touches but otherwise standard heatmap usage
+        comment: Per-cell luminance-based contrast text color is a genuine distinctive
+          touch; the diagonal-masking and strong-cell-highlight features are conceptually
+          distinctive but do not render.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
   - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - correlation-matrix
   styling:
   - custom-colormap
-  - publication-ready
+  - minimal-chrome
+  - alpha-blending
