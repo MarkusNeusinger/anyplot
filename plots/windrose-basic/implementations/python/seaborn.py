@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 windrose-basic: Wind Rose Chart
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-07
+Library: seaborn 0.13.2 | Python 3.13.12
+Quality: 88/100 | Updated: 2026-08-05
 """
 
 import os
@@ -18,8 +18,9 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for speed ranges (cool to warm progression)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+# Imprint palette for speed ranges (cool to warm progression), built via
+# seaborn's own palette API so downstream seaborn calls (kdeplot) share it.
+IMPRINT = sns.color_palette(["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"])
 
 # Configure seaborn
 sns.set_theme(
@@ -88,10 +89,11 @@ for i in range(n_dir_bins):
 
 frequencies = frequencies / n_obs * 100
 
-# Plot
-fig = plt.figure(figsize=(12, 12), facecolor=PAGE_BG)
-ax = fig.add_subplot(111, projection="polar")
-
+# Plot: polar wind rose fills the square canvas; legend and a seaborn KDE
+# inset sit in the corners that fall outside the circle, which the bars
+# (clipped to the radial axis limit) never reach regardless of direction.
+fig = plt.figure(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax = fig.add_axes((0.06, 0.06, 0.88, 0.88), projection="polar")
 ax.set_facecolor(PAGE_BG)
 ax.set_theta_zero_location("N")
 ax.set_theta_direction(-1)
@@ -103,57 +105,68 @@ total_freq = frequencies.sum(axis=1)
 dominant_threshold = np.percentile(total_freq, 75)
 is_dominant = total_freq > dominant_threshold
 
-# Plot stacked bars with Okabe-Ito palette
+# Plot stacked bars with the Imprint palette
 bottoms = np.zeros(n_dir_bins)
 for j, (label, color) in enumerate(zip(speed_labels, IMPRINT, strict=False)):
-    # Use full alpha for dominant sectors, reduced for weaker ones
     alpha_per_sector = np.where(is_dominant, 0.90, 0.65)
-
-    # Plot all sectors in one call, then manually adjust alpha if possible
+    # Contiguous petals (full dir_width, no inter-sector gap): a gap here would
+    # leave a thin sliver of background between direction bins that, next to a
+    # tall dominant sector, reads as a stray line cutting across the chart.
     bars = ax.bar(
         theta,
         frequencies[:, j],
-        width=dir_width * 0.9,
+        width=dir_width,
         bottom=bottoms,
         color=color,
         edgecolor=PAGE_BG,
-        linewidth=0.5,
+        linewidth=0.7,
         label=label,
-        alpha=0.85,
     )
-
-    # Adjust individual bar alpha for dominant directions
     for bar, alpha_val in zip(bars, alpha_per_sector, strict=False):
         bar.set_alpha(alpha_val)
-
     bottoms += frequencies[:, j]
 
-# Style
-ax.set_title("windrose-basic · seaborn · anyplot.ai", fontsize=24, pad=20, fontweight="medium", color=INK)
+# Title
+ax.set_title("windrose-basic · python · seaborn · anyplot.ai", fontsize=12, pad=16, fontweight="medium", color=INK)
 
 max_freq = np.ceil(bottoms.max() / 5) * 5
 ax.set_ylim(0, max_freq)
 ax.set_yticks(np.arange(0, max_freq + 1, 5))
-ax.set_yticklabels([f"{int(y)}%" for y in np.arange(0, max_freq + 1, 5)], fontsize=14, color=INK_SOFT)
+ax.set_yticklabels([f"{int(y)}%" for y in np.arange(0, max_freq + 1, 5)], fontsize=9, color=INK_SOFT)
+# Move the radial-label spoke into the near-empty E/SE sector so it doesn't
+# cut across the dominant, densely colored bars.
+ax.set_rlabel_position(112.5)
 
 direction_labels = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 ax.set_xticks(np.deg2rad(np.arange(0, 360, 45)))
-ax.set_xticklabels(direction_labels, fontsize=18, fontweight="medium", color=INK)
+ax.set_xticklabels(direction_labels, fontsize=11, fontweight="medium", color=INK)
 
-# Enhanced grid styling with subtle radial emphasis
+# Grid styling
 ax.grid(True, alpha=0.12, linestyle="-", linewidth=0.8, color=INK_SOFT)
 for spine in ax.spines.values():
     spine.set_color(INK_SOFT)
     spine.set_linewidth(1.1)
 
-legend = ax.legend(
-    title="Wind Speed", loc="lower right", bbox_to_anchor=(1.15, 0), fontsize=14, title_fontsize=16, framealpha=0.95
-)
+# Legend stays inside the axes bounding box (bottom-right corner, outside the
+# circle) so nothing gets clipped by the fixed-size canvas.
+legend = ax.legend(title="Wind Speed", loc="lower right", fontsize=9, title_fontsize=10, framealpha=0.95)
 legend.get_frame().set_facecolor(ELEVATED_BG)
 legend.get_frame().set_edgecolor(INK_SOFT)
 legend.get_title().set_color(INK)
 for text in legend.get_texts():
     text.set_color(INK)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+# Distinctive seaborn feature: a kernel-density estimate of the overall speed
+# distribution, tucked into the opposite (top-left) empty corner.
+inset = fig.add_axes((0.05, 0.72, 0.24, 0.20))
+sns.kdeplot(x=speeds, fill=True, color=IMPRINT[0], alpha=0.55, linewidth=1.2, ax=inset)
+inset.set_facecolor(PAGE_BG)
+inset.set_title("Speed distribution", fontsize=8, color=INK, pad=3)
+inset.set_xlabel("Wind speed (m/s)", fontsize=7, color=INK_SOFT)
+inset.set_ylabel("")
+inset.set_yticks([])
+inset.tick_params(axis="x", labelsize=6, colors=INK_SOFT)
+sns.despine(ax=inset, left=True)
+inset.spines["bottom"].set_color(INK_SOFT)
+
+fig.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
