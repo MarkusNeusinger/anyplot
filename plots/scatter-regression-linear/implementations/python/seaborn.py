@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-05
@@ -60,7 +60,7 @@ sns.regplot(
     y=exam_score,
     ax=ax,
     ci=95,
-    scatter_kws={"s": 45, "alpha": 0.6, "color": BRAND, "edgecolor": "white", "linewidths": 0.5},
+    scatter_kws={"s": 60, "alpha": 0.6, "color": BRAND, "edgecolor": "white", "linewidths": 0.5},
     line_kws={"color": INK_SOFT, "linewidth": 2},
 )
 # regplot fills the CI band with the line color by default — recolor to brand teal
@@ -70,7 +70,7 @@ ax.collections[-1].set_alpha(0.15)
 
 # Marginal rug plot — seaborn-native touch that shows each variable's density along its axis
 sns.rugplot(x=study_hours, ax=ax, color=INK_SOFT, alpha=0.3, height=0.03)
-sns.rugplot(y=exam_score, ax=ax, color=INK_SOFT, alpha=0.3, height=0.03)
+sns.rugplot(y=exam_score, ax=ax, color=INK_SOFT, alpha=0.2, height=0.02)
 
 # Regression equation + R² annotation
 equation_text = f"y = {slope:.2f}x + {intercept:.1f}\nR² = {r_squared:.3f}"
@@ -87,7 +87,9 @@ ax.annotate(
 # Labels and title
 ax.set_xlabel("Study Hours per Week", fontsize=10, color=INK)
 ax.set_ylabel("Exam Score (%)", fontsize=10, color=INK)
-ax.set_title("Study Hours vs Exam Score — Linear Regression", fontsize=12, color=INK, fontweight="bold", pad=12)
+ax.set_title(
+    "scatter-regression-linear · python · seaborn · anyplot.ai", fontsize=12, color=INK, fontweight="bold", pad=12
+)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 # Grid — both axes for scatter plots (see default-style-guide.md "Grid Guidelines")
