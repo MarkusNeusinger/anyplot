@@ -2,121 +2,134 @@ library: bokeh
 language: python
 specification_id: scatter-regression-linear
 created: '2025-12-24T21:29:46Z'
-updated: '2026-05-06T22:38:48Z'
-generated_by: claude-haiku
-workflow_run: 25464811922
+updated: '2026-08-05T13:25:25Z'
+generated_by: claude-sonnet
+workflow_run: 31008756391
 issue: 1821
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 93
 review:
   strengths:
-  - Flawless theme-adaptive chrome with perfect readability in both light and dark
-    renders
-  - 'Perfect palette compliance — Okabe-Ito colors correct with #009E73 brand green
-    as primary'
-  - All font sizes explicitly set (28pt, 22pt, 18pt) — crystal clear legibility at
-    full resolution
-  - Comprehensive spec coverage — regression line, 95% CI band, R² display, equation
-    annotation all present
-  - Clean, reproducible code with idiomatic bokeh patterns (ColumnDataSource, Band,
-    HoverTool)
-  - Realistic, well-chosen example data (study hours vs exam scores with R²=0.836)
+  - 'Full spec coverage in one composition: scatter + regression line + 95% CI band
+    (Band model) + R²/equation annotation, all clearly legible in both themes'
+  - Outliers (|residual| > 2σ) get a redundant, CVD-safe encoding (matte-red IMPRINT[4]
+    + larger size 17px + heavier ink outline) instead of relying on red-vs-green color
+    alone
+  - Confidence band correctly derived from the regression standard error (t-distribution
+    critical value applied per-point), not a cosmetic fixed-width shade
+  - Subtitle ('n = 80 study sessions · linear fit with 95% confidence band') adds
+    genuine context without cluttering the mandated title
+  - 'Idiomatic bokeh: separate ColumnDataSource per series (normal/outlier/line/band),
+    Band model for the CI ribbon, HoverTool exposing computed residual field, legend
+    click_policy=''hide'' for interactive toggling in the HTML view'
+  - Theme tokens threaded through every chrome element (title, subtitle, axis labels,
+    ticks, grid, legend, annotation box) — both renders pass the light/dark legibility
+    check with identical data colors
+  - Reproducible (np.random.seed(42)), clean flat script with no unused imports or
+    fake UI
   weaknesses:
-  - Design Excellence uses library defaults rather than custom aesthetic sophistication
-  - Library-specific features not fully exploited (Band and HoverTool used, but callbacks
-    or advanced interactivity not leveraged)
+  - p.outline_line_color draws a full four-sided box around the plot area in both
+    renders — the style guide's default is an L-shaped (or fully removed) frame; consider
+    dropping the outline or only keeping bottom/left to reduce chartjunk
+  - Regression-line color (IMPRINT[1] lavender) and outlier color (IMPRINT[4] matte
+    red) skip palette positions 2–4 by using them as semantic picks — defensible (outlier=semantic
+    red anchor, regression line as a secondary reference series) but worth a one-line
+    code comment confirming the semantic-exception reasoning so future regen doesn't
+    'fix' it back to canonical order incorrectly
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title (28pt), axis labels (22pt), tick labels (18pt) all clearly visible in dark text; annotation box with equation and R²=0.836 in upper-left; legend in bottom-right — all readable
-      Data: 80 scatter points in brand green (#009E73) with alpha=0.65; orange regression line (#D55E00); light-green transparent confidence band (95% CI)
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: Bold dark title "scatter-regression-linear · bokeh · anyplot.ai" top-left, gray subtitle "n = 80 study sessions · linear fit with 95% confidence band" beneath it. Italic axis labels "Study Hours" (x) and "Exam Score (%)" (y) in dark ink, gray tick labels on both axes, subtle warm-toned gridlines on both axes. Legend bottom-right on an elevated cream card listing "Linear Regression", "Data Points", "Outlier (|residual| > 2σ)". Equation/R² annotation box ("y = 5.28x + 43.34", "R² = 0.836") sits in open space upper-left, no overlap with any data.
+      Data: Brand-green (#009E73) scatter points at alpha≈0.7, a lavender/purple regression line, a light-green semi-transparent 95% confidence band around it, and four matte-red outlier points (larger, dark-outlined) clearly separated from the normal cluster.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable; no overlaps, no clipped edges.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title, axis labels, tick labels now in light text (#F0EFE8), all clearly readable against dark background; annotation box with dark background (#242420) and light text; legend adapted to dark theme
-      Data: Scatter points identical #009E73, regression line identical #D55E00 (no color shift from light render — only chrome adapted)
-      Legibility verdict: PASS — no dark-on-dark failures; brand green remains visible
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Same layout — light/off-white title and axis labels, lighter-gray subtitle/tick labels/legend text, gridlines faint against the dark surface, legend card on a dark-elevated fill, annotation box with light text on the dark-elevated fill.
+      Data: Identical brand-green points, lavender regression line, matte-red outliers, and green confidence band (visually reads as a darker green ribbon against the black background, same underlying color/alpha as the light render) — confirms only chrome flips theme, not data colors.
+      Legibility verdict: PASS — no dark-on-dark failures; every title/label/tick/legend/annotation string is clearly legible against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28pt, 22pt, 18pt); perfectly readable
-          in both themes
+        comment: All text readable in both themes at full size; explicit font sizes
+          throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend and annotation well-positioned
+        comment: Annotation box and legend both sit in open space, no collisions with
+          data or other text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 80 markers optimally sized (size=16, alpha=0.65); regression line
-          prominent (width=5)
+        comment: Marker size/alpha appropriate for n=80; outliers get larger/heavier-outlined
+          redundant encoding
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) with good contrast; CVD-safe'
+        comment: Outliers use size+outline in addition to color, avoiding red-green-only
+          signaling
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~70% of canvas; balanced margins; legend well-integrated
+        comment: No clipping/overflow; canvas gate passed; balanced axis label sizing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Study Hours'', ''Exam Score (%)'''
+        comment: Descriptive axis labels with units (Exam Score %)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito order); backgrounds
-          #FAF8F1/#1A1A17; theme-adaptive chrome perfect'
+        comment: 'First series #009E73, correct theme backgrounds in both renders,
+          identical data colors across themes'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured defaults with good typography; lacks exceptional
-          custom design
+        passed: true
+        comment: Subtitle context, statistically-derived CI band, outlier callout
+          go beyond generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Subtle grid (alpha=0.10), styled legend and annotation; could be
-          more refined
+        passed: true
+        comment: Subtle grid, generous whitespace; full-box outline_line_color keeps
+          a 4-sided frame rather than L-shaped/none
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clear visual hierarchy and emphasis on regression; could strengthen
-          with additional techniques
+        passed: true
+        comment: 'Clear visual hierarchy: data -> regression line -> highlighted outliers
+          -> equation/R² focal point'
     spec_compliance:
       score: 15
       max: 15
@@ -126,25 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with linear regression and confidence band
+        comment: Scatter with linear regression line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: scatter, regression line, 95% CI, R², equation, transparency'
+        comment: R², equation, 95% CI band, alpha~0.7 points, contrasting regression
+          line all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show full data range
+        comment: Study hours on x, exam score on y, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format with spec-id, library, and domain; legend labels match
+        comment: Title matches mandated format; legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -154,19 +168,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full range of relationship with realistic scatter variation
+        comment: Covers scatter, regression, CI band, R²/equation, outlier detection
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Study hours vs. exam scores: neutral, real-world, comprehensible'
+        comment: Study hours vs exam scores, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Study hours 1–10, exam scores 0–100%, factually correct
+        comment: 1-10 hours, 0-100 clipped scores, realistic ranges
     code_quality:
       score: 10
       max: 10
@@ -176,59 +190,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → calculations → plot → save'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42; deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering
+        comment: No fake UI; manual stats appropriately simple
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.png and .html via the documented Selenium pattern
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Correct bokeh patterns (ColumnDataSource, Band, HoverTool, Label)
+        passed: true
+        comment: ColumnDataSource per series, Band model, Title layout for subtitle
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses bokeh-specific Band, HoverTool, Label; could leverage more advanced
-          features
+        passed: true
+        comment: HoverTool with computed residual field, legend click_policy='hide'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
+  - columndatasource
   dataprep:
   - regression
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
