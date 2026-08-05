@@ -29,7 +29,9 @@ const returns = [];
 for (let i = 0; i < n; i++) {
   // 92% calm-market days, 8% drawdown days (fat left tail)
   const isDrawdown = rand() < 0.08;
-  returns.push(isDrawdown ? -3.2 + randNormal() * 2.0 : 0.15 + randNormal() * 1.1);
+  returns.push(
+    isDrawdown ? -3.2 + randNormal() * 2.0 : 0.15 + randNormal() * 1.1,
+  );
 }
 
 // --- Histogram (density-scaled) ---------------------------------------------
@@ -58,7 +60,8 @@ function gaussianKernel(z) {
 }
 function kde(x) {
   let sum = 0;
-  for (let i = 0; i < n; i++) sum += gaussianKernel((x - returns[i]) / bandwidth);
+  for (let i = 0; i < n; i++)
+    sum += gaussianKernel((x - returns[i]) / bandwidth);
   return sum / (n * bandwidth);
 }
 
@@ -95,6 +98,7 @@ new Chart(canvas, {
         borderWidth: 1,
         barPercentage: 1.0,
         categoryPercentage: 1.0,
+        order: 1,
       },
       {
         type: "line",
@@ -105,6 +109,7 @@ new Chart(canvas, {
         borderWidth: 3,
         pointRadius: 0,
         tension: 0.3,
+        order: 0,
       },
     ],
   },
@@ -126,14 +131,26 @@ new Chart(canvas, {
     scales: {
       x: {
         type: "linear",
+        min: gridMin,
+        max: gridMax,
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { display: false },
-        title: { display: true, text: "Daily Return (%)", color: t.ink, font: { size: 16 } },
+        title: {
+          display: true,
+          text: "Daily Return (%)",
+          color: t.ink,
+          font: { size: 16 },
+        },
       },
       y: {
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
-        title: { display: true, text: "Density", color: t.ink, font: { size: 16 } },
+        title: {
+          display: true,
+          text: "Density",
+          color: t.ink,
+          font: { size: 16 },
+        },
         beginAtZero: true,
       },
     },
