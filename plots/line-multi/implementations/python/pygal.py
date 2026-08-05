@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-multi: Multi-Line Comparison Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-05
@@ -50,12 +50,14 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
+    font_family='"Helvetica Neue", Helvetica, Arial, "DejaVu Sans", sans-serif',
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
     stroke_width=2.5,
+    legend_box_size=30,
 )
 
 # Create chart
@@ -66,6 +68,13 @@ chart = pygal.Line(
     x_title="Month",
     y_title="Sales (thousands USD)",
     style=custom_style,
+    # Hermite/cardinal interpolation passes through every monthly value
+    # exactly (unlike smoothing) while replacing the plain polyline with a
+    # gently curved one — a distinctive pygal-only touch that lifts the
+    # aesthetic beyond straight-segment defaults.
+    interpolate="hermite",
+    interpolation_parameters={"type": "cardinal", "c": 0.25},
+    interpolation_precision=250,
     show_dots=True,
     dots_size=7,
     show_legend=True,
@@ -80,11 +89,11 @@ chart = pygal.Line(
     spacing=24,
 )
 
-# Add data series — Electronics gets a bolder solid stroke to lead the eye
-# toward its steady growth story; the remaining series use distinct dash
-# patterns for redundant encoding alongside color.
+# Add data series — Electronics gets a bolder solid stroke and larger dots to
+# lead the eye toward its steady growth story; the remaining series use
+# distinct dash patterns for redundant encoding alongside color.
 chart.x_labels = months
-chart.add("Electronics", electronics, stroke_style={"width": 4})
+chart.add("Electronics", electronics, stroke_style={"width": 4}, dots_size=9)
 chart.add("Clothing", clothing, stroke_style={"width": 2.5, "dasharray": "10, 6"})
 chart.add("Home Goods", home_goods, stroke_style={"width": 2.5, "dasharray": "2, 6"})
 chart.add("Sports", sports, stroke_style={"width": 2.5, "dasharray": "14, 6, 2, 6"})
