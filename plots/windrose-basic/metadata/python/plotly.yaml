@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: windrose-basic
 created: '2025-12-24T22:16:28Z'
-updated: '2026-08-05T15:27:52Z'
+updated: '2026-08-05T15:35:22Z'
 generated_by: claude-sonnet
 workflow_run: 31019144868
 issue: 1880
@@ -12,51 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
+  - 'Both attempt-1 weaknesses resolved: title now reads "windrose-basic · python
+    · plotly · anyplot.ai", and the square 2400×2400 canvas eliminates the previous
+    large gap between chart and legend'
+  - The >12 m/s band is now clearly perceptible in both themes, no longer a hairline
   - Idiomatic go.Barpolar stacked wind rose with a subtle polar donut hole (hole=0.06)
-    instead of a naive full-disc chart
-  - Thoughtful radial-axis angle rotation (112.5°) that places the frequency ticks
-    over the sparsest sector (between N and NW) instead of colliding with the dominant
-    SW/W bars
-  - 'Correct use of the Imprint sequential colorscale (imprint_seq, #009E73 -> #4467A3)
-    via sample_colorscale to encode the ordinal speed bins, with the brand green anchoring
-    the calmest bin as required'
-  - 'Realistic, well-reasoned coastal wind climatology: Weibull(2, 6 m/s)-distributed
-    speeds and a weighted prevailing SW/W direction distribution, both plausible for
-    a 3-year daily-average record'
-  - Full theme-adaptive chrome (background, ink, grid, legend box) correctly threaded
-    through both light and dark renders
-  - Clean, reproducible, KISS-structured code (seeded RNG, no functions/classes, only
-    used imports)
+  - Thoughtful radial-axis angle rotation (112.5°) placing frequency ticks over the
+    sparsest sector instead of colliding with the dominant SW/W bars
+  - 'Correct Imprint sequential colorscale (imprint_seq, #009E73 → #4467A3) via sample_colorscale,
+    brand green anchoring the calmest bin'
+  - Realistic, well-reasoned coastal wind climatology (Weibull(2, 6 m/s) speeds, weighted
+    prevailing SW/W direction)
+  - Full theme-adaptive chrome correctly threaded through both renders
+  - Clean, reproducible, KISS-structured code
   weaknesses:
-  - Title omits the mandated "python" language segment - it reads "windrose-basic
-    · plotly · anyplot.ai" instead of the required "windrose-basic · python · plotly
-    · anyplot.ai"
-  - Landscape 3200×1800 canvas leaves a large empty gap between the circular chart
-    and the isolated legend column on the right; either tighten the legend's x position/margins
-    or switch to the square 2400×2400 canvas, which is the better native fit for a
-    symmetric polar chart
-  - The outermost ">12 m/s" speed band totals only ~0.9% of observations and renders
-    as a near-invisible hairline ring in most sectors - realistic, but a small minimum
-    visual width (or a slightly heavier marker_line_width) would keep it perceptible
-    at a glance
+  - Design Excellence is still at "well-configured default" level rather than "publication-ready"
+    - a bolder focal-point treatment (e.g. emphasizing the dominant SW/W wedges, or
+    a refined typographic hierarchy between title and legend) would push DE-01/DE-03
+    higher, though this is not required for approval
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white.
-      Chrome: Title "windrose-basic · plotly · anyplot.ai" in dark ink, clearly readable; compass labels (N, NE, E, SE, S, SW, W, NW) dark and legible; radial "Frequency (%)" axis (rotated ~112.5°, placed between N and NW) in dark ink with subtle gridlines at 5/10/15/20/25%; legend box "Wind Speed" in an elevated cream box with dark border and dark text. All chrome text is clearly readable against the light background.
-      Data: Eight stacked polar wedges, one per compass direction. Innermost segment (0-3 m/s) is brand green #009E73, transitioning through teal and blue tones to a thin dark-blue outer rim (>12 m/s), separated by thin cream-colored dividers. SW and W wedges are visibly the longest (dominant directions), N is the shortest. Colors read clearly against the light background.
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "windrose-basic · python · plotly · anyplot.ai" in dark ink, centered at top - now includes the mandated python language segment. Compass labels (N, NE, E, SE, S, SW, W, NW) dark and clearly readable. Radial "Frequency (%)" axis rotated to 112.5° into the sparse N/NW gap with 0/5/10/15/20/25% gridlines, subtle. "Wind Speed" legend sits directly beneath the polar chart in a bordered elevated-cream box - no isolated gap (previous landscape-canvas issue fixed by switching to square 2400x2400).
+      Data: Eight spokes, each stacking 5 wind-speed bins in a green-to-blue Imprint sequential gradient (#009E73 calm -> #4467A3 strong). First/innermost bin is #009E73 as required. SW and W are the dominant directions. The outermost ">12 m/s" band, previously a near-invisible hairline, is now a clearly visible thin ring with crisp border.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black.
-      Chrome: Title, compass labels, radial axis ticks/title, and legend text all render in light/off-white ink, clearly legible against the dark background. Legend box uses the elevated dark surface (#242420) with a light border. Gridlines are subtle light strokes at low opacity.
-      Data: Same stacked wedge structure and identical data colors as the light render (brand green inner segment through to blue outer segment) - confirms the Imprint categorical/continuous colors do not shift between themes. No dark-on-dark or light-on-light failures observed; all text and data remain distinguishable from the near-black surface.
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title, compass labels, radial axis text, and legend text all flip to light/off-white ink, fully legible. No dark-on-dark failures observed. Legend box uses elevated dark surface (#242420) with light border, still positioned directly under the chart.
+      Data: Identical green-to-blue color sequence as the light render - only chrome flipped. >12 m/s outer ring remains clearly distinguishable from the 9-12 m/s band in this theme too.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -64,50 +55,44 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes and at mobile
-          scale; radial axis rotated to avoid clutter
+        comment: All font sizes explicit, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; radial axis deliberately placed over the
-          sparsest sector
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Most speed bands clearly visible; the >12 m/s outer band is a near-invisible
-          hairline in low-wind sectors
+        comment: '>12 m/s band now clearly visible, was a hairline in attempt 1'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential hue progression plus thin dividers keep adjacent bands
-          distinguishable
+        comment: Good contrast, CVD-safe sequential scale
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall balance but a sizable empty gap sits between the circular
-          chart and the isolated legend column
+        comment: Square canvas fixes prior gap between chart and legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial axis labeled "Frequency (%)" with units; compass directions
-          self-explanatory
+        comment: Frequency (%) descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, imprint_seq colorscale for ordinal speed bins,
-          theme-correct chrome in both renders'
+        comment: 'imprint_seq colorscale, #009E73 first bin, theme-correct chrome
+          in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -117,8 +102,8 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Donut hole, sequential gradient and rotated radial axis go beyond
-          a configured default
+        comment: Donut hole, sequential gradient, rotated radial axis go beyond plain
+          default
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -130,10 +115,9 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Dominant SW/W directions and speed magnitude are immediately legible
-          via length + color hierarchy
+        comment: Dominant SW/W directions legible via length + color hierarchy
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,27 +125,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar stacked-histogram wind rose
+        comment: Correct stacked polar wind rose
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 8 direction sectors, meaningful speed bins, N at top, legend with
-          speed ranges, radial frequency axis all present
+        comment: 8 direction sectors, 5 speed bins, legend, N at top
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: theta=direction, r=frequency%, all data visible
+        comment: Direction on theta, frequency on r, correct
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing the mandated "python" language segment; legend labels
-          are correct
+        passed: true
+        comment: Title now includes python language segment; legend labels match speed
+          bins
     data_quality:
       score: 14
       max: 15
@@ -171,21 +154,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All 5 speed tiers present across all 8 directions, though the rarest
-          tier is very thin
+        comment: All 5 speed tiers present and legible; rarest tier still naturally
+          thin
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible coastal wind-monitoring climatology
+        comment: Realistic coastal wind climatology, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weibull speed distribution and direction weighting are physically
-          realistic
+        comment: Weibull speed distribution and prevailing-direction weights are physically
+          plausible
     code_quality:
       score: 10
       max: 10
@@ -195,7 +178,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,19 +190,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects, sample_colorscale - all used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image/write_html to plot-{THEME}.png/.html, current API
+        comment: write_image/write_html with correct plot-{THEME} naming
     library_mastery:
       score: 9
       max: 10
@@ -229,21 +212,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: go.Barpolar with barmode=stack is the recommended plotly pattern
-          for wind roses
+        comment: Idiomatic go.Barpolar usage
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Polar hole, custom radial axis angle placement, and sample_colorscale
-          for discrete-from-continuous mapping are plotly-specific
-  verdict: REJECTED
+        comment: Polar hole, custom radial axis angle, sample_colorscale for discrete-from-continuous
+          mapping
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
