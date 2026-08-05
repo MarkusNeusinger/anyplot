@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-horizontal: Horizontal Bar Chart
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -16,12 +16,12 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 BRAND = "#009E73"  # Imprint palette position 1 — the leading category
 
 # Data - Survey results: "What programming language do you use most?"
 categories = ["Python", "JavaScript", "TypeScript", "Java", "C++", "Go", "Rust", "Ruby", "PHP", "Swift"]
 values = [2847, 2156, 1823, 1542, 987, 756, 623, 412, 389, 298]
+total_responses = sum(values)
 
 # Emphasize the leading language, mute the rest — "highlight specific bars to
 # draw attention" per the spec's own guidance, using the muted semantic
@@ -36,10 +36,11 @@ fig.add_trace(
         x=values,
         orientation="h",
         marker={"color": bar_colors, "line": {"color": PAGE_BG, "width": 1}},
-        text=values,
+        texttemplate="%{x:,}",
         textposition="outside",
         textfont={"size": 12, "color": INK_SOFT},
         cliponaxis=False,
+        hovertemplate="<b>%{y}</b><br>%{x:,} responses<extra></extra>",
     )
 )
 
@@ -49,22 +50,22 @@ fig.update_layout(
     autosize=False,
     width=800,
     height=450,
-    margin={"l": 140, "r": 90, "t": 100, "b": 70},
+    margin={"l": 140, "r": 50, "t": 110, "b": 70},
     title={
         "text": "bar-horizontal · python · plotly · anyplot.ai",
         "font": {"size": 16, "color": INK},
+        "subtitle": {"text": f"n = {total_responses:,} survey respondents", "font": {"size": 11, "color": INK_SOFT}},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
         "title": {"text": "Number of Responses", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
-        "showgrid": True,
-        "gridcolor": GRID,
+        "showgrid": False,
         "showline": True,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
-        "range": [0, max(values) * 1.1],
+        "range": [0, max(values) * 1.12],
     },
     yaxis={
         "title": {"text": "Programming Language", "font": {"size": 12, "color": INK}},
