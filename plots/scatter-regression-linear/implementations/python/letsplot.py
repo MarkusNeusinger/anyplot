@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -59,7 +59,7 @@ plot = (
         color=PAGE_BG,
         stroke=0.6,
         size=3,
-        alpha=0.75,
+        alpha=0.65,
         tooltips=layer_tooltips()  # noqa: F405
         .line("Ad Spend|$@advertising_spend{.1f}K")
         .line("Sales|$@sales_revenue{.1f}K"),
@@ -80,7 +80,7 @@ plot = (
         x=annotation_x,
         y=annotation_y,
         label=annotation_text,
-        size=4,
+        size=4.5,
         color=INK,
         fill=ELEVATED_BG,
         label_size=0,
@@ -94,6 +94,11 @@ plot = (
     )
     + scale_x_continuous(expand=(0.03, 0))  # noqa: F405
     + scale_y_continuous(expand=(0.05, 0))  # noqa: F405
+    + ggmarginal(  # noqa: F405
+        "tr",
+        size=0.09,
+        layer=geom_density(color=BRAND, fill=BRAND, alpha=0.25, size=0.8),  # noqa: F405
+    )
     + ggsize(800, 450)  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
