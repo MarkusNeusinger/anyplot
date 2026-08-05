@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: scatter-regression-linear
 created: '2025-12-24T21:30:06Z'
-updated: '2026-08-05T13:28:51Z'
+updated: '2026-08-05T13:40:11Z'
 generated_by: claude-sonnet
 workflow_run: 31009557034
 issue: 1821
@@ -12,46 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - Regression line uses geom_smooth(method='lm') while the annotation is computed
-    from an independent closed-form OLS calculation, so the displayed equation and
-    R² exactly match the drawn line and CI band.
-  - Confidence band and regression line both use the Imprint palette position-2 color
-    (#C475FD) at a restrained fill_alpha=0.15, staying visually subordinate to the
-    primary green scatter points.
-  - 'Theme customization goes beyond defaults: panel border removed, only x/y axis
-    lines kept, grid reduced to subtle major-only lines — a deliberate minimal aesthetic
-    rather than library defaults.'
-  - layer_tooltips() adds real, well-formatted HTML interactivity (formatted ad-spend/sales
-    values, fitted value + CI range) without faking anything in the static PNG — correctly
-    not penalized per the interactive-library fairness rule.
-  - 'Both renders are theme-correct: backgrounds match #FAF8F1/#1A1A17 tokens exactly,
-    chrome (title/axis/ticks/annotation box) flips appropriately, and data colors
-    (green points, purple line/band) are pixel-identical across themes.'
+  - Canvas is now exactly on-contract (3200×1800 confirmed by direct PNG measurement)
+    after correcting ggsize(1600,900)/scale=3 to ggsize(800,450)/scale=4, with font
+    sizes retuned to match.
+  - Edge-highlighted markers (shape=21, BRAND fill, PAGE_BG-colored stroke) give points
+    a light halo that keeps overlapping clusters (x≈15-20, x≈78-80) readable instead
+    of muddying into solid blobs.
+  - geom_smooth(method='lm') draws the fitted line/CI while the annotation text is
+    computed independently via closed-form OLS, so the displayed equation and R² match
+    the drawn line exactly.
+  - layer_tooltips() is enriched on both geom_point (formatted spend/sales) and geom_smooth
+    (fitted value + 95% CI range) — genuine, working interactivity that adds real
+    value in the HTML output without faking anything in the PNG.
+  - 'Both renders are theme-correct: backgrounds match the #FAF8F1/#1A1A17 tokens
+    exactly, chrome (title/axis/ticks/annotation box/grid) flips appropriately, and
+    data colors (green points, purple line/band) are pixel-identical across themes.'
   weaknesses:
-  - Point alpha is 0.75, slightly above the spec's suggested 0.6-0.7 range — lower
-    it marginally to better reveal density in the x=15-20 and x=78-80 clusters where
-    points visibly overlap.
-  - Design excellence is solid but not distinctive beyond the theme cleanup — consider
-    a stronger focal device (e.g. residual-based point shading, marginal rug, or annotated
-    outlier callout) to lift it further above baseline.
-  - Library mastery leans on one standout feature (layer_tooltips); could showcase
-    more of lets-plot's distinctive surface (e.g. interactive brushing, geom_smooth
-    confidence customization, or ggmarginal) to strengthen LM-02.
+  - The ggmarginal("tr", size=0.09, layer=geom_density(...)) layer added this round
+    to showcase a distinctive lets-plot feature does not render at all — confirmed
+    absent from both plot-light.png/plot-dark.png (direct pixel crop of the top and
+    right panel edges shows a plain rectangular border, no density strip) and from
+    plot-light.html/plot-dark.html (zero occurrences of "marginal" or "density" in
+    the exported spec). This is dead code that claims a feature the shipped artifact
+    does not have.
+  - Design storytelling is still the standard fit-line + CI + equation pattern; the
+    one device meant to push past that (the marginal density) isn't functioning, so
+    DE-03 stays at baseline.
+  - Library Mastery leans entirely on layer_tooltips() as the working distinctive
+    feature — the ggmarginal attempt intended to add a second one does not count since
+    it produces no visible output.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 target — not pure white, not dark.
-      Chrome: Title "scatter-regression-linear · letsplot · anyplot.ai" in dark ink, top-left, comfortably sized (~40% width). Axis titles "Advertising Spend ($K)" / "Sales Revenue ($K)" in dark ink. Tick labels in softer grey-ink. Grid lines are faint horizontal/vertical off-black at low opacity — subtle but visible. Annotation box (top-left, "y = 2.37x + 56.7" / "R² = 0.888") sits on a near-white elevated card, dark text, clearly readable and not overlapping any data points.
-      Data: Scatter points are Imprint green (#009E73) with a light cream stroke, alpha ~0.75, clearly distinguishable from background and from the regression elements. Regression line is a solid purple/magenta (#C475FD), visually distinct in color and higher opacity than the points. 95% CI band is the same purple at low fill alpha, forming a soft translucent envelope around the line.
+      Chrome: Title "scatter-regression-linear · letsplot · anyplot.ai" in dark ink, top-left. Axis titles "Advertising Spend ($K)" / "Sales Revenue ($K)" in dark ink. Tick labels in softer grey-ink. Grid lines are faint dark lines at low opacity — subtle but visible. Annotation card (top-left, "y = 2.37x + 56.7" / "R² = 0.888") sits on a near-white elevated card, dark text, clearly readable and clear of any data points. Direct pixel crop of the top edge and right edge of the panel confirms a plain rectangular border with NO marginal density strip present, despite the code adding ggmarginal("tr", ...).
+      Data: 100 scatter points, Imprint green (#009E73) fill with a light cream (page-bg colored) stroke ring, alpha 0.65 — clearly distinguishable from background and readable even in dense clusters (x≈15-20, x≈78-80). Regression line is solid purple/magenta (#C475FD) at higher opacity than the points; the 95% CI band is the same purple at low fill alpha, forming a soft translucent envelope.
       Legibility verdict: PASS — all title/axis/tick/annotation text reads cleanly against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 target — not pure black, not light.
-      Chrome: Title and axis titles render in light off-white ink, clearly visible. Tick labels in a softer light-grey ink, readable. Grid lines are faint light lines at low opacity, visible without dominating. Annotation box uses a dark elevated card (slightly lighter than the plot background) with light text — readable, no dark-on-dark failure.
-      Data: Scatter points are the same Imprint green (#009E73), regression line and CI band are the same purple (#C475FD) at the same alpha values as the light render — confirmed pixel-identical data colors, only chrome (background/text/grid/annotation box) flipped for the theme.
-      Legibility verdict: PASS — no dark-on-dark text, all chrome elements clearly legible against the near-black background, brand green and CI purple both remain vivid.
+      Chrome: Title and axis titles render in light off-white ink, clearly visible. Tick labels in a softer light-grey ink, readable. Grid lines are faint light lines at low opacity. Annotation card uses a dark elevated background (slightly lighter than the plot bg) with light text — readable, no dark-on-dark failure. Same pixel-crop check on the dark render's top/right panel edges confirms the marginal density strip is likewise absent (plain rectangular border, zero "marginal"/"density" references in plot-dark.html).
+      Data: Scatter points and regression line/CI band are pixel-identical in color/alpha to the light render — confirming only chrome flipped for the theme. Brand green and CI purple both remain vivid against the near-black surface.
+      Legibility verdict: PASS — no dark-on-dark text, all chrome elements clearly legible, brand green and CI purple both readable.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -69,14 +73,14 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Annotation box placed clear of data cloud; no text collisions
+        comment: Annotation box placed clear of the data cloud; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: n=100 points at size=3/alpha=0.75 with white stroke stay distinguishable;
-          regression line/CI clearly layered above/below
+        comment: n=100 points at size=3/alpha=0.65 with light-stroke edges stay distinguishable
+          even in overlapping clusters; regression line/CI clearly layered
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -89,8 +93,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), title ~40% width, balanced axis labels,
-          no overflow
+        comment: Canvas measured exactly 3200x1800; title ~40% width, balanced axis
+          labels, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -113,23 +117,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom theme with removed border, minimal axis lines, and consistent
-          secondary color for regression elements — above generic defaults but not
-          exceptional
+        comment: Custom theme (L-shaped spines, edge-highlighted markers, boxed annotation)
+          above generic defaults, not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Panel border removed, only x/y axis lines kept, grid subdued — modest
-          refinement
+        comment: Panel border removed, subtle grid, adequate whitespace — modest refinement
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Regression line + CI band + equation/R² annotation create a clear
-          focal narrative, though a fairly standard pattern for this spec type
+        comment: Fit line + CI + equation give a clear focal point but it's the standard
+          pattern; the marginal-density device meant to deepen this doesn't render
     spec_compliance:
       score: 15
       max: 15
@@ -139,28 +141,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter with fitted linear regression line, correct
+        comment: Correct scatter + linear regression
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: R² prominent, distinct regression line color, semi-transparent 95%
-          CI band, moderate point alpha, regression equation annotation — all present
+        comment: Scatter points, regression line, 95% CI band, R²/equation annotation
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=advertising_spend, y=sales_revenue correctly mapped, full data
-          range shown
+        comment: X/Y correctly mapped, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated 'scatter-regression-linear · letsplot · anyplot.ai'
-          format; no legend needed for single series + fit line
+        comment: Title matches mandated format; no legend needed (single series)
     data_quality:
       score: 15
       max: 15
@@ -170,22 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Points, fit line, CI band, equation, and R² all shown together
+        comment: Shows scatter, fit, CI, and statistical summary together
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Advertising spend vs sales revenue is realistic, neutral, and plausible
-          in scale/slope
+        comment: Advertising spend vs sales revenue is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Spend $10-100K, sales $50-320K — sensible domain values
+        comment: Spend $10-100K, revenue $50-320K are sensible business-domain values
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -205,22 +204,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot, export ggsave — all used
+        comment: Only os, numpy, pandas, lets_plot used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Closed-form OLS keeps annotation math in sync with geom_smooth; no
-          fake UI
+        passed: false
+        comment: ggmarginal(...) layer is dead code — confirmed absent from both PNG
+          renders and both HTML exports, a real correctness defect
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html via ggsave
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -228,15 +227,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar-of-graphics composition, geom_smooth(method='lm'), theme
-          system used idiomatically
+        comment: Proper ggplot-grammar layering, scale_*_continuous expand tuning
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: layer_tooltips() with formatted per-layer tooltips is a genuine lets-plot-specific
-          touch; could lean on more distinctive surface area
+        passed: false
+        comment: layer_tooltips() works and is genuinely distinctive, but the ggmarginal
+          density attempt added specifically to strengthen this criterion does not
+          render, so it earns no credit
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -251,3 +250,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - publication-ready
