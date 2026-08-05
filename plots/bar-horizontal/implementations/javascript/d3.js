@@ -29,6 +29,11 @@ const data = [
 // instead of a hardcoded `${d}M` multiplier.
 const siFormat = d3.format("~s");
 const valueFormat = d3.format(".3~s");
+const maxStars = d3.max(data, (d) => d.stars);
+
+// Value-driven opacity ramp — the top-ranked bar reads at full strength while
+// lower-ranked bars recede slightly, adding hierarchy beyond sort order alone.
+const opacity = d3.scaleLinear().domain([d3.min(data, (d) => d.stars), maxStars]).range([0.62, 1]);
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -72,7 +77,8 @@ g.selectAll("rect.bar")
   .attr("height", y.bandwidth())
   .attr("rx", 3)
   .attr("ry", 3)
-  .attr("fill", t.palette[0]);
+  .attr("fill", t.palette[0])
+  .attr("fill-opacity", (d) => opacity(d.stars));
 
 // --- Value labels at bar ends ------------------------------------------------
 g.selectAll("text.value")
@@ -84,7 +90,7 @@ g.selectAll("text.value")
   .attr("dy", "0.35em")
   .attr("fill", t.ink)
   .style("font-size", "16px")
-  .style("font-weight", "500")
+  .style("font-weight", (d) => (d.stars === maxStars ? "700" : "500"))
   .text((d) => `${valueFormat(d.stars)}`);
 
 // --- Axis label ---------------------------------------------------------------
