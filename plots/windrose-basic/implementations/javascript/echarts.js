@@ -27,27 +27,25 @@ const directionPct = directionWeight.map((w) => (w / totalWeight) * 100);
 // Speed-bin shape shifts toward the higher bins as prevailing strength
 // grows - calmer secondary directions stay skewed toward the lowest bin.
 const maxWeight = Math.max(...directionWeight);
-const speedShape = (strength) => {
+const dominantDirection = directions[directionWeight.indexOf(maxWeight)];
+const table = directionPct.map((pct, i) => {
+  const strength = directionWeight[i] / maxWeight;
   const raw = [0.42, 0.28, 0.16, 0.09, 0.05].map(
-    (base, i) => base + (strength - 0.5) * i * 0.03
+    (base, k) => base + (strength - 0.5) * k * 0.03
   );
   const sum = raw.reduce((a, b) => a + b, 0);
-  return raw.map((v) => v / sum);
-};
-const table = directionPct.map((pct, i) =>
-  speedShape(directionWeight[i] / maxWeight).map((frac) => pct * frac)
-);
+  return raw.map((v) => (pct * v) / sum);
+});
 
 // --- Colors: sample the Imprint sequential ramp across the speed bins ------
-const hexToRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-const rgbToHex = (rgb) =>
-  "#" + rgb.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
-const seqColor = (f) => {
-  const c0 = hexToRgb(t.seq[0]);
-  const c1 = hexToRgb(t.seq[1]);
-  return rgbToHex(c0.map((v, i) => v + (c1[i] - v) * f));
-};
-const speedColors = speedBins.map((_, i) => seqColor(i / (speedBins.length - 1)));
+const [seqLo, seqHi] = [t.seq[0], t.seq[1]].map((hex) =>
+  [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+);
+const speedColors = speedBins.map((_, i) => {
+  const f = i / (speedBins.length - 1);
+  const rgb = seqLo.map((v, k) => Math.round(v + (seqHi[k] - v) * f));
+  return "#" + rgb.map((v) => v.toString(16).padStart(2, "0")).join("");
+});
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -60,7 +58,7 @@ chart.setOption({
     text: "windrose-basic · javascript · echarts · anyplot.ai",
     left: "center",
     top: 20,
-    textStyle: { color: t.ink, fontSize: 22 },
+    textStyle: { color: t.ink, fontSize: 26, fontWeight: "bold" },
   },
   legend: {
     bottom: 20,
@@ -78,7 +76,12 @@ chart.setOption({
     // angle is offset by half a sector width to land N exactly at top.
     startAngle: 90 + 180 / directions.length,
     clockwise: true,
-    axisLabel: { color: t.inkSoft, fontSize: 14 },
+    axisLabel: {
+      color: t.inkSoft,
+      fontSize: 14,
+      formatter: (value) => (value === dominantDirection ? `{bold|${value}}` : value),
+      rich: { bold: { color: t.ink, fontWeight: "bold", fontSize: 15 } },
+    },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
@@ -97,6 +100,6 @@ chart.setOption({
     stack: "speed",
     barCategoryGap: "20%",
     data: table.map((row) => Number(row[j].toFixed(2))),
-    itemStyle: { color: speedColors[j] },
+    itemStyle: { color: speedColors[j], borderColor: t.pageBg, borderWidth: 1 },
   })),
 });
