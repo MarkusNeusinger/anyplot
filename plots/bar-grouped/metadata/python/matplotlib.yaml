@@ -2,45 +2,58 @@ library: matplotlib
 language: python
 specification_id: bar-grouped
 created: '2025-12-24T21:29:23Z'
-updated: '2026-05-06T11:04:43Z'
-generated_by: claude-haiku
-workflow_run: 25430937500
+updated: '2026-08-05T01:11:35Z'
+generated_by: claude-sonnet
+workflow_run: 30964765072
 issue: 1822
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - 'Perfect technical execution: all visual quality criteria met, clean code, proper
-    theme handling'
-  - Data colors identical across themes with correct Okabe-Ito palette (#009E73 as
-    position 1)
-  - Theme-adaptive chrome flawlessly implemented in both renders—no readability issues
-  - 'Strong design touches: drop shadows, marker emphasis on max values, custom legend
-    styling'
-  - Clear visual hierarchy through marker size variation and bold font weight
-  - No overlap, no legibility failures, excellent canvas utilization
+  - 'Every specific weakness from Attempt 1 was fixed: drop shadow now uses matplotlib''s
+    native patheffects.withSimplePatchShadow and is visibly intentional depth in both
+    renders'
+  - Explicit data-story callout added (bracket + "Near-tie in Q3" annotation) makes
+    the Electronics/Clothing near-tie immediately legible instead of merely implied
+  - 'Correct Imprint palette in canonical order (#009E73 / #C475FD / #4467A3), pixel-identical
+    data colors between light and dark renders'
+  - Theme-adaptive chrome fully correct in both renders — backgrounds (#FAF8F1/#1A1A17),
+    text, grid, legend frame all flip correctly with no dark-on-dark or light-on-light
+    failures
+  - Correct 3200x1800 canvas, no clipping at any edge, no overlap between value labels,
+    bracket annotation, legend, or bars
+  - Clean KISS code, deterministic hardcoded data, correct plot-{THEME}.png output
+    naming
+  - subplots_adjust replaces tight_layout for exact, reproducible margin control tied
+    to the fixed canvas size
   weaknesses:
-  - Design Excellence could push higher with refined grid styling and color contrast
-    emphasis
-  - Data Storytelling could improve by adding explicit narrative emphasis through
-    selective color saturation or size variation
+  - Library Mastery is solid but not maximal — the bracket/near-tie callout is hand-drawn
+    with ax.plot+ax.text rather than a more distinctive matplotlib-only construct;
+    consider annotate() with arrowprops or a ConnectionPatch for an even more idiomatic
+    touch
+  - Data storytelling covers the Q3 near-tie explicitly but the broader trend (Electronics
+    leads every quarter, growing from 245 to 425) is still only implied by the bold
+    top-performer labels, not stated
+  - The per-bar top marker (small circle at every bar's peak, larger for the per-category
+    max) is a slightly unconventional decorative device — effective for hierarchy
+    but adds visual density that a simpler bold-label-only approach would avoid
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct)
-      Chrome: Title, axis labels, tick labels all dark text (INK #1A1A17), 24pt/20pt/16pt—perfectly readable
-      Data: Three bars per quarter with Okabe-Ito colors: #009E73 (Electronics), #D55E00 (Clothing), #0072B2 (Home & Garden)
-      Legibility verdict: PASS—all elements clearly visible, no overlap, proper contrast
+      Background: Warm off-white (#FAF8F1), not pure white and not dark.
+      Chrome: Bold dark-ink title "bar-grouped · python · matplotlib · anyplot.ai" centered at top, ~52% of plot width, fully visible with no clipping. "Quarter" (x) and "Sales (Thousands USD)" (y) axis labels and tick labels render in dark/soft-dark ink, clearly legible. Legend (upper-left: Electronics/Clothing/Home & Garden) sits on a light elevated-cream box with dark-ink swatched text, no overlap with any bar. Grid is subtle, horizontal-only, barely visible as intended.
+      Data: Four Q1-Q4 category groups, each with 3 side-by-side bars in Imprint green/purple/blue, edge-highlighted with a soft ink stroke. A visible drop shadow trails each bar (down-right offset), a small ink-stroked circle marker sits atop every bar (larger + full opacity for the per-quarter top performer), and a bold or regular value label sits above each marker. A bracket annotation reading "Near-tie in Q3" explicitly calls out Electronics (287) vs. Clothing (285).
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct)
-      Chrome: Title, axis labels, tick labels all light text (INK_SOFT #B8B7B0), clearly readable on dark background
-      Data: Same Okabe-Ito colors as light render (identical, no shift)
-      Legibility verdict: PASS—no dark-on-dark issues, all text readable, grid and spines properly light-colored, brand green #009E73 visible
+      Background: Warm near-black (#1A1A17), not pure black and not light.
+      Chrome: Title, axis labels, and tick labels render in light ink (#F0EFE8/#B8B7B0) and are clearly legible against the dark surface. Legend uses a dark elevated fill (#242420) with light text, no overlap with bars. Grid remains subtle.
+      Data: Bar colors are pixel-identical to the light render (#009E73 / #C475FD / #4467A3) — only chrome flipped, confirming palette consistency. Value labels, marker outlines, and the "Near-tie in Q3" bracket annotation all render in light ink and remain fully legible against the near-black background.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every text element (title, axis labels, ticks, value labels, legend, annotation) is clearly distinguishable from the #1A1A17 surface.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,70 +64,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt/20pt/16pt), perfectly readable
-          in both themes
+        comment: All text (title, axes, ticks, value labels, annotation) fully readable
+          in both themes; explicit fontsizes set throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, proper spacing throughout
+        comment: Bracket annotation, value labels, legend, and bars are all spaced
+          with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, markers, labels all clearly visible with optimized sizing
+        comment: 12 bars with clear markers and labels, appropriately sized for this
+          sparse (4x3) dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with good contrast
+        comment: Imprint green/purple/blue triad, CVD-safe, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas with balanced margins at 4800×2700px
+        comment: Correct 3200x1800 canvas (gate passed), balanced axis labels, no
+          overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Sales (Thousands USD)'''
+        comment: Descriptive axis labels with units (Thousands USD)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct, Okabe-Ito order maintained, backgrounds
-          correct (#FAF8F1/#1A1A17), theme chrome correct in both renders'
+        comment: Canonical Imprint order, correct theme-adaptive backgrounds in both
+          renders
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Strong design with drop shadows, marker emphasis, thoughtful styling—above
-          defaults but not FiveThirtyEight-level
+        comment: Custom palette, edge highlighting, native path-effect shadow, top-performer
+          emphasis — above library defaults
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, styled legend; drop shadow now visible
+          and intentional (fixed from Attempt 1)
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-axis grid, generous whitespace, custom legend
-          styling
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: true
-        comment: Visual hierarchy via marker size/font weight variation guides viewer;
-          could add narrative emphasis
+        comment: Explicit Q3 near-tie callout added (fixed from Attempt 1); broader
+          Electronics-leads-every-quarter trend still only implied
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped bar chart implementation
+        comment: Correct grouped bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: multiple bars, colors, legend, value labels,
-          markers'
+        comment: Distinct colors, clear legend, consistent widths/spacing, value labels
+          included
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: Category on x, group as offset, value as bar height — correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Title matches required format exactly; legend labels match group
+          names
     data_quality:
       score: 15
       max: 15
@@ -153,20 +170,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects of grouped bars demonstrated: multiple quarters, three
-          product lines, varied patterns'
+        comment: 4 categories x 3 groups, within spec's recommended range, shows full
+          comparative structure
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic quarterly sales scenario, neutral business context
+        comment: Quarterly product-line sales, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 125–425k realistic, proportions plausible
+        comment: 125-425 thousand USD range, sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -176,59 +193,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions/classes
+        comment: No functions/classes, flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: os, patheffects, pyplot, numpy — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no fake functionality
+        comment: Manual shadow Rectangle patches replaced with idiomatic patheffects.withSimplePatchShadow
+          (fixed from Attempt 1)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: Saves plot-{THEME}.png, current API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper axes-based approach, high-level API usage
+        comment: Axes-level API throughout; native path_effects for shadow (fixed
+          from Attempt 1's manual patch workaround)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses Rectangle patches for shadows and custom marker emphasis
+        passed: false
+        comment: path_effects.withSimplePatchShadow is a genuine matplotlib-specific
+          feature, but the bracket/annotation callout is a generic manual construction
+          rather than a standout library-specific technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
-  - patches
   patterns:
   - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
   - edge-highlighting
   - alpha-blending
+  - grid-styling
