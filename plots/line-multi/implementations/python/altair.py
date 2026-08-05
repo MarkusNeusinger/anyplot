@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-multi: Multi-Line Comparison Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-05
@@ -105,7 +105,7 @@ hero_last = df[df["Product"] == "Electronics"].iloc[[-1]].copy()
 hero_last["Label"] = hero_last["Sales (thousands)"].round(0).astype(int).astype(str) + "k"
 hero_label = (
     alt.Chart(hero_last)
-    .mark_text(align="right", dx=-10, dy=-10, fontSize=11, fontWeight="bold", color=IMPRINT[0])
+    .mark_text(align="center", dy=-16, fontSize=11, fontWeight="bold", color=IMPRINT[0])
     .encode(x="Month:T", y="Sales (thousands):Q", text="Label:N")
 )
 
@@ -118,7 +118,7 @@ chart = (
         background=PAGE_BG,
         title=alt.Title(text="line-multi · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, continuousWidth=620, continuousHeight=320)
+    .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=620, continuousHeight=320)
 )
 
 # Save as PNG — hard target 3200x1800 (landscape), see prompts/library/altair.md
