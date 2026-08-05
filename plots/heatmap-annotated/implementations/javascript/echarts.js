@@ -31,11 +31,9 @@ const hexToRgb = (hex) => [
   parseInt(hex.slice(3, 5), 16),
   parseInt(hex.slice(5, 7), 16),
 ];
-const lerpChannel = (a, b, ratio) => Math.round(a + (b - a) * ratio);
 const lerpRgb = (hexA, hexB, ratio) => {
-  const a = hexToRgb(hexA);
-  const b = hexToRgb(hexB);
-  return [lerpChannel(a[0], b[0], ratio), lerpChannel(a[1], b[1], ratio), lerpChannel(a[2], b[2], ratio)];
+  const [a, b] = [hexToRgb(hexA), hexToRgb(hexB)];
+  return a.map((channel, i) => Math.round(channel + (b[i] - channel) * ratio));
 };
 const divergingRgb = (value) => {
   const ratio = (value + 1) / 2; // value in [-1, 1] -> [0, 1]
@@ -44,13 +42,28 @@ const divergingRgb = (value) => {
 const luma = ([r, g, b]) => (r * 299 + g * 587 + b * 114) / 1000;
 const contrastColor = (value) => (luma(divergingRgb(value)) > 140 ? "#1A1A17" : "#F0EFE8");
 
+// --- Data storytelling: surface the strongest off-diagonal relationship ----
+// so the reader isn't left to hunt the matrix for the standout pair.
+let strongest = { row: 0, col: 1, value: corr[0][1] };
+for (let row = 0; row < metrics.length; row += 1) {
+  for (let col = row + 1; col < metrics.length; col += 1) {
+    if (Math.abs(corr[row][col]) > Math.abs(strongest.value)) {
+      strongest = { row, col, value: corr[row][col] };
+    }
+  }
+}
+const isStrongestPair = (row, col) =>
+  row !== col && ((row === strongest.row && col === strongest.col) || (row === strongest.col && col === strongest.row));
+
 const cells = [];
 for (let row = 0; row < metrics.length; row += 1) {
   for (let col = 0; col < metrics.length; col += 1) {
     const value = corr[row][col];
+    const highlight = isStrongestPair(row, col);
     cells.push({
       value: [col, row, value],
-      label: { color: contrastColor(value) },
+      label: { color: contrastColor(value), fontWeight: highlight ? 700 : 400 },
+      ...(highlight ? { itemStyle: { borderColor: t.ink, borderWidth: 4 } } : {}),
     });
   }
 }
@@ -64,11 +77,13 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "heatmap-annotated · javascript · echarts · anyplot.ai",
+    subtext: `Strongest link: ${metrics[strongest.row]} ↔ ${metrics[strongest.col]} (${strongest.value.toFixed(2)})`,
     left: "center",
     top: 24,
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+    subtextStyle: { color: t.inkSoft, fontSize: 14 },
   },
-  grid: { left: 175, right: 205, top: 110, bottom: 170 },
+  grid: { left: 175, right: 205, top: 135, bottom: 170 },
   xAxis: {
     type: "category",
     data: metrics,
