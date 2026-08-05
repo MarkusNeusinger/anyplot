@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-grouped: Grouped Bar Chart
-Library: letsplot 4.11.0 | Python 3.13.13
-Quality: pending | Updated: 2026-08-05
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-08-05
 """
 
 import os
