@@ -66,6 +66,7 @@ const gridPoints = 200;
 const kdeMin = Math.max(0, dataMin - 3 * bandwidth);
 const kdeMax = dataMax + 3 * bandwidth;
 const kdeData = [];
+let peakIdx = 0;
 for (let i = 0; i < gridPoints; i++) {
   const x = kdeMin + ((kdeMax - kdeMin) * i) / (gridPoints - 1);
   let sum = 0;
@@ -74,7 +75,9 @@ for (let i = 0; i < gridPoints; i++) {
     sum += Math.exp(-0.5 * u * u);
   }
   kdeData.push([x, sum / (sampleSize * bandwidth * Math.sqrt(2 * Math.PI))]);
+  if (kdeData[i][1] > kdeData[peakIdx][1]) peakIdx = i;
 }
+const peakX = kdeData[peakIdx][0];
 
 // --- Chart -------------------------------------------------------------------
 function hexToRgba(hex, alpha) {
@@ -95,7 +98,7 @@ Highcharts.chart("container", {
   colors: t.palette,
   title: {
     text: "histogram-kde · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    style: { color: t.ink, fontSize: "26px", fontWeight: "600" },
   },
   xAxis: {
     type: "linear",
@@ -107,6 +110,20 @@ Highcharts.chart("container", {
     tickColor: t.inkSoft,
     gridLineWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotLines: [
+      {
+        value: peakX,
+        color: t.inkSoft,
+        dashStyle: "Dash",
+        width: 1,
+        zIndex: 5,
+        label: {
+          text: `Peak: ${peakX.toFixed(1)} min`,
+          style: { color: t.inkSoft, fontSize: "12px" },
+          y: -8,
+        },
+      },
+    ],
   },
   yAxis: {
     title: {
@@ -115,6 +132,7 @@ Highcharts.chart("container", {
     },
     gridLineColor: t.grid,
     lineColor: t.inkSoft,
+    tickAmount: 6,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   legend: {
