@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windrose-basic: Wind Rose Chart
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-05
@@ -66,7 +66,7 @@ frequencies = frequencies / n_observations * 100
 p = figure(
     width=2400,
     height=2400,
-    title="windrose-basic · bokeh · anyplot.ai",
+    title="windrose-basic · python · bokeh · anyplot.ai",
     x_range=(-35, 35),
     y_range=(-35, 35),
     match_aspect=True,  # keep wedges/circles round even though the legend eats frame width
@@ -96,59 +96,72 @@ for radius in [5, 10, 15, 20, 25]:
     theta_circle = np.linspace(0, 2 * np.pi, 100)
     x_circle = radius * np.cos(theta_circle)
     y_circle = radius * np.sin(theta_circle)
-    p.line(x_circle, y_circle, line_color=INK_SOFT, line_width=1.5, line_alpha=0.4)
+    p.line(x_circle, y_circle, line_color=INK_SOFT, line_width=1.5, line_alpha=0.2)
 
 # Draw direction spokes (grid sits below the data)
 for i in range(8):
     angle = np.pi / 2 - i * sector_width  # Start from North (top), go clockwise
     x_spoke = [0, 28 * np.cos(angle)]
     y_spoke = [0, 28 * np.sin(angle)]
-    p.line(x_spoke, y_spoke, line_color=INK_SOFT, line_width=1.5, line_alpha=0.3)
+    p.line(x_spoke, y_spoke, line_color=INK_SOFT, line_width=1.5, line_alpha=0.15)
 
-# Draw stacked wedges for each direction
+# Stack each direction's speed bins from the center outward
+center_angles = np.pi / 2 - np.arange(8) * sector_width  # North = up, clockwise
+inner_radii = np.zeros((8, len(speed_labels)))
+outer_radii = np.zeros((8, len(speed_labels)))
+cumulative = np.zeros(8)
+for speed_idx in range(len(speed_labels)):
+    inner_radii[:, speed_idx] = cumulative
+    cumulative = cumulative + frequencies[:, speed_idx]
+    outer_radii[:, speed_idx] = cumulative
+total_freq = cumulative  # total stacked height per direction
+
+# Draw each speed bin as one vectorized annular_wedge glyph (bokeh's native
+# polar/radial primitive) spanning all 8 directions, instead of hand-built
+# polygons — a single ColumnDataSource + glyph call per bin.
 legend_items = []
-renderers_by_speed = {i: [] for i in range(len(speed_labels))}
+gap = 0.02  # radians of separation between neighboring direction sectors
+for speed_idx in range(len(speed_labels)):
+    mask = frequencies[:, speed_idx] > 0.1  # only draw significant bins
+    if not mask.any():
+        continue
+    source = ColumnDataSource(
+        data={
+            "inner_radius": inner_radii[mask, speed_idx],
+            "outer_radius": outer_radii[mask, speed_idx],
+            "start_angle": center_angles[mask] - sector_width / 2 + gap,
+            "end_angle": center_angles[mask] + sector_width / 2 - gap,
+        }
+    )
+    renderer = p.annular_wedge(
+        x=0,
+        y=0,
+        inner_radius="inner_radius",
+        outer_radius="outer_radius",
+        start_angle="start_angle",
+        end_angle="end_angle",
+        source=source,
+        fill_color=IMPRINT[speed_idx],
+        fill_alpha=0.85,
+        line_color=PAGE_BG,
+        line_width=1.5,
+    )
+    legend_items.append(LegendItem(label=speed_labels[speed_idx], renderers=[renderer]))
 
-for dir_idx in range(8):
-    # Angle for this direction (North = up, clockwise)
-    center_angle = np.pi / 2 - dir_idx * sector_width
-
-    # Draw wedges for each speed bin (stacked from center outward)
-    cumulative_radius = 0
-    for speed_idx in range(len(speed_labels)):
-        freq = frequencies[dir_idx, speed_idx]
-        if freq > 0.1:  # Only draw if significant
-            inner_radius = cumulative_radius
-            outer_radius = cumulative_radius + freq
-
-            # Create wedge shape
-            n_points = 30
-            angles = np.linspace(
-                center_angle - sector_width / 2 + 0.02, center_angle + sector_width / 2 - 0.02, n_points
-            )
-
-            # Build polygon: inner arc, outer arc (reversed)
-            x_inner = inner_radius * np.cos(angles)
-            y_inner = inner_radius * np.sin(angles)
-            x_outer = outer_radius * np.cos(angles[::-1])
-            y_outer = outer_radius * np.sin(angles[::-1])
-
-            x_wedge = np.concatenate([x_inner, x_outer])
-            y_wedge = np.concatenate([y_inner, y_outer])
-
-            source = ColumnDataSource(data={"x": [x_wedge.tolist()], "y": [y_wedge.tolist()]})
-            renderer = p.patches(
-                xs="x",
-                ys="y",
-                source=source,
-                fill_color=IMPRINT[speed_idx],
-                fill_alpha=0.85,
-                line_color=PAGE_BG,
-                line_width=1.5,
-            )
-            renderers_by_speed[speed_idx].append(renderer)
-
-            cumulative_radius = outer_radius
+# Highlight the dominant direction with a thin accent ring just outside its
+# stack — a deliberate emphasis technique beyond the data's natural sizing.
+dominant_idx = int(np.argmax(total_freq))
+dominant_angle = center_angles[dominant_idx]
+p.arc(
+    x=0,
+    y=0,
+    radius=total_freq[dominant_idx] + 1.2,
+    start_angle=dominant_angle - sector_width / 2 + gap,
+    end_angle=dominant_angle + sector_width / 2 - gap,
+    line_color=INK,
+    line_width=4,
+    line_alpha=0.6,
+)
 
 # Frequency and direction labels are added last so they render on top of the
 # wedges — added earlier, bokeh's default draw order let the wedges paint over
@@ -178,11 +191,6 @@ for i, label in enumerate(direction_labels):
         text_align="center",
         text_baseline="middle",
     )
-
-# Create legend items
-for speed_idx in range(len(speed_labels)):
-    if renderers_by_speed[speed_idx]:
-        legend_items.append(LegendItem(label=speed_labels[speed_idx], renderers=[renderers_by_speed[speed_idx][0]]))
 
 # Add legend with theme-adaptive styling
 legend = Legend(
