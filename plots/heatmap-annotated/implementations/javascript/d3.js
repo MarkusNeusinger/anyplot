@@ -1,17 +1,15 @@
 // anyplot.ai
 // heatmap-annotated: Annotated Heatmap
 // Library: d3 7.9.0 | JavaScript 22.23.1
-// Quality: 89/100 | Created: 2026-08-05
-//# anyplot-orientation: square
-// anyplot.ai
-// heatmap-annotated: Annotated Heatmap
-// Library: d3 7.9.0 | JavaScript 22
 // Quality: pending | Created: 2026-08-05
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
 
-// --- Data: deterministic pseudo-random correlation matrix (LCG) ------------
+// --- Data: deterministic correlation matrix biased toward domain-plausible --
+// magnitudes/signs for well-known weather-variable relationships (LCG jitter
+// within each pair's plausible range keeps it reproducible, not extreme).
 function lcg(seed) {
   let state = seed;
   return () => {
@@ -33,15 +31,49 @@ const variables = [
 ];
 const n = variables.length;
 
+// [row, col, sign, minMagnitude, maxMagnitude] for every pair, chosen to
+// match textbook-plausible weather correlations (e.g. temperature/UV index
+// move together, cloud cover/UV index move apart, humidity/rainfall are only
+// moderately linked rather than near-perfect).
+const PAIR_CORR = [
+  ["Temperature", "Humidity", -1, 0.3, 0.6],
+  ["Temperature", "Wind Speed", 1, 0.05, 0.3],
+  ["Temperature", "Pressure", -1, 0.1, 0.35],
+  ["Temperature", "Rainfall", -1, 0.2, 0.5],
+  ["Temperature", "Cloud Cover", -1, 0.15, 0.4],
+  ["Temperature", "UV Index", 1, 0.5, 0.8],
+  ["Temperature", "Visibility", 1, 0.1, 0.35],
+  ["Humidity", "Wind Speed", -1, 0.05, 0.3],
+  ["Humidity", "Pressure", -1, 0.15, 0.4],
+  ["Humidity", "Rainfall", 1, 0.35, 0.65],
+  ["Humidity", "Cloud Cover", 1, 0.3, 0.6],
+  ["Humidity", "UV Index", -1, 0.2, 0.5],
+  ["Humidity", "Visibility", -1, 0.3, 0.6],
+  ["Wind Speed", "Pressure", -1, 0.2, 0.5],
+  ["Wind Speed", "Rainfall", 1, 0.05, 0.3],
+  ["Wind Speed", "Cloud Cover", 1, 0.05, 0.3],
+  ["Wind Speed", "UV Index", -1, 0.0, 0.2],
+  ["Wind Speed", "Visibility", 1, 0.1, 0.35],
+  ["Pressure", "Rainfall", -1, 0.25, 0.55],
+  ["Pressure", "Cloud Cover", -1, 0.2, 0.5],
+  ["Pressure", "UV Index", 1, 0.1, 0.35],
+  ["Pressure", "Visibility", 1, 0.15, 0.4],
+  ["Rainfall", "Cloud Cover", 1, 0.4, 0.7],
+  ["Rainfall", "UV Index", -1, 0.3, 0.6],
+  ["Rainfall", "Visibility", -1, 0.35, 0.65],
+  ["Cloud Cover", "UV Index", -1, 0.4, 0.7],
+  ["Cloud Cover", "Visibility", -1, 0.25, 0.55],
+  ["UV Index", "Visibility", 1, 0.1, 0.35],
+];
+
 const corr = Array.from({ length: n }, () => new Array(n).fill(0));
-for (let i = 0; i < n; i++) {
-  corr[i][i] = 1;
-  for (let j = i + 1; j < n; j++) {
-    let value = Math.round((rand() * 2 - 1) * 100) / 100;
-    if (value === 0) value = 0; // normalize -0 to 0 for clean formatting
-    corr[i][j] = value;
-    corr[j][i] = value;
-  }
+for (let i = 0; i < n; i++) corr[i][i] = 1;
+for (const [rowVar, colVar, sign, lo, hi] of PAIR_CORR) {
+  const i = variables.indexOf(rowVar);
+  const j = variables.indexOf(colVar);
+  const value = Math.round(sign * (lo + rand() * (hi - lo)) * 100) / 100;
+  corr[i][j] = value;
+  corr[j][i] = value;
 }
 
 const cells = [];
@@ -51,18 +83,23 @@ for (let i = 0; i < n; i++) {
   }
 }
 
-// --- Layout ------------------------------------------------------------------
-const margin = { top: 150, right: 230, bottom: 130, left: 190 };
-const iw = width - margin.left - margin.right;
-const ih = height - margin.top - margin.bottom;
+// --- Layout --------------------------------------------------------------------
+// Size the matrix off min(availW, availH) and center it so cells stay square
+// even though the title/legend need asymmetric top/right space.
+const margin = { top: 150, right: 250, bottom: 130, left: 190 };
+const availW = width - margin.left - margin.right;
+const availH = height - margin.top - margin.bottom;
+const gridSize = Math.min(availW, availH);
+const gx = margin.left + (availW - gridSize) / 2;
+const gy = margin.top + (availH - gridSize) / 2;
 
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
-const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+const g = svg.append("g").attr("transform", `translate(${gx},${gy})`);
 
 // --- Scales --------------------------------------------------------------------
-const x = d3.scaleBand().domain(variables).range([0, iw]).padding(0.04);
-const y = d3.scaleBand().domain(variables).range([0, ih]).padding(0.04);
+const x = d3.scaleBand().domain(variables).range([0, gridSize]).padding(0.04);
+const y = d3.scaleBand().domain(variables).range([0, gridSize]).padding(0.04);
 const color = d3.scaleSequential(d3.interpolateRgbBasis(t.div)).domain([-1, 1]);
 
 // --- Contrast text color -------------------------------------------------------
@@ -109,7 +146,7 @@ g.selectAll("text.cell-label")
   .text((d) => d.value.toFixed(2));
 
 // --- Axes ------------------------------------------------------------------
-const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).tickSize(0));
+const xAxis = g.append("g").attr("transform", `translate(0,${gridSize})`).call(d3.axisBottom(x).tickSize(0));
 xAxis
   .selectAll("text")
   .attr("fill", t.inkSoft)
@@ -126,9 +163,9 @@ yAxis.select(".domain").remove();
 
 // --- Colorbar legend -----------------------------------------------------------
 const legendW = 34;
-const legendH = ih * 0.62;
-const legendX = margin.left + iw + 70;
-const legendY = margin.top + (ih - legendH) / 2;
+const legendH = gridSize * 0.62;
+const legendX = gx + gridSize + 80;
+const legendY = gy + (gridSize - legendH) / 2;
 
 const defs = svg.append("defs");
 const gradient = defs
