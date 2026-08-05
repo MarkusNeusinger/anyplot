@@ -81,9 +81,10 @@ p <- ggplot(stream_data, aes(x = time, ymin = ymin, ymax = ymax, fill = genre)) 
   scale_x_date(date_labels = "%b %Y", date_breaks = "4 months",
                expand = expansion(mult = c(0.01, 0.05))) +
   labs(
-    title = "streamgraph-basic · r · ggplot2 · anyplot.ai",
-    x = "Month",
-    y = NULL
+    title    = "streamgraph-basic · r · ggplot2 · anyplot.ai",
+    subtitle = "Electronic and Hip-Hop trend upward while Rock cools off",
+    x        = "Month",
+    y        = "Streaming hours (thousands)"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -91,11 +92,13 @@ p <- ggplot(stream_data, aes(x = time, ymin = ymin, ymax = ymax, fill = genre)) 
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
     panel.grid        = element_blank(),
     axis.title.x      = element_text(color = INK, size = 10),
+    axis.title.y      = element_text(color = INK, size = 8),
     axis.text.x       = element_text(color = INK_SOFT, size = 8),
     axis.text.y       = element_blank(),
     axis.ticks        = element_blank(),
     axis.line.x       = element_line(color = INK_SOFT, linewidth = 0.3),
     plot.title        = element_text(color = INK, size = 12),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 9),
     legend.position   = "bottom",
     legend.background = element_rect(fill = ELEVATED_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT, size = 8),
