@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: histogram-kde
 created: '2026-08-05T04:02:17Z'
-updated: '2026-08-05T04:06:40Z'
+updated: '2026-08-05T04:15:01Z'
 generated_by: claude-sonnet
 workflow_run: 30973645130
 issue: 1823
@@ -12,48 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 93
 review:
   strengths:
-  - Pixel-accurate custom renderItem histogram bars using echarts.graphic.clipRectByRect,
-    correctly clipped to the coordinate system
-  - Density-scaled histogram + Gaussian KDE with a Silverman's-rule bandwidth, both
-    mathematically correct
-  - 'Clean theme-adaptive chrome: correct pageBg/ink/inkSoft tokens, y-axis-only gridlines,
-    no vertical splitlines'
-  - Semi-transparent histogram bars (alpha 0.5) let the KDE curve read clearly on
-    top, exactly as the spec requests
-  - Correct Imprint palette usage - brand green for the histogram, lavender (#C475FD,
-    palette position 2) for the KDE line - identical across light/dark renders
-  - Deterministic, self-contained data generation (fixed-seed LCG + Box-Muller) with
-    no network calls
+  - 'Pixel-verified palette compliance: background exactly #FAF8F1 (light) / #1A1A17
+    (dark), histogram bars exactly #009E73 at 0.5 alpha blended over background, KDE
+    line exactly #C475FD — all confirmed by direct pixel sampling'
+  - Custom renderItem + clipRectByRect gives pixel-perfect continuous-axis histogram
+    bars instead of forcing a category-axis workaround, an idiomatic echarts-specific
+    technique
+  - 'Mean reference line (markLine with vertical dashed guide + ''Mean: 8.9 min''
+    label) adds a genuine focal point and visual hierarchy without faking interactivity'
+  - Silverman's-rule bandwidth and density-normalized histogram (count / (n * binWidth))
+    make the histogram and KDE directly comparable on the same y-scale, exactly as
+    the spec requires
+  - Deterministic LCG + Box-Muller data generation matches the library guide's reproducibility
+    guidance for browser-side JS, and produces a realistic right-skewed session-duration
+    distribution
   weaknesses:
-  - KDE legend icon shows a mismatched green dot inside a purple line - the KDE series
-    only sets lineStyle.color, not itemStyle.color, so the legend symbol falls back
-    to the palette's first (green) color instead of matching the line
-  - Design Excellence is competent but generic - no additional visual emphasis (e.g.,
-    a mean/median reference line or peak annotation) to elevate storytelling beyond
-    the baseline histogram+KDE combination
-  - Library Mastery could go further by using an ECharts-distinctive feature (e.g.,
-    markLine for the mean, or dataZoom for the interactive HTML detail view) beyond
-    the custom-series bars
+  - Title 'histogram-kde · javascript · echarts · anyplot.ai' renders at only ~35%
+    of plot width at fontSize 22 — comfortably legible but on the smaller side of
+    the ~50-70% target for a title this length; a touch more size would improve visual
+    weight without risking overflow
+  - renderHistogramBar / makeLcg / randNormal helper functions move the code away
+    from strict flat KISS structure — justified here since echarts' custom series
+    type requires a renderItem callback, but worth noting for CQ-01
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1, not pure white
-      Chrome: title "histogram-kde · javascript · echarts · anyplot.ai" centered top in dark ink; axis titles "Session Duration (min)" and "Density" with units; tick labels dark gray; only horizontal (y-axis) gridlines shown, subtle; legend top-right with "Histogram" and "KDE" entries; all readable
-      Data: histogram bars semi-transparent brand green (#009E73, alpha ~0.5); KDE curve lavender (#C475FD, palette position 2); first series correctly green
-      Defect: KDE legend swatch shows a green dot inside the purple line icon, inconsistent with the all-purple KDE curve in the chart body (itemStyle.color not set on the line series)
-      Legibility verdict: PASS (legend color-consistency defect noted, not a legibility failure)
+      Background: Warm off-white, pixel-sampled at RGB(250,248,241) = #FAF8F1 exactly — matches Imprint spec.
+      Chrome: Bold dark title "histogram-kde · javascript · echarts · anyplot.ai" centered at top; "Session Duration (min)" x-axis title and "Density" y-axis title both dark ink; tick labels and legend ("Histogram", "KDE") in softer gray-brown ink. All clearly legible against the light background, no light-on-light anywhere.
+      Data: Right-skewed unimodal histogram (translucent green bars, pixel-sampled RGB(125,203,178) = #009E73 at 0.5 alpha over the light background — exact match) peaking around 6-7 minutes, with a smooth purple KDE curve (pixel-sampled RGB(196,117,253) = #C475FD exactly, Imprint palette position 2) overlaid on top, plus a dashed vertical "Mean: 8.9 min" reference line. Long right tail extending to ~40 minutes is visible and not clipped.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17, not pure black
-      Chrome: title, axis titles, and tick labels switch to light gray/white and remain fully legible against the dark surface; gridlines remain subtle; no dark-on-dark failures
-      Data: histogram and KDE colors are pixel-identical to the light render, confirming correct theme-adaptive chrome-only flip
-      Defect: same KDE legend green-dot/purple-line mismatch as the light render
+      Background: Warm near-black, pixel-sampled at RGB(26,26,23) = #1A1A17 exactly — matches Imprint spec, not pure black.
+      Chrome: Title, axis titles, and tick labels all render in light off-white ink, clearly legible against the dark background. Legend text is light gray. No dark-on-dark failures anywhere — every text element flipped to a light-on-dark token correctly.
+      Data: Histogram green and KDE purple are visually identical to the light render (confirmed the underlying hex values are theme-independent, only the chrome flipped as required). Mean line and label remain readable, now light-gray/white against the dark background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -61,68 +59,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes
+        comment: All font sizes explicitly set (title 22, axis names 16, ticks 14,
+          legend 16, mean label 13); readable in both themes; title runs slightly
+          small at ~35% width for its length but not a proportion violation
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data
+        comment: Mean line label sits cleanly inside empty space above the peak bar;
+          no collisions with title, legend, or bars
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars and KDE line clearly visible; density-appropriate line weight
+        comment: 26 bins with 0.5 alpha fill and a 3.5px KDE line are well-matched
+          to 600 observations — neither element is lost against the other
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pairing is CVD-distinguishable, no red-green-only
-          encoding
+        comment: Green fill vs. purple line is CVD-safe and high-contrast; not relying
+          on hue alone since shapes (bar vs. line) also differ
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800, good margins, nothing clipped
+        comment: Plot area fills the large majority of the canvas with balanced margins;
+          legend sits near the plot top-right; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Session Duration (min) and Density are descriptive with units
+        comment: '''Session Duration (min)'' has units; ''Density'' is the correct
+          axis concept for a normalized histogram+KDE'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Series colors correct but KDE legend swatch shows mismatched green
-          dot instead of purple
+        passed: true
+        comment: 'Pixel-verified: backgrounds are exactly #FAF8F1/#1A1A17, histogram
+          is exactly #009E73 @ 0.5 alpha, KDE line is exactly #C475FD (Imprint position
+          2); identical data colors across themes'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean but fairly standard histogram+KDE composition
+        comment: Custom pixel-perfect bars, restrained two-color palette, and a mean-line
+          annotation are clearly above a configured default, short of full publication
+          polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Y-axis-only gridlines, no y-axis line, tidy margins
+        comment: Y-axis line hidden, x-axis line soft-colored, grid limited to subtle
+          horizontal lines only, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: KDE curve guides the eye but no additional emphasis (mean/median
-          marker) to sharpen focal point
+        comment: The mean reference line gives the viewer an immediate anchor point
+          beyond raw shape, though no further annotation of skew/tail is added
     spec_compliance:
       score: 15
       max: 15
@@ -131,27 +136,25 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct histogram + KDE overlay
+        comment: Histogram + KDE overlay, correctly combined on one coordinate system
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Semi-transparent bars, density y-axis, contrasting colors, sensible
-          bin count and bandwidth
+        comment: Semi-transparent bars (alpha 0.5), density-scaled y-axis, Silverman-bandwidth
+          KDE, contrasting histogram/KDE colors — all present per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: X = duration, Y = density, full data range shown
+        comment: X = session duration, Y = density for both series; full data range
+          visible with no clipping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title matches required format; legend labels match series names
+        comment: Title exactly matches the mandated format; legend labels 'Histogram'/'KDE'
+          correctly describe the two series
     data_quality:
       score: 15
       max: 15
@@ -160,80 +163,75 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: Full right-skewed distribution shown including long tail
+        comment: Shows binning artifacts vs. smooth density side-by-side, clear right
+          skew, and a long tail — the core value proposition of this plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Customer session durations (lognormal-shaped) - plausible and neutral
+        comment: Customer session duration is a real, neutral business analytics scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: 0-40 minute range is sensible for the stated context
+        comment: 0-40 minute range with an 8.9 min mean is a plausible session-duration
+          distribution
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: true
-        comment: Flat script but uses small justified helper functions (LCG RNG, custom
-          renderItem)
+        comment: Linear imports->data->render flow; the LCG/renderItem helper functions
+          are required by the echarts custom-series API and the library guide's own
+          reproducibility guidance, not incidental over-structuring
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Deterministic fixed-seed LCG (seed 42)
+        comment: Fixed-seed LCG (seed 42) per the library guide's browser-RNG recommendation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: No unused imports; only ANYPLOT_TOKENS/echarts globals used
+        comment: No imports; uses only the provided window globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No fake UI; custom renderItem is a well-scoped technique for pixel-accurate
-          bars
+        comment: Appropriately complex for a from-scratch histogram+KDE in a browser
+          sandbox; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: echarts.init with no explicit size/devicePixelRatio, animation:false
-          set
+        comment: 'Correct mount-node contract: echarts.init(container) with no explicit
+          size/devicePixelRatio, animation:false'
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: true
-        comment: Correct use of custom series + renderItem + clipRectByRect for exact
-          histogram bars
+        comment: 'Correct use of custom series + coordinateSystem: cartesian2d + markLine,
+          following the echarts recommended pattern for continuous-axis histograms'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Custom-series bars are a nice touch but no further distinctive ECharts
-          features used
+        comment: renderItem/clipRectByRect for pixel-perfect bars and markLine for
+          the mean annotation are genuinely echarts-specific techniques, not trivially
+          portable to another library
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-series
+  - annotations
+  - patches
   patterns:
   - data-generation
   dataprep:
@@ -241,3 +239,4 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
+  - grid-styling
