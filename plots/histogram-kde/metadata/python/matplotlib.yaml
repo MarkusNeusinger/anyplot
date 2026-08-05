@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: histogram-kde
 created: '2025-12-24T21:30:52Z'
-updated: '2026-08-05T03:36:46Z'
+updated: '2026-08-05T03:44:13Z'
 generated_by: claude-sonnet
 workflow_run: 30972386535
 issue: 1823
@@ -12,50 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 94
 review:
   strengths:
-  - Correct histogram+KDE combination with proper density scaling (density=True) and
-    semi-transparent bars (alpha=0.5) so the KDE curve stays visible per spec notes
-  - fill_between under the KDE curve (accent purple, alpha=0.15) adds layered visual
-    depth and separates the smooth density estimate from the discrete bars beneath
-    it
-  - Mean reference line (axvline) with annotation gives the distribution a clear focal
-    point, supporting the spec's stated goal of identifying skewness/tail behavior
-  - Theme tokens (PAGE_BG, INK, INK_SOFT, ELEVATED_BG) are threaded through every
-    chrome element consistently; both light and dark renders are fully legible
-  - Canvas saved at exact 3200x1800 landscape target, no clipping of title/labels/legend
-    in either render
-  - 'Clean, reproducible, KISS-structured code: single seed (42), only used imports,
-    no functions/classes, correct plot-{THEME}.png output'
+  - Mean annotation now sits with a clean offset and thin leader line clear of the
+    KDE peak, resolving the attempt-1 VQ-02 crowding issue
+  - New shaded tail-risk (5% VaR) region with matte-red semantic anchor directly answers
+    the spec's Applications section and gives the plot a clear narrative hook
+  - 'Correct Imprint palette usage (#009E73 histogram, #C475FD KDE) with fully consistent
+    theme-adaptive chrome across both renders'
+  - Layered fill_between under the KDE curve adds visual depth and separates the smooth
+    estimate from the discrete bars
+  - Clean, idiomatic Axes-based matplotlib code (ax.hist, ax.plot, ax.fill_between,
+    ax.axvspan, ax.axvline, ax.annotate); canvas exact 3200x1800 with no clipping
+    in either theme
+  - Realistic blended stock-return dataset (calm/volatile/tail-risk regimes) shows
+    skew and a visible secondary bump in the fat tail
   weaknesses:
-  - Mean annotation ('mean 0.10%') sits directly at/crosses the KDE curve peak with
-    only a small (6,-2) point offset, crowding the plot's busiest visual area — nudge
-    it further up/right or add a short leader so it doesn't compete with the curve
-    line for attention.
-  - KDE-via-scipy + fill_between is a solid, correct technique but fairly standard;
-    no additional matplotlib-distinctive flourish (e.g., a secondary annotation calling
-    out the tail-risk region the spec's 'Applications' section highlights) to push
-    Library Mastery beyond baseline.
-  - Design Excellence is good but not exceptional — grid/spine treatment is close
-    to the style-guide defaults; a slightly more custom visual hierarchy (e.g., shading/labeling
-    the tail region) would strengthen the storytelling given the stock-returns tail-risk
-    narrative in the code comments.
+  - 'LM-02 still moderate: histogram+KDE with axvspan/annotate flourishes is a stronger-than-generic
+    combo but remains a fairly common technique for this plot type'
+  - DE-02 grid/spine treatment is good but conventional (standard alpha/linewidth
+    values) — further refinement (e.g. minor ticks, tighter spine styling) could push
+    it further toward publication tier
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "histogram-kde · python · matplotlib · anyplot.ai" in dark ink, centered, ~70% of plot width, fully visible with no clipping. X-axis label "Daily Return (%)" and y-axis label "Density" both dark ink, clearly readable. Tick labels (-10 to 10 on x, 0.00-0.25 on y) in soft dark gray, legible. Horizontal gridlines subtle. Legend box (top right) with light elevated background, dark border, "Histogram" and "KDE" entries readable in soft dark text.
-      Data: Histogram bars in brand green (#009E73) at alpha 0.5, KDE line in accent purple (#C475FD) with a soft purple fill_between beneath it giving the curve visual weight. Dashed gray mean line with "mean 0.10%" annotation near the peak. First series correctly uses #009E73.
-      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "histogram-kde · python · matplotlib · anyplot.ai" in dark ink, centered, ~70-75% of plot width, fully visible with no clipping. Axis labels "Daily Return (%)" and "Density" in dark ink; tick labels in soft dark gray. Legend (top right, "Histogram" / "KDE") sits in a light elevated box with soft-ink border and text, clearly separated from the data. Subtle y-axis-only gridlines. Top/right spines removed; left/bottom spines colored soft ink.
+      Data: Histogram bars in brand green (#009E73, alpha 0.5) with a purple (#C475FD) KDE line plus a soft purple fill_between beneath it. A dashed soft-ink mean line with "mean 0.10%" annotation and thin leader line sits clear above the KDE peak, no overlap. A translucent matte-red (#AE3030) shaded region on the left marks the sub-VaR tail-risk zone, labeled "tail risk (5% VaR)" in matte-red text, positioned in the empty upper portion of the shaded band with no overlap with any other element.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, annotations) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title in light/white ink, fully visible, same size and position as light render. Axis labels in light ink, tick labels in light gray, both clearly legible. Legend box has a dark elevated background with light border and light text — readable against the dark surface. Gridlines subtle but visible.
-      Data: Histogram bars in the same brand green (#009E73), KDE line in the same accent purple (#C475FD) with matching fill_between — data colors are identical to the light render, confirming only chrome flipped. Dashed light-gray mean line and "mean 0.10%" annotation in light ink, readable against the dark background (no dark-on-dark failures observed).
-      Legibility verdict: PASS — no dark-on-dark or light-on-light issues found; all chrome and data elements are clearly distinguishable.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same title, axis labels, and tick labels rendered in light ink/gray — fully legible. Legend box flips to a dark elevated background with light border and light text. Gridlines remain subtle.
+      Data: Histogram (#009E73) and KDE (#C475FD, including its fill_between) are pixel-identical in hue to the light render — confirms only chrome flipped. Mean line and "mean 0.10%" annotation render in light ink, clearly legible against the dark surface. Tail-risk shaded region and its "tail risk (5% VaR)" label remain matte-red and legible against the darker overlay — no dark-on-dark failure.
+      Legibility verdict: PASS — no dark-on-dark or unreadable elements in either theme.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,74 +56,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (title 12pt, labels 10pt, ticks 8pt), fully readable
-          in both themes via theme tokens
+        comment: All font sizes explicit, well-proportioned title/labels, readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No hard collisions, but mean annotation sits close to/crosses the
-          KDE curve peak, crowding the focal area
+        comment: Mean annotation now clears the KDE peak with a leader line; no overlaps
+          anywhere
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 44 bins with alpha=0.5 and a 2.5px KDE line are well-matched to ~1000
-          observations
+        comment: 44 bins for ~1000 points and linewidth=2.5 KDE are well-adapted to
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple pairing has strong contrast and is CVD-safe; no red-green
-          as sole signal
+        comment: Green/purple/red combo distinguished by shape and shading, not color
+          alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), title ~70% width as expected for
-          mandated title, no overflow
+        comment: Canvas gate passed (3200x1800), balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Daily Return (%)'' and ''Density'''
+        comment: Daily Return (%) has units; Density is the standard unitless term
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Histogram uses Imprint position 1 (#009E73), KDE uses position 2
-          (#C475FD); both renders theme-correct backgrounds
+        comment: '#009E73 first series, #C475FD KDE, #AE3030 used intentionally as
+          risk semantic anchor, correct theme backgrounds both renders'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
-        passed: true
-        comment: Layered fill_between under KDE and mean annotation show intentional
-          polish beyond generic defaults
+        comment: Layered fill_between, shaded risk region, and leader-line annotation
+          show clear intentional hierarchy, close to publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Spines removed, y-axis-only subtle grid, edge-colored bars for separation;
-          whitespace generous
+        comment: Spines removed, subtle y-axis grid, edge-highlighted bars; conventional
+          but well-executed values
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: true
-        comment: Mean line/annotation creates a focal point but doesn't call out the
-          tail-risk story the spec's Applications section suggests
+        comment: Tail-risk shading + labeled VaR threshold plus mean annotation give
+          the plot a clear, immediate insight, directly resolving the attempt-1 weakness
     spec_compliance:
       score: 15
       max: 15
@@ -139,53 +128,44 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Histogram with KDE overlay, exactly as specified
+        comment: Correct histogram + KDE overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Semi-transparent bars, density scaling, contrasting histogram/KDE
-          colors all present
+        comment: Semi-transparent bars, density scaling, contrasting colors, appropriate
+          bin/bandwidth all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: X=Daily Return (%), Y=Density, full data range shown
+        comment: X=returns, Y=density, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title matches mandated format exactly; legend labels 'Histogram'/'KDE'
-          are clear
+        comment: Title format exact, legend labels match data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: true
-        comment: Shows binning, density KDE, and a mean reference — covers the key
-          aspects of the plot type
+        comment: Blended calm/volatile/tail-risk regimes produce visible skew and
+          a secondary bump in the tail
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Stock daily returns blending calm/volatile/tail-risk regimes — realistic
-          and neutral
+        comment: Stock daily returns is a real, neutral finance scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Return values in % with plausible range (-12% to +10%) including
-          tail events
+        comment: Return magnitudes and tail extremes are plausible for blended calm/volatile/crisis
+          regimes
     code_quality:
       score: 10
       max: 10
@@ -194,56 +174,50 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: No functions/classes, linear top-to-bottom script
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
         comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: os, matplotlib.pyplot, numpy, scipy.stats.gaussian_kde all used
+        comment: os, pyplot, numpy, scipy.stats.gaussian_kde all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves plot-{THEME}.png correctly
+        comment: plot-{THEME}.png, no bbox_inches='tight', current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: true
-        comment: Axes-method API used throughout (ax.hist, ax.plot, ax.fill_between,
-          ax.annotate); follows canvas/theming rules exactly
+        comment: 'Axes API throughout: ax.hist, ax.plot, ax.fill_between, ax.axvspan,
+          ax.axvline, ax.annotate'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: true
-        comment: scipy gaussian_kde + fill_between depth is correct and reasonably
-          distinctive, but fairly standard for this plot type
+        comment: axvspan shading + annotate with arrowprops leader line go beyond
+          generic KDE overlay, but the core technique is still a common pattern
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
