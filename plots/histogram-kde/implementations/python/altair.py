@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-kde: Histogram with KDE Overlay
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-05
@@ -22,11 +22,13 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint palette
 BRAND = "#009E73"  # Position 1 - first series
-ACCENT = "#954477"  # Position 7 - for KDE line
+ACCENT = "#C475FD"  # Position 2 - for KDE line
 
-# Data - bimodal distribution for interesting KDE demonstration
+# Data - bimodal distribution for interesting KDE demonstration, clipped to the
+# conventional 0-100 test-score range
 np.random.seed(42)
 values = np.concatenate([np.random.normal(loc=45, scale=8, size=300), np.random.normal(loc=72, scale=10, size=200)])
+values = np.clip(values, 0, 100)
 
 # Calculate histogram bins for density
 hist, bin_edges = np.histogram(values, bins=30, density=True)
@@ -62,7 +64,7 @@ histogram = (
     )
 )
 
-# KDE line using Imprint position 7, monotone interpolation for a smoother contrast to the discrete bars
+# KDE line using Imprint position 2, monotone interpolation for a smoother contrast to the discrete bars
 kde_line = (
     alt.Chart(kde_df)
     .mark_line(color=ACCENT, strokeWidth=4, interpolate="monotone")
