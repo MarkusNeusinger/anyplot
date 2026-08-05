@@ -28,11 +28,27 @@ const dashboard = trendSeries(900, 10, 50);
 const mobileApp = trendSeries(600, 22, 40);
 const apiCalls = trendSeries(1500, -6, 70);
 
+// Find where the primary series (Search) and its closest rival (API Calls)
+// swap order, so the crossover can be called out with a marker.
+function crossoverIndex(a, b) {
+  for (let i = 1; i < a.length; i++) {
+    if ((a[i - 1] - b[i - 1]) * (a[i] - b[i]) < 0) return i;
+  }
+  return -1;
+}
+const crossIdx = crossoverIndex(search, apiCalls);
+
+function markerRadii(length, highlightIdx) {
+  return Array.from({ length }, (_, i) => (i === highlightIdx ? 7 : 2.5));
+}
+
+// Search is the primary series (thickest, solid); the rest use distinct
+// dash patterns so the four trends stay distinguishable without color alone.
 const series = [
-  { label: "Search", data: search },
-  { label: "Dashboard", data: dashboard },
-  { label: "Mobile App", data: mobileApp },
-  { label: "API Calls", data: apiCalls },
+  { label: "Search", data: search, borderWidth: 4, borderDash: [], pointRadius: markerRadii(days.length, crossIdx) },
+  { label: "Dashboard", data: dashboard, borderWidth: 2.5, borderDash: [10, 5], pointRadius: 2.5 },
+  { label: "Mobile App", data: mobileApp, borderWidth: 2.5, borderDash: [2, 4], pointRadius: 2.5 },
+  { label: "API Calls", data: apiCalls, borderWidth: 3, borderDash: [10, 4, 2, 4], pointRadius: markerRadii(days.length, crossIdx) },
 ];
 
 // --- Mount -------------------------------------------------------------------
@@ -49,9 +65,10 @@ new Chart(canvas, {
       data: s.data,
       borderColor: t.palette[i % t.palette.length],
       backgroundColor: t.palette[i % t.palette.length],
-      borderWidth: 3,
-      pointRadius: 0,
-      pointHoverRadius: 0,
+      borderWidth: s.borderWidth,
+      borderDash: s.borderDash,
+      pointRadius: s.pointRadius,
+      pointHoverRadius: 5,
       tension: 0.3,
       fill: false,
     })),
@@ -83,7 +100,7 @@ new Chart(canvas, {
       y: {
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
-        title: { display: true, text: "Daily Active Users", color: t.ink, font: { size: 16 } },
+        title: { display: true, text: "Daily Active Users (count)", color: t.ink, font: { size: 16 } },
         beginAtZero: true,
       },
     },
