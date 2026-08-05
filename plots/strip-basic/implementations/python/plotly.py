@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 strip-basic: Basic Strip Plot
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-05
@@ -9,6 +9,7 @@ import os
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
 
 # Theme tokens
@@ -37,8 +38,29 @@ commute = pd.concat(
     ignore_index=True,
 )
 
-# Plot
-fig = px.strip(
+# Quartile box summary (transparent fill, no whisker caps) layered behind the strip
+# points — a plotly-specific composite of an Express strip trace with a Graph
+# Objects box trace, giving each column distribution context the raw points alone
+# don't convey.
+fig = go.Figure()
+for mode in modes:
+    values = commute.loc[commute["mode"] == mode, "commute_time"]
+    fig.add_trace(
+        go.Box(
+            x=[mode] * len(values),
+            y=values,
+            name=mode,
+            boxpoints=False,
+            fillcolor="rgba(0,0,0,0)",
+            line={"color": INK_SOFT, "width": 1.5},
+            whiskerwidth=0.4,
+            width=0.5,
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+
+strip = px.strip(
     commute,
     x="mode",
     y="commute_time",
@@ -46,12 +68,20 @@ fig = px.strip(
     category_orders={"mode": modes},
     color_discrete_sequence=IMPRINT_PALETTE,
 )
-fig.update_traces(jitter=0.3, marker={"size": 10, "opacity": 0.6, "line": {"width": 0}})
+strip.update_traces(
+    jitter=0.35,
+    marker={"size": 8, "opacity": 0.55, "line": {"width": 0.5, "color": PAGE_BG}},
+    hovertemplate="<b>%{x}</b><br>Commute time: %{y:.1f} min<extra></extra>",
+)
+for trace in strip.data:
+    fig.add_trace(trace)
 
 # Mean reference lines
 for i, mode in enumerate(modes):
     mean_val = commute.loc[commute["mode"] == mode, "commute_time"].mean()
-    fig.add_shape(type="line", x0=i - 0.3, x1=i + 0.3, y0=mean_val, y1=mean_val, line={"color": INK, "width": 2})
+    fig.add_shape(
+        type="line", x0=i - 0.3, x1=i + 0.3, y0=mean_val, y1=mean_val, line={"color": INK, "width": 2, "dash": "dot"}
+    )
 
 # Style
 fig.update_layout(
@@ -61,6 +91,10 @@ fig.update_layout(
     showlegend=False,
     title={
         "text": "strip-basic · python · plotly · anyplot.ai",
+        "subtitle": {
+            "text": "Individual commute times with per-mode quartile range and mean",
+            "font": {"size": 11, "color": INK_SOFT},
+        },
         "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
@@ -68,6 +102,8 @@ fig.update_layout(
     xaxis={
         "title": {"text": "Transportation Mode", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
+        "categoryorder": "array",
+        "categoryarray": modes,
         "showgrid": False,
         "linecolor": INK_SOFT,
         "zeroline": False,
@@ -80,7 +116,7 @@ fig.update_layout(
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
     },
-    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    margin={"l": 80, "r": 40, "t": 95, "b": 60},
 )
 
 # Save
