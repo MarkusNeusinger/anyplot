@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-05
@@ -81,6 +81,8 @@ chart = pygal.XY(
     x_title="Advertising Spend ($K)",
     y_title="Revenue ($K)",
     show_legend=True,
+    legend_at_bottom=True,  # top-left legend reserved a tall dead-space column; a bottom row lets the plot use the full canvas width
+    legend_at_bottom_columns=3,
     legend_box_size=28,
     dots_size=14,
     stroke=False,
@@ -88,6 +90,18 @@ chart = pygal.XY(
     show_y_guides=True,
     truncate_legend=-1,
     margin_bottom=40,
+    # pygal's global `.reactive{stroke-width}` CSS rule matches every series'
+    # path directly, so it always wins over any per-series `stroke_style`
+    # (which only targets the parent <g> and loses to a rule matching the
+    # element itself, regardless of specificity). Override it with a
+    # higher-specificity inline rule scoped to the CI-band series (index 1)
+    # so its boundary reads as a soft, thin outline instead of inheriting the
+    # bold stroke_width=6 used for the regression line.
+    css=(
+        "file://style.css",
+        "file://graph.css",
+        "inline:.serie-1 .reactive { stroke-width: 1.5; stroke-opacity: 0.4; }",
+    ),
 )
 
 # Scatter points
