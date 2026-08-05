@@ -1,0 +1,251 @@
+library: chartjs
+language: javascript
+specification_id: heatmap-annotated
+created: '2026-08-05T09:50:42Z'
+updated: '2026-08-05T10:03:46Z'
+generated_by: claude-sonnet
+workflow_run: 30994338282
+issue: 1824
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Repair correctly addressed both attempt-1 weaknesses: cells now use inset rounded
+    rects (CELL_GAP/CELL_RADIUS) instead of edge-to-edge flat fills, and off-diagonal
+    confusion noise was rebalanced onto visually/behaviorally similar species pairs
+    (Cat/Dog, Bird/Rabbit, Dog/Horse), removing the arbitrary Bird<->Fish 6% cross-confusion'
+  - Custom Chart.js plugin (beforeDatasetsDraw/afterDatasetsDraw) correctly builds
+    an annotated heatmap that Chart.js has no native chart type for -- idiomatic use
+    of the plugin hook system rather than reaching for an unsupported library
+  - WCAG relative-luminance-based per-cell text color selection keeps all 36 count
+    annotations readable regardless of how saturated the imprint_seq fill is
+  - Diagonal outline highlighting correctly classified predictions, now rendered as
+    rounded strokes matching the cell radius, creates a clean focal point for the
+    confusion matrix
+  - imprint_seq correctly chosen for single-polarity count data (0-100); data colors
+    confirmed identical between light and dark renders, only chrome (title, ticks,
+    diagonal outline, colorbar tick labels) flips
+  - Title fontsize-scaling formula correctly avoids overflow for the ~89-char mandated
+    title with descriptive prefix
+  - Square orientation is the right call for a 6x6 grid-based plot; verified legible
+    even at the 400px thumbnail render
+  weaknesses:
+  - Cell fills remain flat single-color rounded rects; no further gradient/texture
+    refinement within a cell to push Design Excellence further
+  - Diagonal focal treatment (outlined stroke) is still a fairly standard confusion-matrix
+    convention rather than something that leans further into Chart.js-specific capabilities
+  - Colorbar + luminance-based text contrast is a solid but fairly generic cross-library
+    pattern rather than a distinctively Chart.js feature beyond the plugin hook itself
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Dark-ink title "Wildlife-camera Species Classifier · heatmap-annotated · javascript · chartjs · anyplot.ai" at top, clearly readable. "Predicted Species" (x) and "True Species" (y) axis titles in dark ink, balanced in size; species tick labels (Cat/Dog/Bird/Fish/Rabbit/Horse) legible on both axes. Colorbar ticks (0/25/50/75/100) and rotated "Test images (of 100)" label sit fully inside the canvas at the right, no clipping.
+      Data: 6x6 confusion matrix cells are rounded, inset rects using imprint_seq (green #009E73 at low counts -> blue #4467A3 at high counts); all 36 cells carry a white/dark numeric annotation (contrast picked by luminance) readable against either fill. The 6 diagonal cells (correct predictions, 82-97) are outlined with a dark 3px rounded stroke, forming a clear focal point.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title, axis titles, tick labels, and the diagonal outline all flip to light-colored tokens and remain fully readable; colorbar ticks and rotated label are likewise light and unclipped.
+      Data: Cell colors confirmed identical to the light render (same green->blue gradient, same diagonal positions, same values) -- only chrome flipped as required. No dark-on-dark failures observed; no black text or hidden elements against the near-black surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes, holds up even at 400px thumbnail
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, cells, or colorbar
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Rounded inset cells with gaps clearly separate all 36 cells; diagonal
+          outline distinct
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq green-blue provides adequate contrast, not red-green
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, colorbar fits reserved padding
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles and colorbar label with units (of 100)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq used for single-polarity data, theme-correct backgrounds,
+          identical data colors across themes
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Rounded inset cells add polish over attempt 1's flat fills; still
+          single-color per cell
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: CELL_GAP/CELL_RADIUS repair directly fixed the flat-fill weakness
+          flagged in attempt 1
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Diagonal outline gives a focal point; standard confusion-matrix convention,
+          now cleaner with rounded strokes
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct annotated heatmap via custom plugin
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Annotations, colorbar, appropriate number formatting all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct, full 6x6 matrix shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format with descriptive prefix
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows full matrix, colorbar, annotations, correct-classification
+          highlighting
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Repair fixed the arbitrary Bird<->Fish confusion; off-diagonal noise
+          now concentrated on visually/behaviorally similar species pairs
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Counts sum to 100 per row (of 100 test images), sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions are appropriately scoped for a custom canvas plugin,
+          no gratuitous abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded matrix
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only Chart.js global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a heatmap built on Chart.js's plugin system,
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container, animation:false, no savefig-style calls, current
+          canvas API'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of plugin lifecycle hooks and scale customization for
+          a chart type Chart.js lacks natively
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Plugin-based rendering is distinctive, but colorbar/contrast logic
+          is a generic cross-library pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
+  - edge-highlighting
