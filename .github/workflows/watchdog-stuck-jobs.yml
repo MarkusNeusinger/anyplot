@@ -350,9 +350,29 @@ jobs:
           # immediately after dispatch and would spill into it). Like the
           # cron, the window is UTC-fixed: it matches Berlin evening under
           # CEST and sits an hour earlier in local terms under CET.
+          #
+          # A manually disabled daily-regen is an INTENTIONAL operator state,
+          # not a starved schedule: the maintainer switches it off and on to
+          # manage the monthly token budget. Reviving it would override that
+          # decision, and "starved, re-dispatching" is simply a false report.
+          # Without this check the rescue also cannot succeed — a disabled
+          # workflow rejects workflow_dispatch with HTTP 422 — so every scan
+          # would log a warning and burn a dispatch failure for as long as the
+          # maintainer keeps it off, which is exactly the noise that hid the
+          # real breakage before. `disabled_inactivity` is GitHub switching
+          # schedules off after 60 days of repo inactivity; that one is worth
+          # flagging loudly, but it is equally undispatchable, so both states
+          # skip the rescue and only the message differs.
           LIVENESS_HOURS=10
           HOUR=$(date -u +%-H)
-          if (( HOUR >= 17 && HOUR <= 21 )); then
+          REGEN_STATE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/daily-regen.yml" \
+            --jq '.state' 2>/dev/null || echo "unknown")
+
+          if [[ "$REGEN_STATE" == "disabled_manually" ]]; then
+            echo "::notice::daily-regen liveness: workflow is disabled manually — intentional, rescue skipped"
+          elif [[ "$REGEN_STATE" == disabled_* ]]; then
+            echo "::warning::daily-regen liveness: workflow state is '${REGEN_STATE}' — cannot be dispatched, rescue skipped"
+          elif (( HOUR >= 17 && HOUR <= 21 )); then
             echo "::notice::daily-regen liveness: inside/adjacent to quiet window (UTC hour $HOUR) — check skipped"
           else
             # --branch main: schedule runs (and rescue dispatches) live on the

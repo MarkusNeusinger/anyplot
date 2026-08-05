@@ -158,9 +158,17 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   (3) `ai-review-rescued` was written once and cleared by nothing, so it meant "this PR was ever
   rescued" rather than "this failure streak was already rescued" — any PR that failed review
   twice in its life was permanently outside automation, which described 9 of the 11 PRs stuck on
-  2026-08-05. A successful review now clears it along with `ai-review-failed`. Verified with a
-  harness that extracts `dispatch()` verbatim from the YAML and exercises 11 cases (disabled
-  target, transient failure, success, and the six Case 2 label shapes) (#10180).
+  2026-08-05. A successful review now clears it along with `ai-review-failed`.
+  (4) The cron-liveness rescue treated a manually disabled `daily-regen` as a starved schedule.
+  It is not: the maintainer switches that workflow off and on to manage the monthly token budget,
+  so reviving it would override a deliberate decision, and "starved, re-dispatching" was simply a
+  false report — one that could never succeed anyway, since a disabled workflow rejects
+  `workflow_dispatch`. Section C now reads the workflow state first and skips the rescue for any
+  disabled state, quietly for `disabled_manually` and loudly for GitHub's 60-day
+  `disabled_inactivity`. Verified with harnesses that extract `dispatch()` verbatim from the YAML
+  and replicate the Case 2 and Section C guards exactly: 23 cases covering a disabled target,
+  transient failure and success, the six Case 2 label shapes, and the full workflow-state ×
+  quiet-window × gap matrix (#10180).
 
 - **A correctly rejected plot was reported as a crashed review, deadlocking the PR** —
   `impl-review.yml` used quality score `0` as its sentinel for "the AI review produced no
