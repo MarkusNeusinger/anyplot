@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 streamgraph-basic: Basic Stream Graph
-Library: bokeh 3.9.2 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-08-05
+Library: bokeh 3.9.2 | Python 3.13.14
+Quality: 85/100 | Updated: 2026-08-05
 """
 
 import os
