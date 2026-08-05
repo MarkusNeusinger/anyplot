@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-horizontal: Horizontal Bar Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-07
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-08-05
 """
 
 import os
@@ -12,52 +12,61 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
-# Theme tokens
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
+HIGHLIGHT = "#4467A3"  # Imprint palette position 3 — draws the eye to the leader
 
-# Data - Programming language popularity survey results (sorted by value)
+# Data - programming language popularity survey (sorted ascending for easy ranking)
 data = pd.DataFrame(
     {
-        "language": ["JavaScript", "Python", "Java", "TypeScript", "C#", "C++", "PHP", "C", "Go", "Rust"],
-        "developers": [65.36, 49.28, 35.35, 34.83, 29.81, 22.55, 20.87, 19.34, 13.24, 11.76],
+        "language": ["Rust", "Go", "C", "PHP", "C++", "C#", "TypeScript", "Java", "Python", "JavaScript"],
+        "developers": [11.76, 13.24, 19.34, 20.87, 22.55, 29.81, 34.83, 35.35, 49.28, 65.36],
     }
 )
-
-# Sort by value for better comparison (largest to smallest)
-data = data.sort_values("developers", ascending=True)
 data["language"] = pd.Categorical(data["language"], categories=data["language"].tolist(), ordered=True)
+data["is_leader"] = data["language"] == data.loc[data["developers"].idxmax(), "language"]
+data["value_label"] = data["developers"].map(lambda v: f"{v:.1f}%")
 
-# Create horizontal bar chart
+# Plot — single-color bars with the top language highlighted, value labels at bar ends
+# tooltips: lets-plot-distinctive interactive labels surfaced in the HTML export
+bar_tooltips = layer_tooltips().line("@language").line("@value_label")
+
 plot = (
-    ggplot(data, aes(x="developers", y="language"))
-    + geom_bar(stat="identity", fill="#009E73", width=0.65, alpha=0.85)
-    + labs(x="Developers (%)", y="Programming Language", title="bar-horizontal · letsplot · anyplot.ai")
-    + ggsize(1600, 900)
+    ggplot(data, aes(x="developers", y="language", fill="is_leader"))
+    + geom_bar(stat="identity", width=0.65, alpha=0.9, show_legend=False, color=PAGE_BG, tooltips=bar_tooltips)
+    + geom_text(aes(label="value_label"), hjust="left", nudge_x=1.5, size=4.2, color=INK_SOFT)
+    + scale_fill_manual(values=[BRAND, HIGHLIGHT])
+    + scale_x_continuous(limits=[0, 75], expand=[0, 0])
+    + labs(
+        x="Developers Using Language (%)",
+        y="Programming Language",
+        title="bar-horizontal · python · letsplot · anyplot.ai",
+        subtitle="JavaScript leads adoption, used by more than 5x as many developers as Rust",
+    )
+    + ggsize(800, 450)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid_major_x=element_line(color=RULE, size=0.3),
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
-        axis_title_x=element_text(size=20, color=INK),
-        axis_title_y=element_text(size=20, color=INK),
-        axis_text_x=element_text(size=16, color=INK_SOFT),
-        axis_text_y=element_text(size=16, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT, size=0.5),
-        plot_title=element_text(size=24, color=INK),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=16, color=INK),
+        axis_title_x=element_text(size=12, color=INK),
+        axis_title_y=element_text(size=12, color=INK),
+        axis_text_x=element_text(size=10, color=INK_SOFT),
+        axis_text_y=element_text(size=10, color=INK_SOFT),
+        axis_line=element_blank(),
+        axis_ticks=element_blank(),
+        plot_title=element_text(size=19, color=INK),
+        plot_subtitle=element_text(size=11, color=INK_SOFT),
+        legend_position="none",
     )
 )
 
-# Save as PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
-
-# Save as HTML for interactivity
+# Save as PNG (scale 4x for 3200 x 1800 px) and HTML for interactivity
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
