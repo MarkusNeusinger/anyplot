@@ -1,7 +1,7 @@
 // anyplot.ai
 // streamgraph-basic: Basic Stream Graph
 // Library: chartjs 4.4.7 | JavaScript 22.23.1
-// Quality: 88/100 | Created: 2026-08-05
+// Quality: 93/100 | Created: 2026-08-05
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
