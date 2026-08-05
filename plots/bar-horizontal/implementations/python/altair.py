@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-horizontal: Horizontal Bar Chart
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-05
@@ -25,6 +25,7 @@ data = pd.DataFrame(
     }
 )
 data["label"] = data["popularity"].map(lambda v: f"{v:.1f}%")
+data["is_top"] = data["popularity"] == data["popularity"].max()
 
 # Leave headroom on the value axis so end-of-bar labels never clip
 x_max = data["popularity"].max() * 1.15
@@ -47,7 +48,11 @@ bars = (
             sort="-x",
             axis=alt.Axis(labelFontSize=10, titleFontSize=12, ticks=False),
         ),
-        opacity=alt.condition(hover, alt.value(1.0), alt.value(0.82)),
+        opacity=alt.when(hover)
+        .then(alt.value(1.0))
+        .when("datum.is_top")
+        .then(alt.value(0.95))
+        .otherwise(alt.value(0.75)),
         tooltip=[
             alt.Tooltip("language:N", title="Language"),
             alt.Tooltip("popularity:Q", title="Popularity (%)", format=".1f"),
@@ -58,8 +63,14 @@ bars = (
 
 labels = (
     alt.Chart(data)
-    .mark_text(align="left", dx=6, fontSize=10, color=INK_SOFT)
-    .encode(x=alt.X("popularity:Q"), y=alt.Y("language:N", sort="-x"), text="label:N")
+    .mark_text(align="left", dx=6)
+    .encode(
+        x=alt.X("popularity:Q"),
+        y=alt.Y("language:N", sort="-x"),
+        text="label:N",
+        size=alt.when("datum.is_top").then(alt.value(12)).otherwise(alt.value(10)),
+        color=alt.when("datum.is_top").then(alt.value(INK)).otherwise(alt.value(INK_SOFT)),
+    )
 )
 
 # Create horizontal bar chart with end-of-bar value labels and a pointer-hover highlight
@@ -69,7 +80,7 @@ chart = (
         width=620,
         height=320,
         background=PAGE_BG,
-        title=alt.Title("bar-horizontal · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
+        title=alt.Title("bar-horizontal · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
