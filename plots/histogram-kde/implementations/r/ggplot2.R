@@ -4,7 +4,6 @@
 #' Quality: 83/100 | Created: 2026-08-05
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -15,6 +14,8 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+# ggplot2 has no grid-line alpha, so blend INK 20% toward PAGE_BG for a subtle tint
+GRID_COLOR  <- grDevices::colorRampPalette(c(PAGE_BG, INK))(100)[20]
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
@@ -38,7 +39,7 @@ p <- ggplot(df, aes(x = return_pct)) +
     linewidth = 1.3, adjust = 1.1
   ) +
   scale_fill_manual(name = NULL, values = c("Observed frequency" = IMPRINT_PALETTE[1])) +
-  scale_color_manual(name = NULL, values = c("KDE estimate" = IMPRINT_PALETTE[3])) +
+  scale_color_manual(name = NULL, values = c("KDE estimate" = IMPRINT_PALETTE[2])) +
   labs(
     title = "histogram-kde · r · ggplot2 · anyplot.ai",
     x = "Daily Return (%)",
@@ -50,7 +51,7 @@ p <- ggplot(df, aes(x = return_pct)) +
     panel.background   = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.3),
+    panel.grid.major.y = element_line(color = GRID_COLOR, linewidth = 0.3),
     panel.grid.minor.y = element_blank(),
     axis.title              = element_text(color = INK, size = 10),
     axis.text               = element_text(color = INK_SOFT, size = 8),
