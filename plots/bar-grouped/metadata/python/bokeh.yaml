@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: bar-grouped
 created: '2025-12-24T21:31:03Z'
-updated: '2026-08-05T01:13:35Z'
+updated: '2026-08-05T01:20:08Z'
 generated_by: claude-sonnet
 workflow_run: 30965074735
 issue: 1822
@@ -12,122 +12,126 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 95
 review:
   strengths:
-  - Correct grouped bar chart using bokeh's nested FactorRange categorical axis (category,
-    group) — idiomatic pattern for this plot type
-  - Imprint palette applied in canonical order (green/lavender/blue) for the three
-    product groups, identical across light and dark renders
-  - Theme-adaptive chrome correctly threaded through title, axis labels, ticks, legend,
-    and grid for both plot-light.png and plot-dark.png
-  - Value labels on every bar plus a tasteful 'peak quarter' focal point (bold label,
-    outline highlight, callout text) that adds data storytelling without becoming
-    chartjunk
-  - Subtle y-axis-only grid (alpha 0.12), no boxed outline, generous margins — matches
-    the minimalism/whitespace guidance
-  - Legend cleanly constructed with LegendItem/index against the vbar renderer, with
-    an elevated background box
+  - 'Correct Imprint palette in canonical order (#009E73 Electronics, #C475FD Clothing,
+    #4467A3 Home & Garden) with identical data colors and theme-correct chrome across
+    both light and dark renders'
+  - Idiomatic use of bokeh's nested FactorRange (category, group) categorical axis
+    with group-level tick labels, producing clean grouped-bar layout without manual
+    x-offset math
+  - 'Strong data storytelling: the peak quarter (Q4 Electronics, $385K) is highlighted
+    with a bolded outline, a larger bold value label, and an explicit ''Peak quarter''
+    callout, creating an immediate focal point'
+  - Value labels on every bar aid precise comparison, matching the spec's optional-feature
+    note
+  - All font sizes explicitly set (title 50pt, axis labels 42pt, ticks/legend 34pt)
+    and well-proportioned; both renders are fully readable with no overlap or edge
+    clipping
   weaknesses:
-  - 'Title is missing the required {language} segment: currently ''Quarterly Revenue
-    by Product · bar-grouped · bokeh · anyplot.ai'' but the spec format is ''{spec-id}
-    · {language} · {library} · anyplot.ai'' — should read ''... · bar-grouped · python
-    · bokeh · anyplot.ai'' (SC-04). One-line fix: insert ''python · '' before ''bokeh''.'
-  - Leaf-level x-axis tick labels (Electronics/Clothing/Home & Garden) are fully hidden
-    (major_label_text_font_size='0pt'), so bar identity relies entirely on color +
-    legend — acceptable but reduces the static PNG's standalone readability; consider
-    a lighter-weight alternative (smaller/rotated leaf labels) if width allows.
-  - Library Mastery is solid but not maxed — the nested FactorRange grouping is the
-    main distinctive-feature showcase; the interactive HTML artifact could lean further
-    into bokeh-specific interactivity (e.g. HoverTool) to round out LM-02.
+  - Leaf-level per-bar category tick labels are hidden (major_label_text_font_size='0pt');
+    readers must cross-reference the legend colors to identify which product line
+    an individual bar represents rather than reading it directly off the x-axis
+  - Aesthetic treatment (palette + single peak accent) is polished but fairly standard
+    for the chart type; a more distinctive typographic or color-hierarchy choice would
+    push Aesthetic Sophistication into publication-tier territory
+  - 'LM-02 headroom: the HTML detail view doesn''t add a HoverTool or other bokeh-distinctive
+    interactive affordance beyond the static PNG content (not penalized per the interactivity
+    fairness rules, but would strengthen Library Mastery further)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white — matches spec.
-      Chrome: Title "Quarterly Revenue by Product · bar-grouped · bokeh · anyplot.ai" in bold dark ink, comfortably sized (~63% of plot width). Y-axis label "Revenue ($ Thousands)" and x-axis label "Quarter" in dark ink, italic. Y-axis tick labels (0-500) in soft grey. X-axis shows only Q1-Q4 group labels (leaf-level Electronics/Clothing/Home & Garden labels are intentionally hidden). Legend (top right) lists Electronics/Clothing/Home & Garden with color swatches on an elevated cream background box. Subtle y-axis-only grid lines.
-      Data: 12 bars across 4 quarters x 3 product groups. First series (Electronics) is #009E73 green, second (Clothing) is lavender #C475FD, third (Home & Garden) is blue #4467A3 — correct canonical Imprint order. Every bar has a "$XXXK" value label above it. The Q4 Electronics bar ($385K, the max) is highlighted with a dark outline, bold larger value label, and a green "Peak quarter" callout above it.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Quarterly Revenue by Product · bar-grouped · python · bokeh · anyplot.ai" is fully visible across the top. Italic axis labels ("Revenue ($ Thousands)" on Y, "Quarter" on X) render in dark ink. Y-axis tick labels (0-500) are dark gray and clearly legible. X-axis shows only the Q1-Q4 group labels (leaf-level product labels are intentionally hidden). A legend in an elevated cream box with a thin border sits top-right, listing Electronics/Clothing/Home & Garden with matching color swatches in dark-gray text.
+      Data: 12 bars in 4 clusters of 3 — green (#009E73) for Electronics, purple (#C475FD) for Clothing, blue (#4467A3) for Home & Garden — matching the Imprint canonical order, first series correctly #009E73. Each bar has a dark value label above it (e.g. "$245K"); the Q4 Electronics bar ($385K) is bolded, larger, and outlined in black with a green "Peak quarter" callout above it, creating a clear focal point. Subtle horizontal gridlines are visible but unobtrusive; no box outline, only left/bottom axis lines remain.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, value labels, legend, callout) is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black — matches spec.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink (#F0EFE8) / soft light grey (#B8B7B0) tick labels, fully legible against the dark background. Legend box uses the elevated dark surface (#242420) with light text. Grid lines remain subtle.
-      Data: Bar colors identical to the light render (#009E73 / #C475FD / #4467A3) — only chrome flipped, as required. The peak bar's outline is now white instead of dark ink, correctly adapted for contrast against the dark background; the "Peak quarter" callout stays green and remains visible on both surfaces.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is clearly visible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Bold white title is fully visible. Italic light-gray axis labels and light-gray Y tick labels are legible. X-axis again shows only Q1-Q4 group labels in light text. The legend now sits in a dark charcoal elevated box with light-gray text and swatches, clearly readable against the dark canvas.
+      Data: Same 12 bars with identical green/purple/blue data colors as the light render — confirmed unchanged (only chrome flipped). Value labels are now white; the Q4 Electronics peak bar is outlined in white instead of black, with the same green "Peak quarter" callout (green remains visible and legible on the dark surface).
+      Legibility verdict: PASS — no dark-on-dark failures detected; all title/axis/tick/legend/annotation text is light-colored and clearly readable against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Readable in both themes at full size; leaf-level x-axis category
-          labels are hidden entirely (font-size 0pt), relying solely on color + legend
-          for bar identity
+        comment: All font sizes explicitly set, readable in both themes; hiding leaf-level
+          category ticks trades a small amount of direct legibility for cleanliness
+          (must reference legend)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, bars, legend, or callout
+        comment: No collisions between bars, labels, legend, or the peak callout
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, value labels, and peak highlight are all clearly visible for
-          this 12-bar density
+        comment: Bar width (0.82) and group/factor padding give clean, well-visible
+          bars with clear group separation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 3-series categorical, CVD-safe hue spread, no red-green as sole signal
+        comment: Green/purple/blue are mutually distinguishable, no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, good proportions, no overflow
+        comment: Balanced margins via min_border reservations, plot fills the canvas
+          well, legend sits near the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units ($ Thousands)
+        comment: '''Revenue ($ Thousands)'' includes units; ''Quarter'' is descriptive
+          for a categorical axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order, correct theme backgrounds
-          both renders'
+        comment: 'First series #009E73, canonical Imprint order for series 2-3, correct
+          #FAF8F1/#1A1A17 backgrounds, theme-correct chrome in both renders'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, refined legend, peak-bar edge highlight — above generic
-          defaults but not top-tier polish
+        comment: Thoughtful palette use, italic typography, elevated legend box —
+          clearly above defaults but not fully bespoke
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No boxed outline, subtle y-only grid, generous whitespace
+        comment: Box outline removed (L-shaped frame), single subtle y-axis grid,
+          generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Peak-quarter highlight + callout gives a clear focal point
+        comment: Peak quarter is highlighted with a bolded border, larger bold label,
+          and explicit callout — the insight is immediately obvious
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -135,26 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped bar chart
+        comment: Correct grouped bar chart with category/group nesting
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, clear legend, consistent bar widths, group spacing,
-          value labels present
+        comment: Distinct colors + legend, consistent widths/spacing, meaningful chronological
+          ordering, optional value labels present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category/group on x (nested factors), value on y, all data shown
+        comment: x = (category, group) factors, y = value; all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend correct, but title omits the required {language} segment ('python')
+        passed: true
+        comment: Title matches '{Descriptive} · bar-grouped · python · bokeh · anyplot.ai';
+          legend labels match the three product groups
     data_quality:
       score: 15
       max: 15
@@ -164,19 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 categories x 3 groups rendered with value labels
+        comment: Rising trend (Electronics), dip-then-rise (Clothing), rise-then-fall
+          (Home & Garden) — good variety of patterns
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral quarterly revenue-by-product scenario
+        comment: Neutral quarterly retail-revenue scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible revenue values ($125K-$385K)
+        comment: Values and proportions are realistic for quarterly product-line revenue
+          in thousands
     code_quality:
       score: 10
       max: 10
@@ -186,51 +193,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, time, Path, bokeh, selenium)
+        comment: All imports (os, time, Path, bokeh, selenium) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Appropriate complexity, no fake UI or interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly, current bokeh
-          3.9 API
+        comment: Saves plot-{THEME}.png/.html via current bokeh 3.x API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Canonical bokeh pattern for grouped bars: nested FactorRange + ColumnDataSource
+          + single vbar renderer'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, FactorRange nested grouping, manual Legend/LegendItem
-          — idiomatic bokeh patterns
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Nested categorical FactorRange grouping is bokeh-distinctive; interactive
-          HTML artifact could add HoverTool for a stronger showcase
-  verdict: REJECTED
+        comment: Nested categorical FactorRange with group-level tick styling and
+          manually indexed Legend/LegendItem — bokeh-specific features not easily
+          replicated elsewhere
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -240,7 +247,6 @@ impl_tags:
   - html-export
   patterns:
   - columndatasource
-  - iteration-over-groups
   dataprep: []
   styling:
   - edge-highlighting
