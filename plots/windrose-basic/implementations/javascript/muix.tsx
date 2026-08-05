@@ -10,11 +10,18 @@
 // Quality: pending | Created: 2026-08-05
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
+import { useInteractionItemProps } from "@mui/x-charts/internals";
 
 // @mui/x-charts 7.x community has no polar / radial-bar chart component, so the
 // wind rose is composed on MUI X's own charting surface: ChartContainer supplies
 // the sized <svg> + drawing area, and useDrawingArea() gives the plot rect the
 // polar geometry is mapped onto — real stacked-sector geometry, not faked chrome.
+// The 5 speed bins are still registered as genuine (unrendered) MUI X `bar`
+// series so the native <ChartsLegend> and <ChartsTooltip> read real series data;
+// useInteractionItemProps wires our hand-drawn wedges into MUI X's own
+// interaction/highlight system instead of faking a legend or tooltip.
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
@@ -71,16 +78,25 @@ const SPEED_BINS = [
 ];
 const SPEED_LABELS = ["0–2 m/s", "2–4 m/s", "4–6 m/s", "6–8 m/s", "8+ m/s"];
 const PREVAILING_DEG = 225; // prevailing wind from the southwest
+const SECONDARY_DEG = 315; // secondary regime: brisk northwesterly gusts
 const N_SAMPLES = 4380; // hourly readings across half a year
 
 const counts = DIRECTIONS.map(() => SPEED_BINS.map(() => 0));
 for (let i = 0; i < N_SAMPLES; i += 1) {
-  const fromPrevailing = rand() < 0.68;
-  let direction = fromPrevailing
-    ? PREVAILING_DEG + randNormal() * 36
-    : rand() * 360;
+  const regime = rand();
+  let direction;
+  let speedScale;
+  if (regime < 0.6) {
+    direction = PREVAILING_DEG + randNormal() * 36;
+    speedScale = 3.4;
+  } else if (regime < 0.78) {
+    direction = SECONDARY_DEG + randNormal() * 24;
+    speedScale = 3.0;
+  } else {
+    direction = rand() * 360;
+    speedScale = 1.7;
+  }
   direction = ((direction % 360) + 360) % 360;
-  const speedScale = fromPrevailing ? 3.4 : 1.9;
   const speed = -Math.log(1 - rand()) * speedScale;
   const dirIdx = Math.round(direction / 22.5) % DIRECTIONS.length;
   const speedIdx = SPEED_BINS.findIndex(
@@ -98,6 +114,20 @@ const maxTotal = Math.max(...cumPct.map((row) => row[row.length - 1]));
 const RING_MAX = Math.ceil(maxTotal / 5) * 5;
 const RINGS = [RING_MAX * 0.25, RING_MAX * 0.5, RING_MAX * 0.75, RING_MAX];
 
+// Minimum-radius floor: near-zero direction sectors (E/ENE/NE/ESE/SE) still get
+// a legible sliver per present speed bin, so calm directions don't collapse into
+// indistinguishable slivers. Only used for wedge geometry — the real freqPct
+// values (below) still drive the legend/tooltip, so displayed numbers stay honest.
+const MIN_SLICE_PCT = RING_MAX * 0.015;
+const renderPct = freqPct.map((row) =>
+  row.map((v) => (v > 0 ? Math.max(v, MIN_SLICE_PCT) : 0)),
+);
+const renderCumPct = renderPct.map((row) => {
+  const out = [];
+  row.reduce((sum, v, i) => (out[i] = sum + v), 0);
+  return out;
+});
+
 // --- Sequential Imprint colours (calm → strong) — never a library gradient ---
 const hexToRgb = (hex) => {
   const v = parseInt(hex.slice(1), 16);
@@ -112,6 +142,19 @@ const lerpHex = (from, to, f) => {
 const SPEED_COLORS = SPEED_BINS.map((_, i) =>
   lerpHex(t.seq[0], t.seq[1], i / (SPEED_BINS.length - 1)),
 );
+
+// Real MUI X `bar` series (one per speed bin, values = true freqPct per
+// direction) — never rendered by a <BarPlot>, but registered on ChartContainer
+// so <ChartsLegend> and <ChartsTooltip> below are driven by genuine series
+// data/colors rather than hand-drawn chrome.
+const BAR_SERIES = SPEED_BINS.map((_, speedIdx) => ({
+  id: `speed-${speedIdx}`,
+  type: "bar",
+  label: SPEED_LABELS[speedIdx],
+  color: SPEED_COLORS[speedIdx],
+  data: freqPct.map((row) => row[speedIdx]),
+  valueFormatter: (v) => (v == null ? "" : `${v.toFixed(1)}%`),
+}));
 
 // Direction i's centre angle is i·22.5° clockwise from north; SVG's 0° points
 // at 3 o'clock, so shift by -90° before converting to radians.
@@ -138,6 +181,7 @@ const TICK_ANGLE = SECTOR_SPAN * 2.5; // reference axis sits in the NE/ENE gap
 // --- Wind rose layer: rendered as children inside MUI X's ChartsSurface -------
 function WindRoseLayer() {
   const area = useDrawingArea();
+  const getInteractionProps = useInteractionItemProps();
   const cx = area.left + area.width / 2;
   const cy = area.top + area.height / 2;
   const half = Math.min(area.width, area.height) / 2;
@@ -208,16 +252,20 @@ function WindRoseLayer() {
         const endDeg = centerDeg + SECTOR_SPAN / 2 - SECTOR_GAP / 2;
         let inner = 0;
         return SPEED_BINS.map((_, speedIdx) => {
-          const outer = cumPct[dirIdx][speedIdx];
-          const path = annularSectorPath(
-            cx,
-            cy,
-            scaleR(inner),
-            scaleR(outer),
-            startDeg,
-            endDeg,
-          );
+          const outer = renderCumPct[dirIdx][speedIdx];
+          const isZero = outer <= inner;
+          const path = isZero
+            ? null
+            : annularSectorPath(
+                cx,
+                cy,
+                scaleR(inner),
+                scaleR(outer),
+                startDeg,
+                endDeg,
+              );
           inner = outer;
+          if (isZero) return null;
           return (
             <path
               key={`wedge-${dirIdx}-${speedIdx}`}
@@ -225,6 +273,11 @@ function WindRoseLayer() {
               fill={SPEED_COLORS[speedIdx]}
               stroke={PAGE_BG}
               strokeWidth={1}
+              {...getInteractionProps({
+                type: "bar",
+                seriesId: `speed-${speedIdx}`,
+                dataIndex: dirIdx,
+              })}
             />
           );
         });
@@ -260,50 +313,19 @@ function WindRoseLayer() {
   );
 }
 
-// --- Title + legend drawn on the surface --------------------------------------
-function Chrome() {
-  const legendGap = 200;
-  const legendStart =
-    size.width / 2 - ((SPEED_LABELS.length - 1) * legendGap) / 2;
-  const legendY = size.height - 46;
+// --- Title drawn on the surface (legend is the native <ChartsLegend> below) --
+function Title() {
   return (
-    <g>
-      <text
-        x={size.width / 2}
-        y={54}
-        fill={INK}
-        fontSize={30}
-        fontWeight={700}
-        textAnchor="middle"
-      >
-        windrose-basic · javascript · muix · anyplot.ai
-      </text>
-      {SPEED_LABELS.map((label, i) => {
-        const x = legendStart + i * legendGap;
-        return (
-          <g key={`legend-${label}`}>
-            <rect
-              x={x - 80}
-              y={legendY - 12}
-              width={24}
-              height={24}
-              rx={5}
-              fill={SPEED_COLORS[i]}
-            />
-            <text
-              x={x - 48}
-              y={legendY}
-              fill={INK}
-              fontSize={16}
-              textAnchor="start"
-              dominantBaseline="central"
-            >
-              {label}
-            </text>
-          </g>
-        );
-      })}
-    </g>
+    <text
+      x={size.width / 2}
+      y={54}
+      fill={INK}
+      fontSize={30}
+      fontWeight={700}
+      textAnchor="middle"
+    >
+      windrose-basic · javascript · muix · anyplot.ai
+    </text>
   );
 }
 
@@ -313,12 +335,22 @@ export default function Chart() {
     <ChartContainer
       width={size.width}
       height={size.height}
-      series={[]}
+      series={BAR_SERIES}
+      xAxis={[{ id: "direction", scaleType: "band", data: DIRECTIONS }]}
       margin={{ top: 96, bottom: 96, left: 70, right: 70 }}
       skipAnimation
     >
-      <Chrome />
+      <Title />
       <WindRoseLayer />
+      <ChartsLegend
+        position={{ vertical: "bottom", horizontal: "middle" }}
+        labelStyle={{ fontSize: 16 }}
+        itemMarkWidth={22}
+        itemMarkHeight={22}
+        markGap={8}
+        itemGap={36}
+      />
+      <ChartsTooltip trigger="item" />
     </ChartContainer>
   );
 }
