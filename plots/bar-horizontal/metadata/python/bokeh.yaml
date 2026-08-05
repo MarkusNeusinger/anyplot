@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:37:33Z'
-updated: '2026-08-05T17:09:40Z'
+updated: '2026-08-05T17:17:34Z'
 generated_by: claude-sonnet
 workflow_run: 31028027398
 issue: 1946
@@ -12,54 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - Correct horizontal bar chart with clean, idiomatic bokeh (figure + hbar + ColumnDataSource)
-    implementation
-  - Bars sorted by value with the largest at the top, giving an at-a-glance ranking
-    from JavaScript (65.6%) down to Kotlin (9.2%)
+  - 'Both review-1 fixes were applied correctly: the four-sided box outline is gone
+    (outline_line_color=None, clean L-shaped left+bottom frame) and the top-ranked
+    bar (JavaScript, 65.6%) now carries a distinct focal-point treatment — heavier
+    edge stroke (line_width=4 vs 2), full alpha (1.0 vs 0.9), and a bolder/larger
+    end label (34pt bold vs 28pt) — giving the ranking a clear visual hierarchy'
+  - New HoverTool with formatted tooltips ("Language"/"Popularity" with @values{0.0}%)
+    adds genuine bokeh-specific interactivity to the HTML output without touching
+    the PNG render
   - 'Full theme-adaptive chrome: title, axis labels, tick labels, grid, and outline
-    all correctly branch on ANYPLOT_THEME, and both plot-light.png / plot-dark.png
-    backgrounds match the required #FAF8F1 / #1A1A17 surfaces'
-  - 'First (only) series uses the Imprint brand green #009E73, identical across both
-    renders'
-  - All font sizes explicitly set (title 50pt, axis label 42pt, tick labels 34pt,
-    value labels 26pt) and well-proportioned at the 3200x1800 canvas
-  - End-of-bar value labels (LabelSet) give direct, precise readouts without requiring
-    the viewer to interpolate against the axis
-  - PrintfTickFormatter cleanly renders '%d%%' ticks; realistic, neutral, factually-plausible
-    developer-popularity data
-  - KISS code structure, deterministic/static data (no seed needed), clean imports,
-    correct plot-{theme}.png / plot-{theme}.html output pair
+    all branch correctly on ANYPLOT_THEME; both renders match the required #FAF8F1
+    / #1A1A17 surfaces with identical #009E73 data color'
+  - Bars sorted ascending bottom-to-top so the largest value reads at the top, giving
+    an immediate at-a-glance ranking from JavaScript (65.6%) down to Kotlin (9.2%)
+  - End-of-bar value labels give direct, precise readouts without requiring axis lookup;
+    realistic and neutral programming-language-popularity data
+  - Clean, idiomatic bokeh code (figure + hbar + ColumnDataSource + PrintfTickFormatter),
+    deterministic hardcoded data, correct plot-{theme}.png / plot-{theme}.html output
+    pair
   weaknesses:
-  - 'Design Excellence is at ''well-configured default'' level: a single flat green
-    fill with no visual emphasis on the leading bar (e.g. the #1 JavaScript bar looks
-    identical to all others) — the sorted order alone carries the storytelling, but
-    there''s no additional focal point or hierarchy device to guide the eye to the
-    headline insight'
-  - p.outline_line_color draws a full four-sided box around the plot area (bokeh default
-    look) rather than the style guide's preferred L-shaped or spine-free frame — consider
-    dropping or fading the top/right outline edges for a more refined finish
-  - 'Library Mastery is generic/idiomatic but not distinctive: no HoverTool or other
-    bokeh-specific interactive feature is used in the HTML output, so LM-02 stays
-    at the ''could be any library'' floor — adding a HoverTool with formatted tooltips
-    would strengthen this without affecting the PNG render'
-  - Value labels (26pt) sit noticeably smaller than the tick labels (34pt) they're
-    paired with along the same axis — acceptable per the typography hierarchy, but
-    a touch more parity would tighten the visual balance
+  - 'Design Excellence is solid but not yet publication-level: beyond the single leader-bar
+    accent, the rest of the chart is a flat single-hue bar set with no additional
+    refinement (e.g. no secondary accent color, no subtitle/annotation reinforcing
+    the ranking story)'
+  - The x-axis label ('Developer Popularity (%)') renders in bokeh's default italic
+    style while the title and tick labels are upright — a minor typographic inconsistency
+    worth normalizing for a more deliberate hierarchy
+  - Non-leader value labels (28pt) sit noticeably below the tick-label size (34pt)
+    they're paired with; slightly tightening that gap (without matching the leader's
+    34pt) would balance the reading rhythm further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold centered title "bar-horizontal · python · bokeh · anyplot.ai" in dark ink at the top; italicized x-axis label "Developer Popularity (%)" below the axis; dark-gray category tick labels (JavaScript, Python, TypeScript, Java, C#, C++, PHP, Go, Rust, Kotlin) on the left; percentage tick labels (0%-70%) along the bottom; faint vertical gridlines at each x-tick; thin box outline around the plot area. All chrome is clearly readable against the light background.
-      Data: 10 horizontal bars in Imprint brand green (#009E73) with a subtle darker-ink edge stroke, sorted ascending bottom-to-top so JavaScript (65.6%) is the longest bar at the top and Kotlin (9.2%) the shortest at the bottom; each bar has a small end-of-bar percentage value label in secondary ink color.
-      Legibility verdict: PASS — no text is light-on-light; all title, axis, tick, and value-label text is clearly legible.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold centered title "bar-horizontal · python · bokeh · anyplot.ai" in dark ink; italicized x-axis label "Developer Popularity (%)" below the tick row; dark-gray category tick labels (JavaScript, Python, TypeScript, Java, C#, C++, PHP, Go, Rust, Kotlin) along the left; percentage tick labels (0%-70%) along the bottom; faint vertical gridlines; clean L-shaped left+bottom frame only (no boxed outline). All chrome text is clearly readable against the light background.
+      Data: 10 horizontal bars in Imprint brand green #009E73, sorted so JavaScript (65.6%) is the longest bar at top and Kotlin (9.2%) the shortest at bottom. The leader bar (JavaScript) has a visibly heavier dark edge stroke and a bold, larger end-of-bar value label (34pt) than the rest (28pt, thinner edge), creating a clear focal point on the top-ranked item. First (only) series correctly uses #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis label, tick labels, and gridlines as the light render but recolored to light ink (title/axis label near-white, tick labels light gray) and grid at low alpha against the dark surface; box outline visible in a muted light-gray tone.
-      Data: Bars are the identical #009E73 green as the light render (confirmed same hue/saturation), same sort order and value labels, now shown in a lighter secondary-ink tone for contrast against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, axis, tick, and value label is clearly legible against the near-black surface, and the brand green remains vivid on the dark surface.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout, title, axis label, tick labels, gridlines, and L-shaped frame as the light render, recolored to light ink for primary/secondary text. All title, axis, tick, and value-label text is clearly legible against the dark surface — no dark-on-dark failures observed.
+      Data: Bars are the identical #009E73 green as the light render — only chrome flipped, confirming palette identity is preserved across themes. The same leader-bar focal-point treatment (heavier edge, bold larger label) is present and reads clearly against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -70,74 +66,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50/42/34/26pt); well-proportioned,
-          readable in both themes
+        comment: All font sizes explicit (title 50pt, axis label 42pt, ticks 34pt,
+          value labels 28/34pt); fully readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; value labels clear of axis end
+        comment: No text/data collisions; leader label has clear headroom before the
+          right border (x_range.end=78 vs max value 65.6)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar height 0.7 with stroked edges is prominent and appropriate for
-          10 sparse categories
+        comment: Sparse data (10 categories), bars thick (height=0.7) and prominent,
+          no overplotting
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series green with dark edge stroke reads with good contrast
-          on both surfaces
+        comment: Single-hue series, no red-green reliance, sufficient contrast on
+          both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a healthy majority of the 3200x1800 canvas, nothing
-          cut off, balanced margins
+        comment: Canvas gate passed (3200x1800); balanced margins, no overflow or
+          clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled 'Developer Popularity (%)' with unit; y-axis is self-describing
-          categorical
+        comment: X-axis labeled with units (%); category names on Y self-explanatory
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds are
-          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17 correct in both
+          renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful theme-adaptive palette and typography hierarchy, clearly
-          above raw defaults, but not publication-level custom design
+        passed: true
+        comment: Leader-bar focal-point treatment (heavier stroke, bolder/larger label)
+          added since attempt 1; still a largely flat single-hue chart otherwise
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle x-only gridline, generous whitespace, refined bar edges; four-sided
-          box outline is a remaining default-y element
+        passed: true
+        comment: Box outline removed for a clean L-shaped frame (fixes attempt-1 weakness);
+          subtle x-only grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Sorted ranking + end labels create a readable hierarchy, but no additional
-          focal-point emphasis (e.g. highlight color) on the leading bar
+        passed: true
+        comment: Sorted ranking plus leader emphasis creates a clear focal point on
+          the top result; a standard but effective technique
     spec_compliance:
       score: 15
       max: 15
@@ -153,21 +149,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Consistent bar heights, sorted by value, single color, adequate spacing,
-          value labels
+        comment: Consistent bar heights, sorted by value, single color with highlight,
+          adequate spacing, end-of-bar value labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on y, value on x, all data visible
+        comment: x=value, y=category; all 10 categories shown with full axis range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; single series so legend correctly
-          omitted
+        comment: Title matches required format exactly; legend correctly omitted for
+          single series
     data_quality:
       score: 15
       max: 15
@@ -177,21 +173,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide, realistic spread of 10 categories from 9.2% to 65.6% fully
-          exercises the plot type
+        comment: Covers sorting, spacing, single-color emphasis, and end-of-bar labels
+          called out in the spec notes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, neutral scenario: developer language popularity'
+        comment: Plausible, neutral programming-language popularity percentages
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Relative ordering and magnitudes (JS > Python > TypeScript > Java
-          > ...) are factually plausible
+        comment: 9.2%-65.6% range is sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -201,33 +196,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static hardcoded data, fully deterministic
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (bokeh, selenium, stdlib)
+        comment: All imports used (including sys.path guard and selenium)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: No fake UI; real HoverTool interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png and plot-{theme}.html via current bokeh API
+        comment: Saves plot-{theme}.png + plot-{theme}.html via the mandated Selenium
+          pattern
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -235,22 +231,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct high-level API usage: figure, hbar, ColumnDataSource, LabelSet,
-          PrintfTickFormatter'
+        comment: figure + hbar + ColumnDataSource + PrintfTickFormatter + LabelSet
+          — solid idiomatic bokeh
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: ColumnDataSource + LabelSet are bokeh-flavored but not a feature
-          unique to bokeh; no HoverTool or other distinctive interactivity used in
-          the HTML output
-  verdict: REJECTED
+        passed: true
+        comment: HoverTool with formatted tooltips added since attempt 1, directly
+          addressing the prior weakness
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - columndatasource
