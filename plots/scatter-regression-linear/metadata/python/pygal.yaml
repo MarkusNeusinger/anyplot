@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-regression-linear
 created: '2025-12-24T21:30:33Z'
-updated: '2026-08-05T13:41:49Z'
+updated: '2026-08-05T14:00:35Z'
 generated_by: claude-sonnet
 workflow_run: 31009235022
 issue: 1821
@@ -12,65 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/pygal/plot-dark.html
-quality_score: 78
+quality_score: 88
 review:
   strengths:
-  - 'Fixed the attempt-1 VQ-05 margin imbalance: legend moved to a 3-column row below
-    the x-axis title (legend_at_bottom), replacing the old top-left legend that left
-    a large dead-space column on the left while data crowded the right edge.'
-  - 'Fixed part of the attempt-1 SC-02 note: the CI band''s diagonal boundary stroke
-    is now thin and soft (inline CSS `.serie-1 .reactive { stroke-width: 1.5; stroke-opacity:
-    0.4; }`) instead of inheriting the bold stroke_width=6 used for the regression
-    line, so the band''s diagonal edges read as gentle shading rather than a bold
-    ribbon outline.'
-  - 'Palette and theme correctness fully maintained: first series is exactly #009E73,
-    all three series colors are pixel-identical between plot-light.png and plot-dark.png,
-    and only chrome (background #FAF8F1/#1A1A17, ink, grid) flips between themes.'
+  - The attempt-2 CI-band rendering bug (thick stray vertical bar at the band's left
+    cap) is fully fixed — rebuilt as two independent open-curve fills (upper-bound
+    fill + page-background erase layer) instead of one hand-closed polygon, and both
+    renders now show a clean diagonal-capped band with no artifact.
+  - The 95% CI band now reads as genuine soft translucent shading (fill-opacity 0.3,
+    thin 1.5px low-opacity boundary stroke) rather than the bold opaque ribbon of
+    earlier attempts, resolving the SC-02 note from Review 1 and 2.
+  - 'Attempt-1''s VQ-05 margin imbalance stays fixed: the 3-column legend sits centered
+    below the x-axis title with balanced left/right margins and no dead-space column.'
+  - 'First categorical series is exactly #009E73, backgrounds are correctly #FAF8F1
+    (light) / #1A1A17 (dark), and data colors are pixel-identical across both renders
+    — only chrome flips.'
   - R² is folded prominently into the title and the fit equation into the regression-line
-    legend label — a creative, readable solution given pygal's lack of a free-text
-    annotation API.
-  - Clean KISS-structured, reproducible code (np.random.seed(42)), only-used imports,
-    saves plot-{theme}.png and plot-{theme}.html via the current pygal API.
+    legend label, a well-documented workaround for pygal's lack of a free-text annotation
+    API.
+  - 'Clean, reproducible, KISS-structured code: single seed, only-used imports, no
+    fake interactivity, correct plot-{THEME}.png/.html outputs.'
   weaknesses:
-  - 'VQ-05/DE-02 rendering bug (new, present in BOTH plot-light.png and plot-dark.png):
-    the 95% CI band''s left-edge closing segment renders as a thick, dark, opaque
-    vertical bar dropping straight down from the band''s left cap (data coords approx
-    x=5.3, y=49–62) toward the bottom axis — far past the actual ~13-unit band width
-    at that x. It sits just left of the leftmost data cluster (x≈6–9) as an unmistakable
-    stray shape with nothing behind it. The right-edge cap (mid-canvas) closes cleanly
-    with no such artifact, which points to pygal''s fill=True treating this XY series
-    as an area-to-baseline fill near the left/first point rather than purely closing
-    the drawn upper+reversed-lower polygon loop — the manual ''append ci_band[0] to
-    close'' trick isn''t fully suppressing that baseline-fill behavior. Fix ideas:
-    render the CI band as two separate stroke-only boundary lines plus a fill built
-    to avoid pygal''s baseline-fill origin (e.g. investigate `interpolate`, explicit
-    inline SVG path, or splitting the fill polygon so its start/end vertex isn''t
-    at the plot''s leftmost x), or clip/mask the fill region to the polygon''s own
-    bounding box.'
-  - 'SC-02 (partially carried over from attempt 1): the CI band fill itself still
-    reads as a fairly solid/opaque gray block rather than soft translucent shading
-    — grid lines are not visible through it. Only the boundary stroke was softened
-    this attempt; consider adding a fill-opacity token (pygal Style `opacity`) so
-    the band reads as gentler, more transparent shading per the spec''s ''95% CI recommended,
-    semi-transparent shading'' note.'
-  - 'DE-01/DE-02: overall polish is undercut specifically by the left-edge rendering
-    artifact above — otherwise the theme-adaptive chrome and now-balanced bottom-legend
-    layout are solid, publication-adjacent choices.'
+  - 'Overall design polish is solid and workmanlike but still short of publication-tier:
+    the y-axis boundary line and chart chrome remain close to pygal defaults beyond
+    the custom Style tokens, and the CI band, while now soft, doesn''t clearly let
+    grid lines show through it in dense crossing regions.'
+  - The mandated title plus the added R² clause spans roughly 85% of canvas width
+    — well within the no-clipping/no-overflow bound, but there is little headroom
+    left if the title needs to grow further; keep an eye on the char-count-based font-scaling
+    formula.
+  - The per-series opacity/stroke overrides depend on injected raw CSS with !important
+    to beat pygal's own scoped .reactive rule — functionally correct and clearly commented,
+    but a workaround rather than a first-class pygal styling API, so it's fragile
+    to future pygal version changes to its generated CSS class names.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "Advertising Spend vs. Revenue (R² = 0.954) · scatter-regression-linear · python · pygal · anyplot.ai" in dark ink, fully visible, spans ~81% of canvas width, not clipped at top or sides. X-axis title "Advertising Spend ($K)" and y-axis title "Revenue ($K)" in dark ink, clearly readable and proportionate. Tick labels on both axes dark and legible, balanced in size. Dotted grid lines are subtle gray, visible but not dominant. Legend now sits in a 3-column row below the x-axis title: "Data Points" (green swatch), "95% CI Band" (gray swatch), "Regression Line (y = 4.73x + 30.6)" (purple swatch) - all fully visible, not clipped at the bottom edge, and better balanced than the previous top-left legend that left a dead-space column.
-      Data: Scatter dots in Imprint green #009E73 at moderate transparency, showing a clear positive linear trend with realistic noise/spread and a few mild outliers. A gray, fairly opaque confidence band with now-thin diagonal boundary lines surrounds a solid light-purple/lavender regression line running through the point cloud. DEFECT: at the band's left cap (near x≈5-9 on the x-axis, y≈20-62), a thick dark-gray vertical bar drops straight down from the band toward the bottom axis, well past the actual ~13-unit band width there - a stray rendering artifact not present at the band's right-edge cap.
-      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues. (Visual-quality defect noted above is a shape/layout artifact, not a text-legibility failure.)
+      Chrome: Title "Advertising Spend vs. Revenue (R² = 0.954) · scatter-regression-linear · python · pygal · anyplot.ai" renders fully in dark ink across ~85% of canvas width, not clipped at any edge. Axis titles "Advertising Spend ($K)" / "Revenue ($K)" and all tick labels are dark, legible, and proportionate. Subtle dashed gridlines on both axes. The 3-column legend ("95% CI Band" gray swatch, "Data Points" green swatch, "Regression Line (y = 4.73x + 30.6)" purple swatch) sits centered below the x-axis title with balanced margins on both sides - no left dead-space column.
+      Data: 90 green (#009E73) scatter points at moderate transparency (dot_opacity=0.65) showing a clear, realistic positive linear trend with noise. A soft translucent gray 95% CI band (fill-opacity 0.3, thin low-opacity boundary) hugs a solid light-purple regression line running through the cloud. The band's left cap now closes cleanly with a diagonal edge - the thick stray vertical-bar artifact from the previous attempt is gone (verified by cropping/zooming into the band's left cap and the region where it crosses a gridline).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white ink, fully legible against the dark background, not clipped. Grid lines remain subtle, muted gray-toned dashes. Legend in the same balanced bottom row, text in light ink, fully readable, not clipped at the bottom edge.
-      Data: Scatter dots remain the identical Imprint green #009E73, the regression line remains the identical light-purple, and the CI band remains the identical muted gray fill/outline as the light render - confirming palette consistency across themes. DEFECT: the same thick dark-gray vertical bar artifact at the CI band's left cap is present in the identical location, confirming this is a data/rendering issue rather than a theme-specific one.
-      Legibility verdict: PASS - all text is clearly readable against the dark background; no dark-on-dark failures observed. (Same shape/layout artifact as the light render, not a text-legibility failure.)
+      Chrome: Same title, axis titles, and tick labels now in light ink, fully legible, not clipped top or bottom. Same balanced 3-column legend, light-ink text, fully readable. No dark-on-dark issues anywhere.
+      Data: Colors are pixel-identical to the light render (green dots, purple regression line, gray CI band) - only chrome flipped. The same left-cap region was cropped and checked: band closes cleanly with no artifact, matching the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -78,79 +67,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via Style; readable in both themes;
-          title fills ~81% of width, within the expected range for the long mandated
-          title
+        comment: Explicit font sizes, readable in both themes; title runs ~85% width
+          but within bounds
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions, but a stray vertical
-          artifact from the CI band's left cap sits in the plot area unexplained by
-          any data element
+        comment: No text collisions; prior CI-band rendering artifact confirmed fixed
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: dots_size=14 + dot_opacity=0.65 reasonable for n=90 points
+        comment: 90 points at dots_size=14, alpha 0.65 - visible; some dense clusters
+          blend but that's data density, not a rendering flaw
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/gray series are distinguishable without relying on hue
-          alone
+        comment: Green vs purple, strong contrast, not a red-green pairing
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Left-edge CI-band closing segment renders as a thick vertical bar
-          dropping to the bottom axis, well past the polygon's actual local width
-          - a clear rendering defect (see weaknesses for root-cause diagnosis); legend
-          rebalancing this attempt was otherwise a genuine fix
+        passed: true
+        comment: 3200x1800 canvas, balanced bottom legend, nothing cut off, no dead-space
+          margin
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units ($K)
+        comment: Descriptive axis titles with $K units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, chrome and data colors identical and theme-correct
-          across both renders'
+        comment: 'First series #009E73, correct theme backgrounds, colors identical
+          across renders'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful color/typography and now-balanced legend layout, but the
-          left-edge artifact undercuts overall polish
+        comment: Custom Style tokens, computed title scaling, two-layer band construction
+          - competent but not yet publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Subtle grid and thinner CI-band boundary stroke are good steps, but
-          the stray vertical bar reads as an unrefined rendering glitch
+        comment: Grid subtle and band now soft, but chart chrome (axis boundary line)
+          still close to pygal defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: R² in title + regression equation in legend + CI band create a clear
-          visual hierarchy around the trend
+        comment: R² in title, equation in legend, band+line create a clear focal trend
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -158,52 +141,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter + regression line + CI band
+        comment: pygal.XY scatter with regression line
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: R², regression line, CI band, and moderate point alpha all present;
-          CI band still reads as fairly opaque fill rather than soft semi-transparent
-          shading, and has the left-edge artifact
+        comment: R² prominent, distinct-colored regression line, now-soft semi-transparent
+          CI band, moderate point alpha, equation annotation
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=ad spend, y=revenue, full data range shown
+        comment: x=ad spend, y=revenue correctly mapped, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows the mandated format with a descriptive prefix; legend
-          labels correctly describe each series
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows correlated data with realistic noise and a few outliers across
-          the full spend range
+        comment: Scatter, regression line, CI band, R², equation all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Advertising spend vs. revenue is a real, neutral business scenario
+        comment: Ad spend vs revenue, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Spend ($5-60K) and resulting revenue ($30-320K) with slope 4.6 are
-          plausible business figures
+        comment: Sensible $K ranges for the domain
     code_quality:
       score: 10
       max: 10
@@ -213,7 +193,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear top-down script
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -225,22 +205,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pygal, Style, scipy.stats all used
+        comment: Only used imports (numpy, pygal, scipy.stats, os)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately commented for real pygal API constraints, no
-          fake functionality
+        comment: Workaround complexity is justified and clearly commented, no fake
+          functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal API
+        comment: Saves plot-{THEME}.png and .html correctly
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -248,25 +228,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic pygal.XY + Style usage, correct add() series pattern, legend_at_bottom
-          is a sensible idiomatic choice for this layout
+        comment: Style object, XY chart used well; relies on injected raw CSS !important
+          to override pygal's own scoped .reactive rule
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Closed-polygon fill technique for the CI band is a genuinely pygal-specific
-          workaround for its missing fill-between primitive, but its execution has
-          the unresolved left-edge artifact bug
-  verdict: REJECTED
+        comment: Two-fill CI-band technique, char-count-scaled title sizing, per-series
+          opacity override are genuine pygal-specific problem-solving
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
+  - annotations
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
   - alpha-blending
+  - grid-styling
