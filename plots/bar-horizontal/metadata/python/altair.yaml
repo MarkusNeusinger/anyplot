@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:36:06Z'
-updated: '2026-08-05T17:12:25Z'
+updated: '2026-08-05T17:22:09Z'
 generated_by: claude-sonnet
 workflow_run: 31028191243
 issue: 1946
@@ -12,40 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Real interactivity (pointer-hover alt.selection_point dimming non-hovered bars)
-    rather than any simulated/fake widget
+  - Title now exactly matches the mandated {spec-id} · {language} · {library} · anyplot.ai
+    format
+  - Real interactivity via pointer-hover alt.selection_point and modern alt.when()
+    chaining, not simulated UI
+  - New top-bar emphasis (opacity, label size, label color) creates a clear focal
+    point and directly answers prior review feedback
   - Careful headroom calculation (x_max = max * 1.15) keeps end-of-bar labels from
-    ever clipping or overlapping the axis frame
-  - Theme tokens (PAGE_BG, INK, INK_SOFT) are threaded consistently through title,
-    axis, grid, and labels - both renders are fully legible with identical data color
-  - Realistic, neutral dataset that sums cleanly to 100%, appropriately sized for
-    a horizontal bar chart (10 categories)
+    clipping or overlapping the axis frame
+  - Realistic, neutral dataset that sums cleanly to 100%, appropriately sized (10
+    categories)
   weaknesses:
-  - Title omits the {language} segment mandated by the style guide - should be "bar-horizontal
-    · python · altair · anyplot.ai" instead of "bar-horizontal · altair · anyplot.ai"
-  - 'Design Excellence is on the generic side: a single flat color and default Vega-Lite
-    chrome with no additional visual hierarchy (e.g., emphasizing the top-ranked bar)
-    beyond the descending sort'
-  - Distinctive Altair capabilities are underused beyond the hover highlight - the
-    chart is functionally close to a minimal mark_bar + mark_text combination
+  - '0.75-opacity on 9 of 10 bars composites differently against light (#FAF8F1) vs
+    dark (#1A1A17) backgrounds, so those bars render as visibly different colors between
+    themes (#3FB492 light vs #077D5C dark) despite an identical source color value'
+  - Design Excellence remains close to default Vega-Lite chrome outside the new top-bar
+    emphasis - grid, spines, and typography unchanged since the previous review
+  - Distinctive Altair capabilities remain underused beyond the hover highlight -
+    functionally a mark_bar + mark_text layered composition
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
-      Chrome: Bold dark title "bar-horizontal · altair · anyplot.ai" centered at top; bold "Programming Language" y-axis title and "Popularity (%)" x-axis title; tick labels and end-of-bar value labels in soft gray. All clearly readable against the light background.
-      Data: Ten horizontal bars in Imprint brand green (#009E73), sorted descending Python (28.5%) to Kotlin (1.6%); first (only) series is exactly #009E73.
+      Background: warm off-white, sampled RGB (250,248,241) = #FAF8F1, matches spec exactly.
+      Chrome: bold dark title "bar-horizontal · python · altair · anyplot.ai" centered at top (language token now present, fixing attempt-1 gap); bold rotated Y-axis title "Programming Language"; X-axis title "Popularity (%)"; subtle 10%-opacity vertical gridlines. All text clearly readable against the light background.
+      Data: 10 horizontal bars sorted descending (Python 28.5% -> Kotlin 1.6%). Top bar (Python) samples ~#0DA379 (close to brand #009E73). Remaining 9 bars at opacity 0.75 sample ~#3FB492 - lighter/mintier than the brand hex due to alpha blending over the cream background. Value labels at bar ends: bold ink for top bar, softer gray for the rest.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
-      Chrome: Title and axis titles render in light ink; tick and value labels in soft light gray. No dark-on-dark issues - all text clearly legible against the dark background.
-      Data: Bar color identical #009E73 green to the light render - only chrome (background, text, grid) flips between themes.
+      Background: warm near-black, sampled RGB (26,26,23) = #1A1A17, matches spec exactly.
+      Chrome: same layout; title and axis titles in light ink, tick/value labels in soft light gray. All text clearly legible against the dark background - no dark-on-dark failures.
+      Data: top (Python) bar samples ~#019766, consistent with the light render's top bar. The 9 non-highlighted bars sample ~#077D5C - a darker, more saturated green than their light-theme counterpart (#3FB492), because the same 0.75-opacity fill composites differently over the near-black background. Underlying source color is identical in code; the composited pixel color is not identical across themes for most bars. Flagged as a VQ-07 partial deduction, not a legibility failure.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -53,71 +55,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Explicit font sizes, readable in both themes; minor: labels a bit
-          small at mobile scale'
+        comment: Explicit font sizes throughout, balanced axis titles/ticks, no overflow;
+          non-highlighted value labels slightly small at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Headroom (x_max = max*1.15) prevents label/gridline/axis collisions
+        comment: Headroom calculation keeps end-of-bar labels from colliding with
+          gridlines or axis frame
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar thickness/spacing appropriate for 10 categories
+        comment: Bar thickness/spacing appropriate for 10 categories, rounded ends
+          crisp in both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series, adequate contrast, no red/green-only signal
+        comment: Adequate contrast, no red/green-as-sole-signal issue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, title ~55-60% of plot width, no overflow/cutoff
+        comment: Canvas gate passed, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (%)
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series exactly #009E73; correct light/dark backgrounds; identical
-          data color across themes'
+        passed: false
+        comment: Top bar and backgrounds correct, but 9/10 bars render at different
+          composited colors between light (#3FB492) and dark (#077D5C) due to opacity
+          over different theme backgrounds
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Rounded bars, headroom calc, real hover highlight, but single flat
-          color and default typography
+        passed: true
+        comment: New secondary treatment on top bar (opacity + label size/color) is
+          a clear step up from the prior single-flat-color version
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis ticks removed, subtle 10% grid opacity, generous whitespace
+        comment: Subtle grid, ticks removed on y-axis, generous whitespace; largely
+          unchanged from prior attempt
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Descending sort creates ranking but no additional emphasis beyond
-          ordering
+        passed: true
+        comment: Opacity + label contrast on top bar creates a clear focal point on
+          top of the descending sort
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -131,8 +137,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Consistent heights, sorted, single color, end-of-bar labels, adequate
-          spacing
+        comment: Consistent bar heights, sorted, single-hue with highlighted top bar,
+          end-of-bar labels, adequate spacing
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -141,33 +147,35 @@ review:
         comment: popularity on X, language on Y, all 10 categories shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing the mandated {language} segment ("python")
+        passed: true
+        comment: Title now exactly matches mandated format - python token gap from
+          attempt 1 fixed
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Ranking, value labels, consistent geometry covered; optional bar-highlighting
-          not used
+        comment: Ranking, value labels, consistent geometry, and now the optional
+          top-bar-highlight variant
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral programming-language data summing to 100%
+        comment: Plausible, neutral programming-language popularity data summing to
+          100%
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentages 1.6-28.5% sensible for a developer-survey context
+        comment: Percentages sensible and internally consistent
     code_quality:
       score: 10
       max: 10
@@ -177,32 +185,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script, no functions/classes
+        comment: Flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static DataFrame, fully deterministic
+        comment: Static deterministic DataFrame
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, pandas, PIL.Image all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Real alt.selection_point interactivity, not simulated UI
+        comment: Real alt.selection_point/alt.when interactivity, not simulated UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (padded) and plot-{THEME}.html; current Altair
-          API
+        comment: Saves plot-{THEME}.png/.html, current Altair 6 API
     library_mastery:
       score: 7
       max: 10
@@ -212,23 +219,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper :Q/:N encodings, alt.Scale/alt.Axis config, layered mark_bar
-          + mark_text
+        comment: Proper encodings, layered marks, configure_* chrome, modern alt.when()
+          chain
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Real pointer-hover highlight is a plus, but no faceting/compound
-          views used
+        comment: Real hover selection is genuinely distinctive, but no further Altair-specific
+          capabilities (faceting, repeat, compound views)
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - publication-ready
