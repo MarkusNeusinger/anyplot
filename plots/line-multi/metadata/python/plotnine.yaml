@@ -2,117 +2,150 @@ library: plotnine
 language: python
 specification_id: line-multi
 created: '2025-12-24T21:29:45Z'
-updated: '2026-05-06T15:30:34Z'
-generated_by: claude-haiku
-workflow_run: 25444229346
+updated: '2026-08-05T07:46:46Z'
+generated_by: claude-sonnet
+workflow_run: 30985050508
 issue: 1825
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Perfect theme-adaptive implementation with readable text in both light and dark
-    renders
-  - 'Flawless palette compliance: brand green first, Okabe-Ito order correct, identical
-    across themes'
-  - Clean, reproducible code with deterministic data generation and proper API usage
-  - Excellent spec adherence with all required features (multiple series, colors,
-    legend, markers)
-  - 'No legibility issues: proper INK tokens prevent dark-on-dark or light-on-light
-    failures'
+  - 'Both weaknesses from Attempt 1 are directly addressed: axis lines fully removed
+    (element_blank) for cleaner minimal chrome, and direct end-of-line value labels
+    via geom_text now sharpen the Electronics-vs-Clothing crossover story instead
+    of relying on the legend alone'
+  - Anti-collision logic (min_gap=14) for the end-of-line labels prevents the Furniture/Clothing
+    pair from colliding at month 12, and marker halo strokes (PAGE_BG-colored) cleanly
+    separate overlapping lines at the mid-year convergence zone
+  - 'Perfect Imprint palette compliance: brand green first, remaining three series
+    in canonical order, identical hex values across both themes, backgrounds correctly
+    `#FAF8F1`/`#1A1A17`'
+  - Both light and dark renders are fully legible with correctly-flipped chrome (title,
+    axis text, gridlines, legend box) and no dark-on-dark/light-on-light failures
+  - Realistic, neutral data with a genuine crossover narrative (Electronics overtaking
+    Clothing, Accessories overtaking Furniture/Clothing mid-year); clean, fully reproducible
+    KISS code
   weaknesses:
-  - 'Design Excellence moderate: no distinctive visual refinement beyond standard
-    customization'
-  - 'Library Mastery could be higher: uses idiomatic patterns but limited advanced
-    features'
+  - The end-of-line geom_text value labels ("116", "78") are colored directly with
+    the series' line color at small font size, but lavender (#C475FD ~2.7:1) and ochre
+    (#BD8233 ~3.09:1) fall below WCAG's 3:1 floor on the cream background — per the
+    style guide's own outline-pattern guidance, these are exactly the kind of critical,
+    small, informational text where a thin ink-color stroke would meaningfully improve
+    legibility
+  - Data generation formulas are unchanged since Attempt 1 — series still differ mainly
+    in slope/trend shape; a bit more variation in volatility/spread between series
+    (e.g., a visibly noisier line vs. a smooth one) would strengthen Feature Coverage
+    further
+  - Library Mastery is stronger with the end-of-line labels but LM-01 could reach
+    for one more plotnine-idiomatic construct (e.g., position_nudge helper, geom_segment
+    leader lines, or facet-based small multiples) to differentiate further from a
+    generic ggplot2 port
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title "line-multi · plotnine · anyplot.ai" centered and readable; "Month" and "Sales (thousands USD)" axis labels clear; month abbreviations and value ticks all readable in dark text (INK token)
-      Data: 4 lines with markers showing monthly sales trends. Electronics (brand green #009E73) trends upward, Clothing (orange) declines, Furniture (blue) relatively flat, Accessories (reddish purple) declines. All colors distinct.
-      Legend: "Product Line" title with 4 product labels, positioned right, all readable
-      Legibility verdict: PASS - no dark-on-light or light-on-light failures
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Centered dark-ink title "line-multi · python · plotnine · anyplot.ai" (~45% of canvas width, comfortably clear of edges). X-axis shows month abbreviations (Jan-Dec) in soft dark-grey; Y-axis title "Sales (thousands USD)" and tick labels (100/140/180) in soft dark-grey. Only faint horizontal gridlines are present (alpha ~0.12); axis lines have been fully removed since Attempt 1 for a cleaner minimal look. A bordered legend titled "Product Line" sits at the right, close to the plot, with a light elevated-tone fill. All chrome text is dark ink on the light surface and is clearly readable.
+      Data: Four lines in Imprint palette order — brand-green Electronics (#009E73, drawn thicker to lead the eye) rising from ~110 to 212; lavender Accessories (#C475FD) rising from ~90 to 116; blue Furniture (#4467A3) roughly flat around 88-100; ochre Clothing (#BD8233) falling from ~122 to 78. Each series has circular markers with a background-colored (PAGE_BG) halo stroke that cleanly separates overlapping lines at the mid-year convergence zone. New in this attempt: direct end-of-line value labels (212/116/88/78) colored to match each series, with a minimum-gap nudge so the close Furniture/Clothing pair at month 12 doesn't collide.
+      Legibility verdict: PASS — all chrome text and data labels are readable, though the lavender (~2.7:1) and ochre (~3.09:1) end-labels sit below WCAG's 3:1 floor on the cream background at their small size (no stroke applied) — a minor, non-blocking legibility softness, not a failure.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Same title, axis labels, and month/value ticks now rendered in light text (INK #F0EFE8) against dark background. All readable, no dark-on-dark failures detected.
-      Data: Data colors are identical to light render - brand green, orange, blue, reddish purple all distinctly visible. Grid lines subtle and not competing.
-      Legend: Text readable against elevated background (#242420)
-      Legibility verdict: PASS - no dark-on-dark failures, excellent theme adaptation, chrome flips appropriately while data colors remain constant
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout on the dark surface; title/axis/tick text flipped to light off-white/soft-grey, legend box uses the dark elevated fill with a light-toned border, gridlines remain faint but visible. Axis lines remain removed, matching the light render's minimal chrome.
+      Data: All four line colors are pixel-identical to the light render — only chrome flipped. End-of-line labels (212/116/88/78) again colored per series; blue text contrast on dark bg (~3.09:1) is comparable to the light render's weakest case. No dark-on-dark failures observed; brand green and all series remain clearly visible against the dark surface.
+      Legibility verdict: PASS — no dark-on-dark issues; all title/axis/tick text and data labels are readable against the near-black background.
+
+    Both renders are theme-correct, fully legible, and the only elements that change between themes are background, text, grid, and legend-box colors, as required. Both Attempt 1 weaknesses (axis lines not fully removed, no distinctive end-of-line labeling) are directly addressed in this attempt.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both renders; proper INK/INK_SOFT tokens
+        comment: 'All font sizes explicitly set via theme(); readable in both themes;
+          title fits comfortably (~45% width). Minor deduction: colored end-of-line
+          labels at small size are slightly harder to read for the lower-contrast
+          hues (lavender, ochre) without a stroke.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements properly positioned
+        comment: No text collisions in either render; min-gap logic prevents the Furniture/Clothing
+          end-labels from colliding at month 12.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 4 lines and markers clearly visible; good density
+        comment: Line widths and point sizes are well-adapted to the 12-point sparse
+          series; halo-stroke markers keep crossing lines distinguishable at the mid-year
+          convergence zone.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe
+        comment: Imprint hues are CVD-distinct for the line marks, but the new end-of-line
+          text labels use lavender (~2.7:1) and ochre (~3.09:1) directly on the cream
+          background, both below WCAG's 3:1 floor for text — a thin ink stroke (as
+          suggested by the style guide's outline-pattern guidance for critical small
+          text) would resolve this.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper 16:9 proportions, centered, appropriate margins
+        comment: Plot area fills a healthy majority of the canvas, legend sits close
+          to the plot, balanced margins, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: '"Sales (thousands USD)" includes units; "Month" is descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first, Okabe-Ito order correct, backgrounds correct,
-          theme-correct
+        comment: 'First series #009E73, remaining three exactly match canonical Imprint
+          positions 2-4; backgrounds and chrome theme-correct in both renders.'
     design_excellence:
-      score: 11
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 7
         max: 8
-        passed: false
-        comment: Generic design; uses standard theme customization
+        passed: true
+        comment: 'Thoughtful design: brand-line emphasis, background-colored point-halo
+          stroke, direct end-of-line labels — clearly above configured defaults, close
+          to publication-grade.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Basic refinement; grid and legend styled but could be more sophisticated
+        passed: true
+        comment: Axis lines now fully removed (element_blank), vertical gridlines
+          removed, horizontal grid kept subtle (alpha 0.12), legend styled to match
+          theme tokens — addresses Attempt 1 feedback directly.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clear comparison but could emphasize key insights more
+        passed: true
+        comment: Direct end-of-line value labels plus the thicker brand line create
+          a strong, clear focal point and crossover narrative — addresses Attempt
+          1 feedback directly.
     spec_compliance:
       score: 15
       max: 15
@@ -122,47 +155,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line plot
+        comment: Correct multi-line comparison chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: Distinct colors per series, clear legend, markers included for the
+          sparse 12-point series.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct axes mapping
+        comment: Month on X, Sales on Y, all data visible within axis bounds.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Spec format correct
+        comment: Title exactly "line-multi · python · plotnine · anyplot.ai"; legend
+          labels match product names.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Demonstrates all aspects of multi-line plot
+        comment: Good variety of trend shapes (steady rise, gentle rise, roughly flat,
+          steady decline) with a genuine crossover; volatility/spread is still similar
+          across series.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic and neutral
+        comment: Neutral, plausible business scenario (monthly product-line sales).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values and ranges
+        comment: Sales values, monthly cadence, and growth/decline rates are realistic
+          for retail.
     code_quality:
       score: 10
       max: 10
@@ -172,33 +210,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seed
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only used plotnine symbols imported.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI
+        comment: Clean, no over-engineering, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming and API
+        comment: Saves plot-{THEME}.png via current plot.save() API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -206,20 +244,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good plotnine syntax
+        comment: Correct grammar-of-graphics layering (ggplot() + multiple geom_line/geom_point/geom_text
+          layers + scale_*_manual).
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Standard usage, limited advanced features
+        passed: true
+        comment: Layer-composition (brand series redrawn thicker on top) plus direct
+          end-of-line geom_text labels with anti-collision logic — a genuinely plotnine/ggplot-idiomatic,
+          distinctive touch addressing Attempt 1 feedback.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - grid-styling
+  - alpha-blending
+  - edge-highlighting

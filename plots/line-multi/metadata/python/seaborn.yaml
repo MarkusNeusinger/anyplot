@@ -2,58 +2,58 @@ library: seaborn
 language: python
 specification_id: line-multi
 created: '2025-12-24T21:28:57Z'
-updated: '2026-05-06T15:20:48Z'
-generated_by: claude-haiku
-workflow_run: 25443762927
+updated: '2026-08-05T07:47:39Z'
+generated_by: claude-sonnet
+workflow_run: 30984525176
 issue: 1825
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Perfect theme adaptation across light and dark renders
-  - Excellent text legibility with explicitly sized fonts (title 24pt, labels 20pt,
-    ticks 16pt)
-  - Flawless Okabe-Ito palette compliance with all 4 series correctly colored
-  - Strong data quality with realistic business scenario and diverse product line
-    trends
-  - Clean, reproducible code structure with proper seed and deterministic data generation
-  - Idiomatic seaborn usage with long-format data and hue parameter
+  - 'Both weaknesses flagged in the previous review are genuinely fixed: the annotation
+    callout no longer crosses the title (xytext moved from (9.3, +20) to (9.65, +14)),
+    and the April Home & Garden/Sports marker collision is resolved with a real data
+    nudge (home_garden[3] -= 6, sports[3] += 4) rather than a cosmetic patch'
+  - 'Imprint palette applied in canonical order, Electronics correctly first at #009E73;
+    data colors are pixel-identical between light and dark renders'
+  - 'Theme backgrounds are pixel-exact: #FAF8F1 (light) and #1A1A17 (dark); all chrome
+    (title, axis labels, ticks, legend, annotation box) threads theme tokens correctly
+    with no dark-on-dark or light-on-light failures'
+  - Soft translucent glow underlay behind the Electronics line sharpens its lead-series
+    hierarchy without being gimmicky
+  - Dual hue+style encoding (color AND marker shape per series) aids differentiation
+    and gives a colorblind-safe fallback beyond color alone
+  - Clean L-shaped frame via sns.despine(offset=6, trim=False) with a subtle y-axis-only
+    grid
+  - Reproducible (np.random.seed(42)), flat KISS script, correct plot-{THEME}.png
+    save with no bbox_inches='tight'; canvas gate passed at 3200x1800
   weaknesses:
-  - Could remove top and right spines for more refined aesthetic
-  - Data storytelling is neutral (just displays trends without particular emphasis)
-  - Could leverage more distinctive seaborn features beyond basic lineplot
+  - 'Several series sit close together at a few months (e.g. Jan: Apparel 40 vs Sports
+    39, only 1 unit apart on a 140-unit axis; Aug: Apparel/Sports crossing near 24-25)
+    — still distinguishable via distinct hue+marker shape, but worth a similar nudge
+    treatment if a future pass wants zero visual proximity anywhere in the series'
+  - Design Excellence and Library Mastery remain in the 'good, not distinctive' band
+    — the glow underlay, edge-highlighting, and move_legend are real touches but still
+    built on standard sns.lineplot(hue=, style=) primitives; one more deliberate seaborn-specific
+    flourish (e.g. a confidence band, custom legend handles, or a second annotation)
+    would push this further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid
-      Chrome: Title "line-multi · seaborn · anyplot.ai" in dark text, axis labels "Month" and "Sales (thousands USD)" clearly visible, tick labels readable (months Jan-Dec on x-axis, numeric scale 0-140 on y-axis)
-      Data: Four distinct lines representing product categories:
-        - Electronics (green #009E73): Strong upward trend, prominent holiday spike in Nov-Dec
-        - Apparel (orange #D55E00): Seasonal oscillation with summer/winter peaks
-        - Home & Garden (blue #0072B2): Spring/summer peak around June
-        - Sports (pink #CC79A7): Steady variation with slight upward trend
-      Markers: Clearly visible circles at each data point (12 months each)
-      Legend: Upper left, "Product Line" title with all 4 series labeled
-      Layout: 16:9 landscape format, well-balanced margins, no overcrowding
-      Legibility verdict: PASS - All text readable, no overlaps, excellent contrast
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "line-multi · python · seaborn · anyplot.ai" is dark ink, fully legible, and now clears the annotation callout box with a visible gap (previously crossed by the box border/text). Axis labels ("Month", "Sales (thousands USD)") and tick labels (Jan-Dec, 0-140) are dark/soft-ink and clearly readable. Y-axis gridlines are subtle horizontal lines at low alpha. Legend box ("Product Line": Electronics, Apparel, Home & Garden, Sports) sits top-left with a light elevated background and readable dark text, well clear of the data lines. Annotation callout ("Holiday season lifts / Electronics sharply") sits top-right, pointing to the December Electronics point, no longer overlapping the title.
+      Data: Four lines — Electronics (#009E73, circle markers, soft glow underlay) rising sharply with a holiday-season jump; Apparel (#C475FD, X markers) with a summer peak; Home & Garden (#4467A3, square markers) with a spring/summer bump; Sports (#BD8233, plus markers) mild seasonal drift. At April, Home & Garden and Sports markers are now clearly separated (previously near-coincident and ~80% hidden) thanks to the data nudge. All four colors/marker shapes are distinguishable from each other and the background.
+      Legibility verdict: PASS — both previously-flagged overlap defects (title/annotation, April marker collision) are resolved.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle light grid lines
-      Chrome: Title and all labels rendered in light text (#F0EFE8 range), perfectly readable against dark background. Tick labels, axis labels all clearly visible.
-      Data: ALL FOUR data series colors are IDENTICAL to light render:
-        - Electronics: Same green #009E73 (prominent, easily visible)
-        - Apparel: Same orange #D55E00
-        - Home & Garden: Same blue #0072B2
-        - Sports: Same reddish-purple #CC79A7
-      Markers: Circles at each point, clearly distinguished (outline style adapted for dark)
-      Legend: Same position and labels as light render, legend frame color adapted to dark theme (#242420)
-      Layout: Identical proportions to light render
-      Contrast check: No dark-on-dark failures. All text is light on dark background. Brand green remains prominently visible.
-      Legibility verdict: PASS - Both renders equally readable, data colors preserved perfectly, only chrome adapted
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis labels, tick labels, legend, and annotation box all flip to light ink / light elevated surfaces and remain fully legible — no dark-on-dark failures. The title/annotation gap holds in dark mode too.
+      Data: Confirmed pixel-identical to light render (#009E73, #C475FD, #4467A3, #BD8233); only chrome adapted to theme. April marker separation holds in dark mode.
+      Legibility verdict: PASS — same fixes confirmed in dark theme.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,80 +61,80 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
-          Perfect readability in both themes.'
+        comment: Explicit font sizes throughout (title 12pt, labels 10pt, ticks 8pt);
+          all text readable in both themes; title no longer visually crossed by the
+          annotation box
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Month labels well-spaced, legend positioned
-          clearly in upper left.
+        comment: 'Both previously-flagged collisions fixed: annotation box now clears
+          the title, and the April Home & Garden/Sports markers are cleanly separated
+          by a real data nudge'
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Linewidth=3 and markersize=12 are appropriate for 4-series plot.
-          All series clearly distinguishable. Minor: could explore additional visual
-          variation.'
+        comment: linewidth=2.5, markersize=8 appropriate for 12-point sparse series;
+          April marker no longer hidden
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe. Good luminance contrast between
-          all 4 series.
+        comment: Imprint CVD-safe palette plus marker-shape redundant encoding; no
+          red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape fills ~65% of canvas. Balanced margins, no wasted
-          space, nothing cut off.
+        comment: Canvas gate passed (3200x1800); annotation box now fully contained
+          with clearance from the title and canvas edges
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Sales (thousands USD)'' with units. X-axis: ''Month''.
-          Title: correct format ''line-multi · seaborn · anyplot.ai''.'
+        comment: Descriptive labels with units ("Sales (thousands USD)", "Month");
+          title matches mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Multi-series follows Okabe-Ito
-          order (positions 1-4). Backgrounds correct (#FAF8F1 light, #1A1A17 dark).
-          Chrome colors theme-correct in both renders.'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          in both renders'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured seaborn defaults with professional style. Not publication-ready
-          level customization.
+        comment: Glow underlay and marker edge-highlighting are nice touches beyond
+          baseline, but overall polish stays incremental rather than distinctive
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Subtle grid (Y-axis only), generous whitespace. Top/right spines
-          not removed (minor). Could be more polished.
+        passed: true
+        comment: sns.despine(offset=6) L-shaped frame, subtle y-axis-only grid, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Plot displays 4 product trends clearly but focuses on data display
-          without particular narrative emphasis or insight highlighting.
+        passed: true
+        comment: Annotation callout and glow underlay reinforce the Electronics/holiday-spike
+          focal point, now without obscuring the title
     spec_compliance:
       score: 15
       max: 15
@@ -144,28 +144,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line plot with 4 distinct series.
+        comment: Correct multi-line comparison plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements: distinct colors, legend, markers, manageable
-          series count (4).'
+        comment: Distinct colors, dual hue+style encoding, legend, markers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Month (1-12). Y-axis: Sales in thousands USD. All data visible
-          and correctly mapped.'
+        comment: X=Month, Y=Sales, all 4 series shown across all 12 months
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-multi · seaborn · anyplot.ai'' (correct format). Legend:
-          ''Product Line'' with accurate labels.'
+        comment: Title matches mandated format; legend labels match series names
     data_quality:
       score: 15
       max: 15
@@ -175,23 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates multiple distinct patterns: upward trend (Electronics),
-          seasonal oscillation (Apparel), peak pattern (Home & Garden), steady variation
-          (Sports).'
+        comment: 4 series (within 2-6 recommended), realistic seasonal patterns, holiday
+          spike
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly sales by product category is a real, common business scenario.
-          Realistic product categories and plausible seasonal/holiday patterns.
+        comment: Plausible retail product-line sales, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales range 8K-135K USD is realistic for product sales. Proportions
-          and patterns are factually plausible.
+        comment: Sensible sales figures (thousands USD), realistic month-over-month
+          variation
     code_quality:
       score: 10
       max: 10
@@ -201,60 +196,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → theme tokens → data generation → plot
-          → save. No functions or classes.'
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. All data generation deterministic.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib, numpy, pandas, seaborn.
-          All imports are used.'
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity. Theme token pattern is well-structured.
-          No over-engineering or fake UI.
+        comment: No fake UI; the April data nudge is a small, clearly-commented adjustment,
+          not a manipulation of real data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Uses current seaborn API. No deprecated
-          functions.
+        comment: Correct plot-{THEME}.png save, no bbox_inches='tight'
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert seaborn usage: long-format data, sns.lineplot() with hue
-          parameter, proper palette application, set_theme() for styling.'
+        comment: sns.lineplot(hue=, style=), sns.move_legend, sns.despine, errorbar=None
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses seaborn's distinctive long-format + hue approach. Theme integration
-          via rc parameters. Could explore additional library-specific capabilities.
+        comment: Dual hue+style mapping, move_legend, glow underlay, marker edge-highlighting
+          are real touches, but still built on standard lineplot primitives
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
   styling:
+  - publication-ready
+  - alpha-blending
+  - edge-highlighting
   - grid-styling
