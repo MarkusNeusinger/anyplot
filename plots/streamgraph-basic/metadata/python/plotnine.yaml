@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: streamgraph-basic
 created: 2025-12-14 19:44:18+00:00
-updated: '2026-08-05T11:30:02Z'
+updated: '2026-08-05T11:36:31Z'
 generated_by: claude-sonnet
 workflow_run: 31001093782
 issue: 856
@@ -12,111 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Cubic B-spline upsampling (scipy.interpolate.make_interp_spline) produces genuinely
-    organic, flowing ribbon edges instead of the straight monthly segments geom_ribbon
-    would draw by default
-  - Baseline is correctly and exactly symmetric (baseline = -totals/2, top = baseline
-    + totals) at every time step, giving the true centered-stream look the spec asks
-    for
+  - 'Fixed the attempt-1 weakness: y-axis title/text are now fully hidden (axis_title_y=element_blank(),
+    axis_text_y=element_blank()), removing the misleading negative ''Streaming Hours''
+    readings that were an artifact of the centered baseline'
+  - Cubic B-spline upsampling (scipy.interpolate.make_interp_spline) onto a 240-point
+    fine grid produces genuinely organic, flowing ribbon edges instead of the straight
+    monthly segments geom_ribbon would draw by default
+  - Baseline is exactly symmetric (baseline = -totals/2, top = baseline + totals)
+    at every time step, giving the true centered-stream look the spec asks for
   - 'Full Imprint palette compliance: Pop is #009E73, remaining genres follow canonical
-    order 2-5, and all five hues are pixel-identical between plot-light.png and plot-dark.png'
-  - Theme-adaptive chrome is threaded correctly end-to-end — title/axis/tick/legend
-    colors flip cleanly between light and dark with no dark-on-dark or light-on-light
-    failures
-  - Minimalist chrome (grid, spines, axis line, axis ticks all removed) with a softly
-    elevated legend box — clean, uncluttered, generous whitespace
-  - Synthetic data has genuine crossovers and rank changes between genres over the
-    24 months (not just parallel offset bands), which is exactly the kind of feature
-    coverage a streamgraph should demonstrate
-  - KISS code structure with np.random.seed(42), only used imports, and current plotnine
-    API (plot.save)
+    order 2-5, all five hues pixel-identical between light/dark renders'
+  - Theme-adaptive chrome threaded correctly end-to-end — no dark-on-dark or light-on-light
+    failures in either render
+  - Minimalist chrome (grid, spines, axis line, ticks all removed) with a softly elevated
+    legend box; clean, uncluttered composition
+  - Synthetic data has genuine crossovers/rank changes between genres over the 24
+    months, not just parallel offset bands
   weaknesses:
-  - Y-axis keeps numeric tick labels (-400 to 400, titled 'Streaming Hours') that
-    are an artifact of the centered-baseline transform — actual streaming hours are
-    never negative, so a reader can misread the chart as showing negative values.
-    Professional streamgraphs typically drop the y-axis entirely (or leave it unlabeled)
-    since the baseline offset is arbitrary and only relative band thickness carries
-    meaning. Consider removing axis_text/axis_title on the y-axis (or replacing the
-    label with something like 'Relative Volume') while keeping the panel itself untouched.
-  - No grid lines at all (panel_grid=element_blank()) combined with the misleading
-    negative axis leaves the reader with no way to estimate absolute magnitude — if
-    the numeric axis is kept, a very subtle horizontal reference line at 0 would help
-    ground the symmetric baseline.
-  - The spline-smoothed geom_ribbon technique is the standard grammar-of-graphics
-    approach to a streamgraph and would look nearly identical in ggplot2/R — nothing
-    here leverages a plotnine-specific capability (LM-02 generic usage).
-  - No visual emphasis or focal point (e.g., highlighting one genre's peak/crossover)
-    beyond the inherent shape of the stream — the chart displays the data cleanly
-    but doesn't guide the viewer toward one specific insight.
+  - 'LM-02: the spline+ribbon smoothing technique is generic grammar-of-graphics (would
+    look nearly identical in ggplot2/R), not a plotnine-distinctive touch — the attempt-1
+    feedback on this point was not addressed'
+  - 'DE-03: no explicit visual emphasis or focal point beyond the inherent stream
+    shape — e.g. no direct end-of-stream genre labels or highlighted series'
+  - With the y-axis fully hidden there is no way to gauge absolute magnitude at all
+    now, not even a subtle reference; acceptable for a streamgraph but worth noting
+    as a deliberate trade-off
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white.
-      Chrome: Title "streamgraph-basic · python · plotnine · anyplot.ai" in dark ink, centered top, fully visible and not clipped. Axis titles "Month" (x) and "Streaming Hours" (y) in dark ink. Tick labels (Jan '23, Jul '23, Jan '24, Jul '24 on x; -400/-200/0/200/400 on y) in a softer dark gray. Legend titled "Genre" sits in a slightly elevated cream box to the right of the plot, listing Pop/Hip-Hop/Electronic/Rock/Jazz swatches top to bottom. All chrome text reads clearly against the light background.
-      Data: Five stacked, spline-smoothed ribbons flow left to right. Bottom-to-top order is Pop (teal green), Hip-Hop (lavender/purple), Electronic (blue), Rock (ochre/amber), Jazz (matte red) - matching the legend order and the Imprint categorical palette, with Pop correctly rendered in the brand green #009E73. Band thicknesses vary and cross over each other across the 24 months, creating a genuine organic river shape roughly centered on the x-axis.
-      Legibility verdict: PASS - no light-on-light or unreadable text observed anywhere in the render.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "streamgraph-basic · python · plotnine · anyplot.ai" renders in dark ink, fully visible and centered at the top, spanning ~65% of plot width. X-axis title "Month" and tick labels (Jan '23 / Jul '23 / Jan '24 / Jul '24) are dark ink, clearly legible. Y-axis title and tick labels are intentionally hidden (axis_title_y/axis_text_y = element_blank()) — no misleading numeric axis on the centered baseline. A "Genre" legend sits in a slightly elevated cream box to the right, listing Pop / Hip-Hop / Electronic / Rock / Jazz with clear color swatches.
+      Data: Five spline-smoothed ribbons (teal green Pop, lavender Hip-Hop, blue Electronic, ochre Rock, matte red Jazz, bottom to top) flow left to right with genuine crossovers, forming an organic river shape symmetric around the implicit centerline. Pop confirmed as brand green #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black.
-      Chrome: Same title, now in light cream/off-white text, fully visible at the top. Axis titles in light off-white, tick labels in a lighter secondary gray, both clearly legible against the dark background. Legend box uses a slightly-elevated dark gray fill (#242420-ish) with light text and swatches, positioned identically to the light render.
-      Data: The same five ribbons in the same stacking order and exact same hues as the light render (Pop #009E73 green confirmed identical) - only the chrome (background/text/legend box) flips between themes, the data-color palette does not change.
-      Legibility verdict: PASS - no dark-on-dark failures; every title/axis/tick/legend element is clearly readable against the near-black surface.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title now in light cream text, fully visible. Axis title/tick labels flip to light/soft-light gray and remain legible. Legend box uses a slightly elevated dark-gray fill with light text, still readable. Y-axis remains hidden, consistent with the light render.
+      Data: The five ribbon colors are pixel-identical to the light render — only chrome (background, text, legend box fill) flips between themes. No dark-on-dark failures anywhere; text and data both read cleanly against the near-black surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit; readable in both themes; title fits without
-          clipping
+        comment: All text explicitly sized, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data collisions in either render
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ribbon bands are all clearly visible, none collapse to invisibility
+        comment: Ribbon bands are wide and clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 5 distinct hues from 4 hue families, no red-green-only signal
+        comment: Good contrast between adjacent bands, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills roughly 55-60% of canvas area with balanced margins and
-          a legend near the plot
+        comment: Canvas gate passed (3200x1800); title ~65% width, balanced margins,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Labels are descriptive but the y-axis shows negative 'Streaming Hours'
-          values, an artifact of the centered baseline that can mislead readers since
-          the underlying quantity is never negative
+        passed: true
+        comment: 'Fixed from attempt 1: y-axis fully hidden, no more misleading negative
+          ''Streaming Hours'' values; x-axis descriptive with formatted date ticks'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, canonical Imprint order for the rest, identical
-          colors across themes, theme-correct backgrounds'
+        comment: 'Pop = #009E73 first series, canonical Imprint order, correct theme-adaptive
+          backgrounds'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -124,22 +111,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom theme, restrained palette, spline-smoothed organic curves
-          - clearly above library defaults
+        comment: Custom theme, restrained palette, spline-smoothed organic curves,
+          clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid and spines fully removed, generous whitespace, elevated legend
-          box; docked for the unresolved negative-axis quirk
+        comment: Grid/spines/ticks fully removed, generous whitespace; misleading
+          y-axis quirk from attempt 1 now resolved
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Flowing shapes and genre crossovers create visual movement and hierarchy,
-          but no explicit focal point or emphasis
+        comment: Flowing shapes and genre crossovers create visual movement, but still
+          no explicit focal point/emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -149,27 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct streamgraph with smoothed ribbons and centered baseline
+        comment: Correct symmetric-baseline streamgraph
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth interpolation, centered baseline, distinct colors, legend
-          all present
+        comment: Smooth spline interpolation, centered baseline, distinct harmonious
+          colors, legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=month, ymin/ymax correctly stacked, all data visible
+        comment: x=month (time), band thickness=value per genre, all data represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec exactly; legend labels match genre names
-          in the data
+        comment: Title matches mandated format exactly; legend labels match genre
+          names
     data_quality:
       score: 15
       max: 15
@@ -179,22 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Genres show distinct trends with genuine rank crossovers over the
-          24 months, not parallel offset bands
+        comment: 24 months, 5 genres, trend + noise + genuine crossovers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world scenario matching the spec's own example (monthly
-          streaming hours by genre)
+        comment: Plausible, neutral music-streaming-hours scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Underlying per-genre values (20-400ish streaming hours/month) are
-          plausible and internally consistent
+        comment: Values in a sensible streaming-hours range (20-200ish), floored above
+          0
     code_quality:
       score: 10
       max: 10
@@ -204,7 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -216,19 +201,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os/numpy/pandas/plotnine/scipy.interpolate, all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or over-engineering
+        comment: No fake UI, appropriate complexity for the spline-stacking requirement
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via current plot.save API
+        comment: plot.save(f'plot-{THEME}.png', ...) correct format
     library_mastery:
       score: 6
       max: 10
@@ -238,17 +223,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic ggplot grammar (aes/geom_ribbon/scale_fill_manual/labs/theme),
-          correct workaround for plotnine's lack of a native smoothing stat
+        comment: Idiomatic ggplot grammar; sensible workaround for plotnine's lack
+          of a native smoothing stat
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Spline-smoothed geom_ribbon is the standard grammar-of-graphics streamgraph
-          technique and would look nearly identical in ggplot2/R; nothing plotnine-specific
-          is leveraged
-  verdict: REJECTED
+        comment: Spline-smoothed geom_ribbon is a generic grammar-of-graphics technique,
+          not plotnine-specific — attempt-1 feedback on this point unaddressed
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -256,10 +240,10 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
+  - iteration-over-groups
   dataprep:
   - interpolation
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
