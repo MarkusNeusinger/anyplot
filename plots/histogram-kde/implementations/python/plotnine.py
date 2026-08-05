@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-kde: Histogram with KDE Overlay
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 85/100 | Updated: 2026-08-05
+Quality: 87/100 | Updated: 2026-08-05
 """
 
 import os
