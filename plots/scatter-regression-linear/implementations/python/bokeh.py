@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-08-05
@@ -52,7 +52,6 @@ r_squared = 1 - (ss_res / ss_tot)
 residuals = y - y_pred
 residual_std = np.std(residuals)
 is_outlier = np.abs(residuals) > 2 * residual_std
-point_color = np.where(is_outlier, OUTLIER_COLOR, IMPRINT[0])
 
 # Calculate 95% confidence interval
 n = len(x)
@@ -96,8 +95,15 @@ p.add_layout(
     "above",
 )
 
-# Create data sources
-scatter_source = ColumnDataSource(data={"x": x, "y": y, "y_pred": y_pred, "residual": residuals, "color": point_color})
+# Create data sources — outliers get their own source so they can carry a
+# redundant non-color channel (larger size + heavier outline), since red-vs-green
+# alone is a CVD confusion pair
+normal_source = ColumnDataSource(
+    data={"x": x[~is_outlier], "y": y[~is_outlier], "y_pred": y_pred[~is_outlier], "residual": residuals[~is_outlier]}
+)
+outlier_source = ColumnDataSource(
+    data={"x": x[is_outlier], "y": y[is_outlier], "y_pred": y_pred[is_outlier], "residual": residuals[is_outlier]}
+)
 line_source = ColumnDataSource(data={"x": x_line, "y": y_line})
 band_source = ColumnDataSource(data={"x": x_line, "lower": ci_lower, "upper": ci_upper})
 
@@ -118,28 +124,43 @@ p.add_layout(band)
 # Add regression line
 p.line("x", "y", source=line_source, line_color=IMPRINT[1], line_width=4, legend_label="Linear Regression")
 
-# Add scatter points — outliers beyond 2 std of the residual get the matte-red
-# semantic anchor so the model's weak spots are visible at a glance
-scatter = p.scatter(
+# Add scatter points
+normal_scatter = p.scatter(
     "x",
     "y",
-    source=scatter_source,
+    source=normal_source,
     size=11,
-    color="color",
+    color=IMPRINT[0],
     alpha=0.7,
     line_color=PAGE_BG,
     line_width=1,
     legend_label="Data Points",
 )
 
-# Add hover tooltip
+# Outliers beyond 2 std of the residual get the matte-red semantic anchor PLUS a
+# redundant non-color channel (larger size, heavier ink-colored outline) so the
+# distinction survives when red/green cannot be resolved (CVD-safe)
+outlier_scatter = p.scatter(
+    "x",
+    "y",
+    source=outlier_source,
+    size=17,
+    color=OUTLIER_COLOR,
+    alpha=0.85,
+    line_color=INK,
+    line_width=2.5,
+    legend_label="Outlier (|residual| > 2σ)",
+)
+
+# Add hover tooltip to both point layers
 hover = HoverTool(
+    renderers=[normal_scatter, outlier_scatter],
     tooltips=[
         ("Study Hours", "@x{0.0}"),
         ("Exam Score", "@y{0.0}"),
         ("Predicted", "@y_pred{0.0}"),
         ("Residual", "@residual{+0.0}"),
-    ]
+    ],
 )
 p.add_tools(hover)
 
