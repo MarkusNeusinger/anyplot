@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-horizontal: Horizontal Bar Chart
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-05
@@ -59,10 +59,17 @@ df = pd.DataFrame(data)
 order = df.sort_values("Population", ascending=True)["Country"].tolist()
 top_country = df.loc[df["Population"].idxmax(), "Country"]
 
-# Focal-point emphasis: color each bar individually via hue=Country (a seaborn-idiomatic
-# way to assign one color per category), spotlighting the #1 country in brand green and
-# keeping the rest in muted ink — per the spec's "highlight specific bars" guidance.
-color_map = {country: (BRAND if country == top_country else INK_MUTED) for country in df["Country"]}
+# Focal-point emphasis, graduated by rank: sns.light_palette generates a brand-anchored
+# tint ramp (reverse=True keeps index 0 pixel-identical to BRAND), so the top-3 countries
+# step from full brand green down to a soft tint instead of a flat two-tone split — the
+# rest stay muted ink. hue=Country + palette=dict is the seaborn-idiomatic per-bar recolor.
+top_n = 3
+ranked = df.sort_values("Population", ascending=False)["Country"].tolist()
+rank_shades = sns.light_palette(BRAND, n_colors=top_n + 1, reverse=True)[:top_n]
+color_map = {
+    country: (rank_shades[ranked.index(country)] if country in ranked[:top_n] else INK_MUTED)
+    for country in df["Country"]
+}
 
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
