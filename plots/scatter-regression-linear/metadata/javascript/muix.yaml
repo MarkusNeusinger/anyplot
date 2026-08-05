@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-regression-linear
 created: '2026-08-05T13:40:38Z'
-updated: '2026-08-05T13:46:47Z'
+updated: '2026-08-05T13:56:20Z'
 generated_by: claude-sonnet
 workflow_run: 31010524716
 issue: 1821
@@ -12,131 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/muix/plot-dark.html
-quality_score: 49
+quality_score: 89
 review:
   strengths:
-  - 'Full spec compliance: fitted regression line, 95% confidence band, R² and r annotated
-    prominently, explicit regression equation, and point alpha (~0.6) all match the
-    spec''s notes.'
-  - 'Correct Imprint palette usage: first series is brand green #009E73, the regression
-    line uses a distinct blue from the palette, and the confidence band correctly
-    reaches for the theme-adaptive ''muted'' anchor for its fill — data colors are
-    identical between light and dark renders.'
-  - 'Advanced, idiomatic MUI X composition: uses ChartContainer with independent ScatterPlot/LinePlot
-    layers plus useXScale/useYScale hooks to hand-draw the confidence-band SVG path
-    — a genuinely library-distinctive technique.'
-  - Realistic, neutral dataset (advertising spend vs. sales revenue) with plausible
-    scale, natural noise, and a believable R² (0.828).
-  - Deterministic seeded LCG data generation, correct skipAnimation handling, and
-    clean adherence to the harness's default-export/mount contract.
+  - 'All required statistical elements present: regression line, 95% CI band, R²/r,
+    and the fitted equation, matching every bullet in the spec''s Notes section.'
+  - Confidence band correctly uses the theme-adaptive "muted" anchor (per the style
+    guide's documented confidence-band-fill role), so it looks appropriate in both
+    themes without a custom hex.
+  - Advanced, idiomatic use of MUI X's useXScale/useYScale hooks to render a custom
+    band overlay — real library mastery, not a generic default chart.
+  - Canvas is exactly on-target (3200x1800) with generous margins; no clipping anywhere
+    in either render.
+  - Data colors are identical between light and dark; only chrome flips, exactly as
+    required.
   weaknesses:
-  - 'CRITICAL (VQ-02, both themes): the y-axis title ''Sales Revenue ($k)'' collides
-    directly with the ''140'', ''120'', and ''100'' tick labels — the rotated axis-title
-    letters visibly strike through the tick digits, making both hard to read at that
-    spot. Root cause is insufficient clearance between the y-axis label and 3-digit
-    tick labels at the current margin.left=104 with tickLabelStyle fontSize=14 / labelStyle
-    fontSize=16. Fix: increase margin.left (e.g. to ~140-150) and/or push the y-axis
-    label further out from the tick labels (e.g. via a `sx` override on `.MuiChartsYAxis-label`
-    translateX, or by widening the axis'' reserved label space) so the two never overlap
-    in either theme.'
-  - Design Excellence is solid but not yet publication-ready — typography and color
-    choices work but read as a well-executed default rather than a distinctive, highly
-    polished composition.
-  - No legend distinguishes observed points from the fitted line; readers unfamiliar
-    with the green-points/blue-line convention have to infer it from the equation
-    annotation alone — a small inline legend or direct labels would remove the ambiguity
-    (minor, optional).
+  - Regression line color (t.palette[2], blue) skips t.palette[1] (lavender) without
+    a documented semantic justification — use the next ordinal palette position (t.palette[1])
+    for the second series, or make the semantic case explicit if blue is intentional.
+  - Scatter markers (size 7, alpha ~0.6) are solid but could be a touch more prominent
+    given the point count is on the lower-density side (90 points, well under the
+    500-point 'reduce size' threshold) — a marginal size bump would sharpen the cloud
+    further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Bold dark title "scatter-regression-linear · javascript · muix · anyplot.ai" centered at top, readable. Equation annotation "y = 3.59x + 16.4 · R² = 0.828 · r = 0.910" and the confidence-band note sit clearly above the plot area, fully readable, no clipping. X-axis label "Advertising Spend ($k)" and tick labels (6-50) are clean and legible with no overlap. However, the Y-axis label "Sales Revenue ($k)" (rotated) is positioned directly on top of the "140", "120", and "100" tick labels — the axis-title letters visibly cross through the tick digits, making both partially hard to read at that spot.
-      Data: First/only categorical series renders in brand green #009E73 (with ~0.6 alpha) for the 90 scatter points; the regression line is a contrasting blue; the confidence band is a soft grey (muted anchor) semi-transparent fill. Colors read clearly against the light background.
-      Legibility verdict: FAIL (y-axis label overlaps 3 tick labels — see chrome notes above; everything else passes)
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "scatter-regression-linear · javascript · muix · anyplot.ai" is dark and centered, fully readable. Axis labels ("Advertising Spend ($k)", "Sales Revenue ($k)") and tick labels are dark and crisp. Equation annotation ("y = 3.59x + 16.4 · R² = 0.828 · r = 0.910") and confidence-band caption are gray but legible. Horizontal-only gridlines are subtle.
+      Data: ~90 semi-transparent brand-green (#009E73-based) scatter points, a solid blue regression line, and a light-gray shaded 95% confidence band. Clear upward linear trend.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title, equation annotation, and x-axis label/ticks all render in light ink and are clearly legible against the dark background — no dark-on-dark failures anywhere else. Same y-axis label/tick-label overlap defect reproduces identically here: "Sales Revenue ($k)" collides with "140"/"120"/"100" tick labels.
-      Data: Scatter points and regression line use the identical colors as the light render (brand green #009E73 points, blue regression line, muted-grey confidence band) — only the chrome (background, text, grid) flipped as expected.
-      Legibility verdict: FAIL (same y-axis label/tick overlap as the light render; all other text passes)
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels flip to light/white text, fully readable. Equation and confidence-band caption text dims slightly but remains legible — no dark-on-dark failure.
+      Data: Same brand-green points and blue regression line as the light render (colors identical between themes, only chrome flipped). Confidence band renders as a visible lighter-gray tint against the near-black surface via the theme-adaptive "muted" anchor.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Explicit font sizes throughout, but the y-axis label overlapping
-          tick labels makes several tick values partially unreadable in both themes
+        passed: true
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 0
-        max: 6
-        passed: false
-        comment: Y-axis title 'Sales Revenue ($k)' collides directly with the '140',
-          '120', '100' tick labels in both renders — significant, unreadable overlap
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized (7px) with ~0.6 alpha for 90 points; regression
-          line at 3px stroke is clearly distinct
+        comment: No collisions between text, markers, band, or line
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers appropriately sized/blended; line and band clearly distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between green points, blue line, and grey band; not
-          reliant on red-green
+        comment: Green/blue is CVD-safe, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization and balanced margins; minor deduction for
-          the same margin issue causing the label overlap
+        comment: Correct 3200x1800 canvas, nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units ($k)
+        comment: Descriptive labels with units; title matches required format
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series is Imprint #009E73, blue regression line and muted
-          CI-band fill from the Imprint set, correct theme-adaptive backgrounds in
-          both renders, data colors identical light/dark'
+        passed: false
+        comment: First series correct brand green, but regression line skips palette[1]
+          for palette[2] without semantic justification
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful color and typography choices, above a bare default but
-          short of publication-ready polish
+        passed: true
+        comment: 'Thoughtful composition: equation/R2/r annotation, confidence band,
+          restrained hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle horizontal grid, L-shaped axes, generous whitespace, but the
-          label/tick overlap undercuts the 'every detail polished' bar
+        passed: true
+        comment: Minimal chrome, subtle horizontal grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Regression line, CI band, and equation annotation create clear visual
-          hierarchy guiding the viewer to the linear relationship
+        comment: Regression line + band + equation create a clear analytical focal
+          point
     spec_compliance:
       score: 15
       max: 15
@@ -146,88 +127,83 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter-plus-regression-line chart type
+        comment: Scatter with fitted linear regression line, exactly as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: R²/r shown prominently, distinct solid regression line, semi-transparent
-          95% CI band, point alpha ~0.6, equation annotation, axis labels — all present
+        comment: Regression line, CI band, R2/r annotation, and equation all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Advertising spend on x, sales revenue on y, axes cover full data
-          range with padding
+        comment: X = ad spend, Y = sales revenue, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; no legend needed given
-          the conventional green-points/blue-line encoding plus the equation annotation
+        comment: Title matches required format exactly; no legend needed
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows correlated spread with noise, a high-leverage point, and residuals
-          on both sides of the fit
+        comment: 90 points, realistic noise, clear linear trend, band widens at domain
+          edges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible business scenario (ad spend vs. revenue)
+        comment: Advertising spend vs sales revenue is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Spend ($5k-50k) and revenue ($8k-235k) ranges and slope are plausible
-          for the domain
+        comment: Sensible, non-arbitrary magnitudes
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Straightforward top-to-bottom structure; helper functions are the
-          idiomatic minimum required by the React/hooks contract
+        comment: Small helper functions and ConfidenceBand component are necessary,
+          not over-engineered
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG (seed=42)
+        comment: Deterministic fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: Only imports actually used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean manual OLS/CI math, no fake functionality
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation on both
-          chart and line plot, no manual mounting'
+        comment: Current composed ChartContainer API
     library_mastery:
       score: 9
       max: 10
@@ -237,24 +213,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of the ChartContainer composition pattern with independent
-          plot layers instead of the monolithic ScatterChart wrapper
+        comment: Correct composed ChartContainer + series config + skipAnimation
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks used to hand-draw the confidence-band path
-          directly against the chart's scales — a MUI X-specific composability feature
-  verdict: REJECTED
+        comment: useXScale/useYScale hooks build a custom confidence-band overlay
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - regression-line
+  - confidence-band
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
   - alpha-blending
+  - grid-styling
