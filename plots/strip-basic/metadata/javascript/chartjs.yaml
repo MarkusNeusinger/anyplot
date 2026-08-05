@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: strip-basic
 created: '2026-08-05T05:56:16Z'
-updated: '2026-08-05T06:00:30Z'
+updated: '2026-08-05T06:12:23Z'
 generated_by: claude-sonnet
 workflow_run: 30979430431
 issue: 975
@@ -12,133 +12,133 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/chartjs/plot-dark.html
-quality_score: 83
+quality_score: 92
 review:
   strengths:
-  - Correct Imprint palette in canonical order (green, lavender, blue, ochre) across
-    all 4 treatment groups, identical data colors between light and dark renders
-  - Deterministic fixed-seed LCG RNG (seed=42) with a clean Box-Muller gaussian helper
-    — fully reproducible data generation
-  - Jitter width (0.22) and marker alpha (0.65) both fall inside the spec-recommended
-    ranges (0.1-0.3, 0.5-0.7), effectively reducing overplotting
-  - Theme-adaptive chrome correctly threaded through every text element (title, axis
-    titles, ticks) via window.ANYPLOT_TOKENS — both renders are fully legible with
-    no dark-on-dark or light-on-light failures
-  - The dose-response relationship (decreasing response time and spread from Placebo
-    to High Dose) is immediately visible without any extra annotation
+  - 'All three Attempt-1 weaknesses fixed: marker edge stroke (pointBorderWidth 1
+    / pointBorderColor t.pageBg), dashed per-group mean reference lines, and a density-driven
+    scriptable pointBackgroundColor function'
+  - 'Correct Imprint palette in canonical order (green, lavender, blue, ochre), identical
+    data colors between light and dark renders, correct #FAF8F1 / #1A1A17 theme-adaptive
+    backgrounds'
+  - Deterministic fixed-seed LCG + Box-Muller gaussian helper, fully reproducible
+  - Realistic, neutral clinical dose-response scenario that matches the spec's suggested
+    application directly, with response times sensibly decreasing across Placebo ->
+    Low -> Standard -> High dose
+  - Dashed mean lines make the dose-response trend immediately legible in both themes
+    without extra annotation, meaningfully strengthening data storytelling over Attempt
+    1
   weaknesses:
-  - 'Markers have pointBorderWidth: 0 — no white/light edge stroke despite frequent
-    point overlap in the Placebo and Low Dose clusters; the style guide recommends
-    an edge stroke for overlapping scatter markers to preserve individual point definition'
-  - Spec explicitly suggests adding horizontal reference lines for group means/medians
-    ('Consider adding horizontal lines for group means or medians as reference') —
-    none are present; a subtle dashed per-group mean line would meaningfully strengthen
-    the data storytelling (DE-03) without adding clutter
-  - 'Library Mastery is generic: the linear-scale + ticks.callback trick to fake categorical
-    x-positions is a standard workaround replicable in almost any charting library
-    — nothing here is distinctly Chart.js (e.g. no use of a Chart.js-specific plugin,
-    scriptable style function, or interaction mode)'
-  - Title occupies only ~30-35% of canvas width at the default 22px size, leaving
-    the top of the canvas visually light relative to the dense plot area below — not
-    a violation, but bumping title size slightly would improve visual-hierarchy balance
-  - Visual refinement stays close to the library-prompt skeleton defaults (grid, spacing)
-    with little extra polish beyond what the reference example already provides
+  - Marker radius stays fixed at 6px regardless of local density; only alpha varies
+    with clustering — a slight density-aware radius reduction in the densest sub-clusters
+    (e.g. Placebo) would sharpen VQ-03/DE-01 further
+  - Placebo group still shows moderately dense point overlap even with the alpha/edge-stroke
+    treatment — a touch more jitter width or slightly smaller markers there specifically
+    would help
+  - All four groups show a single unimodal distribution shape (only mean/spread differ)
+    — a bimodal or outlier-containing subgroup would demonstrate fuller strip-plot
+    feature coverage (DQ-01)
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "strip-basic · javascript · chartjs · anyplot.ai" centered at top, clearly readable. X-axis title "Treatment Group" and Y-axis title "Response Time (minutes)" in dark ink, tick labels in a slightly softer gray. Subtle horizontal gridlines only (no vertical gridlines). All chrome text is dark-on-light and fully legible.
-      Data: Four jittered point clusters over category positions Placebo / Low Dose / Standard Dose / High Dose. Placebo = brand green (#009E73), Low Dose = lavender (#C475FD), Standard Dose = blue (#4467A3), High Dose = ochre (#BD8233) — matches Imprint canonical order 1-4. Points are semi-transparent (alpha ~0.65) so overlapping density reads clearly. Response times visibly decrease and tighten in spread from Placebo (~25-57 min) to High Dose (~10-29 min).
-      Legibility verdict: PASS — no light-on-light or hard-to-read text anywhere.
+      Chrome: Bold dark title "strip-basic · javascript · chartjs · anyplot.ai" centered at top; dark-ink "Treatment Group" (x) and "Response Time (minutes)" (y) axis titles; softer gray tick labels; subtle horizontal-only gridlines. All clearly visible against the light background.
+      Data: Four jittered point clusters over Placebo / Low Dose / Standard Dose / High Dose, colored brand green (#009E73), lavender, blue, and ochre — Imprint canonical order, positions 1-4. Each point has a thin page-bg-colored edge stroke for separation, and per-point alpha scales with local neighbor density (denser sub-clusters render more saturated). A dashed ink-toned mean line sits behind each group's points. Response times visibly decrease and tighten from Placebo (~25-57 min) down to High Dose (~10-29 min).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and axis titles render in light/near-white ink, tick labels in a softer light gray — all clearly visible against the dark background. Gridlines are faint light-toned horizontal lines, subtle but present.
-      Data: Same four category colors as the light render — green, lavender, blue, ochre — pixel-identical hues, confirming only chrome (not data) flips between themes. Same distributional pattern (dose-response trend) is equally readable on the dark surface.
-      Legibility verdict: PASS — no dark-on-dark failures; every title/label/tick is clearly visible against the near-black background.
+      Chrome: Title and axis titles render in near-white ink; tick labels in a softer light gray; gridlines are faint light-toned horizontal lines. No dark-on-dark failures — every title/label/tick is clearly visible against the near-black surface.
+      Data: Pixel-identical data colors to the light render (same green/lavender/blue/ochre, same density-driven alpha and edge-stroke treatment, same dashed mean lines) — confirms only chrome flips between themes.
+      Legibility verdict: PASS
+
+    Both renders also checked at the 400px mobile-scaled export (plot-light_400.png / plot-dark_400.png): title, axis titles, and category tick labels remain legible; no text collapses into an unreadable smear.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22px, axis titles 16px, ticks 14px), fully
-          readable in both themes, no overflow or clipping. Title is shorter (47 chars)
-          than the typical mandated-title benchmark so its ~30-35% width is expected,
-          not a defect.
+        comment: All font sizes explicitly set (title 26px, axis titles 16px, ticks
+          14px); readable at full size and at 400px mobile export in both themes;
+          mandated title comfortably proportioned, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text or data elements in either render.
+        comment: No text-on-text or text-on-data collisions; legend correctly omitted
+          since color is redundant with x-axis category position
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 45 points/category (sparse-medium density) with radius=6 CSS px and
-          alpha=0.65 — visible and reasonably sized, but no edge stroke to help separate
-          tightly-overlapping points.
+        comment: 'Edge stroke (pointBorderColor: t.pageBg) now separates overlapping
+          points and density-driven alpha reinforces clustering, but marker radius
+          is fixed at 6px regardless of density rather than also shrinking in the
+          densest sub-clusters'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues, alpha blending mitigates overplotting, no
-          red-green-only signal.
+        comment: Imprint palette provides adequate hue separation across 4 groups;
+          alpha + edge stroke aid contrast for overlapping points; no red-green-only
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas with balanced margins;
-          nothing cut off.
+        comment: Plot area fills a large, well-balanced portion of the 3200x1800 canvas;
+          no cut-off content; canvas dimension gate passed (no gate file present)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Treatment Group" and "Response Time (minutes)" — descriptive, with
-          units on Y.'
+        comment: '"Treatment Group" and "Response Time (minutes)" — descriptive with
+          units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining 3 series follow canonical Imprint
-          order (lavender, blue, ochre); backgrounds correct in both themes; data
-          colors identical across themes.'
+        comment: 'First series #009E73, canonical Imprint order for groups 2-4, identical
+          data colors across themes, correct #FAF8F1/#1A1A17 theme-adaptive backgrounds
+          and chrome'
     design_excellence:
-      score: 10
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured, on-brand palette and alpha tuning, but overall reads
-          as a well-configured library default rather than a distinctive design.
+        passed: true
+        comment: Density-driven per-point alpha, edge-stroked markers, and dashed
+          mean lines together read as a thoughtful, above-default design; not yet
+          at full publication-ready polish
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Y-only subtle grid and generous whitespace, but stays close to the
-          library-prompt skeleton defaults with minimal extra polish (no marker edge
-          stroke, no mean/reference lines).
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: The dose-response trend (decreasing response time and spread across
-          groups) is immediately visible via data choice and color-coded grouping,
-          even without explicit annotations.
+        comment: Subtle horizontal-only grid, generous whitespace, marker edge strokes
+          and dashed mean-line references added this attempt — clear refinement over
+          the Attempt-1 skeleton defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dashed per-group mean lines make the decreasing dose-response trend
+          immediately visible without requiring the viewer to infer it from scattered
+          points alone
     spec_compliance:
       score: 15
       max: 15
@@ -148,32 +148,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Jittered per-category scatter is the correct idiomatic Chart.js approach
-          to a strip plot (Chart.js has no native strip/beeswarm type).
+        comment: Idiomatic jittered-scatter strip plot, the correct Chart.js approach
+          since there is no native strip-plot type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Category grouping, random horizontal jitter (0.22, within 0.1-0.3),
-          and alpha transparency (0.65, within 0.5-0.7) all present; mean/median reference
-          lines are an optional 'consider' in the spec, not required.
+        comment: Jitter width 0.22 (in 0.1-0.3 range), density-scaled alpha for overplotting,
+          and the spec's suggested group mean reference lines are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on X (via linear scale + tick callback), numeric value on
-          Y; all data visible.
+        comment: Category on x (jittered), numeric response time on y; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'strip-basic · javascript · chartjs · anyplot.ai'.
-          Legend intentionally omitted since color already redundantly encodes the
-          x-axis category — consistent with style-guide guidance to drop redundant
-          single/self-evident legends.
+        comment: Title format exact; legend correctly omitted as redundant with x-axis
+          category position
     data_quality:
       score: 14
       max: 15
@@ -183,23 +179,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows 4 distinct groups with differing means and spreads (std 8→5);
-          gaussian tails naturally produce some outlier-like points but nothing is
-          intentionally emphasized as an outlier.
+        comment: 4 groups with differing means and shrinking spread by dose; no intentionally
+          emphasized outlier or bimodal subgroup
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Patient response time to escalating drug doses — real, neutral, comprehensible
-          clinical scenario.
+        comment: Patient response time across escalating drug doses — neutral, realistic
+          clinical scenario matching the spec's own suggested application
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times (~10-57 minutes) and monotonic dose-response decline
-          are plausible and internally consistent.
+        comment: Response times and their decrease with dose are physiologically plausible
     code_quality:
       score: 10
       max: 10
@@ -209,36 +203,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports (none needed) → RNG helpers → data → mount → chart; small
-          LCG/gaussian/withAlpha helpers are necessary utilities, not over-engineering.
+        comment: Linear data -> mount -> chart flow; the small helper functions (LCG,
+          gaussian, withAlpha, localDensity) are necessary in JS's no-numpy environment
+          and stay flat/non-OOP
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic.
+        comment: Fixed-seed LCG(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the Chart.js global, as expected for the browser
-          harness.
+        comment: No imports needed; uses only the global Chart
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI or simulated interactivity.
+        comment: Appropriate complexity for the density-alpha feature; O(n^2) density
+          loop is trivial at n=45; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows the mount-node contract exactly: single canvas appended
-          to #container, animation: false, current Chart.js v4 API.'
+        comment: 'Follows the mount-node contract exactly; animation: false set'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -246,23 +240,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of scatter type + linear x-scale + tick callback, the
-          standard idiomatic Chart.js pattern for categorical-jitter plots.
+        comment: Combines a scatter dataset with a line-type dataset in one chart
+          (Chart.js mixed-chart pattern) for the mean lines, plus linear-scale category
+          ticks
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: The linear-scale-plus-callback trick is a generic workaround replicable
-          in almost any charting library; nothing here is distinctly Chart.js-specific.
-  verdict: REJECTED
+        passed: true
+        comment: pointBackgroundColor as a scriptable per-point function keyed on
+          local neighbor density is a genuine Chart.js-distinctive technique, directly
+          addressing the Attempt-1 feedback
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
