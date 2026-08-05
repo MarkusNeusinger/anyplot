@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: line-multi
 created: '2025-12-24T21:30:25Z'
-updated: '2026-08-05T07:31:23Z'
+updated: '2026-08-05T07:38:41Z'
 generated_by: claude-sonnet
 workflow_run: 30984784336
 issue: 1825
@@ -12,43 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mult
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
   - 'Real bokeh interactivity: HoverTool with formatted per-point tooltips and click-to-hide
     legend — no fake/simulated UI'
-  - 'Deliberate visual hierarchy: the focal series (Electronics) gets full opacity
-    and a thicker line while the other three recede at 0.75 alpha, giving the chart
-    a clear focal point'
-  - Line-dash variation (solid vs dashed) layered on top of the Imprint palette gives
-    a CVD-safe secondary channel beyond color alone
-  - Theme-adaptive chrome correctly threaded through for both renders — background,
-    ink, grid tokens all flip correctly while the four data colors stay identical
-    between light and dark
+  - Now uses three distinct line-dash patterns (solid/dashed/dotted) plus color, fully
+    resolving the prior attempt's Furniture/Groceries dash collision
+  - End-of-line "$80k" value annotation on the focal Electronics series adds a clear
+    data-storytelling payoff beyond the color/opacity emphasis alone
+  - Theme-adaptive chrome correctly threaded through both renders — background, ink,
+    and grid tokens all flip correctly while the four data colors stay identical between
+    light and dark
   - Reproducible data generation (seeded) and idiomatic ColumnDataSource + HoverTool
     usage
   weaknesses:
-  - Furniture and Groceries both use dashed lines and differ only by color — a minor
-    readability compromise; consider a distinct dash pattern (e.g. dotted) for one
-    of them
-  - Design Excellence is solid but not maximal — a small added touch (e.g. a subtle
-    end-of-line value annotation on the focal series) would push the storytelling
-    further
+  - The "$80k" end-label's right edge touches the Electronics December marker in both
+    renders — nudge x_offset further left or reduce marker size at that point to fully
+    clear the overlap
+  - Design excellence, while improved with the focal-series treatment and value callout,
+    still stops short of a fully bespoke composition — DE-01 could go further with
+    additional intentional touches
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: bold centered title "line-multi · python · bokeh · anyplot.ai" in dark ink, clearly readable. Axis titles "Month" (x) and "Sales (thousands $)" (y) in italic dark ink. Tick labels (Jan-Dec on x, 10-80 on y) in a softer dark gray, all legible. Horizontal gridlines are faint and unobtrusive. Legend sits top-left in an elevated off-white box with a thin border, well clear of the data (nearest line value is far below the legend's bottom edge) — no overlap.
-      Data: four lines — Electronics (#009E73 green, solid, thick/full-opacity, trending up from ~48 to ~80, the focal series), Clothing (#C475FD purple, solid, declining then recovering), Furniture (#4467A3 blue, dashed, flat/noisy ~23-28), Groceries (#BD8233 amber, dashed, gently declining ~55 to ~48). All four are clearly distinguishable by color and by solid-vs-dashed pattern. Markers are prominent filled circles at each of the 12 monthly points, appropriately sized for this sparse series count.
-      Legibility verdict: PASS
+      Background: warm off-white, confirmed #FAF8F1 by pixel sample — not pure white, not dark.
+      Chrome: bold centered title "line-multi · python · bokeh · anyplot.ai" in dark ink, clearly readable. Axis titles "Month" (x) and "Sales (thousands $)" (y) in italic dark ink. Tick labels (Jan-Dec on x, 10-80 on y) in a softer dark gray, all legible. Horizontal gridlines are faint and unobtrusive. Legend sits top-left in an elevated off-white box with a thin border, clear of the data lines.
+      Data: four lines — Electronics (#009E73 green, solid, thick/full-opacity, trending up from ~48 to ~80, the focal series with a "$80k" end-of-line value label), Clothing (#C475FD purple, solid, declining then recovering), Furniture (#4467A3 blue, dashed, flat/noisy ~23-28), Groceries (#BD8233 amber, dotted, gently declining ~55 to ~48). All four are clearly distinguishable by color and by solid/dashed/dotted pattern. Markers are prominent filled circles at each of the 12 monthly points, upsized further on the focal series.
+      Legibility verdict: PASS — one minor note: the "$80k" annotation's right edge touches the December marker dot but remains fully readable.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: title, axis titles, and tick labels all render in light/off-white ink, clearly visible against the dark background — no dark-on-dark issues. Legend box uses an elevated dark fill with a lighter border and light gray label text, fully readable. Gridlines are faint but present.
-      Data: same four colors and same dash pattern in the same positions as the light render — Electronics green, Clothing purple, Furniture blue dashed, Groceries amber dashed — confirming the categorical data colors are identical across themes and only the chrome (background/text/grid/legend frame) flipped.
-      Legibility verdict: PASS
+      Background: warm near-black, confirmed #1A1A17 by pixel sample — not pure black, not light.
+      Chrome: title, axis titles, and tick labels all render in light/off-white ink, clearly visible against the dark background — no dark-on-dark issues found. Legend box uses an elevated dark fill with a lighter border and light gray label text, fully readable. Gridlines are faint but present.
+      Data: same four colors and same dash patterns in the same positions as the light render — Electronics green (with the same "$80k" label, still legible on dark), Clothing purple, Furniture blue dashed, Groceries amber dotted — confirming the categorical data colors are identical across themes and only the chrome (background/text/grid/legend frame) flipped.
+      Legibility verdict: PASS — same minor annotation/marker proximity note as the light render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -56,31 +55,35 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, all text readable in both themes
+        comment: Explicit font sizes throughout; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Legend sits well clear of all data lines in both renders
+        comment: '"$80k" end label''s right edge touches the Electronics December
+          marker in both renders — minor, not severe'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse 12-point series with prominent, appropriately-sized markers
+        comment: Sparse 12-point series with prominent, appropriately-sized markers;
+          focal series upsized further for emphasis
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Color + line-dash dual encoding, no red-green sole signal
+        comment: Color + line-dash dual encoding (solid/dashed/dotted), no red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, title well-proportioned, no overflow
+        comment: Canvas gate passed (3200x1800 confirmed); title well-proportioned,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -92,32 +95,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds,
+        comment: 'First series #009E73, canonical Imprint order, exact theme backgrounds,
           identical data colors across themes'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Deliberate focal-series emphasis and dash variation beyond generic
-          defaults
+        comment: Deliberate focal-series emphasis, end-of-line value annotation, and
+          dash variation beyond generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: No outer frame, subtle grid alpha, generous range padding
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Focal series (Electronics) given full opacity/thicker line to create
-          a clear visual hierarchy
+        comment: No outer frame, subtle grid alpha, generous range padding, elevated
+          legend background
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Focal series given full opacity/thicker line plus explicit value
+          callout, creating a strong, unambiguous visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -147,16 +151,16 @@ review:
         passed: true
         comment: Title matches mandated format, legend labels match series names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 4 series with varied trend shapes (rising, declining, flat/noisy,
-          gently declining)
+        comment: 4 series with varied trend shapes and now fully distinct line-dash
+          patterns (solid/dashed/dotted) per spec's 'varying line styles' note
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -168,7 +172,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Sensible thousands-of-dollars range
+        comment: Sensible thousands-of-dollars range for the domain
     code_quality:
       score: 10
       max: 10
@@ -178,7 +182,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -196,15 +200,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Real HoverTool interactivity, no fake UI
+        comment: No fake UI, real HoverTool interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html via current API
+        comment: Saves plot-{THEME}.png and .html, current bokeh API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -212,18 +216,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, figure(), idiomatic styling API
+        comment: Idiomatic ColumnDataSource + figure() high-level API
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: HoverTool with formatted tooltips, click_policy='hide' legend interactivity
+        comment: HoverTool, click-to-hide legend, and Label annotation are genuine
+          bokeh-distinctive interactive features
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
@@ -234,4 +240,3 @@ impl_tags:
   - cumulative-sum
   styling:
   - alpha-blending
-  - grid-styling
