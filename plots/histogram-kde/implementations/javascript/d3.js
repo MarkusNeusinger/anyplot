@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-kde: Histogram with KDE Overlay
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-08-05
+// Library: d3 7.9.0 | JavaScript 22.23.1
+// Quality: 85/100 | Created: 2026-08-05
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
