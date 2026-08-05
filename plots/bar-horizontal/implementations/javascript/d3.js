@@ -12,16 +12,23 @@ const ih = height - margin.top - margin.bottom;
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Most-starred open-source frameworks on GitHub, sorted ascending so the
 // largest bar lands at the top when rendered with a reversed band scale.
+// Raw star counts (not pre-scaled) — the SI-prefix formatter below derives
+// the "k" display units directly from the real magnitude.
 const data = [
-  { language: "Vue", stars: 46.9 },
-  { language: "Bootstrap", stars: 59.1 },
-  { language: "TensorFlow", stars: 68.3 },
-  { language: "React", stars: 79.4 },
-  { language: "Flutter", stars: 89.9 },
-  { language: "VS Code", stars: 98.7 },
-  { language: "Node.js", stars: 108.2 },
-  { language: "freeCodeCamp", stars: 118.5 },
+  { language: "Vue", stars: 46900 },
+  { language: "Bootstrap", stars: 59100 },
+  { language: "TensorFlow", stars: 68300 },
+  { language: "React", stars: 79400 },
+  { language: "Flutter", stars: 89900 },
+  { language: "VS Code", stars: 98700 },
+  { language: "Node.js", stars: 108200 },
+  { language: "freeCodeCamp", stars: 118500 },
 ].sort((a, b) => a.stars - b.stars);
+
+// SI-prefix formatter (d3-format) — auto-derives "k" units from magnitude
+// instead of a hardcoded `${d}M` multiplier.
+const siFormat = d3.format("~s");
+const valueFormat = d3.format(".3~s");
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -44,7 +51,7 @@ g.append("g")
 const xAxis = g
   .append("g")
   .attr("transform", `translate(0,${ih})`)
-  .call(d3.axisBottom(x).ticks(6).tickFormat((d) => `${d}M`).tickSizeOuter(0));
+  .call(d3.axisBottom(x).ticks(6).tickFormat(siFormat).tickSizeOuter(0));
 const yAxis = g.append("g").call(d3.axisLeft(y).tickSizeOuter(0));
 
 for (const ax of [xAxis, yAxis]) {
@@ -63,6 +70,8 @@ g.selectAll("rect.bar")
   .attr("y", (d) => y(d.language))
   .attr("width", (d) => x(d.stars))
   .attr("height", y.bandwidth())
+  .attr("rx", 3)
+  .attr("ry", 3)
   .attr("fill", t.palette[0]);
 
 // --- Value labels at bar ends ------------------------------------------------
@@ -76,7 +85,7 @@ g.selectAll("text.value")
   .attr("fill", t.ink)
   .style("font-size", "16px")
   .style("font-weight", "500")
-  .text((d) => `${d.stars.toFixed(1)}M`);
+  .text((d) => `${valueFormat(d.stars)}`);
 
 // --- Axis label ---------------------------------------------------------------
 svg
@@ -86,7 +95,7 @@ svg
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "18px")
-  .text("GitHub Stars (millions)");
+  .text("GitHub Stars");
 
 // --- Title ------------------------------------------------------------------
 svg
