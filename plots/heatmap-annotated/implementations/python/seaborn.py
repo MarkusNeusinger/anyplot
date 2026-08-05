@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-annotated: Annotated Heatmap
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-06
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-08-05
 """
 
 import os
@@ -10,13 +10,32 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Global theme — idiomatic seaborn styling rather than per-artist overrides
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+    },
+)
+
+# Imprint diverging colormap — correlations have a meaningful zero midpoint
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", PAGE_BG, "#4467A3"])
 
 # Data - Correlation matrix for realistic financial variables
 np.random.seed(42)
@@ -60,32 +79,43 @@ for (i, j), val in correlations.items():
 # Create DataFrame
 df_corr = pd.DataFrame(corr_matrix, index=variables, columns=variables)
 
-# Plot - Square format (3600x3600 px at 300 DPI = 12x12 inches)
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+# Plot - Square format (6x6 in @ 400 dpi = 2400x2400 px, canonical square canvas)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 
-# Use seaborn's heatmap with annotations
+# Use seaborn's heatmap with annotations and the Imprint diverging colormap
 sns.heatmap(
     df_corr,
     annot=True,
     fmt=".2f",
-    cmap="RdBu_r",
+    cmap=imprint_div,
     center=0,
     vmin=-1,
     vmax=1,
     square=True,
-    linewidths=0.5,
-    linecolor=INK_SOFT,
-    cbar_kws={"shrink": 0.75, "label": "Correlation", "ticks": [-1, -0.5, 0, 0.5, 1]},
-    annot_kws={"size": 16, "weight": "bold"},
+    linewidths=0.6,
+    linecolor=PAGE_BG,
+    cbar_kws={"shrink": 0.8, "pad": 0.03, "aspect": 24, "label": "Correlation", "ticks": [-1, -0.5, 0, 0.5, 1]},
+    annot_kws={"size": 13, "weight": "bold"},
     ax=ax,
 )
 
+# Highlight the strongest off-diagonal correlation for visual hierarchy
+off_diag = np.abs(corr_matrix.copy())
+np.fill_diagonal(off_diag, 0)
+peak_i, peak_j = np.unravel_index(np.argmax(off_diag), off_diag.shape)
+for i, j in {(peak_i, peak_j), (peak_j, peak_i)}:
+    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=False, edgecolor=INK, linewidth=2.5))
+
 # Style
-ax.set_facecolor(PAGE_BG)
-ax.set_title("heatmap-annotated · seaborn · anyplot.ai", fontsize=24, pad=20, weight="bold", color=INK)
-ax.set_xlabel("Asset Class", fontsize=20, color=INK)
-ax.set_ylabel("Asset Class", fontsize=20, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.set_title("heatmap-annotated · seaborn · anyplot.ai", fontsize=11, pad=16, weight="bold", color=INK)
+ax.set_xlabel("Asset Class", fontsize=12, color=INK)
+ax.tick_params(axis="both", labelsize=10, colors=INK_SOFT)
+
+# Enclosed heatmap grid — keep all four spines, styled thin and theme-adaptive
+for spine in ax.spines.values():
+    spine.set_visible(True)
+    spine.set_edgecolor(INK_SOFT)
+    spine.set_linewidth(0.8)
 
 # Rotate x-axis labels for better readability
 plt.xticks(rotation=45, ha="right")
@@ -93,9 +123,10 @@ plt.yticks(rotation=0)
 
 # Adjust colorbar label size and colors
 cbar = ax.collections[0].colorbar
-cbar.ax.tick_params(labelsize=14, colors=INK_SOFT)
-cbar.ax.set_ylabel("Correlation", fontsize=16, color=INK)
+cbar.ax.tick_params(labelsize=9, colors=INK_SOFT)
+cbar.ax.set_ylabel("Correlation", fontsize=11, color=INK)
 cbar.outline.set_edgecolor(INK_SOFT)
+cbar.outline.set_linewidth(0.8)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
