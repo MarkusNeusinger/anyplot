@@ -2,123 +2,138 @@ library: letsplot
 language: python
 specification_id: line-multi
 created: '2025-12-24T21:34:29Z'
-updated: '2026-05-06T15:36:02Z'
-generated_by: claude-haiku
-workflow_run: 25444383803
+updated: '2026-08-05T07:49:39Z'
+generated_by: claude-sonnet
+workflow_run: 30985452941
 issue: 1825
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Perfect visual quality with both light and dark themes rendering correctly and
-    readably
-  - Excellent palette compliance with proper Okabe-Ito colors and theme-adaptive chrome
-  - Thoughtful design with clear visual hierarchy (Electronics emphasized as top performer)
-  - Clean, professional styling without visual clutter
-  - Reproducible, well-structured code with clear intent (data separation for layering)
-  - Idiomatic letsplot usage throughout
+  - 'Both fixes requested after attempt 1 are correctly applied: the title now includes
+    the language segment (''line-multi · python · letsplot · anyplot.ai''), and scale_color_manual
+    now sets breaks=["Electronics", "Clothing", "Home Goods"] so the brand-green Imprint
+    color lands on the intended hero series instead of the alphabetically-first one.'
+  - 'Full Imprint palette + theme-adaptive chrome compliance across both renders:
+    data colors are pixel-identical between light and dark, backgrounds match #FAF8F1/#1A1A17,
+    and all text is legible on both surfaces.'
+  - Genuine letsplot-specific interactivity via layer_tooltips() with custom per-series
+    formatting ('^color', '@MonthLabel|@Sales' formatted as '{,.0f}k USD'), surfaced
+    in the saved HTML — not decorative fakery.
+  - Realistic, appropriately-scaled monthly product-line sales data showing three
+    genuinely distinct trajectory shapes (steady growth, decline-then-recovery, flat-with-late-uptick)
+    including a natural crossover around June/July.
+  - 'With the color fix, the line-weight/alpha hierarchy now fully coheres with the
+    palette: Electronics is simultaneously the thickest, fully-opaque, brand-green,
+    top-value line — a clear, unambiguous focal point.'
   weaknesses:
-  - The geom_smooth() trend line adds complexity beyond the core specification (nice-to-have,
-    not required)
-  - Visual hierarchy could be more dramatic for stronger data storytelling impact
-  - Limited showcasing of distinctive letsplot-specific features beyond standard ggplot2
-    patterns
+  - Aesthetic customization is still limited to the mandated default Imprint array
+    plus alpha/size differentiation — solid and correct, but not yet distinctive enough
+    to read as fully publication-ready design (DE-01 stays at 'well-configured default'
+    tier).
+  - Minor unused whitespace below the legend on the right side of the canvas; tightening
+    the legend box position or outer plot margins would improve canvas utilization
+    slightly (VQ-05).
+  - 'LM-02 remains mid-tier: layer_tooltips() with custom formatting is a nice letsplot-specific
+    touch, but the implementation doesn''t yet reach for a feature that''s harder
+    to replicate in other libraries (e.g. faceting, a fitted trend layer, or annotation
+    layers).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title "line-multi · letsplot · anyplot.ai" in dark text (clearly visible). Axis labels "Month" and "Sales (thousands USD)" in primary text color (readable). Tick labels for months (Jan-Dec) and sales values in secondary text color (clearly visible).
-      Data: Three distinct lines with proper Okabe-Ito colors - Clothing (green #009E73), Home Goods (orange #D55E00), Electronics (blue #0072B2). All markers visible. Visual hierarchy through line thickness (Electronics larger) and opacity variation. Loess trend line on Electronics.
-      Legend: Clear legend on right side identifying "Product Line" with all three series.
-      Legibility verdict: PASS - All text readable with good contrast against light background
+      Background: warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "line-multi · python · letsplot · anyplot.ai" top-left in dark ink, fully readable and correctly includes the language segment. Axis titles "Month" (x) and "Sales (thousands USD)" (y) in dark ink; tick labels (Jan-Dec, 60-220) in medium grey — all clearly legible against the light background. Legend box "Product Line" sits to the right of the plot with a subtly elevated off-white fill and thin border, listing Electronics / Clothing / Home Goods in that order with colored circle+line swatches, fully readable. No grid lines (panel_grid_major/minor intentionally blanked) — a deliberate minimalist choice, not a defect.
+      Data: Three line+marker series. Thick, fully-opaque brand-green line (Electronics, #009E73) rising from ~155 to ~220 with the largest markers — now correctly the visual hero, matching both emphasis and palette-position-1. Thin, alpha=0.55 lavender line (Clothing, #C475FD) declining from ~120 to ~65 with a late partial recovery. Thin, alpha=0.55 blue line (Home Goods, #4467A3) relatively flat around 85-105 with a mild late rise. Clothing and Home Goods visibly cross around June/July.
+      Legibility verdict: PASS — no light-on-light issues anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: All text (title, axis labels, tick labels) rendered in light colors with good contrast against dark background. No dark-on-dark failures detected. Specifically, no near-black text on near-black background.
-      Data: The three data colors (green #009E73, orange #D55E00, blue #0072B2) are identical to light render - only chrome changed as expected. Visual hierarchy, markers, and trend line present and visible.
-      Legend: Same legend information clearly visible with light text.
-      Legibility verdict: PASS - All text readable with good contrast against dark background. Proper theme adaptation confirmed.
+      Background: warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels all render in light off-white ink, standing out clearly against the dark background. Legend box background flips to a lighter dark-elevated tone (~#242420) with a thin border; legend text stays light and readable.
+      Data: Line colors are pixel-identical to the light render (same green/lavender/blue hues and alpha treatment, Electronics still the brand-green hero) — only the chrome (background, text, legend box) flips with the theme, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and data remain clearly distinguishable from the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All fonts properly sized (title 24pt, labels 20pt, ticks 16pt) and
-          colored for both light and dark themes
+        comment: All font sizes explicitly set (title 16, axis_title 12, axis_text
+          10, legend 10); readable in both themes with no overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no collisions between text, lines, or markers
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and lines clearly distinguishable with appropriate sizing
-          for data density
+        comment: Sparse 12-point series use prominent, density-appropriate markers
+          (2.5-4.5).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe, no problematic red-green sole signaling
+        comment: Green/lavender/blue distinguishable without relying on hue alone;
+          alpha adds a second distinguishing channel.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions (4800x2700px), generous margins, nothing cut
-          off
+        comment: Good canvas utilization and legend placement near the plot; some
+          unused whitespace below the legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec-id, library, and domain; y-axis has units (thousands
-          USD)
+        comment: Y-axis has units ('Sales (thousands USD)'); x-axis 'Month' is descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order, backgrounds #FAF8F1/#1A1A17,
-          both renders theme-correct'
+        comment: 'First categorical series (Electronics) is #009E73; other series
+          follow canonical Imprint order; both renders theme-correct; data colors
+          identical across themes.'
     design_excellence:
       score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Visual hierarchy with varying line thickness and opacity, custom
-          palette usage, intentional data layering. Solid design but not groundbreaking
+        passed: false
+        comment: Uses the mandated default Imprint array plus alpha/size differentiation
+          — well-configured but not exceptional.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: L-shaped axes (top/right spines removed), no grid, generous whitespace.
-          Minimal additional refinement
+        comment: Grid removed entirely, generous whitespace, refined legend box —
+          real refinement beyond defaults.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Visual hierarchy guides viewer to Electronics as top performer; loess
-          trend reinforces pattern; clear focal point
+        comment: 'Line-weight/alpha hierarchy now fully coheres with the palette fix:
+          the brand-green hero series is simultaneously thickest, most opaque, and
+          highest-valued — a clear, unambiguous focal point.'
     spec_compliance:
       score: 15
       max: 15
@@ -128,47 +143,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line comparison plot
+        comment: Correct multi-line comparison chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend, optional markers all present
+        comment: Distinct colors, clear legend, and optional sparse-data markers all
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (Month), Y-axis (Sales) correct; all series properly mapped
+        comment: x=Month, y=Sales, color=Product Line correctly mapped; all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Title now correctly includes the language segment ('line-multi ·
+          python · letsplot · anyplot.ai'); legend labels correct.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Three distinct product lines with different trends
+        comment: Shows three genuinely distinct trajectory shapes plus a crossover.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly sales data is realistic and neutral
+        comment: Neutral, plausible business scenario (retail product-line sales).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values (60-220k USD/month) are sensible
+        comment: Sales figures and relative magnitudes are plausible for a retail
+          context.
     code_quality:
       score: 10
       max: 10
@@ -178,33 +196,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions; straightforward plotting logic
+        comment: No functions/classes, linear top-to-bottom script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, lets_plot)
+        comment: Only os, numpy, pandas, lets_plot — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; visual hierarchy via data separation justified
+        comment: Layered geoms for emphasis is appropriate complexity, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html; current API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -212,23 +230,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper ggplot2-style grammar, correct aes(), scale_color_manual(),
-          theme config
+        comment: 'Expert use of ggplot grammar: aes, layered geoms, scale_color_manual
+          with breaks, theme customization.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: true
-        comment: geom_smooth() with loess used but standard ggplot2; theme tokens
-          applied correctly
+        passed: false
+        comment: Uses layer_tooltips() with custom formatting — a letsplot-specific
+          fluent tooltip API, though hover tooltips exist in other interactive libraries
+          too.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - hover-tooltips
   - html-export
+  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - alpha-blending
+  - minimal-chrome
