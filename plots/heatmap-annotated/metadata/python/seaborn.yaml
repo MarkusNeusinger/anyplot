@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: heatmap-annotated
 created: '2025-12-24T21:30:34Z'
-updated: '2026-08-05T09:31:13Z'
+updated: '2026-08-05T09:38:57Z'
 generated_by: claude-sonnet
 workflow_run: 30992906112
 issue: 1824
@@ -12,44 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Correct diverging Imprint colormap (imprint_div) chosen appropriately for signed
-    correlation data, with the midpoint set to the theme background so zero-correlation
-    cells read as neutral in both renders
-  - Automatic contrast-aware annotation text (black/white per cell) keeps every correlation
-    value legible against both light and dark cell backgrounds
-  - Canvas confirmed exactly 2400×2400 px, matching the square format recommended
-    for symmetric matrix plots
-  - Theme-adaptive chrome fully threaded through title, axis labels, tick labels,
-    spines, and colorbar — no dark-on-dark or light-on-light failures in either render
-  - 'Clean idiomatic seaborn code: single sns.heatmap() call, reproducible via np.random.seed(42),
-    no unused imports, no fake interactivity'
-  - Enclosed four-spine grid is a deliberate, spec-sanctioned style exception for
-    heatmaps, executed with thin theme-matched edge color and width
+  - Seaborn's native per-cell contrast handling makes every annotation readable regardless
+    of background luminance in both themes
+  - 'Correct theme-adaptive Imprint diverging colormap (imprint_div: matte-red ↔ theme
+    midpoint ↔ blue) appropriately chosen for signed correlation data'
+  - 'Thoughtful data storytelling: a bordered rectangle highlights the strongest off-diagonal
+    correlation (Stocks-Crypto, 0.65), giving the plot a clear focal point without
+    faking interactivity'
+  - Enclosed four-spine heatmap grid is the correct style-guide exception, styled
+    thin and theme-adaptive, with subtle background-colored cell gridlines that keep
+    the grid unobtrusive
+  - Realistic, neutral financial correlation dataset (7 asset classes) with plausible
+    directional relationships (e.g., Stocks-Bonds negative, Bonds-Cash positive)
   weaknesses:
-  - Annotation font (11pt bold) is only modestly sized for a 7x7 matrix — bump to
-    ~12-13pt for extra headroom at ~400px mobile scale
-  - Data storytelling is minimal — color + number encoding only, with no emphasis
-    (e.g. highlighting the strongest correlations) to sharpen the narrative
-  - Doesn't use the common seaborn corr-heatmap idiom of masking the redundant symmetric
-    half (np.triu mask) to reduce visual repetition — not spec-required, but would
-    read as more distinctive
-  - X-axis and Y-axis labels are both literally 'Asset Class' — correct but generic
-    for a self-correlation matrix; consider omitting one for a cleaner look
+  - Title omits the mandated language segment — currently 'heatmap-annotated · seaborn
+    · anyplot.ai', should be 'heatmap-annotated · python · seaborn · anyplot.ai' per
+    the SC-04 title format
+  - No y-axis label is set (only ax.set_xlabel('Asset Class') is called) — the y-axis
+    carries no label, creating an axis-label imbalance
+  - Data doesn't exercise the full negative range of the diverging colormap — the
+    weakest correlation is only -0.25 on a [-1, 1] scale, so the red end of imprint_div
+    stays pale in both renders; a moderately-strong negative correlation (e.g., -0.5
+    to -0.7) would better demonstrate the diverging encoding
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) plot background, confirmed correct — not pure white.
-      Chrome: Bold black title "heatmap-annotated · seaborn · anyplot.ai" centered above the matrix. Axis labels "Asset Class" on both X and Y in dark ink. X-axis tick labels (asset names) rotated 45°, right-aligned; Y-axis tick labels horizontal. Colorbar on the right labeled "Correlation" with ticks -1.0 to 1.0, secondary tick color slightly softer gray. All spines visible (enclosed 4-sided grid), thin and theme-matched. Grid separator lines between cells match the page background.
-      Data: 7x7 symmetric correlation matrix (Stocks, Bonds, Gold, Real Estate, Crypto, Commodities, Cash). Cells colored via the Imprint diverging colormap (matte red -> cream midpoint -> blue), diagonal cells = 1.00 in deep blue. Each cell annotated with a 2-decimal correlation value; text color automatically flips between black and white per cell for contrast (e.g. white "0.65" on medium blue, black "0.10" on near-neutral cell).
-      Legibility verdict: PASS — all title, axis, tick, and annotation text is clearly readable against the light background; no light-on-light issues observed.
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Bold dark-ink title "heatmap-annotated · seaborn · anyplot.ai" at top (missing the "python" language segment). X-axis label "Asset Class" at bottom in dark ink; rotated 45° tick labels (Stocks, Bonds, Gold, Real Estate, Crypto, Commodities, Cash) on both axes in soft grey ink. Colorbar on the right labeled "Correlation" with ticks -1 to 1, thin theme-adaptive outline. All chrome clearly readable against the light background.
+      Data: 7x7 correlation matrix. Diagonal cells (1.00) render in the strongest blue; off-diagonal cells range from pale red (weak negative, e.g. -0.25) through near-background (near zero) to strong blue (strong positive, e.g. 0.65). Each cell has a bold numeric annotation whose text color automatically switches between black and white for contrast against its own cell's background. The strongest off-diagonal correlation (Stocks-Crypto, 0.65) is boxed with a black-edged highlight rectangle.
+      Legibility verdict: PASS — no light-on-light or unreadable text observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) plot background, confirmed correct — not pure black.
-      Chrome: Same title now in light/white text, axis labels in light ink, tick labels in softer light gray. Colorbar retains the "Correlation" label and same -1.0 to 1.0 ticks, now light-colored. Spines and grid lines rendered in the same theme-adaptive soft tone as the light render's equivalents, just inverted for the dark surface.
-      Data: Identical data colors and layout to the light render — the diverging colormap's red/blue endpoints (#AE3030 / #4467A3) are unchanged; only the midpoint shifted to match the dark background, exactly as intended for a theme-adaptive diverging scale. Annotation text again auto-contrasts per cell (white numerals on darker/near-background cells, black numerals on lighter blue cells), with no dark-on-dark failures spotted — even the near-zero-correlation cells (whose color is closest to the background) keep clearly legible white text.
-      Legibility verdict: PASS — all title, axis, tick, and annotation text is clearly readable against the dark background; no dark-on-dark failures found.
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Same title and axis label, now rendered in light ink (#F0EFE8 primary / #B8B7B0 secondary for ticks). Colorbar label and ticks legible in light grey against the dark background. The highlight rectangle's edge color switches to the light-ink token, remaining visible against the dark cell fills.
+      Data: Identical cell colors and values to the light render — diagonal blue at 1.00, same red/blue diverging spread for off-diagonal correlations, same per-cell auto-contrast annotation text (white on darker cells, near-black on lighter cells). Confirms the diverging colormap's data-color anchors are unchanged between themes; only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, tick, and colorbar text remain clearly visible against the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -57,77 +56,82 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; annotation font (11pt) is on the
-          smaller side for a 7x7 matrix, could grow slightly for mobile headroom
+        comment: Font sizes explicitly set (title 11pt, xlabel 12pt, annotations 13pt
+          bold, ticks 10pt); readable in both themes; minor deduction for missing
+          y-axis label creating slight asymmetry
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, axes, ticks, colorbar, or cell annotations
+        comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 49 cells clearly visible and distinguishable in both themes
+        comment: Cell annotations at size 13 bold are prominent and clearly readable
+          for a 7x7 grid
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging red/blue Imprint cmap with redundant numeric-value encoding,
-          CVD-safe by design
+        comment: Diverging red/blue with automatic per-cell contrast text color; numeric
+          labels give redundant encoding beyond hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas confirmed exactly 2400x2400px, good proportions, nothing cut
-          off
+        comment: Heatmap + colorbar + labels occupy a large, well-balanced share of
+          the square canvas
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title matches mandated format; axis labels descriptive, if generic
+        passed: false
+        comment: X-axis labeled 'Asset Class' but no y-axis label present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_div used correctly for signed correlation data; theme-adaptive
-          midpoint; both renders theme-correct
+        comment: 'imprint_div correctly used for diverging correlation data; identical
+          data colors across themes; theme-correct #FAF8F1/#1A1A17 backgrounds and
+          chrome'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom colorbar sizing (shrink/pad/aspect), theme-adaptive midpoint
-          colormap — solid but not exceptional
+        comment: Custom Imprint diverging colormap, bold annotation typography, and
+          an intentional highlight rectangle for the peak correlation show real design
+          thought beyond library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Enclosed grid is a deliberate, spec-sanctioned exception, styled
-          thin and theme-matched; grid separators subtle
+        comment: Thin theme-colored cell gridlines and the full-but-thin spine frame
+          (correct exception for enclosed heatmap grids) give a polished, restrained
+          look
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Color + number encoding only, no emphasis or highlighting of standout
-          correlations
+        passed: true
+        comment: The bordered highlight box around the strongest correlation gives
+          the plot a clear focal point and directs the viewer's eye
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -141,45 +145,48 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Annotations, colorbar legend, contrast-aware text, diverging colormap
-          for +/- data all present
+        comment: Numeric annotations, colorbar legend, diverging colormap for signed
+          data, and auto-contrast text all present per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y categorical labels correctly mapped, all 49 cells shown
+        comment: Both axes correctly show all 7 asset classes; symmetric matrix fully
+          visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct; colorbar acts as the legend, clearly labeled
-          'Correlation'
+        passed: false
+        comment: Title omits the mandated language segment — reads 'heatmap-annotated
+          · seaborn · anyplot.ai' instead of 'heatmap-annotated · python · seaborn
+          · anyplot.ai'
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Full symmetric matrix, diagonal=1, mix of positive/negative/near-zero
-          correlations
+        comment: Good spread of positive/negative/near-zero correlations, but the
+          negative side is shallow (min -0.25) so the diverging colormap's red end
+          is never strongly exercised
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible financial asset-class correlation matrix, neutral domain
+        comment: Realistic, neutral financial correlation matrix
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values realistically bounded within [-0.25, 0.65], sensible for real-world
-          asset correlations
+        comment: All correlation values plausible and internally consistent (symmetric
+          matrix, diagonal=1, believable asset-class relationships)
     code_quality:
       score: 10
       max: 10
@@ -189,14 +196,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: Imports → theme → data → plot → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) not even needed given hardcoded correlations,
-          but present
+        comment: np.random.seed(42) set; matrix construction otherwise deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -208,37 +214,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, bbox_inches left at default (not tight),
-          matches canvas gate
+        comment: Saves as plot-{THEME}.png with current sns.heatmap API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic sns.heatmap usage with cbar_kws, annot_kws, and sns.set_theme
+          rc overrides
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: sns.heatmap with annot/cbar_kws/annot_kws used correctly and idiomatically
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Standard heatmap usage; doesn't leverage distinctive corr-matrix
-          idioms like np.triu masking
+        comment: Leverages seaborn's built-in annotation with automatic per-cell text-contrast,
+          a heatmap feature not trivially replicated in bare matplotlib
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - patches
   patterns:
   - data-generation
   - matrix-construction
@@ -246,4 +253,4 @@ impl_tags:
   - correlation-matrix
   styling:
   - custom-colormap
-  - grid-styling
+  - edge-highlighting
