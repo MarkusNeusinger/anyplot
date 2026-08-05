@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-annotated: Annotated Heatmap
 Library: pygal 3.1.3 | Python 3.13.14
-Quality: 79/100 | Updated: 2026-08-05
+Quality: 89/100 | Updated: 2026-08-05
 """
 
 import os
