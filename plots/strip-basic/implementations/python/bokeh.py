@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 strip-basic: Basic Strip Plot
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-04
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource
+from bokeh.models import BoxAnnotation, ColumnDataSource, Label
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -23,7 +23,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Survey response scores by department
 np.random.seed(42)
@@ -42,7 +42,7 @@ data = {
 x_values = []
 y_values = []
 colors = []
-color_map = dict(zip(categories, IMPRINT, strict=True))
+color_map = dict(zip(categories, IMPRINT_PALETTE, strict=True))
 
 jitter_width = 0.25
 
@@ -56,31 +56,58 @@ for i, cat in enumerate(categories):
 
 source = ColumnDataSource(data={"x": x_values, "y": y_values, "color": colors})
 
-# Plot
+# Plot — 3200x1800 canonical canvas; toolbar disabled (static catalog render)
 p = figure(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     title="strip-basic · bokeh · anyplot.ai",
     x_axis_label="Department",
     y_axis_label="Survey Score (1–10)",
     x_range=(-0.5, len(categories) - 0.5),
     y_range=(0, 11),
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-p.scatter(x="x", y="y", source=source, size=28, color="color", alpha=0.6, line_color=PAGE_BG, line_width=2)
+# Data storytelling emphasis — HR has the highest mean and tightest spread
+hr_index = categories.index("HR")
+hr_mean = float(np.mean(data["HR"]))
+p.add_layout(
+    BoxAnnotation(
+        left=hr_index - 0.45, right=hr_index + 0.45, fill_color=color_map["HR"], fill_alpha=0.08, line_color=None
+    )
+)
+p.add_layout(
+    Label(
+        x=hr_index,
+        y=hr_mean + 1.6,
+        text="Highest morale,\ntightest spread",
+        text_align="center",
+        text_font_size="24pt",
+        text_color=INK_SOFT,
+        background_fill_color=ELEVATED_BG,
+        background_fill_alpha=0.85,
+        border_line_color=INK_SOFT,
+    )
+)
+
+p.scatter(x="x", y="y", source=source, size=20, color="color", alpha=0.6, line_color=PAGE_BG, line_width=1.5)
 
 # Mean reference lines — one legend entry shared across all categories
 for i, cat in enumerate(categories):
     mean_val = float(np.mean(data[cat]))
     legend_kw = {"legend_label": "Group Mean"} if i == 0 else {}
-    p.line(x=[i - 0.35, i + 0.35], y=[mean_val, mean_val], line_color=INK_SOFT, line_width=5, **legend_kw)
+    p.line(x=[i - 0.35, i + 0.35], y=[mean_val, mean_val], line_color=INK_SOFT, line_width=4, **legend_kw)
 
-# Text sizes for 4800×2700 px
-p.title.text_font_size = "42pt"
-p.xaxis.axis_label_text_font_size = "32pt"
-p.yaxis.axis_label_text_font_size = "32pt"
-p.xaxis.major_label_text_font_size = "26pt"
-p.yaxis.major_label_text_font_size = "26pt"
+# Text sizes for 3200x1800 px (bokeh 'pt' strings rendered through headless Chrome)
+p.title.text_font_size = "50pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 
 # Categorical tick labels on x-axis
 p.xaxis.ticker = list(range(len(categories)))
@@ -111,15 +138,15 @@ if p.legend:
     p.legend.background_fill_color = ELEVATED_BG
     p.legend.border_line_color = INK_SOFT
     p.legend.label_text_color = INK_SOFT
-    p.legend.label_text_font_size = "22pt"
+    p.legend.label_text_font_size = "34pt"
     p.legend.location = "top_right"
 
 # Save HTML
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome (use taller window to capture x-axis labels)
-W, H = 4800, 3000
+# Screenshot with headless Chrome — window size must match the figure's width/height
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -133,6 +160,11 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Headless Chrome's --window-size sets the OUTER window, which still reserves a
+# phantom title-bar height even headless — pin the viewport exactly via CDP.
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
