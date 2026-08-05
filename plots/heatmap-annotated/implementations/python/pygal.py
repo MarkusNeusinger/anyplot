@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-annotated: Annotated Heatmap
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 79/100 | Updated: 2026-08-05
@@ -6,8 +6,6 @@ Quality: 79/100 | Updated: 2026-08-05
 
 import os
 import sys
-
-import numpy as np
 
 
 # Temporarily remove current directory from path to avoid name collision
@@ -45,13 +43,11 @@ class AnnotatedHeatmap(Graph):
         self.is_symmetric = kwargs.pop("is_symmetric", False)
         super().__init__(*args, **kwargs)
 
-    def _interpolate_color(self, value, min_val, max_val):
-        """Interpolate color for smooth gradient - handles diverging colormap."""
-        if max_val == min_val:
-            return self.colormap[len(self.colormap) // 2]
-
-        # Normalize value to 0-1 range
-        normalized = (value - min_val) / (max_val - min_val)
+    def _interpolate_color(self, value):
+        """Interpolate color for diverging colormap centered at 0, fixed range -1 to 1."""
+        # Normalize against the true correlation domain, not the data's own min/max,
+        # so the neutral midpoint only appears at a real zero-correlation value.
+        normalized = (value + 1) / 2
         normalized = max(0, min(1, normalized))
 
         # Get position in colormap
@@ -100,7 +96,7 @@ class AnnotatedHeatmap(Graph):
         # Calculate cell size - leave space for labels
         label_margin_left = 400
         label_margin_bottom = 220
-        label_margin_top = 60
+        label_margin_top = 20
         label_margin_right = 280
 
         available_width = plot_width - label_margin_left - label_margin_right
@@ -148,7 +144,7 @@ class AnnotatedHeatmap(Graph):
         for i in range(n_rows):
             for j in range(n_cols):
                 value = self.matrix_data[i][j]
-                color = self._interpolate_color(value, min_val, max_val)
+                color = self._interpolate_color(value)
                 text_color = self._get_text_color(color)
 
                 x = x_offset + j * (cell_width + gap)
@@ -182,7 +178,7 @@ class AnnotatedHeatmap(Graph):
         segment_height = colorbar_height / n_segments
         for seg_i in range(n_segments):
             seg_value = min_val + (max_val - min_val) * (n_segments - 1 - seg_i) / (n_segments - 1)
-            seg_color = self._interpolate_color(seg_value, min_val, max_val)
+            seg_color = self._interpolate_color(seg_value)
             seg_y = colorbar_y + seg_i * segment_height
 
             self.svg.node(
@@ -258,20 +254,21 @@ class AnnotatedHeatmap(Graph):
         self._box.ymax = n_rows
 
 
-# Data: Correlation matrix for business metrics (symmetric)
-np.random.seed(42)
+# Data: Correlation matrix for business metrics (symmetric, hardcoded for reproducibility)
 
 # Variable names for correlation matrix
 variables = ["Revenue", "Marketing", "R&D Spend", "Customers", "Satisfaction", "Retention"]
 n = len(variables)
 
-# Realistic correlation matrix (symmetric, diagonal = 1.0)
+# Realistic correlation matrix (symmetric, diagonal = 1.0), including a couple of
+# mild negative correlations (R&D spend competes with marketing budget and briefly
+# disrupts satisfaction) to exercise the full diverging colormap.
 correlation_matrix = [
     [1.00, 0.85, 0.42, 0.78, 0.65, 0.72],  # Revenue
-    [0.85, 1.00, 0.35, 0.68, 0.55, 0.62],  # Marketing
-    [0.42, 0.35, 1.00, 0.28, 0.45, 0.38],  # R&D Spend
+    [0.85, 1.00, -0.18, 0.68, 0.55, 0.62],  # Marketing
+    [0.42, -0.18, 1.00, 0.28, -0.12, 0.38],  # R&D Spend
     [0.78, 0.68, 0.28, 1.00, 0.82, 0.88],  # Customers
-    [0.65, 0.55, 0.45, 0.82, 1.00, 0.75],  # Satisfaction
+    [0.65, 0.55, -0.12, 0.82, 1.00, 0.75],  # Satisfaction
     [0.72, 0.62, 0.38, 0.88, 0.75, 1.00],  # Retention
 ]
 
@@ -313,7 +310,7 @@ chart = AnnotatedHeatmap(
     is_symmetric=True,
     show_legend=False,
     margin=120,
-    margin_top=200,
+    margin_top=150,
     margin_bottom=100,
     show_x_labels=False,
     show_y_labels=False,
