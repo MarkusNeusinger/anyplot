@@ -318,7 +318,7 @@ jobs:
         id: review
         continue-on-error: true
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@44423bdec74b97d67543eb16c110546762c110b2  # v1
+        uses: anthropics/claude-code-action@be7b93b1907a4abad570368f3c74b6fe3807510b  # v1
         env:
           LIBRARY: ${{ steps.pr.outputs.library }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
