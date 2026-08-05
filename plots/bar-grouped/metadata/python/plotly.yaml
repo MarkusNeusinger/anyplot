@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-grouped
 created: '2025-12-24T21:29:10Z'
-updated: '2026-08-05T01:08:31Z'
+updated: '2026-08-05T01:15:46Z'
 generated_by: claude-sonnet
 workflow_run: 30964971495
 issue: 1822
@@ -12,127 +12,117 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 92
 review:
   strengths:
+  - 'All three Attempt-1 weaknesses are fully resolved: the annotation arrow now terminates
+    cleanly at the top of the Mobile bar without crossing the "224" value label, x-axis
+    gridlines are removed (y-axis-only grid per style guide), and the legend box border
+    is dropped'
   - Correct grouped-bar layout with canonical Imprint palette order (green/lavender/blue)
-    applied consistently to Desktop/Mobile/Tablet series
-  - Theme-adaptive chrome is fully threaded through title, axis labels, ticks, gridlines,
-    legend, and the annotation callout box across both light and dark renders
-  - 'Genuine data storytelling: the annotation callout is data-driven and its "2.3×
-    desktop" claim checks out mathematically (224/96 ≈ 2.33)'
-  - Canvas gate passed (3200×1800), title format matches the mandated "bar-grouped
-    · python · plotly · anyplot.ai" exactly
-  - hovertemplate + hovermode="x unified" is a nice idiomatic touch for the HTML detail
-    view
-  - Value labels on every bar aid precise comparison, matching the spec's optional-but-helpful
-    note
+    applied consistently to Desktop/Mobile/Tablet across both themes
+  - Theme-adaptive chrome fully threaded through title, axes, legend, and annotation
+    across both renders — no dark-on-dark or light-on-light failures
+  - 'Genuine data storytelling: the annotation''s "2.3× desktop" claim is mathematically
+    correct (224/96 ≈ 2.33) and the arrow now points precisely at the relevant bar'
+  - Canvas gate passed (3200×1800); title format matches the mandated string exactly
+    with generous breathing room (~40% width)
+  - hovertemplate + hovermode="x unified" is a nice touch for the HTML detail view
+  - Value labels on every bar aid precise comparison per the spec's notes
   weaknesses:
-  - 'Annotation arrow crosses directly through the ''4'' digit of the ''224'' value
-    label above the Social Media/Mobile bar — visible in both light and dark renders.
-    Fix: adjust the annotation''s ax/ay offsets (or its target y) so the arrowhead
-    terminates beside/below the value label instead of through it.'
-  - 'Vertical grid lines are enabled on the x-axis (xaxis.gridcolor=GRID in the layout)
-    — the style guide specifies grid should be Y-axis only for bar/line charts. Fix:
-    remove gridcolor (or set showgrid=False) on the xaxis config.'
-  - 'Legend uses a boxed frame (bordercolor/borderwidth) — the style guide''s Decoration
-    Removal Checklist recommends removing box frames around legends by default. Fix:
-    drop bordercolor/borderwidth (or set borderwidth=0) on the legend config; keep
-    the annotation''s border since that one functions as a callout, not a legend.'
+  - Legend still carries a subtle elevated-background fill rectangle (no border, but
+    a filled box) behind the swatches — could be dropped entirely (bgcolor=None) for
+    a fully chrome-free legend, though this is a minor polish item, not a defect
+  - 'Design excellence is solid but not yet publication-tier: the chart is a competently
+    styled grouped bar with one annotation — a second layer of emphasis (e.g. bolding/highlighting
+    the Social Media group, or a subtitle framing the insight) would push it further'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "bar-grouped · python · plotly · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Traffic Source" and Y-axis title "Monthly Sessions (thousands)" both dark ink, readable. Tick labels (category names, y-axis numbers) in softer gray-ink, readable. Horizontal y-axis gridlines are subtle; vertical x-axis gridlines are also present (faint lines at category boundaries), which is a style-guide deviation for a bar chart (should be y-axis only). Legend is horizontal, top-center, boxed with a thin border containing three color swatches (Desktop/Mobile/Tablet). An annotation callout box ("Social skews mobile-first — 2.3× desktop sessions") sits above the Social Media group with an arrow pointing down into the Mobile bar; the arrow line visibly crosses through the "4" of the "224" value label directly below it.
-      Data: Bars grouped in triples per category (Organic Search, Direct, Social Media, Paid Search, Referral); Desktop = brand green #009E73, Mobile = lavender #C475FD, Tablet = blue #4467A3 — correct canonical Imprint order. Numeric value labels sit above each bar. All data clearly distinguishable from the cream background.
-      Legibility verdict: PASS (all text readable; the one issue is a minor arrow/label collision, not a legibility failure)
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "bar-grouped · python · plotly · anyplot.ai" centered at top in dark ink, fully legible. Axis titles ("Traffic Source", "Monthly Sessions (thousands)") and tick labels readable in dark/soft-gray ink. Only y-axis (horizontal) gridlines present, subtle and thin — x-axis gridlines have been removed since Attempt 1. Legend sits top-center with a borderless, faintly-tinted background box; text fully readable.
+      Data: Bars grouped in triples per category using canonical Imprint order — Desktop #009E73 (green), Mobile #C475FD (lavender), Tablet #4467A3 (blue) — identical to Attempt 1. Numeric value labels sit above each bar. The annotation callout ("Social skews mobile-first — 2.3× desktop sessions") now points its arrow cleanly to the top of the Social Media/Mobile bar, landing beside/below the "224" label rather than crossing through it — the Attempt-1 overlap is resolved.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title, axis titles, and tick labels flip to light ink/soft-light-gray and remain fully readable against the dark background — no dark-on-dark failures observed. Legend box, callout box, and gridlines all correctly re-themed with light-toned borders/text. Same vertical-gridline and boxed-legend deviations as the light render, and the same annotation-arrow-through-"224"-label overlap is present here too.
-      Data: Bar colors are pixel-identical to the light render (green/lavender/blue) — only chrome (background, text, grid, legend/callout frame colors) changed, confirming palette consistency across themes.
-      Legibility verdict: PASS (all text readable in dark theme; same minor overlap issue as light render, not a legibility failure)
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: All chrome (title, axis titles, tick labels, legend, callout box, y-axis-only gridlines) correctly flips to light-toned ink and remains fully readable — no dark-on-dark failures. Legend box background is a subtle darker-than-bg fill, borderless, text legible.
+      Data: Bar colors are pixel-identical to the light render (green/lavender/blue), confirming only chrome changed between themes. The same fixed annotation-arrow trajectory (no longer crossing the "224" label) is present here too.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All titles, axis labels, ticks, legend, and annotation text explicitly
-          sized and readable in both themes; no dark-on-dark or light-on-light failures.
+        comment: All font sizes explicitly set, readable in both themes, well-proportioned
+          title with breathing room
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Annotation arrow crosses through the '4' digit of the '224' value
-          label above the Social Media/Mobile bar, in both light and dark renders.
+        passed: true
+        comment: Annotation-arrow/value-label collision from Attempt 1 is fixed; arrow
+          now lands cleanly on the bar top
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Only 15 bars total; bar widths and text labels are appropriately
-          sized for this sparse data density.
+        comment: Bars well-sized and clearly visible for 5 categories x 3 groups
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: No red-green-only signal; text labels sit against the page background,
-          not against the lower-contrast lavender fill, so contrast is adequate.
+        comment: Good contrast, CVD-safe, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); title, axis labels, and annotation
-          all stay within bounds with no clipping or overflow.
+        comment: Balanced margins, nothing cut off, good canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles are descriptive and include units ('Monthly Sessions
-          (thousands)').
+        comment: Descriptive labels with units (thousands)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; series use canonical Imprint order (green/lavender/blue);
-          backgrounds match #FAF8F1/#1A1A17; both renders theme-correct.'
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome
+          in both renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful typography hierarchy, theme-adaptive chrome, and a data-driven
-          annotation lift this above generic defaults, but the boxed legend and stray
-          x-axis gridlines hold back full polish.
+        passed: true
+        comment: Thoughtful colors, custom annotation, clearly above library defaults;
+          not yet publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Vertical x-axis gridlines are enabled (style guide calls for y-axis-only
-          grid on bar charts) and the legend keeps a boxed frame (Decoration Removal
-          Checklist recommends removing it).
+        passed: true
+        comment: Y-axis-only subtle grid and borderless legend fixed since Attempt
+          1; a lingering legend background fill keeps it from a perfect score
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Annotation callout creates a clear focal point and its '2.3x desktop'
-          claim is mathematically correct (224/96 ~= 2.33), guiding the viewer to
-          the most interesting pattern in the data.
+        comment: Data-driven annotation with a mathematically correct 2.3x claim,
+          now visually clean
     spec_compliance:
       score: 15
       max: 15
@@ -142,28 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped/clustered bar chart via barmode='group'.
+        comment: Correct grouped bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct group colors, clear legend, consistent bar widths, spacing
-          via bargap/bargroupgap, and optional value labels all present.
+        comment: Distinct colors, clear legend, consistent bar widths/spacing, value
+          labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = category (Traffic Source), Y = value (Monthly Sessions); all
-          data shown.
+        comment: Category on x, value on y, all groups visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'bar-grouped · python · plotly · anyplot.ai';
-          legend labels (Desktop/Mobile/Tablet) match the data series.
+        comment: Title format matches mandated string exactly; legend labels match
+          data
     data_quality:
       score: 15
       max: 15
@@ -173,22 +162,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 5 categories x 3 groups shows grouping, comparison, and relative
-          ordering as the spec's Data section describes.
+        comment: 5 categories x 3 groups with varied relative magnitudes, including
+          a reversal (Social Media mobile > desktop)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website traffic sessions by source/device is a plausible, neutral
-          analytics scenario.
+        comment: Realistic, neutral web-analytics scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (31-420 thousand sessions) are sensible for the domain and
-          read cleanly on the axis.
+        comment: Plausible session counts and device-mix proportions
     code_quality:
       score: 10
       max: 10
@@ -198,32 +185,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes, single loop over device groups.
+        comment: Imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness.
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects imported, both used.
+        comment: Only os and plotly.graph_objects used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity.
+        comment: Clean, no over-engineering, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with correct write_image kwargs and plot-{THEME}.html;
-          current API usage.
+        comment: Saves plot-{THEME}.png + .html via current API
     library_mastery:
       score: 7
       max: 10
@@ -233,22 +219,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper go.Figure/go.Bar usage, hovertemplate, hovermode='x unified'
-          for the HTML detail view.
+        comment: Idiomatic go.Bar/barmode=group usage, correct but not maximally leveraging
+          plotly's higher-level helpers
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses plotly-specific hover unification and annotation, but otherwise
-          a fairly standard grouped-bar construction without deeper plotly-only features.
-  verdict: REJECTED
+        passed: true
+        comment: Uses hovertemplate + hovermode=x unified and add_annotation, moderately
+          distinctive to plotly's interactive model
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - hover-tooltips
-  - html-export
   patterns:
   - iteration-over-groups
   dataprep: []
