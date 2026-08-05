@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: scatter-regression-linear
 created: '2026-08-05T13:24:44Z'
-updated: '2026-08-05T13:28:51Z'
+updated: '2026-08-05T13:37:15Z'
 generated_by: claude-sonnet
 workflow_run: 31009712435
 issue: 1821
@@ -12,51 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - geom_smooth(method = "lm", se = TRUE) correctly renders both the regression line
-    and the 95% CI band in one idiomatic call
-  - Regression equation and R² are displayed prominently via annotate("label", ...)
-    placed in the sparse top-left corner, avoiding any overlap with data
-  - Point stroke uses PAGE_BG as the outline color, which visually separates overlapping
-    markers in dense clusters without extra code complexity
-  - 'Both renders are theme-correct: backgrounds, ink, and grid tokens flip correctly
-    while the Imprint palette data colors (green points, blue regression line) stay
-    identical'
-  - Title, axis labels, and tick labels are fully legible in both light and dark themes
-    with no clipping at canvas edges
-  - Realistic, neutral synthetic data (advertising spend vs. sales revenue) with an
-    appropriate noise level for a clear but not artificially perfect R² = 0.886
+  - geom_smooth(method = "lm", se = TRUE) idiomatically renders both the regression
+    line and the 95% CI band, now with stronger contrast (alpha 0.18→0.22, linewidth
+    1.2→1.4) so the band reads clearly against the panel grid
+  - New geom_rug() marginal ticks on both axes add a distinctive ggplot2 touch that
+    shows the univariate density of ad spend and revenue without cluttering the main
+    scatter
+  - Regression equation and R² annotation now has a visible border (label.size = 0.25)
+    and generous padding, giving it a polished, elevated-surface callout look in both
+    themes
+  - 'Both renders are fully theme-correct: backgrounds, ink, and grid flip correctly
+    while Imprint palette data colors (#009E73 points, #4467A3 line/band) stay identical'
+  - Title, axis labels, and tick labels are fully legible in both themes with no edge
+    clipping
+  - Realistic, neutral synthetic data (ad spend vs. sales revenue) with appropriate
+    noise (R² = 0.886, not artificially perfect)
   weaknesses:
-  - 'Design Excellence is solid but conventional: aside from the point-stroke halo
-    trick and the CI band, there is no distinctive visual flourish (e.g., emphasizing
-    outliers, refining the panel grid further) that would lift it from ''good execution''
-    to ''publication-grade polish'''
-  - The CI band (fill = IMPRINT_PALETTE[3], alpha = 0.18) sits close in visual weight
-    to the panel grid in some regions, slightly softening the line/band's visual hierarchy
-    against the background
-  - With n = 150 points, moderate marker overlap remains in dense clusters (e.g.,
-    around x = 10-15, y = 40-50) - the PAGE_BG stroke helps but a small size/alpha
-    tune could further sharpen density handling
-  - Library Mastery is good (idiomatic geom_smooth + geom_point) but doesn't showcase
-    additional ggplot2-distinctive grammar beyond the basics - e.g. no stat_ecdf,
-    no facet, no custom stat layer - to fully justify top marks in LM-02
+  - 'Design Excellence is strong but not yet publication-grade: beyond the rug marks
+    and boxed annotation there is no further layout innovation (e.g., a secondary
+    summary panel or emphasized outlier callout)'
+  - With n = 150 points, moderate marker overlap remains in the densest clusters (e.g.
+    x = 10-15, y = 40-50 and x = 45-49, y = 110-150) — a small further alpha/size
+    tune could sharpen density handling
+  - Regression line/band uses Imprint position 3 (#4467A3) rather than position 2
+    (#C475FD); acceptable for a statistical overlay but worth a semantic note for
+    future consistency
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Bold dark title "Advertising Spend vs Sales Revenue · scatter-regression-linear · r · ggplot2 · anyplot.ai" at top, fully visible with no clipping. Axis titles "Advertising Spend ($ thousands)" and "Sales Revenue ($ thousands)" in dark ink, tick labels (10-50 on x, 50-150 on y) in a softer dark gray. Subtle light gridlines (major only) are visible without dominating.
-      Data: ~150 green (#009E73) points with a light-colored stroke that separates overlapping markers, a bold blue (#4467A3) regression line with a semi-transparent blue confidence band, and a top-left annotation box (equation "y = 2.33x + 19.30" and "R² = 0.886") on an elevated cream background with dark text.
-      Legibility verdict: PASS - all title/axis/tick/annotation text is clearly readable against the light background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "Advertising Spend vs Sales Revenue · scatter-regression-linear · r · ggplot2 · anyplot.ai" at top, fully visible with no clipping. Axis titles ("Advertising Spend ($ thousands)", "Sales Revenue ($ thousands)") in dark ink, tick labels in softer gray. Subtle horizontal-only gridlines. New marginal rug ticks along both axes in translucent green.
+      Data: ~150 green (#009E73) points with a light (PAGE_BG-colored) stroke separating overlapping markers, a bold blue (#4467A3) regression line with a more visible semi-transparent CI band (alpha 0.22, up from 0.18), and a bordered top-left annotation box (equation + R² = 0.886) on an elevated cream background.
+      Legibility verdict: PASS — all text clearly readable against the light background, no overlap.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Title and axis titles render in light ink (#F0EFE8), tick labels in a lighter gray-white (#B8B7B0), all clearly legible. Gridlines are faint but visible against the dark background. The annotation box uses a dark elevated background (#242420) with light text, readable and not blending into the surrounding page background.
-      Data: Point and regression-line colors are identical to the light render (green #009E73 points, blue #4467A3 line/band) — only the chrome (background, ink, grid) has flipped, as required.
-      Legibility verdict: PASS - no dark-on-dark or light-on-light failures observed; every text element is legible.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and axis titles render in light ink, tick labels in light gray, all legible. Gridlines faint but visible. The annotation box uses a dark elevated background with a visible border and light text — readable, no blending into the page. Rug ticks visible in the same translucent green.
+      Data: Point and line/band colors are identical to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all text and data elements remain distinguishable.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -64,74 +62,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title_size scales with title length,
-          axis.title/text sized); fully readable in both themes, no clipping
+        comment: Explicit sizes throughout, fully readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text/text or text/data overlap; annotation placed in the sparse
-          top-left corner
+        comment: No text/data collisions; annotation placed in the sparse top-left
+          corner
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers reasonably sized for n=150 with PAGE_BG stroke separating
-          overlaps; some residual clustering in dense regions
+        comment: Marker sizing and alpha reasonable for n=150; PAGE_BG stroke separates
+          overlaps, some clustering remains
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green points vs. blue regression line give good CVD-safe contrast,
-          not red-green
+        comment: Green/blue contrast is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); plot fills canvas well, balanced
-          margins, nothing cut off
+        comment: Canvas gate passed, balanced margins improved by axis expansion,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels are descriptive and include units ($ thousands)
+        comment: Both axes descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; regression accent uses palette[3]; backgrounds
-          match theme tokens in both renders'
+        comment: 'First series #009E73, correct theme tokens in both renders'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above generic defaults (stroke halo, annotation box) but not distinctively
-          polished
+        passed: true
+        comment: Rug marks + refined bordered annotation box lift it clearly above
+          defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Panel border removed, grid subtle, but CI band blends slightly into
-          grid region
+        passed: true
+        comment: Stronger CI band contrast, y-axis-only grid, generous whitespace
+          via axis expansion
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clear focal point (line + annotation) but limited additional hierarchy
-          beyond the basic regression overlay
+        passed: true
+        comment: Boxed equation callout is a clear focal point; rug adds secondary
+          distributional context
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +136,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter plot with linear regression line, correct type
+        comment: Correct scatter + regression type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: R²/equation annotation, distinct regression line, semi-transparent
-          95% CI band, moderate point alpha (0.7) - all present
+        comment: Regression line, 95% CI band, R²/equation annotation, moderate point
+          alpha all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=ad_spend, y=sales_revenue correctly mapped, full data range shown
+        comment: X/Y correctly assigned, axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches '{Descriptive Title} · {spec-id} · {language}
-          · {library} · anyplot.ai'; no legend needed for single series
+        comment: Title format correct, no legend needed for single series
     data_quality:
       score: 15
       max: 15
@@ -171,20 +165,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Scatter, regression line, CI band, equation, R² all shown
+        comment: Shows full range of correlation strength and noise
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Advertising spend vs. sales revenue is realistic and neutral
+        comment: Advertising spend vs. sales revenue, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Spend $5k-$50k, revenue ~$18k-$150k, slope/intercept plausible for
-          the domain
+        comment: Sensible values and proportions
     code_quality:
       score: 10
       max: 10
@@ -194,33 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: Imports → data → fit → plot → save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 + ragg imported, tibble namespaced correctly
+        comment: Only ggplot2 + ragg used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at correct dims
+        comment: ggsave with ragg::agg_png, plot-{theme}.png naming
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -228,20 +221,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_smooth(method='lm', se=TRUE) + geom_point(shape=21) is idiomatic
-          ggplot2
+        comment: geom_smooth(se=TRUE), scale_*_continuous(expansion), annotate('label',
+          ...) are all idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Showcases geom_smooth's built-in CI band well, but no further distinctive
-          ggplot2-only feature beyond that
-  verdict: REJECTED
+        passed: true
+        comment: geom_rug() marginal ticks are a genuinely distinctive ggplot2 touch
+          beyond the base geom_smooth CI band
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
@@ -249,3 +243,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
