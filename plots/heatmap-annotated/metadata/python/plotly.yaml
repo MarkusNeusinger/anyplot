@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: heatmap-annotated
 created: '2025-12-24T21:29:15Z'
-updated: '2026-08-05T09:33:16Z'
+updated: '2026-08-05T09:42:56Z'
 generated_by: claude-sonnet
 workflow_run: 30993053288
 issue: 1824
@@ -12,50 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - Contrast-aware per-cell annotation coloring (LIGHT_TEXT vs INK, switched at |value|
-    > 0.5) keeps every value label legible against the diverging colormap in both
-    themes.
-  - Correlation matrix is derived from physically-motivated synthetic weather relationships
-    (temperature -> humidity/pressure/cloud cover -> precipitation/visibility) rather
-    than a generic random block-correlated matrix, giving factually plausible signs
+  - 'Explicit visual focal point: the strongest off-diagonal correlation cell (Cloud
+    Cover vs Visibility, r = -0.59) is outlined and named in a subtitle, directly
+    resolving the attempt-1 ''no storytelling focal point'' weakness.'
+  - Hierarchical-clustering reorder (scipy average-linkage on 1 - correlation) groups
+    metrics with similar correlation profiles into adjacent blocks, giving the matrix
+    a genuinely plotly/scipy-distinctive technique that resolves the attempt-1 Library
+    Mastery weakness.
+  - Generic 'Metric' x/y axis titles were removed, relying cleanly on the tick labels
+    themselves - resolves the attempt-1 VQ-06/DE-02 redundancy weakness without losing
+    information.
+  - Top margin tightened (t=95) with the added subtitle still fitting snugly above
+    the matrix, producing a more deliberate, less loose composition than attempt 1.
+  - Contrast-aware per-cell text coloring (near-white above |r|>0.5, ink otherwise)
+    is retained and keeps all 64 value labels legible in both themes; theme-adaptive
+    imprint_div colorscale with theme-matched midpoint stop is implemented exactly
+    per the style guide.
+  - Correlation data is derived from physically-motivated synthetic weather relationships
+    (not a generic random block-correlated matrix), giving factually plausible signs
     and magnitudes.
-  - Theme-adaptive imprint_div diverging colorscale correctly uses each theme's own
-    page background as the midpoint stop, matching prompts/library/plotly.md exactly.
-  - Clean, idiomatic go.Heatmap + add_annotation construction (deliberately avoiding
-    figure_factory) that keeps full control over colorbar styling, hovertemplate,
-    and the square aspect via scaleanchor.
-  - Correct square 2400x2400 canvas choice for a symmetric 8x8 matrix, with balanced
-    margins and no edge clipping in either render.
   weaknesses:
-  - 'No explicit visual focal point: the strongest correlations (e.g. Cloud Cover
-    vs Visibility -0.59, Temperature vs Humidity -0.55) are only discoverable by scanning
-    the grid. Consider a subtle emphasis (outline/border on the top |correlation|
-    off-diagonal cell(s), or a one-line subtitle calling out the strongest relationship)
-    to add a clear focal point.'
-  - Both axis titles read 'Metric' on x and y, which is generic and somewhat redundant
-    since the tick labels already name each metric explicitly; consider a more specific
-    label or omitting the axis titles to reclaim vertical space.
-  - Library Mastery is only 'correct usage' level (go.Heatmap + add_annotation loop)
-    — consider a more plotly-distinctive touch, e.g. hierarchical-clustering reordering
-    of rows/columns to group correlated metrics, to push past generic annotated-heatmap
-    territory.
-  - The gap between the title and the top of the heatmap (~8% of canvas height) is
-    slightly loose relative to the otherwise tight composition; tightening the top
-    margin a bit would read as more deliberate/polished.
+  - DE-01 still reads as a well-executed but fairly standard annotated-heatmap layout
+    overall; pushing further into publication-tier polish (e.g. a more distinctive
+    typographic treatment for the subtitle/colorbar title) would help close the gap
+    to a 'could appear in Nature/Science' composition.
+  - The distinctive technique added (hierarchical clustering) comes from scipy rather
+    than a plotly-native capability; a plotly-specific interactive touch in the HTML
+    output (e.g. custom hover formatting beyond the current template, or a range-selector)
+    would strengthen Library Mastery further.
+  - Per-cell annotation font (13pt) is on the smaller side relative to the generous
+    2400x2400 canvas headroom; a slightly larger size would improve legibility when
+    the image is scaled down to mobile widths.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Weather Metrics Correlation · heatmap-annotated · python · plotly · anyplot.ai" in dark ink, fully visible, no clipping. Y-axis metric labels (Temperature, Humidity, Wind Speed, Precipitation, Pressure, UV Index, Cloud Cover, Visibility) horizontal and readable. X-axis metric labels rotated 45°, readable, no overlap with each other or the grid. "Metric" axis titles on both axes, dark ink, legible. Colorbar on the right titled "Correlation" with ticks 1, 0.5, 0, -0.5, -1, all legible.
-      Data: 8x8 correlation matrix rendered with the imprint_div diverging colorscale (matte red for negative, near-background near zero, blue for positive). Diagonal cells are 1.00 (saturated blue). Each cell has a numeric value (2 decimals) whose text color switches between near-white (saturated cells) and dark ink (near-neutral cells) for contrast — all 64 values are legible.
+      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
+      Chrome: Title "Weather Metrics Correlation · heatmap-annotated · python · plotly · anyplot.ai" in dark ink, fully visible with no clipping. Subtitle "Strongest relationship: Cloud Cover vs Visibility (strongest negative, r = -0.59)" in soft dark-grey ink beneath it. Y-axis metric labels (Pressure, Humidity, Precipitation, Cloud Cover, Wind Speed, Visibility, Temperature, UV Index - now clustering-reordered) are horizontal and readable; X-axis labels are the same set rotated 45° with no overlap. No generic axis titles are present (removed from attempt 1), which is intentional and appropriate since tick labels already name each metric. Colorbar on the right titled "Correlation" with ticks 1/0.5/0/-0.5/-1, fully legible.
+      Data: 8x8 correlation matrix uses the Imprint diverging colorscale (matte red #AE3030 for negative, page-background midpoint at zero, blue #4467A3 for positive), diagonal cells at 1.00 in saturated blue. Each cell carries a 2-decimal numeric label whose text color switches between near-white and dark ink depending on cell saturation - all 64 values legible. The strongest off-diagonal cell (Cloud Cover vs Visibility, -0.59) is outlined with a bold dark rectangle and its value is bolded.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title in light cream text, fully visible. Y-axis and X-axis metric labels in light gray, readable against the dark background — no dark-on-dark failures observed. Colorbar title/ticks in light text, legible. Axis line/spine in soft light gray.
-      Data: Same 8x8 correlation values as the light render, same imprint_div scale (red negative / blue positive), confirming the data colors are identical between themes — only chrome (background, text) flips. Near-zero cells blend toward the dark page background (correct theme-adaptive midpoint) and their value labels switch to light text, remaining legible; saturated red/blue cells also use light text and are legible.
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Title and subtitle render in light cream/soft-grey text, fully legible against the dark surface - no dark-on-dark failures observed anywhere (title, tick labels, colorbar all clearly readable). The focal-point outline switches to a light stroke color, remaining clearly visible against the dark cell fills.
+      Data: Correlation values and colorscale are pixel-identical in hue to the light render (same reds/blues, same magnitudes, same clustering order) - only the chrome (background, text, outline stroke) flips, confirming theme-adaptive tokens are threaded through correctly. Near-zero cells blend toward the dark page background (correct theme-adaptive midpoint for imprint_div) and their labels switch to light ink, remaining legible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -67,73 +68,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title dynamically scaled, axis/tick/colorbar/annotation
-          fonts), readable in both themes, no overflow
+        comment: All font sizes explicitly set, readable in both themes; cell annotation
+          font (13pt) leaves some mobile-scaling headroom unused
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between rotated x tick labels, y labels, or cell text
+        comment: No overlap between tick labels, title, subtitle, colorbar or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 64 cell values legible via contrast-aware text color
+        comment: Cell gaps (xgap/ygap=3) keep all 64 cells clearly separated and visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging colormap plus redundant numeric-value encoding, no red-green-only
-          signal
+        comment: Red/blue diverging scale avoids red-green confusion; contrast-aware
+          text coloring keeps labels readable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Content bbox spans ~83-86% of the 2400x2400 canvas, no cutoff, balanced
-          margins
+        comment: Matrix fills a large, balanced portion of the square canvas; tightened
+          top margin vs attempt 1
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis titled 'Metric' on both axes; generic but not 'x'/'y' — see
-          weaknesses
+        comment: Tick labels name each metric explicitly and colorbar is titled 'Correlation';
+          redundant generic axis titles correctly removed
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div diverging colorscale with theme-adaptive midpoint, correct
-          #FAF8F1/#1A1A17 backgrounds, theme-correct chrome in both renders'
+        comment: 'imprint_div diverging colorscale with theme-matched midpoint stop;
+          #FAF8F1/#1A1A17 backgrounds; theme-correct chrome in both renders'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Contrast-aware per-cell text color is a genuine touch above defaults,
-          but overall composition is a standard correlation-matrix heatmap
+        passed: true
+        comment: Clustering reorder + focal-point outline + subtitle lift this clearly
+          above a default annotated heatmap, though it stops short of full publication-tier
+          polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: No grid, minimal spines, generous cell gaps, styled colorbar; top
-          title-to-plot gap slightly loose
+        passed: true
+        comment: No grid/spines, subtle cell gaps, generous and now-tightened margins
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Color saturation implicitly highlights strong correlations but there
-          is no explicit focal point or callout
+        passed: true
+        comment: Explicit focal point (outlined cell) plus a subtitle naming the exact
+          strongest relationship gives the viewer an immediate entry point into the
+          data
     spec_compliance:
       score: 15
       max: 15
@@ -149,43 +151,44 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Contrast-aware annotations, 2-decimal formatting, colorbar legend,
-          diverging colormap for signed data — all present
+        comment: Colorbar, diverging colormap for signed data, 2-decimal formatting,
+          contrast-aware text all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y both show all 8 metrics, symmetric matrix correctly mapped
+        comment: Symmetric matrix, both axes show all 8 metrics
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; colorbar legend clear
+        comment: Title matches required format with descriptive prefix; colorbar correctly
+          labeled
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows strong positive, strong negative, and near-zero correlations
-          across the matrix
+        comment: Shows diagonal 1.00, positive and negative correlations across a
+          range of magnitudes (0.05 to 0.59)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible weather-station scenario
+        comment: Neutral, comprehensible weather-science scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlation signs/magnitudes match physically plausible weather relationships
+        comment: Signs and magnitudes match physically plausible weather relationships
     code_quality:
       score: 10
       max: 10
@@ -195,7 +198,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear top-to-bottom structure
+        comment: Linear imports -> data -> clustering -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,22 +210,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects, all used
+        comment: numpy, plotly.graph_objects, scipy.cluster.hierarchy, scipy.spatial.distance
+          all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png at correct dims plus plot-{THEME}.html, current
-          API
+        comment: Correct plot-{THEME}.png / .html output, current go.Figure API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -230,25 +233,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Heatmap + add_annotation with scaleanchor, hovertemplate, styled
-          colorbar
+        comment: Manual go.Heatmap + add_annotation + add_shape construction for full
+          control over colorbar, hover, and focal-point overlay
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Manual annotation/contrast-color construction goes beyond figure_factory,
-          but no uniquely-plotly interactive touch
-  verdict: REJECTED
+        passed: true
+        comment: hovertemplate + customdata, add_shape overlay, and clustering-driven
+          reorder now go clearly beyond generic figure_factory usage
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - colorbar
   - annotations
+  - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep:
   - correlation-matrix
+  - hierarchical-clustering
   styling:
   - custom-colormap
+  - edge-highlighting
