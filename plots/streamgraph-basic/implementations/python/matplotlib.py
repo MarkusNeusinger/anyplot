@@ -1,7 +1,7 @@
 """ anyplot.ai
 streamgraph-basic: Basic Stream Graph
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-05
+Library: matplotlib 3.11.1 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-08-05
 """
 
 import os
@@ -17,6 +17,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Imprint palette — first series always #009E73, positions 1-6 in canonical order
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 np.random.seed(42)
@@ -67,17 +68,41 @@ categories = ["Pop", "Rock", "Hip-Hop", "Electronic", "Jazz", "Classical"]
 months_fine = np.linspace(0, 23, 300)
 data_smooth = np.array([np.maximum(make_interp_spline(months, series, k=3)(months_fine), 1.0) for series in data_raw])
 
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Inside-out layer ordering (Byron & Wattenberg): the highest-volume genre sits
+# in the visual center with progressively smaller genres flanking it, so the
+# dominant trend (Pop) reads immediately without needing a text callout.
+totals = data_smooth.sum(axis=1)
+ranked = np.argsort(totals)[::-1]
+left_side, right_side = [], []
+for rank, idx in enumerate(ranked):
+    (right_side if rank % 2 == 0 else left_side).append(idx)
+stack_order = left_side[::-1] + right_side
+
+stacked_data = data_smooth[stack_order]
+stacked_colors = [IMPRINT[i] for i in stack_order]
+stacked_labels = [categories[i] for i in stack_order]
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-ax.stackplot(months_fine, data_smooth, labels=categories, colors=IMPRINT, baseline="wiggle", alpha=0.85)
+ax.stackplot(
+    months_fine,
+    stacked_data,
+    labels=stacked_labels,
+    colors=stacked_colors,
+    baseline="wiggle",
+    alpha=0.9,
+    edgecolor=PAGE_BG,
+    linewidth=1.2,
+)
 
-ax.set_xlabel("Month (Jan 2023 – Dec 2024)", fontsize=20, color=INK)
-ax.set_title("streamgraph-basic · matplotlib · anyplot.ai", fontsize=24, color=INK, fontweight="medium")
+title = "streamgraph-basic · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, color=INK, fontweight="medium")
+ax.set_xlabel("Month (Jan 2023 – Dec 2024)", fontsize=10, color=INK)
 
 tick_positions = list(range(0, 24, 3))
 ax.set_xticks(tick_positions)
-ax.set_xticklabels([month_labels[i] for i in tick_positions], fontsize=16)
+ax.set_xticklabels([month_labels[i] for i in tick_positions], fontsize=8)
 ax.tick_params(axis="x", colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.set_yticks([])
 
@@ -88,10 +113,12 @@ ax.spines["bottom"].set_color(INK_SOFT)
 
 ax.set_xlim(months_fine[0], months_fine[-1])
 
-leg = ax.legend(loc="upper left", fontsize=16, framealpha=0.9)
+# Legend sits outside the axes (right margin) — the streamgraph fills nearly
+# the full plot height everywhere, so an inside legend would always cover data.
+leg = ax.legend(loc="center left", bbox_to_anchor=(1.01, 0.5), fontsize=8, framealpha=0.9, borderaxespad=0)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.04, right=0.84, top=0.88, bottom=0.16)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
