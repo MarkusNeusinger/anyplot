@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-horizontal: Horizontal Bar Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -26,6 +26,7 @@ geom_bar = pn.geom_bar
 geom_text = pn.geom_text
 ggplot = pn.ggplot
 labs = pn.labs
+scale_alpha_manual = pn.scale_alpha_manual
 scale_y_continuous = pn.scale_y_continuous
 theme = pn.theme
 theme_minimal = pn.theme_minimal
@@ -51,6 +52,10 @@ df = df.sort_values("users_percent", ascending=True)
 df["language"] = pd.Categorical(df["language"], categories=df["language"], ordered=True)
 df["value_label"] = df["users_percent"].map(lambda v: f"{v:.1f}%")
 
+# Emphasis layer: the top-ranked bar (highest usage) is drawn at full opacity,
+# the rest at reduced opacity, sharpening the ranking's focal point.
+df["highlight"] = df["users_percent"] == df["users_percent"].max()
+
 # Theme-adaptive styling
 anyplot_theme = theme(
     figure_size=(8, 4.5),
@@ -61,7 +66,7 @@ anyplot_theme = theme(
     panel_grid_minor_x=element_line(color=INK, size=0.2, alpha=0.05),
     panel_grid_major_y=element_blank(),
     panel_grid_minor_y=element_blank(),
-    panel_border=element_rect(color=INK_SOFT, fill=None),
+    panel_border=element_blank(),
     axis_ticks_major=element_blank(),
     axis_ticks_minor=element_blank(),
     axis_title=element_text(size=10, color=INK),
@@ -71,10 +76,14 @@ anyplot_theme = theme(
 )
 
 # Plot — value labels at bar ends (spec: "Value labels can be placed at the end of bars")
+# The top-ranked bar is highlighted via alpha; every bar keeps the same brand hue.
 plot = (
     ggplot(df, aes(x="language", y="users_percent"))
-    + geom_bar(stat="identity", fill=BRAND, color=PAGE_BG, size=0.3, width=0.7)
-    + geom_text(aes(label="value_label"), nudge_y=1.6, ha="left", size=2.8, color=INK_SOFT)
+    + geom_bar(
+        aes(alpha="highlight"), stat="identity", fill=BRAND, color=PAGE_BG, size=0.3, width=0.7, show_legend=False
+    )
+    + scale_alpha_manual(values={True: 1.0, False: 0.45})
+    + geom_text(aes(label="value_label"), nudge_y=1.6, ha="left", size=3.5, color=INK_SOFT)
     + coord_flip()
     + scale_y_continuous(expand=(0, 0, 0.12, 3))
     + labs(x="Programming Language", y="Developer Usage (%)", title="bar-horizontal · python · plotnine · anyplot.ai")
