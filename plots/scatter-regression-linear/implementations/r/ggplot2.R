@@ -45,28 +45,36 @@ p <- ggplot(df, aes(x = ad_spend, y = sales_revenue)) +
   geom_smooth(
     method = "lm", formula = y ~ x, se = TRUE, level = 0.95,
     color = IMPRINT_PALETTE[3], fill = IMPRINT_PALETTE[3],
-    linewidth = 1.2, alpha = 0.18
+    linewidth = 1.4, alpha = 0.22
   ) +
   geom_point(
     shape = 21, fill = IMPRINT_PALETTE[1], color = PAGE_BG,
     size = 3, stroke = 0.3, alpha = 0.7
   ) +
+  geom_rug(
+    sides = "bl", color = IMPRINT_PALETTE[1], alpha = 0.35,
+    linewidth = 0.3, length = unit(0.015, "npc")
+  ) +
   annotate(
     "label",
     x = min(df$ad_spend), y = max(df$sales_revenue),
     label = equation_label, hjust = 0, vjust = 1,
-    size = 3.2, color = INK, fill = ELEVATED_BG, label.size = 0
+    size = 3.2, color = INK, fill = ELEVATED_BG, label.size = 0.25,
+    label.padding = unit(0.5, "lines")
   ) +
   labs(
     title = title_text,
     x = "Advertising Spend ($ thousands)",
     y = "Sales Revenue ($ thousands)"
   ) +
+  scale_x_continuous(expand = expansion(mult = c(0.02, 0.05))) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.1))) +
   theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.3),
+    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_line(color = GRID_COLOR, linewidth = 0.3),
     panel.grid.minor  = element_blank(),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
