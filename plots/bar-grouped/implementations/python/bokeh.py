@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-grouped: Grouped Bar Chart
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -52,7 +52,7 @@ source = ColumnDataSource(
     }
 )
 
-title = "Quarterly Revenue by Product · bar-grouped · bokeh · anyplot.ai"
+title = "Quarterly Revenue by Product · bar-grouped · python · bokeh · anyplot.ai"
 
 p = figure(
     x_range=FactorRange(*x, group_padding=0.4, factor_padding=0.08),
