@@ -31,19 +31,55 @@ const methods = [
 
 // Jitter width: fraction of the category band, spread as a pixel offset so
 // points stay centered on the category tick without perturbing the x value.
-const JITTER_PX = 70;
+const JITTER_PX = 90;
 
-const series = methods.map((method, i) => ({
-  name: method.name,
-  type: "scatter",
-  data: Array.from({ length: method.n }, () => {
-    const score = Math.min(100, Math.max(0, method.mean + gaussian(rng) * method.std));
-    const jitter = (rng() - 0.5) * 2 * JITTER_PX;
-    return { value: [method.name, Math.round(score * 10) / 10], symbolOffset: [jitter, 0] };
-  }),
-  symbolSize: 16,
-  itemStyle: { color: t.palette[i], opacity: 0.65, borderColor: t.pageBg, borderWidth: 1 },
-}));
+const categoryMeans = [];
+
+const series = methods.map((method, i) => {
+  const scores = Array.from({ length: method.n }, () => {
+    const raw = method.mean + gaussian(rng) * method.std;
+    return Math.round(Math.min(100, Math.max(0, raw)) * 10) / 10;
+  });
+  categoryMeans.push([method.name, scores.reduce((sum, s) => sum + s, 0) / scores.length]);
+
+  return {
+    name: method.name,
+    type: "scatter",
+    data: scores.map((score) => ({
+      value: [method.name, score],
+      symbolOffset: [(rng() - 0.5) * 2 * JITTER_PX, 0],
+    })),
+    symbolSize: 12,
+    itemStyle: { color: t.palette[i], opacity: 0.6, borderColor: t.pageBg, borderWidth: 1 },
+  };
+});
+
+// Group-mean reference line (spec Notes: "adding horizontal lines for group
+// means... as reference"). A category axis snaps any fractional coordinate
+// to its nearest integer index, so a markLine confined to one category's
+// band is impossible via axis coords; instead draw it as a `custom` series
+// with a pixel-space offset, exactly like the jitter above.
+const meanLineSeries = {
+  name: "Group Mean",
+  type: "custom",
+  silent: true,
+  z: 5,
+  data: categoryMeans,
+  encode: { x: 0, y: 1 },
+  renderItem: (params, api) => {
+    const point = api.coord([api.value(0), api.value(1)]);
+    return {
+      type: "line",
+      shape: {
+        x1: point[0] - JITTER_PX,
+        y1: point[1],
+        x2: point[0] + JITTER_PX,
+        y2: point[1],
+      },
+      style: { stroke: t.inkSoft, lineWidth: 2, lineDash: [6, 4] },
+    };
+  },
+};
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -79,5 +115,5 @@ chart.setOption({
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
   },
-  series,
+  series: [...series, meanLineSeries],
 });
