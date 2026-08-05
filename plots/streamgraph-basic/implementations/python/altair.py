@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 streamgraph-basic: Basic Stream Graph
 Library: altair 6.2.2 | Python 3.13.14
-Quality: 85/100 | Updated: 2026-08-05
+Quality: 90/100 | Updated: 2026-08-05
 """
 
 import os

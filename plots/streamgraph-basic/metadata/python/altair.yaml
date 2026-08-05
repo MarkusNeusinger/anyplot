@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:54:28Z'
-updated: '2026-08-05T11:29:22Z'
+updated: '2026-08-05T11:35:59Z'
 generated_by: claude-sonnet
 workflow_run: 31000958255
 issue: 856
@@ -12,9 +12,12 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
+  - 'Both attempt-1 weaknesses fully resolved: title now includes the python language
+    segment, and each genre now has its own trend/phase/amplitude so bands show genuinely
+    independent trajectories instead of moving in lockstep'
   - Canvas is exactly on target (3200x1800), no padding artifacts, no edge clipping
     on title/axis/legend in either theme
   - Theme-adaptive chrome correctly threaded through configure_axis/configure_legend/configure_view/title
@@ -25,24 +28,17 @@ review:
     the library is designed for
   - 'Imprint palette applied correctly in canonical order with #009E73 as the first
     series, consistent across both themes'
-  - Y-axis tick labels/ticks intentionally hidden - a sensible, deliberate design
-    choice for a centered-baseline streamgraph where absolute y-position carries no
-    meaning
   weaknesses:
-  - Title is missing the {language} segment - currently 'streamgraph-basic · altair
-    · anyplot.ai' instead of 'streamgraph-basic · python · altair · anyplot.ai'
-  - The per-genre synthetic data shares an identical trend (np.linspace(0, 20, 24))
-    and identical seasonal (30 * np.sin(...)) component across all six genres - only
-    the random-walk noise differs by genre, so bands swell and shrink largely in sync
-    rather than showing genuinely independent genre trajectories
-  - Design Excellence is competent but does not go meaningfully beyond the mandated
-    Imprint/theme house style - no additional visual hierarchy, emphasis, or storytelling
-    device beyond what the base style guide already requires
+  - 'Design Excellence remains competent-but-standard: no additional visual hierarchy
+    device beyond what the base house style and now-varied data already provide'
+  - Y-axis tick labels/ticks are hidden - a defensible and intentional choice for
+    a centered-baseline streamgraph, but worth continuing to confirm this reads as
+    intentional rather than missing
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Bold dark title "streamgraph-basic · altair · anyplot.ai" centered at top; rotated y-axis title "Streaming Hours (millions)" with a plain vertical domain line (numeric y ticks intentionally hidden); x-axis titled "Time" with rotated month/year tick labels (Jan 2022 ... Nov 2023); bordered "Genre" legend at right with all 6 swatches/labels. All chrome text clearly readable against the light background.
-      Data: Six smooth basis-interpolated bands stacked symmetrically around a centered baseline (Rock/purple, Pop/green, Jazz/red, Hip-Hop/blue, Electronic/ochre, Classical/cyan top-to-bottom). First series (Pop) renders in #009E73 as required.
+      Chrome: Bold dark title "streamgraph-basic · python · altair · anyplot.ai" centered at top; rotated y-axis title "Streaming Hours (millions)" with a plain vertical domain line (numeric y ticks intentionally hidden); x-axis titled "Time" with rotated month/year tick labels (Jan 2022 ... Nov 2023); bordered "Genre" legend at right with all 6 swatches/labels. All chrome text clearly readable against the light background.
+      Data: Six smooth basis-interpolated bands stacked symmetrically around a centered baseline (Classical/cyan, Electronic/ochre, Hip-Hop/blue, Jazz/red, Pop/green, Rock/lavender bottom-to-top). First series (Pop) renders in #009E73 as required. Bands now show genuinely divergent trajectories per genre (distinct trend/phase/amplitude), unlike attempt 1's lockstep shapes.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
@@ -60,8 +56,9 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set, good proportions, title ~54% of plot width;
-          y-axis ticks intentionally hidden (appropriate for centered-baseline streamgraph)
+        comment: Font sizes explicitly set, good proportions, title ~65-68% of plot
+          width; y-axis ticks intentionally hidden (appropriate for centered-baseline
+          streamgraph)
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -79,15 +76,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-optimized; adjacent red/green bands are distinguished
-          by legend + position, not hue alone
+        comment: Imprint palette is CVD-optimized; adjacent bands distinguished by
+          legend + position, not hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Content bounding box covers ~90% width / ~89% height of the 3200x1800
-          canvas, balanced margins, legend near plot
+        comment: Content covers vast majority of the 3200x1800 canvas, balanced margins,
+          legend near plot, canvas gate confirms exact target dims
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -102,7 +99,7 @@ review:
         comment: 'First series #009E73, canonical Imprint order for all 6 genres,
           theme-correct backgrounds and chrome in both renders'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -121,14 +118,14 @@ review:
           standard-guide-compliant, not exceptional beyond the default recipe
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Pleasant organic shape and mild hierarchy from Pop's larger band,
-          but shared trend+seasonal signal across genres means bands mostly move in
-          lockstep rather than telling a contrasting story
+        passed: true
+        comment: 'Fixed since attempt 1: per-genre trend/phase/amplitude now make
+          bands genuinely diverge, creating real visual hierarchy alongside Pop''s
+          dominant focal band; still no explicit annotation device'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,22 +150,23 @@ review:
           visible
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Legend fully correct, but title is missing the mandated {language}
-          segment ('python')
+        passed: true
+        comment: 'Fixed since attempt 1: title now includes the mandated {language}
+          segment (''python''); legend fully correct'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Shows variation via per-genre noise and base level, but shared trend/seasonal
-          signal across all genres limits genuine independent-trajectory coverage
+        comment: 'Fixed since attempt 1: per-genre trend/phase/amplitude give each
+          genre a genuinely independent trajectory instead of a shared trend+seasonal
+          signal'
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -181,8 +179,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Base values 30-150M hours, plausible magnitudes and growth trend,
-          values clipped to stay positive
+        comment: Base values 30-150M hours, plausible magnitudes and growth/decline
+          per genre, values clipped to stay positive
     code_quality:
       score: 10
       max: 10
@@ -238,7 +236,7 @@ review:
         comment: Vega-Lite's declarative stack='center' + interpolate='basis' encoding
           is a distinctive, concise way to build a streamgraph unique to this grammar-of-graphics
           approach
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
