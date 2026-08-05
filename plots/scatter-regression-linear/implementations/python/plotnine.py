@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -28,6 +28,7 @@ from scipy import stats
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
@@ -59,9 +60,22 @@ title_fontsize = round(12 * (67 / len(title) if len(title) > 67 else 1.0))
 # Plot
 plot = (
     ggplot(df, aes(x="study_hours", y="exam_score"))
-    + geom_point(size=3.0, alpha=0.70, color=BRAND)
+    + geom_point(size=3.0, stroke=0.6, alpha=0.70, fill=BRAND, color="white")
     + geom_smooth(method="lm", se=True, color=ACCENT, fill=ACCENT, alpha=0.25, size=1.2)
-    + annotate("text", x=2, y=92, label=annotation_text, ha="left", va="top", size=3.5, color=INK)
+    + annotate(
+        "label",
+        x=2,
+        y=94,
+        label=annotation_text,
+        ha="left",
+        va="top",
+        size=5,
+        fontweight="bold",
+        color=INK,
+        fill=ELEVATED_BG,
+        boxcolor=INK_SOFT,
+        label_padding=0.4,
+    )
     + labs(title=title, x="Study Hours", y="Exam Score (%)")
     + theme_minimal()
     + theme(
@@ -73,7 +87,7 @@ plot = (
         axis_line=element_line(color=INK_SOFT, size=0.5),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
-        plot_title=element_text(size=title_fontsize, color=INK),
+        plot_title=element_text(size=title_fontsize, color=INK, weight="bold"),
         text=element_text(size=7, color=INK),
     )
 )
