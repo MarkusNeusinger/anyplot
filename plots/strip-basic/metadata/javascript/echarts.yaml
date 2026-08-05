@@ -1,0 +1,251 @@
+library: echarts
+language: javascript
+specification_id: strip-basic
+created: '2026-08-05T06:01:04Z'
+updated: '2026-08-05T06:20:01Z'
+generated_by: claude-sonnet
+workflow_run: 30979647707
+issue: 975
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Group-mean dashed reference lines directly address the attempt-1 feedback and
+    the spec's Notes suggestion, giving each category a clear visual focal point for
+    comparison
+  - The mean line is implemented as a `custom` series with `renderItem`/`api.coord`
+    rather than a native `markLine` — a technically sophisticated, well-reasoned choice
+    (explained in a code comment) since a category axis can't confine a markLine to
+    a single band
+  - Marker size reduced from the prior attempt (16 -> 12) with opacity 0.6, directly
+    reducing within-category clumping while still showing density via accumulation,
+    matching the spec's jitter/alpha guidance
+  - 'Border ring (`borderColor: t.pageBg`) around each marker creates a subtle cutout
+    effect that helps separate overlapping points without extra visual noise'
+  - 'Imprint palette pixel-consistent between renders: green/lavender/blue/ochre in
+    canonical order, first series is brand green `#009E73`'
+  - Theme-adaptive chrome fully correct in both renders — background exactly `#FAF8F1`/`#1A1A17`,
+    all text and the mean-line color (`t.inkSoft`) readable with no dark-on-dark or
+    light-on-light failures
+  - Deterministic, reproducible data via fixed-seed LCG + Box-Muller, clamped to plausible
+    0-100 exam scores
+  - Redundant legend correctly omitted since category identity is already carried
+    by the x-axis
+  weaknesses:
+  - The dashed mean-reference line has no label or legend entry — a first-time viewer
+    can infer it's some kind of reference from the dash style, but cannot tell it
+    specifically represents the group mean without external context; a small text
+    annotation near one line (e.g. 'mean') or a legend entry would close this gap
+  - Within-category overlap is still fairly heavy in the densest clusters (e.g. Project-Based
+    ~78-82 band) — a slightly wider jitter width could further separate points without
+    harming the category-band containment
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "strip-basic · javascript · echarts · anyplot.ai" is centered, dark ink, clearly legible. Y-axis title "Exam Score (%)" and tick labels (30-100) render in dark/soft ink, fully readable. X-axis shows four category labels (Lecture-Based, Flipped Classroom, Project-Based, Blended) in dark-soft ink. Subtle horizontal-only gridlines, y-axis line visible, x-axis line visible, no clipping at any edge.
+      Data: Each category shows a jittered strip of ~70 circular markers in a distinct Imprint color — green #009E73 (Lecture-Based), lavender (Flipped Classroom), blue (Project-Based), ochre (Blended), matching canonical Imprint order with the first series green as required. A dark dashed horizontal line sits within each category's band marking the group mean.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/axis/tick chrome now renders in light ink, clearly legible against the dark surface — no dark-on-dark failures anywhere. The dashed mean-reference lines render in light gray, clearly visible against the dark background.
+      Data: Marker colors confirmed identical to the light render (green/lavender/blue/ochre unchanged, same opacity and border treatment) — only chrome (background, text, grid, mean-line stroke) flipped as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; explicit font sizes throughout
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions with other text or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size reduced to 12px with opacity 0.6 vs. attempt 1's 16px/0.65
+          - clumping reduced, density still visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette, CVD-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units (%), title matches mandated format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order green/lavender/blue/ochre,
+          correct backgrounds both themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom border-ring effect, tuned marker size/opacity, thoughtful
+          custom-series reference lines - above default but not full publication-level
+          composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle y-only grid, no spine clutter, generous whitespace, dashed
+          reference lines add refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Group-mean dashed lines now give each category a clear focal point
+          (up from attempt 1's flat point cloud), but the line lacks a label so its
+          meaning isn't immediately obvious to a first-time viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct strip plot: individual points, categorical x, jitter'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Jitter, transparency, and mean reference line per spec Notes all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, numeric value on y, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend correctly omitted (redundant
+          with x-axis)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows individual points, jitter, density via overlap, and group means
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Exam scores by teaching method - plausible, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 score domain, y-axis 30-100 fits data range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Minimal helper functions only for seeded RNG, no unnecessary classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG + Box-Muller
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports, only ANYPLOT_TOKENS and echarts globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom renderItem series well-commented and justified, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mount-node contract respected, animation: false set, current API'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: symbolOffset jitter keeps category coordinate exact; custom series
+          chosen deliberately where markLine can't be band-confined on a category
+          axis
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom series with renderItem/api.coord for pixel-accurate per-category
+          reference lines is an advanced, distinctive ECharts capability
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
