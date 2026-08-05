@@ -1,7 +1,7 @@
 """ anyplot.ai
 windrose-basic: Wind Rose Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-07
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 84/100 | Updated: 2026-08-05
 """
 
 import os
@@ -9,14 +9,16 @@ import os
 import numpy as np
 import pandas as pd
 from lets_plot import *  # noqa: F403
-from lets_plot import element_rect, element_text, ggsave, theme
+from lets_plot import element_line, element_rect, element_text, ggsave, layer_tooltips, theme
+from PIL import Image
 
 
-LetsPlot.setup_html()
+LetsPlot.setup_html()  # noqa: F405
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+PAGE_BG_RGB = (250, 248, 241) if THEME == "light" else (26, 26, 23)
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
@@ -45,7 +47,6 @@ speeds = np.clip(speeds, 0, 25)
 n_sectors = 16
 sector_size = 360 / n_sectors
 direction_bins = ((directions + sector_size / 2) % 360) // sector_size
-direction_labels = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
 
 # Bin speeds into categories
 speed_bins = pd.cut(
@@ -63,43 +64,71 @@ counts["frequency"] = counts["count"] / total_obs * 100
 # Direction as discrete variable for x-axis
 counts["direction"] = counts["direction_bin"]
 
+# Full 16-point compass labels for tooltips (axis itself only labels the 8 cardinal/intercardinal points)
+compass_16 = [
+    "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+    "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
+]  # fmt: skip
+counts["direction_label"] = counts["direction_bin"].map(dict(enumerate(compass_16)))
+
 # Speed category order for proper stacking
 speed_order = ["0-3 m/s", "3-6 m/s", "6-9 m/s", "9-12 m/s", "12-15 m/s", "15+ m/s"]
 counts["speed_bin"] = pd.Categorical(counts["speed_bin"], categories=speed_order, ordered=True)
 counts = counts.sort_values(["direction_bin", "speed_bin"])
 
-# Okabe-Ito palette (cool to warm gradient)
-colors = ["#009E73", "#2ABCCD", "#4467A3", "#954477", "#AE3030", "#C475FD"]
+# Imprint palette, canonical positions 1-6 in order
+colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Create wind rose using polar bar chart
+# Distinctive lets-plot feature: per-segment tooltips surfaced in the interactive
+# HTML export (compass direction, speed band, and exact frequency on hover).
+bar_tooltips = (
+    layer_tooltips()
+    .title("@direction_label")
+    .line("@speed_bin: @{frequency}%")
+    .format(field="@frequency", format=".1f")
+)
+
 plot = (
-    ggplot(counts, aes(x="direction", y="frequency", fill="speed_bin"))
-    + geom_bar(stat="identity", width=0.9, position="stack")
-    + coord_polar(start=0, direction=1)
-    + scale_x_continuous(
+    ggplot(counts, aes(x="direction", y="frequency", fill="speed_bin"))  # noqa: F405
+    + geom_bar(stat="identity", width=0.9, position="stack", tooltips=bar_tooltips)  # noqa: F405
+    + coord_polar(start=0, direction=1)  # noqa: F405
+    + scale_x_continuous(  # noqa: F405
         breaks=list(range(0, 16, 2)),
         labels=["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
         limits=[-0.5, 15.5],
         expand=[0, 0],
     )
-    + scale_y_continuous(expand=[0, 0])
-    + scale_fill_manual(values=colors, name="Wind Speed")
-    + labs(title="windrose-basic · letsplot · anyplot.ai", x="", y="Frequency (%)")
-    + theme_minimal()
+    + scale_y_continuous(expand=[0, 0])  # noqa: F405
+    + scale_fill_manual(values=colors, name="Wind Speed")  # noqa: F405
+    + labs(title="windrose-basic · python · letsplot · anyplot.ai", x="", y="Frequency (%)")  # noqa: F405
+    + theme_minimal()  # noqa: F405
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=24, color=INK, hjust=0.5),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        axis_title_y=element_text(size=20, color=INK),
-        legend_title=element_text(size=20, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_minor=element_line(color=INK_SOFT, size=0.2),
+        plot_title=element_text(size=16, color=INK, hjust=0.5),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_title_y=element_text(size=12, color=INK),
+        legend_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
+        legend_key_size=18,
+        legend_key_spacing_y=6,
+        legend_margin=10,
     )
-    + ggsize(1600, 1600)
+    + ggsize(600, 600)  # noqa: F405
 )
 
-# Save as PNG and HTML (scale=3 to get 4800×4800 px)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# Save as PNG and HTML (scale=4 to get 2400×2400 px)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+
+# coord_polar()'s layout pass leaves a transparent margin around the plot when a
+# title is present; flatten it onto the theme background so PNG edges are opaque.
+img = Image.open(f"plot-{THEME}.png").convert("RGBA")
+bg = Image.new("RGBA", img.size, (*PAGE_BG_RGB, 255))
+Image.alpha_composite(bg, img).convert("RGB").save(f"plot-{THEME}.png")
+
 ggsave(plot, f"plot-{THEME}.html", path=".")

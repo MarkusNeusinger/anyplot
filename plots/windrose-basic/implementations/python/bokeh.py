@@ -1,7 +1,7 @@
 """ anyplot.ai
 windrose-basic: Wind Rose Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 96/100 | Updated: 2026-05-07
+Library: bokeh 3.9.2 | Python 3.13.14
+Quality: 94/100 | Updated: 2026-08-05
 """
 
 import os
@@ -24,7 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette for speed bins (cool to warm progression)
+# Imprint palette (canonical order) for speed bins, low to high
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Generate realistic wind data for a coastal weather station
@@ -64,17 +64,18 @@ frequencies = frequencies / n_observations * 100
 
 # Create figure - square format for polar-like display
 p = figure(
-    width=3600,
-    height=3600,
-    title="windrose-basic · bokeh · anyplot.ai",
+    width=2400,
+    height=2400,
+    title="windrose-basic · python · bokeh · anyplot.ai",
     x_range=(-35, 35),
     y_range=(-35, 35),
+    match_aspect=True,  # keep wedges/circles round even though the legend eats frame width
     tools="",
     toolbar_location=None,
 )
 
 # Style title and overall appearance
-p.title.text_font_size = "28pt"
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
 p.title.align = "center"
 
@@ -89,33 +90,94 @@ p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 
-# Draw concentric circles for reference
+# Draw concentric circles for reference (grid sits below the data)
+sector_width = 2 * np.pi / 8  # 45 degrees in radians
 for radius in [5, 10, 15, 20, 25]:
     theta_circle = np.linspace(0, 2 * np.pi, 100)
     x_circle = radius * np.cos(theta_circle)
     y_circle = radius * np.sin(theta_circle)
-    p.line(x_circle, y_circle, line_color=INK_SOFT, line_width=1.5, line_alpha=0.4)
-    # Add frequency labels on the right side
+    p.line(x_circle, y_circle, line_color=INK_SOFT, line_width=1.5, line_alpha=0.2)
+
+# Draw direction spokes (grid sits below the data)
+for i in range(8):
+    angle = np.pi / 2 - i * sector_width  # Start from North (top), go clockwise
+    x_spoke = [0, 28 * np.cos(angle)]
+    y_spoke = [0, 28 * np.sin(angle)]
+    p.line(x_spoke, y_spoke, line_color=INK_SOFT, line_width=1.5, line_alpha=0.15)
+
+# Stack each direction's speed bins from the center outward
+center_angles = np.pi / 2 - np.arange(8) * sector_width  # North = up, clockwise
+inner_radii = np.zeros((8, len(speed_labels)))
+outer_radii = np.zeros((8, len(speed_labels)))
+cumulative = np.zeros(8)
+for speed_idx in range(len(speed_labels)):
+    inner_radii[:, speed_idx] = cumulative
+    cumulative = cumulative + frequencies[:, speed_idx]
+    outer_radii[:, speed_idx] = cumulative
+total_freq = cumulative  # total stacked height per direction
+
+# Draw each speed bin as one vectorized annular_wedge glyph (bokeh's native
+# polar/radial primitive) spanning all 8 directions, instead of hand-built
+# polygons — a single ColumnDataSource + glyph call per bin.
+legend_items = []
+gap = 0.02  # radians of separation between neighboring direction sectors
+for speed_idx in range(len(speed_labels)):
+    mask = frequencies[:, speed_idx] > 0.1  # only draw significant bins
+    if not mask.any():
+        continue
+    source = ColumnDataSource(
+        data={
+            "inner_radius": inner_radii[mask, speed_idx],
+            "outer_radius": outer_radii[mask, speed_idx],
+            "start_angle": center_angles[mask] - sector_width / 2 + gap,
+            "end_angle": center_angles[mask] + sector_width / 2 - gap,
+        }
+    )
+    renderer = p.annular_wedge(
+        x=0,
+        y=0,
+        inner_radius="inner_radius",
+        outer_radius="outer_radius",
+        start_angle="start_angle",
+        end_angle="end_angle",
+        source=source,
+        fill_color=IMPRINT[speed_idx],
+        fill_alpha=0.85,
+        line_color=PAGE_BG,
+        line_width=1.5,
+    )
+    legend_items.append(LegendItem(label=speed_labels[speed_idx], renderers=[renderer]))
+
+# Highlight the dominant direction with a thin accent ring just outside its
+# stack — a deliberate emphasis technique beyond the data's natural sizing.
+dominant_idx = int(np.argmax(total_freq))
+dominant_angle = center_angles[dominant_idx]
+p.arc(
+    x=0,
+    y=0,
+    radius=total_freq[dominant_idx] + 1.2,
+    start_angle=dominant_angle - sector_width / 2 + gap,
+    end_angle=dominant_angle + sector_width / 2 - gap,
+    line_color=INK,
+    line_width=4,
+    line_alpha=0.6,
+)
+
+# Frequency and direction labels are added last so they render on top of the
+# wedges — added earlier, bokeh's default draw order let the wedges paint over
+# the grid text wherever a sector's stacked height reached that far outward.
+for radius in [5, 10, 15, 20, 25]:
     p.text(
         x=[radius + 0.5],
         y=[0.5],
         text=[f"{radius}%"],
-        text_font_size="20pt",
+        text_font_size="34pt",
         text_color=INK_SOFT,
         text_baseline="bottom",
     )
 
-# Draw direction lines and labels
-sector_width = 2 * np.pi / 8  # 45 degrees in radians
 for i, label in enumerate(direction_labels):
     angle = np.pi / 2 - i * sector_width  # Start from North (top), go clockwise
-
-    # Draw spoke lines
-    x_spoke = [0, 28 * np.cos(angle)]
-    y_spoke = [0, 28 * np.sin(angle)]
-    p.line(x_spoke, y_spoke, line_color=INK_SOFT, line_width=1.5, line_alpha=0.3)
-
-    # Add direction labels outside
     label_radius = 30
     x_label = label_radius * np.cos(angle)
     y_label = label_radius * np.sin(angle)
@@ -123,71 +185,21 @@ for i, label in enumerate(direction_labels):
         x=[x_label],
         y=[y_label],
         text=[label],
-        text_font_size="22pt",
+        text_font_size="42pt",
         text_font_style="bold",
         text_color=INK,
         text_align="center",
         text_baseline="middle",
     )
 
-# Draw stacked wedges for each direction
-legend_items = []
-renderers_by_speed = {i: [] for i in range(len(speed_labels))}
-
-for dir_idx in range(8):
-    # Angle for this direction (North = up, clockwise)
-    center_angle = np.pi / 2 - dir_idx * sector_width
-
-    # Draw wedges for each speed bin (stacked from center outward)
-    cumulative_radius = 0
-    for speed_idx in range(len(speed_labels)):
-        freq = frequencies[dir_idx, speed_idx]
-        if freq > 0.1:  # Only draw if significant
-            inner_radius = cumulative_radius
-            outer_radius = cumulative_radius + freq
-
-            # Create wedge shape
-            n_points = 30
-            angles = np.linspace(
-                center_angle - sector_width / 2 + 0.02, center_angle + sector_width / 2 - 0.02, n_points
-            )
-
-            # Build polygon: inner arc, outer arc (reversed)
-            x_inner = inner_radius * np.cos(angles)
-            y_inner = inner_radius * np.sin(angles)
-            x_outer = outer_radius * np.cos(angles[::-1])
-            y_outer = outer_radius * np.sin(angles[::-1])
-
-            x_wedge = np.concatenate([x_inner, x_outer])
-            y_wedge = np.concatenate([y_inner, y_outer])
-
-            source = ColumnDataSource(data={"x": [x_wedge.tolist()], "y": [y_wedge.tolist()]})
-            renderer = p.patches(
-                xs="x",
-                ys="y",
-                source=source,
-                fill_color=IMPRINT[speed_idx],
-                fill_alpha=0.85,
-                line_color=PAGE_BG,
-                line_width=1.5,
-            )
-            renderers_by_speed[speed_idx].append(renderer)
-
-            cumulative_radius = outer_radius
-
-# Create legend items
-for speed_idx in range(len(speed_labels)):
-    if renderers_by_speed[speed_idx]:
-        legend_items.append(LegendItem(label=speed_labels[speed_idx], renderers=[renderers_by_speed[speed_idx][0]]))
-
 # Add legend with theme-adaptive styling
 legend = Legend(
     items=legend_items,
     location="center",
-    label_text_font_size="22pt",
+    label_text_font_size="34pt",
     label_text_color=INK_SOFT,
-    spacing=10,
-    padding=15,
+    spacing=14,
+    padding=20,
     background_fill_alpha=0.95,
     background_fill_color=ELEVATED_BG,
     border_line_color=INK_SOFT,
@@ -200,8 +212,8 @@ p.text(
     x=[0],
     y=[-33],
     text=["Wind Speed (m/s)"],
-    text_font_size="20pt",
-    text_color=INK_SOFT,
+    text_font_size="26pt",
+    text_color=INK_MUTED,
     text_align="center",
     text_baseline="top",
 )
@@ -211,7 +223,7 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome — Selenium 4 / Selenium Manager auto-resolves a working driver
-W, H = 3600, 3600
+W, H = 2400, 2400
 opts = Options()
 for arg in (
     "--headless=new",
@@ -225,6 +237,11 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# headless Chrome's --window-size sets the OUTER window, which still reserves a
+# phantom title-bar height even headless — pin the viewport exactly via CDP.
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)  # let bokeh's JS render the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
