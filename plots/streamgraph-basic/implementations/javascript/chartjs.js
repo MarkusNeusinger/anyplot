@@ -44,6 +44,15 @@ const layerTops = series.map((s) => {
   return cumulative.slice();
 });
 
+// Storytelling focal point: the genre with the largest combined listening
+// hours gets a defined ink outline so the flow has a clear point of entry.
+const totals = series.map((s) => s.reduce((sum, v) => sum + v, 0));
+const heroIndex = totals.indexOf(Math.max(...totals));
+
+// Lavender (Hip-Hop) and ochre (Rock) fall below WCAG 3:1 contrast on the
+// cream background — a thin ink stroke keeps their band edges legible.
+const lowContrast = new Set(["Hip-Hop", "Rock"]);
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -62,9 +71,9 @@ const datasets = [
   ...genres.map((genre, i) => ({
     label: genre,
     data: layerTops[i],
-    borderColor: t.palette[i % t.palette.length],
+    borderColor: i === heroIndex || lowContrast.has(genre) ? t.ink : t.palette[i % t.palette.length],
     backgroundColor: t.palette[i % t.palette.length],
-    borderWidth: 0,
+    borderWidth: i === heroIndex ? 2 : lowContrast.has(genre) ? 1 : 0,
     pointRadius: 0,
     fill: i,
     tension: 0.4,
@@ -85,12 +94,19 @@ new Chart(canvas, {
         display: true,
         text: "streamgraph-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22 },
+        font: { size: 25 },
+      },
+      subtitle: {
+        display: true,
+        text: `${genres[heroIndex]} led combined listening hours across all 24 months`,
+        color: t.inkSoft,
+        font: { size: 15, weight: "normal" },
+        padding: { bottom: 12 },
       },
       legend: {
         labels: {
           color: t.ink,
-          font: { size: 16 },
+          font: { size: 17 },
           filter: (item) => item.text !== "",
         },
       },
@@ -100,13 +116,13 @@ new Chart(canvas, {
         type: "category",
         ticks: {
           color: t.inkSoft,
-          font: { size: 14 },
+          font: { size: 15 },
           maxRotation: 0,
           autoSkip: true,
           maxTicksLimit: 12,
         },
         grid: { display: false },
-        title: { display: true, text: "Month", color: t.ink, font: { size: 16 } },
+        title: { display: true, text: "Month", color: t.ink, font: { size: 17 } },
       },
       y: {
         display: false,
