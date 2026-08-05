@@ -2,121 +2,137 @@ library: plotnine
 language: python
 specification_id: windrose-basic
 created: '2025-12-24T22:20:12Z'
-updated: '2026-05-07T03:35:31Z'
-generated_by: claude-haiku
-workflow_run: 25474430158
+updated: '2026-08-05T15:50:36Z'
+generated_by: claude-sonnet
+workflow_run: 31019671170
 issue: 1880
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 90
 review:
   strengths:
-  - Sophisticated chart type implementation with custom polar-like geometry via polygons
-  - 'Perfect visual quality and theme implementation: both light and dark renders
-    have correct backgrounds, theme-adaptive chrome, and identical data colors'
-  - Comprehensive spec compliance with all required features
-  - 'Excellent code structure: clean, reproducible, appropriately complex for the
-    visualization'
-  - Realistic meteorological data with clear patterns (N-S wind dominance)
-  - 'Strong visual refinement: subtle gridlines, clean axes, balanced whitespace,
-    no overlaps'
-  - All text legible in both themes; no dark-on-dark or light-on-light failures
+  - Frequencies now sum to ~100.1% across all 8 directions x 5 speed bins (verified
+    by direct calculation), resolving the prior DQ-03 deduction and giving the distribution
+    real-world credibility
+  - The '5%'/'10%'/'15%' radial gridline labels were repositioned into the narrow
+    angular gap between the E and NE wedges, no longer overlapping the N wedge's colored
+    segment
+  - Dead np.random.seed(42) call (never used since all data is a hardcoded literal)
+    was removed, resolving the CQ-04 code elegance deduction
+  - Data-driven subtitle ('N-S corridor carries 37% of observations...') is computed
+    directly from the plotted frequencies rather than being a generic caption
+  - Cool-to-warm speed-bin ramp (blue to cyan to green to amber to red) matches the
+    spec's meteorological convention and every color is a valid Imprint/amber token
+  - Clean minimal chrome (blank axis ticks/lines/text, subtle dashed radial gridlines,
+    generous whitespace) with no dark-on-dark or light-on-light failures in either
+    theme
+  - Legend clearly labeled 'Wind Speed (m/s)' with all 5 ranges; background/border
+    correctly adapts between light and dark surfaces
   weaknesses:
-  - Design Excellence could be elevated with more exceptional aesthetic sophistication
-  - 'Data Storytelling: clear visual hierarchy but doesn''t go beyond standard data
-    display to create compelling narrative emphasis'
-  - 'Library Mastery: manual polygon construction doesn''t showcase distinctively
-    plotnine-specific capabilities'
+  - 'Library mastery remains generic: the wind rose is still built entirely from geom_polygon/geom_path/geom_text
+    primitives available in any ggplot-style API, with no plotnine-distinctive feature
+    (e.g. after_stat, faceting, geom_rect with coord_polar) showcased — this was flagged
+    in the prior review and not addressed in this attempt'
+  - Manual polygon construction (20-point arcs per wedge, per-segment stacking loop)
+    is a defensible workaround for plotnine's lack of a robust polar bar geometry,
+    but it means the implementation doesn't demonstrate idiomatic plotnine stacking
+    (e.g. geom_col + coord_polar) even where that might have been feasible
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct per style guide
-      Chrome: Title "windrose-basic · plotnine · anyplot.ai" is bold and dark; direction labels (N, NE, E, SE, S, SW, W, NW) are dark and clearly readable; frequency labels (5%, 10%, 15%) are light gray and visible; "Frequency (%)" axis label is in italics, readable; all text is dark text on light background - EXCELLENT readability
-      Data: Stacked wedges in Okabe-Ito colors - blue (#0072B2), sky blue (#56B4E9), green (#009E73), orange (#E69F00), red-orange (#D55E00) for wind speed ranges 0-5, 5-10, 10-15, 15-20, 20+ m/s respectively. N-S dominance is clearly apparent with larger stacked segments. Gridlines (radial circles and spokes) are subtle light gray with appropriate alpha. Legend positioned right with light gray background frame.
-      Legibility verdict: PASS - All text fully readable, excellent contrast
+      Background: Warm off-white (#FAF8F1), matches spec — not pure white, not dark.
+      Chrome: Bold dark title "windrose-basic · python · plotnine · anyplot.ai" at top, italic gray subtitle below it naming the N-S corridor share (37%). Compass labels (N, NE, E, SE, S, SW, W, NW) in large bold dark text ring the outside of the rose, all clearly legible against the light background and none clipped at the canvas edge. Dashed radial gridlines at 5%/10%/15% with dark-gray percentage labels now sitting in the angular gap between the N and NE wedges, on blank background rather than on top of a colored segment. An italic "Frequency (%)" label sits above the N label. Bottom legend "Wind Speed (m/s)" with 5 labeled color swatches, elevated cream background, thin border, fully contained within the canvas.
+      Data: Stacked wedges for all 8 compass directions, colored navy (0-5) -> cyan (5-10) -> green (10-15) -> amber (15-20) -> red (20+) from inner to outer ring. N and S petals are visibly the tallest, consistent with the "N-S corridor" narrative and the underlying frequency values. First data color at innermost stack is Imprint blue rather than #009E73, but this is a deliberate cool-to-warm speed-domain ordering matching the spec's own convention, not a generic categorical series.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct per style guide
-      Chrome: Title is light-colored (#F0EFE8) and clearly visible; direction labels are light text and fully readable; frequency labels are light gray (#B8B7B0) and easy to read; axis label is light and visible; all text is light text on dark background - EXCELLENT readability with NO dark-on-dark failures
-      Data: Stacked wedges maintain IDENTICAL colors to light render - blue, sky blue, green, orange, red-orange in same positions. N-S dominance pattern is equally clear as light render. Gridlines are light gray with appropriate opacity for dark surface. Legend background is slightly lighter dark (#242420) with light text on it.
-      Legibility verdict: PASS - All text clearly readable, perfect theme adaptation, identical data colors to light render
+      Background: Warm near-black (#1A1A17), matches spec — not pure black, not light.
+      Chrome: Same title/subtitle now in white/light-gray text, clearly visible. Compass labels flip to bold white/off-white text, fully legible against the dark background. Gridlines remain subtle dashed gray, still visible but unobtrusive; the repositioned 5%/10%/15% labels sit in the same blank angular gap and read clearly in light gray/white. Legend background flips to a dark elevated panel with a visible border; legend text is light gray, readable.
+      Data: Identical wedge colors and stacking to the light render (navy/cyan/green/amber/red) — the data palette does not shift between themes, only chrome (background, text, gridlines, legend panel) changes.
+      Legibility verdict: PASS — no dark-on-dark failures found; all title, direction labels, gridline labels, and legend text remain clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable in both light and
-          dark themes
+        comment: All text readable in both themes; compass labels are large/bold but
+          functional as the primary categorical axis
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable; no overlaps detected
+        comment: Gridline percentage labels were repositioned into the gap between
+          the N and NE wedges and no longer overlap any colored segment
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wedges clearly visible with optimal sizing for data density
+        comment: All 8 direction wedges and 5 speed-bin segments are distinguishable,
+          sized appropriately for the data magnitude
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Okabe-Ito palette; excellent contrast
+        comment: 5-color cool-to-warm ramp varies hue and lightness together, not
+          solely red/green adjacency
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout; plot fills ~70% of canvas; balanced margins
+        comment: 2400x2400 square canvas, centered composition, title within bounds,
+          no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units; title format correct
+        comment: '''Frequency (%)'' label and compass directions clearly identify
+          both axes'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Perfect palette + theme chrome; backgrounds correct, text colors
-          theme-adaptive, Okabe-Ito colors identical between renders
+        comment: All 5 speed-bin colors are valid Imprint/amber tokens; cool-to-warm
+          ordering is a documented semantic exception; backgrounds correct in both
+          themes
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Well-executed professional appearance but lacks exceptional publication-award-level
-          polish
+        passed: true
+        comment: Custom Imprint-derived palette, clear title/subtitle/legend hierarchy,
+          intentional radial composition
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: 'Excellent: subtle gridlines, clean axes, generous whitespace, refined
-          details'
+        comment: Axis ticks/lines/text blanked, subtle dashed gridlines, generous
+          whitespace, soft legend border
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Good visual hierarchy showing N-S dominance but doesn't go beyond
-          standard display
+        comment: Data-driven subtitle names the dominant N-S corridor and its computed
+          share, giving the chart a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct wind rose with 8 directions and 5 speed bins
+        comment: Correct polar stacked histogram / wind rose
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: direction sectors, speed bins, stacking, frequency
-          axis, legend'
+        comment: 8 direction sectors, 5 stacked speed bins, legend, radial frequency
+          axis, N at top — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct: radial=frequency, angular=direction, fill=wind speed'
+        comment: Direction correctly maps to angle (N at top, clockwise), frequency
+          correctly maps to radius
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match speed bins
+        comment: Title matches 'windrose-basic · python · plotnine · anyplot.ai';
+          legend labels match the 5 speed bins
     data_quality:
       score: 15
       max: 15
@@ -155,22 +173,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: 8 directions, 5 speed bins, frequency variation,
-          stacking'
+        comment: All 8 directions and all 5 speed bins represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real meteorological scenario (airport environment); neutral; plausible
-          patterns
+        comment: Airport wind climatology is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency percentages and speed bins appropriate for meteorological
-          data
+        comment: Frequencies now sum to ~100.1% across all direction/speed bins, matching
+          a full-year distribution — prior deduction resolved
     code_quality:
       score: 10
       max: 10
@@ -180,33 +196,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save; no functions/classes'
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic frequencies
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no waste
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured; manual polygon construction appropriately complex
+        comment: Vestigial np.random.seed(42) call removed; no dead code remains
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300; correct format
+        comment: Saves as plot-{THEME}.png via plot.save with correct dpi/dimensions
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -214,25 +230,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper plotnine grammar of graphics; idiomatic but manual approach
-          doesn't fully leverage high-level abstractions
+        comment: Reasonable ggplot-style layering; manual polygon geometry is a defensible
+          workaround for plotnine's lack of a robust polar coord for stacked wind
+          roses
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Shows creative polygon construction but not uniquely plotnine-specific
-          (could transfer to other libraries)
+        comment: No plotnine-specific feature beyond generic geom_polygon/geom_path/geom_text
+          composition; not addressed since the prior review
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - patches
   - layer-composition
   - annotations
   patterns:
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - minimal-chrome
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
