@@ -1,7 +1,7 @@
 // anyplot.ai
 // windrose-basic: Wind Rose Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.1
-// Quality: 88/100 | Created: 2026-08-05
+// Quality: 94/100 | Created: 2026-08-05
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
