@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windrose-basic: Wind Rose Chart
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-05
@@ -39,7 +39,9 @@ directions = np.concatenate([directions_main, directions_secondary, directions_r
 directions = directions % 360  # Wrap to [0, 360)
 
 # Wind speeds using Weibull distribution (common for wind data)
-speeds = np.random.weibull(2.2, len(directions)) * 6  # Scale for realistic m/s values
+# Scale=7.5 keeps the mean around 6.6 m/s (typical moderate wind-climate) while
+# giving the 15+ m/s tail bin ~1% of observations so it stays visible in the rose
+speeds = np.random.weibull(2.2, len(directions)) * 7.5
 speeds = np.clip(speeds, 0, 25)
 
 # Define bins - 16 direction sectors (22.5 degrees each)
@@ -123,7 +125,9 @@ ax.spines["polar"].set_color(INK_SOFT)
 ax.spines["polar"].set_linewidth(0.4)
 
 # Title
-ax.set_title("windrose-basic · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=16)
+ax.set_title(
+    "windrose-basic · python · matplotlib · anyplot.ai", fontsize=10, fontweight="medium", color=INK, pad=16, loc="left"
+)
 
 # Legend - positioned in the right margin reserved by subplots_adjust
 leg = ax.legend(
