@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: histogram-kde
 created: '2026-08-05T03:55:09Z'
-updated: '2026-08-05T04:00:09Z'
+updated: '2026-08-05T04:15:40Z'
 generated_by: claude-sonnet
 workflow_run: 30973357772
 issue: 1823
@@ -12,68 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - 'Correct plot type: histogram with semi-transparent bars (alpha 0.5) plus a contrasting-color
-    KDE overlay, y-axis normalized to density so both series are on a comparable scale,
-    exactly as the spec''s Notes require'
-  - 'Theme-adaptive chrome is fully wired through: both light and dark renders use
-    correct Imprint background tokens, ink/ink-soft text tokens, and theme-correct
-    grid opacity — no dark-on-dark or light-on-light failures in either render'
+  - 'All three attempt-1 weaknesses were addressed directly: KDE line now uses canonical
+    IMPRINT_PALETTE[2] (lavender), title grew to titlesize=25 for better presence,
+    and a new "Peak ~2 min sessions" annotation with leader line adds data storytelling'
+  - 'Correct plot type: semi-transparent histogram (alpha 0.5) plus contrasting KDE
+    overlay, y-axis normalized to density — exactly per the spec''s Notes'
+  - Theme-adaptive chrome fully wired through both renders, including the new annotation
+    text; no dark-on-dark or light-on-light failures
   - Realistic, neutral, well-scaled example data (right-skewed marketing session-duration
-    distribution, n=600) that clearly demonstrates why a KDE overlay adds value over
-    binning alone
-  - 'Idiomatic Makie usage: native density! recipe computes the KDE directly (no external
-    stats dependency needed), clean KISS Imports/Data/Plot/Save structure, explicit
-    font-size tokens, and Random.seed!(42) for reproducibility'
-  - 'Solid visual refinement: top/right spines removed, single subtle y-axis grid
-    (x grid off), frameless legend with elevated-surface background — clearly above
-    raw library defaults'
+    distribution, n=600)
+  - 'Idiomatic Makie usage: native density! recipe (no external stats dependency needed),
+    clean KISS structure, seeded RNG'
   weaknesses:
-  - 'VQ-07: The KDE line uses IMPRINT_PALETTE[3] (#4467A3, blue), skipping IMPRINT_PALETTE[2]
-    (#C475FD, lavender) with no semantic justification — style guide requires canonical
-    1→N order for non-first series unless a real-world color cue applies, which does
-    not exist for a generic ''KDE'' label. Change density!''s strokecolor to IMPRINT_PALETTE[2].'
-  - 'Title proportion is undersized: at titlesize=20 (40 native px after px_per_unit=2),
-    the ~42-character mandated title fills only ~25-30% of the plot width, well under
-    the ~50-70% guideline for a title of this length. Bump titlesize to roughly 24-26
-    to give the title more visual presence and improve legibility at mobile scale.'
-  - Design Excellence sits at 'well-configured defaults' level — the histogram+KDE
-    combination doesn't add any storytelling emphasis (e.g., no callout on the peak/mode
-    or the long tail). A small annotation highlighting the skew or peak session length
-    would lift DE-03 without introducing fake interactivity.
+  - Design Excellence is still at 'well-configured defaults plus one annotation' level
+    rather than fully bespoke — e.g., no secondary emphasis on the long tail, no custom
+    typography hierarchy beyond size/color tokens already in the style guide
+  - Library Mastery is solid but generic beyond the density! recipe — no distinctive
+    Makie-only feature that would push LM-02 higher
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "histogram-kde · julia · makie · anyplot.ai" centered at top, clearly visible against the light background. X-axis label "Session Duration (minutes)" and y-axis label "Density" (rotated) are dark and readable. Tick labels (0/5/10/15 on x, 0.0/0.1/0.2 on y) are a softer dark gray, legible. Only left and bottom spines are visible (L-shaped frame); a single subtle horizontal gridline set (~15% opacity) marks 0.1/0.2 density. Legend in the top-right shows a green swatch labeled "Observed sessions" and a blue-outlined swatch labeled "KDE", set on a slightly elevated frameless panel.
-      Data: Histogram bars are semi-transparent brand green (#009E73 at alpha 0.5), right-skewed with a sharp peak around 2 minutes and a long thin tail out past 15 minutes. The KDE line is a smooth blue (#4467A3) stroke tracking the histogram shape closely.
+      Chrome: Bold dark title "histogram-kde · julia · makie · anyplot.ai" centered at top at titlesize=25, clearly visible. X-axis label "Session Duration (minutes)" and y-axis label "Density" (rotated) are dark and readable. Tick labels are a softer dark gray, legible. Only left and bottom spines are visible (L-shaped frame); a single subtle horizontal gridline set marks 0.1/0.2 density. Legend in the top-right shows a green swatch labeled "Observed sessions" and a lavender-outlined swatch labeled "KDE" (now canonical palette position 2), on a slightly elevated frameless panel. A new annotation "Peak ~2 min sessions" with a thin leader line points to the tallest histogram bar, placed in open whitespace with no overlap.
+      Data: Histogram bars are semi-transparent brand green (#009E73 at alpha 0.5), right-skewed with a sharp peak around 2 minutes and a long thin tail out past 15 minutes. The KDE line is a smooth lavender (#C475FD) stroke tracking the histogram shape closely.
       Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, and tick labels have all flipped to light tones (white/light-gray) and remain fully legible against the dark background. The same L-shaped spine layout and subtle gridline are present, now in a light-toned low-opacity stroke. The legend panel background has flipped to a dark elevated tone with light text, still fully readable.
-      Data: The histogram bars remain the identical brand green (#009E73, alpha 0.5) and the KDE line remains the identical blue (#4467A3) as in the light render — only the chrome (background, text, grid, legend panel) changed between themes, confirming data-color consistency.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick text is clearly visible against the near-black surface.
+      Chrome: Title, axis labels, tick labels, and the new annotation text have all flipped to light tones and remain fully legible against the dark background. The same L-shaped spine layout and subtle gridline are present, now in a light-toned low-opacity stroke. The legend panel background has flipped to a dark elevated tone with light text, still fully readable.
+      Data: The histogram bars remain the identical brand green (#009E73, alpha 0.5) and the KDE line remains the identical lavender (#C475FD) as in the light render — only the chrome (background, text, grid, legend panel, annotation ink) changed between themes, confirming data-color consistency.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick/annotation text is clearly visible against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (titlesize=20, labelsize=14, ticklabelsize=12)
-          and readable in both themes and at mobile scale; title proportion runs smaller
-          than the ~50-70% guideline, keeping this from a perfect score
+        comment: Explicit font sizes throughout, readable in both themes; title bumped
+          to titlesize=25 per prior feedback, no overflow or squeeze
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, axes, legend, or data in either render
+        comment: New annotation sits in open whitespace, no collisions with legend,
+          axes, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -86,14 +75,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Green fill vs. blue stroke is a high-contrast, CVD-safe pairing
+        comment: Green fill vs. lavender stroke is a high-contrast, CVD-safe pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the vast majority of the canvas with balanced margins;
-          nothing cut off
+        comment: Canvas measured at exactly 3200x1800 (canvas gate passed); balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -102,13 +91,13 @@ review:
         comment: Session Duration (minutes) includes units; Density is descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73, but KDE line uses palette position
-          3 (#4467A3) instead of canonical position 2 (#C475FD) with no semantic justification'
+        passed: true
+        comment: 'KDE line color fixed to canonical IMPRINT_PALETTE[2] (#C475FD),
+          first series still #009E73'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -116,22 +105,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured Imprint styling, but not yet publication-level bespoke
-          design
+        comment: Well-configured Imprint styling; still short of publication-level
+          bespoke design
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
         comment: Spines removed, subtle single-axis grid, frameless legend show real
-          refinement beyond raw defaults
+          polish
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Data is displayed clearly but with no explicit emphasis (e.g., annotation
-          on peak/tail) beyond the base histogram+KDE contrast
+        comment: New Peak ~2 min sessions callout with leader line adds a clear focal
+          point; a second cue on the long tail would push this further
     spec_compliance:
       score: 15
       max: 15
@@ -240,10 +229,11 @@ review:
         passed: true
         comment: Uses Makie's native density! recipe for KDE, a feature that avoids
           an external stats dependency other libraries would need
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
