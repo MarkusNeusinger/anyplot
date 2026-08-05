@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-grouped: Grouped Bar Chart
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -6,6 +6,7 @@ Quality: 87/100 | Updated: 2026-08-05
 
 import os
 
+import matplotlib.patheffects as patheffects
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -52,17 +53,9 @@ for i, (group, color) in enumerate(zip(groups, IMPRINT, strict=True)):
     )
     bars.append(bar)
 
-    # Subtle drop shadow for depth
+    # Drop shadow for depth, via matplotlib's native path-effect (idiomatic vs. manual patches)
     for rect in bar:
-        shadow = plt.Rectangle(
-            (rect.get_x() + bar_width * 0.04, rect.get_y() - max_value * 0.008),
-            rect.get_width(),
-            rect.get_height(),
-            facecolor=INK_MUTED,
-            alpha=0.10,
-            zorder=0,
-        )
-        ax.add_patch(shadow)
+        rect.set_path_effects([patheffects.withSimplePatchShadow(offset=(4, -4), shadow_rgbFace="#000000", alpha=0.30)])
 
 # Value labels and top-performer markers
 for bar_group in bars:
@@ -93,10 +86,31 @@ for bar_group in bars:
             zorder=4,
         )
 
+# Explicit callout for the data story: Electronics vs. Clothing near-tie in Q3
+q3_idx = categories.index("Q3")
+top_group, second_group = sorted(groups, key=lambda g: sales_data[g][q3_idx], reverse=True)[:2]
+top_i, second_i = groups.index(top_group), groups.index(second_group)
+top_val, second_val = sales_data[top_group][q3_idx], sales_data[second_group][q3_idx]
+x1, x2 = x[q3_idx] + offsets[top_i], x[q3_idx] + offsets[second_i]
+top_y, second_y = top_val + max_value * 0.08, second_val + max_value * 0.08
+bracket_y = max(top_y, second_y) + max_value * 0.04
+ax.plot([x1, x1, x2, x2], [top_y, bracket_y, bracket_y, second_y], color=INK_MUTED, linewidth=1.0, zorder=5)
+ax.text(
+    (x1 + x2) / 2,
+    bracket_y + max_value * 0.015,
+    "Near-tie in Q3",
+    ha="center",
+    va="bottom",
+    fontsize=8,
+    color=INK_SOFT,
+    style="italic",
+    zorder=5,
+)
+
 # Style
 title = "bar-grouped · python · matplotlib · anyplot.ai"
-title_fontsize = round(12 * 67 / len(title)) if len(title) > 67 else 12
-ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+title_fontsize = round(13 * 67 / len(title)) if len(title) > 67 else 13
+ax.set_title(title, fontsize=title_fontsize, fontweight="bold", color=INK)
 ax.set_xlabel("Quarter", fontsize=10, color=INK)
 ax.set_ylabel("Sales (Thousands USD)", fontsize=10, color=INK)
 
@@ -124,5 +138,5 @@ ax.spines["bottom"].set_color(INK_SOFT)
 
 ax.set_ylim(0, max_value * 1.15)
 
-plt.tight_layout()
+fig.subplots_adjust(left=0.075, right=0.985, top=0.91, bottom=0.11)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
