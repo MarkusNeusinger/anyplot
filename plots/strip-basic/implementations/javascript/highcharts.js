@@ -32,15 +32,50 @@ const groups = [
 ];
 const pointsPerGroup = 45;
 
-const series = groups.map((group, groupIndex) => ({
+const groupData = groups.map((group) => {
+  const values = Array.from({ length: pointsPerGroup }, () => {
+    const responseMinutes = Math.max(5, group.mean + nextGaussian() * group.sd);
+    return Math.round(responseMinutes * 10) / 10;
+  });
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  return { name: group.name, values, mean };
+});
+
+const series = groupData.map((group, groupIndex) => ({
   name: group.name,
   color: t.palette[groupIndex],
-  marker: { fillColor: hexToRgba(t.palette[groupIndex], 0.6), lineWidth: 0 },
-  data: Array.from({ length: pointsPerGroup }, () => {
-    const responseMinutes = Math.max(5, group.mean + nextGaussian() * group.sd);
-    return [groupIndex, Math.round(responseMinutes * 10) / 10];
-  }),
+  showInLegend: false,
+  marker: {
+    fillColor: hexToRgba(t.palette[groupIndex], 0.6),
+    lineWidth: 1,
+    lineColor: t.pageBg,
+  },
+  data: group.values.map((value) => [groupIndex, value]),
 }));
+
+const meanSeries = {
+  name: "Group Mean",
+  showInLegend: true,
+  color: t.ink,
+  jitter: { x: 0, y: 0 },
+  marker: {
+    symbol: "diamond",
+    radius: 8,
+    fillColor: t.ink,
+    lineWidth: 2,
+    lineColor: t.pageBg,
+  },
+  dataLabels: {
+    enabled: true,
+    format: "{y:.1f} min",
+    y: -14,
+    style: { color: t.ink, fontSize: "12px", fontWeight: "600", textOutline: "none" },
+  },
+  data: groupData.map((group, groupIndex) => [
+    groupIndex,
+    Math.round(group.mean * 10) / 10,
+  ]),
+};
 
 // --- Chart -----------------------------------------------------------------
 Highcharts.chart("container", {
@@ -70,7 +105,11 @@ Highcharts.chart("container", {
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
-  legend: { enabled: false },
+  legend: {
+    enabled: true,
+    itemStyle: { color: t.inkSoft, fontSize: "14px" },
+    itemHoverStyle: { color: t.ink },
+  },
   plotOptions: {
     series: { animation: false },
     scatter: {
@@ -78,5 +117,5 @@ Highcharts.chart("container", {
       marker: { radius: 6, symbol: "circle" },
     },
   },
-  series,
+  series: [...series, meanSeries],
 });
