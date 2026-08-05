@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: windrose-basic
 created: '2025-12-24T22:24:01Z'
-updated: '2026-08-05T15:37:06Z'
+updated: '2026-08-05T15:49:09Z'
 generated_by: claude-sonnet
 workflow_run: 31020190743
 issue: 1880
@@ -12,132 +12,149 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 79
 review:
   strengths:
-  - 'Correct wind rose construction: polar stacked bar chart with North at top and
-    clockwise compass orientation (N, NE, E, SE, S, SW, W, NW), matching meteorological
-    convention.'
-  - 'Speed bins use the canonical Imprint palette in the documented positional order
-    (#009E73, #C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD) and the colors are pixel-identical
-    between the light and dark renders.'
-  - 'Clear visual hierarchy / data storytelling: the dominant W/NW wind sectors are
-    immediately obvious against the smaller sectors, giving the chart a clear focal
-    point.'
-  - Canvas target hit exactly (ggsize(600, 600) + scale=4 -> 2400x2400 square) with
-    no clipped text or elements.
-  - Legend clearly labeled 'Wind Speed' with unit-bearing range labels (e.g. '0-3
-    m/s'), placed outside the plot area with no overlap.
-  - Reproducible via np.random.seed(42); realistic Weibull-based speed distribution
-    and direction-weighted sampling produce plausible, neutral meteorological data.
+  - 'Correct wind-rose construction: 16-direction sectors via coord_polar(start=0,
+    direction=1) with North fixed at top, matching meteorological convention'
+  - Speed bins stacked per direction with realistic direction-dependent Weibull speed
+    distribution (direction_speed_factor) and a clearly dominant NW/W prevailing-wind
+    pattern that is visually obvious at a glance
+  - 'Imprint palette applied in correct canonical order with first series #009E73;
+    both light and dark renders keep identical data hues, only chrome flips'
+  - All theme text (title, axis labels, tick labels, legend) explicitly sized and
+    theme-adaptive via INK/INK_SOFT tokens, fully legible in both themes with no dark-on-dark
+    or light-on-light failures
+  - np.random.seed(42) for reproducibility; clean groupby-aggregation into frequency
+    percentages instead of raw counts
+  - Legitimate PIL post-processing step to flatten coord_polar's transparent margin
+    onto the theme background, avoiding a translucent-corner artifact rather than
+    faking any interactivity
   weaknesses:
-  - 'Grid is not theme-adaptive: panel_grid_major/minor are left at theme_minimal()
-    defaults instead of being set from INK_SOFT, so the radial/angular gridlines render
-    as bold, high-contrast white lines against the near-black dark background while
-    staying subtle grey against the light background. Add panel_grid_major=element_line(color=INK_SOFT,
-    size=0.2-0.3) (and panel_grid_minor similarly, lower alpha/size) inside the existing
-    theme() call so grid intensity is consistently subtle in both themes.'
-  - 'Title is missing the required language segment: current title is ''windrose-basic
-    · letsplot · anyplot.ai'' but SC-04 requires ''{spec-id} · {language} · {library}
-    · anyplot.ai'' -> should read ''windrose-basic · python · letsplot · anyplot.ai''.'
-  - 'Dead code: `direction_labels` (the 16-name compass list) is built but never used
-    anywhere -- the actual tick labels passed to scale_x_continuous are a separate
-    hardcoded 8-item list. Remove the unused variable or use it to derive the labels.'
-  - The PIL alpha-compositing step to flatten the transparent margin left by coord_polar()'s
-    layout pass is a functional but non-idiomatic workaround bolted on after ggsave;
-    fine as a stopgap but worth revisiting if lets-plot exposes a cleaner way to set
-    the polar plot's outer margin/background natively.
+  - 'CRITICAL — Title in the actual rendered plot-light.png / plot-dark.png reads
+    ''windrose-basic · letsplot · anyplot.ai'', silently missing the mandated ''·
+    python'' language token that IS present in labs(title=...) in the current source
+    (line 88: "windrose-basic · python · letsplot · anyplot.ai"). Reproducing the
+    current implementation file locally (pip install lets-plot==4.11.0, same ggsave(scale=4)
+    call) renders the title correctly WITH ''python'', so the source code itself is
+    not at fault — the two PNGs supplied for this review do not match what the current
+    code actually produces. This looks like a stale/non-regenerated render or a font/environment-dependent
+    text-drop bug in the pipeline''s render step, not a logic error in letsplot.py.
+    Regardless of root cause, the artifact under review violates the mandated ''{spec-id}
+    · {language} · {library} · anyplot.ai'' title format and must not ship in this
+    state — re-render plot-light.png/plot-dark.png from the current source and re-verify
+    the title text pixel-for-pixel before the next review.'
+  - Legend column (right ~20% of the square canvas) has noticeably more empty whitespace
+    above and below the legend box than the plot area itself uses on the left, giving
+    a slightly unbalanced/isolated look at the canvas scale even though the polar
+    plot itself fills a healthy ~65-70% of the frame
+  - Smallest stacked segments (e.g. the thin 15+ m/s cyan sliver in the N sector,
+    or the sub-1% bins in E/SE/S) are only a few pixels tall at full resolution and
+    risk disappearing entirely once the PNG is downscaled to ~400px mobile width
+  - Design is a well-executed but fairly standard ggplot-style bar+coord_polar composition;
+    nothing in the implementation is distinctive to lets-plot specifically (the same
+    code structure would port to plotnine/ggplot2 with only syntax changes) and the
+    legend/theme styling relies mostly on required brand tokens rather than added
+    creative polish
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 -- not pure white.
-      Chrome: Title "windrose-basic · letsplot · anyplot.ai" centered at top in dark ink, clearly legible. Compass tick labels (N, NE, E, SE, S, SW, W, NW) and radial frequency ticks (0, 5, 10, 15) rendered in soft dark grey, legible against the light surface. "Frequency (%)" y-axis title in dark ink, rotated along the left edge, legible. Grid: subtle light-grey concentric circles and radial spokes, visible but unobtrusive. Legend "Wind Speed" box (elevated off-white background, thin border) sits outside the plot on the right with six unit-labeled swatches (0-3 m/s ... 15+ m/s), all legible.
-      Data: Stacked polar bars per compass sector, six-color stack in canonical Imprint order -- green (#009E73, 0-3 m/s), purple (3-6 m/s), blue (6-9 m/s), brown/tan (9-12 m/s), dark red (12-15 m/s), cyan (15+ m/s). Dominant sectors are NW and W (largest radial extent, reaching past the "10" ring), decreasing smoothly toward N/E/SE, consistent with the "prevailing westerlies" data-generation logic. First series is confirmed #009E73 green.
-      Legibility verdict: PASS -- all text is readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title reads "windrose-basic · letsplot · anyplot.ai" in dark ink, centered, fully within the canvas (verified via pixel bounding-box analysis: title text spans x=501-1634 of 2400px, ~47% width, no overflow/clipping). Radial axis ticks (0/5/10/15) and rotated "Frequency (%)" axis label at the left are dark-gray and clearly readable. Compass tick labels (N, NE, E, SE, S, SW, W, NW) around the circle are legible. Legend titled "Wind Speed" sits in an elevated card (off-white fill, thin border) on the right with 6 correctly labeled speed-range swatches.
+      Data: Stacked polar bars across 16 direction sectors. First/dominant color is Imprint brand green (#009E73) for the innermost 0-3 m/s band, followed in canonical Imprint order by lavender (3-6), blue (6-9), ochre (9-12), red (12-15), cyan (15+). Largest bars are clearly at NW and W, a secondary bump at SW, and small slivers elsewhere — a legible, honest wind-rose story.
+      Legibility verdict: PASS overall, but the title is missing the mandated "· python" language token — see weaknesses. All other text passes legibility.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 -- not pure black.
-      Chrome: Title, compass labels, and radial tick labels are rendered in light ink/grey and remain clearly legible against the dark surface -- no dark-on-dark failures. Legend box uses an elevated dark background with a light border; swatches and text all legible. However, the polar grid (concentric circles + radial spokes) renders as bold, high-contrast white/light-grey lines -- noticeably more prominent here than the subtle grey grid in the light render, because panel_grid colors were not set from the INK_SOFT theme token and fall back to the theme_minimal() default.
-      Data: Same six-color stack as the light render -- green, purple, blue, brown, dark red, cyan -- confirmed pixel-identical to the light render; only chrome (background, grid, text) changed between themes as expected, aside from the grid-intensity issue noted above.
-      Legibility verdict: PASS for text (all readable, no dark-on-dark text failures); grid styling is a refinement issue (too prominent), not a legibility failure.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title text "windrose-basic · letsplot · anyplot.ai" now in light ink, fully readable against the dark background; no dark-on-dark failures observed anywhere (axis ticks, compass labels, legend text and title are all light-colored and clearly legible). Legend card uses the darker elevated background (#242420-ish) with a visible border, readable light text.
+      Data: Colors are pixel-identical to the light render — same brand green first, then lavender/blue/ochre/red/cyan in the same canonical order and the same dominant NW/W pattern. Only the chrome (background, grid, text, legend box) flips; data hues are unchanged, confirming theme-adaptive implementation is correct.
+      Legibility verdict: PASS for all chrome elements in this theme; same title-token omission as the light render (same underlying artifact, not a dark-mode-specific regression).
+
+    Cross-check: Both renders were verified for canvas edge clipping via bounding-box pixel analysis (content margins present on all four sides in both images, no AR-09 violation) and for palette identity between themes (data hues match exactly). The one substantive defect found — omission of "python" from the mandated title format — is identical in both renders, confirming it is a single upstream rendering issue rather than a per-theme bug.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All title/axis/tick/legend text readable in both themes; grid theming
-          gap noted separately under DE-02
+        comment: All font sizes explicitly set via theme(); fully readable in both
+          themes. Docked because the rendered title text itself is missing a mandated
+          word ('python'), a content-fidelity issue that overlaps with legibility
+          of the intended string.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions; legend cleanly separated from plot area
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bar segments clearly distinguishable, appropriately sized for 6-way
-          stacked data
+        comment: Bars well-sized for the dominant directions; the smallest speed-bin
+          slivers in low-frequency sectors are only a few px tall and may vanish at
+          ~400px mobile width.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette provides adequate contrast between adjacent stack
-          segments; no red-green as sole signal
+        comment: Imprint palette is CVD-safe; white bar edges give definition between
+          adjacent stacked segments.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas hit exactly, no clipped or overflowing elements,
-          title ~60% of plot width
+        comment: Polar plot fills ~65-70% of the canvas with balanced margins; legend
+          column has more surrounding whitespace than the plot side, a minor imbalance.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Frequency (%)'' with units, legend labeled with m/s ranges'
+        comment: Radial axis labeled 'Frequency (%)' with units; compass directions
+          are self-explanatory category labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for all 6 series,
-          correct FAF8F1/1A1A17 backgrounds, identical data colors across themes'
+        comment: 'First series is #009E73, remaining 5 series follow canonical Imprint
+          order; backgrounds and chrome are theme-correct in both renders; data hues
+          identical across themes.'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Custom Imprint palette and theme tokens applied deliberately, but
-          overall polish is held back by the un-themed grid
+        comment: 'Well-configured library default: compliant brand colors and an elevated
+          legend card, but no design choices beyond what the style guide mandates.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Generous whitespace and clean legend, but grid lines are not theme-adapted
-          -- too bold/prominent in dark render
+        passed: true
+        comment: Grid explicitly toned down via INK_SOFT tokens, legend boxed and
+          padded; polar frame/gridlines are structurally required so cannot be further
+          stripped.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Prevailing W/NW wind pattern creates a clear, immediately readable
-          focal point
+        comment: Size variation across sectors makes the prevailing NW/W wind pattern
+          immediately obvious without any annotation.
     spec_compliance:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -145,56 +162,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar stacked bar / wind rose
+        comment: Correct polar stacked-bar wind rose via geom_bar(stat='identity',
+          position='stack') + coord_polar().
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 16 direction bins, 6 meaningful speed bins, North at top, legend,
-          radial frequency axis all present
+        comment: 16 direction sectors, meaningful speed bins, North at top, legend
+          with speed ranges, radial frequency axis — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Direction on angular axis, frequency on radial axis, stacked correctly
-          by speed bin
+        comment: Direction correctly mapped to angle, frequency to radius; all 16
+          sectors visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 0
         max: 3
         passed: false
-        comment: 'Title missing required language segment: reads ''windrose-basic
-          · letsplot · anyplot.ai'' instead of ''windrose-basic · python · letsplot
-          · anyplot.ai'''
+        comment: Legend labels are correct, but the rendered title is missing the
+          mandated language token ('python'), so the required '{spec-id} · {language}
+          · {library} · anyplot.ai' format is not met in the delivered PNGs even though
+          the source code specifies it correctly.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All aspects of a wind rose represented: direction distribution,
-          speed stacking, frequency scale'
+        comment: Shows full speed range (0 to 15+ m/s) in dominant directions and
+          realistically narrower ranges in calm directions.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Weibull-based speeds, direction-weighted sampling, plausible and
-          neutral meteorological data
+        comment: Neutral, real-world meteorological scenario (hourly wind measurements
+          over a year).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 8760 hourly observations, frequencies up to ~14% matching the 15%
-          radial scale
+        comment: Weibull-distributed speeds clipped to 0-25 m/s and direction-dependent
+          speed factor are physically plausible.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -202,34 +221,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: Linear imports → data → aggregation → plot → save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot, PIL.Image all actually used
+        comment: os, numpy, pandas, lets_plot, PIL — all used; PIL needed for the
+          background-flatten workaround.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Unused `direction_labels` variable left in the script; no fake functionality
-          otherwise
+        passed: true
+        comment: No fake UI or over-engineering; the PIL alpha-composite step is a
+          legitimate, well-commented fix for coord_polar's transparent-margin quirk.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ggsave(scale=4) and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API.
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -237,15 +257,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar, geom_bar+coord_polar+scale_manual; the post-hoc
-          PIL alpha-composite margin fix is a workaround rather than pure ggplot idiom
+        comment: Proper grammar-of-graphics composition (ggplot + geom_bar + coord_polar
+          + scale_x_continuous + theme), correct use of scale_fill_manual with named
+          legend.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: coord_polar is a genuine distinctive feature use, but otherwise fairly
-          standard geom_bar/scale_manual usage
+        comment: geom_bar + coord_polar is a generic ggplot-family pattern shared
+          with plotnine/ggplot2; nothing here is unique to lets-plot itself.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -259,4 +280,4 @@ impl_tags:
   dataprep:
   - binning
   styling:
-  - minimal-chrome
+  - grid-styling
