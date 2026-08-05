@@ -131,7 +131,7 @@ DIRECTIONS.forEach((label, i) => {
     .text(label, lx, ly + sin * 6 + 5)
     .attr({ align, zIndex: 5 })
     .css({
-      fontSize: isCardinal ? "16px" : "12px",
+      fontSize: isCardinal ? "16px" : "13px",
       fontWeight: isCardinal ? "700" : "400",
       color: isCardinal ? t.ink : t.inkSoft,
       fontFamily: "inherit",
