@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-multi: Multi-Line Comparison Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-05
@@ -16,6 +16,7 @@ from plotnine import (
     element_text,
     geom_line,
     geom_point,
+    geom_text,
     ggplot,
     labs,
     scale_color_manual,
@@ -62,16 +63,39 @@ df["Product"] = pd.Categorical(
 color_map = dict(zip(["Electronics", "Accessories", "Furniture", "Clothing"], IMPRINT, strict=True))
 brand_only = df[df["Product"] == "Electronics"]
 
+# Direct end-of-line value labels (year-end sales) so the crossover story reads
+# without relying on the legend alone. Labels are spread apart with a minimum
+# gap so the close Furniture/Clothing pair at month 12 doesn't collide.
+end_labels = (
+    df.loc[df["Month"] == 12, ["Product", "Sales"]].sort_values("Sales", ascending=False).reset_index(drop=True)
+)
+end_labels["label_y"] = end_labels["Sales"]
+min_gap = 14
+for i in range(1, len(end_labels)):
+    if end_labels.loc[i - 1, "label_y"] - end_labels.loc[i, "label_y"] < min_gap:
+        end_labels.loc[i, "label_y"] = end_labels.loc[i - 1, "label_y"] - min_gap
+end_labels["Month"] = 12
+end_labels["Label"] = end_labels["Sales"].round(0).astype(int).astype(str)
+
 # Plot - base lines for all series, brand series (Electronics) redrawn
-# thicker on top to lead the eye without adding text callouts
+# thicker on top to lead the eye, plus direct end-of-line value labels
 plot = (
     ggplot(df, aes(x="Month", y="Sales", color="Product", group="Product"))
-    + geom_line(size=1.1)
-    + geom_point(aes(fill="Product"), shape="o", color=PAGE_BG, stroke=0.5, size=2.6)
-    + geom_line(data=brand_only, size=1.9, show_legend=False)
+    + geom_line(size=1.3)
+    + geom_point(aes(fill="Product"), shape="o", color=PAGE_BG, stroke=0.6, size=2.9)
+    + geom_line(data=brand_only, size=2.1, show_legend=False)
+    + geom_text(
+        data=end_labels,
+        mapping=aes(x="Month", y="label_y", label="Label", color="Product"),
+        ha="left",
+        nudge_x=0.35,
+        size=2.8,
+        fontweight="bold",
+        show_legend=False,
+    )
     + scale_color_manual(values=color_map)
     + scale_fill_manual(values=color_map, guide=None)
-    + scale_x_continuous(breaks=months, labels=month_labels)
+    + scale_x_continuous(breaks=months, labels=month_labels, expand=(0.02, 0, 0.1, 0.6))
     + labs(
         x="Month", y="Sales (thousands USD)", title="line-multi · python · plotnine · anyplot.ai", color="Product Line"
     )
@@ -83,7 +107,7 @@ plot = (
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.12),
-        axis_line=element_line(color=INK_SOFT, size=0.6),
+        axis_line=element_blank(),
         text=element_text(size=7, color=INK_SOFT),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
