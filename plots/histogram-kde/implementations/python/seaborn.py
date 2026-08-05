@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-kde: Histogram with KDE Overlay
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-05
@@ -6,9 +6,11 @@ Quality: 88/100 | Updated: 2026-08-05
 
 import os
 
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from matplotlib.lines import Line2D
 
 
 # Theme tokens (see prompts/default-style-guide.md)
@@ -60,7 +62,7 @@ ax.set_facecolor(PAGE_BG)
 # Histogram with semi-transparent bars
 sns.histplot(
     test_scores,
-    bins=35,
+    bins=26,
     kde=False,
     stat="density",
     alpha=0.5,
@@ -80,7 +82,7 @@ sns.kdeplot(test_scores, color=KDE_COLOR, linewidth=3, ax=ax, label="KDE")
 # Style
 ax.set_xlabel("Test Score (%)", fontsize=10, color=INK)
 ax.set_ylabel("Density", fontsize=10, color=INK)
-ax.set_title("histogram-kde · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_title("histogram-kde · python · seaborn · anyplot.ai", fontsize=11, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 # Trimmed, offset spines — idiomatic seaborn polish beyond the plain L-frame
@@ -91,8 +93,20 @@ ax.spines["bottom"].set_color(INK_SOFT)
 # Subtle grid
 ax.yaxis.grid(True, alpha=0.18, linewidth=0.8, linestyle="-", color=INK)
 
-# Legend
-ax.legend(frameon=True, fancybox=False, fontsize=8, framealpha=0.95, edgecolor=INK_SOFT, facecolor=ELEVATED_BG)
+# Legend — explicit handles so Histogram (primary, first-drawn series) lists above KDE
+legend_handles = [
+    mpatches.Patch(facecolor=HISTOGRAM_COLOR, alpha=0.5, edgecolor=PAGE_BG, label="Histogram"),
+    Line2D([0], [0], color=KDE_COLOR, linewidth=3, label="KDE"),
+]
+ax.legend(
+    handles=legend_handles,
+    frameon=True,
+    fancybox=False,
+    fontsize=8,
+    framealpha=0.95,
+    edgecolor=INK_SOFT,
+    facecolor=ELEVATED_BG,
+)
 
 plt.tight_layout()
 output_dir = os.path.dirname(os.path.abspath(__file__))
