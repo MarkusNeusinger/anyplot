@@ -81,7 +81,11 @@ const bandHalfWidth = gridX.map(
 const upperY = fittedY.map((y, i) => y + bandHalfWidth[i]);
 const lowerY = fittedY.map((y, i) => y - bandHalfWidth[i]);
 
-const scatterData = adSpend.map((x, i) => ({ x, y: salesRevenue[i], id: `pt-${i}` }));
+const scatterData = adSpend.map((x, i) => ({
+  x,
+  y: salesRevenue[i],
+  id: `pt-${i}`,
+}));
 
 const yAllValues = [...salesRevenue, ...upperY, ...lowerY];
 const yPad = (Math.max(...yAllValues) - Math.min(...yAllValues)) * 0.08;
@@ -96,10 +100,21 @@ const title = "scatter-regression-linear · javascript · muix · anyplot.ai";
 function ConfidenceBand() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const top = gridX.map((x, i) => `${xScale(x)},${yScale(upperY[i])}`).join(" L ");
+  const top = gridX
+    .map((x, i) => `${xScale(x)},${yScale(upperY[i])}`)
+    .join(" L ");
   const bottomIndices = [...gridX.keys()].reverse();
-  const bottom = bottomIndices.map((i) => `${xScale(gridX[i])},${yScale(lowerY[i])}`).join(" L ");
-  return <path d={`M ${top} L ${bottom} Z`} fill={INK_MUTED} opacity={0.22} stroke="none" />;
+  const bottom = bottomIndices
+    .map((i) => `${xScale(gridX[i])},${yScale(lowerY[i])}`)
+    .join(" L ");
+  return (
+    <path
+      d={`M ${top} L ${bottom} Z`}
+      fill={INK_MUTED}
+      opacity={0.22}
+      stroke="none"
+    />
+  );
 }
 
 // --- Chart (default-exported component — the harness mounts it) ------------
@@ -110,7 +125,7 @@ export default function Chart() {
     <ChartContainer
       width={width}
       height={height}
-      margin={{ top: 92, right: 56, bottom: 76, left: 104 }}
+      margin={{ top: 92, right: 56, bottom: 76, left: 132 }}
       series={[
         {
           type: "scatter",
@@ -144,6 +159,11 @@ export default function Chart() {
           min: yDomainMin,
           max: yDomainMax,
           label: "Sales Revenue ($k)",
+          // tickFontSize drives the y-axis label's clearance from the tick labels
+          // (MUI X positions the rotated label at tickFontSize + tickSize + 10 px
+          // from the axis line); it's set well above tickLabelStyle.fontSize so
+          // the label never collides with 3-digit tick values like "140".
+          tickFontSize: 32,
           tickLabelStyle: { fontSize: 14 },
           labelStyle: { fontSize: 16 },
         },
@@ -152,17 +172,27 @@ export default function Chart() {
     >
       <ChartsGrid horizontal />
       <ConfidenceBand />
-      <LinePlot skipAnimation slotProps={{ line: { style: { strokeWidth: 3 } } }} />
+      <LinePlot
+        skipAnimation
+        slotProps={{ line: { style: { strokeWidth: 3 } } }}
+      />
       <ScatterPlot />
       <ChartsXAxis />
       <ChartsYAxis />
-      <text x={width / 2} y={40} textAnchor="middle" fontSize={22} fontWeight={600} fill={t.ink}>
+      <text
+        x={width / 2}
+        y={40}
+        textAnchor="middle"
+        fontSize={22}
+        fontWeight={600}
+        fill={t.ink}
+      >
         {title}
       </text>
-      <text x={112} y={78} fontSize={15} fill={t.inkSoft}>
+      <text x={140} y={78} fontSize={15} fill={t.inkSoft}>
         {equationLabel}
       </text>
-      <text x={112} y={98} fontSize={13} fill={INK_MUTED}>
+      <text x={140} y={98} fontSize={13} fill={INK_MUTED}>
         Shaded band: 95% confidence interval for the mean response
       </text>
     </ChartContainer>
