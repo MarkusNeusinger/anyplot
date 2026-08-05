@@ -1,0 +1,250 @@
+library: echarts
+language: javascript
+specification_id: heatmap-annotated
+created: '2026-08-05T09:54:02Z'
+updated: '2026-08-05T10:06:46Z'
+generated_by: claude-sonnet
+workflow_run: 30994623199
+issue: 1824
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Repair directly addressed the prior review''s DE-03 weakness: the strongest off-diagonal
+    correlation (Temperature ↔ UV Index, 0.81) is now computed in code and surfaced
+    via a subtitle callout plus a bold ink-colored border on both symmetric cells,
+    giving the matrix a clear focal point'
+  - Per-cell label color is derived by interpolating the same imprint_div gradient
+    the visualMap uses and computing luma, so every cell's annotation text stays contrast-safe
+    against its own background in both themes -- no fixed light/dark threshold that
+    could fail on a specific value
+  - Diverging imprint_div colormap correctly chosen for signed correlation data (-1
+    to +1), with a labeled continuous visualMap colorbar
+  - Title format is exact, all 8x8 cells are populated with 2-decimal annotations,
+    and the data (weather metric correlations) is realistic, symmetric, with diagonal
+    = 1.00 as expected
+  - Data colors are pixel-identical between light and dark renders; only chrome (background,
+    title/tick ink, border color on the highlighted cell) adapts to theme
+  weaknesses:
+  - Six small color-math helpers (hexToRgb, lerpRgb, divergingRgb, luma, contrastColor,
+    isStrongestPair) add real surface area beyond a minimal top-to-bottom script;
+    justified here since ECharts has no built-in per-cell contrast-aware label API,
+    but it keeps CQ-01 shy of full marks
+  - Beyond the single highlighted pair, the rest of the 8x8 grid is still a standard
+    correlation matrix layout -- there is no secondary structuring (e.g. row/column
+    reordering by cluster) that would push the layout itself toward publication-grade
+    sophistication
+  - The visualMap colorbar shows only numeric -1.00/1.00 endpoints with no 'Correlation'
+    label, which is a minor descriptiveness gap even though the axis category labels
+    make the matrix content self-evident
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Dark-ink title "heatmap-annotated · javascript · echarts · anyplot.ai" centered near the top, occupying a comfortable width with no clipping. A secondary-ink subtitle beneath it reads "Strongest link: Temperature ↔ UV Index (0.81)". Row labels (8 weather metrics) run horizontally down the left edge; the same 8 labels repeat rotated ~40° along the bottom with no overlap or clipping. A vertical continuous colorbar (visualMap) sits at the right, labeled 1.00 at top and -1.00 at bottom.
+      Data: 8x8 symmetric correlation matrix. Diagonal cells (value 1.00) render deep blue; off-diagonal cells span deep red (strong negative) through near-white (near zero) to blue (strong positive) via the imprint_div diverging gradient. Each cell is annotated with its 2-decimal value; text color auto-switches between near-black and near-white based on that specific cell's background luminance, and stays legible on every cell inspected. The Temperature/UV Index cell pair (0.81) is outlined with a bold black border and bold-weight label, clearly distinguishing it as the callout referenced in the subtitle.
+      Legibility verdict: PASS -- all title, subtitle, tick, and cell-annotation text is clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Title, subtitle, and axis tick labels flip to light ink and remain fully legible with no clipping. The visualMap colorbar text and gradient endpoints are equally readable. The highlighted Temperature/UV Index cell now shows a bold near-white border (ink token flipped for the theme), still standing out from the surrounding grid.
+      Data: Cell background colors are pixel-identical to the light render (only chrome flipped, as required) -- the diverging red/blue scale and every numeric value are unchanged. Per-cell annotation text colors (derived from the theme-independent data color, not the page background) remain readable on every cell; no dark-on-dark or light-on-light failures observed anywhere in the grid.
+      Legibility verdict: PASS -- no dark-on-dark or light-on-light failures found; the theme-adaptive border on the highlighted cell is a nice touch that keeps the focal point visible in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes; title fits comfortably
+          without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Rotated x-axis labels, cell annotations, colorbar text -- no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cell size and label font well matched to an 8x8 grid
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red-blue diverging scale, not red-green; per-cell contrast-aware
+          label color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas well utilized, balanced margins, colorbar integrated
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Category axes are self-descriptive metric names; title format exact
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_div diverging cmap for signed data, theme-correct chrome,
+          identical data colors across themes
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Contrast-aware per-cell text color and theme-adaptive highlight border
+          show thoughtful design, clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No spines, subtle pageBg-colored cell borders, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strongest correlation is computed, called out in a subtitle, and
+          highlighted with a bold border on both symmetric cells -- viewer sees the
+          insight immediately
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct annotated heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Numeric annotations, contrast-safe text, diverging colormap, colorbar
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 8 columns x 8 rows, all cells populated
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; colorbar legend labeled correctly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range of positive/negative/near-zero correlations, diagonal
+          = 1.00
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Weather-metric correlation matrix, neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Signs and magnitudes match real-world weather relationships (e.g.
+          temperature/UV positive, humidity/rainfall positive)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Six small color-math helpers beyond a minimal top-to-bottom script,
+          though justified by the per-cell contrast requirement
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic matrix
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only echarts + provided tokens
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic heatmap series + continuous visualMap with calculable colorbar
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Continuous visualMap with calculable interaction and per-datum itemStyle/label
+          overrides are ECharts-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap
+  - edge-highlighting
