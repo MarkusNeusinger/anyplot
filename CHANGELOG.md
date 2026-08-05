@@ -160,7 +160,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   twice in its life was permanently outside automation, which described 9 of the 11 PRs stuck on
   2026-08-05. A successful review now clears it along with `ai-review-failed`. Verified with a
   harness that extracts `dispatch()` verbatim from the YAML and exercises 11 cases (disabled
-  target, transient failure, success, and the six Case 2 label shapes) (#PRNUM2).
+  target, transient failure, success, and the six Case 2 label shapes) (#10180).
 
 - **A correctly rejected plot was reported as a crashed review, deadlocking the PR** —
   `impl-review.yml` used quality score `0` as its sentinel for "the AI review produced no
