@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windrose-basic: Wind Rose Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-05
@@ -40,25 +40,23 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # 8 direction bins: N, NE, E, SE, S, SW, W, NW
 # 5 speed bins: 0-5, 5-10, 10-15, 15-20, 20+ m/s
 # Airport wind patterns show influence from local terrain and seasonal variations
-np.random.seed(42)
-
 directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 n_dirs = len(directions)
 
 # Wind speed bins and their labels
 speed_bins = ["0-5", "5-10", "10-15", "15-20", "20+"]
 
-# Frequencies (%) for each direction and speed bin
-# Airport with variable wind patterns: N/S dominance, minimal calm winds
+# Frequencies (%) for each direction and speed bin - sums to ~100% of the full year of
+# observations (N/S dominance, minimal calm winds)
 frequencies = {
-    "N": [2.0, 2.5, 1.8, 0.8, 0.3],
-    "NE": [1.8, 1.5, 0.8, 0.3, 0.1],
-    "E": [1.5, 1.2, 0.6, 0.2, 0.0],
-    "SE": [1.8, 1.5, 0.9, 0.4, 0.1],
-    "S": [2.2, 2.8, 1.9, 0.9, 0.4],  # Secondary wind direction
-    "SW": [2.0, 1.8, 1.0, 0.5, 0.2],
-    "W": [1.5, 1.2, 0.6, 0.2, 0.0],
-    "NW": [1.8, 1.5, 0.8, 0.3, 0.1],
+    "N": [4.8, 6.0, 4.3, 1.9, 0.7],
+    "NE": [4.3, 3.6, 1.9, 0.7, 0.2],
+    "E": [3.6, 2.9, 1.4, 0.5, 0.0],
+    "SE": [4.3, 3.6, 2.2, 1.0, 0.2],
+    "S": [5.3, 6.7, 4.5, 2.2, 1.0],  # Secondary wind direction
+    "SW": [4.8, 4.3, 2.4, 1.2, 0.5],
+    "W": [3.6, 2.9, 1.4, 0.5, 0.0],
+    "NW": [4.3, 3.6, 1.9, 0.7, 0.2],
 }
 
 # Colors for wind speed bins: cool (calm) to warm (strong) progression
@@ -149,7 +147,7 @@ grid_df = pd.DataFrame(grid_rows)
 
 # Create spoke lines (one for each direction)
 spoke_rows = []
-max_radius = 18  # Extend spokes beyond data
+max_radius = 21  # Extend spokes beyond the tallest stack (S ~ 19.7%)
 for i, direction in enumerate(directions):
     angle = dir_angles[direction]
     spoke_rows.append({"x": 0, "y": 0, "spoke_id": i})
@@ -159,26 +157,27 @@ spoke_df = pd.DataFrame(spoke_rows)
 
 # Create direction labels positioned outside the chart
 label_rows = []
-label_radius = 20
+label_radius = 23
 for direction in directions:
     angle = dir_angles[direction]
     label_rows.append({"label": direction, "x": label_radius * math.cos(angle), "y": label_radius * math.sin(angle)})
 
 label_df = pd.DataFrame(label_rows)
 
-# Create frequency labels on gridlines (positioned at top of circles for better visibility)
+# Create frequency labels on gridlines, positioned in the angular gap between the E and
+# NE wedges (each wedge is inset 0.03 rad from its sector boundary) so the label always
+# lands on blank background instead of on top of a colored stack segment
 freq_label_rows = []
+freq_label_angle = math.pi / 8
 for radius in grid_radii:
-    # Position labels at top of each circle (90 degrees) with offset
-    angle = math.pi / 2 + 0.20
     freq_label_rows.append(
-        {"label": f"{radius}%", "x": radius * math.cos(angle) + 1.5, "y": radius * math.sin(angle) + 0.5}
+        {"label": f"{radius}%", "x": radius * math.cos(freq_label_angle), "y": radius * math.sin(freq_label_angle)}
     )
 
 freq_label_df = pd.DataFrame(freq_label_rows)
 
 # Create "Frequency (%)" label to explain what gridlines represent
-freq_axis_label_df = pd.DataFrame([{"label": "Frequency (%)", "x": -2.5, "y": 21.5}])
+freq_axis_label_df = pd.DataFrame([{"label": "Frequency (%)", "x": -2.5, "y": label_radius + 1.5}])
 
 # Data-driven insight for the subtitle: identify the dominant direction corridor
 # (a direction and its 180-degree opposite) by summed frequency share
@@ -214,8 +213,8 @@ plot = (
     # Colors with native legend
     + scale_fill_manual(values=speed_colors, name="Wind Speed (m/s)", guide=guide_legend(reverse=False))
     # Axis scaling
-    + scale_x_continuous(limits=(-22, 22))
-    + scale_y_continuous(limits=(-22, 22))
+    + scale_x_continuous(limits=(-25, 25))
+    + scale_y_continuous(limits=(-25, 25))
     + coord_equal()
     # Title + data-driven subtitle (Data Storytelling: names the dominant corridor)
     + labs(title="windrose-basic · python · plotnine · anyplot.ai", subtitle=subtitle)
