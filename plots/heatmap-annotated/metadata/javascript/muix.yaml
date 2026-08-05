@@ -1,0 +1,241 @@
+library: muix
+language: javascript
+specification_id: heatmap-annotated
+created: '2026-08-05T09:54:47Z'
+updated: '2026-08-05T10:00:42Z'
+generated_by: claude-sonnet
+workflow_run: 30994760905
+issue: 1824
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/javascript/muix/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correct diverging Imprint colormap (imprint_div) built from t.div[0..2] with a
+    theme-adaptive midpoint, matching the style guide exactly, and identical red/blue
+    anchors across both renders
+  - Auto-contrast annotation text (luminance-based) keeps every cell value readable
+    regardless of cell color, verified working correctly in both light and dark renders
+  - Idiomatic, distinctive use of MUI X's compositional API (ChartContainer + useXScale/useYScale/useDrawingArea)
+    to build a fully custom heatmap — a chart type the community package has no built-in
+    component for
+  - Realistic, neutral wellness-metrics correlation dataset with a full spread of
+    correlation strengths (-0.71 to 1.00) and directionally sensible relationships
+  - Well-labeled diverging colorbar legend ('Pearson r', ticks from -1 to 1) placed
+    close to the plot, with theme-adaptive chrome throughout
+  weaknesses:
+  - Colorbar tick labels (fontSize 12-13 CSS px) are the smallest text in the chart
+    — could be nudged closer to the 14px used for the main axis ticks for better mobile-scale
+    legibility
+  - No explicit axis titles beyond the variable-name tick labels; acceptable for a
+    correlation matrix but a small axis or figure caption ('Variables') would add
+    clarity
+  - Visual design is clean and functional but does not go beyond the diverging color
+    intensity for storytelling — no highlight/annotation calls out the strongest relationships
+    (e.g. Exercise-Steps 0.82, Stress-Mood -0.71)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "heatmap-annotated · javascript · muix · anyplot.ai" centered at top in dark ink (#1A1A17-family), fully visible with headroom above it. X-axis tick labels (Sleep, Exercise, Screen Time, Stress, Water, Steps, Mood) below the grid and mirrored Y-axis tick labels on the left, both in medium-gray ink, evenly sized and not overlapping. Diverging colorbar legend on the right labeled "Pearson r" with ticks from -1.0 to 1.0, fully inside the canvas with margin to spare.
+      Data: 7x7 correlation matrix with rounded-corner cells colored via the Imprint diverging scale (matte red for negative, near-background midpoint near zero, blue for positive). Diagonal cells (self-correlation = 1.00) are deep blue. Each cell shows its numeric value to 2 decimals; text automatically switches between dark ink on pale cells and off-white ink on saturated cells, and every value is legible.
+      Legibility verdict: PASS — all title, tick label, and colorbar text is clearly readable against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, now in light ink, fully visible with headroom above it. Axis tick labels now render in light gray, same relative sizing and spacing as the light render. Colorbar legend text is light-colored and fully legible, positioned identically to the light render.
+      Data: Same 7x7 matrix with identical cell hues at the -1 (matte red) and +1 (blue) extremes as the light render — only the near-zero midpoint blends toward the dark background instead of the light one, which is the documented theme-adaptive behavior for imprint_div. Diagonal cells remain deep blue. Cell value text again auto-contrasts correctly — dark cells get light text, the few pale cells near zero get dark text — no dark-on-dark failures observed.
+      Legibility verdict: PASS — all title, tick label, and colorbar text is clearly readable against the dark background; no dark-on-dark text found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; colorbar
+          ticks (12-13px) are the smallest text on the page
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cells are large and well-sized for a 7x7 matrix
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Diverging red/blue with redundant numeric labels in every cell
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid + colorbar fill most of the 2400x2400 canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Variable-name tick labels plus 'Pearson r' colorbar label are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_div anchors correct, theme-adaptive midpoint per style guide,
+          chrome theme-correct in both renders
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Rounded cells, auto-contrast text, gradient colorbar go beyond a
+          bare default since MUI X has no built-in heatmap
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No competing grid, subtle ink-soft ticks; default axis baseline lines
+          remain
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Color intensity naturally emphasizes strong correlations but nothing
+          explicitly calls out the insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct annotated heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color + value labels + auto-contrast text + colorbar + diverging
+          cmap all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Row/column indices correctly mapped to variable names
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; colorbar legend labeled and ticked correctly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range of correlation strengths, diagonal = 1.00
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral wellness-metrics domain, plausible and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correlation values are directionally sensible and internally consistent
+          (symmetric matrix, diagonal 1.00)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small, focused helper functions appropriate for a React/JS component
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded matrix
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used @mui/x-charts imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, default-exported component, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses MUI X's documented composition pattern (ChartContainer + hooks)
+          to extend beyond built-in chart types
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useXScale/useYScale/useDrawingArea headless hooks are distinctive
+          to MUI X's architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
