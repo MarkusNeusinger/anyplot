@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-multi: Multi-Line Comparison Plot
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: 49/100 | Updated: 2026-08-05
+Quality: 89/100 | Updated: 2026-08-05
 """
 
 import os

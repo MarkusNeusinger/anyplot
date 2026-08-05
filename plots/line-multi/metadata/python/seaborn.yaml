@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: line-multi
 created: '2025-12-24T21:28:57Z'
-updated: '2026-08-05T07:37:05Z'
+updated: '2026-08-05T07:47:39Z'
 generated_by: claude-sonnet
 workflow_run: 30984525176
 issue: 1825
@@ -12,55 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mult
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 49
+quality_score: 89
 review:
   strengths:
-  - Title matches the mandated format exactly; axis labels carry units
+  - 'Both weaknesses flagged in the previous review are genuinely fixed: the annotation
+    callout no longer crosses the title (xytext moved from (9.3, +20) to (9.65, +14)),
+    and the April Home & Garden/Sports marker collision is resolved with a real data
+    nudge (home_garden[3] -= 6, sports[3] += 4) rather than a cosmetic patch'
   - 'Imprint palette applied in canonical order, Electronics correctly first at #009E73;
-    data colors pixel-identical between light and dark renders'
-  - 'Theme backgrounds are pixel-exact: #FAF8F1 (light) and #1A1A17 (dark)'
+    data colors are pixel-identical between light and dark renders'
+  - 'Theme backgrounds are pixel-exact: #FAF8F1 (light) and #1A1A17 (dark); all chrome
+    (title, axis labels, ticks, legend, annotation box) threads theme tokens correctly
+    with no dark-on-dark or light-on-light failures'
   - Soft translucent glow underlay behind the Electronics line sharpens its lead-series
     hierarchy without being gimmicky
   - Dual hue+style encoding (color AND marker shape per series) aids differentiation
-    and gives a colorblind-safe fallback
+    and gives a colorblind-safe fallback beyond color alone
   - Clean L-shaped frame via sns.despine(offset=6, trim=False) with a subtle y-axis-only
     grid
   - Reproducible (np.random.seed(42)), flat KISS script, correct plot-{THEME}.png
-    save with no bbox_inches='tight'
-  - Canvas gate passed — no dimension drift
+    save with no bbox_inches='tight'; canvas gate passed at 3200x1800
   weaknesses:
-  - 'Title/annotation overlap: the annotation callout box''s border and its ''Electronics
-    sharply'' text cross directly through the final ''i'' of ''anyplot.ai'' in the
-    title, in both light and dark renders. The xytext y-offset (electronics[-1] +
-    20) places the box too high, into the title''s vertical band. Lower the offset
-    (e.g. +14) or shift the box so it clears the title''s bounding box.'
-  - 'April marker collision, unresolved from Attempt 1 feedback: Home & Garden''s
-    blue square marker and Sports'' orange plus marker sit almost exactly on top of
-    each other around April (both ~32-34 on the y-axis), leaving the Home & Garden
-    square ~80% hidden in both themes. Attempt 2 added markeredgecolor/markeredgewidth
-    edge-highlighting, which is a cosmetic improvement but does not fix the underlying
-    spatial coincidence — needs a real fix (data nudge, z-order, or size differentiation
-    at the crossing).'
-  - Design Excellence and Library Mastery improved modestly (glow underlay, edge-highlighting,
-    move_legend) but remain in the 'good, not distinctive' band — one more deliberate
-    seaborn-specific flourish would help.
+  - 'Several series sit close together at a few months (e.g. Jan: Apparel 40 vs Sports
+    39, only 1 unit apart on a 140-unit axis; Aug: Apparel/Sports crossing near 24-25)
+    — still distinguishable via distinct hue+marker shape, but worth a similar nudge
+    treatment if a future pass wants zero visual proximity anywhere in the series'
+  - Design Excellence and Library Mastery remain in the 'good, not distinctive' band
+    — the glow underlay, edge-highlighting, and move_legend are real touches but still
+    built on standard sns.lineplot(hue=, style=) primitives; one more deliberate seaborn-specific
+    flourish (e.g. a confidence band, custom legend handles, or a second annotation)
+    would push this further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, pixel-sampled at #FAF8F1 — matches spec exactly.
-      Chrome: Title "line-multi · python · seaborn · anyplot.ai", axis labels ("Month", "Sales (thousands USD)"), tick labels, and legend ("Product Line": Electronics, Apparel, Home & Garden, Sports) all render in dark ink and are readable. Annotation callout box ("Holiday season lifts / Electronics sharply") top-right.
-      Data: Four lines in Imprint palette — Electronics #009E73 (circles, with soft glow underlay), Apparel #C475FD (X markers), Home & Garden #4467A3 (squares), Sports #BD8233 (plus markers). First series correctly #009E73.
-      Defects found on close pixel inspection: (1) annotation box border/text crosses through the trailing "i" of "anyplot.ai" in the title; (2) at April, Home & Garden square marker is ~80% hidden behind the Sports plus marker.
-      Legibility verdict: PASS overall, but FAIL on VQ-02 overlap (title/annotation crossing; April marker collision)
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "line-multi · python · seaborn · anyplot.ai" is dark ink, fully legible, and now clears the annotation callout box with a visible gap (previously crossed by the box border/text). Axis labels ("Month", "Sales (thousands USD)") and tick labels (Jan-Dec, 0-140) are dark/soft-ink and clearly readable. Y-axis gridlines are subtle horizontal lines at low alpha. Legend box ("Product Line": Electronics, Apparel, Home & Garden, Sports) sits top-left with a light elevated background and readable dark text, well clear of the data lines. Annotation callout ("Holiday season lifts / Electronics sharply") sits top-right, pointing to the December Electronics point, no longer overlapping the title.
+      Data: Four lines — Electronics (#009E73, circle markers, soft glow underlay) rising sharply with a holiday-season jump; Apparel (#C475FD, X markers) with a summer peak; Home & Garden (#4467A3, square markers) with a spring/summer bump; Sports (#BD8233, plus markers) mild seasonal drift. At April, Home & Garden and Sports markers are now clearly separated (previously near-coincident and ~80% hidden) thanks to the data nudge. All four colors/marker shapes are distinguishable from each other and the background.
+      Legibility verdict: PASS — both previously-flagged overlap defects (title/annotation, April marker collision) are resolved.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, pixel-sampled at #1A1A17 — matches spec exactly.
-      Chrome: Title, axis labels, tick labels, legend, and annotation box all flip to light ink / light elevated surfaces and remain readable — no dark-on-dark failures observed.
-      Data: Confirmed pixel-identical to light render (#009E73, #C475FD, #4467A3, #BD8233); only chrome adapted to theme.
-      Defects: Same two issues reproduce — title/annotation overlap and the April Home & Garden/Sports marker collision (slightly harder to parse against the dark background).
-      Legibility verdict: PASS overall, but FAIL on VQ-02 overlap (same two defects as light render)
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis labels, tick labels, legend, and annotation box all flip to light ink / light elevated surfaces and remain fully legible — no dark-on-dark failures. The title/annotation gap holds in dark mode too.
+      Data: Confirmed pixel-identical to light render (#009E73, #C475FD, #4467A3, #BD8233); only chrome adapted to theme. April marker separation holds in dark mode.
+      Legibility verdict: PASS — same fixes confirmed in dark theme.
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,49 +64,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes; minor deduction because
-          the title's trailing glyph is visually crossed by the annotation box border
+        comment: Explicit font sizes throughout (title 12pt, labels 10pt, ticks 8pt);
+          all text readable in both themes; title no longer visually crossed by the
+          annotation box
       - id: VQ-02
         name: No Overlap
-        score: 0
-        max: 6
-        passed: false
-        comment: Annotation box crosses the title text in both renders; Home & Garden
-          and Sports markers nearly coincide at April, hiding the Home & Garden square
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers well-sized generally, but the April collision makes the Home
-          & Garden marker effectively invisible at that point
+        comment: 'Both previously-flagged collisions fixed: annotation box now clears
+          the title, and the April Home & Garden/Sports markers are cleanly separated
+          by a real data nudge'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: linewidth=2.5, markersize=8 appropriate for 12-point sparse series;
+          April marker no longer hidden
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, distinct hues plus distinct marker shapes give a CVD-safe
-          fallback
+        comment: Imprint CVD-safe palette plus marker-shape redundant encoding; no
+          red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed at 3200x1800; -1 for annotation box placement
-          never checked against title bounding box
+        comment: Canvas gate passed (3200x1800); annotation box now fully contained
+          with clearance from the title and canvas edges
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units; title matches mandated format
+        comment: Descriptive labels with units ("Sales (thousands USD)", "Month");
+          title matches mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Electronics first at #009E73, canonical Imprint order, backgrounds
-          pixel-exact in both themes'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -121,20 +120,21 @@ review:
         max: 8
         passed: false
         comment: Glow underlay and marker edge-highlighting are nice touches beyond
-          baseline, but overall polish is still incremental
+          baseline, but overall polish stays incremental rather than distinctive
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: despine offset=6, subtle y-axis-only grid, generous whitespace
+        comment: sns.despine(offset=6) L-shaped frame, subtle y-axis-only grid, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Annotation callout and glow underlay reinforce the Electronics/holiday-spike
-          focal point
+          focal point, now without obscuring the title
     spec_compliance:
       score: 15
       max: 15
@@ -214,7 +214,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: No fake UI; the April data nudge is a small, clearly-commented adjustment,
+          not a manipulation of real data
       - id: CQ-05
         name: Output & API
         score: 1
@@ -238,12 +239,12 @@ review:
         passed: false
         comment: Dual hue+style mapping, move_legend, glow underlay, marker edge-highlighting
           are real touches, but still built on standard lineplot primitives
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - explicit-figure
