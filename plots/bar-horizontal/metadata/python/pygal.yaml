@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:38:04Z'
-updated: '2026-08-05T17:20:36Z'
+updated: '2026-08-05T17:26:59Z'
 generated_by: claude-sonnet
 workflow_run: 31028518767
 issue: 1946
@@ -12,51 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Correct pygal.HorizontalBar usage with proper x_labels/y_labels transposition,
-    matching the spec's category-on-y-axis, value-on-x-axis layout
-  - Bars sorted descending by revenue, giving the chart a clear ranking narrative
-    as recommended in the spec notes
-  - Custom value_formatter renders '$X.XM' labels directly on each bar, and truncate_label=-1
-    keeps long category names like 'Home & Furniture' from being cut off
-  - Title fontsize correctly scaled via the linear formula (61px for a 73-char title)
-    so the mandated title fits without overflow or clipping in either render
-  - Theme tokens (PAGE_BG, INK, INK_MUTED) are threaded through the Style object and
-    both renders are fully legible with correct off-white/near-black surfaces
-  - Legend correctly omitted for the single-series chart per the style guide's decoration-removal
-    checklist
-  - Custom y_labels (0-900 step 150) give a clean, evenly spaced value axis that comfortably
-    covers the full data range without the top bar (Electronics, $842.6M) overflowing
+  - Clean, minimal horizontal bar chart with categories correctly sorted descending
+    by value (largest at top-visual/bottom-index per pygal's bottom-up rendering),
+    matching the spec's ranking-display recommendation
+  - 'Theme tokens correctly threaded through the Style object: backgrounds are exactly
+    #FAF8F1 (light) / #1A1A17 (dark), and chrome text (title, tick labels, category
+    labels) flips from dark-on-light to light-on-dark with zero readability issues
+    in either render'
+  - 'First (and only) series uses brand green #009E73 exactly, identical in both renders
+    per Imprint rules; value labels use a dark, fixed color that stays legible sitting
+    directly on the green bars in both themes'
+  - Value labels formatted with a custom formatter ($842.6M style) placed at the end
+    of each bar, giving precise reading without requiring a separate axis scan
+  - Title follows the exact mandated format with a sensible descriptive prefix, and
+    title font size is computed via the length-based scaling formula so it doesn't
+    overflow the canvas
+  - 'No axis-guide clutter: legend, y-guides and x-guides are suppressed since a single
+    series and value labels make gridlines unnecessary, keeping the chart visually
+    quiet'
+  - Fully deterministic, hardcoded dataset with realistic and neutral retail-revenue
+    values across a plausible $M range - no randomness, no seed needed
+  - Saves both plot-{THEME}.png and plot-{THEME}.html as required for an interactive
+    library, using current pygal 3.x API (render_to_png / render_to_file)
   weaknesses:
-  - 'VQ-07 Palette Compliance: the Style object never sets `opacity` (pygal''s Style
-    defaults to opacity=''.7''), so the bar fill is alpha-blended with the page background
-    instead of rendering the mandated #009E73 solid. Measured pixel colors: light
-    render bars sample as #4BB998, dark render bars sample as #087757 -- neither matches
-    #009E73, and critically the two are visibly different greens between themes, violating
-    the ''Imprint data colors must be identical between light and dark'' rule. Fix:
-    add opacity=''1'' (and opacity_hover=''1'' for the interactive HTML) to the custom_style
-    Style(...) call so the bar fill renders the exact brand green on both surfaces.'
-  - Design Excellence is competent but not exceptional -- beyond the mandatory theme-adaptive
-    tokens there isn't much distinctive polish (e.g. no edge highlighting on bars,
-    no secondary accent for the top-ranked category) to lift it above a solid-but-standard
-    horizontal bar chart.
+  - No custom font-family override, so labels render in pygal's fallback monospace
+    typeface rather than a more polished sans-serif - a minor, systemic pygal styling
+    limitation rather than a spec violation, but it caps DE-01/DE-02 below top marks
+  - Chart relies entirely on a single flat color and default bar styling (no edge
+    highlighting, no subtle gradient, no secondary visual cue) - functional and clean
+    but doesn't create a strong focal point beyond the sort order, limiting DE-03
+  - x_labels/y_labels axis semantics for pygal.HorizontalBar are non-obvious (transposed
+    relative to a normal Bar) and rely only on an inline comment for future maintainers
+    - acceptable but worth double-checking if pygal's API changes in a future version
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches the required light-theme surface -- not pure white.
-      Chrome: Title "Retail Revenue by Category · bar-horizontal · python · pygal · anyplot.ai" in dark ink at the top, fully visible and not clipped. Ten category labels (Electronics down to Garden & Outdoor) run down the left side in dark ink. X-axis title "Revenue ($M)" and numeric tick labels (0, 150, 300, 450, 600, 750, 900) are dark and clearly legible. Subtle dotted vertical guide lines mark each tick without competing with the bars.
-      Data: Ten horizontal bars sorted descending from Electronics ($842.6M) to Garden & Outdoor ($97.6M), each with a black "$X.XM" value label centered inside the bar. Bar fill measured directly from the PNG is #4BB998 (a lighter mint green), not the mandated #009E73 -- this is pygal's default 0.7 fill-opacity blending the brand green with the light background.
-      Legibility verdict: PASS (all text readable; the color-fidelity issue is a palette-compliance defect, not a legibility one).
+      Background: Warm off-white, confirmed #FAF8F1 (sampled pixel (250,248,241)) - matches spec exactly, not pure white.
+      Chrome: Title "Retail Revenue by Category · bar-horizontal · python · pygal · anyplot.ai" in dark ink at top, fully visible, not clipped. Category labels (Electronics, Apparel, Home & Furniture, ... Garden & Outdoor) in dark text along the y-axis, all fully readable. X-axis tick labels (0, 150, 300, ... 900) in dark text below the plot. X-axis title "Revenue ($M)" clearly visible beneath the ticks. All chrome text renders as dark-on-light with strong contrast.
+      Data: Single series in Imprint brand green (#009E73), 10 horizontal bars sorted descending in value from Electronics ($842.6M) at bottom to Garden & Outdoor ($97.6M) at top of the visual stack. Each bar carries a dark value label ("$842.6M", etc.) at its end/inside, clearly legible against the green fill.
+      Legibility verdict: PASS - all text readable, no overlap, no clipping at canvas edges.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches the required dark-theme surface -- not pure black.
-      Chrome: Same title, category labels, axis title, and tick labels now rendered in light ink (#F0EFE8), all clearly readable against the dark surface. No dark-on-dark failures observed. Guide lines remain subtle.
-      Data: Same ten sorted bars with black value labels, still legible against the bar fill. Bar fill measured directly from the PNG is #087757 (a darker, more muted green), not the mandated #009E73 and visibly different from the light render's #4BB998 -- confirms the fill-opacity blending is the root cause, since the same nominal color produces two different apparent hues depending on background.
-      Legibility verdict: PASS (all text readable; same VQ-07 color-fidelity issue as the light render).
+      Background: Warm near-black, confirmed #1A1A17 (sampled pixel (26,26,23)) - matches spec exactly, not pure black.
+      Chrome: Same title, category labels, tick labels, and axis title as the light render, now rendered in light cream/off-white ink, fully legible against the dark background. No dark-on-dark failures observed - verified via pixel crop that category labels ("& Beauty", etc.) render in light ink while the value labels drawn on top of the green bars stay dark for contrast against the green fill (not the background), which is a valid and legible choice.
+      Data: Identical bar order, values, and green fill (#009E73) as the light render - only the chrome (background + text ink) flipped, exactly as required. Bars remain crisp and clearly distinguishable from the near-black background.
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, data colors identical to the light render.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -64,75 +69,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and value labels all readable in
-          both themes at explicit font sizes
+        comment: All font sizes explicit; readable in both themes, no dark-on-dark
+          or light-on-light
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, bars, or value text
+        comment: No collisions between category labels, tick labels, or value labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 10 categories, bars generously sized with adequate spacing=20 for
-          a sparse dataset
+        comment: 10 bars with generous height/spacing, clearly visible on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, black value-label text has adequate contrast against
-          the bar fill in both themes
+        comment: Single-hue green vs neutral background, strong contrast, no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed, title scaled correctly (61px for 73-char
-          title), no overflow or clipping
+        comment: 3200x1800 canvas confirmed by gate; title/margins well proportioned,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Revenue ($M)'' x-axis title has units; category labels are self-explanatory'
+        comment: x_title 'Revenue ($M)' descriptive with units; categories self-explanatory
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Style() never overrides pygal''s default opacity=''.7'', so rendered
-          bar color is #4BB998 (light) / #087757 (dark) instead of the mandated #009E73
-          -- and the two themes render visibly different greens, violating the identical-across-themes
-          rule'
+        passed: true
+        comment: 'Bar color = #009E73 (verified by pixel sample), backgrounds = #FAF8F1/#1A1A17
+          (verified), identical data color across themes'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Tuned margins for long category labels and value-label space, custom
-          $-formatted value labels, deliberate stroke_width -- solid but not exceptional
-          polish
+        comment: Deliberate minimalist styling with sized tokens; capped slightly
+          by pygal's fallback monospace font
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Legend correctly omitted, subtle guide lines, no chartjunk
+        comment: Legend/guides suppressed, generous margins; grid is subtle but a
+          plain flat bar fill
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Descending sort creates a clear ranking narrative; limited further
-          hierarchy given the single-series bar format
+        comment: Descending sort creates a clear ranking narrative; inline value labels
+          aid comparison, but no additional emphasis/focal point beyond sort order
     spec_compliance:
       score: 15
       max: 15
@@ -142,28 +144,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pygal.HorizontalBar
+        comment: pygal.HorizontalBar - correct chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Categorical y-axis, numeric x-axis, consistent bar heights, adequate
-          spacing, value labels at bar end
+        comment: 10 categories, consistent bar heights, sorted, adequate spacing,
+          value labels at bar end - all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on y-axis (via x_labels transposition), value on x-axis;
-          full data range covered by 0-900 ticks
+        comment: Categories on y-axis, values on x-axis, full data range shown 0-900+
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · bar-horizontal · python · pygal
-          · anyplot.ai' format; legend correctly omitted for single series
+        comment: Title matches mandated format with descriptive prefix; legend correctly
+          omitted for single series
     data_quality:
       score: 15
       max: 15
@@ -173,21 +174,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Sorted ranking, value labels, consistent bar heights, adequate category
-          count (10) -- all bar-horizontal spec notes addressed
+        comment: Shows all aspects expected of a horizontal bar ranking chart
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Retail revenue by product category is plausible and neutral
+        comment: Retail revenue by category - plausible, neutral, non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values ($97.6M-$842.6M) and relative ordering (Electronics > Apparel
-          > ... > Garden & Outdoor) are realistic for retail category revenue
+        comment: Values $97.6M-$842.6M, sensible for retail category revenue
     code_quality:
       score: 10
       max: 10
@@ -197,7 +196,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes, flat script
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -209,20 +208,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, pygal, and pygal.style.Style, all used
+        comment: Only os, pygal, pygal.style.Style - all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity or UI
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via render_to_png and plot-{THEME}.html via
-          render_to_file, current pygal 3.x API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal 3.x
+          API
     library_mastery:
       score: 7
       max: 10
@@ -232,20 +231,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level HorizontalBar + Style API usage, proper x_labels/y_labels
-          transposition handling
+        comment: Proper Style object, HorizontalBar with theme-driven tokens
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom value_formatter, truncate_label=-1, custom y_labels tick range
-          -- goes a bit beyond bare defaults
+        comment: Uses print_values/value_formatter/truncate_label - beyond bare defaults,
+          but no other pygal-distinctive feature (e.g. interactivity showcased in
+          HTML) called out
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - html-export
   patterns: []
   dataprep: []
