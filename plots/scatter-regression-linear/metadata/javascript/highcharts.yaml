@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: scatter-regression-linear
 created: '2026-08-05T13:25:14Z'
-updated: '2026-08-05T13:29:30Z'
+updated: '2026-08-05T13:38:31Z'
 generated_by: claude-sonnet
 workflow_run: 31009398594
 issue: 1821
@@ -12,12 +12,15 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
+  - Title now leads with the descriptive prefix 'Ad Spend vs. Sales Revenue ·' before
+    the mandated spec-id/language/library/anyplot.ai suffix, resolving the SC-04 gap
+    from Attempt 1.
   - Genuine SVG-path rendering of the 95% CI band via chart.events.render + axis.toPixels,
-    sidestepping the forbidden highcharts-more arearange module with a real (not faked)
-    redraw-safe technique — strong library mastery.
+    sidestepping the forbidden highcharts-more arearange module with a real, redraw-safe
+    technique.
   - R² and the fitted regression equation (y = mx + b) are displayed prominently in
     the subtitle, exactly as the spec requests.
   - Scatter marker alpha (0.65) and CI band alpha (0.18) match the spec's density/transparency
@@ -27,81 +30,82 @@ review:
   - Theme-adaptive chrome is correctly threaded through title/subtitle/axes/legend/tooltip;
     both renders are legible with identical data colors and only chrome flipping.
   weaknesses:
-  - Title uses only the mandated boilerplate without the optional descriptive prefix;
-    the spec explicitly asks for 'a descriptive title mentioning the regression analysis'
-    — consider prefixing with something like 'Ad Spend vs. Sales Revenue · ' before
-    the mandated 'scatter-regression-linear · javascript · highcharts · anyplot.ai'
-    suffix.
-  - The '95% Confidence Interval' legend entry borrows the circular point-marker icon
-    from its placeholder empty column series, which visually reads like a data point
-    rather than a shaded band — consider a legend symbol/icon override so the icon
-    reads as a translucent rectangle matching the actual band fill.
+  - 'The Attempt-1 fix added legendSymbol: ''rectangle'' to the placeholder ''95%
+    Confidence Interval'' column series, but the rendered legend icon is still a circle
+    (verified by pixel crop in both themes) — Highcharts is not honoring the override
+    on this empty-data column series. It still reads as a data point rather than a
+    shaded band; try plotOptions.column.legendSymbol at the series-type level, or
+    a legend labelFormatter with a custom SVG swatch, or drawLegendSymbol override.'
   - Two small helper functions (lcg, randNormal) are used purely for deterministic
     data generation; reasonable given JS has no seeded-RNG standard library, but strict
-    KISS scoring still notes function usage beyond a flat script.
+    KISS scoring still notes function usage.
+  - Composition is a solid but fairly standard scatter+fit+CI-band layout; no additional
+    visual-hierarchy device (e.g. callout on R², highlighted outlier) sharpens the
+    storytelling focal point beyond the subtitle stats.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Dark bold title "scatter-regression-linear · javascript · highcharts · anyplot.ai" at top center, gray subtitle "R² = 0.836 · y = 3.48x + 20.9" beneath it, top-left legend with three entries (Observations, Regression fit, 95% Confidence Interval) in soft dark-gray text, dark-gray axis titles ("Advertising Spend ($k)", "Sales Revenue ($k)") and tick labels, subtle horizontal gridlines. All chrome text is clearly readable against the light background.
-      Data: ~160 semi-transparent green (Imprint #009E73) scatter points showing a clear positive linear trend, a solid blue/indigo regression line running through the cloud, and a light gray semi-transparent confidence band hugging the line. First categorical series is the Imprint brand green as required.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Dark bold title "Ad Spend vs. Sales Revenue · scatter-regression-linear · javascript · highcharts · anyplot.ai" centered at top (~78% of canvas width, no clipping); gray subtitle "R² = 0.836 · y = 3.48x + 20.9" beneath it; top-left legend (Observations / Regression fit / 95% Confidence Interval) in soft dark-gray text; dark-gray axis titles ("Advertising Spend ($k)", "Sales Revenue ($k)") and tick labels. All chrome text is clearly readable against the light background.
+      Data: ~160 semi-transparent green (#009E73) scatter points showing a clear positive linear trend; a solid indigo/blue regression line with a light-gray semi-transparent 95% CI band hugging it. First categorical series correctly uses the Imprint brand green.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: White bold title, light-gray subtitle with the same R²/equation text, top-left legend in light-gray text, light-gray axis titles and tick labels, subtle horizontal gridlines visible against the dark surface. No dark-on-dark text anywhere — all chrome reads clearly.
-      Data: Same green scatter points and same blue/indigo regression line color as the light render (only chrome flipped, as required); the CI band renders as a subtle dark-blue-gray translucent shape appropriate for the dark surface.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: White bold title, light-gray subtitle with the identical R²/equation text, light-gray legend and axis text/ticks. No dark-on-dark failures — all chrome text reads clearly against the dark background.
+      Data: Scatter points and regression line use the identical green (#009E73) and blue colors as the light render — only chrome (background, text, grid) flipped, confirming palette consistency across themes; the CI band renders as a subtle dark-blue-gray translucent shape appropriate for the dark surface.
+      Legibility verdict: PASS.
+
+    Remaining cosmetic note (both renders): the "95% Confidence Interval" legend swatch renders as a circle (same shape/size family as the "Observations" marker) rather than a rectangle/area swatch, despite the Attempt-1 fix adding legendSymbol: "rectangle" to that series — the override is not taking effect on the empty-data placeholder column series.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All text readable in both themes at explicit sizes (title 22px,
-          axis titles 16px, ticks/legend 14px); minor: subtitle formula is small relative
-          to its informational value'
+        comment: All font sizes explicitly set; readable in both themes; title fits
+          without clipping (~78% width for the long mandated + descriptive string)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, and data across either render
+        comment: No overlap between text, legend, or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker radius 5 with alpha 0.65 is appropriate for n=160 points,
-          no overplotting problems
+        comment: n=160 points with radius 5 / alpha 0.65 matches the 100-300 point
+          density band well
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. blue/indigo contrast is CVD-safe, not a red-green pairing
+        comment: Good contrast, CVD-safe green/blue/gray combination
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced proportions, no clipping or overflow
+        comment: Plot fills the canvas well, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles descriptive with units ($k)
+        comment: Descriptive axis labels with units ($k)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is Imprint #009E73 green; backgrounds match #FAF8F1/#1A1A17;
-          data colors identical across themes'
+        comment: 'First series #009E73; identical data colors across themes; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -111,25 +115,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom-rendered CI band and coherent Imprint styling show real polish
-          beyond defaults
+        comment: Custom-rendered CI band via renderer.path() and coherent Imprint
+          styling show real polish beyond defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle horizontal-only grid, no spines/borders, generous whitespace,
-          clean top-left legend placement
+        comment: Subtle horizontal-only grid, no borders, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Regression line + CI band + stats subtitle create a clear focal point,
-          but the composition is a fairly standard scatter+fit layout without extra
-          emphasis devices
+        comment: Clear focal point via subtitle stats but a fairly standard scatter+fit
+          composition without extra emphasis devices
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,28 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter + linear regression + CI band
+        comment: Correct scatter + regression + CI band type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: R², equation, CI band, distinct line color, moderate point alpha
-          — all present
+        comment: R², regression equation, CI band, and moderate point transparency
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = spend, Y = revenue, axes cover full data range
+        comment: X/Y correctly assigned, axes show full data range
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title uses only the mandated suffix with no descriptive prefix mentioning
-          the regression analysis, as the spec requests; legend labels otherwise match
-          series
+        passed: true
+        comment: Title now includes descriptive prefix + mandated suffix; legend labels
+          match series data
     data_quality:
       score: 15
       max: 15
@@ -168,19 +169,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Scatter, fit line, CI band, and fit statistics all shown
+        comment: Shows scatter spread, regression fit, and CI band together
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Advertising spend vs. sales revenue is plausible and neutral
+        comment: Neutral, real-world plausible ad spend vs. sales revenue scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in sensible $k ranges (10-100 spend, ~0-450 revenue)
+        comment: Realistic $k magnitudes and slope for an advertising-revenue relationship
     code_quality:
       score: 9
       max: 10
@@ -190,34 +191,33 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Flat script overall, but includes lcg/randNormal helper functions
-          for deterministic data generation
+        comment: Two small helper functions (lcg, randNormal) for deterministic RNG
+          — reasonable given no seeded RNG in JS
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed 42), fully deterministic
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the Highcharts global is used
+        comment: No unused imports; browser globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Custom band-drawing workaround is real functionality, appropriately
-          complex given the highcharts-more constraint
+        comment: No fake UI/interactivity; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct Highcharts.chart("container", ...) call, no explicit width/height,
-          animation disabled
+        comment: Follows mount-node contract; no explicit width/height; animation
+          disabled
     library_mastery:
       score: 7
       max: 10
@@ -227,21 +227,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of chart.events.render, axis.toPixels, renderer.path,
-          and standard scatter/line series types
+        comment: Correct Highcharts.chart() with proper series types and options structure
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Manually drawn, redraw-safe CI band via the SVG renderer is a genuine
-          distinctive technique, though the overall chart composition is otherwise
-          conventional
+        passed: false
+        comment: Manually drawn, redraw-safe CI band via chart.events.render + renderer.path()
+          is a genuine distinctive technique unique to Highcharts' renderer API
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   dataprep:

@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-regression-linear: Scatter Plot with Linear Regression
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 87/100 | Created: 2026-08-05
+// Quality: 89/100 | Created: 2026-08-05
 
 const t = window.ANYPLOT_TOKENS;
 
