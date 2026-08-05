@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-kde: Histogram with KDE Overlay
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-05
@@ -21,6 +21,8 @@ GRID = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
 
 BRAND = "#009E73"  # Imprint palette position 1 — first series
 KDE_COLOR = "#C475FD"  # Imprint palette position 2
+# Fill is a touch stronger on dark so it doesn't read as pure background there
+KDE_FILL = "rgba(196,117,253,0.12)" if THEME == "light" else "rgba(196,117,253,0.22)"
 
 # Data - Stock returns simulation with realistic distribution
 np.random.seed(42)
@@ -35,25 +37,21 @@ returns = np.concatenate(
 # Shuffle to mix
 np.random.shuffle(returns)
 
-# Calculate KDE
+# Calculate KDE (plotly has no built-in KDE, so scipy provides the smooth curve)
 kde = stats.gaussian_kde(returns)
 x_kde = np.linspace(returns.min() - 0.5, returns.max() + 0.5, 300)
 y_kde = kde(x_kde)
 
-# Calculate histogram for density normalization
-hist_counts, bin_edges = np.histogram(returns, bins=35, density=True)
-bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-
 # Create figure
 fig = go.Figure()
 
-# Add histogram (density normalized), edge matches page background for
-# subtle bar separation
+# Native histogram trace (density-normalized) instead of manual np.histogram
+# binning, edge matches page background for subtle bar separation
 fig.add_trace(
-    go.Bar(
-        x=bin_centers,
-        y=hist_counts,
-        width=(bin_edges[1] - bin_edges[0]) * 0.9,
+    go.Histogram(
+        x=returns,
+        histnorm="probability density",
+        nbinsx=35,
         marker={"color": BRAND, "opacity": 0.5, "line": {"color": PAGE_BG, "width": 1}},
         name="Histogram",
         hovertemplate="Return: %{x:.2f}%<br>Density: %{y:.3f}<extra></extra>",
@@ -68,7 +66,7 @@ fig.add_trace(
         mode="lines",
         line={"color": KDE_COLOR, "width": 3.5},
         fill="tozeroy",
-        fillcolor="rgba(196,117,253,0.12)",
+        fillcolor=KDE_FILL,
         name="KDE",
         hovertemplate="Return: %{x:.2f}%<br>Density: %{y:.3f}<extra></extra>",
     )
@@ -113,12 +111,36 @@ fig.update_layout(
         "xanchor": "right",
         "yanchor": "top",
         "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
+        "borderwidth": 0,
     },
     margin={"l": 90, "r": 50, "t": 90, "b": 70},
     bargap=0.05,
     hovermode="x unified",
+)
+
+# Callouts naming the two tail components so the skew/tail story the
+# spec calls out is explicit, not just visible in the shape
+fig.add_annotation(
+    x=-1.5,
+    y=float(kde(-1.5)[0]),
+    text="Left tail: market drops",
+    showarrow=True,
+    arrowhead=2,
+    arrowcolor=INK_SOFT,
+    ax=-10,
+    ay=-45,
+    font={"size": 10, "color": INK_SOFT},
+)
+fig.add_annotation(
+    x=1.2,
+    y=float(kde(1.2)[0]),
+    text="Right tail: gains",
+    showarrow=True,
+    arrowhead=2,
+    arrowcolor=INK_SOFT,
+    ax=25,
+    ay=-45,
+    font={"size": 10, "color": INK_SOFT},
 )
 
 # Save as PNG and HTML
