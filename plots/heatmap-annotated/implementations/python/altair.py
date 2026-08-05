@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-annotated: Annotated Heatmap
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-06
+Library: altair 6.2.2 | Python 3.13.12
+Quality: 95/100 | Updated: 2026-08-05
 """
 
 import os
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -56,14 +57,15 @@ base_chart = (
             "x:N",
             title="Business Metrics",
             sort=metrics,
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=-45),
+            axis=alt.Axis(labelFontSize=10, titleFontSize=12, labelAngle=-45),
         ),
-        y=alt.Y("y:N", title="Business Metrics", sort=metrics, axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
+        y=alt.Y("y:N", title="Business Metrics", sort=metrics, axis=alt.Axis(labelFontSize=10, titleFontSize=12)),
         color=alt.Color(
             "correlation:Q",
-            scale=alt.Scale(scheme="brownbluegreen", domain=[-1, 1]),
+            # imprint_div (Imprint diverging cmap): matte-red <-> theme-adaptive midpoint <-> blue
+            scale=alt.Scale(range=["#AE3030", PAGE_BG, "#4467A3"], domain=[-1, 1], domainMid=0),
             legend=alt.Legend(
-                title="Correlation", titleFontSize=18, labelFontSize=16, fillColor=ELEVATED_BG, strokeColor=INK_SOFT
+                title="Correlation", titleFontSize=10, labelFontSize=10, fillColor=ELEVATED_BG, strokeColor=INK_SOFT
             ),
         ),
         tooltip=[
@@ -77,7 +79,7 @@ base_chart = (
 # Create text layer for annotations with conditional color
 text = (
     alt.Chart(df)
-    .mark_text(fontSize=20, fontWeight="bold")
+    .mark_text(fontSize=12, fontWeight="bold")
     .encode(
         x=alt.X("x:N", sort=metrics),
         y=alt.Y("y:N", sort=metrics),
@@ -92,9 +94,10 @@ text = (
 chart = (
     (base_chart + text)
     .properties(
-        width=1600,
-        height=1600,
-        title=alt.Title("heatmap-annotated · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        width=420,
+        height=500,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
+        title=alt.Title("heatmap-annotated · python · altair · anyplot.ai", fontSize=16, anchor="middle"),
         background=PAGE_BG,
     )
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
@@ -106,19 +109,34 @@ chart = (
         labelColor=INK_SOFT,
         titleColor=INK,
     )
-    .configure_title(color=INK, fontSize=28, anchor="middle")
+    .configure_title(color=INK, fontSize=16, anchor="middle")
     .configure_legend(
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
         labelColor=INK_SOFT,
         titleColor=INK,
-        titleFontSize=18,
-        labelFontSize=16,
+        titleFontSize=10,
+        labelFontSize=10,
     )
 )
 
-# Save as PNG (scale_factor=3 for high resolution: 1600x1600 * 3 = 4800x4800, scaled to 3600x3600)
-chart.save(f"plot-{THEME}.png", scale_factor=2.25)
+# Save as PNG — hard target: 2400x2400 (square). See prompts/library/altair.md "Canvas".
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# vl-convert pads the view with title/axis/legend extents outside width/height,
+# so the raw save rarely lands exactly on target — pad (never crop) to match.
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
 
 # Save as HTML for interactive version
 chart.save(f"plot-{THEME}.html")
