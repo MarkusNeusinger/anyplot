@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windrose-basic: Wind Rose Chart
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 80/100 | Updated: 2026-08-05
@@ -245,13 +245,15 @@ pct_label_data = pd.DataFrame(
     ]
 )
 
-# Add radial axis title "Frequency (%)" positioned prominently near the radial axis
+# Add radial axis title "Frequency (%)", same 115° column as the percentage labels but
+# pushed past the outermost one (circle_radii max) so the two text elements never overlap.
+axis_title_radius = max(circle_radii) + 2
 axis_title_data = pd.DataFrame(
     [
         {
             "label": "Frequency (%)",
-            "x": (max_freq * 0.7) * np.cos(np.radians(115)) - 3,
-            "y": (max_freq * 0.7) * np.sin(np.radians(115)) + 2,
+            "x": axis_title_radius * np.cos(np.radians(115)) - 3,
+            "y": axis_title_radius * np.sin(np.radians(115)) + 2,
         }
     ]
 )
@@ -283,7 +285,7 @@ chart = (
         width=460,
         height=460,
         background=PAGE_BG,
-        title=alt.Title("windrose-basic · altair · anyplot.ai", fontSize=26, anchor="middle", color=INK),
+        title=alt.Title("windrose-basic · python · altair · anyplot.ai", fontSize=22, anchor="middle", color=INK),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
