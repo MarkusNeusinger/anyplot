@@ -60,8 +60,9 @@ chart.setOption({
     itemWidth: 26,
     itemHeight: 4,
   },
-  grid: { left: 90, right: 60, top: 130, bottom: 80 },
+  grid: { left: 90, right: 130, top: 130, bottom: 80 },
   tooltip: { trigger: "axis" },
+  labelLayout: { moveOverlap: "shiftY" },
   xAxis: {
     type: "category",
     data: days,
@@ -95,5 +96,30 @@ chart.setOption({
     lineStyle: { color: t.palette[i], width: 3, type: lineStyles[i] },
     itemStyle: { color: t.palette[i] },
     emphasis: { focus: "series" },
+    endLabel: {
+      show: true,
+      formatter: (p) => Number(p.value).toFixed(1),
+      color: t.palette[i],
+      fontSize: 14,
+      fontWeight: "bold",
+      distance: 10,
+    },
+    markLine:
+      i === 0
+        ? {
+            symbol: "none",
+            silent: true,
+            animation: false,
+            label: {
+              show: true,
+              formatter: "Day 1 = 100",
+              position: "insideEndTop",
+              color: t.inkSoft,
+              fontSize: 12,
+            },
+            lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+            data: [{ yAxis: 100 }],
+          }
+        : undefined,
   })),
 });
