@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-horizontal: Horizontal Bar Chart
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-07
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-08-05
 """
 
 import os
@@ -11,16 +11,15 @@ import pandas as pd
 import seaborn as sns
 
 
-# Theme tokens
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"  # Okabe-Ito position 1
+BRAND = "#009E73"  # Imprint palette position 1 — ALWAYS first series
 
-# Set theme
 sns.set_theme(
     style="ticks",
     rc={
@@ -32,13 +31,13 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Data - Top countries by population
+# Data — most populous countries (UN 2024 estimates)
 data = {
     "Country": [
         "India",
@@ -52,47 +51,69 @@ data = {
         "Russia",
         "Mexico",
     ],
-    "Population (millions)": [1417, 1412, 338, 275, 235, 215, 223, 170, 144, 128],
+    "Population": [1417, 1412, 338, 275, 235, 215, 223, 170, 144, 128],
 }
 df = pd.DataFrame(data)
 
-# Sort by population descending for visual ranking
-df = df.sort_values("Population (millions)", ascending=True)
+# Rank ascending so the largest bar lands at the top of the horizontal axis
+order = df.sort_values("Population", ascending=True)["Country"].tolist()
+top_country = df.loc[df["Population"].idxmax(), "Country"]
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Focal-point emphasis, graduated by rank: sns.light_palette generates a brand-anchored
+# tint ramp (reverse=True keeps index 0 pixel-identical to BRAND), so the top-3 countries
+# step from full brand green down to a soft tint instead of a flat two-tone split — the
+# rest stay muted ink. hue=Country + palette=dict is the seaborn-idiomatic per-bar recolor.
+top_n = 3
+ranked = df.sort_values("Population", ascending=False)["Country"].tolist()
+rank_shades = sns.light_palette(BRAND, n_colors=top_n + 1, reverse=True)[:top_n]
+color_map = {
+    country: (rank_shades[ranked.index(country)] if country in ranked[:top_n] else INK_MUTED)
+    for country in df["Country"]
+}
 
-# Plot horizontal bar chart with Okabe-Ito brand color
-bars = ax.barh(df["Country"], df["Population (millions)"], color=BRAND, edgecolor=INK_SOFT, linewidth=1.2)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Add value labels at the end of bars
-for i, (_idx, row) in enumerate(df.iterrows()):
-    value = row["Population (millions)"]
-    ax.text(value + 20, i, f"{value}M", va="center", fontsize=16, color=INK, fontweight="500")
+sns.barplot(
+    data=df,
+    y="Country",
+    x="Population",
+    order=order,
+    hue="Country",
+    palette=color_map,
+    legend=False,
+    dodge=False,
+    edgecolor=PAGE_BG,
+    linewidth=1,
+    ax=ax,
+)
 
-# Styling
-ax.set_xlabel("Population (Millions)", fontsize=20, color=INK, labelpad=12)
-ax.set_ylabel("Country", fontsize=20, color=INK, labelpad=12)
-ax.set_title("Population by Country (2024)", fontsize=24, color=INK, pad=24, fontweight="600")
+# Value labels at the end of each bar
+for container in ax.containers:
+    ax.bar_label(container, fmt=lambda v: f"{v:.0f}M", padding=6, fontsize=9, color=INK)
 
-# Tick labels
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Mandated title (scales fontsize when longer than the 67-char baseline)
+title = "Most Populous Countries (2024) · bar-horizontal · python · seaborn · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = round(12 * ratio)
+ax.set_title(title, fontsize=title_fontsize, fontweight="bold", color=INK, pad=16)
 
-# Grid on x-axis only
-ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, linestyle="-")
+ax.set_xlabel("Population (millions)", fontsize=10, color=INK)
+ax.set_ylabel("Country", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+
+# Bold the highlighted tick label to reinforce the visual emphasis
+for tick_label in ax.get_yticklabels():
+    if tick_label.get_text() == top_country:
+        tick_label.set_fontweight("bold")
+        tick_label.set_color(INK)
+
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.8)
 ax.set_axisbelow(True)
+ax.set_xlim(0, df["Population"].max() * 1.12)
 
-# Spine styling
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
-ax.spines["left"].set_linewidth(0.8)
-ax.spines["bottom"].set_linewidth(0.8)
-
-# Extend x-axis to accommodate labels
-ax.set_xlim(0, 1500)
+sns.despine(ax=ax)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
 plt.close()
