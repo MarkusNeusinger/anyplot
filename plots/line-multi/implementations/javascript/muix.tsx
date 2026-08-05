@@ -10,6 +10,7 @@
 // Quality: pending | Created: 2026-08-05
 
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -85,7 +86,7 @@ export default function Chart() {
             id: "reykjavik",
             data: reykjavik,
             label: "Reykjavik",
-            curve: "natural",
+            curve: "monotoneX",
             showMark: true,
             xAxisId: "month",
             yAxisId: "temp",
@@ -94,7 +95,7 @@ export default function Chart() {
             id: "berlin",
             data: berlin,
             label: "Berlin",
-            curve: "natural",
+            curve: "monotoneX",
             showMark: true,
             xAxisId: "month",
             yAxisId: "temp",
@@ -103,7 +104,7 @@ export default function Chart() {
             id: "dubai",
             data: dubai,
             label: "Dubai",
-            curve: "natural",
+            curve: "monotoneX",
             showMark: true,
             xAxisId: "month",
             yAxisId: "temp",
@@ -112,7 +113,7 @@ export default function Chart() {
             id: "singapore",
             data: singapore,
             label: "Singapore",
-            curve: "natural",
+            curve: "monotoneX",
             showMark: true,
             xAxisId: "month",
             yAxisId: "temp",
@@ -129,7 +130,27 @@ export default function Chart() {
             labelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         }}
-      />
+      >
+        {/* Dubai/Singapore trade seasonal lead twice a year — mark both crossovers. */}
+        <ChartsReferenceLine
+          x="Apr"
+          axisId="month"
+          label="crossover"
+          labelAlign="start"
+          spacing={{ x: 6, y: 4 }}
+          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1.5 }}
+        />
+        <ChartsReferenceLine
+          x="Nov"
+          axisId="month"
+          label="crossover"
+          labelAlign="start"
+          spacing={{ x: 6, y: 4 }}
+          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1.5 }}
+        />
+      </LineChart>
     </Box>
   );
 }
