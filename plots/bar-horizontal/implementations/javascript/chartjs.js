@@ -29,17 +29,25 @@ function hexToRgba(hex, alpha) {
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
-const barColors = speakersMillions.map((_, i) => (i === 0 ? t.palette[0] : hexToRgba(t.palette[0], 0.55)));
+const barColors = speakersMillions.map((_, i) =>
+  i === 0 ? t.palette[0] : hexToRgba(t.palette[0], 0.55),
+);
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Chart -------------------------------------------------------------------
-const title = "World's Most Spoken Languages · bar-horizontal · javascript · chartjs · anyplot.ai";
+const title =
+  "World's Most Spoken Languages · bar-horizontal · javascript · chartjs · anyplot.ai";
 
 // Custom Chart.js plugin: draw the value at the end of each bar so exact
 // speaker counts are readable without a separate legend or tooltip.
+// Chart.js always paints via requestAnimationFrame (even with animation:
+// false), so `afterRender` also flips window.__anyplotReady — the harness's
+// signal that drawing (including this plugin's afterDatasetsDraw) is done,
+// instead of racing a generic fonts-ready/rAF heuristic against Chart's own
+// scheduled frame.
 const valueLabelsPlugin = {
   id: "valueLabels",
   afterDatasetsDraw(chart) {
@@ -54,6 +62,9 @@ const valueLabelsPlugin = {
       ctx.fillText(`${speakersMillions[i]}M`, bar.x + 8, bar.y);
     });
     ctx.restore();
+  },
+  afterRender() {
+    window.__anyplotReady = true;
   },
 };
 
@@ -80,7 +91,13 @@ new Chart(canvas, {
     animation: false,
     layout: { padding: { top: 8, right: 56, bottom: 8, left: 8 } },
     plugins: {
-      title: { display: true, text: title, color: t.ink, font: { size: 18, weight: "500" }, padding: { bottom: 20 } },
+      title: {
+        display: true,
+        text: title,
+        color: t.ink,
+        font: { size: 18, weight: "500" },
+        padding: { bottom: 20 },
+      },
       legend: { display: false },
     },
     scales: {
@@ -88,7 +105,12 @@ new Chart(canvas, {
         beginAtZero: true,
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
-        title: { display: true, text: "Native Speakers (millions)", color: t.ink, font: { size: 16 } },
+        title: {
+          display: true,
+          text: "Native Speakers (millions)",
+          color: t.ink,
+          font: { size: 16 },
+        },
         border: { color: t.inkSoft },
       },
       y: {
