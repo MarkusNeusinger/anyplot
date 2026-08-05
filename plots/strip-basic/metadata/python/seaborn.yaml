@@ -2,76 +2,54 @@ library: seaborn
 language: python
 specification_id: strip-basic
 created: '2025-12-23T21:54:33Z'
-updated: '2026-05-04T21:05:16Z'
+updated: '2026-08-05T05:48:06Z'
 generated_by: claude-sonnet
-workflow_run: 25341831092
+workflow_run: 30978372844
 issue: 975
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 91
 review:
   strengths:
-  - Correct Okabe-Ito palette applied in canonical order (Engineering=#009E73, Marketing=#D55E00,
-    Sales=#0072B2, HR=#CC79A7)
-  - Both light and dark renders pass theme readability — warm off-white/near-black
-    backgrounds, no dark-on-dark failures
-  - Storytelling subtitle announces the key insight; annotation with arrow visually
-    demonstrates the bimodal Sales distribution
-  - All font sizes explicitly set (title 24pt, axes 20pt, ticks 16pt) — readable at
-    4800×2700 px
-  - Diamond mean markers provide clean reference without cluttering the strip
-  - 'Correct seaborn 0.13+ API usage: hue+legend=False pattern avoids palette-without-hue
-    warning'
-  - Realistic neutral business scenario with varied distributions across groups showing
-    all aspects of strip plots
+  - Clean strip plot with proper jitter (0.3) and alpha (0.6), both squarely inside
+    the spec's recommended ranges
+  - 'Custom Imprint palette applied correctly via hue, first series is #009E73, canonical
+    order preserved'
+  - 'Effective storytelling: group-mean diamond overlay + dashed overall-mean reference
+    line + callout annotation on the top department creates clear visual hierarchy
+    without clutter'
+  - Theme-adaptive chrome correctly threaded through INK/INK_SOFT/PAGE_BG tokens —
+    both light and dark renders are fully legible with no dark-on-dark or light-on-light
+    failures
+  - Canvas is exactly 3200x1800 (landscape default), no bbox_inches="tight" clipping
+  - Reproducible via fixed seed; realistic, neutral synthetic dataset with a nice
+    bimodal Sales distribution for added realism
   weaknesses:
-  - 'VQ-05: Annotation box (upper right, Sales cluster) creates slight lateral imbalance
-    — legend sits top-left while annotation sits top-right with empty space in between;
-    annotation could be repositioned or balanced with a second callout'
-  - 'DE-01/DE-02: Design is above defaults but not publication-ready; spines are removed
-    and grid is subtle, but the overall aesthetic lacks the final polish (e.g. tick
-    marks could be hidden, annotation box border could be softened) needed for 8/8
-    sophistication'
-  - 'DE-03: Storytelling is effective but the color encoding of categories does not
-    add a second layer of hierarchy — all four departments compete equally; dimming
-    non-Sales groups or sizing them differently would sharpen the focal point on the
-    bimodal finding'
-  - 'LM-02: Mean markers and annotations are added via raw matplotlib calls (hlines,
-    annotate) rather than seaborn higher-level patterns; the distinctive seaborn feature
-    is only stripplot itself'
+  - The 'Engineering leads · 77 avg' annotation arrow passes very close to a high-value
+    Marketing data point (~88), creating minor visual crowding near the callout text
+    — nudge xytext further right/up or shorten the arrow for clearance
+  - Library mastery is solid but fairly standard (stripplot + pointplot overlay);
+    could push further with an additional distributional cue (e.g. a faint violin/box
+    outline underlay) while keeping the strip-plot identity
+  - Data is clipped to [40, 100], slightly truncating the low tail of Marketing's
+    distribution (one point sits right at ~40.6 near the boundary) — a wider clip
+    range would preserve the natural spread more faithfully
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — not pure white, correctly themed.
-      Chrome: Title "strip-basic · seaborn · anyplot.ai" in dark ink at ~24pt — fully readable.
-        Subtitle "Employee satisfaction by department — Sales reveals two distinct performance clusters" in
-        smaller italic below the title — readable and provides clear narrative framing.
-        Y-axis label "Satisfaction Score" and x-axis label "Department" in dark ink at ~20pt — readable.
-        Tick labels at ~16pt in softer dark ink — readable with no crowding.
-        Grid lines are subtle horizontal lines, very low opacity — visible but not dominant.
-      Data: Four strip columns with jitter. Engineering = #009E73 (brand green) — first series correct.
-        Marketing = #D55E00 (orange), Sales = #0072B2 (blue), HR = #CC79A7 (pink/purple).
-        Diamond markers at group means in adaptive neutral (#1A1A1A on light). Points sized appropriately
-        for 30-40 observations per group. Annotation box with arrow points to bimodal Sales cluster
-        ("Bimodal: Sales splits into high scorers (≈80) and low scorers (≈65)") — clearly visible.
-        Legend "◆ Group Mean" in upper-left corner.
-      Legibility verdict: PASS — all text elements are clearly readable on the light background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "strip-basic · python · seaborn · anyplot.ai" in dark ink, clearly readable. Axis labels "Department" and "Satisfaction Score" in dark ink at 10pt, clearly readable. Tick labels in soft dark gray at 8pt, clearly readable. Subtle horizontal gridlines at alpha 0.15. Legend box "Group Mean" top-right with dark diamond marker, clearly readable with visible border.
+      Data: Four departments (Engineering, Marketing, Sales, HR) shown as jittered strip points. First series (Engineering) is #009E73 green, followed by a light purple/lavender (Marketing), a muted blue (Sales), and a tan/brown (HR) — matches the Imprint canonical order. Black diamond markers mark each group's mean, connected conceptually via a dashed overall-mean reference line. An annotation "Engineering leads · 77 avg" points to the Engineering mean marker.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — not pure black, correctly themed.
-      Chrome: Title, subtitle, axis labels, and tick labels all render in light-colored ink on the dark
-        surface — no dark-on-dark failures detected. Text remains fully readable.
-        Grid lines adapt correctly — subtle light-colored grid on dark background.
-        Legend box uses elevated dark background (#242420) with light-colored border — readable.
-      Data: Data colors are IDENTICAL to the light render — #009E73, #D55E00, #0072B2, #CC79A7 —
-        confirming only chrome flips between themes, not data colors. Diamond mean markers now render
-        in adaptive neutral (#E8E8E0 on dark) — visible and not dark-on-dark. Annotation box text
-        is light-colored on dark background — readable. Arrow visible.
-      Legibility verdict: PASS — all text elements are clearly readable on the dark background.
-        No dark-on-dark failures found. Brand green #009E73 (Engineering) is clearly visible on dark surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels all rendered in light ink/soft-light tones, clearly readable against the dark background. Gridlines remain subtle but visible. Legend box "Group Mean" retains its border and background, now with a white/cream diamond swatch, clearly readable.
+      Data: Same four department colors as the light render — green, lavender, blue, tan — confirming data colors are identical between themes; only the chrome (mean markers, background, text) flipped from dark ink to light ink as expected.
+      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures observed (mean-marker diamonds correctly flip from black to white/cream so they remain visible on the dark surface).
   criteria_checklist:
     visual_quality:
       score: 29
@@ -82,53 +60,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axes 20pt, ticks 16pt.
-          Subtitle and annotation text readable. Both themes pass.'
+        comment: Explicit font sizes throughout (title 12pt, labels 10pt, ticks/legend/annotation
+          8pt); readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlap. Jitter manages point density effectively. x-axis
-          labels non-overlapping for 4 categories.
+        comment: Annotation arrow passes close to a Marketing outlier point (~88)
+          causing minor visual crowding, though not a true collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: size=12 with alpha=0.7 is well-adapted for 30-40 points per group.
-          Markers clearly visible in both themes.
+        comment: Marker size (6) and alpha (0.6) appropriate for ~35-40 points per
+          category
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Page-background edge color on markers
-          adds definition.
+        comment: Imprint palette provides adequate contrast and CVD-safe hues; no
+          red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Good 16:9 utilization. Minor imbalance: annotation box on upper-right
-          with legend on upper-left leaves horizontal asymmetry; nothing cut off.'
+        comment: Canvas exactly 3200x1800, no clipping, balanced axis labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Satisfaction Score'' and ''Department'' are descriptive and unambiguous
-          for this domain.'
+        comment: Descriptive 'Department' / 'Satisfaction Score' labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Engineering = #009E73 correct. Okabe-Ito order correct
-          for all 4 series. Backgrounds #FAF8F1/#1A1A17. Chrome adapts correctly in
-          both renders.'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          in both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -136,24 +111,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Storytelling subtitle + annotation with arrow elevates above configured
-          defaults. Strong design intent visible. Not quite publication-ready (tick
-          marks still showing, annotation border could be softened).
+        comment: Professional polish with custom Imprint palette and consistent theme
+          tokens
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-axis grid, clean layout. Good
-          refinement. Tick marks still present; annotation box border slightly heavy.
+        comment: Spines despined, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtitle announces the insight; annotation demonstrates it visually.
-          Effective viewer guidance. Color encoding does not create additional hierarchy
-          — dimming non-focus groups would strengthen storytelling.
+        comment: Mean markers, overall-mean reference line, and callout annotation
+          create a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -163,30 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct strip plot using sns.stripplot with jitter parameter.
+        comment: Correct strip plot with jitter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Individual points, jitter (0.25), transparency (alpha=0.7), mean
-          reference markers — all spec features present.
+        comment: Jitter 0.3, alpha 0.6, mean reference all present per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=Department (categorical), y=Satisfaction Score (numeric). Correct
-          mapping.
+        comment: x=Department (categorical), y=Satisfaction Score (numeric) correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'strip-basic · seaborn · anyplot.ai'. Legend label
-          'Group Mean' is correct.
+        comment: Title format matches spec exactly; legend clarifies mean marker
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -194,23 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all strip plot aspects: varying means, varying spreads,
-          normal distributions, and a bimodal distribution (Sales). All aspects of
-          the plot type covered.'
+        comment: Individual points, jitter, four categories, overplotting handled
+          via alpha
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee satisfaction by department — neutral business scenario.
-          No controversial elements.
+        comment: Employee satisfaction by department — realistic, neutral topic
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Scores clipped to 40-100, department means 65-78, realistic bimodal
-          Sales split at ~65 and ~80. Factually plausible.
+        comment: 0-100 satisfaction scale sensible, though clip(40,100) slightly truncates
+          Marketing's low tail
     code_quality:
       score: 10
       max: 10
@@ -220,63 +187,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data → plot → save. No functions or classes.'
+        comment: No functions/classes, straightforward script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib, numpy, pandas, seaborn — all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Loop for mean lines is appropriate. No fake
-          interactivity.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No deprecated functions.
+        comment: Saves plot-{THEME}.png, bbox_inches left default
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct new API: hue=Department + legend=False for palette (avoids
-          palette-without-hue warning). sns.set_theme() with full RC dict for theme
-          config. Above default idiomatic usage.'
+        comment: Idiomatic sns.stripplot with hue-based palette assignment
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.stripplot with jitter is seaborn-distinctive. Mean markers and
-          annotation added via raw matplotlib calls rather than seaborn abstractions
-          — limits distinctiveness score.
+        comment: sns.pointplot overlay for group means is a nice technique but fairly
+          standard combination
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
+  - custom-legend
   patterns:
   - data-generation
+  - explicit-figure
   - iteration-over-groups
-  dataprep:
   - groupby-aggregation
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
