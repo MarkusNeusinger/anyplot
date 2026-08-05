@@ -2,117 +2,135 @@ library: seaborn
 language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:35:54Z'
-updated: '2026-05-07T07:27:23Z'
-generated_by: claude-haiku
-workflow_run: 25481643932
+updated: '2026-08-05T17:13:55Z'
+generated_by: claude-sonnet
+workflow_run: 31027697118
 issue: 1946
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Flawless theme-aware rendering in both light and dark with zero chrome issues
-  - Perfect typography hierarchy with all font sizes explicitly set and readable at
-    full resolution
-  - 'Excellent palette compliance with correct Okabe-Ito #009E73 and properly themed
-    backgrounds'
-  - Complete spec compliance with all required features and well-chosen real-world
-    data
-  - Professional polish with subtle grid styling, edge-highlighted bars, and balanced
-    layout
+  - 'Genuine improvement over Attempt 1: the flat gray/green two-tone highlight is
+    now a graduated three-tier rank ramp (sns.light_palette(BRAND, reverse=True))
+    — India full brand green, China a medium tint, US a light tint, directly addressing
+    the prior review''s DE-01/DE-03 feedback'
+  - Exact 3200x1800 canvas, no clipping on any edge, canvas dimension gate passed
+  - 'Data color (#009E73 on the #1 bar) is pixel-identical between light and dark
+    renders; only chrome (backgrounds, ticks, gridlines) adapts to theme'
+  - Value labels ('{value}M') placed cleanly at each bar end via ax.bar_label with
+    sensible padding, no overlap with bars or tick labels
+  - Bolded y-tick label on the top-ranked country reinforces the color-based emphasis
+    without relying on color alone (good CVD-safe redundant encoding)
+  - Clean, deterministic, KISS-structured script — real, neutral UN population data,
+    only used imports, no bbox_inches='tight', no fake interactivity
   weaknesses:
-  - Generic styling with library defaults rather than intentional custom design choices
-  - Limited seaborn-specific features—implementation could be replicated in plain
-    matplotlib
-  - Minimal visual emphasis techniques—could add color gradients, size variation,
-    or focal point emphasis to improve storytelling
+  - Code comment claims 'Rank ascending so the largest bar lands at the top of the
+    horizontal axis' but the rendered order actually places the largest bar (India)
+    at the bottom and the smallest (Mexico) at the top — the comment is factually
+    wrong about the resulting layout; either fix the comment to describe the actual
+    (bottom-heavy) layout or flip the sort direction so the leaderboard convention
+    (largest on top) matches the stated intent
+  - Design excellence, while improved, is still a single-hue (green) ramp plus flat
+    gray for the remaining 7 bars — the three-tier rank distinction and the 'everyone
+    else' group have no further visual gradation (e.g. a very subtle value-linked
+    shading across all 10 bars, or a thin baseline/reference line) that could deepen
+    the storytelling further
+  - Library Mastery beyond sns.light_palette for the rank ramp is still limited to
+    the standard barplot+despine+bar_label toolkit — no further seaborn-distinctive
+    statistical features (e.g. errorbar/estimator options) are demonstrated, though
+    this simple single-value-per-category spec may not call for them
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), proper theme surface
-      Chrome: Title "bar-horizontal · seaborn · anyplot.ai" bold and clear; axis labels "Country" and "Population (Millions)" descriptive with units; all tick labels dark and highly readable
-      Data: Bars in Okabe-Ito green (#009E73) with subtle gray edges; value labels at bar ends (e.g., "1417M"); subtle vertical grid (alpha=0.15) aids readability
-      Legibility verdict: PASS - All text perfectly readable against light background; no contrast issues
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Most Populous Countries (2024) · bar-horizontal · python · seaborn · anyplot.ai" at top. X-axis labeled "Population (millions)", y-axis labeled "Country", both in dark ink. Ten country tick labels in soft dark gray, all clearly readable. Subtle vertical gridlines (alpha ~0.15). Top/right spines removed.
+      Data: Ten horizontal bars, sorted ascending top-to-bottom (Mexico 128M at top ... India 1417M at bottom). Seven lower-ranked bars (Mexico through Indonesia) are a flat muted gray. The top 3 (US, China, India) form a graduated brand-green tint ramp: US is the lightest tint, China a medium tint, India (the #1 country) the full Imprint brand green (#009E73), with its y-tick label bolded. Each bar ends with a "{value}M" data label in dark ink, cleanly spaced with no overlap. Bars have a thin edge stroke matching the page background for separation.
+      Legibility verdict: PASS — every title, axis label, tick label, and value label is clearly legible against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), proper theme surface
-      Chrome: Title and all labels now light-colored (#F0EFE8 / #B8B7B0); perfectly readable against dark background with no dark-on-dark failures; grid and spines properly inverted
-      Data: Bars remain identical green (#009E73) as light render; value labels light-colored and readable; grid subtle and appropriate
-      Legibility verdict: PASS - All text perfectly readable against dark background; theme adaptation flawless
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink/soft-light gray, clearly legible against the dark surface. Gridlines remain subtle but visible. No dark-on-dark failures observed — no black-on-black text anywhere.
+      Data: Identical layout and values to the light render. The seven non-highlighted bars flip to a light gray (theme-adaptive chrome), while the graduated green ramp on US/China/India is unchanged — India's bar is the same #009E73 brand green as in the light render, confirming only chrome (not data color) adapts to theme. Value labels and the bolded India tick label remain clearly readable.
+      Legibility verdict: PASS — all text is readable in the dark theme; brand green remains vivid and distinguishable from both the dark background and the muted gray bars.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable in both themes
+        comment: All font sizes explicit, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; all text fully readable
+        comment: No collisions between labels, ticks, or bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars optimally sized for 10 categories; all clearly visible
+        comment: 10 well-spaced bars, appropriate sizing for the category count
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green excellent contrast on both backgrounds; CVD-safe
+        comment: Emphasis uses brightness/intensity ramp, not red-green as sole signal;
+          bolded label as redundant cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect; plot fills 60-70% with balanced margins
+        comment: Exact 3200x1800 canvas, canvas gate passed, no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units; title provides context
+        comment: '''Population (millions)'' includes units, ''Country'' is clear'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct Okabe-Ito #009E73; backgrounds properly themed; chrome correct
-          in both renders'
+        comment: '#009E73 on rank-1 bar, pixel-identical across themes; backgrounds
+          match #FAF8F1/#1A1A17'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured defaults; not exceptional custom design
+        passed: true
+        comment: Graduated brand-green rank ramp (light_palette) plus edge-highlighted
+          bars — more sophisticated than a flat two-tone split, though still a single-hue
+          palette
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle x-axis grid, generous whitespace — solid but
+          standard refinements
+      - id: DE-03
+        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Spines removed; subtle grid; generous whitespace; bar edges defined
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Sorting reveals ranking; value labels emphasize values; good visual
-          hierarchy
+        comment: Three-tier graduated hierarchy (rank 1/2/3 tint ramp vs. muted rest)
+          plus bolded top label gives a clear, graduated focal point
     spec_compliance:
       score: 15
       max: 15
@@ -122,47 +140,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar chart using ax.barh()
+        comment: Correct horizontal bar orientation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: labels, proportional bars, value labels, ranking'
+        comment: Sorted bars, value labels at bar ends, highlighted bars per spec
+          notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible
+        comment: Country on y-axis (categorical), Population on x-axis (numeric),
+          all 10 categories shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend correctly omitted for single series
+        comment: Title matches mandated format exactly; no legend needed (per-bar
+          recolor, not a labeled series)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all core features; real-world plausible
+        comment: Sorting, value labels, and rank-highlight features all demonstrated;
+          10 categories within the 5-20 recommendation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real country data (2024); neutral and comprehensible
+        comment: Real, neutral UN population estimates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values factually correct/plausible
+        comment: Realistic population figures (128M-1417M)
     code_quality:
       score: 10
       max: 10
@@ -172,58 +194,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow; no unnecessary functions
+        comment: No functions/classes, flat top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static hardcoded data; deterministic
+        comment: Fully deterministic hardcoded dataset
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; all used
+        comment: os, matplotlib.pyplot, pandas, seaborn — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Appropriate complexity, no fake UI (stale comment noted separately
+          in weaknesses, not a functional defect)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png output format
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight', current 0.14+ hue+dodge=False
+          pattern
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Axes-level sns.barplot with order=, hue=+dodge=False per-bar coloring,
+          sns.despine(), ax.bar_label()
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses high-level API correctly; doesn't leverage seaborn-specific
-          features
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic usage; could use seaborn-specific capabilities
+        comment: sns.light_palette(BRAND, reverse=True) to generate a brand-anchored
+          tint ramp is a genuine seaborn-specific technique, addressing prior review
+          feedback
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - explicit-figure
   patterns:
-  - data-generation
+  - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
   - edge-highlighting
-  - publication-ready
+  - grid-styling
