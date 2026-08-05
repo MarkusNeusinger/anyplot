@@ -1,0 +1,239 @@
+library: makie
+language: julia
+specification_id: line-multi
+created: '2026-08-05T07:42:10Z'
+updated: '2026-08-05T07:56:59Z'
+generated_by: claude-sonnet
+workflow_run: 30985715187
+issue: 1825
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - 'Both Attempt 1 weaknesses directly fixed: LinearTicks(9) gives dense reference
+    gridlines across the full data range, and the headline series (largest % change
+    via argmax) is bolded with an endpoint callout for a clear focal point'
+  - Switched from a manual per-series color loop to Makie's idiomatic series! primitive
+    - cleaner code and better Library Mastery
+  - 'Imprint palette in exact canonical order, first series brand green #009E73, identical
+    across both themes'
+  - Theme-adaptive chrome (PAGE_BG, INK, INK_SOFT) correctly threaded through - both
+    renders fully legible, no dark-on-dark or light-on-light failures
+  - Canvas exactly 3200x1800; reproducible (Random.seed!(42)); clean KISS script with
+    only used imports
+  weaknesses:
+  - Callout text ("Mobile App +44%", fontsize 13) is noticeably smaller than tick
+    labels (12) and axis labels (14) sitting next to a much larger title (20) - a
+    slightly larger callout (14-15pt) would read more confidently as an intentional
+    annotation
+  - Data storytelling relies on a single emphasis technique - the declining Analytics
+    Suite series (from ~104 peak to ~87 trough) is an equally interesting story left
+    unaddressed; a second, lighter-weight annotation would deepen the narrative
+  - Library Mastery is solid but not yet distinctive - consider a genuinely Makie-unique
+    feature (custom Legend with GridLayout positioning, or Makie.Cycled color cycling)
+    in a future revision
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Bold dark-ink title centered at top; dark-ink axis labels; softer gray tick labels; legend box (top-left, elevated cream fill #FFFDF6, thin gray frame) lists all 4 series; y-axis gridlines now dense (88/96/104/112/120/128/136/144, via LinearTicks(9)), spanning the full data range including the Analytics Suite trough (~87) - fixes Attempt 1's sparse-tick weakness. All chrome readable.
+      Data: Four lines - Core Platform (green #009E73), Mobile App (lavender #C475FD, bolded/thickened with "Mobile App +44%" endpoint callout), Analytics Suite (blue #4467A3), API Services (ochre #BD8233). First series is the brand green as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title/axis labels flip to light ink (#F0EFE8); tick labels to lighter gray (#B8B7B0); legend uses dark elevated fill (#242420) with light gray text/frame. No dark-on-dark failures anywhere.
+      Data: Confirmed identical line colors and headline bold+callout treatment to the light render - only chrome flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicit, legible in both themes; callout text a touch
+          small relative to other chrome
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend and callout both sit in clear space, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Base linewidth 2.5 + 4.5 headline appropriate for 4 series over 36
+          points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint hues, no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exact 3200x1800; LinearTicks(9) now covers full data range,
+          fixing Attempt 1 weakness
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units, exact mandated title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, first series brand green, both renders theme-correct
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette + theme tokens plus deliberate headline emphasis creates
+          real hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle full-range grid, generous whitespace, styled
+          legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bolded headline series + endpoint callout gives a clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-line comparison plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors + legend present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Month, Y=Revenue Index, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title format, descriptive legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 series, 36 months, divergence/crossovers, highlighted headline
+          trend
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Indexed product-line revenue is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Random-walk index values ~87-148 sensible for base-100 index
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: series! is the idiomatic Makie multi-line primitive, correctly used
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: series! + lines! overlay + text! callout is solid but not highly
+          distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - cumulative-sum
+  styling: []
