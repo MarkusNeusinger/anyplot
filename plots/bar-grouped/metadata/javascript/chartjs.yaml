@@ -1,0 +1,261 @@
+library: chartjs
+language: javascript
+specification_id: bar-grouped
+created: '2026-08-05T01:20:45Z'
+updated: '2026-08-05T01:35:47Z'
+generated_by: claude-sonnet
+workflow_run: 30965924283
+issue: 1822
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Peak callout (custom Chart.js plugin using afterDatasetsDraw + getDatasetMeta/getProps)
+    directly addresses the prior review''s DE-03/LM-02 feedback: it gives the chart
+    a clear focal point ("Peak: $79M" on the Q4 Software bar) while demonstrating
+    a genuinely Chart.js-specific technique.'
+  - Title fontsize bumped from 18px to 22px per prior feedback -- now reads with clear
+    presence at full canvas size and at mobile thumbnail scale, with no overflow (~50%
+    of canvas width, well inside bounds).
+  - 'Full Imprint palette compliance: Hardware/Software/Services map to canonical
+    positions 1-3 (#009E73, #C475FD, #4467A3), identical across light/dark, with correctly
+    theme-flipped chrome (#FAF8F1/#1A1A17 backgrounds, ink/inkSoft text).'
+  - 'The peak-callout box itself is theme-adaptive (fillStyle: t.ink / t.pageBg),
+    so it correctly inverts from dark-box/light-text on the light render to light-box/dark-text
+    on the dark render -- no dark-on-dark or light-on-light regression introduced
+    by the new element.'
+  - Added hoverBackgroundColor per dataset and a currency-formatted tooltip callback,
+    both genuine (if modest) library-specific touches beyond the basic multi-dataset
+    bar setup.
+  - Realistic, neutral quarterly-revenue-by-product-line data with plausible, varied
+    trends (Software growing, Hardware volatile, Services flat) -- shows real feature
+    coverage for a grouped bar chart.
+  - Clean KISS structure, deterministic hardcoded data, no fake interactivity -- the
+    callout is a static always-visible annotation, not a simulated hover/tooltip.
+  weaknesses:
+  - 'DE-02 unchanged from the prior attempt: grid/spine treatment is competent (x-grid
+    removed, y-border hidden, subtle horizontal gridlines) but still close to a refined
+    default -- bars have no edge stroke and there''s no further visual-refinement
+    detail beyond what was already present.'
+  - DE-03 stops at a single focal point (the peak callout); the rest of the chart
+    has no supporting hierarchy (e.g. muted color or reduced emphasis on the non-peak
+    bars) to reinforce the story beyond the one annotation.
+  - 'LM-02 could go further: the custom plugin is a solid distinctive touch, but a
+    native Chart.js capability like per-bar datalabels for all values, or a threshold/average
+    reference line via the scales API, would show broader mastery rather than one
+    bespoke draw call.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Title "Quarterly Revenue by Product Line · bar-grouped · javascript · chartjs · anyplot.ai" centered near the top in dark ink at 22px, fully legible and comfortably within canvas bounds (~50% width, no overflow/clipping). Legend (Hardware/Software/Services swatches) sits top-left in dark ink, legible. X-axis "Fiscal Quarter" with Q1-Q4 ticks and Y-axis "Revenue (USD Millions)" with $XXM-formatted ticks are both clearly readable in muted dark ink (inkSoft). Subtle horizontal gridlines only, no vertical gridlines, y-axis border hidden. New in this attempt: a black speech-bubble callout ("Peak: $79M") with cream text sits above the Q4 Software bar, pointing directly at it.
+      Data: Three side-by-side bars per quarter in brand green (#009E73, Hardware), lavender (#C475FD, Software), and blue (#4467A3, Services) with rounded top corners -- clearly distinguishable from the background and from each other.
+      Legibility verdict: PASS -- all text (title, legend, axis titles, tick labels, callout text) reads clearly against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Same layout -- title, legend, and both axis titles/ticks correctly flip to light ink (title/labels) and inkSoft (ticks/legend) and remain fully legible; no dark-on-dark text anywhere. The peak callout box correctly inverts to a light/cream fill with dark text (driven by the same t.ink/t.pageBg tokens used in light mode), preserving contrast in both themes.
+      Data: Bar colors confirmed identical to the light render (#009E73 / #C475FD / #4467A3) -- only chrome (background, text, grid, callout fill) flipped between themes, as required. Gridlines remain subtle but visible.
+      Legibility verdict: PASS -- all text remains readable against the dark background, including the newly added callout label.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title bumped to 22px per prior feedback; all font sizes explicit;
+          readable in both themes at full size and thumbnail scale; no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between callout, legend, axis labels, or bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 bars (3 groups x 4 quarters) are prominent and well-spaced for
+          this data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast and CVD-safe separation between the three series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large, balanced share of the canvas; headroom above
+          bars is used for the peak callout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Fiscal Quarter" and "Revenue (USD Millions)" -- descriptive with
+          units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order (#009E73/#C475FD/#4467A3), identical across
+          themes, theme-correct chrome including the new callout box
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: The custom theme-adaptive speech-bubble callout is a thoughtful,
+          above-default touch, but the rest of the chart remains a fairly standard
+          grouped-bar treatment
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Unchanged from prior attempt: grid/spine refinement present but
+          no new refinement added this round'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Peak callout creates a clear focal point and immediate insight --
+          meets 'visual hierarchy guides the reader' but stops at one annotation without
+          broader supporting hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped/clustered bar chart via multi-dataset pattern
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors per group, clear legend, consistent bar widths/spacing,
+          meaningful ordering (chronological quarters)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories (quarters) on x-axis, values on y-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labels match
+          dataset names exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows varied patterns per group: growth (Software), volatility (Hardware),
+          stability (Services)'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible business scenario (quarterly revenue by product
+          line)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible revenue magnitudes and quarter-over-quarter deltas
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script; the plugin object is standard Chart.js
+          config, not extra abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; the callout is a genuine static annotation,
+          not fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, current Chart.js API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic multi-dataset grouped-bar pattern plus the documented plugin
+          lifecycle-hook API for the callout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom plugin drawing via getDatasetMeta/getProps for animation-aware
+          coordinates is a genuinely Chart.js-specific technique, addressing the prior
+          review's LM-02 gap
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
