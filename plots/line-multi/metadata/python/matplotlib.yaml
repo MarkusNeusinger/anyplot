@@ -2,48 +2,53 @@ library: matplotlib
 language: python
 specification_id: line-multi
 created: '2025-12-24T21:28:57Z'
-updated: '2026-05-06T21:47:55Z'
-generated_by: claude-haiku
-workflow_run: 25443473406
+updated: '2026-08-05T07:28:54Z'
+generated_by: claude-sonnet
+workflow_run: 30984397655
 issue: 1825
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 91
 review:
   strengths:
-  - 'Perfect theme-adaptive implementation: all chrome tokens correctly applied to
-    every element in both light and dark renders'
-  - Data tells three genuinely distinct stories with seasonal/trend variation; annotation
-    highlights the key peak insight
-  - Triple distinction on series (color + line style + marker shape) exceeds spec
-    requirements
+  - 'Correct Imprint palette in canonical order (#009E73, #C475FD, #4467A3), identical
+    data colors across light and dark renders'
+  - Triple redundant encoding (color + linestyle + marker shape) for the 3 series,
+    matching the style guide's CVD-safety guidance
+  - Path-effect halo strokes keep lines legible where they cross gridlines and each
+    other
+  - 'Theme-adaptive chrome verified correct in both renders: warm off-white / near-black
+    backgrounds, readable text, subtle theme-correct grid and legend frame'
+  - Annotation calling out the year-end peak value adds a clear focal point and a
+    bit of storytelling
+  - Clean KISS code structure, reproducible via np.random.seed(42), explicit font
+    sizes throughout
   weaknesses:
-  - Annotation fontsize=14 is below the 16pt tick label standard — raise to 16pt for
-    typographic consistency
-  - 'LM-02: implementation uses correct but generic matplotlib features — no truly
-    distinctive capability (consider fill_between for trend bands or patheffects for
-    visual emphasis)'
-  - Grid alpha=0.15 is at upper end of recommended range; tick marks could be hidden
-    with ax.tick_params(length=0) for a cleaner minimal look
+  - 'Minor marker overlap at the April crossing point: Product A''s green circle marker
+    is largely hidden behind Product B''s purple square marker due to plot z-order
+    — consider a small offset, higher zorder on both, or a lower marker alpha at crossings'
+  - Design Excellence is solid but not exceptional — the halo/annotation touches are
+    nice, but the overall composition still closely follows the standard style-guide
+    playbook rather than showing a distinctive creative choice
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "line-multi · matplotlib · anyplot.ai" in dark ink, clearly readable; Y-axis label "Sales ($ thousands)" and X-axis label "Month" both readable in INK color; tick labels (Jan-Dec, 30-110) in INK_SOFT — all readable
-      Data: Product A (Electronics) in #009E73 (brand green, solid + circles); Product B (Appliances) in #D55E00 (vermillion, dashed + squares); Product C (Software) in #0072B2 (blue, dash-dot + triangles); "$107K" annotation callout in top-right with ELEVATED_BG box and INK_SOFT text — readable
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1), not pure white — correct.
+      Chrome: Title "line-multi · python · matplotlib · anyplot.ai" is dark and clearly readable, centered near the top, occupying a modest ~38% of canvas width (short spec-id, no overflow). "Month" and "Sales ($ thousands)" axis labels are dark and legible. Tick labels (month abbreviations Jan-Dec on X, numeric values 30-110 on Y) are soft dark gray and legible. A subtle horizontal-only grid is visible without competing with the data. Legend box (top-left, elevated cream fill, soft gray border) lists all three products with matching marker glyphs and is fully readable, positioned above the data range with no overlap. An annotation callout "$107K" with an arrow points to Product A's December peak, rendered as dark text in a light rounded box.
+      Data: Three lines with distinct colors, linestyles, and markers — Product A (Electronics): solid green (#009E73) with circle markers, steady rise with a Q4 acceleration to ~$107K. Product B (Appliances): dashed lavender (#C475FD) with square markers, starts high (~$81K), dips mid-year, recovers to ~$79K. Product C (Software): dash-dot blue (#4467A3) with triangle markers, launches low (~$28K) and grows near-exponentially to ~$69K. First series is correctly #009E73.
+      Legibility verdict: PASS — all text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in near-white (INK=#F0EFE8), axis labels in INK color, tick labels in INK_SOFT (#B8B7B0) — all clearly readable against dark background; no dark-on-dark failures detected; legend text in INK_SOFT against ELEVATED_BG (#242420) frame — readable
-      Data: All three series retain identical Okabe-Ito colors (#009E73, #D55E00, #0072B2) — identical to light render as required; "$107K" annotation box uses ELEVATED_BG (#242420) with INK_SOFT text (#B8B7B0) — readable
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17), not pure black — correct.
+      Chrome: Same title, axis labels, and tick labels now rendered in light tones (off-white title/axis labels, soft light-gray ticks), clearly legible against the dark surface. Grid lines are faint and light-toned but still visible. Legend box now uses the dark "elevated" fill with light text and a light-gray border — fully readable. The "$107K" annotation box now uses a dark elevated fill with light text and light border/arrow, fully legible, no dark-on-dark issues anywhere.
+      Data: Colors are pixel-identical to the light render — brand green #009E73, lavender #C475FD, blue #4467A3 — only the chrome (background, text, grid, legend/annotation boxes) flipped, exactly as required.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element is clearly visible, and brand green remains vivid against the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,50 +56,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
-          16pt, legend 16pt; all perfectly readable in both themes'
+        comment: All font sizes explicitly set; well-proportioned, no overflow, readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; month labels well-spaced, legend placed away
-          from dense data region
+        comment: No text overlap; legend sits clear of all data
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: linewidth=3 and markersize=10 well-suited for 12 monthly data points;
-          all three series clearly distinguishable
+        comment: Markers/lines well-sized for 12-point sparse series, but Product
+          A's circle marker is largely hidden behind Product B's square marker at
+          the April crossing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe; additional distinction via line styles and
-          marker shapes
+        comment: CVD-safe palette plus redundant marker/linestyle encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins; annotation fits without
-          crowding
+        comment: Good canvas utilization, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Sales ($ thousands)' has units; X-axis 'Month' is descriptive
+        comment: Y-axis has units ($ thousands)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, third #0072B2 (canonical Okabe-Ito
-          order 1→3); backgrounds correctly #FAF8F1 / #1A1A17; all chrome theme-correct
-          in both renders'
+        comment: Imprint palette in canonical order, theme-correct chrome in both
+          renders
     design_excellence:
       score: 14
       max: 20
@@ -104,24 +106,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom Okabe-Ito palette, three distinct line styles,
-          three distinct marker shapes, themed peak annotation with styled callout
-          box — clearly above defaults'
+        comment: Triple redundant encoding, halo strokes, styled annotation — clearly
+          above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; Y-axis-only grid at alpha=0.15; legend
-          and spines themed — good refinement with room to improve (tick removal,
-          lower grid alpha)
+        comment: Subtle y-only grid, spines removed, tick marks removed, styled legend
+          frame
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three lines with genuinely different narratives (growth, dip/recovery,
-          exponential launch); peak annotation highlights key insight
+        comment: Peak-value annotation creates a focal point; divergent series trends
+          read as a narrative
     spec_compliance:
       score: 15
       max: 15
@@ -131,27 +131,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line comparison plot with 3 series on shared axes
+        comment: Correct multi-line comparison
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend, varying line styles, markers at data points
-          — all spec recommendations implemented
+        comment: Distinct colors, legend, varying line styles, and markers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = sequential months; Y = sales; all 12 months visible with no clipping
+        comment: Month on X, sales on Y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-multi · matplotlib · anyplot.ai' correct; legend labels
-          descriptive and accurate
+        comment: Title format exact, legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -161,22 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates growth trend, decline+recovery pattern, and exponential
-          growth — covers full diversity of multi-line behaviors
+        comment: 'Three distinct trend shapes: steady growth, dip-and-recovery, exponential
+          launch'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly sales for product lines (Electronics, Appliances, Software)
-          — real, neutral business scenario
+        comment: Neutral, plausible business scenario (monthly product sales)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values ~$28K–$110K plausible for product line monthly revenues;
-          seasonal patterns realistic
+        comment: Values and growth rates are realistic for the domain
     code_quality:
       score: 10
       max: 10
@@ -186,32 +182,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat: imports → theme tokens → data → plot → save; no functions
-          or classes'
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all used
+        comment: Only used imports (os, pyplot, numpy, patheffects)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; annotation complexity appropriate; no over-engineering
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG
+        comment: Saves plot-{THEME}.png, current API
     library_mastery:
       score: 8
       max: 10
@@ -221,16 +216,13 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Axes methods throughout (not pyplot); ax.annotate() with arrowprops;
-          plt.setp() for legend text; tight_layout() — all idiomatic matplotlib
+        comment: Axes-level API, patheffects, annotate with bbox/arrowprops used idiomatically
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ax.annotate() with styled arrowprops and bbox; custom spine color
-          control; plt.setp() on legend texts — library-specific but not a deeply
-          distinctive feature
+        comment: patheffects.withStroke halo is a matplotlib-specific technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -239,6 +231,7 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
-  - alpha-blending
+  - grid-styling
