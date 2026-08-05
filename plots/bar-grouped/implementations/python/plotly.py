@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-grouped: Grouped Bar Chart
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-05
@@ -49,8 +49,8 @@ fig.add_annotation(
     showarrow=True,
     arrowhead=2,
     arrowcolor=INK_SOFT,
-    ax=70,
-    ay=-55,
+    ax=110,
+    ay=-25,
     font={"size": 11, "color": INK},
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
@@ -70,7 +70,7 @@ fig.update_layout(
     xaxis={
         "title": {"text": "Traffic Source", "font": {"size": 15, "color": INK}},
         "tickfont": {"size": 12, "color": INK_SOFT},
-        "gridcolor": GRID,
+        "showgrid": False,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
         "mirror": False,
@@ -92,8 +92,7 @@ fig.update_layout(
     legend={
         "font": {"size": 12, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
+        "borderwidth": 0,
         "orientation": "h",
         "yanchor": "bottom",
         "y": 1.02,
