@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 strip-basic: Basic Strip Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-05
@@ -65,7 +65,7 @@ plot = (
         aes(x="Department", y="Score"), fun="mean", fun_min="lq", fun_max="uq", geom="pointrange", color=INK, size=1.1
     )
     + scale_color_manual(values=IMPRINT_PALETTE)
-    + labs(x="Department", y="Survey Score (points)", title="strip-basic · letsplot · anyplot.ai")
+    + labs(x="Department", y="Survey Score (points)", title="strip-basic · python · letsplot · anyplot.ai")
     + ggsize(800, 450)
     + theme_minimal()
     + theme(
@@ -77,6 +77,8 @@ plot = (
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+        panel_border=element_blank(),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
     )
 )
 
