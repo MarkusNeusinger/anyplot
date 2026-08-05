@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-kde: Histogram with KDE Overlay
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-06
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 85/100 | Updated: 2026-08-05
 """
 
 import os
