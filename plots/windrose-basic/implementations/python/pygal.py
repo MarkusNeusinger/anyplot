@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windrose-basic: Wind Rose Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-08-05
@@ -58,8 +58,11 @@ speeds = np.concatenate(
     ]
 )
 
-# Define 8 direction sectors (N, NE, E, SE, S, SW, W, NW)
-direction_labels = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+# Define 8 direction sectors. pygal's Radar places category index 0 at the
+# top and lays out subsequent categories COUNTER-clockwise, so the labels
+# must be listed counter-clockwise-in-degrees (N, then 315, 270, ...) for the
+# rendered spokes to match true (clockwise) compass bearing.
+direction_labels = ["N", "NW", "W", "SW", "S", "SE", "E", "NE"]
 
 # Define wind speed ranges (m/s)
 speed_bins = [0, 5, 10, 15, np.inf]
@@ -68,7 +71,7 @@ speed_labels = ["0-5 m/s", "5-10 m/s", "10-15 m/s", "15+ m/s"]
 # Calculate frequencies for each direction and speed bin
 frequencies = {label: [] for label in speed_labels}
 
-for dir_center in [0, 45, 90, 135, 180, 225, 270, 315]:
+for dir_center in [0, 315, 270, 225, 180, 135, 90, 45]:
     if dir_center == 0:
         # North spans 337.5-360 and 0-22.5
         mask = (directions >= 337.5) | (directions < 22.5)
