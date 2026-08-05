@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:36:18Z'
-updated: '2026-08-05T17:22:48Z'
+updated: '2026-08-05T17:29:29Z'
 generated_by: claude-sonnet
 workflow_run: 31028837540
 issue: 1946
@@ -12,48 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
+  - 'All three attempt-1 weaknesses were directly addressed: axis_line/axis_ticks
+    now removed (DE-02), a subtitle adds a data-storytelling layer (DE-03), and custom
+    layer_tooltips() add a lets-plot-distinctive interactive touch (LM-02)'
   - 'Correct Imprint palette usage: brand green (#009E73) for all bars, position-3
-    blue (#4467A3) highlighting the top language — identical across both renders,
-    only chrome flips'
-  - Theme-adaptive chrome fully threaded (PAGE_BG, INK, INK_SOFT) — both light and
-    dark renders pass the readability check with no dark-on-dark or light-on-light
-    text
-  - Data sorted ascending so the largest value renders at the top of the categorical
-    axis, giving an intuitive top-to-bottom ranked read reinforced by the highlighted
-    leader
-  - Value labels placed at bar ends (geom_text, hjust=left, nudge_x) improve readability
-    without cluttering the bars
+    blue (#4467A3) highlighting the leader — identical across both renders, only chrome
+    flips'
+  - Theme-adaptive chrome fully threaded (PAGE_BG, INK, INK_SOFT) — both renders pass
+    the readability check with no dark-on-dark or light-on-light text
   - Canvas matches the 3200x1800 landscape target exactly (ggsize(800,450) + scale=4),
     no clipping of title, ticks, or value labels
+  - Title now occupies a more balanced ~55-60% of plot width vs. attempt 1's ~45%
   weaknesses:
-  - 'DE-01/DE-02: styling is clean but conventional — axis_line/spines are kept rather
-    than removed, and there''s no secondary annotation (e.g. average reference line,
-    subtitle) to lift it beyond a standard ranked bar chart'
-  - 'LM-02: doesn''t showcase letsplot-distinctive capabilities beyond baseline ggplot-grammar
-    usage aside from the HTML export — consider a lets-plot-specific touch (e.g. custom
-    tooltip config surfaced via ggsave html) to differentiate from the plotnine/ggplot2
-    twins'
-  - Title occupies only ~45% of plot width, under the comfortable 50-70% target for
-    this canvas — a slightly larger plot_title fontsize would improve visual balance
-    (minor, not a hard deduction)
+  - Still a fairly conventional ranked bar chart at its core — DE-01/DE-02 have room
+    for one more distinctive visual touch (e.g. a subtle reference line/annotation
+    for the survey average, or a more custom bar treatment) to push aesthetic sophistication
+    further
+  - 'LM-02: tooltip customization is a good lets-plot-specific step, but could be
+    pushed further (e.g. richer tooltip formatting, or another lets-plot-only capability)
+    to fully differentiate from the plotnine/ggplot2 twins'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "bar-horizontal · python · letsplot · anyplot.ai" in dark ink at top-left, fully visible and not clipped. Axis titles ("Developers Using Language (%)" / "Programming Language") and tick labels in soft dark gray, all clearly legible against the light background. Subtle vertical gridlines only (major_x), no y gridlines, no axis ticks marks, thin axis line.
+      Chrome: Title "bar-horizontal · python · letsplot · anyplot.ai" and subtitle "JavaScript leads adoption, used by more than 5x as many developers as Rust" in dark ink / soft-dark gray at top-left, fully visible and not clipped. Axis titles ("Developers Using Language (%)" / "Programming Language") and tick labels clearly legible. Subtle vertical gridlines only, no y gridlines, no axis ticks marks, no axis line (spines removed).
       Data: 10 horizontal bars, one per programming language, sorted so the largest value (JavaScript, 65.4%) is at the top and the smallest (Rust, 11.8%) at the bottom. All bars use brand green #009E73 except the top bar (JavaScript), which uses the Imprint position-3 blue #4467A3 to highlight the leader. Value labels (e.g. "65.4%") sit just past each bar's end in soft gray text, with no overlap on bars or other labels.
       Legibility verdict: PASS — all text reads clearly against the light surface, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis titles, and tick labels now rendered in light ink/soft-light gray, clearly legible against the dark background. Gridlines remain subtle but visible. No dark-on-dark text found anywhere (title, axis text, tick labels, value labels all read clearly).
+      Chrome: Same title, subtitle, axis titles, and tick labels now rendered in light ink / soft-light gray, clearly legible against the dark background. Gridlines remain subtle but visible. No dark-on-dark text found anywhere (title, subtitle, axis text, tick labels, value labels all read clearly).
       Data: Same 10 bars in the same order and proportions as the light render. Bar colors are pixel-identical to the light render — brand green #009E73 for all bars except the JavaScript leader bar in #4467A3. Only the chrome (background/text/grid) has flipped for dark mode, confirming palette-position consistency across themes.
       Legibility verdict: PASS — all text reads clearly against the dark surface, no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -61,8 +56,7 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; readable in both themes, mobile scaling
-          should hold given generous baseline sizes
+        comment: Explicit font sizes throughout; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -72,7 +66,7 @@ review:
           render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Bar width (0.65) and count (10) well-suited for readability; no data-density
@@ -89,7 +83,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800; no clipping or overflow; good proportions
+        comment: Canvas exactly 3200x1800; no clipping or overflow; title proportion
+          improved to ~55-60% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,7 +100,7 @@ review:
           theme-correct backgrounds in both renders; data colors identical across
           themes'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -113,22 +108,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Clean and intentional (highlight color, theming) but a fairly conventional
-          ranked bar chart overall
+        comment: Subtitle callout, single-highlight leader, and removed spines/ticks
+          lift this above generic defaults, but it's still a fairly conventional ranked
+          bar chart
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Y gridlines removed and ticks hidden, but axis_line/spine is kept
-          rather than removed
+        comment: axis_line/axis_ticks now correctly removed (fixed from attempt 1),
+          grid subtle, whitespace generous
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Sorted ranking plus highlighted leader creates a clear focal point,
-          though no further annotation layer
+        passed: true
+        comment: Sorted ranking, highlighted leader, and explanatory subtitle create
+          a clear focal point and guided read
     spec_compliance:
       score: 15
       max: 15
@@ -160,12 +156,12 @@ review:
         comment: Title matches mandated format exactly; no legend needed given single-highlight
           design
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Covers categories, values, sorting, labeling, and highlighting aspects
@@ -217,27 +213,29 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
         comment: Proper ggplot-grammar composition, scale_fill_manual, theme() customization
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: HTML export leveraged, but otherwise generic ggplot2-equivalent usage
-          without letsplot-specific flourishes
+        passed: true
+        comment: Custom layer_tooltips() surfaced through HTML export showcases a
+          lets-plot-specific interactive touch (fixed from attempt 1's generic-usage
+          weakness)
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
