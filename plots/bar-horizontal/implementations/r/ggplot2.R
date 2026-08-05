@@ -4,7 +4,6 @@
 #' Quality: 85/100 | Created: 2026-08-05
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -32,6 +31,8 @@ df <- tibble::tibble(
   ),
   share_pct = c(34.5, 24.8, 18.3, 12.1, 6.4, 2.7, 1.2)
 )
+df$is_top <- df$share_pct == max(df$share_pct)
+label_gap <- max(df$share_pct) * 0.07
 
 # --- Plot ---------------------------------------------------------------
 plot_title <- "Preferred Work Arrangement Survey · bar-horizontal · r · ggplot2 · anyplot.ai"
@@ -40,10 +41,11 @@ title_ratio <- if (title_n > 67) 67 / title_n else 1.0
 title_fontsize <- max(8, round(12 * title_ratio))
 
 p <- ggplot(df, aes(x = reorder(arrangement, share_pct), y = share_pct)) +
-  geom_col(fill = BRAND, color = PAGE_BG, linewidth = 0.4, width = 0.7) +
+  geom_col(aes(linewidth = is_top), fill = BRAND, color = PAGE_BG, width = 0.7) +
+  scale_linewidth_manual(values = c(`TRUE` = 1.1, `FALSE` = 0.4), guide = "none") +
   geom_text(
-    aes(label = paste0(share_pct, "%")),
-    hjust = -0.15, size = 3.2, color = INK
+    aes(y = share_pct + label_gap, label = paste0(share_pct, "%"), fontface = ifelse(is_top, "bold", "plain")),
+    hjust = 0, size = 3.2, color = INK
   ) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.16))) +
   coord_flip(clip = "off") +
