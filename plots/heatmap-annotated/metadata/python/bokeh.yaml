@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: heatmap-annotated
 created: '2025-12-24T21:29:19Z'
-updated: '2026-08-05T09:41:42Z'
+updated: '2026-08-05T09:49:27Z'
 generated_by: claude-sonnet
 workflow_run: 30993201696
 issue: 1824
@@ -12,56 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
+  - 'All three attempt-1 weaknesses were addressed precisely and without regressions:
+    title now includes the python language segment, the Debt/ROI correlation was strengthened
+    to -0.77 so the diverging colormap''s red end is genuinely demonstrated, and near-zero
+    cells now carry a subtle floor-line border to keep grid structure perceivable
+    in dark mode'
   - 'Correct imprint_div diverging colormap built exactly per the style guide: matte-red
     -> theme-adaptive midpoint -> blue, verified pixel-identical data colors between
     light and dark renders'
-  - Per-cell text color is computed dynamically from the actual rendered fill luminance
-    rather than a fixed light/dark split, so contrast holds even where the diverging
-    midpoint equals the page background
-  - 'Theme-adaptive chrome verified pixel-exact: light background #FAF8F1 (250,248,241),
-    dark background #1A1A17 (26,26,23), all title/axis/tick/colorbar text branches
-    correctly on ANYPLOT_THEME'
-  - Canvas measured at exactly 2400x2400 with the heatmap grid occupying a well-balanced
-    ~62% of the canvas area and zero pixels clipped at any of the four edges
+  - Per-cell text color computed dynamically from actual rendered luminance (not a
+    fixed light/dark split), so contrast holds even where the diverging midpoint equals
+    the page background
+  - 'Theme-adaptive chrome verified pixel-exact: light background #FAF8F1, dark background
+    #1A1A17, all title/axis/tick/colorbar text branches correctly on ANYPLOT_THEME;
+    title fully visible with zero clipping in both renders'
+  - Canvas measured at exactly 2400x2400 with the heatmap grid well-balanced and zero
+    pixels clipped at any edge
   - HoverTool adds genuine interactive value (row metric, column metric, exact Pearson
-    correlation) without faking anything in the static PNG - correctly exempted from
-    AR-08
+    correlation) without faking anything in the static PNG
   - 'Realistic, factually-consistent correlation matrix: symmetric, diagonal = 1.00,
-    values properly bounded in [-1, 1], derived from shared latent financial factors
-    rather than arbitrary noise'
+    values properly bounded in [-1, 1], derived from shared latent financial factors,
+    now spanning a wider and more demonstrative range'
   weaknesses:
-  - Title omits the mandated 'python' language segment. Format must be '{spec-id}
-    · {language} · {library} · anyplot.ai'; current title renders 'heatmap-annotated
-    · bokeh · anyplot.ai' instead of 'heatmap-annotated · python · bokeh · anyplot.ai'.
-  - All negative correlations are weak (minimum is Debt/ROI at -0.29), so the diverging
-    colormap's red end is barely exercised - only pale pinks appear, no cell approaches
-    the deep matte-red used near -1. Strengthen one relationship (e.g. push Debt vs
-    ROI or Debt vs Profit further negative) so the render demonstrates the full -1..+1
-    range.
-  - In dark mode, near-zero correlation cells (fill color converges on the theme-adaptive
-    midpoint, which equals the page background) become nearly indistinguishable from
-    the surrounding canvas - text stays legible but the 8x8 grid structure partially
-    disappears for weakly-correlated cells. Consider a slightly stronger cell border
-    or a non-background-matching floor tint for |value| < 0.05 in dark mode.
-  - Three small helper functions (_lerp_hex, _luminance, _value_to_hex) deviate from
-    the ideal flat imports -> data -> plot -> save script structure (CQ-01); largely
-    unavoidable boilerplate for building the Imprint diverging ramp, but worth trimming
-    if a simpler inline approach is possible.
+  - Near-zero cells in dark mode (e.g. the Growth row, all |r| < 0.1) still read as
+    a near-uniform dark band - the floor-line border is a real improvement over attempt
+    1 but the boundary is only visible on close inspection, not at a casual glance;
+    this is an inherent tension of the theme-adaptive diverging midpoint equaling
+    the page background rather than an implementation bug, and text remains fully
+    legible throughout
+  - Three small helper functions (_lerp_hex, _luminance, _value_to_hex) still deviate
+    from the ideal flat imports -> data -> plot -> save structure - acceptable given
+    they implement the mandated Imprint diverging ramp, but worth noting
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, measured pixel (250,248,241) - matches #FAF8F1 exactly.
-      Chrome: Bold black title "heatmap-annotated · bokeh · anyplot.ai" centered at top, italic "Financial Metric" axis label (shown above the grid via x_axis_location="above") directly beneath it, rotated (~40 deg) column headers (Revenue, Profit, Assets, Debt, Growth, ROI, Market Cap, Volume), horizontal row labels on the left, and a right-side ColorBar titled "Pearson Correlation" with ticks from 1 to -1. All chrome text is dark ink (#1A1A17 title / #4A4A44 secondary) and clearly legible against the light background.
-      Data: 8x8 symmetric correlation matrix rendered as colored rect cells with centered numeric labels (e.g. "1.00", "0.82", "-0.29"). Diagonal cells are saturated blue (value=1.00) with white text; strongly positive off-diagonal cells (Revenue/Profit = 0.82) are medium blue with white text; near-zero cells are pale cream with dark text; weakly negative cells (Debt row, max magnitude -0.29) are pale pink with dark text. Cell colors come from the imprint_div diverging ramp (#AE3030 -> page-bg midpoint -> #4467A3).
-      Legibility verdict: PASS - all text (title, axis labels, tick labels, cell values, colorbar) reads cleanly against the light surface, no light-on-light failures.
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Bold title "heatmap-annotated · python · bokeh · anyplot.ai" (language segment now present, fixed from attempt 1), italic "Financial Metric" subtitle, rotated column headers, horizontal row labels, right-side ColorBar titled "Pearson Correlation". All chrome text clearly readable against the light background.
+      Data: 8x8 symmetric correlation matrix as colored rect cells with centered numeric labels. Diagonal cells saturated blue (1.00, white text). Strongly correlated pairs (Revenue/Profit=0.82, Debt/ROI=-0.77) show clearly saturated blue/red. Near-zero cells (Growth row) are pale cream with dark text, distinguishable via subtle color tint even at r≈0.03. First data application uses the Imprint imprint_div diverging colormap (matte-red -> theme-adaptive midpoint -> blue), not a library-native cmap.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, measured pixel (26,26,23) - matches #1A1A17 exactly.
-      Chrome: Same layout as the light render with all chrome inverted to light tokens - white/off-white bold title, light-gray italic "Financial Metric" label, light-gray rotated column headers and row labels, light colorbar tick labels and "Pearson Correlation" title. All chrome is clearly legible against the dark background; no dark-on-dark failures found on the title, axis labels, tick labels, or colorbar.
-      Data: Confirmed pixel-identical data colors to the light render (diagonal blue, Revenue/Profit=0.82 medium blue, Debt row pale/near-neutral pink) - only the chrome flipped, exactly as required. One notable but spec-compliant side effect: near-zero cells (e.g. Assets/Revenue = -0.01) render with a fill so close to the page background that the cell boundary is nearly invisible in the dark theme (the diverging colormap's midpoint is intentionally set to match PAGE_BG per the style guide) - text inside those cells stays fully legible (light text on the near-black fill) but the grid pattern is harder to perceive for weakly-correlated pairs.
-      Legibility verdict: PASS - all text remains readable; the near-invisible cell boundaries for near-zero values are a design/contrast nuance, not a legibility failure (flagged as a weakness for repair, not a hard fail).
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Same layout with all chrome correctly inverted to light tokens - title, axis labels, tick labels, colorbar text all light-colored and legible. No dark-on-dark failures; title fully visible top edge, zero clipping.
+      Data: Confirmed pixel-identical data colors to light render (only chrome flipped). Negative range now well exercised (Debt/ROI = -0.77, clearly saturated red, vs. only -0.29 in attempt 1). Near-zero cells (Growth row) render close to the page background since the diverging midpoint is theme-adaptive and equals PAGE_BG by design, but the newly added floor-line cell borders (faint INK_SOFT-tinted stroke for |value| < 0.05) keep individual cell boundaries perceivable under close inspection - a real, if modest, improvement over attempt 1 where boundaries fully vanished into the canvas.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -72,54 +68,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 50pt, axis label 42pt, tick
-          labels 34pt, colorbar 26/30pt); readable in both themes, well-proportioned,
-          no overflow
+        comment: All font sizes explicitly set, readable in both themes and at mobile
+          scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Rotated column headers, row labels, title, subtitle, and colorbar
-          all have clean spacing with no collisions
+        comment: No overlap between text, data, or legend elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Cells sized appropriately for the 8x8 grid, but near-zero-value cells
-          in dark mode blend into the page background since the diverging midpoint
-          equals PAGE_BG, weakening the visible grid structure for those cells
+        comment: Floor-line borders help, but near-zero cells in dark mode still read
+          as a near-uniform dark band on casual glance
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Per-cell text color is chosen from actual rendered luminance (not
-          a fixed split), redundant numeric labels back every color cue, CVD-safe
-          diverging ramp
+        comment: Luminance-based per-cell text contrast, CVD-safe diverging ramp
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Measured grid occupies ~62% of the 2400x2400 canvas with balanced
-          margins on all sides; zero pixels clipped at any edge
+        comment: Canvas exactly 2400x2400, well-balanced margins, zero clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled 'Financial Metric', descriptive and appropriate
-          for a categorical correlation-matrix axis (no numeric units applicable)
+        comment: Descriptive axis labels (Financial Metric)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div diverging ramp used correctly for signed correlation
-          data; backgrounds pixel-match #FAF8F1/#1A1A17; chrome theme-correct in both
-          renders; data colors identical across themes'
+        comment: imprint_div diverging colormap, theme-correct backgrounds and chrome
+          in both renders
     design_excellence:
       score: 14
       max: 20
@@ -129,27 +117,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design clearly above defaults: luminance-based per-cell text
-          contrast, careful min_border reservations, coherent theme-adaptive chrome
-          throughout - not yet at full publication-level distinctiveness'
+        comment: Luminance-based per-cell contrast, careful margins, coherent theme-adaptive
+          chrome
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid lines, axis lines and tick marks fully removed for a clean grid-only
-          look, generous margins - solid but largely following prescribed patterns
-          rather than exceptional extra polish
+        comment: Grid/axis lines/ticks fully removed, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Diverging color intensity naturally highlights the strongest relationships
-          (diagonal, Revenue/Profit=0.82) creating visual hierarchy, though no explicit
-          callouts identify the key insight
+        comment: Color intensity naturally highlights strongest relationships
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -157,55 +140,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct annotated heatmap: colored cells + numeric value labels'
+        comment: Correct annotated heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Numeric annotations, diverging colormap for signed data, colorbar
-          legend, and contrast-aware text color all present
+        comment: Value annotations, colorbar, contrast-aware text all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full symmetric 8x8 matrix shown on both axes, all variable pairs
-          visible
+        comment: X/Y correctly assigned, full matrix visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title omits the mandated 'python' language segment ('heatmap-annotated
-          · bokeh · anyplot.ai' instead of 'heatmap-annotated · python · bokeh · anyplot.ai');
-          colorbar legend correctly labeled
+        comment: Title now includes the python language segment; colorbar labeled
+          correctly
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Shows strong positive, near-zero, and weak negative correlations,
-          but no cell approaches strong negative territory (min = -0.29) so the red
-          end of the diverging ramp is barely exercised
+        comment: Negative range now well exercised (Debt/ROI = -0.77), full -1..+1
+          span demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible business/finance scenario (Revenue, Profit,
-          Assets, Debt, Growth, ROI, Market Cap, Volume)
+        comment: Realistic, neutral financial correlation matrix
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Matrix is properly symmetric, diagonal = 1.00, all values correctly
-          bounded in [-1, 1]
+        comment: Values properly bounded in [-1, 1], diagonal = 1.00, internally consistent
     code_quality:
       score: 9
       max: 10
@@ -215,36 +192,31 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Mostly linear imports -> data -> plot -> save flow, but three small
-          helper functions (_lerp_hex, _luminance, _value_to_hex) are defined for
-          the colormap/contrast math
+        comment: Three small color-math helper functions remain
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set explicitly
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import (os, sys, time, pathlib, numpy, bokeh submodules, selenium)
-          is actually used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering; complexity is proportional to the
-          theme-adaptive contrast requirement
+        comment: Clean, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current bokeh API
-          (output_file/save + transform + LinearColorMapper)
+        comment: Correct plot-{theme}.png / .html output, current API
     library_mastery:
       score: 8
       max: 10
@@ -254,24 +226,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Textbook idiomatic bokeh annotated-heatmap pattern: ColumnDataSource
-          + rect/text glyphs + transform() + LinearColorMapper + ColorBar + HoverTool'
+        comment: ColumnDataSource, transform(), LinearColorMapper, ColorBar - idiomatic
+          bokeh
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Vectorized per-glyph text color driven by a ColumnDataSource field
-          plus native HoverTool interactivity are genuinely bokeh-flavored, though
-          not impossible to approximate in other libraries
-  verdict: REJECTED
+        comment: Vectorized per-glyph text/line color via ColumnDataSource + HoverTool
+          are bokeh-flavored but not unique
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - colorbar
-  - hover-tooltips
   - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
@@ -281,3 +253,4 @@ impl_tags:
   - correlation-matrix
   styling:
   - custom-colormap
+  - publication-ready
