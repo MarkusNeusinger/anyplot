@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: strip-basic
 created: '2026-08-05T05:54:01Z'
-updated: '2026-08-05T05:57:57Z'
+updated: '2026-08-05T06:13:11Z'
 generated_by: claude-sonnet
 workflow_run: 30979322641
 issue: 975
@@ -12,129 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 94
 review:
   strengths:
-  - 'Correct plot type: strip plot with per-point random horizontal jitter (±0.25
-    units, within the spec''s moderate-jitter guidance) cleanly separates the four
-    production batches without adjacent-category bleed'
-  - Theme-adaptive chrome is fully threaded through INK/INK_SOFT/PAGE_BG tokens —
-    title, axis labels, ticks, spines, and grid all flip correctly between light and
-    dark, while the four data colors stay pixel-identical
-  - 'Categorical color mapping follows the canonical Imprint palette order (index
-    1–4) with Batch A correctly anchored to brand green #009E73'
-  - 'Clean, reproducible, KISS-structured code: single seeded RNG call, one data-generation
-    loop, no unused imports, correct canvas (1600×900 @ px_per_unit=2 → 3200×1800)
-    and save call'
-  - Title format exactly matches the mandated `strip-basic · julia · makie · anyplot.ai`
-    convention, and axis labels are descriptive with units ("Bearing Diameter (mm)")
+  - Composite design combining jittered strip points with translucent ±1 SD range
+    bars and a mean-tick overlay per batch — genuine data storytelling beyond a bare
+    strip plot, computed from the actual sampled readings (not hardcoded).
+  - Explicit font sizing at every level (titlesize=20, xlabelsize/ylabelsize=14, tick
+    label sizes=12) with a clean theme-token flip (INK/INK_SOFT/PAGE_BG); all text
+    stays legible in both light and dark renders, including at the ~400px mobile thumbnail.
+  - Full Imprint categorical palette in canonical order (green batch A → lavender
+    → blue → ochre) applied consistently, identical data colors across light/dark,
+    correct theme-adaptive chrome (spines, grid, tick colors, background).
+  - Realistic manufacturing QC scenario (ball-bearing diameter across 4 production
+    batches) matching the spec's own suggested application, with plausible tolerances
+    and per-batch mean/std computed from real sampled data.
+  - 'Clean, idiomatic Makie: Figure/Axis grammar, rangebars!, linesegments!, scatter!
+    — no functions/classes, seeded RNG (Random.seed!(42)), minimal and fully-used
+    imports, correct px_per_unit=2 save producing exact 3200×1800 canvas.'
   weaknesses:
-  - No visual hierarchy or focal point beyond the raw jittered points — the spec explicitly
-    suggests 'horizontal lines for group means or medians as reference'; adding a
-    short hlines!/linesegments! tick per batch spanning the jitter width would give
-    viewers an immediate summary statistic and materially improve data storytelling
-  - Design execution is competent but generic — same marker size, alpha, and stroke
-    for every batch with no secondary encoding (e.g., emphasizing the mean marker,
-    subtle per-category background banding, or size/opacity variation) to create a
-    clear visual hierarchy
-  - No Makie-distinctive feature is used beyond a plain scatter! call — consider a
-    small idiomatic touch such as errorbars!/rangebars! for batch means±std, or crossbar!/bracket!
-    for the mean/median reference lines mentioned above, to demonstrate library mastery
-    beyond generic scatter usage
-  - Batch B and Batch C show a few tightly clustered points near y≈10.11–10.12 and
-    y≈10.20–10.25 that visually merge into near-solid blobs — a touch more jitter
-    spread or a slightly lower alpha in the densest clusters would keep individual
-    observations distinguishable at a glance
+  - Densest sub-clusters (e.g. Batch D points around 9.90–9.95mm) show noticeable
+    point overlap — consider markersize ~8 or alpha ~0.5 there for slightly cleaner
+    separation.
+  - Mean-tick linewidth (3) reads a bit bold next to the deliberately subtle range
+    band it sits beside — a touch thinner would integrate the two overlay elements
+    more smoothly without losing legibility.
+  - rangebars!/linesegments! is a nice combination but is conceptually replicable
+    via errorbar-style calls in other libraries; leaning on a more Makie-unique composition
+    device (e.g. Block-based layout) would push Library Mastery further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "strip-basic · julia · makie · anyplot.ai" is bold dark text, clearly visible top-center with comfortable margin from the top edge. Axis labels "Production Batch" (x) and "Bearing Diameter (mm)" (y) are dark ink and fully legible. Tick labels (Batch A–D on x; 9.8–10.2+ on y) are a softer grey-brown but still clearly readable. Horizontal grid lines are faint and subtle, visible without dominating. Top and right spines are hidden; left/bottom spines are a soft neutral tone.
-      Data: Four vertical bands of jittered points, one per batch. Batch A = teal-green (#009E73), Batch B = lavender (#C475FD), Batch C = blue (#4467A3), Batch D = ochre (#BD8233) — matches the canonical Imprint palette order. Points have a thin light stroke that helps separate overlapping markers. All colors read clearly against the light background.
-      Legibility verdict: PASS — all text is dark-on-light and easily readable; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "strip-basic · julia · makie · anyplot.ai" centered at top, dark axis labels ("Production Batch" / "Bearing Diameter (mm)"), soft grey tick labels and category names (Batch A–D), subtle horizontal-only gridlines, top/right spines removed. All chrome text is clearly legible.
+      Data: Four jittered strip columns — Batch A green (#009E73), Batch B lavender, Batch C blue, Batch D ochre — matching Imprint canonical order. Each batch has a translucent ±1 SD range band and a solid black mean-tick line drawn over the point cloud.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title is bold off-white/cream text, clearly visible against the dark background. Axis labels are the same light ink tone and fully legible. Tick labels use a lighter grey-beige tone, still clearly readable against the near-black background — no dark-on-dark failure observed. Grid lines are faint light lines, subtle but visible. Spines are a soft light-grey tone matching the chrome token.
-      Data: Same four colors as the light render (teal-green, lavender, blue, ochre) at identical positions — confirms data colors are theme-invariant, only chrome flipped. Points remain clearly distinguishable from the dark background with no contrast issues.
-      Legibility verdict: PASS — all text is light-on-dark and easily readable; no dark-on-dark issues found.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels have flipped to light/white tones, fully readable against the dark surface; mean-tick lines flipped from black to white; gridlines remain subtle. No dark-on-dark text anywhere.
+      Data: Same four batch colors (green/lavender/blue/ochre) as the light render — data hues are identical between themes, only chrome flipped, confirming correct theme-adaptive implementation.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit (title 20/40, labels 14/28, ticks 12/24 at
-          px_per_unit=2); readable in both themes
+        comment: All font sizes explicitly set (titlesize=20, label=14, tick=12);
+          readable in both themes and at mobile thumbnail size; title fits comfortably
+          without overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; chrome and data never intersect
+        comment: No text overlap anywhere; title, axis labels, tick labels, category
+          names all clear
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: markersize=10, alpha=0.65 suit n=45/category, but a few dense clusters
-          (Batch B ~10.11, Batch C ~10.20-10.25) nearly merge into blobs
+        comment: Markers (size 10, alpha 0.6) visible for 45 pts/batch, but densest
+          sub-clusters (Batch D ~9.9-9.95mm) show some point overlap
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; no red-green as sole signal
+        comment: Good contrast, CVD-safe Imprint hues, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); no overflow or clipping; proportions
-          balanced
+        comment: Canvas exactly 3200x1800; plot fills canvas well with balanced margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Production Batch" / "Bearing Diameter (mm)" are descriptive with
-          units'
+        comment: 'Descriptive labels with units: ''Bearing Diameter (mm)'', ''Production
+          Batch'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Batch A=#009E73 (correct first series); canonical palette order
-          for B/C/D; backgrounds match #FAF8F1/#1A1A17; both renders theme-correct'
+        comment: 'First series #009E73, canonical Imprint order for series 2-4, identical
+          data colors across themes, correct #FAF8F1/#1A1A17 backgrounds'
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean and polished (thin stroke on markers, deliberate alpha), but
-          no custom hierarchy beyond a plain jittered scatter
+        passed: true
+        comment: 'Strong design: custom palette, range-band + mean-tick overlay, thoughtful
+          typography — clearly above library defaults'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Top/right spines removed, grid subtle and y-only, generous whitespace;
-          still a fairly bare/default look
+        passed: true
+        comment: Spines removed, single subtle horizontal grid, generous whitespace;
+          mean-tick linewidth slightly bold next to the soft range band
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: No reference lines for batch means/medians (spec explicitly suggests
-          this) and no other focal point — four visually equivalent point clouds with
-          no guided takeaway
+        passed: true
+        comment: Range band + mean-tick overlay creates a clear focal point per batch,
+          letting the viewer compare central tendency and spread at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -144,55 +140,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct strip plot: individual points, one axis per category, horizontal
-          jitter'
+        comment: Correct strip plot with jittered individual points
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Jitter width (±0.25) within the 0.1-0.3 moderate-jitter guidance;
-          alpha=0.65 within 0.5-0.7 guidance
+        comment: Jitter width 0.3 (in spec's 0.1-0.3 range), alpha 0.6 (in spec's
+          0.5-0.7 range), mean reference lines added as spec suggests
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=category (batch), Y=numeric measurement (diameter); axes show full
-          data range
+        comment: category on x-axis, numeric value on y-axis, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches "strip-basic · julia · makie · anyplot.ai";
-          no legend needed since color is redundant with the already-labeled x-axis
-          categories
+        comment: Title exactly 'strip-basic · julia · makie · anyplot.ai'; no legend
+          needed since x-axis category labels already identify groups
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows individual observations, jitter, and per-category grouping;
-          missing the optional mean/median reference the spec suggests
+        comment: Shows jitter, varying spread/density and different means across all
+          4 batches
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ball-bearing diameter QC across production batches — plausible, neutral,
-          real-world domain
+        comment: Real, neutral QC scenario (ball-bearing diameter across production
+          batches), matches spec's own suggested application
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Diameters ~9.8-10.3mm with batch means ~10.0mm and realistic noise
-          (~0.09mm sd) — sensible for precision manufacturing
+        comment: ~10mm diameter with realistic manufacturing tolerance (~0.09mm std)
     code_quality:
       score: 10
       max: 10
@@ -202,7 +194,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, single flat script with one generation loop
+        comment: No functions/classes, linear imports->data->plot->save
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -214,42 +206,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used, nothing extraneous
+        comment: CairoMakie, Colors, Random, Statistics — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct naming and
-          current API
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current CairoMakie
+          API
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Native Figure/Axis grammar, high-level scatter!/rangebars!/linesegments!
+          primitives
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Standard idiomatic Figure/Axis/scatter! usage with proper theme-token
-          threading
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic scatter! only — no Makie-specific feature (e.g. rangebars!/crossbar!
-          for mean reference, errorbars!) that would showcase library-specific capability
-  verdict: REJECTED
+        comment: rangebars! + linesegments! layering is a genuine Makie-idiom composition,
+          though conceptually replicable via errorbar-style calls elsewhere
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
@@ -257,3 +251,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
