@@ -2,52 +2,58 @@ library: altair
 language: python
 specification_id: scatter-regression-linear
 created: '2025-12-24T21:29:59Z'
-updated: '2026-05-06T22:46:04Z'
-generated_by: claude-haiku
-workflow_run: 25464893330
+updated: '2026-08-05T13:28:19Z'
+generated_by: claude-sonnet
+workflow_run: 31008918273
 issue: 1821
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Perfect visual quality across all 7 criteria—no readability, overlap, or visibility
-    issues
-  - Exact theme-adaptive chrome implementation; text perfectly legible in both light
-    and dark renders
-  - Correct Okabe-Ito palette usage; data colors identical across themes, only chrome
-    adapts
-  - Clean, reproducible, deterministic code with explicitly set font sizes (28, 22,
-    18)
-  - All spec requirements met; professional annotations (equation + R²) add quantitative
-    context
-  - Strong data example showing realistic temperature–energy relationship with appropriate
-    noise
+  - 'Repair fully addressed both attempt-1 weaknesses: a legend now explicitly labels
+    "95% CI" and "Regression Line", and marker size increased from 70 to 100 for better
+    visual presence at ~100-point scatter density'
+  - Idiomatic Altair layering (alt.layer()) combining scatter, CI band, regression
+    line, and text annotations, with the fit computed via Altair's native declarative
+    transform_regression
+  - 'All spec-required features present: scatter points, a visually distinct regression
+    line, a semi-transparent 95% CI band, and both the equation and R² rendered as
+    on-plot annotations'
+  - 'Correct Imprint palette (#009E73 for data points, #C475FD for the regression
+    channel) with fully theme-correct chrome in both light and dark renders — no legibility
+    failures'
+  - Clean, deterministic KISS code (np.random.seed(42)) with correct canvas pad-to-target
+    handling (no cropping) per the altair library rules
+  - Realistic, neutral temperature-vs-energy-consumption scenario with a physically
+    sensible positive slope and an honest, moderate R² (0.355)
   weaknesses:
-  - Design excellence below median—standard library configuration rather than intentional
-    custom refinement
-  - Visual refinement limited; spines are present (not minimalist style), grid is
-    subtle but defaults are visible
-  - Visual storytelling relies on annotations rather than pure visual hierarchy and
-    emphasis
-  - Library mastery is competent but fairly standard—no exceptional Altair-specific
-    features beyond basic layering
+  - Legend swatches for "95% CI" and "Regression Line" both render as filled circles
+    despite representing an area fill and a line respectively — a minor mismatch between
+    glyph and mark type; consider per-layer alt.Legend(symbolType=...) or separate
+    legends for more representative swatches
+  - Design Excellence is solid but standard — reads as a well-executed regression
+    chart rather than an exceptional, distinctive composition; a bit more visual hierarchy
+    (e.g., emphasizing the fit line relative to the band edge) would push it further
+  - transform_regression is a nice declarative touch, but the overall scatter+line+band+annotation
+    pattern is replicable in most grammar-of-graphics libraries, which caps distinctive-feature
+    credit
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct page surface)
-      Chrome: Title "scatter-regression-linear · altair · anyplot.ai" in dark text (INK #1A1A17), axis labels "Temperature (°F)" and "Energy (kWh)" in INK, tick labels in INK_SOFT (#4A4A44), grid lines subtle
-      Data: ~100 scatter points in brand green #009E73, opacity=0.7; orange/vermillion regression line #D55E00, orange confidence band semi-transparent; annotations "y = 0.61x + 837.5" and "R² = 0.269" in bold dark text
-      Legibility verdict: PASS (all text fully readable, no overlap, excellent contrast)
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Mandated title "scatter-regression-linear · python · altair · anyplot.ai" sits top-left in dark ink, comfortably sized (~50% of plot width), no clipping. Axis titles "Temperature (°F)" / "Energy (kWh)" are bold dark ink, tick labels are softer dark gray, evenly spaced with no overlap. A legend in the top-right reads "95% CI" and "Regression Line" (both lavender swatches). Bold two-line annotation ("y = 0.54x + 807.5" / "R² = 0.355") sits top-left of the plot area, clear of data points.
+      Data: ~100 green (#009E73) scatter points at size=100/opacity=0.65, a solid lavender (#C475FD) regression line, and a semi-transparent lavender confidence band.
+      Legibility verdict: PASS — all text clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct dark surface, not pure black)
-      Chrome: Title in light text (INK #F0EFE8), axis labels in light text, tick labels in INK_SOFT (#B8B7B0), grid lines subtle on dark surface
-      Data: Scatter points remain #009E73 (identical to light), regression line remains #D55E00, confidence band same orange—confirming data colors are theme-independent
-      Legibility verdict: PASS (all text light and readable on dark background, no dark-on-dark failures, brand green #009E73 visible)
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles, tick labels, legend text, and the equation/R² annotation all correctly flip to light ink — no dark-on-dark failures anywhere. Gridlines are light and subtle.
+      Data: Green scatter points and lavender regression line/band are identical in hue to the light render — only chrome flipped, as expected.
+      Legibility verdict: PASS — all text clearly readable against the dark background.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,69 +64,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28, labels=22, ticks=18); perfectly
-          readable in both themes
+        comment: All font sizes explicitly set, well-proportioned, readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all content fully readable
+        comment: No overlap between legend, annotation, axes, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ~100 points with size=180, opacity=0.7; perfectly adapted to density
+        comment: Marker size bumped to 100/opacity 0.65 for ~100-point density, now
+          well-adapted
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; CVD-safe; green and orange have good contrast
+        comment: Green vs lavender clearly distinguishable, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60% of canvas; balanced margins; excellent utilization
+        comment: Balanced margins, plot fills a healthy share of the canvas, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units; correct title format
+        comment: Descriptive labels with units (°F, kWh)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
-          chrome theme-correct both renders'
+        comment: 'First series #009E73, regression channel #C475FD, theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Intentional palette use and annotations; professional but looks like
-          well-configured default
+        passed: true
+        comment: Thoughtful layered composition with annotations and legend, clearly
+          above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid, some configuration visible; library defaults predominate
+        passed: true
+        comment: Subtle grid, generous whitespace; minor polish gap on legend swatch
+          shapes
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Regression line shows relationship, annotations add context; visual
-          hierarchy straightforward
+        passed: true
+        comment: Regression line/band + labeled legend + equation annotation create
+          clear visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -130,25 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with linear regression
+        comment: Correct scatter + regression type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: points, line, 95% CI band, R² and equation annotations'
+        comment: Scatter, regression line, CI band, equation, R² all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show full data range
+        comment: X/Y correctly assigned, axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; no legend needed for single series
+        comment: Title format correct; legend now explicitly labels the regression
+          line and CI band
     data_quality:
       score: 15
       max: 15
@@ -158,20 +168,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full range; demonstrates positive relationship; CI shows uncertainty
+        comment: Scatter spread, fit line, CI band, and stats annotation all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature vs. energy consumption; real-world, neutral scenario
+        comment: Neutral, realistic temperature-vs-energy scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range realistic; energy values plausible; R²=0.269 fits
-          noisy data
+        comment: Physically sensible slope and honest moderate R²
     code_quality:
       score: 10
       max: 10
@@ -181,58 +190,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no functions/classes
+        comment: Imports -> data -> stats -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); fully deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, altair, numpy, pandas; all used
+        comment: Only os, altair, numpy, pandas, PIL used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with scale_factor=3.0 and .html
+        comment: Saves plot-{THEME}.png/.html with pad-to-target, current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: High-level API and encoding chains; idiomatic patterns
+        passed: true
+        comment: alt.layer(), transform_regression, shared color scale for merged
+          legend
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses alt.layer() and mark_area; fairly standard techniques
+        passed: true
+        comment: Declarative transform_regression is Altair-specific, though the overall
+          pattern is replicable elsewhere
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - annotations
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - regression
   styling:
   - alpha-blending
+  - grid-styling
