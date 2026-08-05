@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-kde: Histogram with KDE Overlay
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-05
@@ -68,7 +68,7 @@ hist_hover = HoverTool(tooltips=[("Range", "@left{0.00} - @right{0.00}"), ("Dens
 p = figure(
     width=3200,
     height=1800,
-    title="histogram-kde · bokeh · anyplot.ai",
+    title="histogram-kde · python · bokeh · anyplot.ai",
     x_axis_label="Daily Return (%)",
     y_axis_label="Density",
     toolbar_location=None,
@@ -115,6 +115,23 @@ mean_label = Label(
     x_offset=10,
 )
 p.add_layout(mean_label)
+
+# Fat-tail annotation — calls out the positive tail bump to sharpen the
+# visual story beyond the single mean-line focal point
+tail_mask = x_kde > 8
+tail_peak_idx = np.where(tail_mask)[0][np.argmax(y_kde[tail_mask])]
+tail_peak_x = float(x_kde[tail_peak_idx])
+tail_peak_y = float(y_kde[tail_peak_idx])
+tail_label = Label(
+    x=tail_peak_x,
+    y=tail_peak_y + float(y_kde.max()) * 0.08,
+    text="Fat-tail events",
+    text_font_size="22pt",
+    text_font_style="italic",
+    text_color=INK_SOFT,
+    text_align="center",
+)
+p.add_layout(tail_label)
 
 # Add hover tool for KDE curve
 kde_hover = HoverTool(tooltips=[("Return (%)", "@x{0.00}"), ("Density", "@y{0.0000}")])
