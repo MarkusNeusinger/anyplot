@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 windrose-basic: Wind Rose Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-07
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-08-05
 """
 
 import math
@@ -11,10 +11,11 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    coord_equal,
     element_blank,
     element_rect,
     element_text,
-    geom_line,
+    geom_path,
     geom_polygon,
     geom_text,
     ggplot,
@@ -33,6 +34,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data - Simulated wind measurements from an airport runway environment
 # 8 direction bins: N, NE, E, SE, S, SW, W, NW
@@ -66,7 +68,7 @@ speed_colors = {
     "5-10": "#2ABCCD",  # imprint cyan
     "10-15": "#009E73",  # imprint green (mid)
     "15-20": "#DDCC77",  # imprint amber (caution)
-    "20+": "#AE3030",   # imprint red (strong, hottest)
+    "20+": "#AE3030",  # imprint red (strong, hottest)
 }
 
 # Calculate direction angles (N=top, clockwise)
@@ -178,48 +180,66 @@ freq_label_df = pd.DataFrame(freq_label_rows)
 # Create "Frequency (%)" label to explain what gridlines represent
 freq_axis_label_df = pd.DataFrame([{"label": "Frequency (%)", "x": -2.5, "y": 21.5}])
 
+# Data-driven insight for the subtitle: identify the dominant direction corridor
+# (a direction and its 180-degree opposite) by summed frequency share
+direction_totals = {d: sum(frequencies[d]) for d in directions}
+opposite = {"N": "S", "NE": "SW", "E": "W", "SE": "NW", "S": "N", "SW": "NE", "W": "E", "NW": "SE"}
+total_frequency = sum(direction_totals.values())
+corridor_share = {d: direction_totals[d] + direction_totals[opposite[d]] for d in directions if d < opposite[d]}
+top_corridor = max(corridor_share, key=corridor_share.get)
+top_corridor_pct = round(100 * corridor_share[top_corridor] / total_frequency)
+subtitle = (
+    f"{top_corridor}–{opposite[top_corridor]} corridor carries {top_corridor_pct}% of observations, "
+    "the strongest axis in the record"
+)
+
 # Plot
 plot = (
     ggplot()
-    # Gridlines (circles)
-    + geom_line(aes(x="x", y="y", group="radius"), data=grid_df, color=INK_SOFT, size=0.5, alpha=0.3, linetype="dashed")
+    # Gridlines (circles) — geom_path preserves point order (pre-sorted by angle),
+    # unlike geom_line which would re-sort by x and zigzag across the circle
+    + geom_path(
+        aes(x="x", y="y", group="radius"), data=grid_df, color=INK_SOFT, size=0.3, alpha=0.25, linetype="dashed"
+    )
     # Spoke lines
-    + geom_line(aes(x="x", y="y", group="spoke_id"), data=spoke_df, color=INK_SOFT, size=0.4, alpha=0.4)
+    + geom_path(aes(x="x", y="y", group="spoke_id"), data=spoke_df, color=INK_SOFT, size=0.25, alpha=0.35)
     # Wind rose wedges (stacked)
     + geom_polygon(aes(x="x", y="y", fill="speed", group="wedge_id"), data=df, color=PAGE_BG, size=0.3, alpha=0.95)
     # Direction labels
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=18, fontweight="bold", color=INK)
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=16, fontweight="bold", color=INK)
     # Frequency labels
-    + geom_text(aes(x="x", y="y", label="label"), data=freq_label_df, size=16, color=INK_SOFT, fontweight="bold")
+    + geom_text(aes(x="x", y="y", label="label"), data=freq_label_df, size=10, color=INK_SOFT, fontweight="bold")
     # Frequency axis label
-    + geom_text(aes(x="x", y="y", label="label"), data=freq_axis_label_df, size=14, color=INK_SOFT, fontstyle="italic")
+    + geom_text(aes(x="x", y="y", label="label"), data=freq_axis_label_df, size=9, color=INK_SOFT, fontstyle="italic")
     # Colors with native legend
     + scale_fill_manual(values=speed_colors, name="Wind Speed (m/s)", guide=guide_legend(reverse=False))
     # Axis scaling
-    + scale_x_continuous(limits=(-24, 24))
-    + scale_y_continuous(limits=(-26, 24))
-    # Title
-    + labs(title="windrose-basic · plotnine · anyplot.ai")
+    + scale_x_continuous(limits=(-22, 22))
+    + scale_y_continuous(limits=(-22, 22))
+    + coord_equal()
+    # Title + data-driven subtitle (Data Storytelling: names the dominant corridor)
+    + labs(title="windrose-basic · python · plotnine · anyplot.ai", subtitle=subtitle)
     # Theme for clean wind rose appearance
     + theme(
-        figure_size=(12, 12),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=None),
-        plot_title=element_text(size=28, ha="center", color=INK, face="bold"),
+        plot_title=element_text(size=12, ha="center", color=INK, weight="bold"),
+        plot_subtitle=element_text(size=8, ha="center", color=INK_MUTED, style="italic"),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        legend_position="right",
-        legend_title=element_text(size=16, fontweight="bold", color=INK),
-        legend_text=element_text(size=14, color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
+        legend_position="bottom",
+        legend_title=element_text(size=9, weight="bold", color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.4),
         legend_key=element_rect(fill=ELEVATED_BG, color=None),
-        legend_key_size=24,
+        legend_key_size=14,
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
