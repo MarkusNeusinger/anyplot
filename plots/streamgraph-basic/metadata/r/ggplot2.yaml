@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: streamgraph-basic
 created: '2026-08-05T11:35:35Z'
-updated: '2026-08-05T11:40:17Z'
+updated: '2026-08-05T11:50:30Z'
 generated_by: claude-sonnet
 workflow_run: 31001640456
 issue: 856
@@ -12,49 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 88
 review:
   strengths:
   - Canvas is exactly 3200x1800 (landscape target) — passes the dimension gate cleanly
-  - Theme-adaptive chrome correctly implemented in both light and dark renders; data
-    colors (Imprint palette) stay identical between themes, only chrome flips
-  - Natural cubic spline interpolation (spline(..., method = "natural")) produces
-    genuinely smooth, organic flowing curves as required by the spec, not just a basic
-    loess/geom_smooth shortcut
-  - Symmetric silhouette baseline correctly centered around the x-axis (ymax = cumsum(value)
-    - sum(value)/2)
-  - 'Smart palette assignment: genres are sorted by total volume and the brand green
-    (#009E73) is deliberately assigned to the largest-magnitude genre (Pop), with
-    the remaining canonical Imprint order following'
-  - Ribbon edges stroked in the page-background color (not a hard black/white border)
-    — creates clean, subtle separation between adjacent streams without harsh outlines
+  - Theme-adaptive chrome correctly implemented in both light and dark renders; Imprint
+    data colors stay identical between themes, only chrome flips
+  - Natural cubic spline interpolation produces genuinely smooth, organic flowing
+    curves as required by the spec
+  - Symmetric silhouette baseline correctly centered around the x-axis
+  - 'Smart palette assignment: genres sorted by total volume, brand green (#009E73)
+    deliberately assigned to the largest genre (Pop), remaining series follow canonical
+    Imprint order'
+  - Ribbon edges stroked in the page-background color — clean, subtle separation between
+    adjacent streams without harsh borders
   - No text overlap, no clipping at canvas edges, legend/title/axis all legible in
     both themes
   weaknesses:
-  - Y-axis carries no label, ticks, or unit anywhere on the chart (axis.text.y blank,
-    y = NULL) — a viewer can read relative proportions but has zero indication of
-    absolute magnitude or units (e.g. 'streaming hours, thousands'); consider a subtitle
-    or a minimal y-axis title even without full tick labels
-  - Data storytelling is fairly flat beyond the total-based ordering — the genre_params
-    trends (Hip-Hop and Electronic trending up, Rock trending down) are present in
-    the data but not visually emphasized with any annotation, callout, or subtitle
-    that would give the viewer a clear narrative focal point
-  - 'With 5 series relying on color alone, the adjacent Electronic (blue #4467A3)
-    and Rock (ochre #BD8233) bands are distinguishable but sit in the ''borderline''
-    zone the style guide flags for 5-6 series — direct in-band labels would reinforce
-    identification beyond the legend alone'
+  - 'The Attempt-1 fixes for VQ-06 and DE-03 do not render: labs(subtitle=...), labs(y=...),
+    and axis.title.y = element_text(...) were added, but a pixel-level scan of both
+    PNGs (both themes) confirms neither the subtitle nor the y-axis title paints any
+    visible text — 0 matching pixels in the subtitle band, only anti-aliasing-level
+    noise (63px) in the y-axis-title margin. The chart is visually identical to Attempt
+    1 despite the code changes.'
+  - Y-axis still carries no visible label, ticks, or unit — a viewer can read relative
+    proportions but has zero indication of absolute magnitude/units.
+  - Data storytelling is still fairly flat beyond total-based ordering — the intended
+    subtitle callout isn't visible, so there's still no narrative focal point despite
+    the underlying trend data (Hip-Hop/Electronic rising, Rock declining) being present.
+  - With 5 series relying on color alone, adjacent Electronic (blue) and Rock (ochre)
+    bands remain in the 'borderline' distinguishability zone the style guide flags
+    for 5-6 series.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "streamgraph-basic · r · ggplot2 · anyplot.ai" in dark ink top-left, clearly readable. X-axis title "Month" and tick labels (Apr 2022, Aug 2022, Dec 2022, Apr 2023, Aug 2023, Dec 2023) in soft dark gray, all legible. No y-axis ticks/labels (intentional — silhouette streamgraph baseline is not a meaningful absolute scale). Legend at bottom titled "Genre" with 5 swatches (Pop, Hip-Hop, Electronic, Rock, Jazz), text clearly readable on an elevated cream card background.
-      Data: Five flowing, organically-shaped stream bands stacked with a symmetric centered baseline. Colors bottom-to-top: green (#009E73, Pop, largest band), lavender/purple (#C475FD, Hip-Hop), blue (#4467A3, Electronic), ochre (#BD8233, Rock), matte red (#AE3030, Jazz). Bands are separated by thin background-colored strokes giving clean, non-harsh separation. Smooth spline-interpolated curves give the intended river-like appearance.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Chrome: Title "streamgraph-basic · r · ggplot2 · anyplot.ai" in dark ink top-left, clearly readable (~44% of canvas width at 12pt). X-axis title "Month" and tick labels (Apr 2022, Aug 2022, Dec 2022, Apr 2023, Aug 2023, Dec 2023) in soft dark gray, all legible. Code adds labs(y="Streaming hours (thousands)") and axis.title.y = element_text(...), but a pixel scan of the left margin (x 0-55px, full height) found no text-density cluster — only 63px of anti-aliasing noise, far below what rendered text would produce — confirming the y-axis title does NOT actually render. Code also adds labs(subtitle="Electronic and Hip-Hop trend upward while Rock cools off"), but a pixel scan of the subtitle band (y 90-230px, full width) found 0 pixels matching the subtitle ink color (#4A4A44) — the subtitle does NOT render either. Legend at bottom titled "Genre" with 5 swatches (Pop, Hip-Hop, Electronic, Rock, Jazz), text clearly readable on an elevated cream card background.
+      Data: Five flowing, organically-shaped stream bands stacked with a symmetric centered baseline. Colors bottom-to-top: green (#009E73, Pop, largest band), lavender/purple (#C475FD, Hip-Hop), blue (#4467A3, Electronic), ochre (#BD8233, Rock), matte red (#AE3030, Jazz). Bands separated by thin background-colored strokes giving clean, non-harsh separation. Smooth spline-interpolated curves give the intended river-like appearance.
+      Legibility verdict: PASS for all elements that DO render (title, x-axis title/ticks, legend) — no light-on-light issues. FAIL for the subtitle and y-axis title, which are coded but invisible (0 rendered pixels).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same title in light/off-white ink, clearly readable against the dark background. X-axis title and tick labels in light gray, all legible. Legend card uses a slightly elevated dark background with light text, fully readable — no dark-on-dark failures anywhere.
-      Data: Identical five-color palette and identical stream shapes/positions as the light render — only the chrome (background, text, ribbon-edge stroke color, legend card) has flipped; the Imprint data colors (green/lavender/blue/ochre/red) are pixel-identical between renders, confirming theme-adaptive chrome without touching data colors.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures observed (title, axis labels, tick labels, and legend text all use appropriately light ink tokens).
+      Chrome: Same title in light/off-white ink, clearly readable against the dark background. X-axis title and tick labels in light gray, all legible. Same pixel-scan check repeated with the dark-theme ink tokens: 0 subtitle-band pixels, only 63px anti-aliasing noise in the y-axis-title margin — confirms the omission is identical in both themes, not theme-specific. Legend card uses a slightly elevated dark background with light text, fully readable — no dark-on-dark failures anywhere.
+      Data: Identical five-color palette and identical stream shapes/positions as the light render — only the chrome (background, text, ribbon-edge stroke color, legend card) has flipped; the Imprint data colors are pixel-identical between renders.
+      Legibility verdict: PASS for all elements that DO render — no dark-on-dark failures observed on visible text. FAIL for the subtitle and y-axis title, which remain invisible exactly as in the light render.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -65,8 +65,7 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; readable in both themes; no dark-on-dark
-          or light-on-light issues
+        comment: All text that actually renders is readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -91,15 +90,15 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, title proportion balanced, nothing cut
-          off
+        comment: Canvas exactly 3200x1800, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: X-axis labeled 'Month' but no y-axis label/units anywhere — magnitude/unit
-          information is entirely absent
+        comment: labs(y=...) is set in code but the y-axis title does not render (verified
+          via pixel scan) — still zero indication of magnitude/units, unchanged from
+          Attempt 1
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -130,8 +129,9 @@ review:
         score: 3
         max: 6
         passed: false
-        comment: Ordering by total gives mild hierarchy but no explicit annotation/emphasis
-          calls out the underlying genre trends
+        comment: labs(subtitle=...) added to call out the Hip-Hop/Rock trend but does
+          not render (verified via pixel scan) — no visible narrative focal point,
+          unchanged from Attempt 1
     spec_compliance:
       score: 15
       max: 15
@@ -187,7 +187,7 @@ review:
         comment: Values and trend/amplitude parameters are sensible for the streaming-hours
           domain
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -207,14 +207,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imported packages (ggplot2, dplyr, tidyr, tibble, ragg) are used
+        comment: All imported packages are used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Complexity (spline interpolation) is justified by the smooth-curve
-          requirement; no fake UI
+        passed: false
+        comment: labs(subtitle=...), labs(y=...), and axis.title.y are dead code —
+          they run without error but produce zero visible pixels in either render
       - id: CQ-05
         name: Output & API
         score: 1
