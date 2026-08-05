@@ -1,7 +1,7 @@
 """ anyplot.ai
 windrose-basic: Wind Rose Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-07
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-08-05
 """
 
 import os
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -17,7 +18,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data - Simulated hourly wind measurements for one year
 np.random.seed(42)
@@ -124,10 +124,8 @@ for _, row in freq_df.iterrows():
 
 wedge_df = pd.DataFrame(wedge_data)
 
-# Color scale - viridis mapped to speed ranges (cool to warm progression)
-colors = ["#440154", "#31688e", "#35b779", "#fde724", "#440154"][::-1]  # Reversed for cool to warm
-colors = ["#440154", "#31688e", "#35b779", "#fde724", "#440154"]
-colors = ["#31688e", "#35b779", "#fde724", "#f8765d", "#440154"]  # Better progression
+# Color scale - Imprint palette, canonical order (first series is always brand green)
+colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 max_freq = freq_df["cumulative"].max()
 max_radius = max_freq * 1.15
@@ -144,7 +142,13 @@ wedges = (
             "speed_range:N",
             scale=alt.Scale(domain=speed_order, range=colors),
             legend=alt.Legend(
-                title="Wind Speed", titleFontSize=22, labelFontSize=18, orient="right", symbolSize=500, titleLimit=200
+                title="Wind Speed",
+                titleFontSize=18,
+                labelFontSize=14,
+                orient="right",
+                symbolSize=260,
+                titleLimit=160,
+                symbolType="square",
             ),
         ),
         order=alt.Order("path_order:O"),
@@ -168,7 +172,7 @@ label_data = pd.DataFrame(
 
 labels = (
     alt.Chart(label_data)
-    .mark_text(fontSize=28, fontWeight="bold", color=INK)
+    .mark_text(fontSize=24, fontWeight="bold", color=INK)
     .encode(
         x=alt.X("x:Q").scale(domain=axis_range).axis(None),
         y=alt.Y("y:Q").scale(domain=axis_range).axis(None),
@@ -184,8 +188,15 @@ circle_radii = list(range(circle_step, int(max_freq) + circle_step, circle_step)
 circle_points = []
 for r in circle_radii:
     angles = np.linspace(0, 360, 180)
-    for angle in angles:
-        circle_points.append({"radius": r, "x": r * np.cos(np.radians(angle)), "y": r * np.sin(np.radians(angle))})
+    for point_order, angle in enumerate(angles):
+        circle_points.append(
+            {
+                "radius": r,
+                "x": r * np.cos(np.radians(angle)),
+                "y": r * np.sin(np.radians(angle)),
+                "point_order": point_order,
+            }
+        )
 circle_df = pd.DataFrame(circle_points)
 
 circles = (
@@ -195,6 +206,7 @@ circles = (
         x=alt.X("x:Q").scale(domain=axis_range).axis(None),
         y=alt.Y("y:Q").scale(domain=axis_range).axis(None),
         detail=alt.Detail("radius:O"),
+        order=alt.Order("point_order:O"),
     )
 )
 
@@ -233,20 +245,22 @@ pct_label_data = pd.DataFrame(
     ]
 )
 
-# Add radial axis title "Frequency (%)" positioned prominently near the radial axis
+# Add radial axis title "Frequency (%)", same 115° column as the percentage labels but
+# pushed past the outermost one (circle_radii max) so the two text elements never overlap.
+axis_title_radius = max(circle_radii) + 2
 axis_title_data = pd.DataFrame(
     [
         {
             "label": "Frequency (%)",
-            "x": (max_freq * 0.7) * np.cos(np.radians(115)) - 3,
-            "y": (max_freq * 0.7) * np.sin(np.radians(115)) + 2,
+            "x": axis_title_radius * np.cos(np.radians(115)) - 3,
+            "y": axis_title_radius * np.sin(np.radians(115)) + 2,
         }
     ]
 )
 
 pct_labels = (
     alt.Chart(pct_label_data)
-    .mark_text(fontSize=20, align="left", color=INK_SOFT, fontWeight="bold")
+    .mark_text(fontSize=16, align="left", color=INK_SOFT, fontWeight="bold")
     .encode(
         x=alt.X("x:Q").scale(domain=axis_range).axis(None),
         y=alt.Y("y:Q").scale(domain=axis_range).axis(None),
@@ -256,7 +270,7 @@ pct_labels = (
 
 axis_title = (
     alt.Chart(axis_title_data)
-    .mark_text(fontSize=22, align="center", color=INK, fontWeight="bold", angle=335)
+    .mark_text(fontSize=18, align="center", color=INK, fontWeight="bold", angle=335)
     .encode(
         x=alt.X("x:Q").scale(domain=axis_range).axis(None),
         y=alt.Y("y:Q").scale(domain=axis_range).axis(None),
@@ -268,15 +282,30 @@ axis_title = (
 chart = (
     (circles + radial_lines + wedges + labels + pct_labels + axis_title)
     .properties(
-        width=900,
-        height=900,
+        width=460,
+        height=460,
         background=PAGE_BG,
-        title=alt.Title("windrose-basic · altair · anyplot.ai", fontSize=32, anchor="middle", color=INK),
+        title=alt.Title("windrose-basic · python · altair · anyplot.ai", fontSize=22, anchor="middle", color=INK),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# PAD-only to the canonical 2400x2400 square target — never crop (would clip title/labels).
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
