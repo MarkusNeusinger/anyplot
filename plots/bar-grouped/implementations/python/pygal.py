@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-grouped: Grouped Bar Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-08-05
@@ -39,6 +39,12 @@ custom_style = Style(
     # value labels (drawn above the bar, on the page background) stay
     # legible on both surfaces.
     value_colors=(INK,) * len(tiers),
+    # pygal's graph.css ships guide_stroke_color="black" and layers it over
+    # style.css's foreground_subtle rule for the same selector, so gridlines
+    # render pure black regardless of theme unless overridden here — nearly
+    # invisible against the near-black dark-theme background.
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -50,7 +56,9 @@ custom_style = Style(
 )
 
 # Chart — grouped bars, y-axis grid only, bottom legend to keep the plot area
-# uncluttered, and minor y-labels suppressed for a cleaner tick rhythm
+# uncluttered. Explicit y_labels (with all of them forced major via
+# y_labels_major_count) give the axis a real scale — pygal's auto-picked
+# major labels can otherwise collapse to just "$0.0M" at the origin.
 chart = pygal.Bar(
     width=3200,
     height=1800,
@@ -60,7 +68,8 @@ chart = pygal.Bar(
     y_title="Quarterly Revenue ($M)",
     show_x_guides=False,
     show_y_guides=True,
-    show_minor_y_labels=False,
+    y_labels=[0, 1, 2, 3, 4, 5],
+    y_labels_major_count=6,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
     legend_box_size=32,
