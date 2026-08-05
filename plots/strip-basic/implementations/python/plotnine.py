@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 strip-basic: Basic Strip Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-08-05
@@ -18,7 +18,7 @@ from plotnine import (
     ggplot,
     labs,
     position_jitter,
-    scale_color_manual,
+    scale_fill_manual,
     stat_summary,
     theme,
     theme_minimal,
@@ -56,13 +56,20 @@ df["treatment"] = pd.Categorical(df["treatment"], categories=list(distributions)
 
 # Plot
 plot = (
-    ggplot(df, aes(x="treatment", y="response_time", color="treatment"))
-    + geom_point(position=position_jitter(width=0.25, height=0, random_state=42), size=2.5, alpha=0.65)
+    ggplot(df, aes(x="treatment", y="response_time"))
+    + geom_point(
+        aes(fill="treatment"),
+        position=position_jitter(width=0.25, height=0, random_state=42),
+        color=PAGE_BG,
+        stroke=0.3,
+        size=2.5,
+        alpha=0.65,
+    )
     + stat_summary(
         fun_y=np.mean, fun_ymin=np.mean, fun_ymax=np.mean, geom="crossbar", width=0.4, color=NEUTRAL, size=0.4
     )
     + annotate("text", x="Drug C", y=8, label="Fastest response", color=INK, size=8, fontweight="bold", ha="center")
-    + scale_color_manual(values=IMPRINT)
+    + scale_fill_manual(values=IMPRINT)
     + labs(x="Treatment Group", y="Response Time (seconds)", title="strip-basic · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
@@ -71,11 +78,10 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.20),
         panel_grid_minor=element_line(color=INK, size=0.15, alpha=0.08),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
         axis_line=element_line(color=INK_SOFT, size=0.5),
         axis_title=element_text(color=INK, size=10),
         axis_text=element_text(color=INK_SOFT, size=8),
-        plot_title=element_text(color=INK, size=12),
+        plot_title=element_text(color=INK, size=18, weight="bold"),
         legend_position="none",
     )
 )
