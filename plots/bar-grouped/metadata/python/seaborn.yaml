@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bar-grouped
 created: '2025-12-24T21:28:43Z'
-updated: '2026-08-05T01:04:25Z'
+updated: '2026-08-05T01:16:20Z'
 generated_by: claude-sonnet
 workflow_run: 30964867021
 issue: 1822
@@ -12,49 +12,69 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Correct Imprint palette in canonical order (#009E73 IT, #C475FD HR, #4467A3 Operations),
-    identical data colors across both themes with fully theme-correct chrome'
-  - 'Meaningful data storytelling choice: regions sorted by mean satisfaction score
-    (descending) instead of arbitrary/alphabetical order, giving the chart an implicit
-    hierarchy'
-  - 'Idiomatic seaborn 0.13+ usage: sns.barplot with hue dodge and the newer gap=
-    parameter for clean within-group spacing, plus sns.despine for spine cleanup'
-  - Value labels via ax.bar_label add precision without clutter (muted INK_SOFT color,
-    small font, doesn't compete with the bars)
-  - 'Clean KISS code structure: linear imports -> data -> theme -> plot -> save, deterministic
-    hardcoded data, no fake UI or over-engineering'
-  - Legend cleanly framed and placed directly below the plot with 3-column layout,
-    avoiding overlap with bars
+  - 'Correct Imprint palette (canonical positions 1-3: brand green, lavender, blue),
+    identical data colors across light and dark themes with only chrome flipping'
+  - Full 0-100 y-axis range avoids the classic truncated-bar-chart distortion, and
+    the axis label states the units explicitly
+  - 'Idiomatic modern seaborn: sns.barplot(hue=..., gap=0.1) for 0.13+ dodge spacing,
+    sns.despine, sns.move_legend — high-level API throughout, no manual reimplementation'
+  - Deliberate focal-point technique (axvspan tint + 'Top performer' annotation) on
+    the leading region gives real data storytelling / visual hierarchy, directly addressing
+    the prior attempt's generic-styling feedback
+  - 'Clean, deterministic, dependency-light code: no functions/classes, hard-coded
+    reproducible data, only used imports'
+  - Canvas is exactly 3200x1800 (landscape contract), no clipping, no text/data/legend
+    overlap in either theme
   weaknesses:
-  - Y-axis label 'Satisfaction Score' has no explicit unit/scale hint (e.g. 'Satisfaction
-    Score (0-100)') -- currently reads as descriptive-without-units for VQ-06
-  - Department ranking is identical in every region (IT > HR > Operations each time)
-    -- the grouped-bar comparison would show its full value with at least one region
-    where the ranking crosses over, better demonstrating DQ-01 feature coverage
-  - 'Design Excellence is solid but stops short of publication-level polish: consider
-    a stronger focal point (e.g. subtle emphasis/annotation on the top-scoring West
-    region, or slightly more generous whitespace) to push DE-01/DE-03 further'
-  - Library Mastery is correct but mostly idiomatic-default usage; consider leveraging
-    a more distinctive seaborn-specific feature (e.g. sns.color_palette with explicit
-    hue_order, or catplot faceting) to push LM-02 beyond generic bar/hue usage
+  - 'PIPELINE BUG (not a code defect): the plot_images/plot-light.png and plot-dark.png
+    staged for this AI-review step are STALE, not from this commit. Evidence: (1)
+    the rendered y-axis label reads ''Satisfaction Score'' without the ''(0-100)''
+    suffix that the current seaborn.py sets on line 97; (2) the ''Top performer''
+    annotation and its light axvspan highlight (current lines 81-93) are completely
+    absent from the pixels — confirmed via contrast-enhanced crops and direct pixel
+    sampling showing zero background-color deviation over the West cluster; (3) the
+    North region bars are ordered IT=82/HR=78 in the staged images, matching the pre-fix
+    data list [82, 78, 75, ...], not the current commit''s [78, 82, 75, ...]. Re-running
+    the exact checked-in seaborn.py locally with ANYPLOT_THEME=light and dark reproduces
+    the annotation, the axvspan tint, the ''(0-100)'' y-label, and the corrected North
+    ordering perfectly — so the implementation itself is correct and the staged images
+    are simply out of date. impl-review.yml downloads plot_images from gs://anyplot-images/staging/{spec-id}/{language}/{library}/
+    (populated by impl-repair.yml''s ''Upload repaired plot to GCS staging'' step);
+    if that step''s preceding ''Process repaired image'' check found no freshly-rendered
+    plot-{theme}.png in the implementation directory it would warn-and-exit-0 and
+    skip the re-upload, leaving the attempt-1 images staged — worth checking whether
+    the repair run actually re-executed the script to produce fresh PNGs before this
+    review ran. This review''s Image Description and scoring below are based on locally-regenerated,
+    code-accurate renders (not the stale attachments) to avoid giving misleading feedback.'
+  - 'DE-01/DE-03: the ''Top performer'' annotation is fairly generic — since bars
+    are already sorted descending by mean score, the leading position already implies
+    rank, so the callout mostly restates the ordering rather than adding new insight
+    (e.g. a score delta vs. the next region)'
+  - 'LM-02: distinctive-feature usage (gap dodge spacing, move_legend) is real but
+    modest; no further library-unique technique (e.g. catplot faceting, distribution
+    overlay) to fully max out this category'
+  - 'DQ-01: a light touch of additional context (e.g. a per-region average marker/line)
+    would round out feature coverage, though not required by the spec'
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Title "bar-grouped · python · seaborn · anyplot.ai" in dark ink, centered, fully visible. X-axis label "Region" and Y-axis label "Satisfaction Score" in dark ink, both 10pt-equivalent and balanced in size. Tick labels and value labels above bars in a softer muted gray. Subtle horizontal gridlines at low opacity. Legend "Department" (IT/HR/Operations) framed in a light box below the plot, dark-ink text and border.
-      Data: Four region groups (West, South, East, North, ordered by descending mean score) each with three side-by-side bars. First series (IT) is #009E73 brand green, second (HR) is #C475FD lavender, third (Operations) is #4467A3 blue -- matches Imprint canonical order. White edges outline each bar for definition. Value labels (e.g. 90, 86, 83) sit directly above each bar.
-      Legibility verdict: PASS -- all text (title, axis labels, ticks, value labels, legend) is clearly readable against the light background, no light-on-light issues.
+    NOTE: The plot_images/plot-light.png and plot_images/plot-dark.png staged for this review were found to be STALE (rendered from the pre-fix, attempt-1 revision — see weaknesses for full evidence: missing y-axis units suffix, missing "Top performer" annotation/axvspan, swapped North IT/HR values). The descriptions below are from a local re-render of the exact current commit's plots/bar-grouped/implementations/python/seaborn.py (ANYPLOT_THEME=light and ANYPLOT_THEME=dark), which is code-accurate.
 
-    Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Same title, axis labels, tick labels, and legend now rendered in light ink (white/light gray) and clearly visible against the dark surface. Gridlines are faint light lines at low opacity. Legend box has a dark elevated fill with a light border, matching the theme-adaptive chrome spec.
-      Data: Bar colors are pixel-identical to the light render (#009E73 / #C475FD / #4467A3) -- only the chrome (background, text, grid, legend box) flipped, confirming palette compliance across themes. White bar edges remain crisp on the dark background.
-      Legibility verdict: PASS -- no dark-on-dark failures observed; every title/label/tick/legend/value-label is clearly legible against the near-black background.
+    Light render (plot-light.png, regenerated from current commit):
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: title "bar-grouped · python · seaborn · anyplot.ai" centered top in dark ink, clearly readable; x-axis label "Region" and y-axis label "Satisfaction Score (0-100)" both dark ink, readable; tick labels and bar-top value labels (90, 86, 83, ...) in soft grey, readable; legend "Department" (IT/HR/Operations) framed box below the plot, readable. A light green axvspan tint over the West cluster plus an italic "Top performer" annotation with a small connector line sit above the West bars.
+      Data: four region clusters (West, South, East, North, ordered by descending mean score) each with three side-by-side bars — brand green (IT, #009E73), lavender (HR, #C475FD), blue (Operations, #4467A3) — white edge strokes for definition, numeric value labels above each bar.
+      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png, regenerated from current commit):
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: title, axis labels, tick labels, value labels, and legend text all switch to light ink/grey and remain clearly legible; no dark-on-dark failures observed. The axvspan tint and "Top performer" annotation are present with light ink, still visible.
+      Data: identical brand green / lavender / blue bar colors as the light render — confirms only chrome flipped, categorical data colors held constant across themes.
+      Legibility verdict: PASS — all text reads clearly against the dark background, brand green remains vivid on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,72 +82,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks/legend/value-labels
-          8pt), readable in both themes, no overflow
+        comment: All font sizes explicit, readable in both themes; 8pt tick/legend/value-label
+          sizes are at the small end of the guideline range
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between bars, value labels, ticks, or legend
+        comment: No collisions between text, data, legend, or annotation across either
+          theme
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar width, gap, and edge outline give clean, well-proportioned bars
-          for 12 data points
+        comment: 12 bars at 3200x1800 are appropriately sized with white edge strokes
+          for definition; low data density needs no alpha adjustment
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe categorical palette, no red-green-only signal
+        comment: Imprint palette positions 1-3 (green/lavender/blue) are CVD-safe
+          at n=3, no red-green sole encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a healthy majority of the canvas, legend sits close
-          to the plot, balanced margins
+        comment: Canvas exactly 3200x1800, title ~66% width within the 50-70% guideline,
+          nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive labels but 'Satisfaction Score' lacks an explicit unit/scale
-          hint
+        passed: true
+        comment: Region and Satisfaction Score (0-100) are descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for HR/Operations,
-          theme-correct chrome in both renders'
+        comment: 'First series is #009E73, canonical order for the 3 departments,
+          correct theme-adaptive backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom Imprint palette, intentional mean-sorted category order, edge-highlighted
-          bars -- above a plain default but not publication-tier
+        comment: Custom Imprint palette, restrained focal-point annotation, generous
+          whitespace — solid polish, fairly conventional composition overall
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-axis grid, framed legend with generous whitespace
+        comment: Spines removed (L-shape), subtle y-only grid, white bar-edge highlighting,
+          comfortable margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Descending mean-score ordering creates a clear visual hierarchy across
-          regions
+        comment: axvspan highlight + 'Top performer' annotation creates a real focal
+          point, though it mostly restates the already-sorted ordering rather than
+          adding new insight
     spec_compliance:
       score: 15
       max: 15
@@ -143,20 +166,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Distinct group colors, clear legend, consistent bar widths/spacing,
-          meaningful ordering, optional value labels all present
+        comment: Distinct group colors with legend, consistent bar widths/spacing,
+          meaningful category ordering, adequate group spacing, value labels present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Region on x, Score on y, Department as hue -- all data visible
+        comment: Region on x, Score on y, all 4 regions x 3 departments shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match, legend labels match Department values
+        comment: Title matches mandated format, legend labels (IT/HR/Operations) match
+          data
     data_quality:
       score: 14
       max: 15
@@ -166,20 +190,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Good value spread across groups/categories, but department ranking
-          (IT>HR>Operations) never crosses over between regions
+        comment: Covers grouped comparison across 4 categories x 3 groups with value
+          labels; a per-region average reference would round it out further
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible business scenario (customer satisfaction by region/department)
+        comment: Plausible, neutral satisfaction-score scenario across departments
+          and regions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores in a realistic 75-90 band on a 0-100 satisfaction scale
+        comment: Full 0-100 axis range with realistic 75-90 value band for the domain
     code_quality:
       score: 10
       max: 10
@@ -189,31 +214,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> theme -> plot -> save, no functions/classes
+        comment: No functions/classes, linear top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Fully deterministic hard-coded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, matplotlib.pyplot, pandas, seaborn -- all used
+        comment: Only used imports (os, sys, matplotlib.pyplot, pandas, seaborn)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with bbox_inches left default, current API
+        comment: Saves plot-{THEME}.png at dpi=400 with facecolor, no bbox_inches='tight',
+          current seaborn 0.13+ API
     library_mastery:
       score: 7
       max: 10
@@ -223,16 +249,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.barplot with hue + gap dodge, sns.despine -- solid idiomatic
-          patterns
+        comment: sns.barplot(hue=, gap=), sns.despine, sns.move_legend — high-level
+          seaborn API throughout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses the seaborn-0.13-specific gap= dodge parameter, a feature not
-          trivially portable to other libraries
-  verdict: REJECTED
+        comment: gap dodge-spacing (0.13+) and move_legend are genuine seaborn-specific
+          conveniences but fairly modest in scope
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
