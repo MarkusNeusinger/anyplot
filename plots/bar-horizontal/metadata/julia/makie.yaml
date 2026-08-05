@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: bar-horizontal
 created: '2026-08-05T17:31:55Z'
-updated: '2026-08-05T17:36:21Z'
+updated: '2026-08-05T17:46:30Z'
 generated_by: claude-sonnet
 workflow_run: 31029986091
 issue: 1946
@@ -12,76 +12,76 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - Correct horizontal bar chart, sorted descending by value (largest at top) with
-    clean value labels at the end of every bar in both themes
-  - Real, accurate country-population data (correct order of magnitude and relative
-    proportions) with a wide, realistic value spread
-  - 'Theme-adaptive chrome fully correct: backgrounds, title/axis/tick text, and grid
-    all flip properly between light and dark, while the brand-green data color stays
-    identical'
-  - 'First (only) categorical series is the correct Imprint brand green #009E73; single-series
+  - 'Addressed all three prior review weaknesses in one pass: a genuine design accent
+    on the leader bar (stroke outline + bolder value label), an explicit data-driven
+    subtitle callout, and a distinctive Makie GridLayout composition (Label in fig[0,1])
+    instead of a plain annotation'
+  - Correct horizontal bar chart, sorted descending by value (largest at top), with
+    clean end-of-bar value labels in both themes
+  - 'Theme-adaptive chrome fully correct, including the leader-bar stroke itself:
+    dark stroke on the light render, light stroke on the dark render, while the brand-green
+    fill stays identical between themes'
+  - 'Real, accurate 2024 country-population data with a wide, realistic value spread;
+    first (only) categorical series is the correct Imprint brand green #009E73, single-series
     legend correctly omitted'
-  - Grid convention correctly matches the horizontal orientation — vertical gridlines
-    aligned to the x (value) axis only, y-axis grid off
-  - Left spine removed in addition to top/right (not just the default L-shape) since
-    the y-axis carries category labels instead of a numeric scale — a thoughtful refinement
+  - Title now scaled to fill a strong proportion of the plot width, resolving the
+    prior 'title too small relative to canvas' feedback and giving the title stronger
+    visual hierarchy
   - Clean KISS code structure, deterministic hardcoded data, correct save call and
-    file naming
+    file naming, current Makie API (`size=`, `barplot!(direction=:x)`)
   weaknesses:
-  - 'Design Excellence is generic: a single flat brand-green fill with no additional
-    design accent (e.g. subtle bar-end treatment, top-rank emphasis, or secondary
-    tone on the leading bar) — reads as a well-configured default rather than a publication-ready
-    design'
-  - 'Data storytelling is passive: the ranking itself is the only ''story'' element;
-    consider a stronger focal point (e.g. visually distinguishing the #1 bar, or a
-    short annotation calling out the top country) to guide the viewer more deliberately'
-  - 'Library Mastery is generic (LM-02): direction=:x plus a yticks category axis
-    is the standard/expected way to build a horizontal bar in Makie — no distinctive
-    Makie-only feature (e.g. custom Theme(), GridLayout composition, Observable-driven
-    elements) is demonstrated'
-  - Title renders fairly small relative to the canvas (roughly 20-25% of plot width)
-    versus the ~70-85% typically expected for the mandated `{spec-id} · {lang} · {lib}
-    · anyplot.ai` string at default sizing — not a legibility failure, but there is
-    room to grow titlesize for stronger visual hierarchy
+  - The subtitle Label (fig[0,1]) renders above the Axis title (fig[1,1]) rather than
+    below it, so the reading order is subtitle-then-title — a slightly unconventional
+    hierarchy; consider swapping row order or de-emphasizing the subtitle further
+    so the mandated title reads first
+  - DE-01 design accent is still limited to a single stroke outline plus a font-weight/size
+    bump on the leader's value label — a small, welcome touch, but not yet a fully
+    custom/differentiated visual treatment (e.g. secondary tone, subtle gradient,
+    or icon accent) for top-tier polish
+  - 'LM-02 distinctive-feature usage remains modest: the GridLayout Label composition
+    and bar stroke are genuine Makie-native touches, but deeper Makie-only capabilities
+    (Observables, custom Theme(), recipes) are still unexercised'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "bar-horizontal · julia · makie · anyplot.ai" centered at top; x-axis label "Population (Millions)" below the tick labels (0, 500, 1000, 1500); ten y-axis country labels (India ... Mexico) in a slightly softer dark gray; thin bottom spine only, subtle vertical gridlines at low opacity. All text is clearly legible against the light background.
-      Data: Ten horizontal bars in Imprint brand green (#009E73), sorted descending from India (1441) at top to Mexico (130) at bottom, each bar terminated by a soft-gray numeric value label just past its end.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: A gray subtitle row ("India leads the ranking with 11.1x the population of 10th-ranked Mexico") sits above a bold dark title "bar-horizontal · julia · makie · anyplot.ai"; x-axis label "Population (Millions)" below the tick labels (0, 500, 1000, 1500); ten y-axis country labels (India ... Mexico) in a softer dark gray; thin bottom spine only, subtle low-opacity vertical gridlines. All text (subtitle, title, axis label, tick labels, country labels, value labels) is clearly legible against the light background — no light-on-light anywhere.
+      Data: Ten horizontal bars in Imprint brand green (#009E73), sorted descending from India (1441) at top to Mexico (130) at bottom. The India (leader) bar has a solid dark stroke outline and a bolder, full-ink value label ("1441"), visually distinguishing it as the focal point; the other nine bars have soft-gray value labels just past the bar end.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title now rendered in near-white/light ink; x-axis label and country labels in light gray/off-white tones; gridlines flipped to a light, low-opacity tint; bottom spine in soft light gray. No dark-on-dark text anywhere — all chrome elements read clearly against the dark surface.
-      Data: Bars remain the identical brand green (#009E73) — confirmed unchanged from the light render; value labels still legible in a muted light-gray tone.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same subtitle and title now rendered in light gray / near-white ink; x-axis label and country labels in light gray/off-white tones; gridlines flipped to a light, low-opacity tint; bottom spine in soft light gray. No dark-on-dark text anywhere — every chrome element reads clearly against the dark surface.
+      Data: Bars remain the identical brand green (#009E73) — confirmed unchanged from the light render. The India (leader) bar's stroke outline correctly flips to a light/near-white color (matching the dark-theme INK token) so the emphasis remains visible on the dark background; its value label is bright, full-ink; the other value labels are a muted light-gray, still legible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; title runs
-          smaller than typical proportion but not clipped or overflowing
+        comment: All font sizes explicit, readable in both themes; title now scaled
+          to fill a strong proportion of plot width, resolving prior undersized-title
+          feedback
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between labels, ticks, or data
+        comment: No overlap between labels, ticks, gridlines, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar width and spacing well suited to 10 categories
+        comment: Bar width and spacing well suited to 10 categories; leader bar's
+          stroke stays crisp in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -93,8 +93,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Chart fills most of the canvas with balanced margins, nothing cut
-          off
+        comment: Canonical 3200x1800 canvas (gate passed), balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -107,19 +107,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, theme-correct backgrounds and chrome in both
-          renders'
+        comment: 'First series #009E73, theme-correct backgrounds/chrome/stroke in
+          both renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured default: single flat fill, no additional design
-          accent'
+        passed: true
+        comment: Stroke-outlined leader bar plus bolder value label adds a real design
+          accent over the prior flat fill, though still a single, simple touch rather
+          than a fully custom treatment
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -129,11 +130,12 @@ review:
           to the value axis, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Descending rank order creates visual hierarchy, but no explicit focal-point
-          emphasis on the leader
+        comment: Explicit data-driven subtitle plus visually emphasized leader bar
+          create a clear focal point; minor deduction for the subtitle rendering above
+          rather than below the title
     spec_compliance:
       score: 15
       max: 15
@@ -220,8 +222,9 @@ review:
         max: 1
         passed: true
         comment: save("plot-$(THEME).png", fig; px_per_unit=2), current Makie API
+          (size=, direction=:x)
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -233,12 +236,13 @@ review:
           Makie idiom for horizontal bars
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Generic usage — no Makie-distinctive feature (custom Theme, GridLayout
-          composition, Observables) demonstrated
-  verdict: REJECTED
+        passed: true
+        comment: GridLayout Label composition (fig[0,1]) for the subtitle row, plus
+          strokewidth/strokecolor bar emphasis, are genuine Makie-native techniques
+          beyond the generic default
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - colors
@@ -248,3 +252,4 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
+  - edge-highlighting
