@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: strip-basic
 created: '2026-08-05T05:51:00Z'
-updated: '2026-08-05T05:55:37Z'
+updated: '2026-08-05T06:04:36Z'
 generated_by: claude-sonnet
 workflow_run: 30979003526
 issue: 975
@@ -12,121 +12,140 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Correct Imprint categorical palette in canonical order (green → lavender → blue
-    → ochre) with alpha-blended fills that reinforce the strip plot's density-through-accumulation
-    idea
-  - Deterministic LCG-based Gaussian data generation with a realistic decreasing spread
-    (sd 11→8) across dose groups, giving a genuine, legible dose-response signal
-  - Explicit font sizing and full theme-adaptive chrome (title, axis titles, tick
-    labels, gridlines) that reads cleanly and identically-colored data in both light
-    and dark renders
-  - Idiomatic use of Highcharts' native scatter `jitter` option — the correct built-in
-    workaround for a categorical strip plot without pulling in add-on modules
+  - 'Correct Imprint palette usage: first series #009E73 (Placebo group), remaining
+    three groups follow canonical positions 2-4 (lavender, blue, ochre), identical
+    across both renders'
+  - Group-mean overlay (diamond marker + '{y:.1f} min' data label) uses the theme-adaptive
+    neutral/ink token, giving the strip plot a clear dose-response focal point without
+    hiding the raw jittered observations
+  - Native Highcharts `plotOptions.scatter.jitter` used idiomatically instead of manually
+    randomizing x-coordinates — the correct library-specific mechanism for a strip
+    plot
+  - Theme chrome (title, axis labels, tick labels, gridlines) is fully theme-adaptive
+    and legible in both light and dark renders; alpha-blended fill (0.6) plus a page-background
+    marker stroke keeps overlapping points distinguishable without clutter
+  - Realistic, neutral clinical-trial scenario (time to symptom relief across placebo/low/standard/high
+    dose) with sensible minute-scale values and a directionally correct dose-response
+    trend
+  - 'Clean, deterministic, single-pass code: fixed-seed LCG, no classes, no unused
+    imports, correct output contract (no explicit save calls, matches the JS harness
+    mount-node contract)'
   weaknesses:
-  - 'Design Excellence sits at default/well-configured level: no group mean/median
-    reference lines (explicitly suggested in the spec''s Notes section), and no visual
-    hierarchy beyond the raw jittered points — the dose-response trend must be discovered
-    by the viewer rather than emphasized'
-  - 'Marker overlap in the densest clusters (e.g. Placebo ~65-70min, Low Dose ~50-55min)
-    makes individual observations hard to separate; a thin ink/white marker stroke
-    (style guide: ''Scatter markers: White edge for definition, especially with overlapping
-    points'') would aid separation without losing the alpha-blended density cue'
-  - Library Mastery is only moderate — beyond the jitter option and categorical scatter
-    mapping, no other Highcharts-distinctive capability (e.g. plotLines for group
-    medians, dataLabels for summary stats) is leveraged
+  - Group-mean data labels sit close to nearby jittered points in the densest regions
+    (e.g. Low Dose, Standard Dose) — not overlapping now, but there is little margin;
+    nudging the dataLabels.y offset slightly more or reducing local jitter density
+    near the mean would add safety margin
+  - The four groups share very similar spread/shape (all roughly symmetric, similar
+    SD 8-11) — showing at least one group with a visibly different spread or a couple
+    of stronger outliers would better demonstrate the strip plot's ability to reveal
+    distribution shape differences (DQ-01)
+  - 'Visual refinement is solid but not exceptional: horizontal gridlines and axis
+    lines are present with no further typographic hierarchy beyond title/axis/tick
+    weight — a small amount of additional polish (e.g. lighter y=0 baseline, tighter
+    grid opacity) would push Design Excellence higher'
+  - Library Mastery is good (native jitter option, dataLabels overlay) but doesn't
+    reach for a more distinctive Highcharts-only feature (e.g. per-point tooltip customization
+    surfaced via the HTML detail view, or connector lines from mean to reference)
+    that would be harder to replicate in another library
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
-      Chrome: Title "strip-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top-center; y-axis title "Time to Symptom Relief (minutes)" rotated on the left in dark gray; x-axis category labels (Placebo, Low Dose, Standard Dose, High Dose) in dark gray beneath each cluster; subtle horizontal gridlines at each 10-unit tick. All chrome elements are clearly legible against the light background.
-      Data: Four jittered point clusters, one per category, colored in Imprint canonical order: brand green (Placebo), lavender (Low Dose), blue (Standard Dose), ochre (High Dose), all rendered with ~0.6 alpha fill and no stroke. A visible dose-response gradient: Placebo has the highest/most spread values (~29-87 min), High Dose the lowest/tightest (~10-40 min).
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "strip-basic · javascript · highcharts · anyplot.ai" is bold dark text, clearly readable, occupies roughly a third of the canvas width (well within bounds, no overflow/clipping). Y-axis title "Time to Symptom Relief (minutes)" and tick labels (0-100) are dark/soft-dark and legible. X-axis category labels (Placebo, Low Dose, Standard Dose, High Dose) are legible dark-grey text with no rotation needed. Horizontal gridlines are thin and subtle; no vertical gridlines competing with the jittered points. Legend at the bottom shows a single "Group Mean" diamond swatch with dark text.
+      Data: Four groups rendered as jittered scatter (strip plot) in Imprint palette order — Placebo = brand green #009E73, Low Dose = lavender, Standard Dose = blue, High Dose = ochre — matching the canonical categorical order. Each group has a black diamond marker with a bold "{value} min" label marking the group mean, sitting in a relatively open area near the point cloud without overlapping any individual point. All text is clearly readable against the light background.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
-      Chrome: Title, y-axis title, x-axis category labels, and gridlines all rendered in light/off-white tones, clearly visible against the dark surface. No dark-on-dark text observed anywhere (title, axis titles, tick labels, category labels all flipped to light ink correctly).
-      Data: Same four category colors as the light render — green, lavender, blue, ochre — confirmed identical hex values; only the chrome (background, text, grid) flipped for the dark theme, as required.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis title, and tick labels have all flipped to light/off-white tones and remain fully readable. Gridlines are still faint and subtle against the dark surface. Legend text is light-grey and legible.
+      Data: The four category colors (green, lavender, blue, ochre) are pixel-identical to the light render — only the chrome flipped. The group-mean diamond markers and their data labels flipped from black to white/off-white (using the theme-adaptive "ink" token), remaining clearly visible against the dark background with no dark-on-dark or light-on-light failures anywhere in the chart.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis 16px, ticks 14px);
-          readable in both themes, no overflow
+        comment: All font sizes explicitly set (title 22px, axis 16px, ticks/legend
+          14px); readable in both themes, title well within width bounds
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap in either render
+        comment: No text-on-text or text-on-critical-element overlap; mean labels
+          sit in open space near (not on) the point cloud
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible and alpha-blended for density, but no edge stroke
-          leaves the densest clusters hard to separate into individual points
+        comment: Marker radius 6 with alpha 0.6 works well for 45 pts/group; a couple
+          of the densest clusters (Standard Dose ~30min) show minor point-on-point
+          overlap, which is expected strip-plot behavior but slightly reduces individual-point
+          distinction
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint hues, alpha blending distinguishes
-          overlapping points without relying on hue alone
+        comment: Mean marker distinguished by both shape (diamond) and neutral ink
+          color; alpha-blended fills plus page-bg stroke keep overlapping points distinguishable;
+          no red-green-only signaling
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, nothing cut off
+        comment: Plot area fills the large majority of the canvas with balanced margins;
+          legend sits directly under the plot, not isolated
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis descriptive with units (minutes); x-axis categories are self-explanatory
-          group names
+        comment: Y-axis has units ('Time to Symptom Relief (minutes)'); X-axis categories
+          are self-explanatory
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, subsequent series follow canonical Imprint
-          order, backgrounds theme-correct in both renders'
+        comment: 'First series #009E73, remaining groups follow canonical Imprint
+          order 2-4, identical across themes; backgrounds theme-correct; mean marker
+          correctly uses the neutral/ink semantic anchor for its baseline-reference
+          role'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library defaults with correct palette/typography,
-          but no custom flourish beyond that
+        passed: true
+        comment: Thoughtful layering of jittered raw data with a distinct mean overlay
+          (shape + color + label) goes clearly beyond a generic scatter default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Subtle grid, minimal chrome, generous whitespace, but no marker edge
-          stroke for definition in dense overlaps
+        passed: true
+        comment: Subtle single-axis gridlines, no legend frame, generous whitespace;
+          not maximally refined (baseline/grid could be even lighter)
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Dose-response trend exists in the underlying data but is not visually
-          emphasized (no reference lines, no annotation, no hierarchy beyond raw jittered
-          points)
+        passed: true
+        comment: The annotated group means make the dose-response trend immediately
+          legible left-to-right, creating a clear visual hierarchy and focal point
     spec_compliance:
       score: 15
       max: 15
@@ -136,52 +155,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct strip plot via categorical scatter + jitter
+        comment: Genuine jittered strip plot via Highcharts native scatter jitter
+          option
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Moderate jitter (0.3), alpha transparency (0.6) for overlap, all
-          within spec's recommended ranges
+        comment: Jitter width 0.3 (within 0.1-0.3 spec range), alpha 0.6 (within 0.5-0.7
+          range), group-mean reference markers included
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x, numeric value on y, all data visible
+        comment: Category on X, numeric value on Y; axis range (0-100) shows all data
+          without clipping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact mandated format; legend correctly omitted since
-          category encodes both x-position and color
+        comment: Title exactly matches the mandated format; legend label 'Group Mean'
+          correctly matches the overlay series
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Shows individual observations, density accumulation, decreasing spread
-          across groups, and a natural outlier
+        comment: Shows density accumulation and some outliers, but all four groups
+          share similar spread/shape — a group with visibly different spread would
+          demonstrate the plot type more fully
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible clinical scenario (time to symptom relief by dose
-          group)
+        comment: Neutral, comprehensible clinical dose-response scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Minute-scale values and a monotonic dose-response direction are biologically
-          sensible
+        comment: Minute-scale symptom-relief values are plausible and the dose-response
+          direction is factually sensible
     code_quality:
       score: 10
       max: 10
@@ -191,8 +212,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports/data/chart structure; helper functions are minimal
-          LCG/color utilities
+        comment: Linear data -> series -> chart flow; only small deterministic-RNG
+          helper functions, standard for JS libs with no numpy equivalent
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,7 +225,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No unused globals/imports
+        comment: No imports; Highcharts global used directly, nothing extraneous
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -216,8 +237,8 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Animation disabled on chart and series, current Highcharts.chart
-          API, correct mount-node contract
+        comment: Correctly follows the mount-node contract; animation disabled on
+          chart and series
     library_mastery:
       score: 7
       max: 10
@@ -227,23 +248,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level Highcharts.chart + scatter/jitter idiom for a
-          strip plot
+        comment: Uses Highcharts' native scatter jitter option and multi-series composition
+          idiomatically
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses Highcharts' native categorical jitter option (moderately distinctive),
-          but no further library-specific capability (plotLines, dataLabels) is leveraged
-  verdict: REJECTED
+        passed: true
+        comment: Native jitter option plus a secondary overlay series with custom
+          dataLabels formatting are genuinely Highcharts-specific patterns, though
+          not pushed further into e.g. tooltip/HTML-only distinctive features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - jitter
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting

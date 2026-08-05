@@ -1,7 +1,7 @@
 // anyplot.ai
 // strip-basic: Basic Strip Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 86/100 | Created: 2026-08-05
+// Quality: 88/100 | Created: 2026-08-05
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
