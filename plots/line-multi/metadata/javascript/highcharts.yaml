@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-multi
 created: '2026-08-05T07:35:27Z'
-updated: '2026-08-05T07:38:50Z'
+updated: '2026-08-05T07:48:16Z'
 generated_by: claude-sonnet
 workflow_run: 30985319434
 issue: 1825
@@ -12,117 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mult
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/highcharts/plot-dark.html
-quality_score: 81
+quality_score: 92
 review:
   strengths:
-  - Imprint palette applied in canonical order (green, lavender, blue, ochre) and
-    identical between light and dark renders — only chrome flips.
-  - Distinct marker shapes per series (circle, diamond, square, triangle) give a CVD-safe
-    secondary encoding beyond color alone.
-  - 'Theme-adaptive chrome is correctly threaded through: warm off-white/near-black
-    backgrounds, transparent chart background, credits disabled, all title/axis/tick
-    text legible in both themes with no dark-on-dark or light-on-light failures.'
-  - Title matches the required `{spec-id} · {language} · {library} · anyplot.ai` format
-    exactly, and axis titles carry units (°C).
-  - Deterministic, realistic, neutral dataset — four US cities' average monthly temperatures,
-    hardcoded in-memory with no RNG needed.
+  - 'Directly addresses every Attempt 1 weakness: per-series dashStyle (Solid/ShortDash/Dot/LongDash)
+    now differentiates all four lines beyond color, exactly per the spec''s own suggestion.'
+  - 'New visual hierarchy/focal point: a plotBand highlights the Jun–Aug summer season
+    and a styled dataLabel calls out Miami''s July peak (30°C) — genuine data storytelling
+    that was absent in Attempt 1.'
+  - 'Imprint palette applied in canonical order (green/lavender/blue/ochre), byte-identical
+    between light and dark renders — confirmed by pixel sampling (#FAF8F1 light bg,
+    #1A1A17 dark bg, exact matches).'
+  - All chrome (title, axis titles, ticks, legend, plotBand label, tooltip) threaded
+    through ANYPLOT_TOKENS with explicit font sizes — fully legible in both themes,
+    no dark-on-dark or light-on-light issues.
+  - 'Distinctive Highcharts features used meaningfully: plotBands with label, custom
+    dataLabels with offset/styling, shared tooltip with valueSuffix, hover state deltas
+    — clearly beyond generic/boilerplate usage.'
+  - Clean, deterministic, realistic dataset (four US cities' average monthly temperatures)
+    with genuinely varied trends (convergence, divergence, plateau vs single peak).
+  - Canvas exactly 3200×1800, no clipping at any edge, title format exactly matches
+    the required convention.
   weaknesses:
-  - Styling stays very close to the library-guide skeleton with no extra design refinement
-    — the spec's 'consider varying line styles (solid, dashed, dotted) for additional
-    distinction' suggestion is unused (all four series are solid lines); adding plotOptions.series.dashStyle
-    variation per series would raise differentiation and design excellence.
-  - No visual hierarchy or focal point — all four lines are given equal visual weight
-    with lines crossing repeatedly around Jun–Aug; consider a subtle annotation or
-    emphasis (e.g. highlighting Miami's summer plateau) to guide the viewer.
-  - Around Jul–Aug, the New York and Chicago lines/markers nearly coincide; marker-shape
-    differentiation keeps them distinguishable but a touch more separation (marker
-    z-order or slight dash variation) would remove any ambiguity.
+  - New York and Los Angeles both equal 24°C in August, so their markers land exactly
+    on top of each other (confirmed by pixel sampling — the lavender diamond fully
+    occludes the green circle underneath, leaving only its outline visible). The dashStyle
+    difference keeps the lines traceable, but the coincident marker point is a minor
+    visual blemish — nudging one of the two August values by ~0.5–1°C (still realistic)
+    or increasing marker z-order/edge contrast would remove the ambiguity.
+  - Design Excellence, while much improved, still stops short of top-tier polish —
+    the grid/spine treatment and legend presentation remain close to library defaults;
+    a subtle refinement (e.g. removing the default axis line weight, tightening legend
+    spacing) would push this further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec.
-      Chrome: Title "line-multi · javascript · highcharts · anyplot.ai" in bold dark ink at top; x-axis title "Month" and y-axis title "Average Temperature (°C)" in medium-soft ink; tick labels (Jan–Dec on x, -10 to 35 by 5 on y) in soft ink; horizontal gridlines subtle light gray; legend at bottom with four labeled swatches (New York, Los Angeles, Chicago, Miami). All text is clearly readable against the light background — no light-on-light issues.
-      Data: Four lines with distinct colors and marker shapes — New York (brand green #009E73, circle markers), Los Angeles (lavender/purple, diamond markers), Chicago (blue, square markers), Miami (ochre/amber, triangle markers). First series is correctly the brand green. Lines are smooth, well-separated for most of the year, with New York/Chicago crossing near Jul–Aug but still distinguishable by marker shape.
+      Background: Warm off-white, pixel-sampled at RGB(250,248,241) = #FAF8F1 exactly — matches spec.
+      Chrome: Bold dark title "line-multi · javascript · highcharts · anyplot.ai" at top; "Month" x-axis title and "Average Temperature (°C)" y-axis title in soft ink; Jan–Dec category ticks and -10 to 35 numeric ticks in soft ink; subtle horizontal gridlines; a light-gray plotBand spans Jun–Aug labeled "Summer"; a bold dataLabel reads "Miami peak: 30°C" above the Miami line's July point; bottom legend with four labeled swatches (New York, Los Angeles, Chicago, Miami). All text is clearly readable against the light background — no light-on-light issues.
+      Data: Four lines, each with a distinct color AND distinct dashStyle AND distinct marker shape — New York solid/circle (#009E73, correct brand green, first series), Los Angeles short-dash/diamond (#C475FD), Chicago dotted/square (#4467A3), Miami long-dash/triangle with thicker line (#BD8233). New York and Los Angeles markers coincide exactly in August (both =24°C) — the diamond sits on top of the circle, only a thin green outline peeking through — a minor but real overlap.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec.
-      Chrome: Same title, axis titles, and tick labels now rendered in light/soft-white ink, clearly visible against the dark background. Gridlines remain subtle. Legend text is light-colored and readable. No dark-on-dark failures observed anywhere (title, axis labels, tick labels, legend all pass).
-      Data: Same four colors and marker shapes as the light render — green, lavender, blue, ochre — confirming the data palette is identical across themes; only the chrome (background, text, grid) flipped as required.
+      Background: Warm near-black, pixel-sampled at RGB(26,26,23) = #1A1A17 exactly — matches spec.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink, clearly legible against the dark surface; plotBand and "Summer"/"Miami peak: 30°C" labels remain legible with appropriate contrast; gridlines remain subtle; legend text light-colored and readable. No dark-on-dark failures on title, axis labels, tick labels, plotBand label, or legend.
+      Data: Colors are pixel-identical to the light render (green/lavender/blue/ochre) — only the chrome flipped, as required. Same New York/Los Angeles marker coincidence in August, consistent with the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; readable in both themes
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
+          14px, tooltip/dataLabel 13px); readable in both themes; title comfortably
+          under 70% width
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: New York and Chicago lines/markers nearly coincide near Jul-Aug but
-          remain distinguishable via marker shape
+        comment: No text overlap, but New York and Los Angeles markers coincide exactly
+          in August (both 24°C) — diamond fully occludes the circle beneath it
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (radius 5) and 3px lines appropriately sized for 12-point
-          sparse series
+        comment: Marker radius 5, line widths 3-4, well adapted to 12-point sparse-medium
+          density series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct marker shapes per series add a CVD-safe secondary encoding
-          beyond color
+        comment: Redundant encoding via marker shape + dashStyle beyond color alone;
+          good contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; good proportions, nothing clipped or overflowing
+        comment: Canvas exactly 3200x1800, plot fills most of the canvas, balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Month / Average Temperature (°C) — descriptive with units
+        comment: '"Average Temperature (°C)" has units, "Month" descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, first series brand green, correct light/dark
-          backgrounds
+        comment: Canonical Imprint order (green/lavender/blue/ochre), pixel-verified
+          identical across themes, theme-correct backgrounds
     design_excellence:
-      score: 9
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Follows the library-guide skeleton closely; no custom refinements
-          beyond defaults
+        passed: true
+        comment: Thoughtful dashStyle differentiation, emphasis line width on Miami,
+          plotBand + dataLabel focal point — clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid subtle (y-axis only), generous whitespace, but otherwise standard
+        passed: true
+        comment: Subtle y-axis-only grid, generous whitespace, but grid/spine treatment
+          stays close to standard
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No visual hierarchy or focal point; all four series given equal weight
+        passed: true
+        comment: Summer plotBand + Miami peak annotation create a clear focal point
+          and guide the reader
     spec_compliance:
       score: 15
       max: 15
@@ -138,42 +150,44 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, clear legend, optional markers present
+        comment: Distinct colors, legend, varying line styles (spec's own suggestion),
+          markers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = month, Y = temperature per city, all data shown
+        comment: X=month, Y=temperature correctly mapped, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels match city names
+        comment: Title matches required format exactly; legend labels match series
+          names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers multi-series comparison well; spec's optional line-style variation
-          unused
+        comment: Shows convergence, divergence, plateau, and single-peak trends across
+          four series
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world plausible city temperatures, neutral topic
+        comment: Real US-city average monthly temperatures, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible -5°C to 30°C range for the domain
+        comment: Values and relative city rankings align with real-world climate facts
     code_quality:
       score: 10
       max: 10
@@ -183,7 +197,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes, linear data → chart structure
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -195,43 +209,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; relies only on provided globals
+        comment: No unused imports; relies on provided globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean, appropriate complexity for added plotBand/dataLabel; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled
+        comment: Correct mount-node contract, animation disabled on chart and series,
+          current API
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Highcharts high-level chart options API
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper Highcharts.chart config with idiomatic plotOptions.series
-          usage
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Only relies on default marker symbol cycling; no dashStyle, tooltip,
-          or other Highcharts-specific features showcased
+        comment: plotBands with label, custom dataLabels with offset/style, dashStyle
+          per series, shared tooltip — meaningfully Highcharts-specific
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
+  techniques:
+  - annotations
+  patterns: []
   dataprep: []
   styling:
   - publication-ready
