@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-multi
 created: '2026-08-05T07:43:03Z'
-updated: '2026-08-05T07:47:25Z'
+updated: '2026-08-05T07:56:13Z'
 generated_by: claude-sonnet
 workflow_run: 30985841313
 issue: 1825
@@ -12,51 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mult
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/chartjs/plot-dark.html
-quality_score: 83
+quality_score: 92
 review:
   strengths:
+  - 'Directly addresses attempt 1 feedback: Search is now visually emphasized (thicker
+    solid line, borderWidth 4) while the other three series use distinct dash patterns
+    (dashed, fine-dotted, dash-dot) and thinner widths, giving the chart a clear primary
+    focal point instead of four equal-weight lines'
+  - Crossover between Search and API Calls around day 10 is called out with enlarged
+    point markers (radius 7 vs 2.5) computed from actual data via crossoverIndex(),
+    turning a data-driven insight into a genuine storytelling device rather than a
+    decorative annotation
+  - Y-axis title now carries explicit units ("Daily Active Users (count)"), closing
+    the VQ-06 gap from the previous review
   - Correct Imprint palette in canonical order (Search=#009E73, Dashboard=#C475FD,
-    Mobile App=#4467A3, API Calls=#BD8233), identical data colors across light and
-    dark renders
-  - 'Theme-adaptive chrome is fully correct: warm off-white/near-black backgrounds,
-    all text legible in both themes with no dark-on-dark or light-on-light failures'
-  - 'Clean data-density heuristic use: y-axis-only grid at subtle opacity, x-axis
-    grid disabled, generous margins and no clutter'
-  - Realistic, neutral data scenario (4 product feature DAU trends over 30 days) with
-    genuine variation — crossovers, a dip-and-recovery arc, and steady growth curves
-    rather than four parallel lines
-  - 'Follows the chartjs mount-node contract precisely: single canvas append, animation
-    disabled, explicit font sizes for title/legend/axis/ticks'
+    Mobile App=#4467A3, API Calls=#BD8233) with identical data colors across light/dark
+    renders and fully theme-correct chrome (warm off-white/near-black backgrounds,
+    legible text in both themes)
+  - Realistic, neutral data scenario (30-day DAU trends for 4 product features) with
+    genuine variation — divergent growth rates, a dip-and-recovery arc, and a real
+    crossover — rather than four parallel synthetic lines
+  - 'Clean adherence to the chartjs mount-node contract: single canvas append, animation
+    disabled, explicit font sizes throughout'
   weaknesses:
-  - 'Design Excellence is thin: all four lines share identical borderWidth/tension
-    with no visual hierarchy or focal point — add emphasis (e.g. thicker/more saturated
-    primary series, a subtle annotation on the API Calls dip-and-recovery, or the
-    crossover around day 9-13) so the chart tells a clear story rather than presenting
-    four equal lines'
-  - No markers at data points despite the spec calling out optional markers for readability
-    on a medium-sparse 30-point series — consider small pointRadius (3-4px) to reinforce
-    discrete daily readings without cluttering the smoothed lines
-  - Axis titles ('Day of Month', 'Daily Active Users') are descriptive but carry no
-    explicit unit annotation — acceptable but not full marks; a parenthetical unit
-    or subtitle would tighten this
-  - Spec suggests varying line style (solid/dashed/dotted) as an additional distinction
-    option for scaling past 4 series — not required here but would strengthen Library
-    Mastery/Distinctive Features since Chart.js supports per-dataset borderDash natively
+  - Crossover point markers for Search and API Calls sit directly on top of each other
+    at day 10 — legible but a small offset or a brief text callout would make the
+    emphasis unambiguous rather than relying on marker size alone
+  - No explicit annotation/label naming the crossover — an attentive viewer notices
+    the larger markers but has to infer why; a small text callout would push Data
+    Storytelling further
+  - Design Excellence, while much improved, still stops short of full publication
+    polish — legend swatches are plain line segments with no additional refinement
+    (e.g. rounded caps, subtle shadow) that would elevate it further
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "line-multi · javascript · chartjs · anyplot.ai" centered at top; top-right legend with 4 swatches (Search, Dashboard, Mobile App, API Calls) in dark text; dark axis titles ("Day of Month", "Daily Active Users"); softer dark-gray tick labels on both axes; subtle horizontal gridlines on the y-axis only, no x-axis grid.
-      Data: Four smoothed lines — Search (green #009E73), Dashboard (lavender), Mobile App (blue), API Calls (ochre) — no point markers, moderate 3px line width, tension-smoothed curves showing distinct trends (steady rise, plateau, steady rise, and a rise-dip-recovery arc) with a visible crossover between Search and API Calls around day 9-13.
-      Legibility verdict: PASS — all title/legend/axis/tick text reads clearly against the light background.
+      Chrome: Bold dark title "line-multi · javascript · chartjs · anyplot.ai" centered at top; top-right legend (Search, Dashboard, Mobile App, API Calls) in dark ink; dark axis titles "Day of Month" / "Daily Active Users (count)"; softer dark-gray tick labels; subtle horizontal y-axis-only gridlines, no x-axis grid. All chrome text clearly readable against the light background.
+      Data: Four lines in Imprint order — green Search (thick solid, primary), lavender Dashboard (dashed), blue Mobile App (fine dotted), ochre API Calls (dash-dot). Small point markers throughout, enlarged at the Search/API Calls crossover near day 10. Series show a steady climb, a plateau/dip-recovery, and a slow climb respectively — clear differentiation without relying on color alone.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, legend text, and axis titles rendered in light/white; tick labels in a softer light gray; gridlines subtle and still visible against the dark surface.
-      Data: Same four line colors as the light render (green, lavender, blue, ochre) — confirmed identical hex values, only chrome flipped.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and gridlines remain clearly visible against the near-black background.
+      Chrome: Same layout with title/legend/axis titles rendered in light/near-white text and softer light-gray tick labels; gridlines remain subtle but visible. No dark-on-dark failures anywhere.
+      Data: Colors are pixel-identical to the light render (green, lavender, blue, ochre) — only chrome flipped, as required. Same dash patterns and crossover-marker emphasis are preserved.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,71 +67,70 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 22, legend 16, axis titles 16,
-          ticks 14); readable in both themes, no overflow or clipping, title proportion
-          appropriate for its 46-char length
+          ticks 14); well-proportioned, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; legend sits clear of plot area
+        comment: No text overlap; legend clear of data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines clearly visible at 3px width, but no point markers on a medium-sparse
-          30-point series where they could aid readability
+        comment: Point markers added at appropriate small size, enlarged at the crossover
+          — well adapted to the 30-point series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four CVD-safe hues, no red-green-only signal
+        comment: Distinct dash patterns give redundant encoding beyond hue; good contrast
+          in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas with balanced margins; legend near
-          plot
+        comment: Plot fills the canvas well with balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive axis titles but no explicit units
+        passed: true
+        comment: Y-axis now carries explicit units ("Daily Active Users (count)")
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome
-          in both renders'
+        comment: Canonical Imprint order, identical across themes, theme-correct backgrounds
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured theme-token usage but no exceptional design treatment
-          beyond correct defaults
+        passed: true
+        comment: Thoughtful weight/dash hierarchy for the primary series, clearly
+          above library defaults, short of full publication polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis-only subtle grid, no visible spines/box frame, generous whitespace
+        comment: Subtle y-axis-only grid, no spines, generous whitespace — unchanged
+          from attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: All four series treated with equal visual weight; no emphasis on
-          the crossover or the API Calls dip-and-recovery arc
+        passed: true
+        comment: Clear focal point via emphasized primary series and data-driven crossover
+          marker; no explicit text callout naming the insight
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +140,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line chart
+        comment: Correct multi-line comparison chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors per line, clear legend — all required spec features
-          present
+        comment: Distinct colors, legend, varying line styles, and markers all present
+          per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=day of month, Y=DAU, full 30-day range shown for all series
+        comment: X/Y correctly assigned, full range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels match series names
+        comment: Title format correct; legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -168,21 +169,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows rising, plateauing, and dip-and-recovery trends plus a crossover
-          — genuine variation across series
+        comment: Divergent trends, dip-and-recovery, and a real crossover — genuine
+          variation across series
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible SaaS product-analytics scenario
+        comment: Neutral, realistic SaaS product-usage scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: DAU values and month-over-month growth are plausible for a mid-size
-          product
+        comment: DAU values and month-long growth trajectories are plausible
     code_quality:
       score: 10
       max: 10
@@ -192,8 +192,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Minimal LCG + trendSeries helper is the library-recommended way to
-          get deterministic pseudo-randomness in the browser; otherwise flat imports→data→chart
+        comment: Small focused data-gen helpers, otherwise linear imports/data/plot
+          flow
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,22 +205,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; browser globals only
+        comment: No unused imports; uses global Chart only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering
+        comment: Clean, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current Chart.js
-          API
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,16 +227,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level Chart.js line-dataset config, tension smoothing,
-          theme tokens threaded through plugins/scales
+        comment: Correct high-level Chart.js dataset/options API
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic multi-line usage; no distinctive Chart.js feature like scriptable
-          colors, dataset borderDash, or interaction-mode tuning
-  verdict: REJECTED
+        passed: true
+        comment: Per-dataset borderDash plus per-point pointRadius arrays for data-driven
+          crossover emphasis — a genuinely Chart.js-idiomatic technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
@@ -245,5 +243,4 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
