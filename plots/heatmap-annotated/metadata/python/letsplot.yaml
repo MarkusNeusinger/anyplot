@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: heatmap-annotated
 created: '2025-12-24T21:34:55Z'
-updated: '2026-08-05T09:47:48Z'
+updated: '2026-08-05T09:54:48Z'
 generated_by: claude-sonnet
 workflow_run: 30993923772
 issue: 1824
@@ -12,64 +12,65 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Correct Imprint diverging colormap (`imprint_div`: #AE3030 → theme-adaptive midpoint
-    → #4467A3) applied to the correlation fill, with theme-correct chrome (background,
-    title, axis, legend) in both the light and dark renders.'
+  - Title now correctly follows the mandated `{spec-id} · {language} · {library} ·
+    anyplot.ai` format ("heatmap-annotated · python · letsplot · anyplot.ai"), fixing
+    the SC-04 gap from the prior review.
+  - Correlation range widened (`np.random.uniform(-0.7, 0.85, ...)`) so the red end
+    of the diverging scale is now genuinely exercised — e.g. Healthcare-Industrial
+    at -0.57 renders as a saturated red cell with white text, fixing the DQ-01 under-demonstration
+    flagged previously.
+  - 'Correct Imprint diverging colormap (`imprint_div`: #AE3030 -> theme-adaptive
+    midpoint -> #4467A3) applied to the correlation fill, with theme-correct chrome
+    (background, title, axis, legend) in both renders.'
   - 'Smart contrast-aware annotation text color: cell labels switch between white
     and ink based on |value| > 0.5, keeping every annotation readable regardless of
     cell saturation.'
   - 'Genuine data storytelling: a second `geom_tile` layer with a bold border highlights
-    the single strongest off-diagonal correlation (Finance–Consumer, 0.68), correctly
-    computed from the matrix and drawn on both mirrored cells — a clear focal point
-    beyond a plain grid dump.'
+    the single strongest off-diagonal correlation (Finance-Consumer, 0.68), correctly
+    computed and drawn on both mirrored cells — a clear focal point beyond a plain
+    grid dump.'
   - 'Clean, idiomatic lets-plot/grammar-of-graphics code: layered geoms, `scale_color_identity()`
-    for direct color mapping of the precomputed text colors, KISS structure, reproducible
+    for direct color mapping of precomputed text colors, KISS structure, reproducible
     via `np.random.seed(42)`.'
   - 'Correct matrix conventions: y-axis categories reversed so the diagonal reads
-    top-left to bottom-right as expected for a correlation matrix, all 8x8 cells populated
-    and labeled.'
+    top-left to bottom-right, all 8x8 cells populated and labeled.'
   weaknesses:
-  - Title is missing the language segment required by SC-04's `{spec-id} · {language}
-    · {library} · anyplot.ai` format — currently "heatmap-annotated · letsplot · anyplot.ai",
-    should be "heatmap-annotated · python · letsplot · anyplot.ai".
-  - Synthetic correlation data never shows a strongly negative relationship (most
-    negative value is only -0.20, from `np.random.uniform(-0.3, 0.8, ...)`), so the
-    red end of the diverging colormap is only ever pale pink and the diverging nature
-    of the data is under-demonstrated — widen the sampling range (or inject one clearly
-    negative pair, e.g. around -0.6 to -0.8) so both saturated red and saturated blue
-    extremes appear.
-  - 'Design Excellence has room to grow beyond a solid-but-not-exceptional level:
-    the cell border weight (`geom_tile(color=INK_SOFT, size=0.3)`) and legend box
-    framing are fairly standard; consider slightly more refined borders/whitespace
-    to push visual polish further.'
+  - 'Design Excellence still has room to grow beyond a solid-but-not-exceptional level:
+    cell border weight (`geom_tile(color=INK_SOFT, size=0.3)`) and legend box framing
+    are fairly standard — consider slightly more refined borders/whitespace or an
+    added visual accent to push polish further.'
+  - The negative extreme (-0.57) is still noticeably less saturated than the positive
+    extreme (diagonal 1.00 and several 0.6+ off-diagonal values), so the diverging
+    scale reads slightly asymmetric — not a hard failure, but a wider negative tail
+    (e.g. one pair around -0.75 to -0.85) would make the diverging nature fully symmetric.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "heatmap-annotated · letsplot · anyplot.ai" top-left in dark ink, clearly readable. "Sector" axis titles (x and y) in dark ink, clearly readable. X-axis tick labels (sector names) rotated 45° in medium-gray, no overlap. Y-axis tick labels horizontal in medium-gray, clearly readable. Colorbar legend on the right titled "Correlation" with tick labels 1 / 0.5 / 0 / -0.5 / -1, all legible against the elevated cream legend box.
-      Data: 8x8 grid of cells colored on a red–cream–blue diverging scale (diagonal = 1.00, dark blue). Each cell is annotated with its value to 2 decimal places; white text on saturated (|value| > 0.5) cells, dark ink text on lighter cells — both fully legible. The strongest off-diagonal pair (Finance–Consumer, 0.68) is boxed with a bold dark border on both mirrored cells, creating a clear focal point.
+      Chrome: Title "heatmap-annotated · python · letsplot · anyplot.ai" top-left in dark ink, clearly readable and now includes the required "python" language segment. "Sector" axis titles (x and y) in dark ink, clearly readable. X-axis tick labels (sector names) rotated 45° in medium-gray, no overlap with each other or the axis title. Y-axis tick labels horizontal in medium-gray, clearly readable. Colorbar legend on the right titled "Correlation" with tick labels 1 / 0.5 / 0 / -0.5 / -1, all legible against the elevated cream legend box.
+      Data: 8x8 grid of cells colored on a red-cream-blue diverging scale (diagonal = 1.00, dark blue). Each cell is annotated with its value to 2 decimal places; white text on saturated (|value| > 0.5) cells, dark ink text on lighter cells — both fully legible. The most negative cell (Healthcare-Industrial, -0.57) now renders as a clearly saturated red, showing the red end of the scale is genuinely exercised (fixed from the prior attempt's pale-pink-only red range). The strongest off-diagonal pair (Finance-Consumer, 0.68) is boxed with a bold dark border on both mirrored cells, creating a clear focal point.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title in light cream text, clearly readable against the dark background. "Sector" axis titles in light text, clearly readable. Tick labels (both axes) in light gray, legible, same rotation/layout as the light render. Colorbar legend box uses the dark elevated background with light text/ticks, fully legible.
-      Data: Same red–cream–blue diverging scale and identical cell values/colors as the light render — only the chrome (background, text, legend box, cell border color) flips. Cell annotation text remains white on saturated cells and light ink on lighter cells; no dark-on-dark or unreadable text observed anywhere. The Finance–Consumer highlight box is now rendered with a near-white border so it still reads clearly against the dark cell fills.
+      Chrome: Title in light cream text, clearly readable against the dark background, same corrected "python" language segment. "Sector" axis titles in light text, clearly readable. Tick labels (both axes) in light gray, legible, same rotation/layout as the light render. Colorbar legend box uses the dark elevated background with light text/ticks, fully legible.
+      Data: Same red-cream-blue diverging scale and identical cell values/colors as the light render — only the chrome (background, text, legend box, cell border color) flips. Cell annotation text remains white on saturated cells and light ink on lighter cells; no dark-on-dark or unreadable text observed anywhere. The Finance-Consumer highlight box is rendered with a near-white border so it still reads clearly against the dark cell fills.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 16pt, axis 12pt, ticks 10pt,
-          annotation size=3.5), readable at full size and would scale down cleanly;
-          no overflow or clipping in either theme.
+          annotation size=3.5), readable at full size in both themes; no overflow
+          or clipping.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -82,7 +83,7 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Tiles and annotations fill the grid well and are clearly visible;
+        comment: Tiles and annotations fill the 8x8 grid well and are clearly visible;
           annotation text could be marginally larger for extra full-resolution punch.
       - id: VQ-04
         name: Color Accessibility
@@ -97,8 +98,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Grid + colorbar fill the canvas well with balanced margins; colorbar
-          sits close to the plot, not isolated.
+        comment: Grid + colorbar fill the 3200x1800 canvas well with balanced margins;
+          colorbar sits close to the plot, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -111,8 +112,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Uses imprint_div (#AE3030 → theme-adaptive midpoint → #4467A3) correctly
-          for diverging correlation data; theme-correct chrome in both renders.'
+        comment: 'Uses imprint_div (#AE3030 -> theme-adaptive midpoint -> #4467A3)
+          correctly for diverging correlation data; theme-correct chrome in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -121,23 +122,25 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
+        passed: true
         comment: Thoughtful diverging palette and contrast-aware annotation logic
-          go beyond a configured default, but overall polish stops short of publication-ready.
+          go beyond configured defaults, but overall polish stops short of publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
+        passed: true
         comment: Grid removed (panel_grid=element_blank()), subtle cell borders, appropriate
-          all-four-spine frame for a heatmap grid; legend/cell border weights could
-          be a touch more refined.
+          frame for a heatmap grid; legend/cell border weights are fairly standard.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: The bold-bordered highlight on the strongest off-diagonal pair creates
+        passed: true
+        comment: Bold-bordered highlight on the strongest off-diagonal pair creates
           real visual hierarchy and a clear focal point beyond a raw data dump.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -162,22 +165,24 @@ review:
           all cells shown.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend is correct, but the title omits the required language token
-          ("python") from the {spec-id} · {language} · {library} · anyplot.ai format.
+        passed: true
+        comment: Title now correctly reads "heatmap-annotated · python · letsplot
+          · anyplot.ai" — the missing language segment from the prior review is fixed.
+          Legend correct.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        comment: Diagonal, symmetry, and a positive range are all shown, but the most
-          negative value is only -0.20 — the red/negative extreme of the diverging
-          scale is never meaningfully exercised.
+        passed: true
+        comment: Diagonal, symmetry, and now a genuinely exercised negative range
+          (min -0.57, saturated red) are all shown, fixing the prior pale-red-only
+          issue; still slightly less saturated than the positive extreme.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -201,7 +206,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → plot → save, no functions/classes.
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -235,16 +240,18 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
+        passed: true
         comment: 'Idiomatic grammar-of-graphics composition: geom_tile + geom_text
           layers, scale_fill_gradient2, theme().'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
+        passed: true
         comment: Uses scale_color_identity() to map precomputed per-cell text colors
           directly, plus a layered geom_tile technique for the highlight border —
           distinctive to the grammar-of-graphics layering model.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
