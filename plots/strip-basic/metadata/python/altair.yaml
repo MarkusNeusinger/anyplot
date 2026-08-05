@@ -2,46 +2,64 @@ library: altair
 language: python
 specification_id: strip-basic
 created: '2025-12-23T21:54:11Z'
-updated: '2026-05-04T20:47:57Z'
+updated: '2026-08-05T05:55:22Z'
 generated_by: claude-sonnet
-workflow_run: 25342118996
+workflow_run: 30978687988
 issue: 975
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 91
 review:
   strengths:
-  - Gaussian jitter via transform_calculate Box-Muller formula is a sophisticated,
-    distinctly Altair-idiomatic approach to strip-plot jitter
-  - Mean reference ticks using Okabe-Ito position 2 create clear visual hierarchy
-    between data and summary statistics
-  - 'Perfect theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
-    correctly threaded through all configure_* calls; both renders pass readability
-    checks'
-  - Complete spec compliance with all required strip-plot features present
+  - 'Excellent theme-adaptive chrome — both light and dark renders are fully legible
+    with correct #FAF8F1/#1A1A17 backgrounds, subtle gridlines, and no dark-on-dark
+    or light-on-light failures.'
+  - 'Directly addressed prior feedback: the y-axis now reads ''Response Score (0–100)''
+    with a unit/scale hint, and a new subtitle (''Engineering leads with the highest
+    mean score (74)'') gives the plot a clear, computed data-storytelling focal point.'
+  - 'Idiomatic, distinctive Altair implementation: native xOffset quantitative channel
+    for jitter combined with a genuine Box-Muller Gaussian random offset (transform_calculate)
+    instead of a naive uniform-random hack.'
+  - 'Correct Imprint palette usage — brand green #009E73 for the data series, #C475FD
+    accent for the mean ticks, both identical and stable across themes.'
+  - Realistic, neutral business scenario (survey response scores by department) with
+    genuine per-group variance (different means/stds per department) demonstrating
+    real feature coverage rather than four identical-looking blobs.
+  - Widened jitter multiplier (0.2 → 0.27) and slightly reduced marker opacity (0.65
+    → 0.55) measurably soften point clumping in the denser clusters versus the prior
+    attempt.
   weaknesses:
-  - Legend 'Group Mean' box floats isolated in the top-right corner, visually disconnected
-    from the data cloud below
-  - Top/right axis domain lines not suppressed — adding domainWidth=0 or configure_axis(domain=False)
-    for non-data spines would add refinement
-  - Lower canvas (y=20-40) is quite empty; tightening the y-domain to ~35-105 would
-    better utilize the canvas and reduce dead space
+  - The 'Group Mean' legend swatch renders as a completely blank box in BOTH the light
+    and dark PNGs — no purple (#C475FD) stroke/tick symbol is visible at all, so the
+    legend text has no visual link to the purple mean-tick marks drawn in the chart.
+    Likely a Vega-Lite quirk where mark_tick's 'color' channel (fill-oriented) doesn't
+    populate a legend configured with symbolType='stroke' — try setting an explicit
+    symbolStrokeColor/symbolFillColor on the alt.Legend(...), or switch the tick mark
+    to encode a 'stroke' channel instead of 'color' so the legend symbol renders.
+  - Aesthetic sophistication (DE-01) is improved by the new subtitle but still reads
+    closer to a well-configured, tastefully accented default than fully publication-ready
+    — consider a stronger typographic hierarchy (e.g. weight/size contrast between
+    title and subtitle) or a second small refinement to push past 'good default.'
+  - Marker overlap is still noticeable in the denser clusters (Marketing, Support)
+    despite the widened jitter multiplier — consider pushing the jitter multiplier
+    a bit further toward the spec's upper bound or lowering opacity slightly more
+    to reduce visual clumping.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "strip-basic · altair · anyplot.ai" in dark ink, clearly readable. Y-axis label "Response Score" and X-axis label "Department" in dark text. Tick labels (20-110 by 5 on Y, four department names on X) readable. Legend "Group Mean" in top-right box with light elevated fill.
-      Data: Green (#009E73) circular markers with horizontal jitter across Engineering, Marketing, Sales, Support. Orange (#D55E00) horizontal tick marks show group means. Subtle horizontal grid lines at 10% opacity.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "strip-basic · python · altair · anyplot.ai" top-center with a new subtitle "Engineering leads with the highest mean score (74)" in soft ink below it. Y-axis "Response Score (0–100)" with subtle horizontal gridlines only; x-axis "Department" with 4 categories (Engineering, Marketing, Sales, Support), horizontal labels. Title, subtitle, axis titles, and tick labels all render in dark ink tones and are clearly readable against the light background. The "Group Mean" legend entry at bottom-left shows the text label correctly but its color swatch is a blank box — no visible purple stroke/tick symbol.
+      Data: Green (#009E73) circles at opacity ~0.55, jittered horizontally within each category band, showing ~35-50 individual response scores per department, with visibly different spreads/means per department (e.g. Support skews lower and wider than Engineering). Lavender (#C475FD) horizontal tick marks overlaid per category mark each group's mean — visible in the plot itself even though the legend swatch representing them is blank.
+      Legibility verdict: PASS (all text readable; the legend swatch issue is a missing-symbol defect, not a legibility/contrast failure)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black approximately #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in light color (#F0EFE8 range), readable. Axis labels and tick labels in light/soft ink colors (#B8B7B0 range). Legend "Group Mean" box has dark elevated fill (#242420) with light label text. No dark-on-dark failures detected.
-      Data: Same green (#009E73) circular markers — identical to light render, confirming only chrome flips. Orange mean ticks visible against dark background.
-      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark failures
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Identical layout to the light render — title, subtitle, axis titles, tick labels all render in light ink tones (F0EFE8 / B8B7B0) and are clearly readable against the dark background. No dark-on-dark text found on any element. Same "Group Mean" legend blank-swatch issue reproduces identically in this theme.
+      Data: Same green (#009E73) circles and lavender (#C475FD) mean ticks as the light render — data colors are identical between themes; only the chrome (background, text, grid, legend box fill) flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -52,78 +70,80 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis titles 22px, tick
-          labels 18px, legend 16px. Readable in both themes.'
+        comment: Font sizes explicitly set (labelFontSize=10, titleFontSize=12/16,
+          subtitleFontSize=11); title+subtitle fit comfortably without overflow; readable
+          in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Four well-separated categories; jitter keeps points within lanes;
-          no text collisions.
+        comment: No text/data overlap in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: size=200, opacity=0.6 well-suited for 35-50 points per category.
+        comment: Markers density-appropriate and jitter widened since last attempt,
+          but noticeable clumping remains in denser clusters (Marketing, Support).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; green vs. orange mean ticks distinguishable without
-          hue alone; CVD-safe.
+        comment: Good contrast, CVD-safe, green data vs. purple mean ticks distinguishable
+          without relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Correct 4800x2700 dimensions. Minor: lower canvas (y=20-40) empty;
-          legend box floats isolated in top-right corner away from data cloud.'
+        comment: Plot fills a large, well-balanced portion of the canvas at the correct
+          3200x1800 target; legend sits close to the plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Response Score and Department — descriptive and appropriate for survey
-          data context.
+        comment: Y-axis now reads 'Response Score (0–100)' — unit/scale hint added
+          since last review.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; mean ticks #D55E00 (Okabe-Ito pos 2); backgrounds
-          #FAF8F1/#1A1A17; INK/INK_SOFT tokens correct in both renders.'
+        comment: 'First series is #009E73; mean-tick accent uses Imprint position
+          2 (#C475FD); backgrounds theme-correct in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: true
-        comment: Well-configured with correct palette and mean reference lines, but
-          not at publication-quality visual sophistication. Clean and functional rather
-          than striking.
+        passed: false
+        comment: New computed subtitle plus the Gaussian jitter / mean-reference layer
+          push this above a plain default, but typography/hierarchy still isn't fully
+          publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: strokeWidth=0 removes view border; gridOpacity=0.10 subtle grid.
-          Above defaults but top/right axis domain lines remain visible.
+        comment: Subtle grid (10% opacity), theme-muted axis lines, and legend box
+          frame removed per prior feedback — held back by the 'Group Mean' legend
+          swatch rendering completely blank in both themes.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Mean ticks in contrasting orange create visual hierarchy; viewer
-          compares department central tendencies while observing spread through jitter
-          density.
+        comment: The new subtitle explicitly names the leading department and its
+          score, combined with the mean-reference ticks, gives the viewer an immediate
+          takeaway rather than a raw data dump.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,28 +151,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct strip plot with individual data points per category and horizontal
-          jitter.
+        comment: Correct strip plot with jitter.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Jitter via xOffset+transform_calculate; opacity 0.6; group means
-          as reference ticks.
+        comment: Jitter multiplier and alpha within spec range, plus bonus mean reference
+          lines.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Department (N), Y=Response Score (Q); all data visible.
+        comment: Department (categorical) on x, Response Score (numeric) on y, all
+          data visible.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title 'strip-basic · altair · anyplot.ai' correct; legend label 'Group
-          Mean' matches mean tick encoding.
+        passed: false
+        comment: Title matches mandated format exactly with a nice subtitle addition;
+          but the legend's color swatch for 'Group Mean' renders blank/invisible in
+          both renders, so the legend text isn't visually tied to any symbol.
     data_quality:
       score: 15
       max: 15
@@ -162,22 +183,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four groups with different mean/std parameters showcase varied distributions,
-          spreads, and density — all key strip-plot features.
+        comment: Different means/stds per department produce genuinely varied spreads;
+          no two groups look identical.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Survey response scores by corporate department — real-world, neutral,
-          immediately comprehensible business scenario.
+        comment: Neutral, real-world business scenario (survey response scores by
+          department).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores clipped to 20-100; means in 65-75 range realistic for workplace
-          satisfaction surveys.
+        comment: Values clipped to a sensible 20–100 response-score range.
     code_quality:
       score: 10
       max: 10
@@ -187,33 +207,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> tokens -> data -> chart -> save. No functions
-          or classes.'
+        comment: Imports → data → plot → save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas all actively used.
+        comment: os, altair, numpy, pandas, PIL — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; appropriate use of alt.layer(), transform_calculate,
-          and configure_* methods.
+        comment: Clean, idiomatic altair chaining, no fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and .html with correct canvas padding logic;
+          PNG measured at the canonical 3200x1800 target.
     library_mastery:
       score: 9
       max: 10
@@ -223,25 +242,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of Altair high-level API: alt.layer() composition, transform_calculate,
-          xOffset encoding, configure_* for global styling.'
+        comment: Native xOffset encoding channel, layer composition, transform_calculate
+          — expert use of Vega-Lite's declarative grammar.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: xOffset encoding for jitter within nominal bands is Altair/Vega-Lite-specific;
-          Box-Muller Gaussian jitter in transform_calculate is distinctively Altair-idiomatic.
+        comment: Box-Muller Gaussian jitter via transform_calculate + xOffset is a
+          genuinely Altair/Vega-Lite-distinctive technique, hard to replicate as cleanly
+          elsewhere.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - hover-tooltips
-  - html-export
   - layer-composition
+  - html-export
   patterns:
   - data-generation
   - groupby-aggregation
   dataprep: []
   styling:
   - alpha-blending
+  - publication-ready
