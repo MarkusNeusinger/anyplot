@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-grouped: Grouped Bar Chart
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-05
@@ -62,7 +62,7 @@ bars = (
         x=alt.X(
             "Quarter:O",
             title="Quarter",
-            axis=alt.Axis(labelFontSize=10, titleFontSize=12, labelColor=INK_SOFT, titleColor=INK),
+            axis=alt.Axis(labelAngle=0, labelFontSize=10, titleFontSize=12, labelColor=INK_SOFT, titleColor=INK),
         ),
         xOffset=alt.XOffset("Product:N", sort=["Software", "Hardware", "Services"]),
         y=alt.Y(
@@ -96,13 +96,28 @@ labels = (
     )
 )
 
+
+# Callout on the standout bar (Q4 Software, the clear growth peak) — a deliberate
+# storytelling touch beyond the raw value labels (DE-03).
+callout = pd.DataFrame({"Quarter": ["Q4"], "Product": ["Software"], "Revenue": [168], "note": ["peak quarter"]})
+callout_text = (
+    alt.Chart(callout)
+    .mark_text(dy=-22, fontSize=9, fontWeight="bold", color=IMPRINT[0])
+    .encode(
+        x=alt.X("Quarter:O"),
+        xOffset=alt.XOffset("Product:N", sort=["Software", "Hardware", "Services"]),
+        y=alt.Y("Revenue:Q"),
+        text="note:N",
+    )
+)
+
 chart = (
-    (bars + labels)
+    (bars + labels + callout_text)
     .properties(
         width=620,
         height=320,
         background=PAGE_BG,
-        title=alt.Title("bar-grouped · python · altair · anyplot.ai", fontSize=16, anchor="middle"),
+        title=alt.Title("bar-grouped · python · altair · anyplot.ai", fontSize=18, anchor="middle"),
     )
     .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10)
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
