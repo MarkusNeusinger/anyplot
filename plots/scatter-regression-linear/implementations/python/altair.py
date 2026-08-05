@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-linear: Scatter Plot with Linear Regression
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-05
@@ -49,16 +49,20 @@ y_upper = y_line + t_val * se_line
 y_lower = y_line - t_val * se_line
 
 df_scatter = pd.DataFrame({"Temperature (°F)": temperature, "Energy (kWh)": energy_consumption})
-df_band = pd.DataFrame({"Temperature (°F)": x_line, "y_lower": y_lower, "y_upper": y_upper})
+df_band = pd.DataFrame({"Temperature (°F)": x_line, "y_lower": y_lower, "y_upper": y_upper, "series": "95% CI"})
 
 equation_text = f"y = {slope:.2f}x + {intercept:.1f}"
 r2_text = f"R² = {r_squared:.3f}"
 annotation_df = pd.DataFrame({"equation": [equation_text], "r2": [r2_text]})
 
+# Shared color scale so the CI band and regression line report into one merged legend
+overlay_scale = alt.Scale(domain=["95% CI", "Regression Line"], range=[ACCENT, ACCENT])
+overlay_legend = alt.Legend(title=None, labelFontSize=10, orient="top-right")
+
 # Layers
 scatter = (
     alt.Chart(df_scatter)
-    .mark_point(size=70, opacity=0.65, filled=True)
+    .mark_point(size=100, opacity=0.65, filled=True)
     .encode(
         x=alt.X("Temperature (°F):Q", scale=alt.Scale(zero=False)),
         y=alt.Y("Energy (kWh):Q", scale=alt.Scale(zero=False)),
@@ -69,16 +73,26 @@ scatter = (
 
 band = (
     alt.Chart(df_band)
-    .mark_area(opacity=0.18, color=ACCENT)
-    .encode(x="Temperature (°F):Q", y=alt.Y("y_lower:Q", title="Energy (kWh)"), y2="y_upper:Q")
+    .mark_area(opacity=0.18)
+    .encode(
+        x="Temperature (°F):Q",
+        y=alt.Y("y_lower:Q", title="Energy (kWh)"),
+        y2="y_upper:Q",
+        color=alt.Color("series:N", scale=overlay_scale, legend=overlay_legend),
+    )
 )
 
 # Regression line fit natively via Altair's declarative regression transform
 regression_line = (
     alt.Chart(df_scatter)
     .transform_regression("Temperature (°F)", "Energy (kWh)", method="linear")
-    .mark_line(strokeWidth=2.5, color=ACCENT)
-    .encode(x="Temperature (°F):Q", y="Energy (kWh):Q")
+    .transform_calculate(series="'Regression Line'")
+    .mark_line(strokeWidth=3)
+    .encode(
+        x="Temperature (°F):Q",
+        y="Energy (kWh):Q",
+        color=alt.Color("series:N", scale=overlay_scale, legend=overlay_legend),
+    )
 )
 
 annotation_eq = (
@@ -118,6 +132,7 @@ chart = (
         gridColor=INK,
     )
     .configure_title(color=INK, fontSize=title_fontsize, anchor="start", fontWeight="normal")
+    .configure_legend(labelColor=INK_SOFT, symbolStrokeWidth=2.5, symbolOpacity=1)
 )
 
 # Save
