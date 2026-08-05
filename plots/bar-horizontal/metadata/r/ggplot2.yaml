@@ -1,0 +1,258 @@
+library: ggplot2
+language: r
+specification_id: bar-horizontal
+created: '2026-08-05T17:19:18Z'
+updated: '2026-08-05T17:33:25Z'
+generated_by: claude-sonnet
+workflow_run: 31028994595
+issue: 1946
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Bars sorted descending by value via reorder(), making the ranking immediately
+    readable — matches the spec's 'consider sorting for easier comparison' note
+  - Top category ('Fully remote') is deliberately emphasized with a bolder bar border
+    and bold data-label text, creating a clear focal point without adding a second
+    color
+  - Data labels placed at the end of every bar communicate exact values while the
+    axis still carries the scale, satisfying the spec's 'value labels at bar ends'
+    option
+  - Values sum to exactly 100% (34.5+24.8+18.3+12.1+6.4+2.7+1.2) for a plausible,
+    neutral 'work arrangement survey' scenario with realistic proportions
+  - Theme tokens (PAGE_BG/INK/INK_SOFT) are threaded through plot/panel background,
+    grid, axis text and title consistently, and both renders keep the brand green
+    identical
+  - Title fontsize scales dynamically with title length (title_ratio formula), keeping
+    the long mandated title readable without manual tuning
+  - Y-axis needs no title (category names are self-descriptive) and the single-series
+    legend is correctly omitted — reduces clutter per the style guide
+  weaknesses:
+  - The 'Fully in-office' row's data label '18.3%' visually collides with the x=20
+    major gridline in BOTH renders — the vertical grid line passes directly through
+    the glyphs (label position = value + label_gap = 18.3 + 2.415 = 20.7, landing
+    right on the gridline). Text stays legible but the crossing line is a visible
+    defect; increase label_gap slightly or draw grid lines behind a wider label halo/background
+    to avoid the collision.
+  - The is_top border-linewidth highlight (1.1 vs 0.4, both colored PAGE_BG) is nearly
+    imperceptible against the small bar edge — the bold data-label carries almost
+    all of the emphasis. Consider a more visible highlight (e.g. slightly darker/lighter
+    fill tint or a small marker) if a stronger focal point is desired.
+  - Right-side canvas margin beyond the 34.5% bar is fairly generous relative to the
+    data range (scale runs to ~40 while max value is 34.5) — acceptable given label
+    space is needed, but could be tightened slightly for better canvas utilization.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Preferred Work Arrangement Survey · bar-horizontal · r · ggplot2 · anyplot.ai" in dark ink at the top, fully visible, not clipped. Y-axis category labels (7 survey response options) in dark ink to the left of each bar. X-axis "Share of Respondents (%)" title and 0/10/20/30/40 tick labels in soft ink below. Subtle vertical major gridlines at each decade tick.
+      Data: 7 horizontal bars in brand green (#009E73), sorted descending from "Fully remote" (34.5%) to "Job-share arrangement" (1.2%). Each bar has a data label (e.g. "34.5%") placed just past its end in dark ink; the top bar's label is bold to mark the focal point.
+      Legibility verdict: PASS — all title, axis, tick, and data-label text is clearly readable against the light background. One minor defect: the "18.3%" label for "Fully in-office" is crossed by the x=20 gridline (still legible, but a visible collision — see weaknesses).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, now in light ink (#F0EFE8), fully visible. Y-axis category labels and X-axis title/ticks rendered in light ink, fully legible against the dark surface. Gridlines are a faint light color, still visible but subtle.
+      Data: Same 7 bars in identical brand green (#009E73) — confirmed pixel-identical hue to the light render — only chrome (background/text/grid) flips.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; all text is light-colored against the dark background and clearly readable. Same minor gridline/label collision on "18.3%" as in the light render (theme-independent issue, not a legibility failure).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout, dynamic title-fontsize scaling; readable
+          in both themes, no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: x=20 gridline visibly crosses the '18.3%' data label in both renders;
+          text stays legible so this is minimal, not severe, overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars are well-sized and clearly separated for 7 categories
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green on off-white/near-black surfaces, strong contrast,
+          no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large majority of the canvas, balanced margins, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Share of Respondents (%)'' includes unit; y-axis correctly omits
+          a redundant title'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes; backgrounds match
+          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean single-hue palette with intentional bold-label emphasis on
+          the top category — above a generic default but short of publication-grade
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle x-only grid, ticks removed, generous whitespace; docked slightly
+          for the gridline/label collision
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted ranking plus bold top-label creates a real focal point, though
+          the border-linewidth highlight itself is barely visible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart via geom_col + coord_flip
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted bars, single color, adequate spacing, end-of-bar value labels
+          — all spec notes satisfied
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: category on y-axis, value on x-axis after coord_flip; all 7 categories
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · bar-horizontal · r · ggplot2
+          · anyplot.ai'; single-series legend correctly omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range from 34.5% down to 1.2% shows clear variation across all
+          7 categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible workplace-survey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentages sum exactly to 100%, realistic distribution shape
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports → data → plot → save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only ggplot2 + ragg loaded; tibble used via ::'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately concise, no over-engineering or fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{theme}.png via ragg::agg_png, current ggplot2 API (linewidth,
+          not size)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: reorder(), coord_flip(), scale_y_continuous(expand=...), theme_minimal()
+          layered with targeted theme() overrides — idiomatic grammar-of-graphics
+          style
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Data-driven aes(linewidth = is_top) mapping to highlight one bar
+          is a genuine grammar-of-graphics technique, though its visual effect is
+          subtle
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns: []
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling
