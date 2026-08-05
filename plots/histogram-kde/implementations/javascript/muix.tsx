@@ -1,8 +1,7 @@
 // anyplot.ai
 // histogram-kde: Histogram with KDE Overlay
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-05
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 87/100 | Created: 2026-08-05
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
