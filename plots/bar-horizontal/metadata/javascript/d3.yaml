@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: bar-horizontal
 created: '2026-08-05T17:24:06Z'
-updated: '2026-08-05T17:28:14Z'
+updated: '2026-08-05T17:43:15Z'
 generated_by: claude-sonnet
 workflow_run: 31029478883
 issue: 1946
@@ -12,123 +12,141 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/javascript/d3/plot-dark.html
-quality_score: 81
+quality_score: 77
 review:
   strengths:
-  - 'Correctly threads ANYPLOT_TOKENS/ANYPLOT_SIZE through the mount-node contract;
-    first series is the mandated #009E73 brand green and chrome (title, ticks, grid,
-    domain lines) flips correctly between light and dark with data color held constant'
-  - Bars sorted ascending so the largest value lands at the top of the reversed band
-    scale, giving the chart a clear ranked-list focal point per the spec's storytelling
-    note
-  - Value labels placed at bar ends improve readability without adding legend clutter
-    for a single-series chart
-  - 'Clean, idiomatic D3: scaleBand/scaleLinear, axisBottom/axisLeft, and the selection.join()
-    pattern; x-axis-only gridlines are the correct convention for a horizontal bar
-    chart (value axis, not category axis)'
-  - No AR-09 edge clipping in either render — all labels, title, and value text stay
-    fully within canvas bounds with generous margins
+  - 'Correct, idiomatic D3 horizontal-bar structure: scaleBand for the category axis,
+    scaleLinear for the value axis, proper data joins, and the classic tickSize(ih)
+    full-height-gridline trick'
+  - Bars are pre-sorted ascending so the largest value lands at the top of the reversed
+    band scale, giving an immediate top-to-bottom ranking
+  - 'Clean theme-adaptive chrome: brand green #009E73 on both renders, correct #FAF8F1/#1A1A17
+    backgrounds, ink/inkSoft tokens threaded through axis text and value labels'
+  - Value labels placed directly at each bar's end (per spec's suggestion), with rounded
+    bar corners (rx/ry=3) as a small refinement over the raw skeleton
+  - Real, well-known, neutral dataset (GitHub star counts for major open-source projects)
+    — good realistic-context choice for the plot type
   weaknesses:
-  - 'Data scale is unrealistic: GitHub star counts are labeled in millions (46.9M–118.5M)
-    but no real repository has anywhere near that many stars — the most-starred GitHub
-    repos top out in the low hundreds of thousands (e.g. freeCodeCamp ~412k, VS Code
-    ~170k). Rescale the data to plausible star counts (thousands, not hundreds of
-    millions) or switch to a metric that genuinely reaches millions.'
-  - Library mastery is generic idiomatic usage only — no D3-distinctive technique
-    (e.g. a custom tick formatter beyond the basic `${d}M`, an annotation layer, or
-    a scale/format module feature) to differentiate it from a tutorial-level bar chart.
-  - 'Design polish is solid but stays close to baseline: single flat green fill with
-    no secondary refinement (e.g. subtle bar-end rounding, hover-ready but static
-    value-label emphasis) to push aesthetic sophistication further.'
+  - 'CRITICAL — rendered artifact does not match the committed source: plots/bar-horizontal/implementations/javascript/d3.js
+    line 98 sets the axis-label text to exactly `.text("GitHub Stars")` (no unit suffix),
+    but both plot-light.png and plot-dark.png show the axis label as ''GitHub Stars
+    (millions)'' and every bar-end value label as e.g. ''118.5M'', ''108.2M'', ''46.9M''.
+    Mathematically, `d3.format(".3~s")(118500)` (the exact formatter in the current
+    code, verified against the pinned d3@7.9.0 / d3-format@3.1.2) produces ''119k'',
+    never ''118.5M'' — a 1000x unit mismatch. This means the images in plot_images/
+    were very likely rendered from a stale/earlier version of this file (e.g. before
+    the ''fix(d3): address review feedback'' commit that removed the hardcoded ''(millions)''
+    label and switched to raw star counts + auto SI formatting), not the code currently
+    under review. This is a pipeline/render-sync failure, not necessarily a code defect
+    — but it makes this review unverifiable as-is.'
+  - As literally rendered, the chart claims up to '118.5M' (118.5 million) GitHub
+    stars for a single repository — no GitHub repository has ever exceeded roughly
+    half a million stars, so the displayed magnitude is factually impossible for the
+    domain regardless of root cause.
+  - 'Action needed before the next review can be trusted: re-render plot-light.png/plot-dark.png
+    from the exact current commit of d3.js and confirm the value labels read ''~119k''
+    down to ''~46.9k'' and the axis label reads plain ''GitHub Stars'' (or add an
+    explicit, correct unit qualifier matching whatever the formatter actually outputs)
+    — do not blindly rewrite the .js file to chase the wrong stale image.'
+  - 'Design Excellence is still at the ''well-configured default'' tier: a single
+    flat brand-green fill with modest refinements (rounded corners, hidden y-axis
+    ticks) — no additional visual hierarchy or emphasis technique (e.g., a highlighted
+    top bar, subtle value-driven opacity ramp) beyond the inherent bar-length/sort
+    ordering'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
-      Chrome: Title "bar-horizontal · javascript · d3 · anyplot.ai" in bold dark ink, centered top. Y-axis category labels (Vue, Bootstrap, TensorFlow, React, Flutter, VS Code, Node.js, freeCodeCamp) in dark gray at left. X-axis tick labels (0M-120M) and axis title "GitHub Stars (millions)" in muted gray below. Subtle vertical gridlines aligned to x-axis ticks. Bottom and left axis domain lines visible (L-shaped frame), top/right spines absent.
-      Data: Single-series horizontal bars in brand green (#009E73), bars sorted ascending bottom-to-top so freeCodeCamp (118.5M) is the longest bar at top and Vue (46.9M) the shortest at bottom. Value labels in dark text placed just past each bar's end.
-      Legibility verdict: PASS — all title, axis, tick, and value-label text is clearly readable against the light background; no light-on-light text.
+      Background: Warm off-white, consistent with #FAF8F1 — correct light-theme surface.
+      Chrome: Bold dark title "bar-horizontal · javascript · d3 · anyplot.ai" centered at top. X-axis ticks read 0M/20M/40M/60M/80M/100M/120M with a centered axis-title reading "GitHub Stars (millions)". Y-axis shows 8 project names (Vue, Bootstrap, TensorFlow, React, Flutter, VS Code, Node.js, freeCodeCamp) as category labels, no tick marks. Subtle vertical gridlines only. All chrome text is dark and clearly readable against the light background.
+      Data: 8 horizontal brand-green (#009E73) bars, sorted so freeCodeCamp (longest) is at top and Vue (shortest) at bottom. Each bar has a bold value label at its end reading e.g. "118.5M", "108.2M", "98.7M", "89.9M", "79.4M", "68.3M", "59.1M", "46.9M".
+      Legibility verdict: PASS for readability, but FAIL for correctness — the displayed unit ("(millions)") and the "M"-suffixed value labels do not match the implementation's source code, which sets the axis-label text to plain "GitHub Stars" (no unit suffix) and formats raw star counts (46,900–118,500) with d3.format(".3~s"), which mathematically yields "k"-suffixed values (e.g. "119k"), not "M". The rendered artifact appears to be stale relative to the current d3.js file.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 (not pure black).
-      Chrome: Same title now in white/light ink. Y-axis category labels and x-axis tick labels rendered in light gray, clearly visible against the dark surface. Gridlines are faint light vertical lines. Axis domain lines visible in a lighter tone matching the L-shaped frame convention.
-      Data: Bars are the identical brand green (#009E73) as the light render — confirmed unchanged across themes. Value labels in light-colored text at bar ends, fully legible.
-      Legibility verdict: PASS — no dark-on-dark failures; all text (title, axis labels, ticks, value labels) reads clearly against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — correct dark-theme surface.
+      Chrome: Same title, now in light/white text. Same "0M...120M" x-axis ticks and "GitHub Stars (millions)" axis label, now light-colored. Y-axis category labels in light gray, clearly legible. No dark-on-dark issues found — all text is appropriately light-colored against the dark background.
+      Data: Same 8 bars, identical brand-green #009E73 hue confirmed matching the light render exactly (only chrome flipped, as required). Same value labels ("118.5M" down to "46.9M") in light text.
+      Legibility verdict: PASS for readability, FAIL for correctness — same mismatch as the light render: the code's plain "GitHub Stars" label and "k"-scale formatter cannot produce the "(millions)"/"M" text visible here, indicating this image is also generated from a stale version of the implementation rather than the code currently in the PR diff.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Explicit font sizes (16px ticks, 18px axis label, 30px title); readable
-          in both themes; no overlap or crowding
+        comment: All font sizes explicitly set (16px axis, 18px axis label, 30px title)
+          and readable in both themes; docked because the rendered artifact's text
+          content cannot be trusted to match the reviewed source (see weaknesses).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, bars, or value text in either render
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8 bars at medium density with clear inter-bar spacing (padding 0.28);
-          appropriately sized for the canvas
+        comment: 8 categories, bars are prominent and well-sized for the data density,
+          rounded corners add polish.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green has strong contrast against both surfaces;
-          no red-green reliance
+        comment: Single high-contrast brand-green series on both light and dark surfaces,
+          no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); generous margins; no overflow or
-          clipping
+        comment: Plot fills the vast majority of the canvas, margins balanced, nothing
+          cut off, no canvas-dimension gate failure.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: X-axis labeled 'GitHub Stars (millions)' with units; y-axis category
-          names are self-explanatory
+        passed: false
+        comment: As rendered, the axis label reads 'GitHub Stars (millions)' which
+          is inconsistent with the actual data scale/source code and is actively misleading
+          rather than merely generic.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; data
-          color identical across themes'
+        comment: 'First series is #009E73 in both renders, identical hue across themes,
+          correct #FAF8F1/#1A1A17 backgrounds, theme-correct chrome.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        comment: Clean single-color composition with value labels; polish is solid
-          but not distinctive
+        passed: false
+        comment: 'Well-configured library default: single flat color, rounded corners
+          — professional but not exceptional.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Top/right spines removed, subtle x-axis-only gridlines, generous
-          whitespace via wide margins
+        passed: true
+        comment: X-axis-only gridlines, y-axis tick lines removed, generous margins
+          — some refinement beyond raw defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Ascending sort creates a clear ranked focal point at the top of the
-          chart
+        passed: true
+        comment: Sorted ranking with end-of-bar value labels gives a clear, immediate
+          top-to-bottom hierarchy without requiring annotations.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,54 +154,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar chart
+        comment: Correct horizontal bar chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent bar heights, sorted by value, single color, adequate spacing,
-          value labels at bar ends
+        comment: Consistent bar heights, sorted order, single color, adequate spacing
+          (padding 0.28), value labels at bar ends — all spec notes satisfied.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value on x-axis, category on y-axis, correct orientation
+        comment: Value on x, category on y, all 8 categories visible.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title matches mandated format exactly; legend correctly omitted for
-          single series
+        passed: false
+        comment: Title format is correct in source and (apparently) in the render;
+          docked one point because the axis-label discrepancy casts doubt on whether
+          the reviewed render's text can be trusted at all.
     data_quality:
-      score: 9
+      score: 10
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all core aspects of a horizontal bar chart: bars, category
-          labels, value labels, sorting'
+        comment: 8 categories (within the spec's 5-20 range) with clear value variation
+          supporting a ranking read.
       - id: DQ-02
         name: Realistic Context
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Framework names are real and neutral, but star counts in the hundreds
-          of millions are not remotely plausible for real GitHub repos
+        passed: true
+        comment: Real, neutral, relatable scenario — GitHub star counts for well-known
+          open-source projects.
       - id: DQ-03
         name: Appropriate Scale
-        score: 1
+        score: 0
         max: 4
         passed: false
-        comment: Values (46.9M-118.5M) are roughly 300-1000x larger than any real
-          repository's star count
+        comment: As displayed, values run from '46.9M' to '118.5M' GitHub stars —
+          no repository has ever come close to a million stars, let alone over a hundred
+          million. Factually impossible for the domain as rendered.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -191,49 +211,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, no functions/classes
+        comment: Flat top-to-bottom script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data array
+        comment: Fully deterministic hardcoded data array.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3, no unused imports
+        comment: Only the global d3 is used, no unused imports.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity
+        comment: Clean and appropriately simple, but the source's axis-label text
+          does not match what shipped in the reviewed render, suggesting a rendering/CI
+          sync issue worth verifying.
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Correct mount-node contract via ANYPLOT_SIZE/ANYPLOT_TOKENS, no animation,
-          current D3 7.x API
+        passed: false
+        comment: The saved plot-{theme}.png/html do not reflect the current mount-node
+          output of this exact source file — output/artifact reliability is unverified
+          this attempt.
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        comment: scaleBand/scaleLinear, axisBottom/axisLeft, and selection.join()
-          used idiomatically
+        passed: true
+        comment: Idiomatic scaleBand/scaleLinear/axisBottom/axisLeft usage, proper
+          data joins.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        comment: No D3-distinctive technique beyond basic scales/axes; generic tutorial-level
-          feature set
-  verdict: APPROVED
+        passed: true
+        comment: Uses the classic D3-specific tickSize(ih) full-height-gridline technique
+          and d3-format SI-prefix formatting — D3-idiomatic but not a rare/unique
+          feature.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
@@ -243,3 +269,4 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
+  - minimal-chrome
