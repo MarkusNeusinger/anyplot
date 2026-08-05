@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 streamgraph-basic: Basic Stream Graph
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-05
@@ -67,8 +67,8 @@ uppers = np.column_stack([baseline + cumsum[:, i] for i in range(len(genres))])
 x_numeric = np.arange(len(months), dtype=float)
 x_smooth = np.linspace(0, len(months) - 1, 400)
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot — landscape 3200×1800 px (figsize=(8, 4.5) × dpi=400, no bbox_inches='tight')
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Store splines to reuse for trend lines and annotations
@@ -89,7 +89,9 @@ for i in range(len(genres)):
     )
 
 # Seaborn-native center-line trend highlights for Hip-Hop and Rock
-# sns.lineplot adds a genuine seaborn plotting element over the streams
+# sns.lineplot adds a genuine seaborn plotting element over the streams.
+# Drawn in INK_SOFT (not the stream's own color) so the dashed overlay stays
+# visible against its same-hue band instead of blending in.
 for gname, linestyle in [("Hip-Hop", (0, (6, 3))), ("Rock", (0, (6, 3)))]:
     gi = genres.index(gname)
     spl_lo, spl_up = splines[gi]
@@ -100,8 +102,8 @@ for gname, linestyle in [("Hip-Hop", (0, (6, 3))), ("Rock", (0, (6, 3)))]:
         x="x",
         y="y",
         ax=ax,
-        color=IMPRINT[gi],
-        linewidth=2.5,
+        color=INK_SOFT,
+        linewidth=1.5,
         linestyle=linestyle,
         alpha=0.85,
         legend=False,
@@ -118,10 +120,10 @@ ax.annotate(
     "Hip-Hop\nrising ↑",
     xy=(hh_x, hh_center),
     xytext=(hh_x - 4, hh_center + 28),
-    fontsize=15,
+    fontsize=11,
     fontweight="bold",
     color=IMPRINT[hip_hop_idx],
-    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5},
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2},
 )
 
 # Rock center near month 18 (decline well established)
@@ -131,29 +133,29 @@ ax.annotate(
     "Rock\ndeclining ↓",
     xy=(rk_x, rk_center),
     xytext=(rk_x - 5, rk_center - 32),
-    fontsize=15,
+    fontsize=11,
     fontweight="bold",
     color=IMPRINT[rock_idx],
-    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5},
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2},
 )
 
 # Style
 tick_positions = [0, 4, 8, 12, 16, 20, 23]
 tick_labels = [months[i].strftime("%b '%y") for i in tick_positions]
 ax.set_xticks(tick_positions)
-ax.set_xticklabels(tick_labels, fontsize=16, color=INK_SOFT)
+ax.set_xticklabels(tick_labels, fontsize=8, color=INK_SOFT)
 
 ax.set_xlim(0, len(months) - 1)
 ax.set_yticks([])
 ax.set_ylabel("")
-ax.set_xlabel("Month", fontsize=20, color=INK)
-ax.set_title("streamgraph-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.set_xlabel("Month (2023–2024)", fontsize=10, color=INK)
+ax.set_title("streamgraph-basic · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 
 ax.legend(
     loc="upper left",
-    fontsize=16,
+    fontsize=8,
     title="Genre",
-    title_fontsize=16,
+    title_fontsize=8,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
     framealpha=0.9,
@@ -163,4 +165,4 @@ sns.despine(ax=ax, left=True, bottom=False)
 ax.spines["bottom"].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
