@@ -12,12 +12,14 @@ const t = window.ANYPLOT_TOKENS;
 // predicted species. Counts are single-polarity (0-100) -> imprint_seq.
 const species = ["Cat", "Dog", "Bird", "Fish", "Rabbit", "Horse"];
 const N = species.length;
+// Off-diagonal noise concentrates on visually/behaviorally similar pairs
+// (Cat<->Dog, Bird<->Rabbit, Dog<->Horse) rather than dissimilar species.
 const matrix = [
   [86, 9, 1, 0, 3, 1],
   [11, 82, 0, 0, 2, 5],
-  [0, 1, 91, 4, 2, 2],
-  [0, 0, 6, 93, 0, 1],
-  [4, 3, 1, 0, 88, 4],
+  [1, 1, 93, 0, 3, 2],
+  [0, 0, 1, 97, 0, 2],
+  [4, 3, 2, 0, 87, 4],
   [2, 6, 0, 1, 3, 88],
 ];
 
@@ -60,6 +62,9 @@ const FONT_STACK =
 // Paints heatmap cells, writes per-cell counts, outlines the diagonal (correct
 // predictions), and renders a vertical colorbar in the right-side padding
 // reserved via options.layout.padding.
+const CELL_GAP = 3;
+const CELL_RADIUS = 6;
+
 const heatmapPainter = {
   id: "heatmap-annotated-painter",
   beforeDatasetsDraw(chart) {
@@ -68,29 +73,23 @@ const heatmapPainter = {
     const cellW = (right - left) / N;
     const cellH = (bottom - top) / N;
 
+    // Inset rounded-rect cells (small gap between cells) rather than an
+    // edge-to-edge flat fill, so the fill itself carries visual refinement.
     for (let r = 0; r < N; r++) {
       for (let c = 0; c < N; c++) {
         const [rr, gg, bb] = seqRgb(matrix[r][c] / 100);
         ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
-        ctx.fillRect(left + c * cellW, top + r * cellH, cellW + 1, cellH + 1);
+        ctx.beginPath();
+        ctx.roundRect(
+          left + c * cellW + CELL_GAP / 2,
+          top + r * cellH + CELL_GAP / 2,
+          cellW - CELL_GAP,
+          cellH - CELL_GAP,
+          CELL_RADIUS,
+        );
+        ctx.fill();
       }
     }
-
-    // Hairline separators so the grid stays legible on both themes.
-    ctx.save();
-    ctx.strokeStyle = t.grid;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let k = 0; k <= N; k++) {
-      const x = Math.round(left + k * cellW) + 0.5;
-      ctx.moveTo(x, top);
-      ctx.lineTo(x, bottom);
-      const y = Math.round(top + k * cellH) + 0.5;
-      ctx.moveTo(left, y);
-      ctx.lineTo(right, y);
-    }
-    ctx.stroke();
-    ctx.restore();
 
     // Diagonal outline — correctly classified samples, the natural focal
     // structure of a confusion matrix.
@@ -98,7 +97,15 @@ const heatmapPainter = {
     ctx.strokeStyle = t.ink;
     ctx.lineWidth = 3;
     for (let i = 0; i < N; i++) {
-      ctx.strokeRect(left + i * cellW + 1.5, top + i * cellH + 1.5, cellW - 3, cellH - 3);
+      ctx.beginPath();
+      ctx.roundRect(
+        left + i * cellW + CELL_GAP / 2 + 1.5,
+        top + i * cellH + CELL_GAP / 2 + 1.5,
+        cellW - CELL_GAP - 3,
+        cellH - CELL_GAP - 3,
+        CELL_RADIUS,
+      );
+      ctx.stroke();
     }
     ctx.restore();
   },
