@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:55:42Z'
-updated: '2026-08-05T11:26:10Z'
+updated: '2026-08-05T11:34:20Z'
 generated_by: claude-sonnet
 workflow_run: 31000826364
 issue: 856
@@ -12,49 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
+  - 'All four weaknesses from Attempt 1 are fixed: title now includes python, the
+    4-sided outline box is removed, the x-axis label reads Month instead of generic
+    Time, and adjacent stream bands now have a theme-adaptive PAGE_BG separator stroke
+    that sharpens boundaries in both themes'
   - Imprint palette applied in canonical order (Pop=#009E73, Rock=#C475FD, Hip-Hop=#4467A3,
     Electronic=#BD8233, Jazz=#AE3030, Classical=#2ABCCD), identical across both themes
   - PCHIP-interpolated smooth curves with a properly centered symmetric baseline produce
     a genuine organic streamgraph shape, matching the spec's core requirement
-  - Theme-adaptive chrome (background, ink, grid, legend box) is correctly threaded
-    through PAGE_BG/INK/INK_SOFT tokens — both renders pass the legibility check with
-    no dark-on-dark or light-on-light failures
-  - HoverTool + Legend add real interactive value in the HTML output without faking
-    anything in the static PNG
-  - Realistic, neutral music-streaming dataset (6 genres over 2 years) with plausible
-    amplitude variation and a data-driven peak annotation for storytelling
+  - Theme-adaptive chrome correctly threaded through PAGE_BG/INK/INK_SOFT tokens,
+    including the new separator stroke color, verified via pixel crop to render correctly
+    in both themes
+  - No edge clipping on title, axes, or legend in either render (verified by pixel
+    inspection)
+  - Realistic, neutral music-streaming dataset with plausible amplitude variation
+    and a data-driven peak annotation
   weaknesses:
-  - 'Title is missing the required {language} segment: current title is ''streamgraph-basic
-    · bokeh · anyplot.ai'' but the mandated format is ''{spec-id} · {language} · {library}
-    · anyplot.ai'' — fix to ''streamgraph-basic · python · bokeh · anyplot.ai'' in
-    the figure() title= string.'
-  - Bokeh figure keeps a full 4-sided outline (outline_line_color set on all sides)
-    rather than following the minimal/L-shaped spine convention — remove or drop the
-    outline for a cleaner look.
-  - X-axis label 'Time' is generic given the data is monthly — rename to something
-    more descriptive (e.g. 'Month') to match the specificity of the Y-axis label.
-  - Streamgraph bands use fill_color == line_color with no separating stroke between
-    adjacent areas — a subtle ink-colored (or PAGE_BG-colored) 1px edge between bands
-    would sharpen boundaries, especially between the visually closer purple/blue/red
-    hues.
+  - DE-01 still reads as a well-executed default rather than a distinctive aesthetic
+    statement - consider a more intentional visual signature (e.g. a subtle background
+    band or gradient emphasis behind the peak genre) to push past competent into publication-ready
+  - LM-02 usage is solid but not maximally distinctive - bokeh-specific features like
+    CustomJSHover for richer tooltip formatting, or linked brushing, would better
+    showcase library-specific strengths
+  - Modest whitespace gap between the right edge of the stream chart and the legend
+    box - tightening this slightly would improve canvas utilization further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "streamgraph-basic · bokeh · anyplot.ai" top-left; dark "Time" x-axis label and rotated "Streaming Hours (relative)" y-axis label; soft grey tick labels on both axes; subtle horizontal gridlines at ~10% alpha; a thin full-perimeter outline box around the plot area. Legend box ("Pop, Rock, Hip-Hop, Electronic, Jazz, Classical") sits just right of the plot with a light elevated-cream fill and thin border. All chrome text is clearly readable against the light background.
-      Data: Six smoothly interpolated, symmetric-baseline stream bands stacked around y=0, colored (bottom-to-top) green/Pop, lavender/Rock, blue/Hip-Hop, ochre/Electronic, red/Jazz, cyan/Classical — matching Imprint palette positions 1–6 in canonical order, first series #009E73. A small circular marker plus a boxed "Pop — peak streaming month" label calls out the Pop band's peak around mid-2022.
-      Legibility verdict: PASS — all text (title, axis labels, tick labels, legend, annotation) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white
+      Chrome: Bold dark title "streamgraph-basic · python · bokeh · anyplot.ai" (language segment now present); dark "Month" x-axis label; rotated dark "Streaming Hours (relative)" y-axis label; soft grey tick labels; subtle ~10%-alpha gridlines. Full 4-sided outline box from Attempt 1 has been removed. Legend sits right of the plot with a light elevated-cream fill and dark text. All readable, no clipping at canvas edges (verified by pixel crop of title, left axis, bottom axis, and legend regions).
+      Data: Six PCHIP-smoothed stream bands in Imprint canonical order (green #009E73 Pop, lavender Rock, blue Hip-Hop, ochre Electronic, red Jazz, cyan Classical), symmetric baseline centered at y=0. Adjacent bands now separated by a crisp off-white (PAGE_BG) stroke, sharpening boundaries between visually similar hues. Peak-streaming-month callout marks Pop's high point.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as light — white/light-cream title and axis labels, light-grey tick labels, subtle light-tinted gridlines, thin outline box in a soft light-grey. Legend box now uses the dark elevated fill (#242420-ish) with a light border. The annotation callout box also flips to a dark fill with white text and border.
-      Data: Identical six band colors to the light render (green/lavender/blue/ochre/red/cyan) — confirms data colors are theme-independent; only chrome flipped.
-      Legibility verdict: PASS — all chrome text is light-colored against the near-black background; no dark-on-dark failures observed (title, axis labels, tick labels, legend, and annotation box all readable).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black
+      Chrome: Same layout, light/cream title and axis labels, light-grey tick labels, light-tinted subtle gridlines, no outline box. Legend and callout flip to dark elevated fills with light text/borders. All readable — no dark-on-dark failures.
+      Data: Colors pixel-identical to light render (only chrome flipped, as required). Inter-band separator stroke correctly resolves to near-black (PAGE_BG per-theme), still reading as a clean seam rather than a mismatched light line — verified via pixel crop comparison against the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,52 +61,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50/42/34pt), readable in both themes;
-          title fills only ~40% of plot width (short mandated string, not a penalty)
-          with no overflow
+        comment: All sizes explicit and well-proportioned; title comfortably ~45-50%
+          of canvas width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No collisions; new inter-band strokes sharpen adjacent boundaries
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bands are wide and clearly visible at fill_alpha=0.85; peak marker
-          (size=22) is visible
+        comment: Bands and markers clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-validated; adjacent bands remain distinguishable
-          despite no separating stroke
+        comment: Good contrast, CVD-safe hue diversity
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large majority of the canvas with balanced margins;
-          legend sits adjacent, not isolated
+        comment: Chart fills ~80%+ of canvas width/height; legend near plot
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis label has a units-like qualifier ('relative'); X-axis label
-          'Time' is generic for monthly data
+        passed: true
+        comment: Month is now specific to the monthly cadence (was generic Time)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for all 6 categories,
-          correct theme-adaptive chrome in both renders'
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -115,24 +108,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Harmonious Imprint colors and smooth organic curves read as competent,
-          but not exceptional beyond spec requirements
+        comment: Harmonious colors and smooth curves but still reads as well-executed
+          default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid and generous whitespace, but a full 4-sided outline box
-          remains instead of a minimal/no-spine treatment
+        passed: true
+        comment: Outline removed, subtle grid, new inter-band separator stroke is
+          a genuine polish detail
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Data-driven peak annotation gives the chart a focal point beyond
-          raw display
+        comment: Data-driven peak annotation gives a focal point beyond raw display
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,29 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct symmetric-baseline streamgraph with smooth curves
+        comment: Correct streamgraph with symmetric baseline
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth interpolation, centered baseline, distinct colors, legend
+        comment: Smooth interpolation, symmetric baseline, legend, harmonious colors
           all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x (datetime axis), stacked value bands, category encoded
-          via color
+        comment: Time on x, streaming hours on y, all categories shown
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is missing the required {language} ('python') segment — reads
-          'streamgraph-basic · bokeh · anyplot.ai' instead of 'streamgraph-basic ·
-          python · bokeh · anyplot.ai'; legend labels are correct
+        passed: true
+        comment: Title now matches spec-id · language · library · anyplot.ai exactly;
+          legend labels match data
     data_quality:
       score: 14
       max: 15
@@ -172,20 +162,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Six genres show varied amplitude and phase; growth/decline patterns
-          are visible across the timeline
+        comment: Six genres with varied amplitude and phase
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible music-streaming-hours-by-genre scenario
+        comment: Neutral, plausible music-streaming scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (5-63 relative hours) and relative genre proportions are plausible
+        comment: Sensible relative magnitudes and seasonal variation
     code_quality:
       score: 10
       max: 10
@@ -195,34 +184,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; linear imports → data → plot → save flow
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (numpy, pandas, bokeh, scipy.PchipInterpolator, selenium)
-          are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering; complexity is appropriate for a manually-drawn
-          streamgraph
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via the documented output_file/save
-          + Selenium screenshot pattern
+        comment: Saves plot-{theme}.png and .html via current bokeh API
     library_mastery:
       score: 7
       max: 10
@@ -232,17 +218,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource + p.patch() is the correct idiomatic approach for
-          a custom symmetric-baseline streamgraph that bokeh has no built-in glyph
-          for
+        comment: ColumnDataSource + p.patch() is the correct idiomatic approach
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: HoverTool with per-genre tooltips is a genuinely bokeh-distinctive
-          interactive feature
-  verdict: REJECTED
+        comment: HoverTool with per-genre tooltips is genuinely bokeh-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -251,15 +234,17 @@ impl_tags:
   - hover-tooltips
   - annotations
   - custom-legend
-  - patches
   - html-export
   patterns:
   - data-generation
   - columndatasource
   - iteration-over-groups
+  - matrix-construction
   dataprep:
   - interpolation
   - time-series
   styling:
+  - publication-ready
   - alpha-blending
+  - edge-highlighting
   - grid-styling
