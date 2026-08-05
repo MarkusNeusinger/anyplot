@@ -2,126 +2,130 @@ library: altair
 language: python
 specification_id: heatmap-annotated
 created: '2025-12-24T21:32:17Z'
-updated: '2026-05-06T13:11:49Z'
-generated_by: claude-haiku
-workflow_run: 25436641301
+updated: '2026-08-05T09:46:01Z'
+generated_by: claude-sonnet
+workflow_run: 30993345159
 issue: 1824
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/altair/plot-dark.html
-quality_score: 95
+quality_score: 88
 review:
   strengths:
-  - Perfect visual quality with explicitly sized fonts readable in both themes
-  - Expert Altair mastery including distinctive conditional text coloring via alt.condition()
-  - Flawless palette compliance with correct BrBG diverging colormap and theme-adaptive
-    chrome
-  - Complete spec compliance with all required features implemented perfectly
-  - Clean Pythonic code with excellent KISS structure and reproducibility
-  - Meaningful business metrics data with realistic correlation patterns
-  - Thoughtful design with white cell borders for clarity and custom legend styling
-  - Two-layer composition elegantly demonstrates Altair's strengths
+  - Diverging colormap correctly implements imprint_div with a theme-adaptive midpoint
+    (PAGE_BG), matching the style guide's continuous-data rule exactly
+  - Text annotation color is conditional on |correlation| > 0.5 (white vs. INK_SOFT),
+    keeping every label readable across the full red-to-blue range in both themes
+  - Annotation font size scales with |correlation| via alt.Size, creating a clear
+    visual hierarchy that draws the eye to the strongest relationships first
+  - Square canvas is the right call for a symmetric grid-based plot; padding logic
+    lands exactly on 2400x2400 with no clipping or overflow in either render
+  - Rotated -45deg x-axis tick labels avoid overlap while keeping labels legible;
+    axis label typography is balanced between x and y
+  - Realistic, plausible correlation structure between named business metrics (Revenue/Marketing/R&D/Support/Profit/Growth/Efficiency)
+    via seeded synthetic data
   weaknesses:
-  - Design Excellence slightly below maximum (15/20) - could explore custom colormap
-    variants or more elaborate visual refinement for publication-premium finish
+  - The identity diagonal (always 1.00) gets no distinct visual treatment beyond its
+    color — a subtle outline or corner marker would make the diagonal instantly recognizable
+    and sharpen the data-storytelling read
+  - Legend/colorbar mastery is solid but generic to Altair's default Legend API; no
+    distinctive library-specific feature (e.g. interactive selection/highlight wired
+    into the HTML export) is used to push Library Mastery further
+  - Right-hand whitespace next to the legend on the square canvas is a little generous;
+    tightening legend placement or padding would let the matrix itself claim slightly
+    more of the canvas
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct warm tone, not pure white
-      Chrome: Title, axis labels (Business Metrics), tick labels all clearly visible in dark text (#1A1A17)
-      Data: 7x7 correlation heatmap with BrBG diverging colormap showing positive (dark teal) and negative (warm tan) correlations. Text annotations in each cell with conditional coloring: white for strong correlations (>0.5 or <-0.5), soft ink (#4A4A44) for weaker. White cell borders provide excellent separation.
-      Legend: "Correlation" title with scale -1.0 to 1.0, custom styling with elevated background (#FFFDF6)
-      Legibility verdict: PASS - All text perfectly readable, excellent contrast, no overlapping elements
+      Background: Warm off-white (#FAF8F1), matches the light-theme page surface — not pure white.
+      Chrome: Title "heatmap-annotated · python · altair · anyplot.ai" is bold dark ink, centered, fully visible with no clipping. Both axis titles ("Business Metrics") are dark and legible; x-axis tick labels are rotated -45deg and don't overlap each other or the axis title; y-axis tick labels are horizontal and clearly readable. The "Correlation" legend title and its 1.0/0.5/0.0/-0.5/-1.0 tick labels sit inside an elevated cream box with a soft ink border, fully legible.
+      Data: 7x7 correlation matrix rendered as mark_rect cells with a red (#AE3030) <-> cream midpoint <-> blue (#4467A3) diverging scale (imprint_div). Numeric values are overlaid via bold mark_text, with font size scaling by |correlation| so strong relationships (e.g. Revenue/Profit = 0.95) read larger than near-zero ones (e.g. Efficiency/Support = -0.01). Text color flips to white on strongly saturated cells (|r| > 0.5) and to soft ink on weak/near-white cells — no low-contrast pairing observed anywhere in the grid.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct warm tone, not pure black
-      Chrome: Title, axis labels, tick labels all clearly visible in light text (#F0EFE8). Secondary text in light soft ink (#B8B7B0). Zero "dark-on-dark" failures.
-      Data: Identical to light render - same BrBG colormap colors, white cell borders, cell values clearly visible. Conditional text coloring works perfectly: white text stands out on dark correlation cells, light gray visible on lightest backgrounds.
-      Legend: Elevated dark background (#242420) with light text, maintains proper readability
-      Legibility verdict: PASS - All text perfectly readable in dark theme, data colors identical to light render, proper theme adaptation throughout
+      Background: Warm near-black (#1A1A17), matches the dark-theme page surface — not pure black.
+      Chrome: Title, axis titles, and tick labels all render in light ink (#F0EFE8 / #B8B7B0) and are clearly visible against the dark background — no dark-on-dark occurrences. The legend box uses the dark elevated fill (#242420) with a light border and light text, fully legible.
+      Data: Same red-to-blue diverging scale and cell positions as the light render; the interpolated midpoint hue differs from light (since the diverging scale's midpoint is intentionally theme-adaptive — #1A1A17 on dark vs #FAF8F1 on light, per the style guide's continuous-data rule), but the two saturated end colors (#AE3030 red, #4467A3 blue) match exactly between renders. Near-zero cells (e.g. the Efficiency row) sit very close to the page background but the muted-ink text overlaid on them (e.g. "-0.01", "0.05") remains legible at close inspection — verified via pixel crop, no dark-on-dark text failure.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 18-22px, annotations
-          20px bold). Perfectly readable in both themes.
+        comment: All text explicitly sized and readable in both themes; no dark-on-dark
+          or light-on-light
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Rotated x-axis labels, white cell borders
-          clearly separate content.
+        comment: Rotated tick labels, cell text, and legend all clear of each other
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Heatmap cells ~225×225px in 1600×1600 canvas are perfectly visible.
-          Text annotations well-sized for cell dimensions.
+        comment: Size-scaled annotations read well; near-zero cells in dark theme
+          sit close to bg but text stays legible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: BrBG colormap is colorblind-safe. Conditional text coloring ensures
-          good contrast in all cells.
+        comment: Diverging red/blue with conditional text color keeps contrast across
+          the full value range
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 1600×1600 format ideal for heatmap. Plot fills ~80% of canvas
-          with balanced margins.
+        comment: Square format correct for grid-based plot; lands on 2400x2400 with
+          no clipping or overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Business Metrics for both axes. Title format
-          correct.'
+        comment: Descriptive 'Business Metrics' axis titles on both axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'BrBG colormap correct for diverging data. Backgrounds #FAF8F1 (light)
-          / #1A1A17 (dark). Text colors theme-adaptive. Both renders pass.'
+        comment: imprint_div with theme-adaptive midpoint; correct PAGE_BG in both
+          renders
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Professional design with thoughtful conditional text coloring. White
-          cell borders add polish. Standard BrBG applied with sophistication. Above
-          defaults but not custom-palette level.
+        comment: Custom diverging palette and magnitude-scaled annotations show real
+          design intent
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Grid disabled appropriately. White borders add clarity. Legend has
-          custom styling. Generous whitespace. Good refinement.
+        comment: Grid off, subtle white cell strokes, generous padding; legend box
+          a touch roomy
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Business metrics with meaningful correlations. Diagonal shows perfect
-          self-correlation. Inverse relationships visible. Visual hierarchy through
-          color guides focus.
+        comment: Size+color hierarchy draws attention to strongest correlations; diagonal
+          has no distinct visual cue
     spec_compliance:
       score: 15
       max: 15
@@ -131,49 +135,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap with annotated values
+        comment: Correct annotated heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: rectangles, text annotations, colorbar, automatic
-          text contrast'
+        comment: Contrast-aware annotations, colorbar legend, 2-decimal formatting,
+          diverging cmap for signed data
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to metrics, color to correlation values
+        comment: Full 7x7 matrix shown, x/y correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend format correct
+        comment: Title matches mandated format; legend clearly labeled 'Correlation'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows positive, negative, perfect self-correlation, and near-zero
-          values
+        comment: Full range of positive/negative/near-zero correlations represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real business metrics with meaningful, neutral correlations
+        comment: Plausible, neutral business-metric relationships
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlation values properly scaled [-1, 1], all mathematically valid
+        comment: Correlation values sensibly bounded in [-1, 1]
     code_quality:
       score: 10
       max: 10
@@ -183,57 +186,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow from imports through styling to save
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, altair, numpy, pandas'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, clean Pythonic code, appropriate complexity
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct file naming: plot-{THEME}.png and .html'
+        comment: Saves plot-{THEME}.png/.html correctly, current API
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of alt.Chart(), mark_rect(), mark_text(), alt.condition().
-          Proper configure_*() for theming.
+        comment: Declarative layered encoding, alt.condition, alt.Size/Color scales
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Conditional text coloring via alt.condition(), two-layer composition,
-          theme-adaptive tokens, interactive tooltips
+        comment: Magnitude-scaled text encoding is a nice touch; no other Altair-distinctive
+          feature (e.g. interactive selection) leveraged
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - colorbar
   - annotations
   - layer-composition
-  - custom-legend
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -242,3 +244,4 @@ impl_tags:
   - correlation-matrix
   styling:
   - custom-colormap
+  - edge-highlighting
