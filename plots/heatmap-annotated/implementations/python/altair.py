@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-annotated: Annotated Heatmap
-Library: altair 6.2.2 | Python 3.13.12
-Quality: 95/100 | Updated: 2026-08-05
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-08-05
 """
 
 import os
