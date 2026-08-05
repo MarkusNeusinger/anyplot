@@ -2,43 +2,57 @@ library: plotnine
 language: python
 specification_id: heatmap-annotated
 created: '2025-12-24T21:30:30Z'
-updated: '2026-05-06T13:11:23Z'
-generated_by: claude-haiku
-workflow_run: 25436745401
+updated: '2026-08-05T09:39:30Z'
+generated_by: claude-sonnet
+workflow_run: 30993486067
 issue: 1824
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 91
 review:
   strengths:
-  - Excellent visual clarity in both light and dark themes
-  - Strong data storytelling through color encoding of correlation strength
-  - Proper annotation formatting (2 decimal places)
-  - Correct RdBu diverging palette for centered correlation data
-  - Clean professional design with appropriate visual refinement
-  - Robust deterministic data generation using mathematical correlation matrix
+  - 'Diverging colormap exactly matches the Imprint imprint_div spec (#AE3030 -> theme-adaptive
+    midpoint -> #4467A3), with the midpoint correctly swapped per theme (#FAF8F1 light
+    / #1A1A17 dark)'
+  - Per-cell text color adapts to its own tile via a computed text_color column +
+    scale_color_identity() (|value| > 0.5 -> light text, else INK) — a genuinely distinctive
+    plotnine technique for solving the classic annotated-heatmap contrast problem
+  - coord_fixed(ratio=1) keeps every tile square regardless of the 8x8 grid, matching
+    the 2400x2400 canvas exactly
+  - Zero clipping at any canvas edge (title, both axis label sets, rotated tick labels,
+    and the colorbar were all verified fully visible with no chopped pixels)
+  - 'Clean minimal theme: grid, panel border, and axis ticks all removed; tile borders
+    painted in PAGE_BG create a subtle separating grid without extra gridline elements'
+  - 'Both renders confirmed theme-correct: identical data colors between light/dark,
+    only chrome (background, ink, grid) flips'
+  - Realistic, neutral correlation-matrix dataset (8 economic indicators) built via
+    a proper symmetric correlation construction (A·Aᵀ normalized, forced symmetric,
+    unit diagonal) with a fixed seed
   weaknesses:
-  - Code does not explicitly set theme-adaptive colors using ANYPLOT_THEME environment
-    variable (relies on workflow post-processing instead of following documented pattern)
-  - Output filename hardcoded to plot.png instead of using theme variable f-string
-  - Design Excellence slightly above default but not exceptional - room for additional
-    aesthetic sophistication
+  - Design Excellence is competent but not exceptional beyond the contrast-text trick
+    — no additional storytelling device (e.g. subtle callout/annotation on the strongest
+    correlation pair, or reordering variables by cluster) to give the viewer an explicit
+    focal point beyond the self-evident diagonal
+  - Library Mastery is solid and idiomatic (geom_tile + geom_text + scale_fill_gradient2
+    + coord_fixed) but doesn't reach for a second distinctive plotnine feature beyond
+    the contrast-text pattern (e.g. facet_wrap for a small-multiples angle, or a custom
+    legend/guide tweak) to push it further above generic usage
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct for light theme
-      Chrome: Title, axis labels, tick labels all dark-colored and clearly visible. No text-on-light failures.
-      Data: RdBu diverging palette with white cell borders. Correlation values displayed as black text on light cells, white text on dark cells. Dynamic text contrast ensures readability across all cells.
-      Legibility verdict: PASS — all elements readable, clean presentation
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "heatmap-annotated · python · plotnine · anyplot.ai" centered at top in dark ink, ~67% of plot width, fully visible with no clipping. Both axis titles ("Economic Indicator") in dark ink. X-axis tick labels (8 indicator names) rotated 45° with right alignment, fully visible above the bottom canvas edge. Y-axis tick labels horizontal, fully visible left of the left canvas edge. Colorbar titled "Correlation" sits at the right with 1.0/0.5/0.0/-0.5/-1.0 tick labels, fully within the canvas.
+      Data: 8x8 tile grid using the Imprint diverging scale (#AE3030 red -> near-neutral -> #4467A3 blue), diagonal cells are solid dark blue (1.00, self-correlation). Each cell is annotated with its correlation value to 2 decimals; text is light/white on saturated (|r|>0.5) cells and dark ink on near-neutral cells — all values read clearly against their own cell.
+      Legibility verdict: PASS — title, both axis titles, both sets of tick labels, colorbar labels, and every one of the 64 cell annotations are readable against their local background; no light-on-light instances found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct for dark theme
-      Chrome: Title, axis labels, tick labels all light-colored and clearly visible against dark background. No dark-on-dark failures.
-      Data: RdBu colors identical to light render (only chrome changed). Text colors maintain contrast with background. Cell borders remain white for definition.
-      Legibility verdict: PASS — both renders equally readable, theme adaptation successful
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink/soft-gray, clearly legible against the dark background. Colorbar and its tick labels also flip to light-on-dark and remain fully legible.
+      Data: Identical tile colors to the light render — same #AE3030/#4467A3 diverging scale and identical correlation values per cell, confirming only chrome (not data color) changed between themes. Near-zero-correlation cells blend closer to the dark background by design (their fill approaches the theme's own PAGE_BG midpoint), which is an intentional and correct diverging-scale behavior, not a rendering bug.
+      Legibility verdict: PASS — no dark-on-dark instances; text color logic (text_color column driven by |value| > 0.5) correctly keeps light text on saturated cells and ink-toned text on near-neutral cells in both themes.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,52 +63,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All fonts explicitly set: title 24pt, labels 20pt, ticks 14pt. Perfectly
-          readable in both themes.'
+        comment: Title, axis titles, tick labels, colorbar labels, and all 64 cell
+          annotations readable in both themes; contrast-adaptive text color per cell
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. X-axis labels rotated cleanly, colorbar
-          properly positioned.
+        comment: No collisions between text, cells, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells optimally sized for 8x8 matrix with white cell borders
-          for definition.
+        comment: 8x8 grid well within 5-20 spec range, tiles clearly sized and separated
+          by background-colored borders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: RdBu palette is perceptually uniform and CVD-safe. Text contrast
-          excellent (white on dark cells, black on light).
+        comment: Red-blue diverging scale (not red-green), adequate contrast, auto-adaptive
+          annotation text
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600px format appropriate for symmetric data. Balanced
-          margins with ~60% canvas utilization.
+        comment: 2400x2400 canvas correct via figure_size=(6,6); coord_fixed keeps
+          tiles square; zero clipping at any edge; title ~67% width as expected for
+          the mandated title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format. Axis labels descriptive ('Economic Indicator').
+        comment: Descriptive axis titles (Economic Indicator x2); correlation is inherently
+          unitless
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'RdBu diverging palette correct for centered correlation data. Background
-          colors theme-correct in both renders (#FAF8F1 light, #1A1A17 dark). Data
-          colors identical across themes.'
+        comment: 'imprint_div exactly matched (#AE3030 / theme-adaptive midpoint /
+          #4467A3); PAGE_BG correct in both themes'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -102,22 +116,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional RdBu palette, clean white borders, well-proportioned
-          typography. Well-configured library defaults, not exceptional design.
+        comment: Contrast-adaptive per-cell text (scale_color_identity) is a genuinely
+          distinctive touch beyond generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Grid removed, minimal chrome via theme_minimal(), balanced whitespace.
-          Good refinement overall.
+        comment: Grid, panel border, axis ticks removed; PAGE_BG-colored tile borders
+          as subtle separation; generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Correlation structure clearly encoded through warm/cool/neutral colors.
-          Visual hierarchy guides reader to patterns.
+        comment: Diagonal band and saturated-vs-neutral contrast give a clear focal
+          hierarchy, but no explicit narrative device beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +141,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct annotated heatmap type.
+        comment: Correct annotated heatmap via geom_tile + geom_text
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: color + annotation, colorbar legend, automatic
-          text contrast.'
+        comment: Numeric annotations, contrast-adaptive text, colorbar legend, diverging
+          colormap for signed data — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to 8 economic indicators. Diagonal=1.0, symmetric
-          matrix.
+        comment: Full 8x8 symmetric matrix shown, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labeled 'Correlation' with proper scale.
+        comment: Title matches mandated format exactly; legend labeled Correlation
     data_quality:
       score: 15
       max: 15
@@ -157,24 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full correlation structure: positive (red), negative (blue),
-          near-zero (cream), diagonal (1.0).'
+        comment: Correlation matrix, values, colorbar, symmetric structure all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Economic indicators (GDP Growth, Inflation, etc.) is real, plausible,
-          and neutral context.
+        comment: Plausible, neutral economic-indicator correlation matrix
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlation values [-1,1] correct. Generated with realistic mathematical
-          structure.
+        comment: Values correctly bounded in [-1, 1] with unit diagonal
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -182,62 +192,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save. No unnecessary functions.'
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately.
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Pythonic and clean, but does NOT follow explicit theme-adaptation
-          pattern from style guide. Should read ANYPLOT_THEME and set PAGE_BG, INK,
-          INK_SOFT.
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to 'plot.png' instead of f'plot-{ANYPLOT_THEME}.png'. Should
-          be self-contained with environment variable.
+        passed: true
+        comment: plot.save(f'plot-{THEME}.png', ...) with current plotnine API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of ggplot grammar: data → aes → geoms → scales → theme.
-          High-level API throughout.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses geom_text with color aesthetic and scale_color_identity for
-          dynamic contrast. coord_fixed for square cells.
+        comment: geom_tile + geom_text + scale_fill_gradient2 + coord_fixed is the
+          idiomatic plotnine heatmap pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: scale_color_identity() driven by a computed contrast column is a
+          real plotnine-specific flex, though it's the only distinctive feature used
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - colorbar
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
   dataprep:
   - correlation-matrix
   styling:
+  - publication-ready
   - custom-colormap
