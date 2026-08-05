@@ -2,125 +2,138 @@ library: matplotlib
 language: python
 specification_id: heatmap-annotated
 created: '2025-12-24T21:28:54Z'
-updated: '2026-05-06T13:01:34Z'
-generated_by: claude-haiku
-workflow_run: 25436228701
+updated: '2026-08-05T09:29:18Z'
+generated_by: claude-sonnet
+workflow_run: 30992759315
 issue: 1824
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-annotated/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 95
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing (24/20/16/14pt) and full readability
-    in both light and dark renders
-  - 'Flawless spec compliance: correct heatmap type with all required features (color
-    mapping, cell annotations, colorbar, adaptive text contrast)'
-  - Authentic scientific data with realistic laboratory correlations, symmetric structure,
-    and appropriate coefficient ranges [-1, 1]
-  - Clean reproducible code with simple KISS structure, proper seeding (np.random.seed(42)),
-    and theme-adaptive styling
-  - 'Proper theme adaptation: backgrounds, text, grid, and colorbar all correctly
-    styled for light (#FAF8F1) and dark (#1A1A17) rendering, with data colors identical
-    across themes'
+  - Per-cell text contrast is computed from the actual rendered colormap luminance
+    (im.cmap(im.norm(value))) rather than a fixed value threshold — this stays correct
+    across the entire imprint_div range and adapts automatically per theme, since
+    the diverging colormap's midpoint is set to PAGE_BG.
+  - 'Magnitude-driven visual hierarchy: bold weight for |r| >= 0.5 and font size scaling
+    (9 + 3*|value|) draw the eye to the strongest correlations (Salinity-Pressure
+    0.81, Density-Conductivity 0.77) without any extra annotation clutter — genuine
+    data storytelling.'
+  - Correct choice of imprint_div (diverging) colormap for signed correlation data,
+    matching both the spec's explicit recommendation and the library rules; theme-adaptive
+    midpoint keeps light/dark chrome correct while the data-driving colors stay identical.
+  - Square 2400x2400 canvas is the right call for a symmetric correlation matrix per
+    the library's canvas rules, and passes the canvas dimension gate cleanly.
+  - Realistic, neutral domain data (laboratory measurement correlations) with hand-tuned
+    realistic correlations (Temperature-pH, Density-Conductivity, Salinity-Pressure,
+    etc.) rather than pure random noise, giving the matrix genuine visual patterns
+    to discover.
+  - 'Clean KISS structure: single flat script, np.random.seed(42) for reproducibility,
+    only used imports, correct axes-method API (ax.imshow, ax.text) and correct savefig
+    call with no bbox_inches=''tight''.'
   weaknesses:
-  - 'Design Excellence is competent but generic: relies on library defaults and theme
-    tokens without custom aesthetic flourishes or distinctive visual polish'
-  - 'Limited Library Mastery: adaptive text color via simple conditional (INK if abs(value)
-    > 0.5 else INK_SOFT) is straightforward logic, not distinctive to matplotlib or
-    creatively leveraging the library''s features'
-  - 'No visual hierarchy or emphasis techniques beyond color mapping: plot clearly
-    displays correlations but doesn''t use size variation, focal points, or strategic
-    annotation to guide viewer interpretation'
+  - Cell border spines are left at matplotlib defaults (full black/ink frame) rather
+    than being intentionally restyled — a subtle INK_SOFT-colored or removed outer
+    frame would read as slightly more refined against the theme-adaptive chrome elsewhere
+    in the plot.
+  - No explicit visual callout (e.g., a subtle box or outline) on the single strongest
+    correlation (Salinity-Pressure, 0.81) beyond bold/size scaling shared by all |r|>=0.5
+    cells — an optional stronger single focal point could push data storytelling further.
+  - Colorbar tick labels at 8pt are on the small side; still legible at 2400px but
+    worth checking they hold up when the image is scaled down to ~400px for mobile/thumbnail
+    views.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title in dark INK (#1A1A17, 24pt), axis labels in dark INK (20pt), x-axis tick labels rotated 45° in INK_SOFT (16pt), y-axis labels vertical in INK_SOFT (16pt). All clearly readable against light background. No dark-on-light failures.
-      Data: 8×8 correlation matrix visualized with BrBG diverging colormap. Cell annotations show correlation values (-0.68 to 1.00) in bold 14pt text. High-magnitude values (>0.5) use dark INK text, low-magnitude use lighter INK_SOFT. Diagonal cells (1.0) stand out in dark green. Colorbar on right shows scale with label "Correlation Coefficient".
-      Legibility verdict: PASS — all text is readable; proper contrast between cell values and background
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "heatmap-annotated · python · matplotlib · anyplot.ai" centered at top in dark ink, clearly legible. X-axis label "Laboratory Measurements" below the rotated (45°) tick labels (Temperature, pH, Viscosity, Density, Turbidity, Conductivity, Salinity, Pressure), y-axis label "Laboratory Measurements" rotated 90° on the left with matching row tick labels. Colorbar on the right titled "Correlation Coefficient" with ticks from -1.00 to 1.00. All chrome text renders in dark ink/soft-ink tones, clearly readable against the light background.
+      Data: 8x8 symmetric correlation matrix using the imprint_div diverging colormap — red for negative correlations, warm off-white near zero, blue for positive correlations, matching the spec's "diverging colormap for +/- data" recommendation. Each cell has a numeric value to 2 decimal places; text color is computed per-cell from the actual rendered luminance so it's always dark on light cells and light on dark/saturated cells. Diagonal cells (all 1.00) are solid blue with bold white text. Values with |r| >= 0.5 render in bold, slightly larger font, creating a clear visual hierarchy toward the strongest relationships (e.g., Salinity-Pressure 0.81, Density-Conductivity 0.77, Turbidity-Conductivity -0.62).
+      Legibility verdict: PASS — no title/axis/tick/cell text is unreadable; no light-on-light failures observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, axis labels, tick labels now in light INK (#F0EFE8) and INK_SOFT (#B8B7B0). All clearly readable against dark background. No dark-on-dark failures detected (e.g., no black labels on near-black background).
-      Data: BrBG colormap is IDENTICAL to light render — the greens, tans, and beiges have not shifted. This confirms proper theme-adaptive coloring with data colors preserved. Cell annotations appear in off-white (high values) or lighter gray (low values), with good contrast against cells. Colorbar properly themed with light text and labels.
-      Legibility verdict: PASS — all text is readable; no dark-on-dark failures; data colors match light render exactly
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, and tick labels as the light render, now rendered in light ink (#F0EFE8 / #B8B7B0 tones) against the dark background — all clearly legible, including the rotated x tick labels and the colorbar's white-on-transparent style ticks.
+      Data: The imprint_div colormap's midpoint shifts to the dark background color, so near-zero cells (e.g., -0.04, 0.08, 0.13) render as very dark maroon/navy tones nearly blending into the background chrome, while stronger correlations (0.77, -0.68, 0.81) remain vivid red/blue — confirmed identical to the light render's data hues (only the chrome and near-zero midpoint shifted, as expected). Per-cell text color again adapts to the rendered luminance: cells near the dark midpoint get the fixed light "CELL_LIGHT_TEXT" color rather than the theme's INK, so no dark-on-dark failures occur even for the darkest, near-zero cells.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; every cell's numeric label remains legible against its own background color.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24/20/16/14pt); perfectly readable
-          in both themes
+        comment: All text readable in both themes via per-cell luminance-based contrast;
+          colorbar ticks at 8pt are slightly small at full scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels rotated 45°; no overlapping elements
+        comment: No collisions between cell text, tick labels, colorbar, or axis titles
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells and annotations well-sized and distinct
+        comment: All 64 cell annotations clearly visible against their cell colors
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: BrBG is perceptually uniform and CVD-safe
+        comment: Diverging red/blue with numeric labels as backup signal, not color-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 12×12 figure with balanced margins; 50-80% canvas utilization
+        comment: 2400x2400 square canvas passes the canvas gate; nothing cut off,
+          well-proportioned title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels descriptive with context
+        comment: Descriptive axis labels, colorbar labeled 'Correlation Coefficient'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'BrBG correct for diverging continuous data; backgrounds #FAF8F1/#1A1A17;
-          text colors theme-adaptive; data colors identical in both renders'
+        comment: imprint_div used correctly for diverging data; theme-adaptive backgrounds
+          correct in both renders
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 7
         max: 8
         passed: true
-        comment: Well-configured library default; thoughtful choices (BrBG, theme
-          tokens) but no custom design flourishes
+        comment: Render-luminance-based per-cell contrast and magnitude-scaled bold/size
+          are genuinely sophisticated, intentional design choices
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid styling, refined colorbar; standard appearance with some
-          customization
+        comment: Subtle minor gridlines, styled colorbar outline; default full-frame
+          spines left unstyled
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color mapping creates visual hierarchy; diagonal values stand out;
-          no additional emphasis techniques
+        comment: Bold/size hierarchy guides the eye to strongest correlations, but
+          no single explicit focal-point callout
     spec_compliance:
       score: 15
       max: 15
@@ -130,26 +143,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap with cell annotations
+        comment: Correct annotated heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color mapping, numeric annotations, colorbar legend, adaptive text
-          contrast all present
+        comment: Color intensity + numeric labels + colorbar + contrast-aware text
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible
+        comment: All 8x8 measurements shown on both axes, symmetric matrix correctly
+          mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar labeled
+        comment: Title matches mandated format exactly; colorbar serves as the legend
     data_quality:
       score: 15
       max: 15
@@ -159,22 +173,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows perfect (1.0), strong positive (0.77, 0.81), strong negative
-          (-0.68, -0.62), weak correlations, and symmetric structure
+        comment: Full range of positive/negative correlations, diagonal, symmetric
+          structure all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real laboratory measurements; scientifically plausible; neutral and
-          appropriate
+        comment: Laboratory measurement correlations, plausible and neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlation coefficients in [-1, 1]; diagonal=1.0; symmetric; factually
-          sound
+        comment: Correlation coefficients correctly bounded to [-1, 1]
     code_quality:
       score: 10
       max: 10
@@ -184,7 +196,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → theme → data → plot → save'
+        comment: Flat procedural script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -196,37 +208,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy; all used
+        comment: Only os, matplotlib.pyplot, numpy, LinearSegmentedColormap, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering
+        comment: Appropriate complexity for the contrast-aware annotation loop, no
+          fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png with dpi=300
+        comment: Saves plot-{THEME}.png at dpi=400 with no bbox_inches='tight'
     library_mastery:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct axes methods, imshow(), figure.colorbar(); standard patterns
-          but no advanced techniques
+        comment: Correct axes-method API (ax.imshow, ax.text loop), matches library
+          rules
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 5
         max: 5
-        passed: false
-        comment: Adaptive text color is straightforward conditional logic, not distinctive
-          to matplotlib
+        passed: true
+        comment: Render-luminance-based contrast computation and magnitude-scaled
+          text are a distinctive, non-generic technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -237,6 +250,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
+  - explicit-figure
   dataprep:
   - correlation-matrix
   styling:
