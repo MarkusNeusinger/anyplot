@@ -20,12 +20,12 @@ dependencies = [
     "uvicorn[standard]>=0.51.0",
     # MCP Server
     "mcp>=1.28.1",
-    "fastmcp>=3.4.5",
+    "fastmcp>=3.4.6",
     # Database
     "sqlalchemy[asyncio]>=2.0.51",
     "asyncpg>=0.30.0",
     "pg8000>=1.31.0",  # Sync driver for Cloud SQL Connector in GitHub Actions
-    "alembic>=1.18.5",
+    "alembic>=1.19.0",
     "cloud-sql-python-connector[asyncpg,pg8000]>=1.20.4",  # Cloud SQL Connector
     # Data & Plotting
     "pandas>=3.0.5",
@@ -36,20 +36,20 @@ dependencies = [
     "scikit-learn>=1.9.0",
     "statsmodels>=0.14.0",
     # AI & Cloud
-    "anthropic>=0.120.2",
-    "google-cloud-storage>=3.13.0",
+    "anthropic>=0.121.0",
+    "google-cloud-storage>=3.13.1",
     # Image Processing
     "pillow>=12.3.0",
     # HTTP Client
     "httpx>=0.28.0",
     # Essentials
     "pydantic>=2.13.4",
-    "pydantic-settings>=2.14.2",
+    "pydantic-settings>=2.15.0",
     "pyyaml>=6.0.0",
     "python-dotenv>=1.0.0",
     "pandas-stubs>=3.0.5.260730",
     # Caching
-    "cachetools>=7.1.6",
+    "cachetools>=7.1.7",
     # Auth — Cloudflare Access JWT verification on /debug/*
     "pyjwt[crypto]>=2.13.0",
 ]
@@ -63,7 +63,7 @@ test = [
     "aiosqlite>=0.20.0",  # SQLite async driver for integration tests
 ]
 dev = [
-    "ruff>=0.16.1",
+    "ruff>=0.16.2",
     "pre-commit>=4.6.1",
 ]
 typecheck = [
