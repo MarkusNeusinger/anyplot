@@ -39,11 +39,16 @@ loa_upper <- bias + 1.96 * sd_diff
 loa_lower <- bias - 1.96 * sd_diff
 
 df <- tibble(avg_sbp = avg_sbp, diff_sbp = diff_sbp)
+loa_band <- tibble(x = range(avg_sbp))
 
 annotation_x <- max(avg_sbp) - 0.02 * diff(range(avg_sbp))
 
 # --- Plot -----------------------------------------------------------------
 p <- ggplot(df, aes(x = avg_sbp, y = diff_sbp)) +
+  geom_ribbon(
+    data = loa_band, aes(x = x, ymin = loa_lower, ymax = loa_upper),
+    inherit.aes = FALSE, fill = IMPRINT_PALETTE[5], alpha = 0.08
+  ) +
   geom_hline(yintercept = 0, color = INK_MUTED, linewidth = 0.4, linetype = "solid") +
   geom_hline(yintercept = bias, color = IMPRINT_PALETTE[3], linewidth = 1.1) +
   geom_hline(yintercept = loa_upper, color = IMPRINT_PALETTE[5], linewidth = 0.9, linetype = "dashed") +
@@ -52,17 +57,17 @@ p <- ggplot(df, aes(x = avg_sbp, y = diff_sbp)) +
   annotate(
     "text", x = annotation_x, y = bias, hjust = 1, vjust = -0.6,
     label = sprintf("Bias = %.1f mmHg", bias),
-    size = 3.4, color = IMPRINT_PALETTE[3]
+    size = 4, color = IMPRINT_PALETTE[3]
   ) +
   annotate(
     "text", x = annotation_x, y = loa_upper, hjust = 1, vjust = -0.6,
     label = sprintf("+1.96 SD = %.1f", loa_upper),
-    size = 3.4, color = IMPRINT_PALETTE[5]
+    size = 4, color = IMPRINT_PALETTE[5]
   ) +
   annotate(
     "text", x = annotation_x, y = loa_lower, hjust = 1, vjust = 1.4,
     label = sprintf("-1.96 SD = %.1f", loa_lower),
-    size = 3.4, color = IMPRINT_PALETTE[5]
+    size = 4, color = IMPRINT_PALETTE[5]
   ) +
   labs(
     title = "bland-altman-basic · r · ggplot2 · anyplot.ai",
