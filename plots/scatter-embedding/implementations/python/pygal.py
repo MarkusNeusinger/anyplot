@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-11
@@ -64,6 +64,11 @@ custom_style = Style(
     value_font_size=36,
 )
 
+# A thin ink-colored outline on every marker adds a CVD-safety margin for the
+# 6-series borderline color range (style-guide "Optional outline pattern"),
+# since pygal's XY chart has no per-series marker-shape API to fall back on.
+dot_outline_css = f".dot {{ stroke: {INK} !important; stroke-width: 1.5px !important; stroke-opacity: 1 !important; }}"
+
 chart = pygal.XY(
     style=custom_style,
     width=3200,
@@ -78,6 +83,7 @@ chart = pygal.XY(
     print_values=False,
     value_formatter=Significant(3),
     truncate_legend=-1,
+    css=("file://style.css", "file://graph.css", f"inline:{dot_outline_css}"),
 )
 
 for i, name in enumerate(CELL_TYPES):
