@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-11
@@ -54,19 +54,32 @@ centroids = df.groupby("cluster")[["tsne_1", "tsne_2"]].mean()
 centroids = centroids.loc[CELL_TYPES].reset_index()
 centroids["abbr"] = [CELL_ABBR[c] for c in centroids["cluster"]]
 
+# Tighten the scale domain to the data extent (+6% pad) instead of Altair's
+# default "nice" auto-domain — sparse t-SNE clusters otherwise leave large
+# unused margins on the canvas.
+x_min, x_max = df["tsne_1"].min(), df["tsne_1"].max()
+y_min, y_max = df["tsne_2"].min(), df["tsne_2"].max()
+x_pad, y_pad = (x_max - x_min) * 0.06, (y_max - y_min) * 0.06
+x_domain = [x_min - x_pad, x_max + x_pad]
+y_domain = [y_min - y_pad, y_max + y_pad]
+
 # Interactive selection bound to legend — clicking a cell type highlights its cluster
 selection = alt.selection_point(fields=["cluster"], bind="legend")
 
 # Marker size/opacity tuned for 700 overlapping points (high-density heuristic)
 scatter = (
     alt.Chart(df)
-    .mark_circle(size=50, strokeWidth=0.5)
+    .mark_circle(size=45, strokeWidth=0.5)
     .encode(
         x=alt.X(
-            "tsne_1:Q", axis=alt.Axis(labels=False, ticks=False, domain=False, grid=False, title="t-SNE Dimension 1")
+            "tsne_1:Q",
+            scale=alt.Scale(domain=x_domain, nice=False),
+            axis=alt.Axis(labels=False, ticks=False, domain=False, grid=False, title="t-SNE Dimension 1"),
         ),
         y=alt.Y(
-            "tsne_2:Q", axis=alt.Axis(labels=False, ticks=False, domain=False, grid=False, title="t-SNE Dimension 2")
+            "tsne_2:Q",
+            scale=alt.Scale(domain=y_domain, nice=False),
+            axis=alt.Axis(labels=False, ticks=False, domain=False, grid=False, title="t-SNE Dimension 2"),
         ),
         color=alt.Color(
             "cluster:N", scale=alt.Scale(domain=CELL_TYPES, range=IMPRINT), legend=alt.Legend(title="Cell Type")
@@ -82,18 +95,25 @@ scatter = (
     .add_params(selection)
 )
 
-# Direct abbreviated-name labels on centroids (no legend cross-referencing needed)
+# Direct abbreviated-name labels on centroids (no legend cross-referencing needed).
+# A background-colored halo stroke behind the text keeps labels legible against
+# every cluster hue in both themes, independent of the underlying data color.
 centroid_marks = (
     alt.Chart(centroids)
-    .mark_text(fontSize=13, fontWeight="bold", dy=-9)
-    .encode(x=alt.X("tsne_1:Q"), y=alt.Y("tsne_2:Q"), text="abbr:N", color=alt.value(INK))
+    .mark_text(fontSize=13, fontWeight="bold", dy=-9, stroke=PAGE_BG, strokeWidth=0.75)
+    .encode(
+        x=alt.X("tsne_1:Q", scale=alt.Scale(domain=x_domain, nice=False)),
+        y=alt.Y("tsne_2:Q", scale=alt.Scale(domain=y_domain, nice=False)),
+        text="abbr:N",
+        color=alt.value(INK),
+    )
 )
 
 title_text = "scatter-embedding · python · altair · anyplot.ai"
 title_params = alt.TitleParams(
     text=title_text,
     subtitle="t-SNE (perplexity=30) · 20-dimensional synthetic scRNA-seq · 7 cell types, 700 cells",
-    fontSize=round(16 * min(1.0, 67 / len(title_text))),
+    fontSize=round(18 * min(1.0, 67 / len(title_text))),
     subtitleFontSize=12,
     color=INK,
     subtitleColor=INK_SOFT,
@@ -119,6 +139,8 @@ chart = (
         titleColor=INK,
         labelFontSize=10,
         titleFontSize=10,
+        cornerRadius=4,
+        padding=8,
     )
 )
 
