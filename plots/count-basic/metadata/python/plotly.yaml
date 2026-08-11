@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: count-basic
 created: '2025-12-25T12:42:33Z'
-updated: '2026-08-11T06:41:02Z'
+updated: '2026-08-11T06:48:47Z'
 generated_by: claude-sonnet
 workflow_run: 31465353583
 issue: 2033
@@ -12,103 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
+  - 'Title-fontsize formula fixed since attempt 1: now scales proportionally in both
+    directions (max(11, min(24, round(16 * 67 / len(title))))) and the title measures
+    ~52% of canvas width, squarely inside the 50-70% target instead of the previous
+    ~34%'
   - 'Genuine Pareto-style enhancement: secondary-axis cumulative % line adds real
     analytical value beyond a basic count plot, satisfying the spec''s optional percentage-annotation
     note without cluttering the primary bars'
-  - 'Theme-adaptive chrome and Imprint palette verified pixel-exact: light bg (250,248,241)=#FAF8F1
-    and dark bg (26,26,23)=#1A1A17 match the style guide exactly; brand green #009E73
-    used for the sole categorical series; cumulative line correctly uses the theme-adaptive
-    neutral/ink token per the semantic-anchor rule for reference/trend lines'
-  - 'Correctly implements the spec''s core requirement: bars sorted by frequency descending
-    with count labels above each bar'
-  - Canvas is pixel-exact 3200x1800 landscape via write_image(width=800,height=450,scale=4)
-    with no canvas-gate failure
-  - 'Clean, reproducible code: np.random.seed(42), no unused imports, real hover text
-    (hovertext/hoverinfo) rather than fake interactivity, dual output (PNG+HTML)'
+  - 'Theme-adaptive chrome and Imprint palette verified pixel-exact (#FAF8F1 / #1A1A17
+    backgrounds); brand green #009E73 used for the sole categorical series; cumulative
+    line correctly uses the theme-adaptive neutral/ink token per the semantic-anchor
+    rule, and both renders keep identical data colors'
+  - Correctly counts from raw per-observation data (np.random.choice + np.unique)
+    rather than pre-aggregated values, matching the spec's core distinction between
+    a count plot and a bar chart; bars sorted by frequency descending with count labels
+    above each bar
+  - Canvas pixel-exact 3200x1800 landscape, no canvas-gate failure; clean, reproducible
+    code (np.random.seed(42)), no unused imports, real hover interactivity (not faked),
+    dual PNG+HTML output; remains legible when scaled to the 400px mobile thumbnail
   weaknesses:
-  - 'Title occupies only ~34% of canvas width (1102/3200 px measured), well below
-    the ~50-70% target for this canvas. The formula `title_fontsize = round(16 * min(1.0,
-    67/len(title_text)))` only scales the font DOWN for titles longer than the 67-char
-    baseline; this title is 42 chars (shorter), so it gets capped at the base 16pt
-    instead of scaling up, leaving it visually small against the wide landscape canvas.
-    Fix: scale up proportionally for shorter titles, e.g. `round(16 * (67/len(title_text)))`
-    without the 1.0 cap (clamped to a sane max like 22-24pt).'
-  - 'Dual y-axis was built via a manual `yaxis2` overlay dict rather than plotly''s
-    more idiomatic `make_subplots(specs=[[{''secondary_y'': True}]])` pattern for
-    combo charts — functionally correct and visually fine, but not the textbook-recommended
-    API for secondary axes.'
-  - No annotation or color emphasis calls out the ~80% cumulative threshold explicitly
-    (e.g. a reference line at 80%), which would have strengthened the Pareto storytelling
-    further.
+  - 'Dual y-axis built via a manual yaxis2 overlay dict rather than plotly''s more
+    idiomatic make_subplots(specs=[[{"secondary_y": True}]]) pattern for combo charts
+    — functionally correct and visually fine, but not the textbook-recommended API
+    for this combo-chart type'
+  - No annotation/reference line calls out the ~80% cumulative threshold explicitly,
+    which would sharpen the Pareto storytelling further (not required for the current
+    DE-03 score, but would be the next lever if pushing for a higher design score)
+  - Overall styling stays close to a well-configured library default (edge-stroked
+    bars, dotted secondary line) rather than a distinctive, highly-customized look
+    — solid but not exceptional aesthetic sophistication
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, pixel-sampled at RGB(250,248,241) = #FAF8F1 exactly, matching the style guide. Not pure white.
-      Chrome: Title "count-basic · python · plotly · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Product Category" and left Y-axis title "Count (n)" in dark ink; right Y-axis title "Cumulative Share (%)" in dark ink, rotated, fully within canvas bounds (no clipping). Tick labels in softer grey-ink, all readable. Subtle horizontal gridlines on the left axis only (light grey, low alpha) — no visual clutter.
-      Data: 7 green (#009E73) bars sorted descending (Electronics 110 → Beauty 2) with black count labels positioned above each bar, no overlap with the line/markers. A black dotted cumulative-% line with circle markers (white-outlined) traces the secondary axis from ~44% to ~100%, clearly distinguishable from the bars. Legend box (cream fill, dark border) bottom-right, does not overlap any bar or data label.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, pixel-sampled at RGB(250,248,241) = #FAF8F1 exactly — matches the required light surface, not pure white.
+      Chrome: Title "count-basic · python · plotly · anyplot.ai" centered at top in dark ink, measured ~52% of canvas width (1658/3200 px) via pixel scan — inside the 50-70% target for a custom (non-mandated-length) title. "Product Category" (x-axis) and "Count (n)" (left y-axis) titles in dark ink; "Cumulative Share (%)" (right y-axis) rotated, fully within canvas bounds with generous margin (confirmed via edge crops — no clipping on left or right). Tick labels in softer grey-ink, all legible. Subtle horizontal gridlines only, non-competing with data. Legend ("Count" / "Cumulative %") sits bottom-right in an elevated-bg box, clear of all bars and labels.
+      Data: 7 green (#009E73) bars sorted descending (Electronics 110 -> Beauty 2) with black count labels above each bar. A black dotted cumulative-% line with white-outlined circle markers traces the secondary axis from ~44% to ~100%, tracking a classic Pareto curve.
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues, remains legible at the 400px mobile thumbnail.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, pixel-sampled at RGB(26,26,23) = #1A1A17 exactly, matching the style guide. Not pure black.
-      Chrome: Title, axis titles, and tick labels all render in light ink (white/light-grey), clearly legible against the dark background — no dark-on-dark failures observed. Gridlines are subtle light grey at low alpha, visible but unobtrusive. Legend box uses the dark elevated-bg fill with light border and light-grey text, fully legible.
-      Data: Bars remain the identical #009E73 green (verified colors unchanged from the light render — only chrome flipped). The cumulative line is now white/light-dotted with light markers (black-outlined) for contrast against the dark background, tracing the same cumulative shape as the light render.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures.
+      Background: Warm near-black, pixel-sampled at RGB(26,26,23) = #1A1A17 exactly — matches the required dark surface, not pure black.
+      Chrome: Title, axis titles, and tick labels render in light ink, clearly legible against the dark background — no dark-on-dark failures. Gridlines subtle and unobtrusive. Legend uses the dark elevated-bg fill with light border and light-grey text.
+      Data: Bars remain the identical #009E73 green (data colors confirmed unchanged from the light render — only chrome flipped); the cumulative line switches to a white/light dotted line with black-outlined light markers for contrast against the dark surface. Brand green reads well on the dark background.
+      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark issues found.
+
+    Both renders confirmed theme-correct, pixel-exact on background colors, and identical in data-color usage — only chrome tokens flip between themes as required.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicit and readable in both themes; pixel-sampled backgrounds
-          confirm exact theme tokens
+        comment: All font sizes explicitly set; title fontsize formula fixed to scale
+          proportionally, now measures ~52% of canvas width (was ~34% in attempt 1);
+          readable in both themes and at 400px mobile thumbnail
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Count labels, cumulative line/markers, and legend box do not collide
+        comment: No collisions between bars, count labels, line markers, legend, or
+          axis text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse 7-bar data with prominent markers (size 9) and thick bars
-          — appropriate for the density
+        comment: Bar markers and line markers appropriately sized and prominent for
+          sparse (7-point) data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single categorical series + theme-adaptive neutral trend line; no
-          red-green reliance
+        comment: Green bars vs ink-colored line give strong non-color-dependent contrast;
+          no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas pixel-exact 3200x1800, no gate failure; but title only fills
-          ~34% of width vs the ~50-70% target due to the fontsize formula capping
-          at the 67-char baseline instead of scaling up for this shorter title
+        comment: Title, axis titles, and both y-axis label sets confirmed fully within
+          canvas via pixel-level edge crops; no overflow, no clipping, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Count (n), Cumulative Share (%), Product Category — descriptive with
-          units
+        comment: Product Category / Count (n) / Cumulative Share (%) — descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 confirmed; backgrounds pixel-verified #FAF8F1/#1A1A17;
-          cumulative line correctly uses theme-adaptive neutral anchor'
+        comment: 'First series #009E73 exact; backgrounds pixel-sampled exact #FAF8F1/#1A1A17;
+          cumulative line uses theme-adaptive ink token per semantic-anchor rule'
     design_excellence:
       score: 13
       max: 20
@@ -118,22 +122,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Dual-axis Pareto combo, edge-highlighted bars and markers go beyond
-          generic defaults but styling is otherwise standard
+        comment: Dual-axis Pareto combo and edge-highlighted marks go beyond generic
+          defaults, but overall styling is otherwise a well-configured library default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle single-axis gridlines, generous margins, bar/marker edge strokes;
+        comment: Subtle single-axis gridlines, top/right spines absent, generous margins,
           no unnecessary chrome
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Cumulative-% line gives a clear Pareto narrative, though no explicit
-          80% reference annotation to sharpen the story further
+        comment: Cumulative-% line and descending sort give a clear Pareto narrative
+          via visual hierarchy; no explicit 80% reference annotation (not required
+          for this score tier)
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +148,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct count/bar plot with a well-justified Pareto enhancement
+        comment: Correct count plot (vertical bars) sorted by frequency descending
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Descending sort, count labels, percentage annotations (cumulative
-          line) all present
+        comment: Counts derived from raw per-observation data (not pre-aggregated),
+          count labels above bars, optional percentage annotation via cumulative line
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=category, Y=count, Y2=cumulative share — correct
+        comment: Category on x, count on primary y, cumulative share on secondary
+          y — all categories shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels 'Count' / 'Cumulative
-          %' are clear
+        comment: Title matches mandated format exactly; legend labels (Count / Cumulative
+          %) match series
     data_quality:
       score: 15
       max: 15
@@ -173,21 +179,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 7 categories (within 3-20 spec range), raw-data counting via np.unique,
-          descending sort
+        comment: Shows sorting, count labels, and percentage/cumulative annotation
+          — all optional spec notes covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product-category purchase counts — plausible and neutral
+        comment: Product-category purchase counts, realistic and neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts 2-110 from 250 samples with a right-skewed probability vector
-          — sensible magnitudes
+        comment: Counts 2-110 across 7 categories with a plausible right-skewed distribution
     code_quality:
       score: 10
       max: 10
@@ -197,7 +202,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, no functions/classes
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -209,20 +214,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects — all used
+        comment: Only os, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; real hover/interactivity
+        comment: Appropriate complexity, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image(width=800,height=450,scale=4) -> plot-{theme}.png plus
-          write_html -> plot-{theme}.html; current API
+        comment: Saves plot-{THEME}.png via write_image and plot-{THEME}.html via
+          write_html, current API
     library_mastery:
       score: 7
       max: 10
@@ -233,15 +238,15 @@ review:
         max: 5
         passed: true
         comment: Manual yaxis2 overlay works but make_subplots(secondary_y=True) is
-          the more idiomatic plotly pattern for combo charts
+          plotly's more idiomatic combo-chart pattern
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Secondary axis, custom hovertext/hoverinfo, outside text labels,
-          marker/bar edge strokes — good but not exhaustive use of plotly-specific
-          features
+        comment: Secondary axis, custom hovertext, outside text labels, marker/bar
+          edge strokes are good touches but not exhaustive use of plotly-specific
+          capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -254,5 +259,5 @@ impl_tags:
   dataprep:
   - cumulative-sum
   styling:
+  - alpha-blending
   - edge-highlighting
-  - publication-ready
