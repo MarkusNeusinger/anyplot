@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-regression-polynomial: Scatter Plot with Polynomial Regression
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 85/100 | Created: 2026-08-11
+// Quality: 90/100 | Created: 2026-08-11
 
 const t = window.ANYPLOT_TOKENS;
 
