@@ -41,20 +41,36 @@ freq_order <- df %>%
   pull(response)
 df$response <- factor(df$response, levels = freq_order)
 
-counts <- df %>% count(response, name = "n")
+counts <- df %>%
+  count(response, name = "n") %>%
+  mutate(
+    pct   = 100 * n / sum(n),
+    label = sprintf("%d (%.0f%%)", n, pct)
+  )
+
+# Highlight the leading category as a focal point; other bars get a solid,
+# lightened tint of the same brand hue (opaque, not alpha) so the mix stays
+# identical between light and dark renders -- alpha would blend with the
+# theme background and make the tint shift between themes.
+leader     <- freq_order[1]
+bar_muted  <- colorRampPalette(c(IMPRINT_PALETTE[1], "#FFFFFF"))(100)[55]
+bar_colors <- setNames(rep(bar_muted, length(freq_order)), freq_order)
+bar_colors[leader] <- IMPRINT_PALETTE[1]
 
 # --- Plot -----------------------------------------------------------------
 title_text <- "count-basic · r · ggplot2 · anyplot.ai"
 
-p <- ggplot(df, aes(x = response)) +
-  geom_bar(fill = IMPRINT_PALETTE[1], width = 0.65) +
+p <- ggplot(df, aes(x = response, fill = response)) +
+  geom_bar(width = 0.65) +
   geom_text(
     data = counts,
-    aes(x = response, y = n, label = n),
+    aes(x = response, y = n, label = label),
     vjust = -0.6,
     size = 3.2,
-    color = INK
+    color = INK,
+    inherit.aes = FALSE
   ) +
+  scale_fill_manual(values = bar_colors, guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
   labs(
     title = title_text,
@@ -70,7 +86,6 @@ p <- ggplot(df, aes(x = response)) +
     panel.grid.major.y = element_line(color = INK, linewidth = 0.3),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
-    axis.text.x       = element_text(color = INK_SOFT, size = 8),
     axis.ticks         = element_blank(),
     plot.title        = element_text(color = INK, size = 12)
   )
