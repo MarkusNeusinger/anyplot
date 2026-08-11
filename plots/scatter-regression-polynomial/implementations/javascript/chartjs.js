@@ -106,6 +106,7 @@ function hexToRgba(hex, alpha) {
 const signedTerm = (value, symbol) =>
   `${value >= 0 ? "+" : "−"} ${Math.abs(value).toFixed(4)}${symbol}`;
 const equation = `y = ${c2.toFixed(4)}x² ${signedTerm(c1, "x")} ${signedTerm(c0, "")}`;
+const BAND_SWATCH = hexToRgba(MUTED, 0.55); // opaque enough to read in the legend chip (fill itself stays soft at 0.18)
 
 // Mount
 const canvas = document.createElement("canvas");
@@ -197,22 +198,50 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 8, right: 8 } },
+    layout: { padding: { top: 8, right: 16 } },
     plugins: {
       title: {
         display: true,
         text: "scatter-regression-polynomial · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22 },
-        padding: { top: 12, bottom: 8 },
+        font: { size: 26 },
+        padding: { top: 10, bottom: 20 },
       },
+      // Legend lives below the plot (not stacked under the title) so the top
+      // region stays open for just the title + equation badge.
       legend: {
+        position: "bottom",
         labels: {
           color: t.ink,
           font: { size: 16 },
-          boxWidth: 30,
-          padding: 20,
+          usePointStyle: true,
+          pointStyle: "circle",
+          boxWidth: 10,
+          padding: 24,
           filter: (item) => !item.text.startsWith("_"),
+          generateLabels(chart) {
+            const items = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+            for (const item of items) {
+              if (item.text === "95% prediction band") {
+                item.fillStyle = BAND_SWATCH;
+                item.strokeStyle = BAND_SWATCH;
+              }
+            }
+            return items;
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label(ctx) {
+            if (ctx.dataset.label !== "Ad campaigns (spend vs. revenue lift)") {
+              return ctx.dataset.label;
+            }
+            const { x, y } = ctx.raw;
+            const residual = y - predict(x);
+            const sign = residual >= 0 ? "+" : "−";
+            return `spend $${x.toFixed(1)}k → lift $${y.toFixed(1)}k (${sign}${Math.abs(residual).toFixed(1)} vs. fit)`;
+          },
         },
       },
     },
@@ -226,6 +255,7 @@ new Chart(canvas, {
         },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
+        border: { display: false },
       },
       y: {
         title: {
@@ -236,6 +266,7 @@ new Chart(canvas, {
         },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
+        border: { display: false },
       },
     },
   },
