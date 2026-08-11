@@ -2,11 +2,11 @@ library: seaborn
 language: python
 specification_id: count-basic
 created: '2025-12-25T12:41:49Z'
-updated: '2026-05-07T09:12:35Z'
-generated_by: claude-haiku
-workflow_run: 25486574149
+updated: '2026-08-11T06:46:52Z'
+generated_by: claude-sonnet
+workflow_run: 31465222978
 issue: 2033
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/seaborn/plot-dark.png
@@ -15,32 +15,31 @@ preview_html_dark: null
 quality_score: 94
 review:
   strengths:
-  - Excellent theme adaptation with perfect light/dark chrome flipping while data
-    colors remain constant
-  - Perfect text legibility in both renders with all font sizes explicitly set and
-    readable at full resolution
-  - Professional aesthetic using seaborn best practices (ticks style, subtle grid,
-    removed spines, thoughtful color use)
-  - Strong data storytelling through frequency-sorted bars and count labels enabling
-    both overview and precise reading
-  - Clean, maintainable code with KISS structure and deterministic data generation
+  - 'Both attempt-1 weaknesses are cleanly resolved: the title now includes the python
+    language segment, and the ''86'' count label no longer collides with the cumulative-line
+    marker (verified via pixel crop in both renders)'
+  - Creative Pareto overlay (cumulative-share line with an 80% reference line) adds
+    genuine data storytelling beyond a plain count plot
+  - Theme-adaptive chrome threaded consistently through sns.set_theme rc params, twin-axis
+    spines, and annotation colors — both renders pass legibility and Imprint palette
+    checks with identical data colors
+  - Clean, reproducible, KISS-structured code with correct canvas sizing (no bbox_inches='tight')
   weaknesses:
-  - Design sophistication limited to seaborn defaults with single-color approach (could
-    explore multi-series variants or custom palette)
-  - Visual storytelling straightforward but not exceptional—bar height and labels
-    guide clearly but lack dramatic emphasis
+  - The Pareto overlay uses generic matplotlib twinx() rather than a more seaborn-idiomatic
+    construction — consider a more seaborn-distinctive technique for the cumulative
+    series to raise library-mastery distinctiveness further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white ✓
-      Chrome: Title "count-basic · seaborn · anyplot.ai" in dark text; x-axis "Programming Language", y-axis "Response Count" in dark text; all tick labels readable; subtle gray gridlines ✓
-      Data: Eight bars in brand green (#009E73), heights showing frequency distribution (140, 101, 86, 43, 42, 33, 31, 24); count labels in dark text above each bar ✓
-      Legibility verdict: PASS — all text clearly readable against light background, no overlap
+      Background: Warm off-white, matches #FAF8F1 target — not pure white.
+      Chrome: Title "count-basic · python · seaborn · anyplot.ai" (language segment now present, fixing attempt 1) centered at top in dark ink; "Programming Language" x-axis label and "Response Count" / "Cumulative Share" y-axis labels in dark ink; tick labels in soft ink; subtle horizontal gridlines. All chrome text is clearly readable against the light background.
+      Data: 8 vertical bars in brand green (#009E73) for Python, JavaScript, Java, Go, C++, Rust, TypeScript, Ruby (140/101/86/43/42/33/31/24), sorted descending, each with a count label above it. A lavender (#C475FD) line with circular markers traces the cumulative share on a secondary right-hand axis (0-100%), crossing a dashed 80% reference line between Java and Go. Legend box labels "Responses" (green swatch) and "Cumulative Share" (lavender line+marker), positioned in open space clear of all data.
+      Legibility verdict: PASS — verified via pixel crop that the "86" count label above the Java bar no longer overlaps the cumulative-line marker (attempt-1 issue fixed).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black ✓
-      Chrome: Title in light text (#F0EFE8); axis labels and tick labels in light text (#B8B7B0); gridlines visible but subtle ✓
-      Data: Bar colors identical to light render (#009E73); count labels in light text above bars ✓
-      Legibility verdict: PASS — no dark-on-dark failures, all text light-colored and readable, chrome properly theme-adapted
+      Background: Warm near-black, matches #1A1A17 target — not pure black.
+      Chrome: Title and axis labels rendered in light off-white ink, tick labels in soft light gray, gridlines faint but visible. No dark-on-dark text found — title, axis labels, and tick labels are all clearly legible against the dark background.
+      Data: Same 8 green bars and same lavender cumulative-share line/markers as the light render — data colors are identical between themes, only chrome (background, text, grid, legend box fill) flips. Bars show a thin white edge outline (visible against dark background) that reads as intentional refinement, not a defect. Legend box uses the dark elevated background with light text, consistent with theme tokens.
+      Legibility verdict: PASS — same fix confirmed as in the light render; "86" label and line-marker no longer collide.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,74 +50,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks);
-          perfectly readable in both themes
+        comment: All font sizes explicit, fully readable in both themes; attempt-1
+          tightness near the '86' label resolved
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Count labels positioned above bars with proper padding; no overlapping
-          elements
+        comment: The '86' count label / cumulative-marker collision from attempt 1
+          is fixed; verified no overlap in either render via pixel crop
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars and labels clearly visible; element sizing well-adapted
-          to 8 categories
+        comment: Bar width and line/marker sizing well adapted to 8 categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green (#009E73) has excellent contrast; Okabe-Ito palette is
-          colorblind-safe
+        comment: Green/lavender combination is CVD-safe with good contrast, not red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions at 16:9 (4800×2700 px); balanced margins; nothing
-          cut off
+        comment: Canvas gate passed (3200x1800); verified all four edges have comfortable
+          margin, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with correct title format
+        comment: Descriptive axis labels with units (%, counts) on both axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; backgrounds #FAF8F1 (light) and #1A1A17
-          (dark) ✓; theme chrome properly adapted'
+        comment: 'First series #009E73, second series #C475FD (canonical order); backgrounds
+          theme-correct; data colors identical across themes'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Professional, well-polished design; uses seaborn defaults thoughtfully;
-          above generic but not exceptionally custom
+        comment: Pareto overlay with reference line elevates this well above a plain
+          default count plot
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed; subtle grid (alpha=0.15); generous whitespace;
-          secondary elements use INK_SOFT
+        comment: Spines removed, subtle grid, styled legend box, subtle white bar-edge
+          highlight; no longer held back by the label/marker overlap
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars sorted by frequency; count labels enable precise reading; bar
-          height creates visual hierarchy
+        comment: Cumulative-share line + 80% threshold clearly communicates the Pareto
+          principle at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -128,25 +125,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sns.countplot() implementation
+        comment: Correct count plot via sns.countplot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bars sorted by frequency descending; count labels added
+        comment: Descending sort, count labels, and optional percentage annotation
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis mapped to language categories; Y-axis to count; all data visible
+        comment: Category on x, count on primary y, cumulative % on secondary y, all
+          data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend omitted appropriately for single-series
+        comment: Title now correctly includes the language segment ('python'); legend
+          labels are correct
     data_quality:
       score: 15
       max: 15
@@ -156,20 +156,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete distribution across 8 categories with varying frequencies
+        comment: Full distribution shown across 8 categories plus cumulative view
+          demonstrates the plot type fully
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world programming language survey; neutral, comprehensible scenario
+        comment: Neutral, realistic programming-language survey scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample size 500 sensible; frequency distribution realistic and aligns
-          with real-world language popularity
+        comment: 500 weighted responses with plausible relative popularity ordering
     code_quality:
       score: 10
       max: 10
@@ -179,53 +179,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save; no functions or classes
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no waste
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, no over-engineering, no fake UI
+        comment: Appropriately complex for the added Pareto feature, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi
+        comment: Saves plot-{THEME}.png at dpi=400 with bbox_inches left default
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: sns.countplot() and sns.set_theme() are idiomatic high-level patterns
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: sns.countplot() for automatic counting; bar_label() for annotations;
-          sns.set_theme() with rc dict
+        comment: Idiomatic sns.countplot with order= for sorted bars
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: countplot's auto-counting is the library's distinctive feature for
+          this spec; the Pareto overlay itself is generic matplotlib twinx, not seaborn-specific
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
+  - edge-highlighting
