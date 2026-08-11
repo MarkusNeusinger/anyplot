@@ -2,9 +2,9 @@ library: chartjs
 language: javascript
 specification_id: count-basic
 created: '2026-08-11T06:52:58Z'
-updated: '2026-08-11T07:05:22Z'
+updated: '2026-08-11T07:44:43Z'
 generated_by: claude-sonnet
-workflow_run: 31466498508
+workflow_run: 31468441846
 issue: 2033
 language_version: 22.23.1
 library_version: 4.4.7
@@ -12,55 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/chartjs/plot-dark.html
-quality_score: 92
+quality_score: 94
 review:
   strengths:
-  - 'Directly resolved the attempt-1 feedback: a custom afterDatasetsDraw plugin now
-    renders the exact count above every bar, satisfying the spec''s own ''consider
-    adding count labels'' note and adding real Chart.js library mastery.'
-  - New top-to-bottom alpha-gradient bar fill (via a scriptable backgroundColor function
-    building a CanvasGradient) replaces the flat single color from attempt 1 — a genuine,
-    restrained Chart.js-idiomatic polish that lifts Design Excellence without adding
-    chartjunk.
-  - 'Both renders remain fully readable with correct theme-adaptive chrome — no dark-on-dark
-    or light-on-light failures; title, axis titles, ticks, and the new count labels
-    all read clearly on both #FAF8F1 and #1A1A17 surfaces.'
-  - 'Exact Imprint palette compliance preserved: the gradient still resolves to #009E73
-    in both themes at full opacity, background tokens match the canonical light/dark
-    values.'
-  - Data generation still mirrors a real value_counts() workflow — 320 raw categorical
-    observations drawn from a seeded LCG and counted client-side, matching the spec's
-    core distinction for a count plot.
-  - Bars remain sorted descending by frequency, and the new subtitle ('n = 320 tickets')
-    adds total-count context that was flagged missing in attempt 1.
-  - Title exactly matches the mandated `count-basic · javascript · chartjs · anyplot.ai`
-    format; axis titles remain descriptive.
+  - 'Color-compositing bug from attempt 1 is fixed: the bar gradient''s bottom stop
+    now blends toward the page background (mixHex) instead of using alpha transparency,
+    so the Cumulative Share line/markers render as pure #C475FD wherever they cross
+    a bar in both themes (pixel-verified: (196,117,253) exactly at multiple crossing
+    points, only a handful of 1-2px anti-aliasing edge pixels remain).'
+  - Point radius on the cumulative-share line increased from 4px to 6px per attempt
+    1 feedback, giving the sparse 6-point series a more prominent, on-brand focal
+    point.
+  - Genuine mixed bar+line Chart.js dataset (dual y-axis) overlays a real Pareto cumulative-share
+    curve computed from the actual sorted counts, directly answering the spec's 'optional
+    percentage annotations' note with a more sophisticated technique than a plain
+    per-bar label.
+  - 'Explicit font sizes throughout with a clear typographic hierarchy; both renders
+    are fully readable, theme-correct chrome (#FAF8F1 / #1A1A17 backgrounds pixel-exact),
+    no dark-on-dark or light-on-light failures.'
+  - 'Correct Imprint palette usage: first series #009E73 (bar), second series #C475FD
+    (line/points) matching canonical palette order; title matches the mandated ''count-basic
+    · javascript · chartjs · anyplot.ai'' format exactly.'
+  - Realistic, neutral business scenario (support ticket categories, n=320) with a
+    believable skewed frequency distribution across 6 categories, sorted descending
+    per the spec's guidance.
   weaknesses:
-  - 'Design Excellence is solid but still single-hue: the gradient and count labels
-    are a real improvement over attempt 1, but the chart doesn''t yet reach ''publication-ready''
-    — no secondary visual emphasis (e.g. highlighting the top category) beyond the
-    sort order and labels.'
-  - The count-label plugin is a good distinctive touch, but it's a fairly common pattern
-    (value-labels-above-bars); a more Chart.js-specific feature (e.g. a mixed chart
-    type, floating bars, or an indexAxis variant) would push Library Mastery higher.
-  - Horizontal whitespace between the 6 bars is fairly generous given maxBarThickness=110
-    on a 3200px canvas — not a defect, but there's room to either widen bars slightly
-    or tighten the category gap for a more filled composition.
+  - The '57' count label for the Account bar still sits nearly flush against the dashed
+    cumulative-share line/dot (halo stroke keeps it legible, and the plugin's near-line
+    push-up logic reduces the overlap versus attempt 1, but the label's bottom edge
+    still nearly touches the dot in both themes) - a minor VQ-02 deduction, worth
+    a slightly larger offset or repositioning the dot when it lands this close to
+    a label.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "count-basic · javascript · chartjs · anyplot.ai" is dark, centered, comfortably sized, well within canvas bounds with no clipping. Italic subtitle "n = 320 tickets" sits directly below in a softer dark gray. X-axis title "Support Ticket Category" and Y-axis title "Count" are dark and clearly legible. Tick labels (category names on X, 0-90 by 10s on Y) are a softer dark gray, fully readable. Horizontal gridlines are subtle and unobtrusive; vertical gridlines are intentionally hidden.
-      Data: Six bars with a top-to-bottom alpha-gradient fill from solid brand green (#009E73) at the top to a lighter, more transparent green toward the base, sorted descending by count: Billing (86), Technical (69), Account (57), Shipping (54), Feature Request (34), Other (20). Each bar has a bold count value printed directly above it in dark text — precisely addressing the spec's "consider adding count labels" note. Bars have subtle rounded top corners and consistent width via maxBarThickness. No legend shown, which is correct for a single-series chart.
-      Legibility verdict: PASS — all text, including the new count labels, is clearly readable against the light background; no overlaps, no clipping.
+      Background: Warm off-white, pixel-sampled #FAF8F1 (matches spec, not pure white).
+      Chrome: Title "count-basic · javascript · chartjs · anyplot.ai" in dark ink, centered, fully visible; italic subtitle "n = 320 tickets" below it; legend ("Cumulative Share" line swatch, "Support Tickets" bar swatch) centered above the plot; x-axis title "Support Ticket Category", left y-axis title "Count", right y-axis title "Cumulative Share" - all dark/soft-dark ink, all clearly legible against the cream background. Subtle horizontal gridlines only on the left (count) axis.
+      Data: Six green (#009E73) vertical bars with a top-to-bottom gradient toward the page background, sorted descending (Billing 86, Technical 69, Account 57, Shipping 54, Feature Request 34, Other 20), each with a bold halo-stroked count label above it. A dashed lavender (#C475FD) line with circular markers overlays the cumulative percentage share on a secondary right-hand axis (0-100%), rising from ~25% to 100%. Pixel-sampling confirms the line/markers render as pure #C475FD everywhere, including where they cross the Billing and Technical bars - the attempt-1 color-compositing bug (blended slate-teal at bar/line intersections) is fixed; only a handful of 1-2px anti-aliasing pixels remain at line edges, which is normal.
+      Legibility verdict: PASS (all text readable; the "57" label sits close to but not overlapping the line's dot at the Account bar - minor, not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, subtitle, axis titles, and tick labels have all flipped to light tones (white/light-gray) that read clearly against the dark surface. Gridlines remain subtle. No dark-on-dark or hard-to-read text anywhere, including the count labels above each bar (rendered in light ink, fully legible).
-      Data: Bars use the identical gradient anchored on brand green (#009E73) as the light render, at the same heights and order (Billing highest through Other lowest) — data-ink colors did not shift with the theme, only chrome did, as required.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed.
+      Background: Warm near-black, pixel-sampled #1A1A17 (matches spec, not pure black).
+      Chrome: Same title/subtitle/legend/axis-title layout as light, now in light ink against the dark background - all clearly legible, no dark-on-dark failures anywhere (title, subtitle, tick labels, axis titles, legend text all confirmed readable).
+      Data: Identical bar order, values, and count labels as the light render; bars remain #009E73 green (same gradient), cumulative-share line remains pure #C475FD lavender - colors are identical to the light render as required, only the chrome flipped. No compositing artifact reproduces in this render either.
+      Legibility verdict: PASS (all text readable; same minor near-touch between the "57" label and the line's dot as in the light render).
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,80 +65,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, subtitle 14, axis titles
-          16, ticks 14, count labels 15); fully readable in both themes at full size,
-          no overflow or clipping.
+        comment: All font sizes explicitly set; fully readable in both themes; title
+          fits without clipping.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: New count labels above each bar do not collide with the title/subtitle
-          or with each other; no text/data collisions in either render.
+        comment: 'Minor: the ''57'' count label sits nearly flush against the dashed
+          cumulative-share line''s dot (halo keeps it readable, improved vs attempt
+          1 but not fully resolved).'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 6 bars with maxBarThickness=110 render clearly visible and appropriately
-          sized for the sparse category count.
+        comment: Point radius increased from 4px to 6px per attempt-1 feedback, appropriately
+          prominent for a sparse 6-point series.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Gradient-filled green bars against both backgrounds retain strong
-          contrast; no red-green-only encoding.
+        comment: 'Compositing bug from attempt 1 fixed: line/markers pixel-verified
+          as pure #C475FD wherever they cross a bar, in both themes; only negligible
+          anti-aliasing edge pixels remain.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed; balanced margins, nothing cut off,
-          top padding (40px) correctly accommodates the new count labels above the
-          tallest bar.
+        comment: Balanced margins, canvas gate passed, good use of space with dual
+          y-axes.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles (Support Ticket Category / Count); Count
-          is unitless, appropriately so.
+        comment: Descriptive axis titles; percentage unit conveyed via right-axis
+          tick format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Gradient still resolves to #009E73 at full opacity as the first/only
-          series; backgrounds match Imprint light/dark tokens; both renders theme-correct.'
+        comment: 'First series #009E73, second series #C475FD by canonical palette
+          order; backgrounds pixel-exact #FAF8F1/#1A1A17; both renders theme-correct.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful gradient fill and custom count-label typography clearly
-          lift this above library defaults; not yet 'publication-ready' custom-palette
-          level.
+        comment: Gradient bars, halo-stroked labels, dual-axis Pareto overlay, clean
+          typography - clearly above library defaults; the fixed compositing bug removes
+          the previous polish deduction.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Hidden X gridlines, subtle Y gridlines, generous whitespace, subtle
-          rounded bar corners and gradient — good refinement, some room for further
-          polish.
+        comment: Single-axis subtle grid, generous whitespace, no boxed legend; minor
+          deduction only for the tight label/dot proximity at Account.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Descending sort plus precise count labels and the n=320 subtitle
-          give a clear, immediately readable hierarchy from most to least frequent
-          category.
+        comment: Descending sort plus the cumulative-share overlay gives real visual
+          hierarchy and a Pareto-style insight (which categories dominate volume).
     spec_compliance:
       score: 15
       max: 15
@@ -151,28 +146,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct count plot: raw categorical observations counted client-side,
-          not pre-aggregated.'
+        comment: Correct count/bar plot type, counts computed from raw categorical
+          draws.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Descending sort, consistent bar width/spacing, and now count labels
-          for precise reading — all spec notes implemented.
+        comment: Descending sort, count labels above bars, and a percentage-share
+          overlay all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=category, Y=count, all 6 categories shown.
+        comment: Categories on x, counts on left y, cumulative share on right y -
+          all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches mandated format; legend correctly hidden for
-          single series.
+        comment: Title matches the mandated format exactly; legend labels match dataset
+          names.
     data_quality:
       score: 15
       max: 15
@@ -182,58 +178,61 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Now shows count labels and total-ticket subtitle in addition to core
-          count-plot mechanics — closes the attempt-1 gap.
+        comment: 6 categories with a realistic skewed spread (20-86), showing clear
+          ranking and magnitude variation.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Support ticket categories are realistic and neutral.
+        comment: Neutral, comprehensible support-ticket triage scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 320 tickets across 6 categories with plausible weighted distribution
-          (86 down to 20).
+        comment: Counts sum to the stated n=320 and proportions are plausible for
+          a support queue.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Fixed-seed LCG helper and the count-label/gradient plugin functions
-          are appropriately scoped, no unnecessary abstraction.
+        comment: Mostly linear data -> mount -> chart flow, but needs an LCG helper,
+          a gradient callback, and a plugin object - justified by the distinctive
+          features but adds structure beyond a flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG(42).
+        comment: Deterministic seeded LCG (seed=42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global Chart.
+        comment: No unused imports; relies only on the provided Chart.js global.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a gradient + custom plugin; no fake UI/interactivity.
+        comment: No fake UI; the attempt-1 alpha/z-order gap is fixed by switching
+          to a solid opaque gradient stop.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract; animation disabled; no filesystem calls.
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API.
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -241,25 +240,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scriptable backgroundColor callback building a CanvasGradient and
-          a registered plugin are both textbook idiomatic Chart.js patterns.
+        comment: Idiomatic use of mixed bar+line datasets, dual scales, and the plugin
+          API; the z-order/alpha interaction from attempt 1 is now correctly handled.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: The custom afterDatasetsDraw plugin for count labels and CanvasGradient
-          fill are real Chart.js-specific techniques, though value-labels-above-bars
-          is a fairly common pattern rather than a rarer distinctive feature.
+        comment: Mixed chart type, custom draw plugin, and canvas gradient fills are
+          genuinely Chart.js-distinctive and not trivially replicated elsewhere.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - twin-axes
   - annotations
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - gradient-fill
-  - alpha-blending
-  - minimal-chrome
