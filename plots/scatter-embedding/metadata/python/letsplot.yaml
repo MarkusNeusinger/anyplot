@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:33:13Z'
-updated: '2026-08-11T09:11:37Z'
+updated: '2026-08-11T09:19:52Z'
 generated_by: claude-sonnet
 workflow_run: 31475602055
 issue: 5236
@@ -12,64 +12,63 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - Centroid labels (geom_label) placed directly on each cluster give an immediate
-    visual key to cell type without relying solely on the legend — a genuine storytelling
+  - 'Every weakness from Attempt 1 was directly and correctly addressed: title now
+    includes the "python" language token, geom_density2d contours were added as a
+    genuine lets-plot-specific distinctive touch, and point size/alpha were tuned
+    down (2.5→2.1, 0.6→0.5) to resolve dense-core marker overlap'
+  - Centroid geom_label annotations placed directly on each cluster give an immediate
+    visual key to cell type without relying solely on the legend — a real storytelling
     touch beyond the spec's optional suggestion
-  - 'Palette compliance is pixel-exact: first series #009E73, canonical Imprint order
-    for the remaining five clusters, and both plot/label backgrounds match #FAF8F1
-    (light) / #1A1A17 (dark) precisely, verified at the pixel level'
-  - Theme-adaptive chrome is fully correct in both renders — text, grid, legend box,
-    and geom_label fill/color all flip correctly between light and dark with no dark-on-dark
-    or light-on-light failures
-  - Minimal, uncluttered chrome (no grid, no spines, no axis ticks/text) correctly
-    follows the spec's instruction that embedding-dimension axes are not directly
-    interpretable
+  - 'Palette compliance is exact: first series is #009E73 (T-cell), remaining five
+    clusters follow the canonical Imprint order, and both plot background and geom_label
+    fill are pixel-correct #FAF8F1/#1A1A17 (light) and dark-adaptive fills in the
+    dark render'
+  - Theme-adaptive chrome is fully correct in both renders — title, subtitle, axis
+    titles, legend box/text, and centroid label boxes all flip appropriately with
+    no dark-on-dark or light-on-light failures
+  - geom_density2d contours add a genuine statistical layer (2D density estimate per
+    cluster) that reinforces cluster shape beyond a plain point cloud, combined with
+    interactive layer_tooltips that add real value in the HTML export without harming
+    the static PNG
+  - Minimal chrome (no grid, spines, or axis tick labels) correctly follows the spec's
+    explicit instruction that embedding-dimension axes aren't directly interpretable
   - Subtitle clearly states algorithm and key parameter ("t-SNE (perplexity=30)")
-    as required by the spec
-  - Interactive tooltips (layer_tooltips) add real value in the HTML export without
-    harming the static PNG render
-  - 'Reproducible: np.random.seed(42) plus explicit random_state=42 on TSNE'
-  - Clean KISS structure with only used imports and no over-engineering
+    exactly as the spec requires
+  - TSNE is genuinely computed via sklearn.manifold.TSNE on a 20-feature synthetic
+    dataset rather than faked 2D coordinates, and is fully reproducible (np.random.seed(42)
+    + random_state=42)
   weaknesses:
-  - 'Title is "scatter-embedding · letsplot · anyplot.ai" but the mandated format
-    is "{spec-id} · {language} · {library} · anyplot.ai" — the "python" language token
-    is missing. Other letsplot implementations in this repo (e.g. acf-pacf, area-basic,
-    arc-basic, audiogram-clinical) correctly include it as "acf-pacf · python · letsplot
-    · anyplot.ai". Fix: change the title string to "scatter-embedding · python · letsplot
-    · anyplot.ai".'
-  - Design Excellence is solid but not yet exceptional — the theme setup closely follows
-    the library's documented boilerplate chrome tokens rather than introducing a distinctive
-    visual signature. Consider a more deliberate design choice (e.g., subtle size/alpha
-    variation to hint at point density, a softer/rounded centroid label style, or
-    a restrained accent on one cluster) to push past 'well-configured' into genuinely
-    distinctive territory.
-  - Cluster point clouds (~250 points each at size=2.5/alpha=0.6) are legible but
-    the dense cores still show meaningful marker overlap — a touch more transparency
-    or slightly smaller markers would resolve individual points more cleanly in the
-    densest cluster centers.
-  - 'LM-02: layer_tooltips and geom_label are nice touches but are shared concepts
-    across other interactive plotting libraries (bokeh, plotly) rather than something
-    uniquely lets-plot/ggplot — consider a feature more distinctive to lets-plot''s
-    grammar (e.g., geom_density2d contours per cluster, or facet_wrap for a small-multiples
-    comparison view) to raise Library Mastery further.'
+  - All six clusters are generated with identical cluster_std and roughly equal sample
+    counts, so every cluster looks the same size/tightness in the embedding — real
+    single-cell/embedding data usually shows some clusters larger, some tighter, and
+    occasional outlier points or near-touching clusters. Varying cluster_std per group
+    (or adding a handful of outlier points) would make the data feel more authentic.
+  - geom_label centroid boxes use a plain rectangular style identical across all six
+    clusters — a slightly softer/rounded corner or subtle per-cluster accent would
+    push the design further past 'well-configured' into a more distinctive signature.
+  - layer_tooltips and geom_density2d are solid choices but are still conceptually
+    available in other grammar-of-graphics-adjacent libraries (ggplot2, plotnine,
+    seaborn kdeplot) rather than something unique to lets-plot's interactive engine
+    — a lets-plot-only interactive feature (e.g., linked brushing via ggtb(), or facet_wrap
+    for a small-multiples per-cluster comparison) would raise Library Mastery further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, pixel-verified at (250,248,241) = #FAF8F1, matches spec exactly.
-      Chrome: Title "scatter-embedding · letsplot · anyplot.ai" (dark ink, bold, top-left) and subtitle "t-SNE (perplexity=30) · Single-cell RNA-seq Cell Type Clusters" (soft gray) are both clearly legible. Axis titles "t-SNE 1" / "t-SNE 2" present; no tick labels or grid, per spec instruction that embedding axes are not directly interpretable. Legend "Cell Type" sits at the right edge, near the rightmost cluster, with a boxed background and clearly readable swatches/labels.
-      Data: Six well-separated elliptical point clusters (T-cell green #009E73, Monocyte purple, NK-cell blue, Dendritic orange, Neutrophil red, B-cell cyan) each carrying a boxed centroid label (white box, dark bold text) naming the cell type directly on the cluster. Points use alpha≈0.6, individual dots resolvable at cluster edges with some overlap in the denser cores.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "scatter-embedding · python · letsplot · anyplot.ai" and subtitle "t-SNE (perplexity=30) · Single-cell RNA-seq Cell Type Clusters" render in dark/soft-gray text, both clearly legible. Axis titles "t-SNE 1"/"t-SNE 2" are present with no tick labels or grid, matching the spec's note that embedding axes aren't directly interpretable. Legend "Cell Type" sits at the right, fully inside the canvas with no clipping.
+      Data: Six well-separated point clusters, each with a matching geom_density2d contour outline: T-cell (green #009E73), Monocyte (purple), NK-cell (blue), Dendritic (ochre), Neutrophil (red), B-cell (cyan) — matches the canonical Imprint order with first series = brand green. Each cluster carries a boxed centroid label (dark text on light box) naming the cell type directly on the plot.
+      Legibility verdict: PASS — all text reads cleanly against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, pixel-verified at (26,26,23) = #1A1A17, matches spec exactly.
-      Chrome: Title and subtitle switch to light ink/soft-gray text, fully legible against the dark background. Legend box uses the dark "elevated" fill with light text, still clearly readable. No axis ticks/grid, consistent with the light render.
-      Data: Same six clusters in the exact same hex colors as the light render (verified pixel-identical, e.g. T-cell swatch (0,158,115) = #009E73 in both renders) — only the chrome flipped. Centroid label boxes correctly flip to a dark fill (#242420) with light text (#F0EFE8), verified at the pixel level — not a leftover light box as it might first appear.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/subtitle/axis/legend/centroid-label text is clearly visible against the dark surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title/subtitle/axis titles/legend text all switch to light ink and remain fully legible. Centroid label boxes correctly flip to a dark fill with light text and light border (verified via close crop) — not a leftover light box.
+      Data: Colors are identical to the light render (same six Imprint hues in the same cluster positions) — only chrome flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures anywhere; centroid label boxes, legend box, and all text are correctly theme-adapted.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -77,77 +76,80 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 16, subtitle 13, axis 12, legend
-          10/11, label 4); readable in both themes, verified via pixel sampling; no
-          clipping or overflow
+        comment: All font sizes explicit (title 16, subtitle 13, axis title 12, legend
+          10/11); readable in both themes; title occupies ~50% width, well within
+          proportion guidance
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text overlap; centroid label boxes sit on data by design
+        comment: No text-text overlap; centroid label boxes sit cleanly over their
+          own cluster
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: size=2.5/alpha=0.6 for ~250 pts/cluster is legible but dense cores
-          still show meaningful marker overlap
+        comment: size=2.1/alpha=0.5 (reduced from attempt 1's 2.5/0.6) resolves dense-core
+          overlap while keeping clusters visible; density2d contours reinforce cluster
+          shape
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good hue spacing across 6 colors, alpha aids overlap perception,
-          no red-green-only reliance
+        comment: Imprint palette is CVD-safe; alpha blending and contour outlines
+          give redundant encoding beyond hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Full-canvas utilization, balanced margins, legend adjacent to plot
+        comment: Clusters and legend well distributed across the canvas, balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: t-SNE 1 / t-SNE 2 are the correct descriptive labels for the domain
-          (no natural units apply)
+        comment: '"t-SNE 1"/"t-SNE 2" descriptive; units not applicable for embedding
+          dimensions per spec'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Pixel-verified exact Imprint hexes and theme-correct backgrounds/chrome
-          in both renders
+        comment: 'First series #009E73, canonical Imprint order for remaining 5, theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above default thanks to centroid labels and typographic hierarchy,
-          but theme closely follows the documented library boilerplate rather than
-          a distinctive signature
+        passed: true
+        comment: geom_density2d contours plus boxed centroid labels push past library
+          boilerplate into a distinctive composition; not yet publication-tier custom
+          typography/palette work
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Grid, spines, and axis ticks fully removed with generous whitespace;
-          centroid label box styling is slightly blunt/utilitarian
+        comment: Grid, spines, and ticks fully removed with generous whitespace; centroid
+          label box styling is still a plain rectangle, slightly utilitarian
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Direct cluster labeling gives immediate insight without cross-referencing
-          the legend
+        comment: Direct cluster labeling plus density contours give immediate insight
+          into cluster identity and shape without cross-referencing the legend
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -155,28 +157,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D scatter embedding visualization
+        comment: Correct 2D embedding scatter with cluster coloring
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colorblind-accessible colors + legend, centroid labels,
-          alpha for overlap, subtitle with algorithm/param, no axis tick labels
+        comment: Distinct CVD-safe colors + legend, optional centroid annotations,
+          moderate size+alpha, subtitle with algorithm/parameter, no interpretable
+          tick labels — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=tsne_1, y=tsne_2 correctly mapped, all data visible
+        comment: x=tsne_1, y=tsne_2 correctly mapped, all points visible within axes
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is missing the required 'python' language token (should read
-          'scatter-embedding · python · letsplot · anyplot.ai'); legend labels are
-          correct
+        passed: true
+        comment: Title now reads exactly "scatter-embedding · python · letsplot ·
+          anyplot.ai" (language token fixed from attempt 1); legend labels match cell
+          types
     data_quality:
       score: 14
       max: 15
@@ -186,20 +189,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Six distinct clusters with some variation in spread/tightness, solid
-          coverage of embedding-plot features
+        comment: Shows 6 distinct, well-separated clusters, but all with equal cluster_std/size
+          — real embeddings usually show varying cluster tightness/size or a few outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral single-cell RNA-seq scenario
+        comment: Single-cell RNA-seq immune cell types is a real, neutral, comprehensible
+          scientific scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible embedding coordinate scale, no factual issues
+        comment: t-SNE output scale and cluster separation are plausible for the domain
     code_quality:
       score: 10
       max: 10
@@ -209,7 +213,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> Data -> Plot -> Save, no functions/classes
+        comment: Linear imports → data → plot → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -221,7 +225,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only numpy, pandas, lets_plot, sklearn (make_blobs, TSNE), os, shutil
+          — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -233,10 +238,10 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html via current
-          ggsave API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly, current lets-plot
+          API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -244,28 +249,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic ggplot-grammar composition with scale_color_manual, labs,
-          theme
+        comment: 'Idiomatic ggplot-grammar composition: geom_density2d + geom_point
+          + geom_label layered with scale_color_manual and theme()'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: layer_tooltips and geom_label are genuine lets-plot features but
-          conceptually shared with other interactive libraries; a more distinctive
-          feature (e.g. geom_density2d contours, facet_wrap) would score higher
-  verdict: REJECTED
+        passed: true
+        comment: Combines layer_tooltips (interactive HTML tooltips), geom_density2d
+          contours, and geom_label centroid annotations — a genuinely layered, library-native
+          composition, though each individual technique has analogues in other libraries
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - hover-tooltips
-  - annotations
+  - html-export
+  - custom-legend
   patterns:
   - data-generation
   - groupby-aggregation
   dataprep:
-  - dimensionality-reduction
+  - tsne
+  - kde
   styling:
   - alpha-blending
   - minimal-chrome
