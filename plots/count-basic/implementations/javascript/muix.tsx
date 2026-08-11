@@ -1,8 +1,7 @@
 // anyplot.ai
 // count-basic: Basic Count Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: 88/100 | Created: 2026-08-11
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 89/100 | Created: 2026-08-11
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
