@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-11
@@ -94,20 +94,28 @@ plot = (
         y="Sales Revenue (thousands $)",
         title="scatter-regression-polynomial · python · letsplot · anyplot.ai",
     )
-    # Annotations for R² and equation
-    + geom_text(
+    # Annotations for R² and equation - placed top-left, away from the point
+    # cloud (which only rises above y=95 for x > 27) and shielded with a
+    # background label box so any future data draw can't overlap the text
+    + geom_label(
         aes(x="x", y="y", label="label"),
-        data=pd.DataFrame({"x": [x.max() - 5], "y": [y.max() + 5], "label": [f"R² = {r2:.3f}"]}),
+        data=pd.DataFrame({"x": [x.min() + 1], "y": [y.max()], "label": [f"R² = {r2:.3f}"]}),
         size=5,
         color=INK,
-        hjust=1,
+        fill=PAGE_BG,
+        label_size=0,
+        alpha=0.9,
+        hjust=0,
     )
-    + geom_text(
+    + geom_label(
         aes(x="x", y="y", label="label"),
-        data=pd.DataFrame({"x": [x.max() - 5], "y": [y.max() - 2], "label": [equation]}),
+        data=pd.DataFrame({"x": [x.min() + 1], "y": [y.max() - 6], "label": [equation]}),
         size=4,
         color=INK_SOFT,
-        hjust=1,
+        fill=PAGE_BG,
+        label_size=0,
+        alpha=0.9,
+        hjust=0,
     )
     # Theme
     + theme_minimal()
