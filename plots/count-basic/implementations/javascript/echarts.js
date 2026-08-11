@@ -40,6 +40,19 @@ for (const language of responses) counts[language] = (counts[language] || 0) + 1
 const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 const categories = ranked.map(([language]) => language);
 const frequencies = ranked.map(([, count]) => count);
+const total = frequencies.reduce((sum, count) => sum + count, 0);
+
+// The leader (rank 1) is rendered at full opacity with a bolder label; the rest
+// sit at reduced opacity so the top bar reads as an immediate focal point.
+const barData = frequencies.map((count, i) => ({
+  value: count,
+  itemStyle: {
+    color: t.palette[0],
+    opacity: i === 0 ? 1 : 0.55,
+    borderRadius: [6, 6, 0, 0],
+  },
+  label: i === 0 ? { fontWeight: 700 } : {},
+}));
 
 // --- Init ---------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -53,6 +66,15 @@ chart.setOption({
     text: "count-basic · javascript · echarts · anyplot.ai",
     left: "center",
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+  },
+  tooltip: {
+    trigger: "axis",
+    axisPointer: { type: "shadow" },
+    formatter: (params) => {
+      const p = params[0];
+      const pct = ((p.value / total) * 100).toFixed(1);
+      return `${p.name}<br/>${p.value} responses (${pct}%)`;
+    },
   },
   grid: { left: 90, right: 60, top: 100, bottom: 80 },
   xAxis: {
@@ -81,14 +103,17 @@ chart.setOption({
   series: [
     {
       type: "bar",
-      data: frequencies,
+      data: barData,
       barWidth: "60%",
-      itemStyle: { color: t.palette[0] },
       label: {
         show: true,
         position: "top",
         color: t.ink,
         fontSize: 14,
+      },
+      emphasis: {
+        focus: "series",
+        itemStyle: { opacity: 1, shadowBlur: 12, shadowColor: "rgba(0, 0, 0, 0.25)" },
       },
     },
   ],
