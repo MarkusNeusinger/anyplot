@@ -1,7 +1,7 @@
 // anyplot.ai
 // count-basic: Basic Count Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: 86/100 | Created: 2026-08-11
+// Quality: pending | Created: 2026-08-11
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
@@ -42,6 +42,8 @@ const sorted = genres
 
 const categories = sorted.map((d) => d.genre);
 const values = sorted.map((d) => d.count);
+const total = values.reduce((sum, v) => sum + v, 0);
+const mean = total / values.length;
 
 // --- Chart -----------------------------------------------------------------
 Highcharts.chart("container", {
@@ -67,17 +69,35 @@ Highcharts.chart("container", {
     title: { text: "Checkouts", style: { color: t.inkSoft, fontSize: "16px" } },
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotLines: [
+      {
+        value: mean,
+        color: t.inkSoft,
+        dashStyle: "ShortDash",
+        width: 1.5,
+        zIndex: 5,
+        label: {
+          text: `Mean: ${mean.toFixed(0)}`,
+          align: "right",
+          style: { color: t.inkSoft, fontSize: "12px" },
+        },
+      },
+    ],
   },
   legend: { enabled: false },
   plotOptions: {
     series: { animation: false },
     column: {
       borderWidth: 0,
+      borderRadius: 4,
       colorByPoint: true,
       dataLabels: {
         enabled: true,
         color: t.ink,
         style: { fontSize: "14px", fontWeight: "500", textOutline: "none" },
+        formatter: function () {
+          return `${this.y} (${((this.y / total) * 100).toFixed(0)}%)`;
+        },
       },
     },
   },
