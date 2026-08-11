@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-07
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-08-11
 """
 
 import os
