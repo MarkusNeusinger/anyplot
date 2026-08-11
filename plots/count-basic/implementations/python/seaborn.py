@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 count-basic: Basic Count Plot
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: pending | Updated: 2026-08-11
+Quality: 93/100 | Updated: 2026-08-11
 """
 
 import os
