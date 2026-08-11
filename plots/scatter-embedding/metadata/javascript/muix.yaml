@@ -1,0 +1,249 @@
+library: muix
+language: javascript
+specification_id: scatter-embedding
+created: '2026-08-11T09:16:18Z'
+updated: '2026-08-11T09:31:19Z'
+generated_by: claude-sonnet
+workflow_run: 31476547553
+issue: 5236
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/muix/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Correct canonical Imprint palette order (T cells = #009E73 brand green through
+    Neutrophils = lime), identical data colors across both renders with only chrome
+    flipping between themes'
+  - Density-adaptive per-cluster alpha (0.55-0.72) plus varied spread (1.0-2.1) and
+    point count (55-95) directly fixes the previous attempt's flagged 'identical spread/count
+    for every cluster' weakness, now showing realistic differing compactness
+  - Centroid labels driven by live useXScale/useYScale hooks render theme-adaptive,
+    color-matched chips that give the redundant color+text encoding the style guide
+    requires at n=8 series
+  - Title, subtitle (algorithm + key parameter), axis labels, and legend all match
+    the spec and mandated format exactly; tick labels correctly omitted since UMAP
+    coordinates carry no interpretable units
+  - No edge clipping in either render; canvas dimension gate passed; chrome fully
+    legible in both light and dark themes
+  weaknesses:
+  - 'File has a duplicated/stale header block: lines 1-10 stack two header comments
+    -- an old one with a hardcoded ''Quality: 89/100'' line left over from a previous
+    metadata-sync commit, plus the current canonical header. Clean up to a single
+    header matching prompts/library/muix.md''s Header Style; the stray hardcoded score
+    is misleading before this review completes.'
+  - Title still occupies only ~40% of canvas width, below the ~50-70% target for this
+    mandated title format -- improved from ~32% in the previous attempt but not yet
+    fully at target; a further modest fontsize increase would strengthen the visual
+    hierarchy.
+  - Design Excellence is solid (centroid labels, density-adaptive alpha/spread) but
+    still lacks one strong focal point or emphasis technique to push data storytelling
+    further, per the prior attempt's feedback -- e.g. subtly de-emphasizing background
+    clusters or highlighting a single cluster.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), no pure-white areas -- correct.
+      Chrome: Title "scatter-embedding · javascript · muix · anyplot.ai" and subtitle "UMAP (n_neighbors=15) · synthetic single-cell RNA-seq embedding" render in dark ink, clearly legible. "UMAP dimension 1" / "UMAP dimension 2" axis labels are dark, similarly sized, and legible; no tick labels are shown, correct per spec since embedding coordinates are not directly interpretable. Legend on the right lists all 8 cluster names in dark ink with color swatches, fully readable and not clipped against the right canvas edge. 8 translucent centroid-label chips (near-white boxes) sit inside each cluster with bold text colored to match that cluster's series color -- all legible against their chip background, including the lower-contrast palette entries (lime "Neutrophils", ochre "NK cells", cyan "Platelets").
+      Data: 8 clusters of small circular markers arranged in a loose double-arc across the canvas (T cells, B cells, Monocytes, NK cells, Dendritic cells, Platelets, Erythrocytes, Neutrophils), first series (T cells) rendered in brand green #009E73. Clusters now visibly differ in point count and spread (denser/tighter Platelets and Monocytes vs. looser Monocytes/Erythrocytes/Dendritic cells), with per-cluster alpha (0.55-0.72) keeping dense cores distinguishable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), no pure-black areas -- correct.
+      Chrome: Title and subtitle render in light ink (near-white/soft grey), clearly legible against the dark background. Axis labels and legend text are light-colored and legible; no dark-on-dark or light-on-light failures observed anywhere, including inside the centroid-label chips (dark near-black chip fill, cluster-colored bold text remains readable).
+      Data: Identical marker colors, cluster layout, spread, and alpha to the light render -- confirmed the same 8 hues, same brand-green first series, same per-cluster density adaptation. Only the chrome (background, title/label/legend/chip colors) flipped to the dark-theme tokens.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes; title
+          improved from ~32% to ~40% of canvas width (title fontsize raised from 22px
+          to 28px) but still under the ~50-70% target for this mandated title format
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text collisions; centroid-label chips sit over data points
+          by design and stay fully readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Density-adaptive alpha (0.55-0.72, denser clusters get more transparency)
+          fixes the previous attempt's overlap-in-dense-cores weakness
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 8-series palette paired with redundant text-label encoding per style-guide
+          guidance for n=8 -- no reliance on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, legend near the plot, nothing cut off, canvas dimension
+          gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels; tick labels correctly omitted since embedding
+          coordinates are not interpretable
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, first series #009E73, identical data colors
+          across both theme-correct renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Centroid labels, density-adaptive alpha, and varied per-cluster spread/count
+          go beyond generic defaults, but not yet publication-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Axis lines/ticks fully removed, generous whitespace, no grid clutter
+          -- clean and deliberate for an embedding plot
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Centroid labels let the viewer identify every cluster at a glance,
+          but there is still no single strong focal point or emphasis technique, per
+          the prior attempt's feedback
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct 2D scatter embedding visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Distinct colorblind-accessible colors + legend, centroid label annotations,
+          moderate size + density-adaptive alpha, algorithm/parameter subtitle, no
+          tick labels -- all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: X/Y correctly mapped to UMAP dimensions 1/2 with padded axis ranges
+          showing all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title exactly matches the mandated format; legend labels match the
+          8 cluster names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: 8 clusters now vary in point count (55-95) and spread (1.0-2.1),
+          fixing the previous attempt's uniform-cluster weakness and reflecting real
+          UMAP density diversity
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Single-cell RNA-seq immune cell-type UMAP is exactly the standard,
+          neutral use case named in the spec's applications
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Coordinate ranges and cluster spacing are plausible for a synthetic
+          UMAP embedding
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Imports -> data -> Chart component flow; CentroidLabels and RNG helpers
+          are the minimum required by the React harness
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Deterministic seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: Every import (ChartContainer, ScatterPlot, ChartsXAxis/YAxis, ChartsLegend,
+          useXScale/useYScale) is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        comment: 'File has a duplicated/stale header block (lines 1-10, two stacked
+          header comments incl. a hardcoded leftover ''Quality: 89/100'') that should
+          be cleaned up to a single canonical header'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Default-exported component sized from window.ANYPLOT_SIZE, skipAnimation
+          set, current MUI X API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: ChartContainer + ScatterPlot composition with typed axis/series config
+          is exactly MUI X's recommended low-level composition pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: useXScale/useYScale hooks drive custom SVG centroid labels synced
+          to the chart's live D3 scales -- a MUI X-specific capability not trivially
+          replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
