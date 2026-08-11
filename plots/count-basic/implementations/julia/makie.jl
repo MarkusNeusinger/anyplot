@@ -42,7 +42,7 @@ fig = Figure(
 
 ax = Axis(
     fig[1, 1];
-    title             = "count-basic · julia · makie · anyplot.ai",
+    title             = "Device Type Sessions · count-basic · julia · makie · anyplot.ai",
     titlesize         = 20,
     titlecolor        = INK,
     xlabel            = "Device Type",
@@ -58,17 +58,25 @@ ax = Axis(
     xtickcolor        = INK_SOFT,
     ytickcolor        = INK_SOFT,
     backgroundcolor   = PAGE_BG,
-    topspinevisible   = false,
-    rightspinevisible = false,
     leftspinecolor    = INK_SOFT,
     bottomspinecolor  = INK_SOFT,
     xgridvisible      = false,
     ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.12),
     xticks            = (1:length(sorted_devices), sorted_devices),
 )
+hidespines!(ax, :t, :r)
 
-barplot!(ax, 1:length(sorted_devices), sorted_counts; color = BRAND, width = 0.62)
+# Leading category gets full brand-green emphasis; the rest are tinted back
+# so the eye lands on the top device type first.
+bar_colors = [i == 1 ? BRAND : RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.55) for i in 1:length(sorted_devices)]
 
+barplot!(
+    ax, 1:length(sorted_devices), sorted_counts;
+    color = bar_colors, width = 0.62,
+    strokewidth = 1.5, strokecolor = PAGE_BG,
+)
+
+total_sessions = sum(sorted_counts)
 for (i, count) in enumerate(sorted_counts)
     text!(
         ax, i, count;
@@ -76,11 +84,20 @@ for (i, count) in enumerate(sorted_counts)
         align = (:center, :bottom),
         offset = (0, 6),
         fontsize = 14,
+        color = INK,
+    )
+    pct = round(100 * count / total_sessions; digits = 1)
+    text!(
+        ax, i, count;
+        text = "($(pct)%)",
+        align = (:center, :bottom),
+        offset = (0, 24),
+        fontsize = 11,
         color = INK_SOFT,
     )
 end
 
-ylims!(ax, 0, maximum(sorted_counts) * 1.12)
+ylims!(ax, 0, maximum(sorted_counts) * 1.2)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
