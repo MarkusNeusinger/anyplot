@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-11
@@ -9,6 +9,7 @@ import sys
 
 
 sys.path.pop(0)
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.datasets import make_blobs
@@ -32,8 +33,10 @@ CLUSTER_LABELS = ["Finance", "Healthcare", "Technology", "Sports", "Politics", "
 MARKERS = ["o", "s", "^", "D", "v", "P", "X"]
 
 # Data — 1050 document embeddings (150 per topic) in 50-dimensional space
+# cluster_std=3.3 leaves some boundary overlap/noise between neighboring topics,
+# matching the real-world embedding-quality-checking use case this spec targets
 np.random.seed(42)
-X_high, labels = make_blobs(n_samples=1050, n_features=50, centers=7, cluster_std=2.5, random_state=42)
+X_high, labels = make_blobs(n_samples=1050, n_features=50, centers=7, cluster_std=3.3, random_state=42)
 tsne = TSNE(n_components=2, perplexity=30, random_state=42)
 X_2d = tsne.fit_transform(X_high)
 
@@ -43,23 +46,13 @@ ax.set_facecolor(PAGE_BG)
 
 for i, (label, color, marker) in enumerate(zip(CLUSTER_LABELS, IMPRINT, MARKERS, strict=False)):
     mask = labels == i
-    ax.scatter(
-        X_2d[mask, 0],
-        X_2d[mask, 1],
-        c=color,
-        s=90,
-        alpha=0.65,
-        edgecolors=PAGE_BG,
-        linewidth=0.5,
-        marker=marker,
-        label=label,
-    )
+    ax.scatter(X_2d[mask, 0], X_2d[mask, 1], c=color, s=90, alpha=0.65, edgecolors="none", marker=marker, label=label)
 
 # Centroid annotations
 for i, label in enumerate(CLUSTER_LABELS):
     mask = labels == i
     cx, cy = X_2d[mask, 0].mean(), X_2d[mask, 1].mean()
-    ax.text(
+    txt = ax.text(
         cx,
         cy,
         label,
@@ -76,6 +69,9 @@ for i, label in enumerate(CLUSTER_LABELS):
             "linewidth": 0.8,
         },
     )
+    # PathEffects halo keeps the bold label crisp against the box even where
+    # dense, overlapping markers sit directly beneath the centroid text
+    txt.set_path_effects([pe.withStroke(linewidth=2, foreground=ELEVATED_BG)])
 
 # Outlier callout — surfaces the point furthest from its own cluster centroid,
 # the kind of embedding-quality check this plot type exists to support (DE-03)
@@ -97,8 +93,8 @@ ax.annotate(
 ax.set_xlabel("t-SNE 1", fontsize=10, color=INK)
 ax.set_ylabel("t-SNE 2", fontsize=10, color=INK)
 ax.set_title(
-    "Document Topic Embeddings · scatter-embedding · matplotlib · anyplot.ai",
-    fontsize=11,
+    "Document Topic Embeddings · scatter-embedding · python · matplotlib · anyplot.ai",
+    fontsize=10,
     fontweight="medium",
     color=INK,
 )
