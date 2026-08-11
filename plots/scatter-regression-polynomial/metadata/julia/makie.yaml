@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: scatter-regression-polynomial
 created: '2026-08-11T13:09:09Z'
-updated: '2026-08-11T13:14:47Z'
+updated: '2026-08-11T13:30:25Z'
 generated_by: claude-sonnet
 workflow_run: 31493793356
 issue: 2028
@@ -12,53 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - R² (0.982) and the full quadratic equation are annotated prominently in the bottom-right,
-    directly satisfying the spec's 'display R² prominently' and 'annotate with the
-    polynomial equation' notes.
-  - 95% confidence band is included around the fit curve (the spec's optional enhancement),
-    correctly alpha-blended and pixel-verified identical base colors between light
-    and dark renders.
+  - 'Title now fills ~59% of canvas width (pixel-measured: 1893/3200 px), squarely
+    in the comfortable 50-70% target — the fontsize formula fix resolved the prior
+    37% under-fill.'
+  - Fit line + confidence band now use canonical Imprint position 2 (#C475FD, lavender),
+    pixel-verified exact in both renders, restoring the correct 1->N palette order.
+  - R^2 (0.982) and the full quadratic equation are annotated prominently bottom-right,
+    satisfying the spec's goodness-of-fit and equation-annotation notes.
+  - 95% confidence band included around the fit curve, correctly alpha-blended and
+    pixel-identical between themes.
   - 'Clean, idiomatic implementation: closed-form Vandermonde least-squares quadratic
-    fit with no external ML dependency, flat single-script structure, Random.seed!(42)
-    for reproducibility, and theme tokens threaded consistently through every Axis
-    kwarg.'
-  - 'Both renders are theme-correct: backgrounds measured exactly #FAF8F1 (light)
-    and #1A1A17 (dark), all text legible in both themes, subtle gridlines, top/right
-    spines removed.'
+    fit with no external ML dependency, flat single-script structure, Random.seed!(42),
+    theme tokens threaded through every Axis kwarg.'
+  - 'Both renders theme-correct: backgrounds pixel-exact #FAF8F1 / #1A1A17, all text
+    legible in both themes, subtle gridlines, top/right spines removed.'
   - Physically plausible projectile-motion dataset (90 points, parabolic arc, moderate
-    Gaussian noise) at a realistic scale for the domain.
+    Gaussian noise) at a realistic scale.
   weaknesses:
-  - Title occupies only ~37% of canvas width (measured 1193/3200 px), well below the
-    50-70% comfortable target — the dynamic fontsize formula `round(Int, 20 * 67 /
-    length(title_str))` overcorrects for this 78-char title and shrinks it too far;
-    increase the multiplier (or floor the shrink ratio) so the title reads with more
-    visual presence.
-  - The regression-fit line uses Imprint palette position 3 (#4467A3, blue) for the
-    second series instead of the canonical position 2 (#C475FD, lavender) — a generic
-    regression fit line has no real-world color association that qualifies as a semantic
-    exception, so this breaks the 'use positions 1→N in order' hard rule from the
-    style guide.
-  - 'Design Excellence is solid but not fully realized: the legend/annotation styling
-    is functional rather than distinctive, and Library Mastery could lean further
-    into Makie-specific idioms (e.g. richer text/Label composition) beyond band!/scatter!/lines!/text!.'
+  - Design Excellence and Library Mastery are solid but not fully realized -- legend/annotation
+    styling is functional rather than distinctive; could lean further into Makie-specific
+    idioms (e.g. Legend positioning, custom tick formatting) to push Library Mastery
+    beyond generic usage.
+  - Scatter markers (size=11, alpha=0.65) are visible but not optimally prominent
+    for 90 sparse-ish points; a modest size increase would strengthen Element Visibility.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, measured RGB (250,248,241) = #FAF8F1 exactly as required.
-      Chrome: Title "Projectile Motion · scatter-regression-polynomial · julia · makie · anyplot.ai" is bold dark text, clearly visible but occupies only ~37% of canvas width (smaller than the comfortable 50-70% target). Axis labels "Horizontal Distance (m)" / "Height (m)" and tick labels are dark/soft-ink and fully legible. Grid lines are subtle light gray, visible but not dominant.
-      Data: Scatter points are Imprint brand green (#009E73, alpha 0.65 with light-bg-colored stroke), forming a clear parabolic arc. Fit line is Imprint position-3 blue (#4467A3, solid, linewidth 3). A light gray 95% confidence band hugs the fit line. Equation "ŷ = -0.0275x² + 1.974x + 0.14, R² = 0.982" is annotated bottom-right in dark ink, fully readable, no overlap with data or legend.
+      Background: Measured pixel-exact #FAF8F1 (warm off-white), matches spec.
+      Chrome: Title "Projectile Motion · scatter-regression-polynomial · julia · makie · anyplot.ai" is bold dark ink, fully legible, now spans ~59% of canvas width (pixel-measured 1893/3200 px, x-range 697-2590) -- squarely in the comfortable 50-70% target, up from ~37% in attempt 1. Axis labels ("Horizontal Distance (m)" / "Height (m)") and tick labels are dark/soft-ink, clearly readable, balanced sizing (14pt labels, 12pt ticks). Gridlines subtle. Top/right spines removed.
+      Data: Brand-green (#009E73, alpha 0.65) scatter points trace a clean parabolic arc; a solid lavender (#C475FD, Imprint palette position 2) quadratic fit line runs through them with a matching light-lavender 95% confidence band. Equation + R² (0.982) annotated bottom-right in dark ink, no overlap with data or legend.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, measured RGB (26,26,23) = #1A1A17 exactly as required.
-      Chrome: Title, axis labels, and tick labels flip to light ink and remain clearly legible against the dark background — no dark-on-dark failures observed. Grid lines remain subtle.
-      Data: Scatter/fit-line base hex colors verified pixel-identical to the light render (green #009E73 and blue #4467A3); the differing on-screen tone of the alpha-blended scatter fill (green composited over dark vs. light background) is expected alpha-compositing behavior, not a palette violation — the underlying hue and the solid (non-alpha) fit line are unchanged. Confidence band and equation annotation remain legible.
+      Background: Measured pixel-exact #1A1A17 (warm near-black), matches spec.
+      Chrome: All chrome (title, axis labels, ticks, legend, annotation) flips to light ink and remains clearly legible -- no dark-on-dark failures found.
+      Data: Fit line pixel-verified exact #C475FD, identical to light render (RGB diff = 0). Scatter green shows the same base hue with the expected alpha-compositing shift against the darker background (not a palette violation -- alpha=0.65 blending against a different backdrop).
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -66,49 +60,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; all text readable in both themes.
+        comment: All font sizes explicitly set, readable in both themes; title now
+          well-proportioned
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend, equation annotation, and data never collide.
+        comment: No overlap between text, legend, and data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 90 points at markersize 11 with alpha 0.65 read well; fit line at
-          linewidth 3 is clearly distinct.
+        comment: Markers visible but not maximally prominent for the data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs blue, no red-green-only signal, good contrast on both backgrounds.
+        comment: Good contrast, CVD-safe green/lavender pairing
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800; no clipping/overflow, but title measured
-          at only ~37% width, below the 50-70% comfortable target.
+        comment: Title width fix resolved prior under-fill (37% -> 59%); balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (m); mandated title format followed.
+        comment: Descriptive with units (m)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73; second series (fit line) uses palette
-          position 3 (#4467A3) instead of canonical position 2 (#C475FD) without a
-          semantic-exception justification. Backgrounds theme-correct.'
+        passed: true
+        comment: 'Fit line pixel-verified #C475FD (Imprint position 2, canonical order);
+          backgrounds pixel-exact both themes'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -116,22 +109,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Confidence band, equation annotation, and dynamic title-fit logic
-          show real design effort, though the title-sizing calculation undershoots.
+        comment: Confidence band + equation annotation show effort; strong but not
+          publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle gridlines, generous whitespace (arguably
-          too much around the title).
+        comment: Clean spines/grid; title-width fix removed the prior excess-whitespace
+          issue
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear parabolic focal point with fit + confidence band + goodness-of-fit
-          annotation guiding the read.
+        comment: Clear focal point via curve + goodness-of-fit annotation guides the
+          reader
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +134,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter with fitted polynomial (degree 2) regression curve.
+        comment: Scatter + polynomial regression curve, correct type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: R² prominent, contrasting solid fit line, degree-2 default, confidence
-          band, alpha ~0.65 points, axis labels, equation annotation — all present.
+        comment: R^2, equation, confidence band, degree-2 fit all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = horizontal distance, y = height; full data range shown on both
-          axes.
+        comment: X/Y correctly assigned, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title = 'Projectile Motion · scatter-regression-polynomial · julia
-          · makie · anyplot.ai'; legend labels match plotted series.
+        comment: Title format correct, legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -172,20 +162,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Scatter, polynomial curve, confidence band, and equation together
-          cover all plot-type aspects.
+        comment: Full arc shown from launch to landing with realistic noise
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Projectile-motion trajectory is plausible and neutral.
+        comment: Neutral, comprehensible projectile-motion scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Distances 0-55m, heights 0-40m are sensible for the domain.
+        comment: Physically plausible distances/heights and noise magnitude
     code_quality:
       score: 10
       max: 10
@@ -195,31 +184,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42).
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics — all used.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex closed-form fit, no fake UI/interactivity.
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via current CairoMakie API.
+        comment: Saves plot-$(THEME).png, current CairoMakie API
     library_mastery:
       score: 7
       max: 10
@@ -229,25 +218,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: band!/scatter!/lines!/text!/axislegend used idiomatically with relative-space
-          text placement.
+        comment: Idiomatic Axis/Figure kwargs, correct but not maximal use of Makie
+          patterns
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: band! confidence interval and relative-space text annotation go beyond
-          generic usage, but nothing more distinctively Makie-specific beyond that.
-  verdict: REJECTED
+        comment: band! confidence interval + relative-space text! annotation are Makie-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - regression
   styling:
   - alpha-blending
+  - edge-highlighting
