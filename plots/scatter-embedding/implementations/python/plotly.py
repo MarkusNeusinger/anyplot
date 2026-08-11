@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-11

@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:23:24Z'
-updated: '2026-08-11T08:58:14Z'
+updated: '2026-08-11T09:05:45Z'
 generated_by: claude-sonnet
 workflow_run: 31474686322
 issue: 5236
@@ -15,135 +15,138 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 quality_score: 87
 review:
   strengths:
-  - Correct 3200x1800 landscape canvas via width=800/height=450/scale=4 — no clipping
-    on any edge
-  - Title fontsize (13) is correctly scaled down from the style-guide default for
-    the long descriptive-prefixed title, avoiding overflow
+  - Correct 3200×1800 landscape canvas via width=800/height=450/scale=4 — no clipping
+    on any edge, canvas gate passed
+  - 'Attempt 1''s axis-title-vs-title hierarchy bug is fixed: xaxis/yaxis title font
+    size reduced from 22 to 12, clearly below the main title'
   - 'Thoughtful semantic-exception color choice: Erythrocytes get the matte-red anchor
-    (#AE3030) for the blood association instead of its ordinal palette position, with
-    the deviation explained in a code comment'
-  - Centroid annotation labels are offset below each cluster (yanchor='top', y_margin
-    computed from data range) specifically to avoid covering the data points — a deliberate,
-    well-reasoned layout choice
+    (#AE3030) for the blood association instead of its ordinal palette position 6,
+    explained in a code comment'
+  - Centroid annotation labels deliberately offset below each cluster (yanchor="top",
+    computed y_margin) so they never cover data points
   - 'All spec features present: colorblind-accessible palette + legend, optional centroid
-    annotations, moderate marker size with alpha=0.65 for the 1,500-point density,
-    subtitle stating algorithm and perplexity, tick labels hidden since embedding
-    coordinates aren''t interpretable'
+    annotations, moderate alpha-blended markers with density-appropriate opacity,
+    algorithm/parameter subtitle, hidden tick labels since t-SNE coordinates aren''t
+    directly interpretable'
   - 'Fully reproducible: np.random.seed(42) plus random_state=42 on both make_blobs
     and TSNE'
   - Theme-adaptive chrome correctly threaded through backgrounds, fonts, gridlines,
-    legend, hoverlabel, and annotation boxes for both light and dark renders
-  - Data colors are pixel-identical between light and dark renders; only chrome (backgrounds,
-    text, borders) flips
+    legend, hoverlabel, and annotation boxes; data colors are pixel-identical between
+    light and dark renders
+  - Spines removed (showline=False on both axes) and grid kept subtle — clean minimal-scatter
+    look with generous margins
   weaknesses:
-  - 'Typography hierarchy is inverted: axis title font size (22) renders visibly taller
-    (~63 source-px measured) than the main chart title (13, ~48 source-px measured)
-    once scale=4 is applied. The library guide''s own example uses title=16 > axis-title=12;
-    here the relationship flipped because axis-title size wasn''t reduced to compensate
-    when the title was shrunk for length. Reduce xaxis/yaxis title font size to ~12-14
-    so the main title remains the visually dominant text element.'
+  - 'Typography hierarchy is inverted again, just relocated: legend title (18px×scale4=72
+    source-px) and annotation labels (17px bold → 68 source-px) now render visibly
+    larger than the main chart title (13px → 52 source-px). The attempt-1 fix only
+    addressed axis titles; legend.title.font.size and legend.font.size and the annotation
+    font size were never brought below the title. Reduce legend.title.font.size to
+    ~12-13, legend.font.size to ~10-11, and the centroid annotation font size to ~13-14
+    so the main title stays the single largest, most dominant text element per the
+    style guide''s typography hierarchy.'
+  - 'Library Mastery remains generic: only basic hovertemplate customization and add_annotation
+    are used — no plotly-distinctive capability (e.g. px faceting, updatemenus, subplots)
+    that would differentiate this from a minimal go.Scatter usage.'
   - Subtitle (rendered via the <sup> tag, inheriting ~70-80% of the 13px title size)
-    is quite small once scaled to a ~400px mobile width — still legible at full resolution
-    but worth bumping the subtitle's explicit font size a couple of points for mobile
-    comfort.
-  - 'Library Mastery is generic: the plotly-specific surface used (hovertemplate,
-    add_annotation) is basic API, not a distinctive plotly capability (e.g. no plotly
-    express, subplots, range sliders, or other differentiating feature) — LM-02 scored
-    low as a result.'
+    is quite small once scaled to mobile width — still legible at full resolution
+    but tight; consider a couple points larger for mobile comfort now that headroom
+    exists below the (fixed) axis titles.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "Single-Cell RNA-Seq Clustering · scatter-embedding · python · plotly · anyplot.ai" centered at top, with a smaller gray subtitle "t-SNE (perplexity=30) | 1,500 synthetic transcriptomes across 6 cell types" beneath it. Axis titles "t-SNE Dimension 1" / "t-SNE Dimension 2" in large dark bold-weight text along the bottom and left. No tick labels (correct per spec). Subtle light-gray gridlines on both axes. Legend box top-right with a bordered off-white fill, "Cell Type" title and six color-swatched entries. Six bordered white annotation boxes with bold dark text sit just below each cluster of points, naming the cell type.
-      Data: Six well-separated point clusters (T Cells green #009E73, B Cells lavender, NK Cells blue, Monocytes ochre, Dendritic Cells cyan, Erythrocytes matte red) with semi-transparent markers and thin light edges, showing realistic overlap/density within each cluster.
-      Legibility verdict: PASS — all text (title, subtitle, axis titles, legend, annotation labels) is clearly readable against the light background; no light-on-light issues found.
+      Background: Warm off-white, matches #FAF8F1 target — not pure white, not dark.
+      Chrome: Bold dark title "Single-Cell RNA-Seq Clustering · scatter-embedding · python · plotly · anyplot.ai" centered at top, with a smaller gray subtitle "t-SNE (perplexity=30) | 1,500 synthetic transcriptomes across 6 cell types" beneath it. Dark axis titles "t-SNE Dimension 1" / "t-SNE Dimension 2" with tick labels correctly hidden (t-SNE coordinates aren't directly interpretable). Subtle light-gray gridlines on both axes. Bordered legend box top-right titled "Cell Type" listing all six categories with color swatches. All text is clearly readable against the light background — no light-on-light issues found.
+      Data: Six well-separated point clusters using the Imprint palette in canonical order except Erythrocytes, which takes the matte-red anchor (#AE3030) for its blood association instead of its ordinal slot — T Cells green (#009E73), B Cells lavender (#C475FD), NK Cells blue (#4467A3), Monocytes ochre (#BD8233), Dendritic Cells cyan (#2ABCCD), Erythrocytes red (#AE3030). Each cluster has a bordered white/cream annotation box directly beneath it naming the cell type, offset so it never covers the data points. First series (T Cells) is confirmed #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title/subtitle now in light cream/gray text, same axis titles in light bold text, gridlines flipped to a subtle light-on-dark tone, legend box now with a dark elevated fill and light border/text, annotation boxes now dark-elevated fill with light bordered text.
-      Data: Identical cluster colors and marker styling to the light render — confirmed only chrome (backgrounds, text, borders, gridlines) changed between themes; the six data-color hues are pixel-identical.
-      Legibility verdict: PASS — all chrome text is light-colored against the dark background; no dark-on-dark failures observed anywhere (title, axis titles, tick-free axes, legend, or annotation boxes).
+      Background: Warm near-black, matches #1A1A17 target — not pure black, not light.
+      Chrome: Same title, subtitle, and axis titles now rendered in light cream/gray text; gridlines, legend box, and annotation boxes all flip to dark-elevated fills (#242420) with light borders and light text. All text (title, axis titles, legend, annotation boxes) is clearly readable — no dark-on-dark failures found anywhere.
+      Data: The six cluster colors are pixel-identical to the light render — only chrome flipped, as required. Erythrocytes red (#AE3030) still reads clearly against the near-black background.
+      Legibility verdict: PASS
+
+    Canvas measured at 3200×1800 (landscape) with no clipping on any edge (title, legend, axis titles, and annotation boxes all fully inside the canvas in both renders); the canvas-dimension gate file was absent, confirming the automated size check passed.
+
+    Typography hierarchy note (affects VQ-01/DE-01 scoring, not legibility pass/fail): legend title (18px) and centroid annotation labels (17px bold) render visibly larger than the main chart title (13px) once scale=4 is applied — the title should remain the single largest, most dominant text element per the style guide.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: All text readable in both themes, but typography hierarchy is inverted
-          — axis titles (22px) render larger than the main title (13px, ~48 vs ~63
-          source-px measured), and the <sup> subtitle is small for mobile.
+        comment: 'All text readable in both themes with no light-on-light/dark-on-dark
+          issues, but hierarchy is inverted: legend title (18px) and annotation labels
+          (17px bold) render larger than the main title (13px).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Centroid annotation boxes are deliberately offset below each cluster;
-          no collisions with markers or other text.
+        comment: No collisions between text, legend, annotations, or data in either
+          render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: marker size=9, opacity=0.65 appropriately combats overplotting for
-          1,500 points across 6 clusters.
+        comment: Marker size 9 with opacity 0.65 and subtle same-bg edge stroke appropriately
+          handles the ~250-point-per-cluster density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe palette plus redundant direct-label annotations per cluster;
-          no red-green-only signal.
+        comment: Imprint palette is CVD-safe; clusters are spatially separated with
+          direct text labels providing redundant encoding beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, generous margins, nothing clipped on any
-          edge (verified via pixel-level edge crops).
+        comment: 3200×1800 canvas confirmed, title ~62% width, no overflow or clipping
+          in either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles; tick labels correctly hidden since embedding
-          coordinates aren't interpretable.
+        comment: Descriptive axis titles (t-SNE Dimension 1/2); tick labels correctly
+          hidden since coordinates aren't directly interpretable.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order elsewhere, well-justified
-          semantic exception for Erythrocytes=matte-red, correct theme backgrounds
-          both renders, data colors identical across themes.'
+        comment: 'First series #009E73 confirmed; semantic-exception red for Erythrocytes
+          documented; backgrounds match #FAF8F1/#1A1A17 in both themes.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Professional look with intentional semantic color choice, but the
-          inverted title/axis-title hierarchy undercuts the 'intentional hierarchy'
-          bar for full marks.
+        passed: false
+        comment: Thoughtful semantic color choice and annotation styling, but the
+          persisting typography hierarchy inversion undercuts the case for fully intentional
+          hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: No axis lines, subtle grid, generous whitespace — but typography
-          sizing between title and axis titles is not well balanced.
+        comment: Spines removed, grid subtle (10% opacity), generous margins and whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Per-cluster centroid labels give a clear, guided reading of the embedding
-          without needing to cross-reference the legend.
+        comment: Direct centroid labels plus spatial cluster separation create a clear,
+          guided reading with distinct focal points.
     spec_compliance:
       score: 15
       max: 15
@@ -153,28 +156,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D embedding scatter plot with cluster coloring.
+        comment: Correct 2D embedding scatter plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Legend, optional centroid annotations, moderate alpha-blended markers,
-          algorithm/parameter subtitle, hidden tick labels — all present.
+        comment: Colorblind-safe palette + legend, centroid annotations, moderate
+          alpha-blended markers, algorithm/parameter subtitle, hidden tick labels.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y correctly mapped to t-SNE dimensions 1 and 2, full data range
-          shown.
+        comment: x/y map to t-SNE dimensions 1/2; all points shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive} · scatter-embedding · python · plotly
-          · anyplot.ai'; legend labels match the six cell-type series.
+        comment: Title matches required format with descriptive prefix; legend labels
+          match the six cell types.
     data_quality:
       score: 15
       max: 15
@@ -184,22 +186,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clustering, centroid labels, legend, and algorithm subtitle together
-          cover all aspects of an embedding-visualization plot type.
+        comment: Covers clustering, coloring, legend, centroid labels, and algorithm/parameter
+          subtitle.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Single-cell RNA-seq cell-type clustering is realistic, neutral, and
-          matches the spec's own application examples.
+        comment: Named immune cell types on a synthetic single-cell RNA-seq embedding
+          — plausible and neutral, explicitly labeled synthetic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1,500 points and 6 clusters both sit inside the spec's suggested
-          ranges (500-5000 points, 5-10 groups).
+        comment: 1,500 points across 6 clusters, within the spec's 500-5000 point
+          guidance.
     code_quality:
       score: 10
       max: 10
@@ -209,7 +211,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script, no functions/classes.
+        comment: Flat script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -221,21 +223,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects, sklearn.datasets.make_blobs,
-          sklearn.manifold.TSNE — all used.
+        comment: Only os, numpy, plotly.graph_objects, sklearn make_blobs/TSNE — all
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity.
+        comment: Appropriately concise; no fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)
-          plus write_html — correct, current API.
+        comment: Saves plot-{theme}.png via write_image and plot-{theme}.html via
+          write_html.
     library_mastery:
       score: 6
       max: 10
@@ -245,22 +247,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Solid graph_objects usage — per-trace styling, custom hovertemplate,
-          layout dicts — but nothing beyond the common pattern.
+        comment: Standard go.Figure/go.Scatter per-trace pattern, correctly used.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: hovertemplate and add_annotation are basic plotly API, not features
-          distinctive to the library.
-  verdict: REJECTED
+        comment: hovertemplate and add_annotation are basic API usage; no plotly-distinctive
+          capability (px faceting, updatemenus, subplots) demonstrated.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -270,3 +270,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - minimal-chrome
