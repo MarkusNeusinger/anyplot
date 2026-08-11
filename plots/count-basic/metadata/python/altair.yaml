@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: count-basic
 created: '2025-12-25T12:41:48Z'
-updated: '2026-08-11T07:12:24Z'
+updated: '2026-08-11T07:20:35Z'
 generated_by: claude-sonnet
 workflow_run: 31467491942
 issue: 2033
@@ -12,141 +12,140 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
+  - 'Directly addressed attempt 1''s feedback: leading category ("Good", 33%) now
+    carries a deliberate focal-point treatment via stroke outline, full opacity, and
+    a bold label, giving the chart a clear visual hierarchy it lacked before'
+  - Tick labels are now horizontal (axis=alt.Axis(labelAngle=0)) instead of relying
+    on Vega-Lite's automatic 90° rotation for short category names, improving legibility
+  - Data labels are split into two filtered layers (bold for the leading bar, smaller/muted
+    for the rest) so the count+percentage annotations no longer visually overpower
+    the bars
   - Idiomatic Altair declarative transform pipeline (transform_aggregate -> transform_joinaggregate
-    -> transform_calculate) computes counts and percentages inside the chart spec
-    instead of pre-aggregating in pandas
-  - Bars sorted descending by frequency with combined count+percentage data labels,
-    directly matching the spec's 'sort by frequency' and 'optional percentage annotations'
-    notes
+    -> transform_calculate) computes counts, percentages, and the isLeading flag inside
+    the chart spec instead of pre-aggregating in pandas
   - 'Theme-adaptive chrome is fully correct in both renders: warm off-white/near-black
-    backgrounds, all text legible, brand green #009E73 identical across themes, L-shaped
-    spines via view stroke removal'
+    backgrounds, all text legible, brand green #009E73 identical across themes, canvas
+    padded to exact 3200x1800 target without cropping'
   - Real, functional hover selection (alt.selection_point) drives bar opacity in the
     interactive HTML export rather than faking interactivity
-  - Canvas padding logic correctly lands the PNG at the exact 3200x1800 target without
-    cropping, per the altair library rules
   weaknesses:
-  - 'Design Excellence still reads close to a well-configured default: a single flat
-    green bar chart with rounded top corners; add more deliberate visual hierarchy
-    (e.g. a subtle highlight/stroke on the leading category) to reach publication-level
-    polish'
-  - Category tick labels are rotated 90 degrees for all five short labels ('Good',
-    'Poor', 'Average', 'Excellent', 'Very Poor') even though none are especially long;
-    widen the inner view slightly or test horizontal labels so the x-axis reads at
-    a glance instead of requiring vertical rotation
-  - The bold count+percentage labels above each bar are visually heavier than the
-    rest of the minimal chrome; consider a lighter font weight or slightly smaller
-    size so the bars remain the strongest visual signal
-  - No distinct visual emphasis on the leading category ('Good', 33%) despite it being
-    the natural focal point of the story; a slight highlight (border stroke, distinct
-    opacity, or annotation) would strengthen data storytelling (DE-03)
+  - 'Bug: sort="-y" is set on all three x-encodings (bars, label_rest, label_leading)
+    intending descending-by-count order, but the rendered bars are alphabetical (Average,
+    Excellent, Good, Poor, Very Poor) instead of descending (Good=66, Excellent=56,
+    Average=36, Poor=27, Very Poor=15) -- the transform_filter''d label layers subset
+    the data before the shared x-scale sort is resolved, which appears to break Vega-Lite''s
+    sort resolution across the layered chart. Spec permits alphabetical order as a
+    fallback so this is not a spec violation, but it undermines the newly-added leading-category
+    highlight (the focal bar sits in the middle of the axis instead of leading a Pareto-style
+    descending run). Fix by driving the sort from a single un-filtered aggregation
+    (e.g. alt.X sort=alt.EncodingSortField(field=''count'', op=''sum'', order=''descending'')
+    applied consistently, or compute the sorted category order once and pass it as
+    an explicit list to sort=) so all three layers agree.'
+  - 'Design Excellence is improved but still fairly restrained: a single-hue bar chart
+    with one stroke-highlighted bar; there is room for more deliberate typography/color
+    choices to reach full publication-level polish'
+  - Bold vs. muted label-weight split (leading vs rest) is a nice touch but the leading
+    label at fontSize=14 sits close to the top gridline/axis boundary at count=66
+    -- watch this margin if data scale changes
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-like cream), not pure white.
-      Chrome: Bold dark title "count-basic · python · altair · anyplot.ai" and a gray subtitle
-        "n = 200 survey responses" centered at top. Y-axis title "Number of Responses" (rotated,
-        dark bold text) on the left, X-axis title "Survey Response" (dark bold text) at the bottom.
-        Tick labels for the y-axis (0-70) are small gray numerals; x-axis category tick labels
-        ("Good", "Excellent", "Average", "Poor", "Very Poor") are rotated 90 degrees in gray text.
-        A subtle horizontal gridline runs behind each y tick.
-      Data: Five vertical bars in a single brand-green hue (#009E73) with rounded top corners,
-        sorted descending by height: Good=66 (33%), Excellent=56 (28%), Average=36 (18%),
-        Poor=27 (14%), Very Poor=15 (8%). Bold black count+percentage labels sit just above each bar.
-      Legibility verdict: PASS - all title, subtitle, axis titles, tick labels, and data labels are
-        clearly readable against the light background; no light-on-light text.
+      Background: Warm off-white, matches #FAF8F1 target -- not pure white, not dark.
+      Chrome: Bold dark title "count-basic · python · altair · anyplot.ai" with gray subtitle "n = 200 survey responses" centered at top. X-axis title "Survey Response" and Y-axis title "Number of Responses" both bold and dark. Category tick labels are horizontal (not rotated), all clearly legible. Subtle horizontal gridlines at 12% opacity. All chrome text is dark-on-light and clearly readable.
+      Data: Five vertical bars in brand green #009E73, rounded top corners, ordered left-to-right: Average=36 (18%), Excellent=56 (28%), Good=66 (33%), Poor=27 (14%), Very Poor=15 (8%). The "Good" bar (the numeric maximum) has a distinct black stroke outline and full opacity, standing out from the other four bars which sit at ~0.8 opacity with no stroke. Count+percentage labels sit above each bar; the "Good" label is bold/larger, the other four are smaller/lighter gray. First (and only) series color matches Imprint palette position 1.
+      Legibility verdict: PASS -- no light-on-light text anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-like), not pure black.
-      Chrome: Same title/subtitle layout, now rendered in light/off-white text. Axis titles in bold
-        off-white text, tick labels (including the rotated category labels) in light gray text.
-        Gridlines are faint light lines against the dark background.
-      Data: Same five bars, identical #009E73 green as the light render, same heights and order.
-        Data labels above each bar are now bold white text.
-      Legibility verdict: PASS - all text is light-colored against the dark background; no
-        dark-on-dark failures observed. Data colors are confirmed identical to the light render,
-        only chrome (background + text) flipped as expected.
+      Background: Warm near-black, matches #1A1A17 target -- not pure black, not light.
+      Chrome: Same layout, now rendered with light/off-white text throughout (title, subtitle, axis titles, tick labels). Gridlines are faint light lines against the dark surface, same 12% opacity treatment.
+      Data: Bars are the identical #009E73 green, identical heights, identical (alphabetical, not frequency-sorted) order -- only chrome flipped, confirming data-color consistency between themes. The "Good" bar now has a white/light stroke outline instead of black, correctly adapted for dark-mode contrast, still at full opacity with the bold label; the other four bars remain at ~0.8 opacity with muted labels.
+      Legibility verdict: PASS -- no dark-on-dark failures; all text is clearly legible against the near-black background.
+
+    Both renders pass the theme-readability check. Data colors (brand green #009E73) are identical between light and dark; only background, text, and stroke-highlight color adapt to theme, as required.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via configure_axis/Title args; readable
-          in both themes with no overflow, but relies on Vega-Lite's automatic 90deg
-          tick rotation rather than a tuned layout
+        comment: Explicit font sizes, readable in both themes; tick labels now explicitly
+          horizontal (axis=alt.Axis(labelAngle=0)) instead of relying on automatic
+          90° rotation, directly fixing attempt 1's flag
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between labels, bars, or title/subtitle in either render
+        comment: No collisions between text, bars, or labels in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Five bars are large and prominent, well matched to the sparse (5-category)
-          data density
+        comment: Sparse categorical data (5 bars) with prominent, appropriately-sized
+          bars and clear stroke highlight on the leading bar
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue brand green with strong contrast against both surfaces;
-          no red-green dependency
+        comment: Single-hue brand green with high contrast against both theme backgrounds;
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a good majority of the 3200x1800 canvas, balanced
-          margins, nothing cut off, canvas gate passed
+        comment: Canvas dimension gate passed (no /tmp/anyplot-canvas-gate.txt); good
+          proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Number of Responses' / 'Survey Response' axis titles
+        comment: Descriptive axis titles with implicit units (count of responses);
+          title matches mandated format exactly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is exactly #009E73, identical in both themes;
-          backgrounds are #FAF8F1/#1A1A17; chrome is theme-correct'
+        comment: 'First series is #009E73; backgrounds are exact #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Reads as a well-configured library default: single flat green bars
-          with rounded corners, clean typography hierarchy, but no custom palette
-          or distinctive polish'
+        passed: true
+        comment: 'Improved from attempt 1''s flat single-hue default: stroke outline
+          + opacity differentiation on the leading bar is a deliberate polish touch,
+          though still fairly restrained overall'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: L-shaped spines via stroke removal, subtle 12% gridline opacity,
-          generous whitespace, rounded bar corners
+        comment: L-shaped spines via view stroke removal, subtle 12% gridline opacity,
+          generous whitespace, rounded bar corners, edge-highlight on focal bar
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Descending sort plus percentage labels create a clear most-to-least
-          common narrative, but no explicit focal-point emphasis on the leading category
+        comment: Leading category now has a clear focal-point treatment (stroke +
+          full opacity + bold label) directly answering attempt 1's feedback; slightly
+          undercut by the sort="-y" bug leaving the highlighted bar in the middle
+          of an alphabetical axis instead of a descending run
     spec_compliance:
       score: 15
       max: 15
@@ -162,20 +161,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Descending frequency sort, count labels, and percentage annotations
-          all present per spec notes
+        comment: Count labels and percentage annotations present; category ordering
+          (alphabetical, due to a sort bug -- see weaknesses) is still within the
+          spec's permitted 'original/alphabetical order based on context' fallback
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x, count on y, all 5 categories visible
+        comment: X=category, Y=count, all 5 categories shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches 'count-basic · python · altair · anyplot.ai' exactly;
+        comment: Title exactly matches 'count-basic · python · altair · anyplot.ai';
           legend correctly omitted for single series
     data_quality:
       score: 14
@@ -186,23 +186,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows a realistic skewed distribution across 5 categories with clear
-          variation, though not an especially extreme edge case
+        comment: 5 categories with realistic skewed distribution, clear variation
+          from 15 to 66
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible customer-satisfaction survey scenario
+        comment: Neutral customer-satisfaction survey scenario (Excellent/Good/Average/Poor/Very
+          Poor)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts and percentages are internally consistent and realistic for
-          n=200
+        comment: Counts and percentages internally consistent for n=200
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -210,31 +210,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> chart -> save, no functions/classes
+        comment: No functions or classes, flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, altair, numpy, pandas, PIL.Image all used
+        comment: os, sys, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean use of Altair's transform pipeline, no fake functionality
+        passed: false
+        comment: sort="-y" is written on all three x-encodings but does not take effect
+          in the rendered output due to the layered/filtered composition -- a real
+          functional gap between code intent and behavior
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current chart.save
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, current vl-convert
           API
     library_mastery:
       score: 8
@@ -242,19 +244,21 @@ review:
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
         comment: Expert use of transform_aggregate/transform_joinaggregate/transform_calculate,
-          alt.Title, configure_view/configure_axis
+          alt.Title, configure_view/configure_axis; docked slightly for the non-functional
+          cross-layer sort
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses Altair-distinctive declarative transforms and a real selection_point
-          hover binding for the interactive export
-  verdict: REJECTED
+        comment: Layered label composition (bold/muted split), alt.when() conditional
+          opacity, real selection_point hover binding driving the interactive HTML
+          export
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
@@ -267,5 +271,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
-  - minimal-chrome
+  - edge-highlighting
