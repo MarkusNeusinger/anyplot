@@ -2,121 +2,141 @@ library: pygal
 language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:11:37Z'
-updated: '2026-05-07T13:15:46Z'
-generated_by: claude-haiku
-workflow_run: 25497491077
+updated: '2026-08-11T13:07:54Z'
+generated_by: claude-sonnet
+workflow_run: 31493124802
 issue: 2028
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 88
 review:
   strengths:
-  - Perfect visual quality with excellent legibility in both light and dark themes
-  - Complete spec compliance with all required features present and functional
-  - Clean, reproducible code with proper theme-aware token architecture
-  - Professional styling with Okabe-Ito color palette correctly applied
-  - Correct polynomial regression implementation with prominent R² display
+  - Title now includes the full mandated segments (the previously missing 'python'
+    language segment is present) with a descriptive prefix, and the R² value is embedded
+    directly in the title itself — the most prominent element pygal offers — directly
+    satisfying the spec's 'display R² prominently' requirement.
+  - 95% confidence band added via a clever two-fill technique (translucent upper-bound
+    fill + opaque page-background erase layer, with CSS !important overrides to win
+    specificity over pygal's own scoped stylesheet) — implements the spec's optional
+    confidence-band suggestion and adds genuine visual sophistication over the previous
+    attempt.
+  - Theme tokens threaded consistently through the Style object; both renders are
+    fully legible with identical data colors (green scatter, purple curve, gray band)
+    across themes — only chrome flips.
+  - Scatter points at opacity=0.7 and a solid 2.5px lavender fit curve keep the polynomial
+    curve visually distinct from the point cloud, per the spec.
+  - Deterministic (np.random.seed(42)), flat KISS script, clean imports, canvas exactly
+    3200x1800.
   weaknesses:
-  - Polynomial equation annotation attempted but non-functional—adds empty series
-    that doesn't display on plot
-  - Conservative design without refinement touches (no spine removal, basic grid styling)
-  - Could leverage more distinctive pygal features beyond standard style options
-  - Limited design sophistication compared to potential
+  - Design Excellence is still close to pygal's default aesthetic — dashed gridlines
+    and standard chrome beyond the CI band and required theme tokens; no additional
+    refinement such as an annotation callout near the curve apex or distinctive typography
+    treatment.
+  - The CI-band technique is a workaround for pygal's fill/legend limitations rather
+    than a showcase of a native distinctive pygal feature (e.g. print_values, secondary
+    axis, custom tooltip content) — Library Mastery is still fairly baseline API usage
+    outside of that workaround.
+  - The title is now quite long (descriptive prefix + R² + all four mandated segments)
+    and spans a large fraction of the plot width even after the linear font-size scaling
+    — keep an eye on the total title length budget if the descriptive prefix grows
+    further in future attempts.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title "scatter-regression-polynomial · pygal · anyplot.ai" clearly readable in dark text; X-axis "Sunlight Exposure (hours)" and Y-axis "Plant Growth (cm)" both visible with proper units; tick labels (2, 4, 6... and 10, 30, 50...) clearly visible; legend shows "Data Points" and "Polynomial Fit (R²=0.913)"
-      Data: 80 scatter points in Okabe-Ito brand green (#009E73) with 70% opacity; polynomial curve in Okabe-Ito orange (#D55E00) is visually distinct and clear; grid on both axes is subtle but visible
-      Legibility verdict: PASS - all text is readable against light background with proper contrast
+      Background: Warm off-white (#FAF8F1), matches spec target — not pure white.
+      Chrome: Title "Plant Growth vs. Sunlight Exposure (R² = 0.886) · scatter-regression-polynomial · python · pygal · anyplot.ai" in dark ink, large and centered at top, spanning roughly 85% of the plot width (font-size scaled down from the 67-char baseline given the longer descriptive+R² prefix). X-axis title "Sunlight Exposure (hours)" and y-axis title "Plant Growth (cm)" in dark ink, both clearly readable and similarly sized. Tick labels (2-14 on x, 0-130 on y) dark and legible. Dotted gridlines subtle grey, visible but not dominant. Legend at bottom in three columns: gray square "95% CI Band", green square "Data Points", lavender square "Fit: y = -2.36x² + 42.92x - 75.20".
+      Data: ~80 green (#009E73) scatter points with visible transparency (opacity 0.7) tracing a clear parabolic arc from (2, ~5) up through a peak near (9, 120) back down to (14, ~36). A solid lavender/purple (#C475FD) fit curve overlays the scatter, closely tracking the parabola. A translucent gray 95% confidence band hugs the fit curve, narrower near the data center and widening slightly toward the edges — no visible seam/artifact from the two-fill construction.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Title, axis labels, tick labels all clearly visible in light text with no dark-on-dark issues; grid is subtle and visible; legend unchanged from light render
-      Data: Scatter points remain in identical Okabe-Ito green (#009E73); polynomial curve remains identical orange (#D55E00) - only chrome elements adapted to dark theme; brand green is well-suited for dark background and fully visible
-      Legibility verdict: PASS - no dark-on-dark failures; all elements clearly distinguishable
-
-    Both renders successfully implement theme-adaptive styling with consistent data colors (Okabe-Ito positions 1 and 2 identical between light and dark) and properly themed chrome elements. No legibility issues in either theme.
+      Background: Warm near-black (#1A1A17), matches spec target — not pure black.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white ink, clearly legible against the dark background. Gridlines remain subtle (muted light-grey dotted lines), visible without dominating. Legend text also switches to light ink and stays fully readable in all three columns.
+      Data: Identical green (#009E73) scatter points, lavender (#C475FD) fit curve, and gray confidence band as the light render — confirmed the data colors are unchanged between themes, only the chrome (background/text/grid) flipped.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is clearly visible against the near-black background, and the brand green and lavender both remain vivid on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28px title, 22px labels, 18px ticks);
-          all readable in both light and dark themes
+        comment: Explicit font sizes throughout (title scaled to 67-char baseline,
+          label 56, major_label 44, legend 40); fully readable in both themes including
+          at 400px thumbnail scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text clearly spaced; legend does not overlap data area; no collisions
+        comment: No collisions between text, legend, CI band, or the ~80 scatter points
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 80 scatter points visible with opacity 0.7; polynomial curve is distinct
-          and prominent
+        comment: dots_size=6 with opacity=0.7 appropriate for 80-point density; fit
+          line stroke_width=2.5 and CI band clearly distinct from the scatter
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green (#009E73) and orange (#D55E00); colorblind-safe;
-          adequate contrast
+        comment: Green/lavender pairing has good contrast and is not a red-green pair;
+          gray CI band is a neutral supporting layer
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px landscape well-proportioned; nothing cut off; generous
-          margins
+        comment: Canvas exactly 3200x1800 (canvas gate passed), no overflow/clipping,
+          balanced axis label sizing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format matches spec; axes labeled with units (hours, cm)
+        comment: '''Sunlight Exposure (hours)'' and ''Plant Growth (cm)'' both descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito order); backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark); both renders theme-correct'
+        comment: 'First data series #009E73, fit curve #C475FD (Imprint position 2),
+          backgrounds match #FAF8F1/#1A1A17, both renders theme-correct'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Professional polish with custom Style object; uses standard Okabe-Ito
-          without extended customization
+        passed: false
+        comment: CI band and custom Style tokens add polish over the previous attempt,
+          but overall look is still close to pygal defaults (dashed gridlines, no
+          extra flourish)
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Functional grid and whitespace; could benefit from spine removal
-          or other refinement
+        passed: false
+        comment: Grid subtle, whitespace generous, CI band shading adds refinement,
+          but no annotation callouts or other distinctive touches
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Clear focal point and hierarchy; attempted polynomial equation annotation
-          is non-functional
+        comment: Curve + CI band + title-embedded R² together create a clear focal
+          point and now surface fit quality more prominently than the legend-only
+          approach of the previous attempt
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY scatter plot with polynomial regression degree 2
+        comment: Correct XY scatter with polynomial regression overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: R² value displayed; curve visually distinct; scatter opacity appropriate;
-          degree 2 used
+        comment: R² (in title), equation (in legend), degree-2 default, alpha~0.7
+          points, distinct solid curve, and the optional confidence band are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct; data range shown fully
+        comment: X/Y correctly mapped, full data range shown on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend properly labeled with R²
+        comment: Title now reads '... (R² = 0.886) · scatter-regression-polynomial
+          · python · pygal · anyplot.ai' — the previously missing language segment
+          is fixed; legend labels match the series
     data_quality:
       score: 15
       max: 15
@@ -155,19 +177,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All plot aspects shown: scatter, curve, R², labeled axes'
+        comment: Scatter + fit + equation + R² + confidence band all shown — full
+          optional feature set from the spec
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sunlight vs. plant growth; realistic and neutral domain
+        comment: Plant growth vs. sunlight exposure is plausible, neutral, and matches
+          the spec's applications list
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible for domain; within recommended point range
+        comment: Sunlight 2-14h and growth 0-140cm are sensible domain values
     code_quality:
       score: 10
       max: 10
@@ -177,55 +201,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; simple, direct script
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for deterministic results
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused dependencies
+        comment: Only os, numpy, pygal, scipy.stats used, all exercised
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake features; appropriate complexity
+        comment: No fake UI; well-documented workaround for pygal's fill/legend limitations
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: plot-{THEME}.png and .html'
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal API
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal.XY() correctly; Style object for theming; idiomatic API
+        comment: Correct pygal.XY, Style object, dots_size/opacity/stroke usage, legend-label
+          workaround for R²/equation
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Standard pygal patterns; could leverage more distinctive capabilities
-    total:
-      score: 91
-      max: 100
+        comment: The dual-fill + CSS !important CI-band construction is a genuinely
+          clever pygal-specific workaround, but it compensates for a library limitation
+          rather than showcasing a native distinctive feature
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
+  - custom-legend
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep:

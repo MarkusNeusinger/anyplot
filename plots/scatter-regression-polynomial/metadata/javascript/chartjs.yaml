@@ -1,0 +1,247 @@
+library: chartjs
+language: javascript
+specification_id: scatter-regression-polynomial
+created: '2026-08-11T13:06:56Z'
+updated: '2026-08-11T13:24:06Z'
+generated_by: claude-sonnet
+workflow_run: 31493962438
+issue: 2028
+language_version: 22.23.1
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/chartjs/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Every weakness from Attempt 1 was addressed precisely as requested: legend moved
+    below the plot to declutter the top region, title font increased 22→26px, prediction-band
+    legend swatch now uses a distinct higher-opacity color via generateLabels, and
+    a tooltip callback surfacing per-point residuals was added'
+  - 'Correct Imprint palette: points #009E73, curve #C475FD (canonical position 2);
+    band correctly uses the muted semantic anchor for its documented "confidence-band
+    fill" role rather than an arbitrary gray'
+  - Genuine computed regression — normal-equations least-squares via Gaussian elimination,
+    live R²/equation values, not a canned fit
+  - Well-chosen dataset (advertising spend vs. revenue lift) with a true inverted-U
+    shape that gives the quadratic fit real narrative purpose
+  - 'Full spec-note coverage: R² badge, equation annotation, degree-2 default, point
+    alpha ~0.65, descriptive units on both axes'
+  - Theme-correct in both renders with identical data colors; deterministic LCG-seeded
+    data generation
+  weaknesses:
+  - KISS structure still relies on five free-standing helper functions; hexToRgba
+    and signedTerm are pure formatting helpers that could be merged/inlined to tighten
+    the top-to-bottom structure
+  - Marker density in the peak cluster (spend 55-65) is still slightly tight at pointRadius
+    7 — a touch more edge contrast or size adjustment could improve separation
+  - Title still occupies less than the ~70-85% width typical for the mandated title
+    string even after the font increase — readable and well-proportioned as-is, so
+    this is cosmetic polish only, not a defect
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Bold dark title "scatter-regression-polynomial · javascript · chartjs · anyplot.ai" centered at top at 26px; axis titles "Advertising Spend ($ thousands)" / "Revenue Lift ($ thousands)" in dark ink; tick labels in soft dark gray; subtle light gridlines on both axes; legend with 3 items positioned below the plot (prediction band, ad campaigns, quadratic fit). All chrome text clearly readable.
+      Data: Scatter points in #009E73 at ~0.65 alpha forming a clear inverted-U (rise, peak around spend 55-60, decline); solid lavender #C475FD quadratic fit curve; semi-transparent gray 95% prediction band behind the curve; rounded equation badge top-right showing "y = -0.0435x² + 5.0562x + 17.1705" and "R² = 0.892" in bold dark text on a light elevated panel, positioned clear of the densest point cluster.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Same title/axis titles/legend now rendered in light ink; ticks in soft light gray; gridlines subtle but visible. No dark-on-dark failures anywhere — every text element is clearly legible against the near-black surface.
+      Data: Identical colors to the light render — points still #009E73, curve still #C475FD, band still the same neutral gray fill — confirming only chrome flipped between themes. Equation badge uses a dark elevated panel with light text, fully legible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title bumped to 26px per prior feedback; all sizes explicit, readable
+          both themes, no overflow/clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Equation badge clear of peak cluster; legend separated from title/badge
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: pointRadius 7 / alpha 0.65 visible but still slightly tight in the
+          densest cluster (spend 55-65)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Theme-adaptive pageBg edge stroke, good contrast, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills most of the canvas, balanced margins, legend near the
+          plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes have units ($ thousands)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, curve #C475FD (Imprint position 2), band uses
+          muted semantic anchor correctly, theme-correct chrome both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom afterDraw equation badge, semantically-correct muted band
+          color, deliberate bottom-legend layout
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Crowded top region from attempt 1 resolved; subtle grid, no axis
+          border lines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Inverted-U dataset + prominent equation/R2 badge give an immediate
+          read of the fit
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter + regression curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: R2, equation, degree-2 default, prediction band, point alpha all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full curve shape, realistic noise, low-end outlier
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Advertising spend vs. revenue lift, neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and proportions plausible for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Five helper functions remain; RNG/regression logic genuinely needs
+          some in a browser with no numpy, but formatting helpers unmerged
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current API
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixed scatter+line dataset types, fill:'-1' band technique, generateLabels
+          override, correct high-level Chart() usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom afterDraw plugin, residual tooltip callback, and generateLabels
+          override — three genuinely Chart.js-plugin-architecture techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending

@@ -2,52 +2,60 @@ library: letsplot
 language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:13:02Z'
-updated: '2026-05-07T13:15:12Z'
-generated_by: claude-haiku
-workflow_run: 25497703927
+updated: '2026-08-11T13:17:11Z'
+generated_by: claude-sonnet
+workflow_run: 31493462626
 issue: 2028
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/letsplot/plot-dark.html
-quality_score: 93
+quality_score: 90
 review:
   strengths:
-  - All specification requirements correctly implemented (scatter, polynomial curve,
-    R², equation, confidence band)
-  - Perfect theme-adaptive execution—both light and dark renders properly adapted
-    with zero legibility failures
-  - All text elements readable at 4800×2700px resolution; zero contrast or accessibility
-    issues
-  - 'Visual clarity: scatter points, regression line, and confidence band all distinctly
-    visible with no overlaps'
-  - Realistic and neutral data context (economics diminishing returns); polynomial
-    model accurately represents relationship
-  - Okabe-Ito color palette ensures colorblind accessibility; professional color choices
-  - Clean, reproducible, idiomatic letsplot code with proper environment-variable
-    theme handling
+  - The equation annotation from Attempt 1 (which overlapped a scatter point) has
+    been successfully relocated to the top-left, empty-canvas region and shielded
+    with a matching-background label box, fully resolving the prior VQ-02 finding
+    in both renders
+  - Confidence-band + regression-line + scatter layering reads clearly and matches
+    the spec's optional confidence-band request
+  - Per-layer layer_tooltips() gives the HTML export genuinely useful hover detail
+    (advertising spend, sales revenue, fitted value, band range) without cluttering
+    the PNG
+  - Theme tokens (PAGE_BG/INK/INK_SOFT/RULE) are threaded consistently through plot/panel
+    background, grid, and text - both renders are fully legible with correct light/dark
+    chrome flip
+  - Point alpha (0.65) and marker size (2.5) are well-matched to an 80-point density;
+    R² and polynomial equation are both prominently annotated as the spec requests
   weaknesses:
-  - Top/right spines present; could remove for L-shaped frame to increase visual refinement
-    and align with anyplot minimalism
-  - Interactive features not explored; confidence band and regression line could use
-    hover tooltips to showcase letsplot's distinctive interactive capabilities
+  - geom_ribbon is passed color=None intending no border, but the rendered confidence
+    band shows a solid, fixed rgb(71,71,71) boundary stroke on both the upper and
+    lower edges in BOTH light and dark renders (verified via pixel sampling) - it
+    is not theme-adaptive (should track RULE/INK_SOFT, or truly disappear). Minor
+    VQ-07/DE-02 deduction; fix by passing an explicit theme-matched color (e.g. RULE)
+    to geom_ribbon's color argument, or by confirming which color=None actually maps
+    to in this lets-plot version and overriding it.
+  - Design Excellence is solid but not exceptional - the ribbon and custom theme go
+    beyond generic defaults, but there is no additional hierarchy device beyond color
+    contrast (e.g. de-emphasizing the ribbon edge relative to the fitted curve) to
+    push Data Storytelling higher
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color, not pure white
-      Chrome: Title "scatter-regression-polynomial · letsplot · anyplot.ai" in dark bold text (size 24pt) - clearly readable. Axis labels "Advertising Spend (thousands $)" and "Sales Revenue (thousands $)" in dark text (size 20pt) - clearly readable with descriptive units. Tick labels in gray (INK_SOFT, size 16pt) - readable. R² value "R² = 0.936" in dark text (size 18pt) - prominent and readable. Polynomial equation "y = -0.046x² + 3.789x + 21.45" in gray text (size 14pt) - readable. Grid lines subtle (10% opacity, size 0.3) - visible but non-intrusive.
-      Data: 80 scatter points in brand green (#009E73) with alpha 0.65 - clearly visible against light background with no obscuring. Orange regression line (#D55E00, size 2.5) - bold, distinct, visually separates from scatter. Semi-transparent green confidence band (alpha 0.15) - subtle but visible, frames the trend elegantly.
-      Legibility verdict: PASS - All elements readable, no contrast failures, proper visual hierarchy
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark-ink title "scatter-regression-polynomial · python · letsplot · anyplot.ai" top-left; dark-ink axis titles "Advertising Spend (thousands $)" / "Sales Revenue (thousands $)"; soft-ink tick labels; subtle light-gray gridlines; L-shaped axis-line frame (top/right spines removed). All chrome text is clearly readable against the light background.
+      Data: ~80 green (#009E73) scatter points with alpha ~0.65 tracing a diminishing-returns curve from (5, ~41) to (50, ~85), a purple (#C475FD) quadratic regression line running through the cloud, and a semi-transparent green 95% confidence ribbon around it. "R² = 0.936" and the fitted equation "y = -0.046x² + 3.789x + 21.45" are annotated top-left in a shielded label box, now fully clear of the data cloud (fixes the Attempt 1 point-on-text overlap). One implementation detail: the confidence ribbon's upper/lower edges render with a solid fixed dark-gray (rgb 71,71,71) boundary line despite the code passing color=None - this line is not theme-adaptive.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color, not pure black
-      Chrome: Title in light text (#F0EFE8, size 24pt) - clearly readable against dark background. Axis labels in light text (#F0EFE8, size 20pt) - clearly readable. Tick labels in light gray (#B8B7B0, size 16pt) - readable, no dark-on-dark issues. R² and equation in light text colors - all readable. Grid lines in rgba(240,239,232,0.10) - subtle, visible.
-      Data: Scatter points identical green (#009E73) from light render - confirmed color consistency. Regression line identical orange (#D55E00) - confirmed data colors unchanged. Confidence band identical semi-transparent green - confirmed.
-      Legibility verdict: PASS - Zero dark-on-dark failures, all text readable, data colors identical to light render (only chrome adapted)
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title and axis titles render in light ink (#F0EFE8), tick labels in soft light gray (#B8B7B0), gridlines subtle but visible. No dark-on-dark issues anywhere - all chrome text is clearly readable against the dark background.
+      Data: Identical green (#009E73) points and purple (#C475FD) regression line as the light render, confirming the Imprint data colors are unchanged across themes. The R²/equation annotation box is in the same clear top-left position with no overlap. The same fixed rgb(71,71,71) ribbon-edge line from the light render appears here too, at the identical pixel value - confirming it is a static, non-theme-adaptive color rather than a dark-render-specific bug.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,52 +63,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title 24pt, labels 20pt, ticks 16pt, annotations) theme-adapted
-          and readable in both light/dark at full 4800×2700px resolution
+        comment: All font sizes explicitly set (theme() sizes + label sizes); well-proportioned,
+          readable in both themes; equation/R² overlap from Attempt 1 is fixed
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Title, annotations, axis labels, ticks positioned without collision;
-          R² and equation in top-right outside data area
+        comment: Equation/R² annotation relocated to empty top-left space with a shielding
+          label box; no overlap with data or other text in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 80 scatter points (alpha 0.65) clearly distinguishable; orange line
-          (size 2.5) stands out; confidence band (alpha 0.15) visible
+        comment: Marker size 2.5 / alpha 0.65 well-tuned for 80 points; ribbon and
+          regression line both clearly distinguishable from the point cloud
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 & 2 ensure colorblind safety; excellent contrast
-          on light/dark
+        comment: Green scatter vs. purple line is CVD-safe, no red/green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Standard landscape 1600×900 (→4800×2700px); excellent proportions,
-          generous margins
+        comment: Landscape 3200x1800 canvas, balanced margins, no clipping or overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title format exact (spec-id · library
-          · anyplot.ai)
+        comment: Both axes labeled with units (thousands $)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73 (brand green); line #D55E00 (Okabe-Ito 2);
-          backgrounds #FAF8F1/#1A1A17; both renders theme-correct'
+        passed: false
+        comment: 'First series #009E73, regression line Imprint position 2 (#C475FD),
+          correct light/dark backgrounds and text chrome; but geom_ribbon''s border
+          renders as a fixed rgb(71,71,71) line identical in both themes instead of
+          theme-adaptive or absent (code intends color=None)'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -108,23 +115,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Professional theme-adaptive tokens; intentional color/alpha choices;
-          polished execution beyond defaults
+        comment: Custom Imprint palette, confidence ribbon, layered composition beyond
+          a bare scatter+line
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal() base with refined grid (10% opacity, size 0.3); good
-          whitespace; could improve by removing top/right spines (L-shaped frame)
+        comment: Panel border removed (L-shaped axis-line frame), subtle major-only
+          gridlines, generous whitespace; the un-themed ribbon border keeps this from
+          a perfect score
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Clear hierarchy: green points → orange trend → confidence band.
-          R² and equation support interpretation. Focal point (curved relationship)
-          unambiguous'
+        comment: Clear focal point (curve + ribbon); R² and equation annotations now
+          cleanly add interpretive context without visual noise
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with quadratic polynomial regression; visually
-          distinct line (orange solid) from points (green)
+        comment: Scatter + polynomial regression, correctly rendered
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: R² displayed; equation shown; confidence band with semi-transparent
-          shading; point transparency (alpha 0.65) as spec
+        comment: R² prominent, visually distinct solid regression line, degree-2 default,
+          optional confidence band included, point alpha 0.65 matches spec, equation
+          annotated
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X/Y axes map variables correctly; all data visible; axes span full
-          range (x: 4–52, y: 30–115)'
+        comment: X/Y correctly mapped, full data range shown on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend correctly omitted (single series)
+        comment: Title matches mandated format exactly; no legend needed for a single
+          series
     data_quality:
       score: 15
       max: 15
@@ -165,22 +172,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all key plot aspects: scatter, polynomial curve, confidence
-          band, R², equation'
+        comment: Points, curve, band, R², equation all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Economics example (advertising → revenue with diminishing returns)
-          plausible, neutral, and realistic
+        comment: Advertising spend vs. sales revenue diminishing-returns scenario
+          is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Marketing budget scale reasonable; revenue proportional; 80 points
-          adequate for curve; no overfitting
+        comment: Spend 5-50k, revenue 40-110k are sensible, non-degenerate magnitudes
     code_quality:
       score: 10
       max: 10
@@ -190,60 +195,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward linear flow (seed → data →
-          polyfit → plot)
+        comment: Flat top-level script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot all used; no unused imports
+        comment: Only os, numpy, pandas, lets_plot, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; polyfit/poly1d idiomatic; theme handling elegant with
-          environment variable pattern
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API; scale=3
-          for 4800×2700px
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html, current lets-plot
+          API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ggplot() + geom_*() composition; proper aes(); geom_ribbon for confidence
-          band; geom_text for annotations; theme_minimal() + theme(); ggsize() + ggsave()
-          with scale—all canonical patterns
+        comment: Proper layered ggplot() composition (geom_ribbon + geom_point + geom_line
+          + geom_label), theme() tokens threaded through correctly
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_ribbon for layer-composition beyond basic scatter+line;
-          HTML export leveraged; could explore interactive callbacks/hover tooltips
-          for higher utilization of letsplot's distinctive capabilities
+        comment: Per-layer layer_tooltips() for rich HTML hover content is a distinctly
+          lets-plot feature, used well
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -251,4 +253,4 @@ impl_tags:
   - regression
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready

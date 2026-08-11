@@ -1,0 +1,254 @@
+library: d3
+language: javascript
+specification_id: scatter-regression-polynomial
+created: '2026-08-11T13:07:31Z'
+updated: '2026-08-11T13:24:13Z'
+generated_by: claude-sonnet
+workflow_run: 31494134315
+issue: 2028
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/d3/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Full spec feature set: R² prominently displayed, polynomial equation annotated,
+    95% confidence band, correct ~0.65 scatter alpha'
+  - Title now fills ~72% of canvas width (42px, up from 26px) for strong visual hierarchy,
+    resolving the prior attempt's weak-title finding
+  - RNG helper inlined (randNormal removed) leaving only the three functions genuinely
+    required (stateful rand, polyfit, evalPoly) for a flatter KISS structure
+  - New d3.bisector + d3.pointer hover-guide is a genuinely d3-distinctive interaction
+    pattern for the HTML detail view, addressing the prior Library Mastery gap
+  - 'Deterministic and reproducible: fixed-seed LCG + inlined Box-Muller noise + hand-rolled
+    least-squares polyfit'
+  - 'Correct Imprint palette (green #009E73 points, lavender #C475FD curve/band) and
+    full theme-adaptive chrome across both renders'
+  - No clipping or overlap in either render; axes start at 0 with nice() padding;
+    canvas gate passes at exact 3200x1800
+  weaknesses:
+  - 'DE-03: the hover-guide interactivity and title-size fix add hierarchy, but the
+    static render''s visual storytelling is still driven mainly by the annotation
+    box rather than a stronger compositional focal point'
+  - 'LM-02: the bisector-based hover guide is a solid, genuinely d3-specific touch
+    but is a fairly standard tutorial pattern (d3 official ''nearest point on line
+    hover'' example) rather than a truly novel showcase of the library'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: bold dark title "scatter-regression-polynomial · javascript · d3 · anyplot.ai" now at 42px, spanning ~72% of canvas width (measured 2300/3200 px) — a clear improvement over the prior attempt's ~44%; gray subtitle "Diminishing returns: crop yield vs. fertilizer application" below it; dark "Fertilizer Application (kg/hectare)" and "Crop Yield (tons/hectare)" axis labels with units; soft gray tick labels; subtle light gridlines on both axes. All chrome clearly readable against the light background.
+      Data: 85 green (#009E73) scatter points at ~0.65 fill-opacity with thin cream strokes tracing a rise-then-plateau-then-slight-decline curve; solid lavender (#C475FD) polynomial regression line with a semi-transparent lavender 95% confidence band (opacity now 0.11, slightly subtler than the prior attempt's 0.15); rounded cream callout box top-left shows "R² = 0.836", the fitted equation "y = -0.0003x² + 0.101x + 1.46", and "Degree-2 (quadratic) fit, 95% band" in dark/gray text.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: identical title/subtitle/axis-label/tick text now rendered in light ink against the dark surface at the same larger 42px title size; faint light gridlines. No dark-on-dark issues found anywhere.
+      Data: colors unchanged from the light render — identical green scatter points, lavender curve, and lavender confidence band (only chrome flipped, as required). The callout box flips to a dark elevated fill with light text, fully readable.
+      Legibility verdict: PASS
+
+    Both renders pass legibility, no clipping (AR-09 clear), no overlap. Canvas gate passed (exact 3200x1800, no /tmp/anyplot-canvas-gate.txt file present).
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes; title enlarged
+          to 42px now fills ~72% of canvas width, resolving the prior attempt's under-sized
+          title
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or the annotation box in either
+          render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size (r=7) and alpha (0.65) well matched to 85-point medium
+          density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pairing has adequate contrast and is CVD-safe; no
+          red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800 canvas (gate passed), balanced margins, title within
+          bounds at ~72% width
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes have descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, curve/band Imprint position 2 (#C475FD), theme-correct
+          #FAF8F1/#1A1A17 backgrounds in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Enlarged title, R² callout, and equation annotation raise polish
+          above the prior attempt, but overall look stops short of fully publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines omitted, subtle grid, generous margins, confidence-band opacity
+          tightened from 0.15 to 0.11 for a cleaner look
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Color contrast and annotation box create a clear focal point, but
+          hierarchy still relies mainly on the callout box rather than stronger compositional
+          emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter plot with fitted polynomial curve, correctly implemented
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: R², equation, confidence band, contrasting curve color, correct alpha
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Fertilizer on x, crop yield on y, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend redundant given the
+          annotation box, correctly omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Rise → plateau → slight decline curve fully shown across 85 points
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fertilizer vs. crop yield diminishing-returns scenario, real-world
+          plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible agricultural ranges (5-200 kg/hectare, 0.2-10 tons/hectare)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: randNormal helper inlined per feedback; the three remaining functions
+          (stateful rand, polyfit, evalPoly) are all justified by the regression/RNG
+          requirements
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global d3 bundle, none unused
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current d3 v7 API, no animation on the
+          static draw
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert join()/scale/axis/shape idioms throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: New d3.bisector + d3.pointer hover-guide for the HTML export is a
+          genuinely d3-specific interaction pattern, addressing the prior attempt's
+          generic-usage gap
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - confidence-band
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - publication-ready
