@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-11
@@ -24,9 +24,14 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Semantic anchors reused for the sentiment scale below (Imprint palette
-# "Semantic exception": positive -> green, negative -> red, neutral -> muted)
-POSITIVE = IMPRINT[0]  # brand green
-NEGATIVE = IMPRINT[4]  # matte red, semantic anchor for bad/error roles
+# "Semantic exception": positive -> green, negative -> red, neutral -> muted).
+# Each polarity gets two shades (base + a deeper "very" shade) so the two
+# intensity levels ("Dissatisfied" vs "Very Dissatisfied", "Satisfied" vs
+# "Very Satisfied") stay visually distinguishable while keeping the hue.
+POSITIVE = IMPRINT[0]  # brand green, "Satisfied"
+POSITIVE_STRONG = "#00714F"  # deeper green, "Very Satisfied"
+NEGATIVE = IMPRINT[4]  # matte red, "Dissatisfied"
+NEGATIVE_STRONG = "#7A2020"  # deeper red, "Very Dissatisfied"
 NEUTRAL = INK_MUTED  # theme-adaptive muted anchor
 
 # Data - Survey responses from customer feedback
@@ -90,11 +95,11 @@ total = len(responses)
 # Define category order (logical satisfaction order) and its sentiment color
 category_order = ["Very Dissatisfied", "Dissatisfied", "Neutral", "Satisfied", "Very Satisfied"]
 category_sentiment = {
-    "Very Dissatisfied": NEGATIVE,
+    "Very Dissatisfied": NEGATIVE_STRONG,
     "Dissatisfied": NEGATIVE,
     "Neutral": NEUTRAL,
     "Satisfied": POSITIVE,
-    "Very Satisfied": POSITIVE,
+    "Very Satisfied": POSITIVE_STRONG,
 }
 
 # Custom style, sized for the 3200x1800 canvas (see prompts/library/pygal.md
@@ -118,6 +123,10 @@ custom_style = Style(
     value_font_size=36,
     tooltip_font_size=32,
     stroke_width=2.5,
+    # Style guide requires solid (not dashed) y-guides at low opacity;
+    # pygal defaults to a dashed stroke, so force it off here.
+    guide_stroke_dasharray="none",
+    major_guide_stroke_dasharray="none",
 )
 
 # Create chart
@@ -125,7 +134,7 @@ chart = pygal.Bar(
     width=3200,
     height=1800,
     style=custom_style,
-    title="count-basic · pygal · anyplot.ai",
+    title="count-basic · python · pygal · anyplot.ai",
     x_title="Satisfaction Level",
     y_title="Number of Responses",
     show_legend=False,
