@@ -2,9 +2,9 @@ library: echarts
 language: javascript
 specification_id: count-basic
 created: '2026-08-11T06:57:41Z'
-updated: '2026-08-11T07:09:59Z'
+updated: '2026-08-11T07:32:36Z'
 generated_by: claude-sonnet
-workflow_run: 31466757229
+workflow_run: 31468713241
 issue: 2033
 language_version: 22.23.1
 library_version: 6.1.0
@@ -12,49 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/echarts/plot-dark.html
-quality_score: 90
+quality_score: 96
 review:
   strengths:
-  - 'Correctly implements a count plot: raw per-response category data is tallied
-    in-code (not pre-aggregated) and sorted descending, matching the spec''s recommendation.'
-  - 'Clear focal point now added per Attempt 1 feedback: the leading bar (JavaScript)
-    renders at full opacity with a bold count label and rounded top corners, while
-    the remaining bars sit at 0.55 opacity — the ''most popular language'' insight
-    reads immediately without comparing bar heights.'
-  - 'Full Imprint compliance verified by pixel sampling: leader bar is exactly #009E73
-    in both renders, secondary bars are the same hue blended at reduced opacity, chrome
-    is fully theme-adaptive and legible in both renders.'
-  - 'Richer ECharts usage than Attempt 1: per-datapoint itemStyle (opacity/borderRadius/label
-    weight), an emphasis.focus hover state with shadow highlight, and a custom tooltip
-    formatter that computes percentage share.'
-  - 'Clean, minimal chrome: y-axis line and tick marks hidden, only a subtle horizontal
-    grid, generous margins, canvas is exactly 3200x1800.'
-  - Realistic, neutral survey dataset (primary programming language of 600 respondents)
-    with a believable, well-differentiated descending distribution.
+  - 'Correctly implements a true count plot: 600 raw, uncounted survey responses are
+    generated and tallied in-code (not pre-aggregated), matching the spec''s core
+    requirement.'
+  - 'Clear data storytelling: the leading category is spotlighted via full opacity
+    + bold label + a translucent markArea backdrop, while a dashed markLine shows
+    the mean count as a reference — the viewer immediately sees the insight.'
+  - 'Distinctive, idiomatic ECharts usage: markLine and markArea are native declarative
+    features that would require significant manual work to replicate in another library.'
+  - 'Theme-correct chrome in both renders: warm off-white / near-black backgrounds,
+    all text uses ink/inkSoft tokens, brand green #009E73 identical across themes.'
+  - 'Clean, deterministic code: tiny seeded LCG for reproducibility, no fake interactivity,
+    correct mount-node contract (animation: false, no explicit init size).'
   weaknesses:
-  - 'DE-01: the design touch (opacity contrast + rounded top corners) is a real improvement
-    but still reads as a single-hue bar chart with one added flourish rather than
-    a fully custom, art-directed composition — a stronger DE-01 score would need something
-    like a subtle background band behind the leader, a callout annotation, or richer
-    typographic hierarchy.'
-  - 'LM-02: itemStyle-per-datapoint, emphasis.focus, and a custom tooltip formatter
-    are genuine ECharts features but are fairly common patterns for any bar chart
-    in the library, not features that are especially distinctive to ECharts (e.g.
-    markLine/markPoint, visualMap, graphic elements, or dataZoom were not explored).'
+  - Percentage annotations (spec's 'optional' suggestion) only appear in the tooltip,
+    not in the static PNG — acceptable per interactive-library fairness rules, but
+    a small on-bar '%' label could push Design Excellence further.
+  - Visual design, while polished, is still a fairly conventional single-hue ranked
+    bar chart — could push further into publication-ready territory with e.g. a more
+    distinctive typographic treatment or secondary annotation calling out the gap
+    to average.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, sampled #FAF8F1-consistent, not pure white.
-      Chrome: Title "count-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Axis titles "Primary Language" (X) and "Number of Responses" (Y) in dark ink, tick labels in secondary gray — all readable. Only a subtle horizontal split-line grid; y-axis line and tick marks are hidden.
-      Data: 7 vertical bars sorted descending — JavaScript 146 (leader, full-opacity #009E73, bold "146" label, rounded top corners), Python 139, Java 100, TypeScript 89, Go 62, Rust 33, C++ 31 (remaining bars at 0.55 opacity of the same green, regular-weight count labels above each). Pixel-sampled leader bar = exactly (0,158,115) = #009E73.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "count-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, subtitle "600 survey responses, ranked by frequency — leader spotlighted" below it in softer gray. X-axis "Primary Language" and Y-axis "Number of Responses" labels both dark and clearly legible. Tick labels and bar-value labels (146, 139, 100, 89, 62, 33, 31) all render in dark/soft-dark ink, fully readable. Subtle horizontal gridlines only on the y-axis, no x-axis gridlines.
+      Data: First bar (JavaScript) full-opacity brand green (#009E73) with a bold "146" label and a light green spotlight band behind it; remaining bars (Python, Java, TypeScript, Go, Rust, C++) render as the same green at ~55% opacity, descending in height per the sort. A dashed gray reference line marks the mean ("avg 86").
+      Legibility verdict: PASS — no light-on-light text, all elements clearly distinguishable from the background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, #1A1A17-consistent, not pure black.
-      Chrome: Same title, axis titles, and tick labels now render in light ink / light gray, all clearly legible against the dark surface — no dark-on-dark failures.
-      Data: Leader bar (JavaScript) is the identical #009E73 green at full opacity with bold label; remaining bars are the same hue at reduced opacity, now reading as a darker desaturated teal against the near-black background (expected — only chrome flips, data hue is identical hex, perceived brightness differs due to background contrast). Same values, order, and labels as light render.
-      Legibility verdict: PASS
-
-    Both renders pass the theme-readability check; no light-on-light or dark-on-dark issues found. The Attempt 1 weaknesses (no focal point, flat single-color fill, no ECharts-distinctive feature) have been visibly addressed via opacity-based emphasis, rounded bar corners, an emphasis/focus hover state, and a percentage-aware tooltip formatter.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, subtitle, axis names, and tick labels all render in light ink (white/light-gray), clearly visible against the dark background — no dark-on-dark failures observed. Gridlines are faint and consistent with the light render.
+      Data: Bar colors are identical to the light render — leader bar in full-opacity #009E73 brand green, remaining bars at the same reduced opacity, confirming only chrome (not data color) flipped between themes. The average reference line and its "avg 86" label remain legible in light gray.
+      Legibility verdict: PASS — all text and data elements are clearly readable in the dark theme.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -65,69 +57,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes appropriate
+        comment: All font sizes explicitly set (title 22px, axis names 16px, labels/ticks
+          14px); fully readable in both themes, no overflow or clipping.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text or data
+        comment: No overlap between title, subtitle, axis text, bar labels, or the
+          avg-line label.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 7 bars at appropriate width/spacing for the category count
+        comment: Bar width and value labels are well-sized and clearly visible for
+          7 categories.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green on cream/near-black, CVD-safe, no red-green sole signal
+        comment: Single-hue opacity encoding avoids any hue-based (red-green) discrimination
+          issue; good contrast in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, good margins, nothing cut off
+        comment: Plot area fills the majority of the canvas with balanced margins;
+          nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles; mandated title format correct
+        comment: '"Primary Language" and "Number of Responses" are descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Leader bar pixel-verified #009E73; theme-correct backgrounds in
-          both renders'
+        comment: 'First (only) series uses brand green #009E73, identical across themes;
+          backgrounds are theme-correct #FAF8F1/#1A1A17.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Opacity contrast + rounded corners is a real touch, but still a single-hue
-          bar chart with one added flourish
+        passed: true
+        comment: Thoughtful use of opacity hierarchy, spotlight band, and rounded
+          bar corners — clearly above library defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Rounded bar corners, hidden y-spine/ticks, subtle grid, generous
-          margins
+        comment: Minimal spines (only x-axis line), y-only subtle gridlines, generous
+          whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Full-opacity + bold-label leader vs. faded rest creates a clear,
-          immediate focal point
+        comment: Leader spotlight + average reference line give the viewer an immediate,
+          clear insight without requiring interpretation.
     spec_compliance:
       score: 15
       max: 15
@@ -137,101 +134,103 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct count plot / bar chart
+        comment: Correct count/bar chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Raw-data tally, descending sort, count labels above bars
+        comment: Counts raw observations (not pre-aggregated), sorted descending,
+          count labels shown, consistent bar width/spacing.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=category, Y=count, all 7 categories shown
+        comment: Categories on X, counts on Y, all 7 categories visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; single-series legend correctly omitted
+        comment: Title format matches exactly; single-series legend correctly omitted.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Counts, sort, and labels shown; percentage only surfaced in tooltip,
-          not on-chart (spec marks it optional)
+        comment: Wide, realistic spread of counts (146 down to 31) showing a clear
+          ranked distribution.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible programming-language survey data
+        comment: Programming-language survey is a real, neutral, comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 600 total responses, sensible per-category counts
+        comment: 600 responses summing correctly across categories; plausible relative
+          shares.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Tiny fixed-seed LCG helper is the guide-recommended pattern for browser-side
-          reproducibility
+        comment: Linear imports → data → plot flow; the tiny lcg() helper is the library-recommended
+          reproducibility pattern, not over-engineering.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG, fixed seed
+        comment: Seeded LCG(42) produces deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses globals only
+        comment: No unused imports; uses the global echarts.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriately complex, no fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false
+        comment: Correct mount-node contract, animation disabled.
     library_mastery:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic option config, category/value axes, axis-trigger tooltip
+        comment: Expert use of the high-level option API (grid, axis, tooltip formatter,
+          series).
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Per-datapoint itemStyle, emphasis.focus, custom tooltip formatter
-          used, but these are common bar-chart patterns rather than deeply distinctive
-          ECharts capabilities
+        passed: true
+        comment: markLine (reference line) and markArea (spotlight band) are ECharts-distinctive
+          declarative features, not easily replicated elsewhere.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -242,4 +241,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - minimal-chrome
