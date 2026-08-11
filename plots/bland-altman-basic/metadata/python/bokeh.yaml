@@ -2,95 +2,125 @@ library: bokeh
 language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:17:24Z'
-updated: '2026-05-07T11:04:34Z'
-generated_by: claude-haiku
-workflow_run: 25491694186
+updated: '2026-08-11T11:09:03Z'
+generated_by: claude-sonnet
+workflow_run: 31483656097
 issue: 2032
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 90
 review:
   strengths:
-  - 'Excellent theme compliance: both light and dark renders readable with proper
-    color adaptation'
-  - Clean, professional design with appropriate use of transparency and line styles
-  - All spec requirements met with accurate calculations and annotations
-  - Bokeh idioms properly applied (ColumnDataSource, Span, Label)
-  - Consistent Okabe-Ito palette usage with brand green and accent orange
-  - Well-sized typography and elements for 4800×2700 canvas
+  - 'Correctly implements Bland-Altman construction: solid mean-bias line, dashed
+    ±1.96 SD limits-of-agreement lines, and annotated numeric labels for all three
+    reference values'
+  - Shaded BoxAnnotation gives the limits-of-agreement zone a visual footprint without
+    competing with the data, a nice design touch beyond bokeh defaults
+  - 'The repair fully addresses all three Attempt-1 weaknesses in the current source:
+    title now includes the required ''python'' language segment, p.outline_line_color
+    is removed for a clean no-frame look, and scatter markers now carry a background-colored
+    edge (line_color=PAGE_BG) to better separate overlapping points'
+  - 'Idiomatic, distinctive bokeh usage: ColumnDataSource, Span for reference lines,
+    BoxAnnotation for the shaded zone, dynamically positioned Label annotations, and
+    a formatted HoverTool for interactive detail in the HTML output'
+  - 'Correct Imprint palette (brand green #009E73 for data, lavender accent for LOA
+    lines) and fully theme-adaptive chrome, verified identical data colors between
+    light/dark renders when the current source is executed'
+  - Clean KISS code structure, seeded RNG (np.random.seed(42)), no unused imports,
+    correct plot-{theme}.png/.html output pattern via the documented Selenium approach
   weaknesses:
-  - Design Excellence could be slightly elevated by further visual refinement (e.g.,
-    subtle background shading for agreement zone, more minimalist grid styling)
-  - 'Library Mastery: could demonstrate more distinctive bokeh features (e.g., HoverTool
-    for interactive version, custom tick formatters)'
+  - 'CRITICAL/PROCESS: plot-light.png / plot-dark.png (and their .html) supplied for
+    this review are stale — they match the Attempt-1 render (pre-repair), not HEAD
+    (ec2c64784). Evidence: the rendered title reads ''bland-altman-basic · bokeh ·
+    anyplot.ai'' (missing the required language segment) and shows a full rectangular
+    outline box around the plot area in both themes, while the current source (implementations/python/bokeh.py)
+    sets title="bland-altman-basic · python · bokeh · anyplot.ai" and p.outline_line_color
+    = None. Independently re-running the exact current bokeh.py for ANYPLOT_THEME=light
+    and dark confirms it renders the correct title and no outline box — the code fix
+    is real and correct, but the preview artifacts were never regenerated from it.
+    No code change is needed for this item; regenerate plot-light.png/plot-dark.png/.html
+    from HEAD before this can ship.'
+  - ACCENT purple (#C475FD) used for the ±1.96 SD lines/labels has a contrast ratio
+    of only ~2.7:1 against the light-theme background (#FAF8F1) — below the WCAG large-text
+    minimum of 3:1 (dark theme is fine at ~6.1:1). Consider a darker purple for the
+    light-theme label/line color, or increase label weight, to improve low-vision
+    readability.
+  - The densest point cluster (mean ≈ 130-138 mmHg) still has several overlapping
+    markers that are hard to individually distinguish even with alpha=0.7 and the
+    new background-colored edge; a slightly smaller marker size or a touch more transparency
+    in that region could help further (minor, not blocking).
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title, axis labels, and tick labels all dark text (#1A1A17, #4A4A44) — clearly readable against light background
-      Data: 80 scatter points in brand green (#009E73) with 0.7 alpha; solid green mean line; dashed orange bounds lines; all colors distinct and visible
-      Legibility verdict: PASS — all elements readable, no contrast issues, proper theme adaptation
+    Light render (plot-light.png, as supplied for this review):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title reading "bland-altman-basic · bokeh · anyplot.ai" (missing the required "python" language segment — mandated format is "{spec-id} · {language} · {library} · anyplot.ai"); italicized dark axis labels "Mean of Two Methods (mmHg)" and "Difference (Method 1 - Method 2) (mmHg)" with units; softer gray tick labels; subtle grid lines (~15% alpha); a light legend box "Observations" top-left; a full rectangular outline box is visible around the entire plot area (all four sides).
+      Data: 80 green (#009E73) scatter points at alpha 0.7. A solid green horizontal line marks the mean bias (-2.82 mmHg) with a matching label. Two dashed lavender (#C475FD) horizontal lines mark the ±1.96 SD limits of agreement (13.34 / -18.99 mmHg), each with a matching label. A subtle gray-tinted band shades the region between the limits of agreement.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues. (Content issue, not a legibility issue: title text is missing "python" and the frame has an unintended full outline box — see below.)
 
-    Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title and axis labels in light text (#F0EFE8); tick labels in soft light gray (#B8B7B0) — clearly readable against dark background. No dark-on-dark text failures.
-      Data: Scatter points, lines, and annotations use identical data colors to light render (#009E73 green, #D55E00 orange) — theme-independent palette ✓
-      Legibility verdict: PASS — all elements readable, proper light-on-dark contrast, consistent with light render
+    Dark render (plot-dark.png, as supplied for this review):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same structure now in light tones (white title, light-gray axis/tick labels) against the dark surface; legend uses a dark elevated fill with light text; same full rectangular outline box visible around the plot area.
+      Data: Same 80 green scatter points at the same positions/alpha — confirmed identical to the light render. Mean-bias line/label stay green; LOA lines/labels stay lavender — only chrome flips correctly for the theme.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/annotation text is clearly visible against the near-black background. (Same content issue as light: title missing "python", full outline box present.)
+
+    CRITICAL FINDING: Both supplied renders exactly match Attempt 1's metadata (quality_score 88, REJECTED) which flagged this same missing-language title and full-outline-box as weaknesses. The Attempt-2 source (plots/bland-altman-basic/implementations/python/bokeh.py, HEAD ec2c64784) already fixes both: title="bland-altman-basic · python · bokeh · anyplot.ai" (line 50) and p.outline_line_color = None (line ~152). I independently executed the current script with ANYPLOT_THEME=light and ANYPLOT_THEME=dark in a sandbox and confirmed it renders the corrected title and no outline box on both themes, with all other elements (colors, layout, legibility, backgrounds) unchanged and correct. This means the plot-light.png/plot-dark.png supplied for this Attempt-2 review are stale leftovers from Attempt 1 and were not regenerated from the repaired code — a pipeline/render-caching issue, not a code defect. Scoring in this review reflects the verified current source; the verdict is REJECTED solely to force regeneration of the preview artifacts before merge/promotion, not because the code needs further changes.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and colored for readability in both light
-          and dark themes
+        comment: All text explicitly sized (title 50pt, axis labels 42pt, ticks/legend
+          34pt) and clearly readable in both themes when rendered from current source.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Data points with transparency spread nicely; labels positioned clearly
-          without collision
+        comment: Mean-bias and LOA annotation labels are positioned clear of data
+          points and each other in both themes; no text/element collisions found.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All markers visible; reference lines and annotations clearly visible
-          in both themes
+        comment: size=14 markers with alpha=0.7 and a background-colored edge reveal
+          most overlap; the densest cluster (~130-138 mmHg) still partially blends.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Okabe-Ito brand green with high contrast; orange accent provides
-          CVD-safe distinction
+        passed: false
+        comment: ACCENT (#C475FD) on the light background (#FAF8F1) is only ~2.7:1
+          contrast, below the WCAG large-text 3:1 minimum; dark theme is fine (~6.1:1).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions; all elements fit within bounds; generous whitespace
+        comment: 3200x1800 canvas correct, min_border reservations prevent clipping,
+          title/axis/tick proportions balanced, nothing overflows the frame.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (mmHg); title follows catalog format
+        comment: Descriptive axis labels with units (mmHg); title matches the mandated
+          format exactly when rendered from current HEAD source.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; accent #D55E00; backgrounds #FAF8F1/#1A1A17;
-          data colors identical between themes'
+        comment: 'First series #009E73, LOA lines use Imprint accent #C475FD; backgrounds
+          #FAF8F1/#1A1A17 correct; identical data colors across themes.'
     design_excellence:
       score: 14
       max: 20
@@ -100,21 +130,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Professional, clean design with intentional use of line styles and
-          transparency
+        comment: Shaded LOA BoxAnnotation, dynamically positioned annotation labels,
+          and edge-highlighted markers go beyond generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Good use of subtle grid and line differentiation; could be more minimalist
+        comment: Current source removes the outline box entirely (p.outline_line_color
+          = None) for a clean no-frame look; grid is subtle (15% alpha); generous
+          whitespace via min_border reservations.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear focal point with mean line; visual hierarchy through line styles;
-          could emphasize bounds zone
+        comment: Bias line + shaded LOA band + annotated values create a clear focal
+          point that guides interpretation of method agreement.
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +156,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bland-Altman agreement plot with difference vs. mean
+        comment: Correct Bland-Altman agreement plot (mean vs. difference scatter).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Mean difference line, ±1.96 SD bounds, scatter points with transparency,
-          annotations with actual values
+        comment: Mean-diff bias line, dashed ±1.96 SD limits, annotated values, and
+          moderate marker transparency all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: mean of pairs; Y-axis: difference; axes span full data range'
+        comment: x = (method1+method2)/2, y = method1-method2, both axes show the
+          full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend label appropriate
+        comment: Current source's title matches the required '{spec-id} · {language}
+          · {library} · anyplot.ai' format exactly; legend label 'Observations' matches
+          the data.
     data_quality:
       score: 15
       max: 15
@@ -153,22 +188,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all aspects of Bland-Altman plot: agreement assessment,
-          bias detection, LOA estimation'
+        comment: Shows scatter, bias line, LOA lines, and annotated values — all core
+          Bland-Altman elements.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Blood pressure comparison data is realistic and neutral; paired observations
-          appropriate
+        comment: Neutral, plausible blood-pressure method-comparison scenario (two
+          sphygmomanometer-style methods).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (100-150 mmHg range, ±20 mmHg difference) plausible for medical
-          device validation
+        comment: n=80 within the 30-200 recommended range; BP means ~90-155 mmHg and
+          bias/SD magnitudes are physiologically plausible.
     code_quality:
       score: 10
       max: 10
@@ -178,33 +213,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; straightforward plot construction
+        comment: 'Flat script: imports → data → plot → save, no functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous packages
+        comment: Only used imports (numpy, bokeh, selenium, os/time/pathlib).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake interactivity; theme handling clean
+        comment: Appropriate complexity, no fake/simulated functionality, real HoverTool
+          interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output naming: plot-light.png/html, plot-dark.png/html'
+        comment: Saves plot-{THEME}.png/.html via the documented Selenium screenshot
+          pattern.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -212,26 +249,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper use of ColumnDataSource, Span, Label; theme-adaptive tokens
-          well-implemented
+        comment: ColumnDataSource, figure.scatter, Span, BoxAnnotation, Label all
+          used per bokeh's high-level recommended patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Good use of Label and Span; Selenium approach follows bokeh best
-          practices; could explore HoverTool, custom formatters
-  verdict: APPROVED
+        comment: Span/BoxAnnotation/Label/HoverTool combination leverages bokeh-specific
+          models not trivially replicated in other libraries.
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
   styling:
-  - publication-ready
   - alpha-blending
+  - edge-highlighting
