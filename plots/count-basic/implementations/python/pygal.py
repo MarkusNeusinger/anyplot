@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-07
+Quality: 86/100 | Updated: 2026-08-11
 """
 
 import os
@@ -22,6 +22,12 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+
+# Semantic anchors reused for the sentiment scale below (Imprint palette
+# "Semantic exception": positive -> green, negative -> red, neutral -> muted)
+POSITIVE = IMPRINT[0]  # brand green
+NEGATIVE = IMPRINT[4]  # matte red, semantic anchor for bad/error roles
+NEUTRAL = INK_MUTED  # theme-adaptive muted anchor
 
 # Data - Survey responses from customer feedback
 responses = [
@@ -79,12 +85,20 @@ responses = [
 
 # Count occurrences
 counts = Counter(responses)
+total = len(responses)
 
-# Define category order (logical satisfaction order)
+# Define category order (logical satisfaction order) and its sentiment color
 category_order = ["Very Dissatisfied", "Dissatisfied", "Neutral", "Satisfied", "Very Satisfied"]
-ordered_counts = [(cat, counts.get(cat, 0)) for cat in category_order]
+category_sentiment = {
+    "Very Dissatisfied": NEGATIVE,
+    "Dissatisfied": NEGATIVE,
+    "Neutral": NEUTRAL,
+    "Satisfied": POSITIVE,
+    "Very Satisfied": POSITIVE,
+}
 
-# Custom style for large canvas
+# Custom style, sized for the 3200x1800 canvas (see prompts/library/pygal.md
+# "Sizing + Theme" - unitless pygal sizes map ~1:1 onto source pixels)
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -92,17 +106,24 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
+    # Print-value text otherwise defaults to black/white per bar-fill
+    # luminance (pygal's Style.value_colors heuristic) rather than the
+    # theme-adaptive ink used everywhere else -- pin it to INK so the counts
+    # stay legible against the plot background in both themes.
+    value_colors=(INK,),
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    tooltip_font_size=32,
+    stroke_width=2.5,
 )
 
 # Create chart
 chart = pygal.Bar(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     title="count-basic · pygal · anyplot.ai",
     x_title="Satisfaction Level",
@@ -113,15 +134,30 @@ chart = pygal.Bar(
     print_values=True,
     print_values_position="top",
     value_formatter=lambda x: str(int(x)),
-    margin=60,
-    spacing=80,
+    rounded_bars=8,
+    margin=50,
+    spacing=60,
+    x_label_rotation=15,
 )
 
 # Set x-axis labels
 chart.x_labels = category_order
 
-# Add data as single series
-chart.add("Responses", [count for _, count in ordered_counts])
+# Advanced pygal technique: per-bar metadata gives each category a sentiment
+# color (Imprint semantic exception: positive->green, negative->red,
+# neutral->muted) and a hover tooltip with the response share, instead of a
+# single flat series color.
+chart.add(
+    "Responses",
+    [
+        {
+            "value": counts.get(cat, 0),
+            "color": category_sentiment[cat],
+            "tooltip": f"{cat}: {counts.get(cat, 0)} responses ({counts.get(cat, 0) / total:.0%})",
+        }
+        for cat in category_order
+    ],
+)
 
 # Save outputs
 chart.render_to_png(f"plot-{THEME}.png")
