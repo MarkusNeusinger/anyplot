@@ -2,44 +2,64 @@ library: matplotlib
 language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:16:47Z'
-updated: '2026-05-07T11:05:01Z'
-generated_by: claude-haiku
-workflow_run: 25491418318
+updated: '2026-08-11T10:55:09Z'
+generated_by: claude-sonnet
+workflow_run: 31483204542
 issue: 2032
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 98
+quality_score: 93
 review:
   strengths:
-  - Flawless theme adaptation with correct theme-token implementation in both light
-    and dark renders
-  - All text explicitly sized and perfectly readable at full resolution
-  - 'Spec requirements perfectly met: mean line, LoA limits, appropriate annotations'
-  - Realistic, well-chosen example data with credible medical scenario
-  - Professional aesthetic with intentional design choices (spine removal, subtle
-    grid, refined annotations)
-  - Clean, maintainable code structure
-  - Exemplary use of matplotlib's styling capabilities
-  weaknesses: []
+  - 'All four Review-1 weaknesses directly addressed: the redundant top-left legend
+    was removed (right-side line annotations are now the single source of truth),
+    marker size increased to s=130 with alpha=0.65, a matplotlib-distinctive blended-transform
+    (transforms.blended_transform_factory) anchors the annotations to the axes fraction
+    with arrow-connected callouts for the LOA lines, and the simulated data now includes
+    proportional/heteroscedastic error that widens with the mean — the exact pattern
+    Bland-Altman plots are designed to expose'
+  - 'Correct Bland-Altman construction: X = mean of paired methods, Y = method1 -
+    method2, matching the spec exactly, with all required features present (solid
+    bias line, dashed +-1.96 SD limits of agreement, direct value annotations, moderate
+    transparency)'
+  - 'Full Imprint palette compliance and theme-adaptive chrome: brand green #009E73
+    for the primary series, canonical position-2 lavender #C475FD for the limits-of-agreement
+    lines, identical data colors across both renders, no dark-on-dark or light-on-light
+    failures, no edge clipping in either theme'
+  - 'Clean, reproducible KISS code: np.random.seed(42), only used imports (transforms
+    import is actually used), no fake functionality, correct plot-{THEME}.png output'
+  - Realistic, neutral medical device-comparison scenario (two sphygmomanometers)
+    with physiologically plausible blood pressure values and bias magnitude
+  weaknesses:
+  - Scatter alpha=0.65 sits just below the guideline's 0.7-0.9 range for n=80 points
+    (s=130 is correctly within 100-200) — a small nudge to alpha=0.7-0.75 would better
+    match the density heuristic, though overlap is already visible
+  - The newly added proportional/heteroscedastic bias is subtle in the rendered plot
+    — the widening of scatter spread at higher mean values is only mildly visible;
+    increasing error_scale's slope slightly would make the pattern the plot type is
+    designed to expose more unmistakable
+  - Design polish is strong but stops short of full publication-level refinement (DE-01/DE-02)
+    — e.g. the title/annotation typography is functional rather than distinctive;
+    further weight/size hierarchy tuning could push this higher
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, correct light theme surface
-      Chrome: Title, axis labels, tick labels all in dark INK color - perfectly readable against light background
-      Data: 80 points in Okabe-Ito green #009E73 with alpha=0.6; mean line in green; limits in orange #D55E00; annotations on right in dark text
-      Legibility verdict: PASS - All elements clearly visible; no contrast issues
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "bland-altman-basic · python · matplotlib · anyplot.ai" in dark ink (~62% of plot width), clearly legible. X-axis label "Mean of Two Methods (mmHg)" and Y-axis label "Difference (Method 1 - Method 2) (mmHg)" both dark and readable, well-balanced in size against each other. Tick labels in muted gray, subtle y-axis-only gridlines (alpha≈0.10). No legend box — the bias line and both limits-of-agreement lines are labeled directly via axes-fraction-anchored annotations flush against the right margin ("Bias: -2.41", "+1.96 SD: 10.08" and "-1.96 SD: -14.90" with arrow connectors to their respective dashed lines). All annotation text sits with a clear, comfortable margin before the canvas edge — verified via pixel crop, no clipping.
+      Data: ~80 green (#009E73) semi-transparent circular markers (s=130, alpha=0.65) scattered around a solid green bias line (-2.41) and two dashed lavender (#C475FD) limit-of-agreement lines (+10.08 / -14.90), plus a faint dotted zero-reference line. Overlapping points remain visibly distinguishable.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, correct dark theme surface
-      Chrome: Title, axis labels, tick labels all in light INK color (#F0EFE8) - perfectly readable against dark background; no dark-on-dark failures
-      Data: Data colors identical to light render - green points, green mean, orange limits; only chrome changed theme
-      Legibility verdict: PASS - All elements clearly visible; theme adaptation flawless
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and both axis labels rendered in light/off-white ink, fully legible against the dark background. Tick labels in light muted gray. No dark-on-dark failures anywhere; annotation text ("Bias: -2.41", LOA labels) renders in light ink, fully readable, with the same comfortable right-margin clearance as the light render.
+      Data: Same #009E73 green markers and #C475FD lavender dashed LOA lines as the light render — data colors are pixel-identical between themes; only the chrome (background, text, grid) flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -47,49 +67,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title=24, labels=20, ticks=16; perfectly
-          readable in both themes
+        comment: All font sizes explicit, readable in both themes, title ~62% of width
+          with no overflow, balanced axis label/tick sizing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text well-spaced; legend, annotations, axis labels non-overlapping
+        comment: No legend clutter anymore; right-side annotations have clear margin,
+          verified via pixel crop, no overlap with data or each other
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 80 points with s=150, alpha=0.6 perfectly adapted; lines at linewidth=2.5
-          clearly visible
+        comment: s=130 correctly within the 100-200 guideline for n=80, but alpha=0.65
+          sits just under the recommended 0.7-0.9 range
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73 + #D55E00); good contrast; CVD-safe'
+        comment: Green/lavender pairing is CVD-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px layout; ideal plot proportion; balanced whitespace; thoughtful
-          annotation placement
+        comment: Canvas gate passed (3200x1800); balanced proportions, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title in correct format
+        comment: Both axis labels descriptive with units (mmHg)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito colors correct; backgrounds #FAF8F1/#1A1A17; theme-adaptive
-          chrome flawless'
+        comment: 'First series #009E73, LOA lines use canonical position 2 (#C475FD),
+          theme-correct chrome in both renders'
     design_excellence:
-      score: 18
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -97,22 +118,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Professional color harmony, intentional hierarchy, thoughtful annotations;
-          above defaults but not original flourishes
+        comment: Redundant legend removed; direct arrow-connected line labels read
+          as intentional, thoughtful hierarchy, clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: L-shaped spines, subtle grid, generous margins, refined legend/annotation
-          styling
+        comment: Subtle grid, spines removed, generous whitespace on the right for
+          annotations; clutter from Review 1 eliminated
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Clear visual hierarchy; realistic data tells compelling agreement
-          story
+        comment: Bias/LOA lines with arrow-connected value callouts guide the reader
+          directly to the key metrics without needing to cross-reference a legend
     spec_compliance:
       score: 15
       max: 15
@@ -122,47 +143,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bland-Altman; x=mean, y=difference
+        comment: Correct Bland-Altman agreement plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: points, mean line, limits, annotations'
+        comment: Bias line, dashed LOA lines, annotations, moderate transparency all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct; full data range visible; zero line aids interpretation
+        comment: X = mean of pair, Y = method1 - method2, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format; legend with values
+        comment: Title matches mandated format exactly; direct line-labels replace
+          the legend and match the plotted lines
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full variation; positive/negative; realistic outliers; spread variation
+        comment: Now includes proportional/heteroscedastic bias (variance widening
+          with the mean) in addition to constant bias — the pattern Bland-Altman plots
+          are designed to expose; effect is present but subtle
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real blood pressure scenario; realistic bias and error; neutral domain
+        comment: Neutral, comprehensible medical device-comparison scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: BP values, differences, bias all factually correct; n=80 appropriate
+        comment: Blood pressure values and bias magnitude are physiologically plausible
     code_quality:
       score: 10
       max: 10
@@ -172,33 +197,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no extraneous functions
+        comment: Linear imports/data/plot/save, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set; deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: os, matplotlib.pyplot, matplotlib.transforms, numpy — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, no fake UI
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png naming
+        comment: Saves plot-{THEME}.png, no deprecated calls, no bbox_inches='tight'
     library_mastery:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -206,13 +231,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: High-level Axes API; theme via environment; proper spine/legend control
+        comment: Correct Axes-method usage (ax.scatter/ax.axhline/ax.annotate), idiomatic
+          use of the transforms module
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Theme-adaptive token system; clever annotations; spine/grid customization
+        comment: transforms.blended_transform_factory anchoring annotations to axes-fraction
+          x / data y, combined with arrowprops callouts, is a matplotlib-distinctive
+          technique not trivially replicated in most other libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -220,7 +248,9 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
