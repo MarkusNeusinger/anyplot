@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
-Library: plotnine 0.15.7 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-08-11
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-08-11
 """
 
 import os
