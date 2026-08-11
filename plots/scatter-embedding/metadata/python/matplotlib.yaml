@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:25:22Z'
-updated: '2026-08-11T08:52:44Z'
+updated: '2026-08-11T09:03:53Z'
 generated_by: claude-sonnet
 workflow_run: 31474379375
 issue: 5236
@@ -12,56 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 93
 review:
   strengths:
+  - Title now includes the full mandated format "Document Topic Embeddings · scatter-embedding
+    · python · matplotlib · anyplot.ai" with a formula-correct fontsize (10pt) so
+    it fits without overflow.
+  - 'Marker edge treatment fixed: edgecolors changed from PAGE_BG to none, eliminating
+    the previous quilted/holed texture in dense clusters — overlapping markers now
+    blend into smooth, soft cloud shapes in both themes.'
+  - Added matplotlib.patheffects.withStroke halo to centroid labels, a genuine library-specific
+    technique that keeps bold text crisp against dense marker fields — directly addresses
+    prior LM-02 feedback.
   - 'Excellent Imprint palette compliance: first series (Finance) is #009E73, remaining
-    six clusters follow the canonical Imprint order, and data colors are identical
-    between the light and dark renders.'
-  - 'Redundant encoding at 7-series scale: each cluster gets both a distinct Imprint
-    color AND a distinct marker shape (circle/square/triangle/diamond/inverted-triangle/plus/x),
-    which is genuinely CVD-safe design.'
-  - 'Full spec feature coverage: centroid label annotations (spec''s ''optionally
-    annotate cluster centroids''), alpha-blended markers for overlap handling, algorithm
-    subtitle (''t-SNE (perplexity=30)''), and tick labels correctly suppressed since
-    embedding coordinates aren''t directly interpretable.'
-  - Outlier callout ('farthest from centroid') gives the plot a clear data-storytelling
-    focal point tied directly to the spec's real-world use case of quality-checking
-    cluster assignments.
-  - Theme-adaptive chrome is fully correct in both renders — background, text, grid,
-    spines, legend box, and annotation boxes all flip appropriately; canvas gate passed
-    cleanly at 3200x1800 for both.
-  - 'Fully reproducible: fixed seeds (np.random.seed(42) and random_state=42) for
-    both make_blobs and TSNE.'
+    six clusters follow canonical order, identical across light/dark renders.'
+  - Redundant color + marker-shape encoding across all 7 series — genuinely CVD-safe
+    design at a series count that sits at the discrimination floor.
+  - 'Full spec feature coverage: centroid annotations, alpha-blended overlap handling,
+    algorithm subtitle, and tick labels correctly suppressed (embedding coordinates
+    aren''t directly interpretable).'
+  - Theme-adaptive chrome fully correct in both renders; canvas gate passed cleanly
+    at 3200×1800.
+  - Fully reproducible via fixed seeds (np.random.seed(42), random_state=42 throughout).
   weaknesses:
-  - 'Title is missing the required ''python'' language token: current title is ''Document
-    Topic Embeddings · scatter-embedding · matplotlib · anyplot.ai'' but the mandated
-    format is ''{Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai''
-    — insert ''python'' between ''scatter-embedding'' and ''matplotlib'' (SC-04).'
-  - Marker edgecolors are set to PAGE_BG (matching the plot background) so overlapping
-    markers punch small background-colored holes into dense clusters, giving a slightly
-    'quilted'/busy texture instead of a clean blob — consider a thinner or neutral
-    edge, or dropping edgecolors in the densest clusters (DE-02).
-  - Beyond the per-cluster marker-shape loop and fig.text subtitle, the implementation
-    doesn't lean on any matplotlib-distinctive capability (e.g. PathEffects, custom
-    colormaps, blended transforms) — usage is solid but fairly transferable to other
-    libraries (LM-02).
-  - Clusters are unusually cleanly separated (make_blobs + TSNE with cluster_std=2.5)
-    with almost no boundary overlap or stray points between groups; real embeddings
-    typically show at least some cluster bleed/noise, which would better showcase
-    this spec's core use case of visually inspecting representation quality (DQ-01).
+  - cluster_std was raised from 2.5 to 3.3 to introduce boundary overlap/noise, but
+    the rendered clusters (both themes) still show zero inter-cluster bleed or stray
+    points — visually indistinguishable from the prior cleanly-separated version.
+    t-SNE's local-structure emphasis absorbs the extra high-dimensional spread; a
+    more effective fix would inject a handful of points that are genuinely near a
+    neighboring cluster's centroid in the 2D projection, or lower TSNE perplexity
+    slightly, so a few points visibly sit between clusters.
+  - The "farthest from centroid" annotation points to a point still well within the
+    Science cluster's own boundary — it doesn't read as a meaningful outlier relative
+    to its neighbors, weakening the intended embedding-quality-checking storytelling
+    moment. Consider annotating a point that visibly sits closer to a different cluster
+    instead.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Document Topic Embeddings · scatter-embedding · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "t-SNE 1" / "t-SNE 2" dark and legible. Tick labels intentionally suppressed (per spec: embedding coordinates aren't directly interpretable). Grid lines are faint but visible. Legend ("Topic") sits bottom-right near the Sports cluster with a light elevated-background box, dark border, and legible text. Subtitle "t-SNE (perplexity=30) · 50-dimensional document embeddings · 7 topic clusters" is muted gray and readable at the bottom.
-      Data: Seven clusters (Finance, Healthcare, Technology, Sports, Politics, Science, Entertainment), each with a distinct Imprint color AND a distinct marker shape (circle, square, triangle, diamond, inverted-triangle, plus, x). First series (Finance) is #009E73 as required. Bold centroid labels sit inside each cluster with a light rounded box. An arrow-annotated "farthest from centroid" callout points to an outlier point near the Science cluster.
-      Legibility verdict: PASS — all text (title, axis labels, centroid labels, legend, subtitle, outlier annotation) is clearly readable against the light background; no light-on-light issues found.
+      Background: Warm off-white (#FAF8F1), matches the required light-theme page surface — not pure white.
+      Chrome: Title "Document Topic Embeddings · scatter-embedding · python · matplotlib · anyplot.ai" in dark ink, fully visible, not clipped, spans ~72% of plot width (expected range for the mandated title format). "t-SNE 1"/"t-SNE 2" axis labels readable; tick labels are intentionally suppressed per spec since embedding coordinates aren't directly interpretable. Subtle y/x grid (alpha 0.15) visible but not competing with data. Legend box ("Topic") sits inside the plot at lower right with all 7 entries fully visible, no clipping.
+      Data: Seven clusters (Finance, Healthcare, Technology, Sports, Politics, Science, Entertainment), each in a distinct Imprint color AND distinct marker shape (circle/square/triangle/diamond/inverted-triangle/plus/x) — Finance correctly uses #009E73 (brand green), remaining six follow Imprint canonical order. Markers now have no edge stroke (edgecolors="none"), producing smooth soft-cloud cluster shapes with no quilted texture. Bold centroid labels sit in light rounded boxes with a white text halo (PathEffects) that keeps them crisp over dense markers. An arrow-annotated "farthest from centroid" callout points to an edge point within the Science cluster.
+      Legibility verdict: PASS — all text readable, no light-on-light issues, no clipped elements at canvas edges (checked right edge near Sports cluster, top edge near title, left edge near Entertainment, bottom edge near subtitle/legend — all have healthy margin).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, and subtitle switch to light ink and remain fully legible on the dark background. Grid lines remain subtle but visible. Legend box uses the dark elevated background with light border and light text, matching the light render's structure but inverted in tone. Centroid label boxes use the dark elevated background with light text, clearly readable — no dark-on-dark failures observed.
-      Data: All seven cluster colors and marker shapes are visually identical to the light render (Finance still #009E73, etc.) — only the chrome (background, text, grid, legend/annotation boxes) flipped, confirming palette consistency across themes.
-      Legibility verdict: PASS — no "dark-on-dark" text found; the outlier annotation and centroid labels both remain legible against the dark surface.
+      Background: Warm near-black (#1A1A17), matches the required dark-theme page surface — not pure black.
+      Chrome: Title, axis labels, subtitle, legend, and centroid-label text all flip to light ink (#F0EFE8 / #B8B7B0) and remain fully legible. Grid stays subtle but visible against the dark surface. Legend frame and centroid-label boxes flip to the dark elevated surface (#242420) with light borders.
+      Data: Colors and marker shapes are pixel-identical to the light render (Finance still #009E73, etc.) — only chrome flipped, confirmed by direct crop comparison of the Finance cluster in both themes. No dark-on-dark failures anywhere; centroid-label halo and outlier annotation both remain legible on the dark surface.
+      Legibility verdict: PASS — no dark-on-dark text, no wrong-theme background, brand green #009E73 clearly visible against the near-black surface.
+
+    Both renders pass the theme-readability check with no edge clipping (AR-09 clear) and no fake-interactivity elements (AR-08 clear).
   criteria_checklist:
     visual_quality:
       score: 29
@@ -72,75 +71,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title, axis labels, legend, centroid
-          labels, subtitle, and outlier annotation are all readable in both themes
-          with no overflow.
+        comment: All font sizes explicitly set; title fontsize correctly computed
+          from length formula (10pt), fits without overflow in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clusters are well separated; centroid labels, legend, and outlier
-          callout do not collide with each other or with data.
+        comment: No overlap between any text/data elements, verified via crops
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: s=90, alpha=0.65 matches the 100-300 point density guideline (~150
-          points/cluster) well.
+        comment: s=90, alpha=0.65 matches the 100-300pt medium-density guideline exactly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant color + marker-shape encoding across all 7 series is genuinely
-          CVD-safe.
+        comment: Marker-shape redundancy on top of color addresses the 7-series CVD
+          discrimination floor
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Axes frame fills nearly the full canvas with balanced margins; legend
-          sits near the plot, nothing cut off.
+        comment: Balanced margins, nothing cut off, legend well-placed near plot,
+          canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''t-SNE 1'' / ''t-SNE 2'' are descriptive and appropriate; units
-          are N/A for unitless embedding dimensions.'
+        comment: Descriptive axis labels; embedding dimensions have no physical units
+          by definition
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for remaining 6, theme-correct
-          chrome in both renders, identical data colors across themes.'
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          both renders'
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: Thoughtful custom palette + marker-shape pairing and annotation styling,
-          clearly above library defaults.
+        passed: true
+        comment: Custom palette + marker-shape pairing, clearly above defaults, not
+          yet FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
-        comment: Spines removed, subtle grid, generous whitespace; background-matched
-          marker edges create a mildly busy/quilted texture in dense clusters.
+        passed: true
+        comment: Quilted marker-edge issue from attempt 1 fully resolved (edgecolors=none);
+          spines/grid/whitespace/halo all polished
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
-        comment: Centroid labels plus the outlier callout give the plot a clear focal
-          point tied to the spec's real-world use case.
+        passed: true
+        comment: Centroid labels + outlier callout give a focal point, though the
+          annotated point isn't a visually convincing outlier
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -148,29 +147,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter-embedding visualization.
+        comment: Correct scatter/embedding plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colored clusters with legend, centroid annotations, moderate alpha-blended
-          markers, algorithm subtitle, tick labels suppressed — all spec notes covered.
+        comment: Color+legend, centroid annotations, alpha for overlap, algorithm
+          subtitle, hidden ticks — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: t-SNE dim 1/2 correctly mapped to x/y, all data visible.
+        comment: t-SNE 1/2 correctly mapped to x/y
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title omits the required 'python' language token ('Document Topic
-          Embeddings · scatter-embedding · matplotlib · anyplot.ai' instead of '...
-          · scatter-embedding · python · matplotlib · anyplot.ai'); legend labels
-          are correct.
+        passed: true
+        comment: Title now includes the required "python" language token; legend labels
+          match cluster names
     data_quality:
       score: 14
       max: 15
@@ -179,23 +176,22 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Shows color-coded clusters, centroids, and an outlier, but clusters
-          are unusually cleanly separated with almost no boundary overlap/noise.
+        passed: true
+        comment: cluster_std raised to 3.3 but rendered clusters still show no visible
+          inter-cluster overlap/stray points
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral document-topic-classification scenario (Finance, Healthcare,
-          Technology, Sports, Politics, Science, Entertainment) — a standard, comprehensible
-          NLP embedding use case, not a controversial political statement.
+        comment: Neutral document-topic classification scenario (news-category style),
+          matches the spec's NLP use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Real sklearn TSNE output on 50-dimensional synthetic data — plausible
-          coordinate ranges and cluster geometry.
+        comment: No factual proportions to violate; embedding coordinates are abstract
     code_quality:
       score: 10
       max: 10
@@ -205,48 +201,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single linear script, no functions/classes.
+        comment: Linear imports->data->plot->save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and random_state=42 throughout.
+        comment: np.random.seed(42) plus random_state=42 throughout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (os, sys, matplotlib, numpy, sklearn).
+        comment: Only used imports (patheffects, pyplot, numpy, sklearn)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the annotated centroid + outlier features,
-          no fake UI.
+        comment: Clean, appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at dpi=400 with facecolor, no bbox_inches='tight'.
+        comment: Saves plot-{THEME}.png, current API, no bbox_inches=tight
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Axes-based API throughout, correct legend/spine/grid patterns.
+        passed: true
+        comment: Consistent Axes-level API, correct patterns throughout
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Per-series marker-shape loop, bbox-styled text annotations, and fig.text
-          subtitle placement are matplotlib-idiomatic but not deeply library-unique.
-  verdict: REJECTED
+        passed: true
+        comment: PathEffects.withStroke halo added per prior feedback — a genuine
+          matplotlib-specific technique
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
@@ -260,5 +257,4 @@ impl_tags:
   - dimensionality-reduction
   styling:
   - alpha-blending
-  - edge-highlighting
-  - grid-styling
+  - publication-ready
