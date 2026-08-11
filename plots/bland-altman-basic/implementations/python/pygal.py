@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-11
@@ -17,8 +17,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette (first series = brand green #009E73)
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette (first series = brand green #009E73). The outlier highlight
+# continues the canonical Imprint sequence.
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030")
 
 # Data - Blood pressure readings from two different sphygmomanometers
 np.random.seed(42)
@@ -37,6 +38,12 @@ mean_diff = np.mean(differences)
 std_diff = np.std(differences, ddof=1)
 upper_loa = mean_diff + 1.96 * std_diff
 lower_loa = mean_diff - 1.96 * std_diff
+
+# Point furthest from the bias line - called out separately below
+outlier_idx = int(np.argmax(np.abs(differences - mean_diff)))
+outlier_x = float(mean_values[outlier_idx])
+outlier_y = float(differences[outlier_idx])
+outlier_outside_loa = outlier_y > upper_loa or outlier_y < lower_loa
 
 # Custom style with theme-adaptive colors (canonical pygal sizing, see
 # prompts/library/pygal.md "Sizing + Theme for 3200x1800 px")
@@ -109,6 +116,16 @@ chart.add(
     stroke=True,
     dots_size=0,
     stroke_style={"width": 2, "dasharray": "10, 5"},
+)
+
+# Outlier callout - the single observation furthest from the bias line,
+# replotted larger and in a distinct color so it reads as the plot's focal
+# point without altering the underlying "Measurements" series.
+chart.add(
+    f"Outlier ({outlier_y:+.1f}{', outside LoA' if outlier_outside_loa else ''})",
+    [{"value": (outlier_x, outlier_y)}],
+    dots_size=22,
+    stroke=False,
 )
 
 # Save outputs
