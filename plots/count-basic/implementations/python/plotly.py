@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-11
@@ -46,9 +46,10 @@ bar_hover = [
 ]
 line_hover = [f"{cat}<br>Cumulative: {pct:.1f}%" for cat, pct in zip(sorted_categories, cumulative_pct, strict=True)]
 
-# Title fontsize scales linearly with title length off the 67-char baseline
+# Title fontsize scales linearly with title length off the 67-char baseline,
+# both up (short titles) and down (long titles), clamped to a legible range
 title_text = "count-basic · python · plotly · anyplot.ai"
-title_fontsize = round(16 * min(1.0, 67 / len(title_text)))
+title_fontsize = max(11, min(24, round(16 * 67 / len(title_text))))
 
 fig = go.Figure()
 
