@@ -1,7 +1,7 @@
 // anyplot.ai
 // bland-altman-basic: Bland-Altman Agreement Plot
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-08-11
+// Library: chartjs 4.4.7 | JavaScript 22.23.1
+// Quality: 90/100 | Created: 2026-08-11
 
 const t = window.ANYPLOT_TOKENS;
 
