@@ -1,0 +1,268 @@
+library: echarts
+language: javascript
+specification_id: scatter-embedding
+created: '2026-08-11T09:15:32Z'
+updated: '2026-08-11T09:31:06Z'
+generated_by: claude-sonnet
+workflow_run: 31476386996
+issue: 5236
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'All four Attempt-1 weaknesses are directly and verifiably fixed: the four-sided
+    axis box is gone (axisLine/splitLine now show:false on both axes, a true minimal
+    frame), centroid labels are nudged above each cluster core and sit on a solid
+    background pill (t.elevatedBg) instead of relying on a text-shadow halo, a 26-point
+    silent ''noise'' series adds realistic inter-cluster scatter, and per-cluster
+    z-ordering (sorted by descending n) plus density-scaled opacity give the markers
+    deliberate, non-default treatment.'
+  - 'Correct Imprint palette in canonical order with brand green #009E73 pinned to
+    the first-listed series (T cells) via t.palette[idx] indexed on the original array
+    position, not render order — both renders are theme-correct (light #FAF8F1 chrome/dark
+    ink, dark #1A1A17 chrome/light ink) with identical data hues.'
+  - Deterministic, reproducible synthetic data (fixed-seed LCG + Box-Muller gaussian)
+    modeling a realistic, neutral single-cell RNA-seq scenario (8 immune cell types)
+    with per-cluster variation in shape (elongation/rotation), density, and point
+    count.
+  - 'All spec-required details present: subtitle notes algorithm and parameters (''UMAP
+    (n_neighbors=15, min_dist=0.1)''), axis tick labels correctly hidden since embedding
+    coordinates aren''t directly interpretable, descriptive axis names, mandated title
+    format, direct centroid labels providing redundant (non-color) encoding at n=8
+    categories.'
+  - Density-aware marker opacity (denser clusters render slightly more transparent,
+    sparser clusters bolder) is a genuine, well-reasoned ECharts-specific refinement
+    rather than one flat alpha for every series.
+  weaknesses:
+  - Still relies on the default canonical Imprint color order and plain circular markers
+    as the base treatment; the added polish (opacity/z-order/border) is real but incremental
+    rather than a distinctive marker language (e.g. varied symbol shapes or size-encoded
+    cluster confidence).
+  - Legend swatches and text use library defaults (itemWidth 12/itemHeight 12/circle
+    icon) with no further refinement — fine, but a missed opportunity for extra visual
+    cohesion with the pill-styled centroid labels.
+  - 'CQ-01 KISS: three small helper functions (rnd, gauss, densityOpacity) are needed
+    since the browser lacks a seeded RNG, so the script isn''t a single flat sequence
+    of statements — justified by the runtime constraint, not a real flaw.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "scatter-embedding · javascript · echarts · anyplot.ai" in bold dark text (~34% of plot width, comfortably short), subtitle "UMAP (n_neighbors=15, min_dist=0.1) · colored by cell type" in softer gray beneath it — both centered and fully legible. Axis names "UMAP dimension 1" / "UMAP dimension 2" in muted gray; no tick labels (correct per spec, since embedding coordinates aren't directly interpretable). No axis lines or box border — a genuinely minimal frame. Vertical legend at right lists all 8 cell types in dark text with circular color swatches, cleanly separated from the plot area. All chrome text is clearly readable against the light background.
+      Data: 8 distinct elliptical clusters of scatter points in Imprint palette hues, canonical order (T cells = brand green #009E73, B cells = lavender, NK cells = blue, Monocytes = ochre, Dendritic cells = matte red, Neutrophils = cyan, Erythrocytes = rose, Platelets = lime-green). Small gray "noise" points are visible scattered between clusters (e.g. between T/B cells and between Neutrophils/Erythrocytes), adding realistic projection noise. Each cluster has a bold centroid text label on a light pill background, nudged above the densest core so it doesn't sit directly on top of markers. Sparser clusters (Platelets, Dendritic cells) render cleanly on top of larger neighbors thanks to density-based z-ordering.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle now rendered in white/off-white text, fully readable against the dark background. Axis names in muted light-gray, same minimal (borderless) frame. Legend switches to light-colored text with the same color swatches, still cleanly separated from data. No dark-on-dark or hard-to-read text anywhere.
+      Data: Identical cluster colors and positions to the light render — confirmed the 8 categorical hues (green, lavender, blue, ochre, matte red, cyan, rose, lime) and the gray noise points are unchanged; only chrome (background, text, legend) flipped to the dark theme. Centroid labels now sit on a dark pill with light text, still clearly legible over the marker fill, with the same nudge-above-centroid placement as the light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, subtext 15, legend 15, axis
+          name 14); readable in both themes; well-proportioned short title
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Centroid labels now nudged above cluster cores and sit on a solid
+          background pill — no more label-on-marker collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: symbolSize 11 with density-scaled opacity (0.54-0.78) handles the
+          35-95 points-per-cluster range well; noise series adds realism without hurting
+          legibility
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 8-series case correctly adds redundant encoding via direct centroid
+          labels
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed (no gate failure); plot area fills the
+          canvas well, legend close to plot, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis names; mandated title format; no units applicable
+          for unitless embedding dimensions
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for all 8 clusters,
+          theme-correct chrome in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Density-aware opacity, deliberate z-ordering (sparse-over-dense),
+          bordered markers and emphasis state add genuine intentional polish beyond
+          a flat default treatment
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Full box border removed for a true minimal frame; subtle noise points
+          and generous margins read as refined, not just default
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-coded clusters plus direct, well-placed centroid labels give
+          an immediate, clear read of cluster structure
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D scatter embedding plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cluster coloring + legend, centroid annotations, density-aware alpha,
+          algorithm/parameter subtitle, no axis tick labels — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y correctly mapped to embedding dimensions, all data visible within
+          axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches mandated format; legend labels match cluster
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Varied cluster shape/size/density, realistic inter-cluster overlap,
+          plus now includes stray noise points typical of real embeddings
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, comprehensible, neutral single-cell RNA-seq immune cell-type
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coordinate ranges and cluster spread are plausible for a UMAP-style
+          projection
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three small helper functions (rnd, gauss, densityOpacity) needed
+          since the browser has no seeded RNG; otherwise linear
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG + Box-Muller gaussian, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only browser globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, current setOption API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, idiomatic use of echarts.init/setOption with title/legend/tooltip/grid/xAxis/yAxis/series
+          config
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Density-based z-ordering, per-series opacity scaling, silent overlay
+          series with pill-styled labels, and emphasis hover state are genuine ECharts-specific
+          techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome
