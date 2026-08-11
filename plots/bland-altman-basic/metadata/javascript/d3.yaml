@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: bland-altman-basic
 created: '2026-08-11T11:09:34Z'
-updated: '2026-08-11T11:14:04Z'
+updated: '2026-08-11T11:22:46Z'
 generated_by: claude-sonnet
 workflow_run: 31484993787
 issue: 2032
@@ -12,35 +12,10 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-alt
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/d3/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
-  strengths:
-  - 'Correct D3 idioms: data joins (selection.data().join()) drive both the circles
-    and the direct-label annotations, satisfying AR-05'
-  - 'All spec-required features present: solid bias line, dashed +-1.96 SD limits-of-agreement
-    lines, direct numeric annotations for bias and both limits, and moderate marker
-    transparency (fill-opacity 0.55) to reveal overlapping observations'
-  - 'Clean theme adaptation: data color (#009E73) identical between light and dark
-    renders, chrome (background, ticks, grid, title) correctly flips via ANYPLOT_TOKENS
-    with no legibility failures in either theme'
-  - 'Deterministic, realistic data: seeded LCG + Box-Muller normal generator produces
-    plausible systolic blood-pressure values (100-160 mmHg) with a believable proportional
-    bias plus noise between reference and test cuff'
-  - Correct canvas (3200x1800 landscape, matches gate) and correctly formatted title
-    'Blood Pressure Cuff Comparison · bland-altman-basic · javascript · d3 · anyplot.ai'
-  - Direct labeling of bias/LoA values instead of a separate legend box is a good
-    idiomatic choice for this plot type and keeps the chart uncluttered
-  weaknesses:
-  - 'DE-01: Generic styling beyond the mandated Imprint token color — no additional
-    design touch (e.g. a subtle shaded band between the LoA lines, or highlighting
-    points outside the limits of agreement) to distinguish the chart beyond spec-minimum
-    requirements'
-  - 'DE-02/DE-03: Visual hierarchy is limited to the required solid-vs-dashed reference
-    lines; no extra emphasis (color or size) calls out the handful of points that
-    fall outside the limits of agreement, which is where a Bland-Altman plot''s story
-    usually lives'
-  - 'LM-02: Relies on common d3 patterns (axisBottom/axisLeft tickSize gridline trick,
-    d3-array mean/deviation/extent) without a more distinctive library-specific technique'
+  strengths: []
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
