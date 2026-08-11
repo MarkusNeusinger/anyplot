@@ -4,7 +4,6 @@
 #' Quality: 85/100 | Created: 2026-08-11
 
 library(ggplot2)
-library(dplyr)
 library(tibble)
 library(ragg)
 
@@ -23,10 +22,10 @@ IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2A
 # blobs a real non-linear embedding produces, rather than circular Gaussians.
 cell_types <- c("CD4+ T cells", "CD8+ T cells", "B cells", "NK cells", "Monocytes", "Dendritic cells")
 cluster_n  <- c(700, 550, 450, 350, 400, 250)
-center_x   <- c(-6.0, -3.5, 5.5, -7.0, 6.5, 1.5)
-center_y   <- c(2.0, -3.0, 2.5, -1.5, -2.0, 4.5)
-spread_x   <- c(1.3, 1.0, 1.1, 0.9, 1.2, 0.8)
-spread_y   <- c(0.55, 0.5, 0.6, 0.45, 0.5, 0.4)
+center_x   <- c(-6.0, -3.5, 5.5, -8.2, 6.5, 1.5)
+center_y   <- c(2.0, -3.0, 2.5, -2.6, -2.0, 4.5)
+spread_x   <- c(1.3, 1.0, 1.1, 0.8, 1.2, 0.8)
+spread_y   <- c(0.55, 0.5, 0.6, 0.4, 0.5, 0.4)
 angle_deg  <- c(20, -30, 10, 60, -15, 45)
 
 n_total    <- sum(cluster_n)
@@ -46,6 +45,9 @@ embedding <- tibble::tibble(
   cell_type = cluster_id
 )
 
+# Cluster centroids for the optional label annotations called out in the spec.
+centroids <- aggregate(cbind(x, y) ~ cell_type, data = embedding, FUN = mean)
+
 # --- Title (scales fontsize to length; mandated title is well under the
 # 67-char baseline here, so this resolves to the library default of 12pt) ---
 title_text  <- "scatter-embedding · r · ggplot2 · anyplot.ai"
@@ -54,7 +56,19 @@ title_size  <- max(8, round(12 * title_ratio))
 
 # --- Plot ---------------------------------------------------------------
 p <- ggplot(embedding, aes(x = x, y = y, color = cell_type, shape = cell_type)) +
-  geom_point(size = 1.8, alpha = 0.55, stroke = 0.4) +
+  geom_point(size = 1.8, alpha = 0.5, stroke = 0.4) +
+  geom_label(
+    data          = centroids,
+    aes(x = x, y = y, label = cell_type),
+    inherit.aes   = FALSE,
+    color         = INK,
+    fill          = ELEVATED_BG,
+    alpha         = 0.85,
+    size          = 2.5,
+    label.size    = 0,
+    label.padding = unit(0.12, "lines"),
+    fontface      = "bold"
+  ) +
   scale_color_manual(values = IMPRINT_PALETTE, name = "Cell type") +
   scale_shape_manual(values = c(16, 17, 15, 18, 3, 8), name = "Cell type") +
   labs(
@@ -74,11 +88,14 @@ p <- ggplot(embedding, aes(x = x, y = y, color = cell_type, shape = cell_type)) 
     axis.title        = element_text(color = INK, size = 10),
     plot.title        = element_text(color = INK, size = title_size, face = "bold"),
     plot.subtitle     = element_text(color = INK_SOFT, size = 9),
-    legend.position    = "right",
-    legend.background = element_rect(fill = ELEVATED_BG, color = NA),
-    legend.key         = element_rect(fill = ELEVATED_BG, color = NA),
-    legend.text        = element_text(color = INK_SOFT, size = 8),
-    legend.title       = element_text(color = INK, size = 9)
+    plot.margin       = margin(t = 10, r = 14, b = 10, l = 10),
+    legend.position   = "right",
+    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
+    legend.margin     = margin(t = 6, r = 8, b = 6, l = 8),
+    legend.key        = element_rect(fill = ELEVATED_BG, color = NA),
+    legend.key.size   = unit(0.9, "lines"),
+    legend.text       = element_text(color = INK_SOFT, size = 8),
+    legend.title      = element_text(color = INK, size = 9, face = "bold")
   )
 
 # --- Save --------------------------------------------------------------
