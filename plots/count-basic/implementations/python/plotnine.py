@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-11
@@ -51,7 +51,7 @@ plot = (
         aes(label=after_stat("count")), stat="count", color=INK, size=8, va="bottom", nudge_y=8, format_string="{:.0f}"
     )
     + scale_fill_manual(values={"Mode": BRAND, "Other": INK_MUTED})
-    + labs(x="Rating", y="Number of Responses", title="count-basic · plotnine · anyplot.ai")
+    + labs(x="Rating", y="Number of Responses", title="count-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
