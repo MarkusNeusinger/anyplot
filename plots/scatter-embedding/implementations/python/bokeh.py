@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: bokeh 3.9.2 | Python 3.13.14
-Quality: 88/100 | Updated: 2026-08-11
+Quality: 91/100 | Updated: 2026-08-11
 """
 
 import os
