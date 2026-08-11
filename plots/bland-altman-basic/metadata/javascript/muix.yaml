@@ -1,0 +1,243 @@
+library: muix
+language: javascript
+specification_id: bland-altman-basic
+created: '2026-08-11T11:13:32Z'
+updated: '2026-08-11T11:30:11Z'
+generated_by: claude-sonnet
+workflow_run: 31485302278
+issue: 2032
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/muix/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Outlier accent treatment directly fixes attempt 1''s top weakness: the 4 points
+    outside the ±1.96 SD limits get a distinct matte-red (#AE3030, the correct Imprint
+    semantic anchor for bad/error) color, larger radius (11 vs 7), and higher alpha
+    (0.85 vs 0.6), with legend labels so the distinction isn''t hue-only'
+  - 'Explicit marker stroke (stroke: t.pageBg, strokeWidth: 1) gives every point clean
+    definition against overlapping neighbors'
+  - Reference-line label font sizes are now consistent (bias 14/bold, both limit labels
+    14), fixing attempt 1's 13-vs-14 mismatch
+  - Grid explicitly styled via sx (t.grid stroke) rather than relying purely on library
+    defaults
+  - 'Pixel-verified: data colors are byte-identical between light/dark renders (only
+    alpha-blended against theme-correct backgrounds), backgrounds are exact #FAF8F1/#1A1A17,
+    and no element clips at any canvas edge'
+  - Correct data mapping (x = mean, y = diff), realistic heteroscedastic measurement-error
+    data, and moderate transparency per spec all carried over cleanly from attempt
+    1
+  weaknesses:
+  - Title still fills only ~38% of canvas width - larger than attempt 1's ~30% but
+    still under the ~50-70% general guidance; not a scored deduction (no overflow/clipping/squeeze)
+    but there is headroom to grow the title fontSize for stronger hierarchy
+  - LM-02 remains capped by using only one clearly MUI X-distinctive capability (ChartsReferenceLine);
+    a second distinctive feature would strengthen library mastery
+  - DE-02 grid is correctly both-axes per the scatter-plot grid guideline but still
+    reads as a fairly conventional layout - further whitespace/typographic hierarchy
+    tuning could push this higher
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-verified exact #FAF8F1
+      Chrome: Title, both axis titles, and tick labels render in dark ink, all clearly readable; grid lines subtle on both axes (correct for scatter plot per style guide); reference-line labels (bias + both limits) consistently sized at 14px
+      Data: ~70 points, funnel-shaped heteroscedastic spread; within-limits points are green (#009E73, alpha 0.6, r=7); outside-limits points are matte-red (#AE3030, alpha 0.85, r=11) with a thin light stroke outline on all markers; legend confirms group labels
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-verified exact #1A1A17
+      Chrome: Title, axis titles, and tick labels flip to light/white text, fully legible; grid remains subtle; bias/limit lines and labels flip to light tones while preserving solid/dashed distinction; no dark-on-dark failures
+      Data: Pixel-sampling confirms the green and red marker hues alpha-blend to the identical base colors (#009E73, #AE3030) as in the light render - only chrome flipped
+      Legibility verdict: PASS
+
+    Edge-clipping check: sampled all four canvas borders (top/bottom/left/right) on plot-light.png - no content pixels found within the outermost rows/columns; nearest content in the rightmost 500px band ends ~258px from the edge. No AR-09 violation.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit and consistent; readable in both themes;
+          no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text, legend, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker sizes (7/11) and alpha appropriately adapted for n=70 with
+          outlier emphasis
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green pair distinguished by size, alpha, and legend text, not
+          hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, chart fills canvas well, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (mmHg)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, outlier series semantic anchor #AE3030, theme-correct
+          backgrounds pixel-verified'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Two-tier semantic color/size treatment plus marker stroke, clearly
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Explicit grid styling and marker strokes; still a fairly conventional
+          layout
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Outlier points are an immediate, clearly-legended visual focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Bland-Altman agreement plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bias line, ±1.96 SD dashed limits, annotated values, moderate transparency
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = mean(cuff, reference), y = cuff - reference, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match data groups
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows bias, funnel-shaped heteroscedastic spread, and clear outliers
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Blood pressure cuff vs. mercury reference, realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physiologically plausible BP ranges, bias, and SD
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Simple, linear structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export component contract, skipAnimation set
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic ScatterChart + ChartsReferenceLine + theming token usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Only one MUI X-distinctive capability (ChartsReferenceLine) exercised
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

@@ -1,7 +1,7 @@
 """ anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-07
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-08-11
 """
 
 import os
@@ -15,11 +15,11 @@ from pygal.style import Style
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette (first series = brand green #009E73)
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette (first series = brand green #009E73). The outlier highlight
+# continues the canonical Imprint sequence.
+IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030")
 
 # Data - Blood pressure readings from two different sphygmomanometers
 np.random.seed(42)
@@ -39,7 +39,14 @@ std_diff = np.std(differences, ddof=1)
 upper_loa = mean_diff + 1.96 * std_diff
 lower_loa = mean_diff - 1.96 * std_diff
 
-# Custom style with theme-adaptive colors
+# Point furthest from the bias line - called out separately below
+outlier_idx = int(np.argmax(np.abs(differences - mean_diff)))
+outlier_x = float(mean_values[outlier_idx])
+outlier_y = float(differences[outlier_idx])
+outlier_outside_loa = outlier_y > upper_loa or outlier_y < lower_loa
+
+# Custom style with theme-adaptive colors (canonical pygal sizing, see
+# prompts/library/pygal.md "Sizing + Theme for 3200x1800 px")
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -47,18 +54,19 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    dot_opacity=0.65,  # spec: scatter points at moderate transparency to reveal overlap
     stroke_width=3,
 )
 
 # Create XY chart for Bland-Altman scatter
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     title="bland-altman-basic · pygal · anyplot.ai",
     x_title="Mean of Two Methods (mmHg)",
@@ -69,6 +77,7 @@ chart = pygal.XY(
     stroke=False,
     show_x_guides=True,
     show_y_guides=True,
+    value_formatter=lambda v: f"{v:.1f} mmHg",
 )
 
 # Prepare scatter data points with opacity for overlapping observations
@@ -107,6 +116,16 @@ chart.add(
     stroke=True,
     dots_size=0,
     stroke_style={"width": 2, "dasharray": "10, 5"},
+)
+
+# Outlier callout - the single observation furthest from the bias line,
+# replotted larger and in a distinct color so it reads as the plot's focal
+# point without altering the underlying "Measurements" series.
+chart.add(
+    f"Outlier ({outlier_y:+.1f}{', outside LoA' if outlier_outside_loa else ''})",
+    [{"value": (outlier_x, outlier_y)}],
+    dots_size=22,
+    stroke=False,
 )
 
 # Save outputs
