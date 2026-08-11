@@ -20,7 +20,7 @@ const IMPRINT_PALETTE = [
     colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
 const BRAND = IMPRINT_PALETTE[1]
-const BIAS_COLOR = IMPRINT_PALETTE[5]  # matte red — semantic anchor for the bias/limit reference lines
+const BIAS_COLOR = INK  # neutral anchor — reference/baseline lines read as part of the chart's structural layer
 
 # --- Data ---------------------------------------------------------------
 # Paired systolic blood pressure readings (mmHg) from two sphygmomanometers
@@ -56,6 +56,8 @@ ax = Axis(
     ylabelsize         = 14,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
+    xticks             = LinearTicks(7),
+    yticks             = LinearTicks(7),
     xticklabelsize     = 12,
     yticklabelsize     = 12,
     xticklabelcolor    = INK_SOFT,
@@ -73,6 +75,14 @@ ax = Axis(
     yminorgridvisible  = false,
 )
 
+x_min = minimum(mean_pressure)
+x_max = maximum(mean_pressure)
+
+# Shaded limits-of-agreement band gives the acceptable-range region its own
+# visual weight instead of relying on the two dashed lines alone.
+band!(ax, [x_min, x_max], [lower_loa, lower_loa], [upper_loa, upper_loa];
+    color = (BIAS_COLOR, 0.08))
+
 scatter!(ax, mean_pressure, pressure_diff;
     color = BRAND, markersize = 14, strokewidth = 1, strokecolor = PAGE_BG,
     alpha = 0.65)
@@ -80,7 +90,6 @@ scatter!(ax, mean_pressure, pressure_diff;
 hlines!(ax, [bias]; color = BIAS_COLOR, linewidth = 2.5)
 hlines!(ax, [upper_loa, lower_loa]; color = BIAS_COLOR, linewidth = 2, linestyle = :dash)
 
-x_max = maximum(mean_pressure)
 text!(ax, x_max, bias;
     text = "Bias = $(round(bias, digits = 1))",
     align = (:right, :bottom), fontsize = 13, color = BIAS_COLOR, offset = (0, 4))
