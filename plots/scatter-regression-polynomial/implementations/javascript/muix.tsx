@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-regression-polynomial: Scatter Plot with Polynomial Regression
 // Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 89/100 | Created: 2026-08-11
+// Quality: 91/100 | Created: 2026-08-11
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { LinePlot } from "@mui/x-charts/LineChart";

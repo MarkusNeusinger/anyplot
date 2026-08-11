@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-regression-polynomial
 created: '2026-08-11T13:11:14Z'
-updated: '2026-08-11T13:16:07Z'
+updated: '2026-08-11T13:25:27Z'
 generated_by: claude-sonnet
 workflow_run: 31494477901
 issue: 2028
@@ -12,57 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Accurate least-squares quadratic regression computed from scratch and displayed
-    with a visible R² (0.989) and equation annotation (h(x) = -0.0153x² + 0.788x +
-    1.16), directly fulfilling the spec's 'display R² prominently' and 'annotate equation'
-    notes.
-  - Realistic, factually-grounded projectile-trajectory scenario using correct kinematic
-    constants (g=9.81, plausible launch velocities), producing a believable parabolic
-    scatter with sensor-style noise.
-  - 'Clean theme-adaptive chrome — both renders pass legibility checks, backgrounds
-    correctly flip to #FAF8F1/#1A1A17, text flips to theme-correct ink, and data colors
-    (green points, blue curve) stay identical across themes.'
-  - Idiomatic ChartContainer composition (ScatterPlot + LinePlot + custom SVG text
-    annotations) is the correct MUI X pattern for combining a scatter series with
-    a fitted curve, which a single high-level chart wrapper could not achieve.
-  - Marker size and alpha (~0.67) are well matched to the 85-point density per the
-    style guide's data-density heuristic.
+  - Excellent idiomatic use of MUI X's composable ChartContainer API (layered LinePlot
+    + ScatterPlot with ChartsGrid/ChartsXAxis/ChartsYAxis) rather than a monolithic
+    chart component — a genuinely distinctive MUI X pattern
+  - 'Correct Imprint palette usage: brand green (#009E73) for observations, canonical
+    lavender (position 2) for the regression fit, identical across both themes with
+    fully theme-adaptive chrome'
+  - Strong data storytelling — the bold, stroke-outlined R² annotation and equation
+    callout create a clear focal point drawing the eye to goodness-of-fit
+  - Physically realistic projectile-motion data (correct gravity constant, plausible
+    launch velocities/height) produces a genuinely curved, non-linear relationship
+    as required by the spec
+  - Deterministic LCG + Box-Muller RNG with fixed seed gives full reproducibility
+    without any external dependency
+  - Scatter alpha (~0.67 via the 'aa' hex suffix) matches the spec's moderate-transparency
+    guidance for density
   weaknesses:
-  - 'VQ-07: The regression line uses t.palette[2] (blue #4467A3, canonical position
-    3) instead of t.palette[1] (lavender #C475FD, canonical position 2). There is
-    no strong semantic cue here (not water/sky data) that justifies skipping position
-    2 — follow the canonical Imprint order for the second series, or if blue is kept
-    deliberately, note the semantic reasoning.'
-  - 'CQ-01: The file departs significantly from KISS structure with 6 helper functions
-    (makeLcg, randNormal, solveLinearSystem, polyFit, evalPoly, formatSigned) before
-    the main data/chart flow. Even though a from-scratch fit is required in-browser,
-    consider consolidating (e.g., fold solveLinearSystem directly into polyFit, drop
-    the separate formatSigned helper) to reduce the surface area.'
-  - 'DE-01/DE-02: Styling relies on only two colors (brand green + one accent blue)
-    with default MUI X spine/tick treatment beyond the grid opacity override — there
-    is room for more deliberate typographic hierarchy or a subtler secondary-line
-    treatment to reach publication-ready polish.'
-  - Title occupies only ~40% of canvas width — not a violation, but given the strong
-    equation/R² focal point already established, a slightly larger title would better
-    match the visual hierarchy the rest of the chart establishes.
+  - 'yAxis config sets both `tickFontSize: 28` and `tickLabelStyle: { fontSize: 14
+    }` — tickFontSize appears to have no effect (rendered Y-axis ticks match the 14px
+    tickLabelStyle, not 28px), leaving dead/confusing leftover code. Remove the unused
+    tickFontSize prop.'
+  - No legend distinguishing the scatter 'observations' series from the regression
+    line — the convention (dots=data, line=fit) is inferable and the equation/R² callout
+    helps, but an explicit legend would make the two series unambiguous, especially
+    for accessibility.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "scatter-regression-polynomial · javascript · muix · anyplot.ai" centered at top, clearly legible. Top-left annotation block shows the fitted equation "h(x) = -0.0153x² + 0.788x + 1.16" in soft dark gray and "R² = 0.989" in bold blue below it. X-axis "Horizontal Distance (m)" (0-54) and Y-axis "Height (m)" (-1 to 12) both labeled with units and readable tick labels. Grid lines are faint and subtle.
-      Data: ~85 green (#009E73) scatter points with light edges tracing a clear upward-then-downward parabolic arc from (~1, 2.4) through a peak near (26, 11.3) down to (~53, 0). A solid blue (#4467A3) regression curve tracks the point cloud closely, consistent with the high R².
-      Legibility verdict: PASS — all text (title, equation, R², axis labels, tick labels) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white cream, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "scatter-regression-polynomial · javascript · muix · anyplot.ai" bold and dark, fully visible near top-center. Equation "h(x) = -0.0153x² + 0.788x + 1.16" in muted gray and "R² = 0.989" in bold lavender with a thin ink stroke sit in the top-left margin, both fully readable. Axis labels "Horizontal Distance (m)" / "Height (m)" and all tick labels render in dark ink, clearly legible. Grid lines subtle (both axes), L-shaped spine (left+bottom only).
+      Data: Scatter points are semi-transparent brand green (#009E73 @ ~67% alpha), regression curve is lavender (Imprint position 2) with a thin ink drop-shadow for contrast against overlapping points — both exactly as specified.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title now rendered in light/white text, centered top, fully legible. Equation text in light gray, "R² = 0.989" in the same bold blue (still reads well against the dark surface). Axis labels and tick labels rendered in light ink, fully legible. Grid lines faint light-on-dark.
-      Data: Scatter points remain the identical green (#009E73) and the regression curve remains the identical blue (#4467A3) as the light render — confirms data-color parity between themes; only chrome (background/text/grid) flipped.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all chrome text is clearly visible against the near-black background.
+      Chrome: Title, equation, and R² annotation render in light ink / the same lavender accent, fully legible against the dark surface — no dark-on-dark text anywhere. Axis labels and tick labels are light-colored and clearly readable. Grid lines subtle and visible.
+      Data: Scatter green and regression-line lavender are pixel-identical to the light render — confirmed only chrome (background/text/grid) flips between themes, data colors are constant.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -70,50 +61,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 22px, axis labels 16px, ticks 14px,
-          annotations 15-19px); no overflow or clipping in either theme.
+        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks
+          14px, equation 15px, R² 19px); readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, annotation block, axes, and data.
+        comment: No text overlap; annotation block sits cleanly in top margin above
+          plot area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size (7px) and alpha (~0.67) well matched to 85-point density.
+        comment: Marker size 7 with alpha ~0.67 well-suited to 85-point density; regression
+          line at 3.5px with drop-shadow stays visible over overlapping points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green points vs. blue curve give strong contrast; no red-green sole
-          signal.
+        comment: Green vs lavender is high-contrast and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot area uses the majority of the canvas, nothing
-          cut off.
+        comment: Plot area occupies ~70-80% of canvas, balanced margins, edge crops
+          confirm no clipping on any side
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units (m).
+        comment: '''Horizontal Distance (m)'' / ''Height (m)'' both descriptive with
+          units'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73; regression line uses palette[2]
-          (blue, position 3) instead of canonical palette[1] (lavender, position 2)
-          with no clear semantic justification.'
+        passed: true
+        comment: 'First series #009E73, fit line canonical position 2 lavender, identical
+          across themes, theme-correct chrome/backgrounds in both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -121,24 +113,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful equation/R² annotation and color separation, clearly above
-          defaults, but not yet publication-ready.
+        comment: Thoughtful color + typography hierarchy, stroke-outlined R² for contrast,
+          clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid opacity override is deliberate; spines follow MUI X defaults
-          without further refinement.
+        comment: L-shaped spine, subtle grid (15% opacity), generous whitespace, drop-shadow
+          detail on regression line
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bold, color-matched R² and equation annotation creates a clear focal
-          point guiding the reader to the fit quality.
+        comment: Bold R² + equation callout creates a clear focal point on goodness-of-fit;
+          no additional annotation beyond that (not required by spec)
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -146,26 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter + quadratic polynomial regression curve.
+        comment: Scatter + polynomial regression curve, correct type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: R² prominent, distinct solid contrasting curve, moderate point transparency,
-          equation annotated; confidence band (optional) omitted.
+        comment: R² prominent, curve visually distinct (solid, contrasting lavender),
+          degree-2 default, alpha ~0.67, equation annotated
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = horizontal distance, Y = height, full data range shown.
+        comment: x=distance, y=height correctly mapped, axes show full data range
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format matches spec exactly; single-series so no legend needed.
+        comment: Title format exact match; no legend distinguishing the two series
+          (scatter vs. fit line)
     data_quality:
       score: 15
       max: 15
@@ -175,61 +168,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full parabolic arc from launch to landing shown with realistic scatter
-          noise.
+        comment: 'Full trajectory shown: rise, peak, and fall with realistic scatter
+          noise around the fit'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible physics (projectile trajectory) scenario.
+        comment: Projectile-motion physics scenario, neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Kinematic constants (g=9.81, plausible velocities) produce physically
-          consistent values.
+        comment: Gravity, launch velocity, and release height are all physically plausible
+          and self-consistent
     code_quality:
       score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: 6 helper functions (LCG, Box-Muller, Gauss-Jordan solver, polyFit,
-          evalPoly, formatSigned) depart significantly from a flat Imports→Data→Plot
-          flow.
+        passed: true
+        comment: Helper functions (LCG, polyFit, evalPoly) are necessary given no
+          numpy/scipy equivalent in-browser, but do deviate from strict flat structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG (seed=42).
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used @mui/x-charts imports.
+        comment: Only used @mui/x-charts imports
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: No fake UI/functionality; complexity is justified by the from-scratch
-          regression.
+        comment: Overall clean, but leftover conflicting tickFontSize prop is dead
+          code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default-exported component, skipAnimation
-          set, sized from window.ANYPLOT_SIZE.'
+        comment: Correct default export, skipAnimation set, harness contract respected
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -237,25 +228,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ChartContainer composition of ScatterPlot + LinePlot is the correct
-          idiomatic pattern for combining series types.
+        comment: Composable ChartContainer + individual plot components is the library's
+          advanced recommended pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom SVG text children within ChartContainer and ChartsGrid sx
-          overrides are MUI X-specific, but not a hallmark distinctive feature.
-  verdict: REJECTED
+        comment: Multi-series scatter+line composition via ChartContainer showcases
+          a feature distinctive to MUI X's architecture
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - regression
   styling:
   - alpha-blending
-  - grid-styling
