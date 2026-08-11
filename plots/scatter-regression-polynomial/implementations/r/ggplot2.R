@@ -4,7 +4,6 @@
 #' Quality: 88/100 | Created: 2026-08-11
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -89,7 +88,7 @@ p <- ggplot(df, aes(x = fertilizer_kg_ha, y = corn_yield_t_ha)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK, linewidth = 0.15),
+    panel.grid.major  = element_line(color = INK_SOFT, linewidth = 0.15),
     panel.grid.minor  = element_blank(),
     panel.border      = element_blank(),
     axis.title        = element_text(color = INK, size = 10),
