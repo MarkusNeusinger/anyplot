@@ -59,6 +59,15 @@ const yMax = Math.max(d3.max(diffs), upperLoA);
 const yPad = (yMax - yMin) * 0.12;
 const y = d3.scaleLinear().domain([yMin - yPad, yMax + yPad]).nice().range([ih, 0]);
 
+// --- Agreement-zone band (behind gridlines/points, frames ±1.96 SD) --------
+g.append("rect")
+  .attr("x", 0)
+  .attr("y", y(upperLoA))
+  .attr("width", iw)
+  .attr("height", y(lowerLoA) - y(upperLoA))
+  .attr("fill", t.ink)
+  .attr("fill-opacity", 0.05);
+
 // --- Gridlines (both axes, subtle) -----------------------------------------
 g.append("g")
   .attr("transform", `translate(0,${ih})`)
@@ -117,17 +126,18 @@ g.selectAll(".loa-label")
   .style("font-size", "15px")
   .text((d) => d.label);
 
-// --- Points -------------------------------------------------------------
+// --- Points (out-of-limit observations flagged in amber) -------------------
+const outOfLimits = (d) => d.diff > upperLoA || d.diff < lowerLoA;
 g.selectAll("circle")
   .data(pairs)
   .join("circle")
   .attr("cx", (d) => x(d.mean))
   .attr("cy", (d) => y(d.diff))
-  .attr("r", 7)
-  .attr("fill", t.palette[0])
-  .attr("fill-opacity", 0.55)
-  .attr("stroke", t.pageBg)
-  .attr("stroke-width", 1);
+  .attr("r", (d) => (outOfLimits(d) ? 9 : 7))
+  .attr("fill", (d) => (outOfLimits(d) ? t.amber : t.palette[0]))
+  .attr("fill-opacity", (d) => (outOfLimits(d) ? 0.85 : 0.55))
+  .attr("stroke", (d) => (outOfLimits(d) ? t.ink : t.pageBg))
+  .attr("stroke-width", (d) => (outOfLimits(d) ? 1.5 : 1));
 
 // --- Axis labels --------------------------------------------------------
 svg
