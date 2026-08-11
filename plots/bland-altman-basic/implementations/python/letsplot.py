@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-11
@@ -37,6 +37,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID_COLOR = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Imprint palette
 BRAND = "#009E73"  # Position 1 - first categorical series
@@ -73,8 +74,9 @@ band_df = pd.DataFrame(
     {"xmin": [df["mean"].min() - x_pad], "xmax": [df["mean"].max() + x_pad], "ymin": [lower_loa], "ymax": [upper_loa]}
 )
 
-# Annotation labels, right-aligned so they don't collide with the point cloud
-annot_x = df["mean"].max()
+# Annotation labels, right-aligned with extra headroom past the data range so the
+# label never sits on top of whichever point happens to be rightmost
+annot_x = df["mean"].max() + x_pad * 3
 y_offset = 1.0
 annot_df = pd.DataFrame(
     {
@@ -134,14 +136,14 @@ plot = (
     + labs(
         x="Mean of Two Methods (mmHg)",
         y="Difference (Method 1 - Method 2) (mmHg)",
-        title="bland-altman-basic · letsplot · anyplot.ai",
+        title="bland-altman-basic · python · letsplot · anyplot.ai",
     )
     + ggsize(800, 450)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid_major=element_line(color=INK, size=0.3, linetype="solid"),
+        panel_grid_major=element_line(color=GRID_COLOR, size=0.3, linetype="solid"),
         panel_grid_minor=element_blank(),
         plot_title=element_text(size=16, color=INK),
         axis_title=element_text(size=12, color=INK),
