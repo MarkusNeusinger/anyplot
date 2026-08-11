@@ -84,12 +84,36 @@ const rSquared = 1 - ssRes / ssTot;
 
 const xMin = Math.min(...fertilizer);
 const xMax = Math.max(...fertilizer);
+
+// Approximate 90% prediction band around the fit — reuses the standard OLS
+// leverage formula (se widens away from x̄) applied to the quadratic's
+// residual SE. Not the exact leverage of a 3-parameter design matrix, but a
+// close, honest visual approximation: pinches near the data's center of mass,
+// widens at the extremes.
+const xBar = fertilizer.reduce((a, b) => a + b, 0) / pointCount;
+const sxx = fertilizer.reduce((acc, x) => acc + (x - xBar) ** 2, 0);
+const residualStdErr = Math.sqrt(ssRes / (pointCount - 3)); // 3 fitted params
+const tCrit90 = 1.665; // ~90% two-tail critical value at df=77
+
 const curveSteps = 100;
 const curvePoints = [];
+const bandUpper = [];
+const bandLower = [];
 for (let i = 0; i <= curveSteps; i++) {
   const x = xMin + ((xMax - xMin) * i) / curveSteps;
-  curvePoints.push([x, predict(x)]);
+  const y = predict(x);
+  curvePoints.push([x, y]);
+  const se = residualStdErr * Math.sqrt(1 / pointCount + ((x - xBar) ** 2) / sxx);
+  bandUpper.push([x, y + tCrit90 * se]);
+  bandLower.push([x, y - tCrit90 * se]);
 }
+
+// Diminishing-returns onset: the dose past which the marginal yield gain has
+// fallen to a quarter of its initial (low-dose) rate — the agronomic point
+// where extra fertilizer stops paying off.
+const initialSlope = c1 + 2 * c2 * xMin;
+const thresholdSlope = 0.25 * initialSlope;
+const plateauStart = Math.min(Math.max((thresholdSlope - c1) / (2 * c2), xMin), xMax);
 
 const equation = `y = ${c2.toFixed(4)}x² ${c1 >= 0 ? "+" : "−"} ${Math.abs(c1).toFixed(3)}x ${c0 >= 0 ? "+" : "−"} ${Math.abs(c0).toFixed(2)}`;
 const fitSummary = `${equation}    |    R² = ${rSquared.toFixed(3)}`;
@@ -101,13 +125,41 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// Imprint "muted" semantic anchor — not in ANYPLOT_TOKENS on the JS side, so
+// it's hard-coded per prompts/default-style-guide.md (theme-adaptive).
+const muted = t.theme === "dark" ? "#A8A79F" : "#6B6A63";
+const bandFill = Highcharts.color(muted).setOpacity(0.16).get();
+
 // --- Chart -------------------------------------------------------------------
+// The 90% prediction band is drawn as a plain SVG path in the core renderer,
+// redrawn on every chart render — arearange lives in highcharts-more, which
+// isn't vendored here.
+let bandPath;
 Highcharts.chart("container", {
   chart: {
     type: "scatter",
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
+    events: {
+      render: function () {
+        const xAxis = this.xAxis[0];
+        const yAxis = this.yAxis[0];
+        const upper = bandUpper.map(
+          (p, i) => `${i === 0 ? "M" : "L"} ${xAxis.toPixels(p[0], false)} ${yAxis.toPixels(p[1], false)}`,
+        );
+        const lower = bandLower
+          .slice()
+          .reverse()
+          .map((p) => `L ${xAxis.toPixels(p[0], false)} ${yAxis.toPixels(p[1], false)}`);
+        const d = `${upper.join(" ")} ${lower.join(" ")} Z`;
+        if (bandPath) {
+          bandPath.attr({ d });
+        } else {
+          bandPath = this.renderer.path().attr({ d, fill: bandFill, zIndex: 2 }).add();
+        }
+      },
+    },
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -129,6 +181,20 @@ Highcharts.chart("container", {
     gridLineColor: t.grid,
     gridLineWidth: 1,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: [
+      {
+        from: plateauStart,
+        to: xMax,
+        color: hexToRgba(muted, 0.1),
+        label: {
+          text: "Diminishing returns",
+          verticalAlign: "top",
+          align: "center",
+          y: 16,
+          style: { color: t.inkSoft, fontSize: "12px", fontStyle: "italic" },
+        },
+      },
+    ],
   },
   yAxis: {
     title: {
@@ -154,7 +220,8 @@ Highcharts.chart("container", {
       name: "Field Trials",
       data: fertilizer.map((x, i) => [x, cropYield[i]]),
       color: hexToRgba(t.palette[0], 0.65),
-      marker: { radius: 5.5, lineWidth: 0 },
+      zIndex: 5,
+      marker: { radius: 5.5, lineWidth: 0.5, lineColor: t.pageBg },
     },
     {
       type: "spline",
@@ -162,7 +229,17 @@ Highcharts.chart("container", {
       data: curvePoints,
       color: t.palette[1],
       lineWidth: 3,
+      zIndex: 4,
       marker: { enabled: false },
+      enableMouseTracking: false,
+    },
+    {
+      type: "column",
+      name: "90% Prediction Band",
+      data: [],
+      color: bandFill,
+      legendSymbol: "rectangle",
+      showInLegend: true,
       enableMouseTracking: false,
     },
   ],
