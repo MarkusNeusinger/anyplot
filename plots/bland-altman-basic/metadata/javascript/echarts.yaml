@@ -1,0 +1,258 @@
+library: echarts
+language: javascript
+specification_id: bland-altman-basic
+created: '2026-08-11T11:12:57Z'
+updated: '2026-08-11T11:32:35Z'
+generated_by: claude-sonnet
+workflow_run: 31485151146
+issue: 2032
+language_version: 22.23.1
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Correct Bland-Altman construction retained: mean-vs-difference scatter, solid
+    bias line, dashed +-1.96 SD limit lines, all annotated with computed values directly
+    on the chart.'
+  - 'New in this attempt: a markArea shades the +-1.96 SD limits-of-agreement band
+    (opacity 0.08, brand green), giving the plot a clear ''in-range vs out-of-range''
+    visual story that was explicitly requested in the prior review.'
+  - Theme-adaptive chrome is correctly threaded through every element (title, axis
+    names, tick labels, grid, markLine/markArea colors and labels) - both renders
+    are fully readable with no dark-on-dark or light-on-light failures.
+  - 'Deterministic seeded PRNG (mulberry32, seed=42) produces reproducible synthetic
+    paired systolic-BP data with a realistic bias and spread; the sole data series
+    correctly uses Imprint brand green #009E73, identical across both themes.'
+  - All font sizes explicitly set per the echarts style guide; no clipping, no text
+    overlap; canvas is exactly 3200x1800.
+  weaknesses:
+  - 'The prior review''s ''full four-sided box border'' fix did NOT actually resolve
+    the issue: pixel inspection of both renders shows a full-width horizontal splitLine
+    at the exact top of the grid (y=200px of 1800, spanning x=220-2899 solid) and
+    a full-height vertical splitLine at the exact right edge of the grid (x=2900px
+    of 3200, spanning y=200-1619 solid) in addition to the real left+bottom axisLine
+    spines. The xMin/xMax and yMin/yMax padding plus showMinLabel/showMaxLabel:false
+    hid the boundary tick LABELS but not the boundary tick''s splitLine itself, so
+    the closed-rectangle look persists in both light and dark renders. To truly fix:
+    either increase the padding further so no computed tick lands within ~1px of xMin/xMax/yMin/yMax,
+    or explicitly suppress the boundary splitLine (e.g. clip via a slightly larger
+    min/max than any tick, or filter splitLine.lineStyle via an interval function).'
+  - 'Styling remains close to the well-configured-default tier: a single green scatter,
+    black/gray reference lines, and now a subtle LoA band. Distinctive ECharts features
+    (e.g. piecewise/visualMap coloring of out-of-range points, or a richer legend/callout)
+    are still not used.'
+  - 'Minor: with n=100 points and visible local clustering (e.g. near mean 100-115
+    mmHg), slightly larger markers or a thin light stroke on each point could better
+    separate overlapping observations.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: Title "bland-altman-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. X-axis name "Mean of Two Methods (mmHg)" and Y-axis name "Difference: Device - Reference (mmHg)" in dark ink; tick labels in softer gray-ink. A solid dark "Bias -2.5" line and two dashed gray "+1.96 SD 4.2" / "-1.96 SD -9.2" lines cross the plot with right-aligned text labels, all fully inside the canvas. A new pale-green markArea now shades the band between the two LoA lines. Grid lines are thin and subtle. Pixel inspection confirms a full-width splitLine sits exactly at the top of the grid (y=200px) and a full-height splitLine sits exactly at the right edge of the grid (x=2900px), in addition to the real dark left+bottom axis spines - so the plot still reads as a closed four-sided box rather than the style-guide's L-shaped default, despite this attempt's padding fix.
+      Data: ~100 scatter points in Imprint brand green (#009E73) at ~0.6 opacity, revealing overlap where points cluster.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black.
+      Chrome: Same title, axis names, and tick labels now rendered in light ink/off-white, clearly readable against the dark surface. Bias/LoA lines and their labels are rendered in light colors, no dark-on-dark text anywhere. The same top/right boundary splitLines are present (verified by pixel scan), matching the light render's box-frame artifact.
+      Data: Scatter points are the identical green (#009E73) as the light render - only the chrome (background, text, grid, box-frame lines) flipped, confirming palette consistency.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable at full size and both themes;
+          no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps other text or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: symbolSize 14 + alpha 0.6 works for n=100 but slightly small in dense
+          clusters
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue series with moderate alpha, CVD-safe, redundant text labels
+          on reference lines
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot occupies a large majority of the canvas, balanced margins, nothing
+          cut off, canvas exactly 3200x1800
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis names descriptive with units (mmHg)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical both themes; backgrounds and
+          chrome theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: The new LoA markArea band adds intentional hierarchy beyond a plain
+          default scatter+line, but overall still reads as a well-configured build
+          rather than exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: The prior review's requested fix for the full four-sided box border
+          did not work - pixel inspection confirms boundary splitLines still close
+          the frame on all four sides in both renders
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Shaded LoA band plus annotated bias/limit lines now give a clear
+          focal point and 'in-range vs out-of-range' story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Bland-Altman agreement plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bias line, dashed +-1.96 SD lines, annotations of values, moderate
+          transparency, and now a shaded LoA band all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = mean of methods, Y = difference, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend correctly omitted (single series)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows scatter, bias, and both LoA lines with annotated values plus
+          the shaded LoA zone
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic blood-pressure device validation scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Systolic BP range and bias/SD magnitudes are clinically plausible
+          and internally consistent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/init/option flow; PRNG helpers are necessary,
+          not over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded mulberry32 PRNG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global echarts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract; no explicit size/devicePixelRatio
+          passed to echarts.init
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic scatter + markLine + markArea composition, correct high-level
+          option API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markLine formatter labels plus a markArea LoA band together showcase
+          ECharts-specific declarative annotation features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
