@@ -92,6 +92,13 @@ for (const axis of [xAxis, yAxis]) {
 yAxis.selectAll(".tick line").attr("stroke", t.grid);
 
 // --- Bars ---------------------------------------------------------------------
+// Opacity fades from the leading language (full strength) down through the
+// long tail, giving the top result a visual focal point beyond sort order.
+const emphasis = d3
+  .scaleLinear()
+  .domain([d3.min(counts, (d) => d.count), d3.max(counts, (d) => d.count)])
+  .range([0.6, 1]);
+
 g.selectAll("rect")
   .data(counts)
   .join("rect")
@@ -99,7 +106,11 @@ g.selectAll("rect")
   .attr("y", (d) => y(d.count))
   .attr("width", x.bandwidth())
   .attr("height", (d) => ih - y(d.count))
-  .attr("fill", t.palette[0]);
+  .attr("fill", t.palette[0])
+  .attr("fill-opacity", (d) => emphasis(d.count))
+  .attr("stroke", t.ink)
+  .attr("stroke-opacity", 0.15)
+  .attr("stroke-width", 1);
 
 // --- Count labels above bars ---------------------------------------------------
 g.selectAll(".count-label")
