@@ -2,11 +2,11 @@ library: seaborn
 language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:16:16Z'
-updated: '2026-05-07T11:04:32Z'
-generated_by: claude-haiku
-workflow_run: 25491640512
+updated: '2026-08-11T11:00:46Z'
+generated_by: claude-sonnet
+workflow_run: 31483356471
 issue: 2032
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/seaborn/plot-dark.png
@@ -15,112 +15,122 @@ preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - Excellent visual quality across both light and dark themes with no legibility
-    failures
-  - 'Perfect theme-adaptive chrome: data colors stay identical while background/text/grid
-    flip correctly'
-  - Clean professional aesthetic with intentional design choices (spine removal, subtle
-    grid, theme tokens)
-  - Realistic well-chosen example data demonstrating Bland-Altman plot type
-  - Perfect spec compliance with all required features
-  - Clean reproducible code with explicit font sizing
+  - Correct Bland-Altman methodology with exact x/y mapping (mean of methods vs. method1
+    - method2) per spec.
+  - 'All required spec features present: bias line, ±1.96 SD dashed limits-of-agreement
+    lines, annotated numeric values, moderate-transparency points (alpha=0.7), plus
+    a shaded LoA envelope and marginal rug plot that go beyond the spec minimum.'
+  - Shaded band between the limits of agreement (axhspan) meaningfully strengthens
+    the visual hierarchy by giving the 95% agreement zone a single focal region.
+  - 'Theme-adaptive chrome correctly implemented — both renders pass the light/dark
+    legibility check, Imprint data colors (#009E73 / #C475FD) identical across themes.'
+  - Clean, reproducible, KISS-structured code (np.random.seed(42), no functions/classes);
+    canvas verified at exactly 3200×1800.
+  - Legend successfully relocated to lower-right, resolving the prior attempt's overlap
+    with the y-axis rug ticks.
   weaknesses:
-  - Limited distinctive use of seaborn-specific features; relies on matplotlib layer
-    for annotations and spine handling
-  - Visual storytelling is clear but lacks exceptional emphasis found in publication-ready
-    designs
+  - The relocated lower-right legend now clips two scatter points at its top-left
+    corner (visible in both plot-light.png and plot-dark.png, around x≈127-134, y≈-9
+    to -10) — a smaller residual version of the same class of issue flagged in attempt
+    1. Nudge the legend further right/down via bbox_to_anchor, or expand the y-axis
+    lower limit slightly so no marker falls under the box.
+  - Right-edge value annotations (7.1 / -1.9 / -10.9) stay at 8-9pt — legible but
+    on the small side relative to the 3200px canvas; a point or two larger would improve
+    balance with the 10-12pt axis/title text.
+  - 'Library mastery remains solid-but-conservative: the rug plot is a nice seaborn-native
+    touch, but no further seaborn-distinctive layering (e.g. a marginal KDE) was added
+    since attempt 1 to push LM-02 higher.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title, axis labels, tick labels all readable (dark INK/INK_SOFT tokens on light background)
-      Data: 80 green scatter points (#009E73), solid green mean line at -1.91 mmHg, dashed orange LoA lines at ±7.10/-10.91 mmHg, dotted gray reference at 0
-      Annotations: Right-side value labels in green (mean) and orange (LoA) clearly visible
-      Legibility verdict: PASS - All elements perfectly readable, no light-on-light failures
+      Background: Warm off-white, consistent with #FAF8F1, across the figure and inside the axes (outside the shaded LoA band).
+      Chrome: Title "bland-altman-basic · python · seaborn · anyplot.ai" centered at top in dark ink, fully legible. X-axis label "Mean of Two Methods (mmHg)" and Y-axis label "Difference (Method 1 - Method 2) (mmHg)" both dark ink with units, clearly readable. Tick labels dark grey, evenly balanced in size between axes. Subtle light grid lines visible on both axes without dominating.
+      Data: ~80 semi-transparent green (#009E73) scatter points with a thin off-white edge, a green rug plot along the left edge showing the marginal distribution of differences, a solid green bias line (mean: -1.91 mmHg), two dashed purple (#C475FD) limits-of-agreement lines (+7.10 / -10.91 mmHg) with a light purple shaded band between them, a dotted grey zero-reference line, and matching numeric annotations at the right edge of each horizontal line. Legend (lower-right) restates all three line values in an opaque cream box with dark border.
+      Legibility verdict: PASS — all title/axis/tick/legend/annotation text is dark-on-light and fully readable. One minor defect: two scatter points sit partly behind the top-left corner of the legend box (visible on close inspection, not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: All text rendered in light colors (INK_SOFT becomes #B8B7B0), readable against dark background
-      Data: Scatter points, mean line, and LoA lines IDENTICAL to light render (#009E73 and #D55E00 - data colors unchanged)
-      Legend: Adapted to dark theme with light text on dark background box
-      Legibility verdict: PASS - All elements readable, no dark-on-dark failures, data colors confirm perfect theme-independence
-
-    Both renders display identical data colors with correctly flipped chrome - a model implementation of theme-adaptive design.
+      Background: Warm near-black, consistent with #1A1A17, across the figure and inside the axes outside the shaded band; the shaded LoA band itself reads as a dark plum tint (intentional data-layer overlay, not a chrome error — axes facecolor confirmed correct outside the band).
+      Chrome: Title, axis labels, and tick labels have flipped to light/off-white ink and remain fully legible against the dark surface — no dark-on-dark failures. Grid lines are subtle but visible. Legend box uses a dark elevated background with light text and border, fully readable.
+      Data: Green scatter points, rug, bias line, and purple dashed LoA lines are pixel-identical in color to the light render — confirms only chrome adapted to theme, not data colors. Brand green #009E73 stays clearly visible against the dark background.
+      Legibility verdict: PASS — no dark-on-dark issues found. Same minor legend/data-point overlap as in the light render (identical layout, both themes affected equally).
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks);
-          perfectly readable in both themes
+        comment: All font sizes explicit, readable in both themes; right-edge value
+          annotations at 8-9pt are slightly small relative to canvas.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No overlapping text; all content fully readable
+        comment: Legend box (lower-right) partially clips two scatter points at its
+          top-left corner in both renders — minor residual overlap after repositioning
+          away from the rug.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 80 points with s=150 and alpha=0.7 perfectly adapted to density;
-          all markers clearly visible
+        comment: s=100, alpha=0.7 well-tuned for 80 points; matches VQ-03 guideline
+          for 30-100 point scatters.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast; colorblind-safe
+        comment: Green/purple pairing has good contrast; no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~70% of canvas with balanced margins; no cut-off
+        comment: Canvas verified at exactly 3200x1800; plot fills a large majority
+          of the canvas with balanced margins; legend sits near the plot, not isolated.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: X=''Mean of Two Methods (mmHg)'',
-          Y=''Difference (Method 1 - Method 2) (mmHg)'''
+        comment: Both axes descriptive with units (mmHg).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, LoA #D55E00, backgrounds #FAF8F1/#1A1A17,
-          theme-adaptive text, both renders perfect'
+        comment: 'First series #009E73, second #C475FD (canonical Imprint order);
+          backgrounds #FAF8F1/#1A1A17 correct in both themes; data colors identical
+          across themes.'
     design_excellence:
       score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Strong design with intentional colors and typography; above defaults
-          but not FiveThirtyEight-level
+        comment: Custom Imprint palette, shaded LoA envelope, rug plot, and annotated
+          values together read as clearly above library defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 6
-        max: 6
-        passed: true
-        comment: 'Perfect: spines removed, subtle grid, generous whitespace, polished
-          annotations'
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy guides reader; clear story but not exceptional
-          emphasis
+        comment: Spines removed, grid subtle, legend styled with elevated facecolor
+          — held back by the legend/data-point overlap that shows incomplete polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Shaded band + bold bias line + annotated values create a strong,
+          immediately readable focal point for the agreement zone.
     spec_compliance:
       score: 15
       max: 15
@@ -130,25 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bland-Altman with all subtypes
+        comment: Correct Bland-Altman / difference plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: scatter, mean, LoA, annotations'
+        comment: Bias line, ±1.96 SD dashed lines, annotated values, and moderate-transparency
+          points all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; all data visible
+        comment: x = mean(method1, method2), y = method1 - method2, correctly computed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Title matches the exact mandated format; legend labels match plotted
+          lines with values.
     data_quality:
       score: 15
       max: 15
@@ -158,19 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: scatter, mean, LoA, reference'
+        comment: Scatter, bias line, LoA lines, shaded band, annotations, and marginal
+          rug all present — comprehensive.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible medical scenario (BP measurements)
+        comment: Plausible sphygmomanometer comparison scenario, neutral framing.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean ~120, SD ~15, bias ~2, LoA ±7-11 all realistic
+        comment: n=80 within spec's 30-200 range; realistic BP magnitudes and a plausible
+          small systematic bias.
     code_quality:
       score: 10
       max: 10
@@ -180,47 +194,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow; no functions/classes
+        comment: Flat script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set; deterministic
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; all used
+        comment: os, sys, matplotlib.pyplot, numpy, seaborn all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Appropriate complexity, no fake UI/interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png at dpi=400 with facecolor, no bbox_inches='tight'.
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct but doesn't leverage seaborn's figure-level API
+        comment: Axes-level sns.scatterplot/sns.rugplot, sns.despine, sns.move_legend,
+          sns.set_theme rc mapping — idiomatic seaborn.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic usage; could easily transfer to matplotlib
+        comment: Rugplot is a nice seaborn-native touch tied to the LoA normality
+          assumption, but usage stays fairly conservative beyond that; no new distinctive
+          feature added since attempt 1.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -232,4 +249,5 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
