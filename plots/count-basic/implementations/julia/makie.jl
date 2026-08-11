@@ -41,6 +41,8 @@ categories = categories[order]
 tallies = tallies[order]
 
 n = length(categories)
+total_responses = sum(tallies)
+leading_share = round(Int, 100 * tallies[1] / total_responses)
 title_str = "count-basic · julia · makie · anyplot.ai"
 
 # --- Plot -----------------------------------------------------------------
@@ -53,7 +55,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = title_str,
-    titlesize          = 20,
+    titlesize          = 27,
     titlecolor         = INK,
     xlabel             = "Primary Device Used for Survey",
     ylabel             = "Number of Respondents",
@@ -77,14 +79,25 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-barplot!(ax, 1:n, tallies; color = BRAND, width = 0.65)
+# Leading category gets a subtle ink outline to draw the eye without
+# breaking the single brand-green palette rule.
+stroke_widths = zeros(Float64, n)
+stroke_widths[1] = 3.0
+barplot!(ax, 1:n, tallies; color = BRAND, width = 0.65,
+         strokewidth = stroke_widths, strokecolor = INK)
 
 for (i, count) in enumerate(tallies)
-    text!(ax, i, count; text = string(count), align = (:center, :bottom),
-          offset = (0, 6), color = INK_SOFT, fontsize = 13)
+    if i == 1
+        label = "$(count) ($(leading_share)% of responses)"
+        text!(ax, i, count; text = label, align = (:center, :bottom),
+              offset = (0, 8), color = INK, fontsize = 16)
+    else
+        text!(ax, i, count; text = string(count), align = (:center, :bottom),
+              offset = (0, 6), color = INK_SOFT, fontsize = 13)
+    end
 end
 
-ylims!(ax, 0, maximum(tallies) * 1.12)
+ylims!(ax, 0, maximum(tallies) * 1.18)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
