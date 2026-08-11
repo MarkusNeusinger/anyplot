@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-embedding: t-SNE and UMAP Embedding Visualization
 // Library: chartjs 4.4.7 | JavaScript 22.23.1
-// Quality: 86/100 | Created: 2026-08-11
+// Quality: 91/100 | Created: 2026-08-11
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
