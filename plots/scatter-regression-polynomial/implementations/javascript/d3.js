@@ -14,11 +14,6 @@ function rand() {
   seed = (seed * 1664525 + 1013904223) % 4294967296;
   return seed / 4294967296;
 }
-function randNormal() {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
 
 // Fertilizer application vs. crop yield — classic diminishing-returns curve:
 // yield rises with fertilizer, then plateaus and slightly declines (over-application).
@@ -26,8 +21,13 @@ const n = 85;
 const data = [];
 for (let i = 0; i < n; i++) {
   const fertilizer = 5 + rand() * 195;
-  const trueYield = 1.8 + 0.095 * fertilizer - 0.00032 * fertilizer * fertilizer;
-  const yieldTons = Math.max(0.2, trueYield + randNormal() * 0.9);
+  const trueYield =
+    1.8 + 0.095 * fertilizer - 0.00032 * fertilizer * fertilizer;
+  // Box-Muller normal noise, inlined (only used here)
+  const u1 = Math.max(rand(), 1e-9);
+  const u2 = rand();
+  const noise = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  const yieldTons = Math.max(0.2, trueYield + noise * 0.9);
   data.push({ fertilizer, yieldTons });
 }
 data.sort((a, b) => a.fertilizer - b.fertilizer);
@@ -101,7 +101,11 @@ const margin = { top: 130, right: 70, bottom: 100, left: 110 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
-const x = d3.scaleLinear().domain([0, xMax * 1.03]).nice().range([0, iw]);
+const x = d3
+  .scaleLinear()
+  .domain([0, xMax * 1.03])
+  .nice()
+  .range([0, iw]);
 const y = d3
   .scaleLinear()
   .domain([0, d3.max([...ys, ...curve.map((d) => d.yHigh)]) * 1.08])
@@ -109,8 +113,14 @@ const y = d3
   .range([ih, 0]);
 
 // --- SVG mount ------------------------------------------------------------
-const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
-const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+const svg = d3
+  .select("#container")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height);
+const g = svg
+  .append("g")
+  .attr("transform", `translate(${margin.left},${margin.top})`);
 
 // --- Gridlines (both axes — scatter plot) ----------------------------------
 g.append("g")
@@ -132,7 +142,11 @@ const bandArea = d3
   .y0((d) => y(d.yLow))
   .y1((d) => y(d.yHigh))
   .curve(d3.curveBasis);
-g.append("path").datum(curve).attr("d", bandArea).attr("fill", t.palette[1]).attr("opacity", 0.15);
+g.append("path")
+  .datum(curve)
+  .attr("d", bandArea)
+  .attr("fill", t.palette[1])
+  .attr("opacity", 0.11);
 
 // --- Axes -------------------------------------------------------------------
 const xAxis = g
@@ -170,6 +184,53 @@ g.append("path")
   .attr("fill", "none")
   .attr("stroke", t.palette[1])
   .attr("stroke-width", 3.5);
+
+// --- Hover guide (interactive HTML export only) -----------------------------
+// d3-array's bisector locates the nearest point along x in O(log n); a static
+// screenshot never fires mouse events, so this only activates in plot-*.html.
+const bisectFertilizer = d3.bisector((d) => d.fertilizer).left;
+const focus = g.append("g").style("display", "none");
+focus
+  .append("line")
+  .attr("y1", 0)
+  .attr("y2", ih)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-dasharray", "4,3");
+focus
+  .append("circle")
+  .attr("r", 9)
+  .attr("fill", "none")
+  .attr("stroke", t.palette[0])
+  .attr("stroke-width", 2.5);
+const focusLabel = focus
+  .append("text")
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600");
+
+g.append("rect")
+  .attr("width", iw)
+  .attr("height", ih)
+  .attr("fill", "none")
+  .attr("pointer-events", "all")
+  .on("mouseenter", () => focus.style("display", null))
+  .on("mouseleave", () => focus.style("display", "none"))
+  .on("mousemove", (event) => {
+    const x0 = x.invert(d3.pointer(event)[0]);
+    const i = bisectFertilizer(data, x0, 1);
+    const prev = data[i - 1];
+    const next = data[i] || prev;
+    const d = x0 - prev.fertilizer > next.fertilizer - x0 ? next : prev;
+    const px = x(d.fertilizer);
+    const nearRightEdge = iw - px < 140;
+    focus.attr("transform", `translate(${px},0)`);
+    focus.select("circle").attr("cy", y(d.yieldTons));
+    focusLabel
+      .attr("text-anchor", nearRightEdge ? "end" : "start")
+      .attr("x", nearRightEdge ? -14 : 14)
+      .attr("y", y(d.yieldTons) - 16)
+      .text(`${d.fertilizer.toFixed(0)} kg → ${d.yieldTons.toFixed(2)} t`);
+  });
 
 // --- Axis labels --------------------------------------------------------
 g.append("text")
@@ -229,16 +290,16 @@ box
 svg
   .append("text")
   .attr("x", width / 2)
-  .attr("y", 56)
+  .attr("y", 58)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "26px")
+  .style("font-size", "42px")
   .style("font-weight", "600")
   .text("scatter-regression-polynomial · javascript · d3 · anyplot.ai");
 svg
   .append("text")
   .attr("x", width / 2)
-  .attr("y", 90)
+  .attr("y", 100)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "17px")
