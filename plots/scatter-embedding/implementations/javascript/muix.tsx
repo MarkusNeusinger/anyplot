@@ -39,27 +39,38 @@ function hexToRgba(hex, alpha) {
 
 // --- Data: simulated UMAP projection of single-cell RNA-seq data -----------
 // 8 cell-type clusters scattered around distinct centroids in 2D embedding
-// space (the axes themselves carry no interpretable units).
+// space (the axes themselves carry no interpretable units). Point count and
+// spread vary per cluster — real UMAP/t-SNE embeddings show clusters of
+// differing size and compactness, not uniform blobs.
 const CLUSTERS = [
-  { label: "T cells", cx: -9, cy: 5 },
-  { label: "B cells", cx: 8, cy: 6.5 },
-  { label: "Monocytes", cx: -7, cy: -6.5 },
-  { label: "NK cells", cx: 9.5, cy: -4 },
-  { label: "Dendritic cells", cx: 0.5, cy: 10 },
-  { label: "Platelets", cx: -1, cy: -10 },
-  { label: "Erythrocytes", cx: -12, cy: -1 },
-  { label: "Neutrophils", cx: 13, cy: 1.5 },
+  { label: "T cells", cx: -9, cy: 5, spread: 1.9, n: 90 },
+  { label: "B cells", cx: 8, cy: 6.5, spread: 1.3, n: 65 },
+  { label: "Monocytes", cx: -7, cy: -6.5, spread: 2.1, n: 95 },
+  { label: "NK cells", cx: 9.5, cy: -4, spread: 1.4, n: 60 },
+  { label: "Dendritic cells", cx: 0.5, cy: 10, spread: 1.6, n: 70 },
+  { label: "Platelets", cx: -1, cy: -10, spread: 1.0, n: 55 },
+  { label: "Erythrocytes", cx: -12, cy: -1, spread: 1.75, n: 80 },
+  { label: "Neutrophils", cx: 13, cy: 1.5, spread: 1.5, n: 65 },
 ];
-const POINTS_PER_CLUSTER = 80;
-const SPREAD = 1.7;
 
 const clusterData = CLUSTERS.map((cluster) =>
-  Array.from({ length: POINTS_PER_CLUSTER }, (_, i) => ({
+  Array.from({ length: cluster.n }, (_, i) => ({
     id: `${cluster.label}-${i}`,
-    x: cluster.cx + randn() * SPREAD,
-    y: cluster.cy + randn() * SPREAD,
+    x: cluster.cx + randn() * cluster.spread,
+    y: cluster.cy + randn() * cluster.spread,
   })),
 );
+
+// Denser, tighter clusters get more transparency so overlapping cores stay
+// distinguishable; sparser clusters can afford to render more opaque.
+const densities = CLUSTERS.map((c) => c.n / (c.spread * c.spread));
+const MIN_DENSITY = Math.min(...densities);
+const MAX_DENSITY = Math.max(...densities);
+function alphaForCluster(cluster) {
+  const density = cluster.n / (cluster.spread * cluster.spread);
+  const t01 = (density - MIN_DENSITY) / (MAX_DENSITY - MIN_DENSITY || 1);
+  return 0.72 - t01 * 0.17; // 0.72 (sparse) -> 0.55 (dense)
+}
 
 const allPoints = clusterData.flat();
 const xs = allPoints.map((p) => p.x);
@@ -71,7 +82,7 @@ const X_MAX = Math.max(...xs) + xPad;
 const Y_MIN = Math.min(...ys) - yPad;
 const Y_MAX = Math.max(...ys) + yPad;
 
-const MARGIN = { top: 112, right: 250, bottom: 60, left: 60 };
+const MARGIN = { top: 120, right: 250, bottom: 60, left: 60 };
 
 // Centroid labels rendered at data coordinates via the live D3 scales — the
 // redundant color+text encoding required once a chart uses all 8 categorical
@@ -131,7 +142,7 @@ export default function Chart() {
         id: cluster.label,
         label: cluster.label,
         data: clusterData[i],
-        color: hexToRgba(t.palette[i], 0.68),
+        color: hexToRgba(t.palette[i], alphaForCluster(cluster)),
         markerSize: 5,
       }))}
       xAxis={[
@@ -178,10 +189,10 @@ export default function Chart() {
           },
         }}
       />
-      <text x={width / 2} y={40} textAnchor="middle" fontSize={22} fontWeight={600} fill={t.ink}>
+      <text x={width / 2} y={46} textAnchor="middle" fontSize={28} fontWeight={600} fill={t.ink}>
         {TITLE}
       </text>
-      <text x={width / 2} y={72} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
+      <text x={width / 2} y={82} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
         {SUBTITLE}
       </text>
     </ChartContainer>
