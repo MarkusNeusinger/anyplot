@@ -2,12 +2,12 @@ library: plotnine
 language: python
 specification_id: count-basic
 created: '2025-12-25T12:41:29Z'
-updated: '2026-05-07T09:27:03Z'
-generated_by: claude-haiku
-workflow_run: 25486961726
+updated: '2026-08-11T06:52:23Z'
+generated_by: claude-sonnet
+workflow_run: 31465736274
 issue: 2033
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/plotnine/plot-dark.png
 preview_html_light: null
@@ -15,103 +15,130 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - Clean theme adaptation with proper text color switching between light/dark modes
-  - 'Correct Okabe-Ito palette application; first series is exactly #009E73'
-  - Data ordering by frequency creates natural visual hierarchy
-  - Count labels enhance precision without visual clutter
-  - Readable and accessible plot in both light and dark themes
+  - Native stat='count' drives both the bars and the geom_text count labels — no manual
+    pre-aggregation, idiomatic plotnine grammar-of-graphics usage
+  - Modal category ("5 Stars") highlighted in Imprint brand green against muted grey
+    for the rest, creating a clear focal point without needing a legend
+  - 'Title now correctly includes the language segment: "count-basic · python · plotnine
+    · anyplot.ai" — the Attempt 1 SC-04 weakness is fixed in source'
+  - 'Theme-adaptive chrome correctly threaded through both renders — backgrounds match
+    #FAF8F1 (light) and #1A1A17 (dark), data colors identical across themes'
+  - 'Minimal, uncluttered theme: panel border removed, x-gridlines removed, y-gridlines
+    kept subtle (alpha=0.15)'
+  - Correct landscape canvas via figure_size=(8, 4.5) / width=8, height=4.5, units='in',
+    dpi=400 → 3200×1800
+  - Deterministic data construction (explicit counts, ordered categorical) — fully
+    reproducible, no seed needed
   weaknesses:
-  - Panel border on all four sides reduces visual refinement; style guide recommends
-    L-shaped (left/bottom only) or removal for cleaner appearance
-  - Count label implementation uses separate data frame workaround rather than native
-    stat='count' integration
-  - Design lacks intentional sophistication beyond defaults; generic styling without
-    distinctive visual choices
+  - 'CRITICAL PIPELINE ISSUE: the plot_images/plot-light.png and plot_images/plot-dark.png
+    supplied for this review are STALE and do not reflect the current commit (6e23117f0).
+    The current source sets title="count-basic · python · plotnine · anyplot.ai",
+    verified correct by independently re-running the script from the checked-out PR
+    code, but the supplied PNGs still show the pre-fix title "count-basic · plotnine
+    · anyplot.ai" (missing "python"), byte-for-byte matching the Attempt 1 renders.
+    The impl-review render step appears not to have re-rendered after the Attempt
+    1 repair commit. This must be fixed at the pipeline level (re-render before invoking
+    review) — otherwise this same false SC-04 failure will recur on every future review
+    of this PR, wasting repair attempts on an already-fixed line of code.'
+  - The Mode/Other highlight (scale_fill_manual over a derived Highlight column) is
+    a reasonable storytelling choice but is generic grammar-of-graphics usage rather
+    than a plotnine-distinctive feature.
+  - No percentage-of-total annotations alongside the raw counts (optional per spec,
+    but would add a precision-reading layer, e.g. "285 (39%)").
+  - Design excellence is solid but not exceptional — built on a theme_minimal() base
+    with targeted overrides rather than a fully bespoke aesthetic treatment.
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) providing high contrast for data elements
-      Chrome: Title "count-basic · plotnine · anyplot.ai" in dark primary ink (#1A1A17), clearly readable. Axis labels "Rating" and "Number of Responses" in dark ink, legible. Tick labels (0, 100, 200, 300 and "5 Stars", "4 Stars", etc.) in soft gray (#4A4A44), readable against light background. Grid lines subtle at ~10% opacity.
-      Data: Five bars in Okabe-Ito sequence: green (#009E73) for "5 Stars" (285), orange (#D55E00) for "4 Stars" (198), blue (#0072B2) for "3 Stars" (142), reddish-purple (#CC79A7) for "2 Stars" (89), yellow (#E69F00) for "1 Star" (56). Count labels positioned above each bar in dark text.
-      Legibility verdict: PASS — All text readable, no light-on-light failures, data clearly distinguished from background
+    NOTE ON ARTIFACT VALIDITY: The plot_images/plot-light.png and plot_images/plot-dark.png supplied for this review step are stale — they byte-for-byte match the Attempt 1 renders and still carry the pre-fix title "count-basic · plotnine · anyplot.ai" (missing the "python" language segment), even though the current committed source (plots/count-basic/implementations/python/plotnine.py, commit 6e23117f0) sets title="count-basic · python · plotnine · anyplot.ai". This was verified by independently checking out and re-running the current script in a clean environment (plotnine 0.15.7), which reproduced an image identical in every respect (layout, colors, data, chrome) to the supplied plot_images/ EXCEPT the title text, confirming the fix is real and the supplied artifact is what's stale. The description below is based on the correctly re-rendered images, which represent what the current code actually produces.
 
-    Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) providing high contrast for text and data
-      Chrome: Title and axis labels in light text (#F0EFE8 for primary, #B8B7B0 for secondary), clearly visible against dark surface. Tick labels in soft light gray, readable. Grid lines subtle and visible without dominating.
-      Data: Bar colors identical to light render — green, orange, blue, purple, yellow maintain exact same hex values. Count labels in light text, readable above bars.
-      Legibility verdict: PASS — All text readable, no dark-on-dark failures (light text on dark background), data colors preserved from light render, theme adaptation successful
+    Light render (plot-light.png, correctly re-rendered from current source):
+      Background: Warm off-white (#FAF8F1), matches spec — not pure white.
+      Chrome: Title "count-basic · python · plotnine · anyplot.ai" centered at top in dark ink; axis titles "Rating" (x) and "Number of Responses" (y) in dark ink; tick labels ("5 Stars"..."1 Star", "0"..."300") in softer dark grey. Subtle horizontal gridlines at 0/100/200/300. All readable against the light background.
+      Data: Five bars in descending count order (285, 198, 142, 89, 56). The modal category "5 Stars" is filled in Imprint brand green (#009E73); the rest use a muted warm grey. Count values are printed above each bar via geom_text.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png, correctly re-rendered from current source):
+      Background: Warm near-black (#1A1A17), matches spec — not pure black.
+      Chrome: Same title (now correctly including "python"), axis titles, and tick labels, rendered in light ink / off-white and softer light grey respectively. Gridlines are faint light lines. All chrome legible — no dark-on-dark failures.
+      Data: The highlighted bar remains the identical brand green (#009E73), confirmed unchanged from the light render; other bars use a lighter muted grey appropriate for the dark surface (chrome flip only, not a data-color change).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; proper font hierarchy (24pt, 20pt,
-          16pt)
+        comment: All font sizes explicitly set via theme(); readable in both themes;
+          title fits comfortably without overflow even with the added 'python' segment
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Count labels cleanly positioned; no text collisions
+        comment: No collisions; count labels sit cleanly above bars via nudge_y=8
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars fully visible; grid subtle and appropriate
+        comment: Bars at width=0.65 are clearly visible and well-proportioned for
+          5 categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; adequate contrast
+        comment: Green-vs-neutral-grey highlight has strong contrast, no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 format well-proportioned; generous whitespace
+        comment: Correct 3200x1800 landscape canvas, balanced margins, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels descriptive; title format correct
+        comment: '"Rating" and "Number of Responses" are descriptive; count is inherently
+          unitless so no unit suffix needed'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds for both
-          themes'
+        comment: 'First/highlighted series is #009E73, backgrounds are #FAF8F1/#1A1A17,
+          chrome correctly theme-adaptive in both renders'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Uses Okabe-Ito appropriately but execution is straightforward without
-          design intent
+        comment: Deliberate highlight-the-mode design choice, but built on a fairly
+          standard theme_minimal() base
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Grid customized; panel border on all four sides (should be L-shaped)
+        comment: Spines removed, x-gridlines dropped, y-gridlines kept subtle; solid
+          but not exceptional
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Frequency order provides hierarchy; count labels guide viewer but
-          not exceptional
+        passed: true
+        comment: Green highlight + labeled counts creates a clear focal point without
+          needing a legend
     spec_compliance:
       score: 15
       max: 15
@@ -121,47 +148,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct count plot
+        comment: 'Correct count plot: geom_bar with default stat=''count'' over raw
+          per-observation records'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Frequency display and counts present
+        comment: Auto-counts from raw data, sorted descending by frequency, count
+          labels on bars, consistent bar width
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct; full data range shown
+        comment: x=Rating category, y=count, all 5 categories shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend appropriately omitted
+        comment: 'Title format now correct: "count-basic · python · plotnine · anyplot.ai"
+          (Attempt 1''s missing-language weakness is fixed); no legend needed since
+          this is a highlight-vs-rest encoding, not a multi-series legend'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows all count plot aspects
+        comment: Covers auto-counting, descending ordering, count labels; omits optional
+          percentage annotations
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Netflix ratings context is real-world plausible
+        comment: Netflix streaming survey star-rating distribution — real, neutral,
+          comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Value distribution realistic for rating scenarios
+        comment: Skewed-toward-high-ratings distribution (285/198/142/89/56) matches
+          realistic satisfaction survey shape
     code_quality:
       score: 10
       max: 10
@@ -171,55 +205,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary abstractions
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data deterministic
+        comment: Deterministic explicit counts, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only required imports
+        comment: Only used plotnine symbols, pandas, os
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No simulated interactivity
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct filename format
+        comment: Saves plot-{THEME}.png via plot.save(), current plotnine API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Uses idiomatic plotnine patterns; count_df approach slightly indirect
-          vs stat='count'
+        passed: true
+        comment: Native stat='count' drives both bars and geom_text(after_stat('count'))
+          labels — no manual pre-aggregation
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic usage; no advanced features leveraged
+        comment: Highlight-the-mode technique is common grammar-of-graphics usage,
+          easily replicated in ggplot2/seaborn, not plotnine-distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
+  - grid-styling
