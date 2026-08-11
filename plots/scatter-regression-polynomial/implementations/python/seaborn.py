@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-11
@@ -46,6 +46,10 @@ ss_tot = np.sum((y - np.mean(y)) ** 2)
 r2 = 1 - (ss_res / ss_tot)
 a, b, c = coeffs
 
+# Vertex of the fitted parabola — the "diminishing returns" peak the spec calls out
+x_peak = -b / (2 * a)
+y_peak = poly(x_peak)
+
 # Plot setup with theme-adaptive styling
 sns.set_theme(
     style="ticks",
@@ -76,7 +80,7 @@ sns.regplot(
     order=2,
     ci=95,
     ax=ax,
-    scatter_kws={"s": 110, "alpha": 0.65, "color": BRAND, "edgecolor": PAGE_BG, "linewidths": 0.5},
+    scatter_kws={"s": 75, "alpha": 0.6, "color": BRAND, "edgecolor": PAGE_BG, "linewidths": 0.5},
     line_kws={"color": ACCENT, "linewidth": 3},
 )
 
@@ -90,14 +94,25 @@ legend_handles = [
         markerfacecolor=BRAND,
         markeredgecolor=PAGE_BG,
         markersize=9,
-        alpha=0.65,
+        alpha=0.6,
         label="Building Data",
     ),
     Line2D([0], [0], color=ACCENT, linewidth=3, label="Polynomial Fit (degree 2)"),
-    Patch(facecolor=ACCENT, alpha=0.15, edgecolor="none", label="95% Confidence Band"),
+    Patch(facecolor=ACCENT, alpha=0.35, edgecolor=ACCENT, linewidth=0.8, label="95% Confidence Band"),
 ]
 ax.legend(
     handles=legend_handles, fontsize=8, loc="upper left", framealpha=0.9, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
+)
+
+# Callout at the curve's vertex — reinforces the "diminishing returns" story
+ax.plot([x_peak], [y_peak], marker="o", markersize=7, markerfacecolor="none", markeredgecolor=INK, markeredgewidth=1.5)
+ax.annotate(
+    "Peak efficiency",
+    xy=(x_peak, y_peak),
+    xytext=(x_peak + 2.5, y_peak - 8),
+    fontsize=8,
+    color=INK_SOFT,
+    arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.8},
 )
 
 # Equation and R² annotation with theme-adaptive box
