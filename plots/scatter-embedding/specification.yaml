@@ -6,7 +6,7 @@ title: t-SNE and UMAP Embedding Visualization
 
 # Specification tracking
 created: "2026-04-11T20:22:05Z"
-updated: null
+updated: "2026-08-11T00:00:00Z"
 issue: 5236
 suggested: MarkusNeusinger
 
@@ -21,7 +21,9 @@ tags:
   domain:
     - machine-learning
     - science
+    - bioinformatics
   features:
     - color-mapped
     - annotated
     - 2d
+    - clustering
