@@ -1,7 +1,7 @@
 """ anyplot.ai
 count-basic: Basic Count Plot
 Library: bokeh 3.9.2 | Python 3.13.14
-Quality: 93/100 | Updated: 2026-08-11
+Quality: 91/100 | Updated: 2026-08-11
 """
 
 import os
@@ -14,7 +14,7 @@ sys.path = [p for p in sys.path if "implementations" not in p]  # noqa: E402
 
 import numpy as np  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource, LabelSet  # noqa: E402
+from bokeh.models import ColumnDataSource, HoverTool, LabelSet  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from selenium import webdriver  # noqa: E402
 from selenium.webdriver.chrome.options import Options  # noqa: E402
@@ -43,7 +43,8 @@ categories, counts = np.unique(orders, return_counts=True)
 sorted_indices = np.argsort(-counts)
 categories = categories[sorted_indices].tolist()
 counts = counts[sorted_indices].tolist()
-leading_share = counts[0] / sum(counts) * 100
+total_orders = sum(counts)
+leading_share = counts[0] / total_orders * 100
 
 # Create data source (explicit per-bar fill color list, never a bare scalar,
 # so every bar unambiguously resolves to the same brand green)
@@ -52,6 +53,7 @@ source = ColumnDataSource(
         "category": categories,
         "count": counts,
         "label": [str(c) for c in counts],
+        "share": [c / total_orders * 100 for c in counts],
         "fill_color": [BRAND] * len(categories),
         "callout": [f"{leading_share:.0f}% of all orders"] + [""] * (len(categories) - 1),
     }
@@ -76,7 +78,7 @@ p = figure(
 
 # Plot bars with brand green — fill_color/line_color set explicitly (not the
 # "color=" shorthand) so every bar resolves the same fill unambiguously.
-p.vbar(
+bars = p.vbar(
     x="category",
     top="count",
     source=source,
@@ -88,6 +90,15 @@ p.vbar(
     nonselection_fill_color="fill_color",
     nonselection_fill_alpha=0.85,
     nonselection_line_color=INK_SOFT,
+)
+
+# Hover detail beyond the bare default — exact count plus each category's
+# share of the 500-order sample, without altering the static PNG (the chart
+# stays a basic count plot; only the interactive HTML gains this detail).
+p.add_tools(
+    HoverTool(
+        renderers=[bars], tooltips=[("Category", "@category"), ("Orders", "@count"), ("Share of total", "@share{0.0}%")]
+    )
 )
 
 # Add count labels above bars
