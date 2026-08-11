@@ -2,126 +2,151 @@ library: plotnine
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:24:14Z'
-updated: '2026-05-07T10:42:39Z'
+updated: '2026-08-11T09:11:16Z'
 generated_by: claude-sonnet
-workflow_run: 25489880356
+workflow_run: 31475145185
 issue: 5236
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - Perfect visual quality — all font sizes explicitly set, both themes fully legible
-  - Full spec compliance — algorithm subtitle, suppressed tick labels, alpha transparency
-    all present
-  - Excellent code quality — KISS structure, dual random seeds, pd.Categorical for
-    ordered legend
-  - 'Palette fully correct — Okabe-Ito canonical order starting with #009E73, both
-    theme chromes adapt correctly'
+  - Title now correctly reads 'scatter-embedding · python · plotnine · anyplot.ai',
+    fixing the missing language token flagged in the previous review
+  - 'Canonical Imprint palette in correct order across all six clusters, first series
+    is #009E73, identical data colors between light and dark renders'
+  - 'Theme-adaptive chrome is correctly threaded through: warm off-white / warm near-black
+    backgrounds, all text and legend box colors flip correctly with no dark-on-dark
+    or light-on-light failures'
+  - Direct centroid labeling via geom_label plus 68% stat_ellipse contours gives the
+    plot a genuine visual hierarchy — a viewer can identify each cluster without cross-referencing
+    the legend
+  - coord_fixed(ratio=1) is a thoughtful, correct choice for an embedding scatter
+    plot — prevents the 2D projection from being visually distorted
+  - Realistic, neutral single-cell RNA-seq scenario (spec's own suggested application)
+    with 6 cell-type clusters showing both well-separated groups (T cells, Monocytes)
+    and realistically adjacent/overlapping ones (NK cells/Neutrophils, B cells/Dendritic
+    cells)
+  - Subtitle correctly reports algorithm and key parameter ('t-SNE (perplexity=30)
+    · 1200 cells · 6 clusters') per spec requirement, and axes correctly omit tick
+    labels since t-SNE coordinates aren't directly interpretable
+  - 'Clean, reproducible, KISS-structured code: fixed seeds throughout, only used
+    imports, no functions/classes'
   weaknesses:
-  - Panel retains all 4 spines via panel_border instead of L-shaped frame — remove
-    top/right spines
-  - No visual storytelling — clusters equal-weighted with no emphasis or centroid
-    annotations
-  - Generic Cluster N labels lack real-world domain context (cell types, document
-    topics, etc.)
-  - No distinctive plotnine features — missed coord_fixed() for equal-aspect t-SNE
-    axes and stat_ellipse() for cluster boundaries
+  - 'The legend title ''Cluster'' still touches/overlaps its own box''s top and left
+    border in BOTH the light and dark render (the ''C'' crosses the left border line,
+    ascenders touch the top border line). The attempted fix in this attempt (adding
+    legend_margin=10) did NOT resolve it — legend_margin controls the outer spacing
+    between the legend box and the plot panel, not the internal padding between the
+    legend title text and its own border. Fix: add internal padding directly on the
+    title text, e.g. legend_title=element_text(color=INK, size=9, margin={''b'': 6,
+    ''l'': 6}), or increase legend_key_size / legend box width so the title has room
+    to clear the border.'
+  - NK cells (orange) and Neutrophils (cyan) clusters, and separately B cells (purple)
+    and Dendritic cells (red) clusters, still overlap heavily enough that the two
+    ellipses and centroid labels in each pair sit very close together — still readable
+    but slightly muddies the at-a-glance cluster separation story; this was flagged
+    in the previous review and not addressed in this attempt. Consider nudging label
+    positions apart or increasing point alpha contrast between adjacent clusters if
+    repair touches this area.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "scatter-embedding · plotnine · anyplot.ai" in dark ink, clearly readable. Subtitle in INK_SOFT, readable. Axis labels "t-SNE Dimension 1/2" in dark ink, readable. No tick labels (intentional per spec). Legend box with elevated background, cluster labels in INK_SOFT.
-      Data: 6 clusters in Okabe-Ito order — Cluster 1 teal-green (#009E73), Cluster 2 vermillion-orange (#D55E00), Cluster 3 blue (#0072B2), Cluster 4 reddish-purple (#CC79A7), Cluster 5 gold-orange (#E69F00), Cluster 6 sky blue (#56B4E9). Points size=2.5 alpha=0.7 across 1200 total points.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "scatter-embedding · python · plotnine · anyplot.ai" in dark ink, clearly legible and now includes the correct language token; subtitle "t-SNE (perplexity=30) · 1200 cells · 6 clusters" in softer gray, legible; axis titles "t-SNE Dimension 1" / "t-SNE Dimension 2" in dark ink, legible; no axis tick labels (intentional per spec, since t-SNE coordinates are not directly interpretable); subtle light grid lines; legend box titled "Cluster" on the right with a light cream fill and dark border, listing all 6 cluster names with matching color swatches — all legend text legible, though the "Cluster" title text still touches the box's top/left border (unresolved padding bug, see weaknesses).
+      Data: Six clusters shown as semi-transparent (alpha 0.7) circular points — T cells (#009E73 green, top-right, well separated, with one natural t-SNE outlier point near the NK/Neutrophils region), B cells (#C475FD purple) and Dendritic cells (#AE3030 red) adjacent/overlapping (left-center), Monocytes (#4467A3 blue, bottom-left, well separated), NK cells (#BD8233 ochre) and Neutrophils (#2ABCCD cyan) adjacent/overlapping (bottom-right). Each cluster has a dashed 68%-confidence ellipse and a bold centroid label in a light box. First series is confirmed #009E73.
+      Legibility verdict: PASS (all text readable against the light background; the legend-title/border touch is a design nit, not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
-      Chrome: Title, subtitle, and axis labels rendered in light cream/off-white text (#F0EFE8 equivalent). All clearly readable against the dark background. Legend box uses elevated dark surface #242420. No dark-on-dark failures detected.
-      Data: All 6 cluster colors identical to light render — data colors preserved across themes as required. Brand green #009E73 (Cluster 1) clearly visible against dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and subtitle rendered in light ink (white/soft-white), clearly legible against the dark background; axis titles light-colored and legible; grid lines subtle light-gray on dark; legend box has a dark fill with light border and light text — all legible. Centroid label boxes correctly flip to a dark fill with white bold text — no dark-on-dark failure. Same "Cluster" legend-title/border touch issue reproduces here, confirming it is a fixed-position layout bug rather than a theme-specific issue, and confirming legend_margin=10 did not change the internal title padding.
+      Data: Same six cluster colors as the light render — #009E73 green (T cells), #C475FD purple (B cells), #4467A3 blue (Monocytes), #BD8233 ochre (NK cells), #AE3030 red (Dendritic cells), #2ABCCD cyan (Neutrophils) — confirmed identical to light render; only chrome (background/text/legend fill) changed between themes.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures found in either the main chrome or the centroid label boxes).
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, subtitle=16,
-          legend=16/18. Both renders fully legible.'
+        comment: All font sizes explicitly set, readable in both themes, no dark-on-dark;
+          minor legend-title padding issue counted under VQ-02/VQ-05
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No tick labels by design; no legend/data collisions.
+        comment: '''Cluster'' legend title text still touches/overlaps its own box
+          border in both renders despite the attempted legend_margin fix; all other
+          text is clear of overlap'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 1200 points at size=2.5, alpha=0.7. Well-separated clusters, points
-          clearly visible.
+        comment: Point size/alpha well adapted to ~200 points per cluster; ellipses
+          aid density perception without clutter
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Full Okabe-Ito palette, colorblind-safe. Good luminance contrast
-          between all series.
+        comment: 6 CVD-safe hues from the Imprint palette, plus direct text labels
+          reduce reliance on hue alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas well utilized. Data ~70% width with legend alongside. Balanced
-          margins.
+        comment: Good canvas utilization and balanced margins overall; legend internal
+          padding around its title remains cramped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: t-SNE Dimension 1/2 descriptive; no units needed for unitless embedding
-          coordinates.
+        comment: Descriptive axis titles; units correctly omitted since t-SNE coordinates
+          are not directly interpretable, per spec
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order, backgrounds #FAF8F1/#1A1A17,
-          all chrome theme-adaptive.'
+        comment: 'Canonical Imprint order, first series #009E73, identical across
+          themes, theme-correct backgrounds/chrome'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: Well-configured above defaults with proper color hierarchy. Panel
-          retains all 4 borders instead of L-shape; no centroid labels or special
-          design choices.
+        comment: Thoughtful palette use, coord_fixed aspect-ratio choice, layered
+          ellipse+label composition — above default but not fully publication-perfect
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Subtle grid alpha=0.10, minor grid removed, tick marks/labels eliminated.
-          Deduction: panel_border retains all four spines.'
+        comment: Subtle grid, spines/border removed, generous whitespace, but the
+          legend-title padding bug shows a lapse in polish that survived a repair
+          attempt
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data cleanly displayed but no focal emphasis, no centroid annotations,
-          no visual hierarchy beyond equal treatment of 6 clusters.
+        passed: true
+        comment: Direct centroid labeling + confidence ellipses create clear visual
+          hierarchy; slightly muddied where NK/Neutrophils and B/Dendritic clusters
+          overlap
     spec_compliance:
       score: 15
       max: 15
@@ -131,29 +156,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with t-SNE embedding, 6 clusters.
+        comment: Correct 2D embedding scatter plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: cluster color coding, legend, alpha, subtitle with
-          algorithm+parameter, tick labels suppressed.'
+        comment: Distinct CVD-safe colors + legend, centroid annotations, moderate
+          size+alpha, algorithm/parameter subtitle, no tick labels — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: tsne_1→X, tsne_2→Y, Cluster→color, full data range shown.
+        comment: x/y correctly mapped to tsne_1/tsne_2, axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format scatter-embedding · plotnine · anyplot.ai.
-          Legend Cluster 1-6 correct.
+        comment: Title now matches the mandated '{spec-id} · {language} · {library}
+          · anyplot.ai' format exactly, including the previously-missing 'python'
+          token; legend labels correct
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -161,22 +187,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 well-separated clusters in varied spatial positions show t-SNE
-          behavior comprehensively.
+        comment: Shows both well-separated and realistically adjacent/overlapping
+          clusters across 6 groups
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Cluster 1-6 labels are generic/abstract equivalent to Group 1-6.
-          Plausible but lacks domain grounding.
+        comment: Neutral, real single-cell RNA-seq cell-type clustering scenario,
+          matching the spec's own suggested application
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1200 points, 6 clusters, perplexity=30, cluster_std=1.2 — all appropriate
-          for t-SNE demo.
+        comment: 1200 cells across 6 clusters is a sensible, realistic scale for this
+          domain
     code_quality:
       score: 10
       max: 10
@@ -186,59 +212,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → theme tokens → data → plot → save.'
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42), TSNE(random_state=42), make_blobs(random_state=42).
+        comment: np.random.seed(42) plus random_state=42 on make_blobs and TSNE
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; both sklearn.datasets and sklearn.manifold exercised.
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity. pd.Categorical for ordered legend
-          is a nice touch.
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at dpi=300. Current plotnine API.
+        comment: plot.save(f'plot-{THEME}.png', ...) — current API, correct naming
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic grammar-of-graphics layering: geom_point + stat_ellipse
+          + geom_label + scale_color_manual + coord_fixed'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar, pd.Categorical for ordered factor levels,
-          proper element_blank()/element_rect() usage. Missed coord_fixed() for equal-aspect
-          t-SNE.
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: 'Standard ggplot pattern. Missed: stat_ellipse() for cluster boundaries,
-          coord_fixed() for equal aspect, geom_label() for centroid annotations.'
+        comment: stat_ellipse density contours and inherit_aes=False geom_label direct-labeling
+          are distinctive grammar-of-graphics techniques
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
+  - groupby-aggregation
   dataprep:
   - tsne
   styling:
   - alpha-blending
+  - minimal-chrome
