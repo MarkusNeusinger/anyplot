@@ -54,10 +54,24 @@ const categories = sortedEntries.map(([category]) => category);
 const counts = sortedEntries.map(([, count]) => count);
 const meanCount = counts.reduce((sum, c) => sum + c, 0) / counts.length;
 
+// Leading category vs. the average — surfaces the takeaway instead of leaving
+// the viewer to read it off the bars themselves.
+const topCategory = categories[0];
+const pctAboveAvg = Math.round(((counts[0] - meanCount) / meanCount) * 100);
+
+// The y-axis label's offset from the axis line is computed internally by MUI X
+// as `tickFontSize + tickSize + 10` (not from tickLabelStyle.fontSize, the
+// prop that actually sets the rendered glyph size) — so tickFontSize has to be
+// sized to clear the widest tick number, or the label collides with it. Scale
+// it off the real digit count instead of a fixed magic number so the offset
+// stays correct if the data range changes.
+const yTickDigits = String(Math.max(...counts)).length;
+const yTickFontSize = 12 + yTickDigits * 8;
+
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width; // 1600 CSS px (landscape mount)
   const H = window.ANYPLOT_SIZE.height; // 900 CSS px
-  const CHART_TOP = 84;
+  const CHART_TOP = 108;
 
   return (
     <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
@@ -65,6 +79,14 @@ export default function Chart() {
       <Box sx={{ position: "absolute", top: 24, left: 56, right: 56 }}>
         <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 500 }}>
           count-basic · javascript · muix · anyplot.ai
+        </Typography>
+      </Box>
+
+      {/* Subtitle: surfaces the takeaway directly rather than leaving the
+          viewer to read the sort order + average line themselves. */}
+      <Box sx={{ position: "absolute", top: 58, left: 56, right: 56 }}>
+        <Typography sx={{ color: t.inkSoft, fontSize: 15, fontWeight: 400 }}>
+          {topCategory} tickets run {pctAboveAvg}% above the category average
         </Typography>
       </Box>
 
@@ -103,9 +125,9 @@ export default function Chart() {
               tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
               // tickFontSize only sizes the *reserved layout offset* between the
               // tick labels and the axis label (tickLabelStyle.fontSize above
-              // wins for the rendered glyph size) — bumped so 3-digit counts
-              // don't collide with the vertical "Number of Tickets" label.
-              tickFontSize: 36,
+              // wins for the rendered glyph size) — derived from yTickFontSize
+              // above so it stays correct if the data range changes.
+              tickFontSize: yTickFontSize,
               disableTicks: true,
               disableLine: true,
               max: Math.max(...counts) * 1.15,
@@ -117,7 +139,21 @@ export default function Chart() {
           grid={{ horizontal: true }}
           slotProps={{
             legend: { hidden: true },
-            barLabel: { style: { fontSize: 15, fontWeight: 600, fill: t.ink } },
+            // The leading category (dataIndex 0, since bars are sorted
+            // descending) gets a slightly bolder/larger label — a focal-point
+            // emphasis that reinforces the subtitle without changing the
+            // brand-green fill, so data color stays identical across themes.
+            barLabel: (ownerState) => ({
+              style: {
+                fontSize: ownerState.dataIndex === 0 ? 17 : 15,
+                fontWeight: ownerState.dataIndex === 0 ? 700 : 600,
+                fill: t.ink,
+              },
+            }),
+            // A thin ink-colored stroke crisps the bar edges against the page
+            // background — the style guide's sanctioned outline pattern, not
+            // a color/gradient change, so it doesn't affect data color parity.
+            bar: { style: { stroke: t.ink, strokeOpacity: 0.15, strokeWidth: 1 } },
           }}
           sx={{
             "& .MuiChartsGrid-line": { stroke: t.grid },
