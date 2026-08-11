@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-08-11
@@ -38,16 +38,42 @@ y_fit = poly(x_fit)
 
 # Calculate R²
 y_pred = poly(outdoor_temp)
-ss_res = np.sum((energy_consumption - y_pred) ** 2)
+residuals = energy_consumption - y_pred
+ss_res = np.sum(residuals**2)
 ss_tot = np.sum((energy_consumption - np.mean(energy_consumption)) ** 2)
 r_squared = 1 - (ss_res / ss_tot)
 
-# Format polynomial equation
+# 95% confidence band around the fit, from the residual spread
+residual_std = np.std(residuals)
+y_upper = y_fit + 1.96 * residual_std
+y_lower = y_fit - 1.96 * residual_std
+
+# Format polynomial equation with explicit sign handling (avoids "+ -3.63x")
 a, b, c = coeffs
-equation = f"y = {a:.4f}x² + {b:.2f}x + {c:.1f}"
+sign_b = "-" if b < 0 else "+"
+sign_c = "-" if c < 0 else "+"
+equation = f"y = {a:.4f}x² {sign_b} {abs(b):.2f}x {sign_c} {abs(c):.1f}"
+
+# Curve vertex - the "balance point" temperature where energy use is minimized
+vertex_x = -b / (2 * a)
+vertex_y = poly(vertex_x)
 
 # Create figure
 fig = go.Figure()
+
+# Confidence band (drawn first so it sits behind the scatter and fit line)
+fig.add_trace(
+    go.Scatter(
+        x=np.concatenate([x_fit, x_fit[::-1]]),
+        y=np.concatenate([y_upper, y_lower[::-1]]),
+        fill="toself",
+        fillcolor="rgba(196, 117, 253, 0.15)",
+        line={"width": 0},
+        hoverinfo="skip",
+        showlegend=False,
+        name="95% Confidence Band",
+    )
+)
 
 # Scatter points with brand color
 fig.add_trace(
@@ -56,17 +82,38 @@ fig.add_trace(
         y=energy_consumption,
         mode="markers",
         name="Measured Data",
-        marker={"size": 12, "color": BRAND, "opacity": 0.65, "line": {"width": 1, "color": PAGE_BG}},
+        marker={"size": 10, "color": BRAND, "opacity": 0.6, "line": {"width": 1, "color": PAGE_BG}},
+        hovertemplate="%{x:.1f}°C, %{y:.1f} kWh/day<extra></extra>",
     )
 )
 
 # Polynomial regression curve
 fig.add_trace(
-    go.Scatter(x=x_fit, y=y_fit, mode="lines", name="Polynomial Fit (degree 2)", line={"color": ACCENT, "width": 3.5})
+    go.Scatter(
+        x=x_fit,
+        y=y_fit,
+        mode="lines",
+        name="Polynomial Fit (degree 2)",
+        line={"color": ACCENT, "width": 3.5},
+        hovertemplate="Fit: %{x:.1f}°C, %{y:.1f} kWh/day<extra></extra>",
+    )
 )
 
-# Title fontsize scaled from the 16px/67-char baseline (title is 81 chars)
-title_text = "Building Energy Consumption · scatter-regression-polynomial · plotly · anyplot.ai"
+# Highlight the curve's minimum - the real-world "balance point" insight
+fig.add_trace(
+    go.Scatter(
+        x=[vertex_x],
+        y=[vertex_y],
+        mode="markers",
+        name="Balance Point",
+        showlegend=False,
+        marker={"size": 13, "symbol": "diamond", "color": INK, "line": {"width": 2, "color": ACCENT}},
+        hovertemplate=f"Balance point: {vertex_x:.1f}°C, {vertex_y:.1f} kWh/day<extra></extra>",
+    )
+)
+
+# Title fontsize scaled from the 16px/67-char baseline
+title_text = "Energy vs. Temperature: Quadratic Regression · scatter-regression-polynomial · plotly · anyplot.ai"
 title_fontsize = max(round(16 * 67 / len(title_text)), 11)
 
 # Layout with theme-adaptive chrome
@@ -83,7 +130,7 @@ fig.update_layout(
         "zeroline": False,
     },
     yaxis={
-        "title": {"text": "Energy Consumption (kWh)", "font": {"size": 12, "color": INK}},
+        "title": {"text": "Energy Consumption (kWh/day)", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
         "gridwidth": 1,
@@ -91,18 +138,27 @@ fig.update_layout(
         "linecolor": INK_SOFT,
         "zeroline": False,
     },
-    legend={
-        "font": {"size": 10, "color": INK_SOFT},
-        "x": 0.02,
-        "y": 0.98,
-        "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
-    },
+    legend={"font": {"size": 10, "color": INK_SOFT}, "x": 0.02, "y": 0.98, "bgcolor": ELEVATED_BG, "borderwidth": 0},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     margin={"l": 80, "r": 40, "t": 80, "b": 60},
     annotations=[
+        {
+            "x": vertex_x,
+            "y": vertex_y,
+            "xref": "x",
+            "yref": "y",
+            "text": "Balance point",
+            "showarrow": True,
+            "arrowhead": 2,
+            "arrowcolor": INK_SOFT,
+            "ax": 0,
+            "ay": -36,
+            "font": {"size": 10, "color": INK},
+            "bgcolor": ELEVATED_BG,
+            "borderwidth": 0,
+            "borderpad": 4,
+        },
         {
             "x": 0.98,
             "y": 0.05,
@@ -112,12 +168,11 @@ fig.update_layout(
             "showarrow": False,
             "font": {"size": 11, "color": INK},
             "bgcolor": ELEVATED_BG,
-            "bordercolor": INK_SOFT,
-            "borderwidth": 1,
+            "borderwidth": 0,
             "borderpad": 10,
             "xanchor": "right",
             "yanchor": "bottom",
-        }
+        },
     ],
 )
 
