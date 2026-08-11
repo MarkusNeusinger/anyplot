@@ -1,7 +1,7 @@
 # anyplot.ai
 # count-basic: Basic Count Plot
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 84/100 | Created: 2026-08-11
+# Quality: 0/100 | Created: 2026-08-11
 
 using CairoMakie
 using Colors

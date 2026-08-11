@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: count-basic
 created: '2026-08-11T07:21:05Z'
-updated: '2026-08-11T07:25:05Z'
+updated: '2026-08-11T07:44:27Z'
 generated_by: claude-sonnet
 workflow_run: 31468309306
 issue: 2033
@@ -12,231 +12,230 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 0
 review:
   strengths:
-  - Bars sorted by frequency descending (as recommended by the spec), giving the count
-    plot an immediate rank-ordering story
-  - Count labels placed above each bar for precise reading, exactly matching the spec's
-    optional-feature suggestion
-  - Theme-adaptive chrome correctly threaded through (background, ink, ink-soft) with
-    identical brand-green data color across both renders
-  - Explicit font sizes set for every text element (title, axis labels, ticks, count
-    labels) and canvas dimensions land on the exact 3200x1800 landscape target
-  - Clean KISS structure with Random.seed!(42) for reproducibility and no unused imports
+  - 'Source code (plots/count-basic/implementations/julia/makie.jl as committed in
+    10c4ce61a) correctly implements the requested fixes: titlesize raised 20 -> 27,
+    a per-bar strokewidth vector highlighting only the leading category, and a conditional
+    text! label adding a percentage annotation (''342 (36% of responses)'') to the
+    leading bar -- this cannot yet be credited because it is not visible in the reviewed
+    PNGs (see weaknesses)'
+  - 'Underlying data/structure remains solid: raw per-respondent tallying (true count-plot
+    semantics, not pre-aggregated bars), descending sort, KISS script structure, Random.seed!(42)
+    reproducibility, and theme-adaptive chrome threaded correctly through both renders'
   weaknesses:
-  - Title occupies only ~20% of the plot width — well under the ~70-85% expected for
-    the long mandated '{spec-id} · {lang} · {lib} · anyplot.ai' string at default
-    sizing. Increase titlesize (e.g. 20 -> 26-28) so it carries appropriate visual
-    weight relative to the 3200px canvas.
-  - 'Design Excellence is generic: every bar gets an identical flat brand-green fill
-    despite a 342-vs-24 range across categories — no visual emphasis (e.g. subtle
-    highlight/annotation on the leading category) differentiates the story from a
-    plain default bar chart.'
-  - 'No data-storytelling element beyond the sort order — an annotation or emphasis
-    calling out the leading category (e.g. ''Smartphone: 37% of responses'') would
-    give the viewer an immediate takeaway instead of requiring them to read six bars.'
-  - Visual refinement (grid alpha, spine removal) matches the mandated house-style
-    baseline from the library skeleton rather than adding extra polish beyond it —
-    nothing distinguishes this beyond the expected anyplot chrome defaults.
+  - 'CRITICAL / PIPELINE: plot-light.png and plot-dark.png under review do not reflect
+    the current makie.jl (commit 10c4ce61a). Measured evidence: (1) title occupies
+    only ~22% of canvas width with a measured glyph cap-to-descender height of ~37px,
+    matching titlesize=20 (the PRE-fix value), not the committed titlesize=27 which
+    should render visibly larger/wider; (2) the leading bar''s (''Smartphone'', count
+    342) label reads plain ''342'' at the darkest-pixel color (74,74,68) == INK_SOFT
+    #4A4A44, i.e. the ELSE-branch style used for every other bar -- the current source''s
+    IF i==1 branch should render ''342 (36% of responses)'' in INK #1A1A17 at fontsize
+    16; (3) no ink stroke/outline is visible around the leading bar''s edges despite
+    strokewidth=3.0/strokecolor=INK being set only on bar index 1 in the current source.
+    All three independent signals point the same direction: the reviewed PNGs are
+    a stale artifact from before the fix commit, not a render of the code actually
+    being reviewed this attempt.'
+  - 'Because of the above, this review cannot certify whether the attempt-2 fix (leading-category
+    emphasis: stroke outline + percentage annotation, larger title) actually renders
+    correctly -- score is set to 0 / REJECTED specifically to force regeneration,
+    not because the code itself is judged deficient. Please regenerate plot-light.png
+    and plot-dark.png from the current makie.jl before the next AI review. If a fresh
+    render still omits the stroke/percentage-label/enlarged title, then investigate
+    for a real Makie rendering issue (e.g. confirm CairoMakie 0.21.9 barplot! accepts
+    a per-element strokewidth vector, and confirm the text! z-order/offset places
+    the longer label fully within the ylims(0, max*1.18) headroom).'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "count-basic · julia · makie · anyplot.ai" centered top in bold dark ink; x-axis label "Primary Device Used for Survey" and y-axis label "Number of Respondents" in dark ink; tick labels (category names, y-axis numbers) in a softer grey-ink tone. Only left/bottom spines visible (softened grey), top/right spines removed. Subtle horizontal gridlines at ~15% opacity, no vertical gridlines. All chrome elements clearly legible against the light background.
-      Data: Six vertical bars in brand green (#009E73), sorted descending: Smartphone (342), Laptop (268), Tablet (145), Desktop (98), Smartwatch (61), E-reader (24). Black-ish count labels sit just above each bar. Consistent bar width with even spacing between categories.
-      Legibility verdict: PASS — all text (title, axis labels, tick labels, count annotations) is clearly readable against the light background; no light-on-light issues.
+      Chrome: Title "count-basic · julia · makie · anyplot.ai" in bold dark ink, top-center, but measured at only ~22% of canvas width (~700px of 3200px) with ~37px glyph height — this matches the PRE-fix titlesize=20, not the titlesize=27 present in the current committed source. X-axis label "Primary Device Used for Survey" and y-axis label "Number of Respondents" in dark ink; category tick labels and y-axis tick numbers in softer grey ink. Only left/bottom spines visible (softened grey), top/right removed. Subtle horizontal gridlines (~15% opacity), no vertical gridlines.
+      Data: Six vertical bars in brand green (#009E73), sorted descending: Smartphone (342), Laptop (268), Tablet (145), Desktop (98), Smartwatch (61), E-reader (24). Every bar — including the leading "Smartphone" bar — has a plain numeric count label in the same soft-grey ink and apparent size; darkest-pixel sampling of the "342" label returned RGB (74,74,68), an exact match for INK_SOFT (#4A4A44), i.e. the else-branch styling. No percentage annotation ("342 (36% of responses)") and no ink stroke/outline around the leading bar are visible, despite both being present in the current makie.jl source (stroke_widths[1] = 3.0 / strokecolor = INK, and an `if i == 1` branch emitting the percentage label in INK at fontsize 16).
+      Legibility verdict: PASS for the text that IS rendered — all of it reads clearly against the light background. However this appears to be a stale render that predates the latest fix commit (see weaknesses).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink (white/near-white for title and axis labels, soft light-grey for tick labels and count annotations) against the dark background. Spine and gridline treatment mirrors the light render (top/right hidden, subtle horizontal gridlines).
-      Data: Bars are the identical brand green (#009E73) as the light render — confirmed no color drift between themes. Bar order and values unchanged (342, 268, 145, 98, 61, 24).
-      Legibility verdict: PASS — title, axis labels, tick labels, and count annotations are all clearly visible light-colored text on the dark background; no dark-on-dark failures observed.
+      Chrome: Same title, axis labels, and tick labels correctly flipped to light-ink tones (title/axis labels near-white, tick/legend text softer light-grey) — no dark-on-dark failures. Same undersized title proportion as the light render (~22% width). Spines and gridlines correctly theme-adapted.
+      Data: Identical bar heights, order, and brand-green (#009E73) hue as the light render — data colors are consistent across themes as required. Same absence of the leading-bar percentage annotation and stroke outline as in the light render.
+      Legibility verdict: PASS for the text that IS rendered — no dark-on-dark issues. Same staleness concern as the light render: this does not appear to reflect the current source's leading-category emphasis fix.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 0
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 0
         max: 8
-        passed: true
-        comment: All font sizes explicit and readable in both themes, but title occupies
-          only ~20% of plot width vs. the ~70-85% expected for the long mandated title
-          at default sizing — proportions off.
+        passed: false
+        comment: Not scored — reviewed PNGs appear to be a stale pre-fix render (title
+          width/height matches titlesize=20, not the committed 27); cannot certify
+          current source's text sizing
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 0
         max: 6
-        passed: true
-        comment: No overlap between any text or data elements
+        passed: false
+        comment: Not scored — stale render blocks certification
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 0
         max: 6
-        passed: true
-        comment: Bar width (0.65) and spacing are well-adapted to 6 categories
+        passed: false
+        comment: Not scored — stale render blocks certification
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Single brand-green series with good contrast against both backgrounds,
-          no red-green reliance
+        passed: false
+        comment: Not scored — stale render blocks certification
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Chart fills a large, balanced portion of the 3200x1800 canvas; nothing
-          cut off
+        passed: false
+        comment: Not scored — stale render blocks certification
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Descriptive axis labels ('Primary Device Used for Survey', 'Number
-          of Respondents')
+        passed: false
+        comment: Not scored — stale render blocks certification
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First (only) series is #009E73, identical across themes; backgrounds
-          theme-correct in both renders'
+        passed: false
+        comment: Not scored — stale render blocks certification
     design_excellence:
-      score: 10
+      score: 0
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 0
         max: 8
         passed: false
-        comment: 'Well-configured default: flat single-color bars, no custom palette
-          or typographic hierarchy beyond the mandated defaults'
+        comment: Not scored — the leading-category stroke emphasis added in the current
+          source is not visible in the reviewed render, so DE cannot be judged against
+          the actual code
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 0
         max: 6
         passed: false
-        comment: Spine removal and subtle gridline match the mandated house-style
-          baseline from the library skeleton; no extra polish beyond it
+        comment: Not scored — stale render blocks certification
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 0
         max: 6
         passed: false
-        comment: Descending sort order gives basic hierarchy, but no annotation or
-          emphasis highlights the leading category's takeaway
+        comment: Not scored — the percentage-annotation storytelling fix added in
+          the current source is not visible in the reviewed render
     spec_compliance:
-      score: 15
+      score: 0
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 0
         max: 5
-        passed: true
-        comment: 'Correct count plot: tallies raw per-respondent data rather than
-          using pre-aggregated values'
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Sorted descending by frequency, count labels on bars, consistent
-          bar width and spacing — all spec notes satisfied
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: Categories on x-axis, counts on y-axis, all 6 categories visible
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: Title exactly matches 'count-basic · julia · makie · anyplot.ai';
-          no legend needed for single series
+        passed: false
+        comment: Not scored — title format cannot be certified against current source
+          (see VQ-01)
     data_quality:
-      score: 15
+      score: 0
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 0
         max: 6
-        passed: true
-        comment: Wide count range (342 down to 24) across 6 categories shows the full
-          distribution shape
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 0
         max: 5
-        passed: true
-        comment: Neutral, plausible survey-device-usage scenario
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 938 total responses with realistic device-usage proportions (smartphone-heavy,
-          e-reader rare)
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence
     code_quality:
-      score: 10
+      score: 0
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence (source itself
+          reads as clean KISS structure)
       - id: CQ-02
         name: Reproducibility
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Random.seed!(42) set before shuffle
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence (source itself
+          sets Random.seed!(42))
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: CairoMakie, Colors, Random all used
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Clean, appropriate complexity, no fake functionality
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves plot-$(THEME).png with current px_per_unit API
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence
     library_mastery:
-      score: 6
+      score: 0
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper high-level Axis/barplot!/text! usage, correct xticks tuple
-          pattern
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 0
         max: 5
         passed: false
-        comment: text! annotations and RGBAf-based grid theming are modest Makie-specific
-          touches, but nothing that couldn't be replicated in another library with
-          minor syntax changes
+        comment: Not scored — pipeline validity issue takes precedence
+      - id: LM-02
+        name: Distinctive Features
+        score: 0
+        max: 5
+        passed: false
+        comment: Not scored — pipeline validity issue takes precedence
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -248,3 +247,4 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
+  - edge-highlighting
