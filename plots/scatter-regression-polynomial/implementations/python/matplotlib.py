@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
 Library: matplotlib 3.11.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-11
@@ -6,6 +6,7 @@ Quality: 86/100 | Updated: 2026-08-11
 
 import os
 
+import matplotlib.patheffects as patheffects
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -42,7 +43,7 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Scatter points with transparency
-ax.scatter(x, y, s=100, alpha=0.7, color=BRAND, edgecolors=PAGE_BG, linewidth=0.5, label="Data points", zorder=3)
+ax.scatter(x, y, s=140, alpha=0.8, color=BRAND, edgecolors=PAGE_BG, linewidth=0.5, label="Data points", zorder=3)
 
 # Confidence band (approximate using residual standard error)
 residuals = y - y_pred
@@ -57,20 +58,47 @@ ax.fill_between(
     zorder=1,
 )
 
-# Polynomial regression curve
-ax.plot(x_smooth, y_fit, color=SECONDARY, linewidth=2.5, label="Polynomial fit (degree 2)", zorder=2)
+# Polynomial regression curve — a soft page-colored halo (patheffects) lifts the
+# curve off the scatter cloud without darkening its color in either theme.
+(fit_line,) = ax.plot(x_smooth, y_fit, color=SECONDARY, linewidth=2.5, label="Polynomial fit (degree 2)", zorder=2)
+fit_line.set_path_effects([patheffects.Stroke(linewidth=5, foreground=PAGE_BG, alpha=0.6), patheffects.Normal()])
 
-# Format polynomial equation
+# Highlight the curve's peak (vertex of the parabola) — the "diminishing returns"
+# insight the plot is telling: returns rise, crest here, then decline.
 a, b, c = coeffs
-equation = f"y = {a:.2f}x² + {b:.2f}x + {c:.2f}"
+vertex_x = -b / (2 * a)
+if x.min() <= vertex_x <= x.max():
+    vertex_y = poly(vertex_x)
+    ax.plot(
+        vertex_x,
+        vertex_y,
+        marker="o",
+        markersize=11,
+        markerfacecolor=PAGE_BG,
+        markeredgecolor=SECONDARY,
+        markeredgewidth=2,
+        zorder=4,
+    )
+    ax.annotate(
+        "Peak return",
+        xy=(vertex_x, vertex_y),
+        xytext=(vertex_x, vertex_y + 0.14 * (y.max() - y.min())),
+        ha="center",
+        fontsize=8,
+        color=INK_SOFT,
+        arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.8},
+    )
+
+# Format polynomial equation with mathtext for a cleaner, typeset look
+equation = f"$y = {a:.2f}x^2 + {b:.2f}x + {c:.2f}$"
 
 # Add R² and equation annotation (top-left, well clear of the legend which lives outside the axes)
-annotation_text = f"{equation}\nR² = {r_squared:.3f}"
+annotation_text = f"{equation}\n$R^2 = {r_squared:.3f}$"
 ax.annotate(
     annotation_text,
     xy=(0.03, 0.97),
     xycoords="axes fraction",
-    fontsize=8,
+    fontsize=9,
     verticalalignment="top",
     bbox={"boxstyle": "round,pad=0.5", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
     color=INK,
