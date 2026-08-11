@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-08-11
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-08-11
 """
 
 import os
