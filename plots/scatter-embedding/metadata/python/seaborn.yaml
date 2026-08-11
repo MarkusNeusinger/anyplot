@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:24:04Z'
-updated: '2026-08-11T08:57:14Z'
+updated: '2026-08-11T09:08:44Z'
 generated_by: claude-sonnet
 workflow_run: 31474529918
 issue: 5236
@@ -12,57 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
+  - 'Repair directly fixed both attempt-1 weaknesses: cluster_std raised 2.5→8.0 gives
+    realistic overlapping/ambiguous cluster boundaries instead of textbook-clean blobs,
+    and the legend/margin rework (ax.margins 0.20/0.12, tight_layout rect) cuts the
+    plot-to-legend dead space from ~20-25% down to ~11%'
+  - Marker alpha lowered 0.55→0.5, now inside the density-appropriate 0.3-0.5 band
+    for 1500 overplotted points
   - Excellent theme-adaptive chrome — background, text, spines, and legend correctly
-    flip between light (#FAF8F1) and dark (#1A1A17) renders with no dark-on-dark or
-    light-on-light failures
+    flip between light and dark renders with no dark-on-dark/light-on-light failures
   - 'Thoughtful semantic color assignment: matte red (#AE3030) is reserved specifically
-    for the ''Churn Risk'' segment (bad/risk semantic cue) rather than following blind
-    ordinal order, consistent with the Imprint palette''s semantic-exception rule'
+    for "Churn Risk", consistent with the Imprint palette''s semantic-exception rule,
+    instead of blind ordinal order'
   - Direct in-plot centroid labeling with color-matched bordered callout boxes gives
-    immediate visual hierarchy and lets the viewer identify each cluster without hunting
-    through the legend
-  - Correct 3200x1800 canvas achieved via figsize=(8,4.5)/dpi=400 with bbox_inches
-    left at default — respects the hard no-bbox_inches='tight' canvas rule
-  - 'Follows the spec precisely: no tick labels on either axis (embedding coordinates
-    are not interpretable), subtitle documents algorithm + parameter + sample size
-    + segment count'
-  - 'Fully reproducible: seeds set for np.random, make_blobs, and TSNE'
-  - Idiomatic seaborn usage — sns.scatterplot (axes-level) plus sns.move_legend to
-    place the legend outside the axes cleanly
+    immediate visual hierarchy without requiring legend cross-referencing
+  - Correct 3200×1800 canvas via figsize=(8,4.5)/dpi=400, no bbox_inches='tight' —
+    canvas gate passed
+  - Fully reproducible (seeds on np.random, make_blobs, and TSNE)
   weaknesses:
-  - 'Unbalanced whitespace: roughly 20-25% of the canvas width to the right of the
-    legend is empty dead space while the left/top margins are much tighter — tighten
-    `tight_layout(rect=...)` or shift the legend further right/up so margins are more
-    balanced'
-  - Clusters are unrealistically clean and fully separated with zero overlap or boundary
-    ambiguity between segments — real t-SNE/UMAP embeddings of behavioral data almost
-    always show some fuzzy boundaries or a few ambiguous points; increase cluster_std
-    slightly or add light noise so the clustering-QC context reads as realistic rather
-    than synthetic-perfect
-  - Marker alpha=0.55 is slightly above the recommended 0.3-0.5 range for 300+ point
-    density — consider ~0.45-0.5 for slightly better overplotting handling in the
-    denser cluster cores
-  - The 'Loyal Subscribers' centroid annotation box sits right at / touching the y-axis
-    spine on the left edge — nudge its position or increase left-side ax.margins slightly
-    so the callout box doesn't visually collide with the axis line
+  - A ~11% wide empty gap still sits between the rightmost cluster (New Signups/Occasional
+    Buyers/Churn Risk area) and the legend box — not severe, but tightening ax.margins(x=...)
+    slightly further or nudging the legend left would close it
+  - Clusters are still fairly tight blobs despite the increased cluster_std — a bit
+    more spread or a couple of stray/ambiguous points between adjacent segments would
+    push the embedding closer to how real noisy t-SNE/UMAP output looks
+  - Library usage is correct but generic (scatterplot + move_legend); no seaborn-distinctive
+    feature (e.g. joint/KDE density overlay, FacetGrid small multiples for an alternate
+    cluster view) is used to lift Library Mastery beyond a solid baseline
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "scatter-embedding · python · seaborn · anyplot.ai" in dark ink, clearly bold/medium weight and legible; subtitle "t-SNE (perplexity=30) · 1500 customers · 6 behavioral segments · clustering QC" in softer grey, legible. Axis labels "t-SNE 1" / "t-SNE 2" dark and readable. No tick labels present (correct per spec). Legend box has a light elevated fill with a soft grey border, title "Segment" and six labeled entries, all readable.
-      Data: Six well-separated point clouds (t-SNE clusters), each colored per the Imprint palette — Power Users=#009E73 (brand green, first series, correct), Loyal Subscribers=#C475FD (lavender), Occasional Buyers=#4467A3 (blue), New Signups=#BD8233 (ochre), Cart Abandoners=#2ABCCD (cyan), Churn Risk=#AE3030 (matte red, semantic exception for the "risk" label — intentional and justified). Each cluster has a direct color-matched, bordered text label at its centroid. Markers use alpha=0.55 with a light edge color for a soft "cloud" texture.
-      Legibility verdict: PASS — all title, subtitle, axis label, legend, and centroid-annotation text is clearly readable against the light background. No light-on-light issues.
+      Background: Warm off-white (#FAF8F1), matches the required light-theme plot surface.
+      Chrome: Title "scatter-embedding · python · seaborn · anyplot.ai" in bold/medium dark ink; subtitle "t-SNE (perplexity=30) · 1500 customers · 6 behavioral segments · clustering QC" in softer grey. Axis labels "t-SNE 1" / "t-SNE 2" dark and readable; no tick labels (correct per spec — embedding coordinates are not interpretable). Only left/bottom spines kept (L-shaped frame), no grid. Legend sits outside the axes in a light elevated (#FFFDF6) box with a soft border.
+      Data: Six t-SNE clusters colored via the Imprint palette — Power Users=#009E73 (brand green, first series), Loyal Subscribers=lavender, Occasional Buyers=blue, New Signups=ochre, Cart Abandoners=cyan, Churn Risk=matte red (deliberate semantic exception for the "risk" label). Compared to attempt 1, clusters now show visible boundary overlap (e.g. red Churn Risk points bleeding into the cyan Cart Abandoners cluster, blue/green mixing near the center) rather than perfectly clean separation. Each cluster has a direct, color-matched, bordered centroid label.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and subtitle render in light ink (white/light grey) and are clearly legible against the dark background. Axis labels are light-colored and readable. Legend box has a dark elevated fill (#242420-like) with a light-grey border; legend title and all six entries render in light text, fully readable — no dark-on-dark failures observed.
-      Data: Colors are identical to the light render — #009E73 green for Power Users (first series, unchanged), and the same lavender/blue/ochre/cyan/red for the remaining five segments. This confirms only chrome (background, text, legend box) flips between themes while data colors stay constant, as required.
-      Legibility verdict: PASS — all text elements (title, subtitle, axis labels, legend, centroid annotations) are clearly readable in light color against the dark surface. No dark-on-dark text found.
+      Background: Warm near-black (#1A1A17), matches the required dark-theme plot surface.
+      Chrome: Title, subtitle, and axis labels render in light ink (INK/INK_SOFT tokens) and are clearly legible. Legend box uses a dark elevated (#242420) fill with a light-grey border; all six entries render in light, readable text.
+      Data: Colors are pixel-identical to the light render (green/lavender/blue/ochre/cyan/red unchanged) — only chrome flipped, confirming Imprint data-color consistency across themes.
+      Legibility verdict: PASS — no dark-on-dark text found; all elements pass legibility.
+
+    Both renders confirm full legibility in both themes; canvas-dimension gate passed (3200×1800 exact, no clipping detected at any edge).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -70,50 +65,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes, title width
-          (~77%) fits the expected 70-85% range for the mandated string
+        comment: All font sizes explicit, readable in both themes, title proportion
+          appropriate for this shorter mandated string
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data collisions; 'Loyal Subscribers' label
-          sits very close to the y-axis spine but does not obscure text
+        comment: No text/label overlap in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size (s=45) fits the 300+ point density guideline; alpha=0.55
-          is slightly above the recommended 0.3-0.5 range
+        comment: alpha lowered 0.55→0.5, now inside the 0.3-0.5 density-appropriate
+          band for ~1500 overplotted points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint palette, edges add definition
+        comment: Good contrast, CVD-safe, redundant color+label encoding via centroid
+          boxes
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Roughly 20-25% of canvas width to the right of the legend is unused
-          dead space, margins not balanced left-to-right
+        passed: true
+        comment: Whitespace gap between plot and legend reduced from ~20-25% to ~11%
+          of canvas width; still a minor imbalance, not severe
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''t-SNE 1''/''t-SNE 2'' are the maximal descriptive labels possible
-          for an inherently unitless embedding axis'
+        comment: Descriptive axis labels (t-SNE 1/2), correctly omits uninterpretable
+          tick labels per spec
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, remaining colors are Imprint palette members
-          with a justified semantic exception (red for Churn Risk); backgrounds and
-          chrome correct in both themes'
+        comment: 'First series #009E73, semantic-exception red for Churn Risk, theme-correct
+          chrome in both renders'
     design_excellence:
       score: 15
       max: 20
@@ -123,22 +117,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color reassignment and color-matched centroid
-          callouts clearly exceed a configured-default look
+        comment: Thoughtful semantic color reassignment, color-matched centroid callouts
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, ticks removed cleanly, generous whitespace, but right-side
-          margin imbalance keeps it from perfect
+        comment: Spines/ticks cleanly removed, generous whitespace, minor right-side
+          gap remains
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Direct in-plot centroid labels give an immediate focal point per
-          segment without requiring legend cross-referencing
+        comment: Direct in-plot centroid labels give an immediate per-segment focal
+          point
     spec_compliance:
       score: 15
       max: 15
@@ -148,52 +141,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D embedding scatter plot
+        comment: Correct embedding scatter plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe categorical coloring + legend, centroid annotations,
-          moderate size/alpha, algorithm+parameter subtitle, no tick labels — all
-          present
+        comment: Colored clusters, legend, centroid annotations, algorithm/parameter
+          subtitle, no tick labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: tsne_1/tsne_2 correctly mapped to x/y, all data visible within margins
+        comment: t-SNE dims correctly mapped to x/y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches mandated format; legend labels match segment
-          names
+        comment: Title format exact match, legend labels match segment names
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Six segments shown but all clusters are unrealistically clean and
-          fully separated, no boundary overlap or ambiguous points typical of real
-          embeddings
+        comment: cluster_std raised 2.5→8.0 now produces visible boundary overlap/ambiguity
+          between adjacent clusters instead of perfectly clean separation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible customer-segmentation business scenario
+        comment: Realistic, neutral customer-segmentation clustering-QC scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1500 customers across 6 segments is a plausible clustering-QC dataset
+        comment: 1500 customers across 6 segments is a sensible clustering-QC sample
           size
     code_quality:
       score: 10
@@ -204,31 +194,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: Linear imports → data → plot → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeds set on np.random, make_blobs, and TSNE
+        comment: np.random.seed(42) plus seeded make_blobs and TSNE
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (os, plt, np, pd, sns, sklearn)
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake UI/interactivity
+        comment: Clean, no over-engineering, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at dpi=400 with no bbox_inches='tight'
+        comment: Saves plot-{THEME}.png, current seaborn/matplotlib API
     library_mastery:
       score: 7
       max: 10
@@ -238,27 +228,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes-level sns.scatterplot with hue/palette, correct spine/margin
-          handling
+        comment: Idiomatic sns.scatterplot + sns.move_legend usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.move_legend is a seaborn-specific convenience not trivially replicated
-          elsewhere
-  verdict: REJECTED
+        comment: Uses sns.move_legend, a seaborn-specific convenience; no more distinctive
+          feature (e.g. jointplot/FacetGrid) leveraged
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
-  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - tsne
   styling:
   - alpha-blending
   - edge-highlighting
