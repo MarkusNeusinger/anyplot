@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:23:14Z'
-updated: '2026-08-11T09:00:52Z'
+updated: '2026-08-11T09:09:21Z'
 generated_by: claude-sonnet
 workflow_run: 31474987418
 issue: 5236
@@ -12,142 +12,136 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
+  - 'Directly addresses all three attempt-1 weaknesses: added a PAGE_BG halo stroke
+    behind centroid labels (`stroke=PAGE_BG, strokeWidth=0.75`), reduced marker size
+    50→45, and tightened the axis scale domain to the data extent (+6% pad)'
   - 'Correct Imprint categorical palette in canonical order — first series (T cells)
-    is #009E73, and all 7 data colors are byte-identical between the light and dark
-    renders'
-  - 'Genuine, non-simulated Altair interactivity: alt.selection_point bound to the
-    legend lets a viewer click a cell type to highlight its cluster — a real distinctive-library
-    feature, not faked'
-  - Direct abbreviated centroid labels (T, B, NK, Mono, DC, Mac, PC) reduce legend
-    cross-referencing and read clearly against every cluster color in both themes
-  - Axis chrome correctly follows the spec's guidance that embedding dimensions are
-    not directly interpretable — labels, ticks, domain, and grid are all removed,
-    leaving only descriptive axis titles
-  - Realistic, neutral single-cell RNA-seq scenario that matches one of the spec's
-    stated applications almost verbatim, with a proper t-SNE subtitle disclosing perplexity=30
-  - Title fontsize is computed via an explicit scaling formula (round(16 * min(1.0,
-    67/len(title)))) so the mandated title never overflows
-  - Canvas-safety block never crops — it raises loudly if vl-convert overshoots and
-    only pads when undershooting, per the altair library rules
+    is #009E73, and all 7 data colors are pixel-identical between light and dark renders'
+  - 'Genuine, non-simulated Altair interactivity: `alt.selection_point` bound to the
+    legend lets a viewer click a cell type to highlight its cluster'
+  - Halo-stroke centroid labels (T, B, NK, Mono, DC, Mac, PC) now read cleanly against
+    every cluster hue in both themes, removing the flat-ink legibility risk flagged
+    last attempt
+  - Title fontsize computed via an explicit scaling formula so the mandated title
+    fills a comfortable ~50% of plot width without overflowing
+  - Canvas-safety block never crops — raises loudly on overshoot, only pads on undershoot,
+    per the altair library rules
+  - Axis chrome correctly follows the spec's guidance that embedding dimensions aren't
+    directly interpretable — labels, ticks, domain, and grid all removed, leaving
+    only descriptive axis titles
+  - Realistic, neutral scRNA-seq scenario matching one of the spec's stated applications,
+    with a proper t-SNE subtitle disclosing perplexity=30
   weaknesses:
-  - Design Excellence is solid but still reads as a well-configured default rather
-    than a fully custom, publication-grade composition — consider a more deliberate
-    visual flourish (e.g. a subtle size or alpha emphasis on one cluster, or a refined
-    legend frame) to push past 'tasteful default'.
-  - Centroid label color is a flat theme-ink value (INK) regardless of the underlying
-    cluster color — it reads fine on all 7 hues in both renders here, but a thin contrasting
-    halo/stroke behind the text (e.g. mark_text stroke=PAGE_BG, strokeWidth=3) would
-    make legibility robust against any future palette or data change instead of relying
-    on lucky contrast.
-  - Title block occupies only ~40-45% of the plot width at the current fontsize —
-    comfortably within the 'no overflow' safe zone, but on the low end of the 50-70%
-    comfortable range; a slightly larger title/subtitle could improve visual hierarchy
-    without risking overflow.
-  - Considerable unused canvas area in the lower-left and upper-right quadrants between
-    clusters (inherent to a sparse t-SNE embedding) — a touch more zoom/tighter axis
-    domain, or slightly enlarging the marks, would raise canvas utilization without
-    harming readability.
-  - Marker size (50) sits at the upper edge of the 300+ points guideline (20-50) —
-    one notch smaller with the existing opacity would slightly reduce within-cluster
-    overplotting for the densest clusters (T, DC).
+  - Centroid labels still sit directly on top of their cluster's scatter points —
+    the halo stroke keeps them legible, but letterforms are still partially interleaved
+    with marker dots rather than floating clear of the data
+  - Considerable unused canvas area between clusters remains, inherent to a sparse
+    t-SNE embedding — the 6% domain tightening helped marginally but clusters are
+    still islands surrounded by empty space
+  - Design Excellence is a well-executed, tasteful composition (halo labels, refined
+    legend frame, tightened domain) but still reads as a polished standard scatter+legend+label
+    layout rather than a distinctly bespoke one
+  - t-SNE partially normalizes the intentional cluster_std variation baked into the
+    synthetic data, so the compactness differences between cell types are only subtly
+    visible in the final layout
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "scatter-embedding · python · altair · anyplot.ai" in bold dark ink, subtitle "t-SNE (perplexity=30) · 20-dimensional synthetic scRNA-seq · 7 cell types, 700 cells" in softer dark-gray ink below it, both clearly legible. Y-axis title "t-SNE Dimension 2" (rotated) and X-axis title "t-SNE Dimension 1" are dark and readable; no tick labels/ticks/grid are drawn (intentional, matches spec's "embedding coordinates are not directly interpretable"). Legend box ("Cell Type") sits top-right with a light frame and dark/soft-gray text, fully inside the canvas, not clipped.
-      Data: Seven well-separated clusters, each colored with a distinct Imprint hue — T cells green (#009E73, brand-first as required), B cells lavender, NK cells blue, Monocytes ochre, Dendritic cells red, Macrophages cyan, Plasma cells rose — matching the canonical Imprint order. Each cluster carries a bold abbreviated centroid label (T, B, NK, Mono, DC, Mac, PC) in dark ink, readable against every cluster color. Points have a thin background-colored stroke that visually separates overlapping markers within a cluster.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark-ink title "scatter-embedding · python · altair · anyplot.ai" (~50% plot width) and a softer dark-gray subtitle "t-SNE (perplexity=30) · 20-dimensional synthetic scRNA-seq · 7 cell types, 700 cells" are both clearly legible. Axis titles "t-SNE Dimension 1"/"t-SNE Dimension 2" are dark and readable; no tick labels/ticks/grid are drawn, matching the spec's guidance that embedding coordinates aren't directly interpretable. Legend ("Cell Type") sits top-right in a light-framed box, fully inside the canvas with no clipping.
+      Data: Seven well-separated clusters render in canonical Imprint order — T cells green #009E73 (first series), B cells lavender, NK cells blue, Monocytes ochre, Dendritic cells matte red, Macrophages cyan, Plasma cells rose. Each cluster carries a bold abbreviated centroid label (T, B, NK, Mono, DC, Mac, PC) with a background-colored halo stroke that keeps the text legible directly on top of the colored points.
+      Legibility verdict: PASS — all text reads clearly against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and subtitle flip to light ink (near-white / soft light-gray) and remain clearly legible. Axis titles are light and readable. Legend box flips to a dark elevated fill with a light frame and light/soft text, still fully inside the canvas.
-      Data: The 7 cluster colors are visually identical to the light render (green/lavender/blue/ochre/red/cyan/rose in the same canonical order and positions) — only the chrome flipped, confirming palette-position consistency. Centroid labels flip to light ink and remain legible against every cluster color, including the lighter/lavender and rose clusters — no dark-on-dark failures observed.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark issues.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title/subtitle/axis titles/legend all flip to light ink (#F0EFE8 primary, #B8B7B0 secondary) and remain clearly legible. Legend box border and fill are theme-adapted correctly.
+      Data: The 7 cluster colors are pixel-identical to the light render (same hues, same canonical order) — only chrome (background, text, legend fill, label-halo color) flipped. Centroid labels flip their halo to the dark background color and stay legible against every cluster hue, including the lighter lavender and rose clusters — no dark-on-dark failures observed.
+      Legibility verdict: PASS — all text reads clearly against the dark background; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title formula, subtitle, axis, legend,
-          centroid labels); readable in both themes and at proportion; title sits
-          ~40-45% width, well within safe zone though below the comfortable 50-70%
-          band
+        comment: All font sizes explicit via computed formula; title now spans ~50%
+          of plot width (up from ~40-45% in attempt 1); fully legible in both themes.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No overlap between text and legend/data; centroid labels sit just
-          above the topmost points of their cluster with minor cosmetic proximity
-          but no readability loss
+        comment: Centroid labels sit on top of their cluster's scatter points; the
+          new halo stroke (PAGE_BG, strokeWidth=0.75) keeps them legible despite the
+          overlap, but letterforms still interleave with marker dots.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 700 points, size=50 with opacity ~0.55 and background-colored strokes
-          give good but not optimal separation; slightly oversized vs. the 300+ point
-          guideline (20-50)
+        comment: Marker size reduced 50→45 with opacity 0.55/0.12 correctly applies
+          the high-density (>500 points) heuristic.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe by design; direct text labels provide
-          redundant encoding beyond color alone (important at n=7 series)
+        comment: CVD-safe Imprint palette plus redundant direct-label encoding at
+          n=7 series.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good margins, nothing cut off, legend near plot; moderate unused
-          whitespace between sparse t-SNE clusters
+        comment: Domain tightened with +6% pad; nothing cropped or overflowing; residual
+          whitespace between clusters is inherent to a sparse t-SNE embedding, not
+          a layout defect.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles; correctly omits tick labels per spec since
-          embedding coordinates aren't directly interpretable
+        comment: Descriptive axis titles; correctly omits tick labels per spec guidance
+          that embedding coords aren't interpretable.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; full canonical Imprint order for all 7 categories;
-          theme-correct backgrounds and chrome in both renders'
+        comment: 'First series #009E73, full canonical Imprint order, theme-correct
+          chrome and identical data colors in both renders.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured, tasteful use of Altair defaults with direct labeling
-          and custom stroke, but not yet a distinctly custom, publication-grade composition
+        passed: true
+        comment: Halo-stroke centroid labels (direct fix for attempt-1 feedback),
+          tightened domain, and refined legend chrome (corner radius, border color)
+          push past a generic default, though the composition is still fundamentally
+          a standard scatter+legend+label layout.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No grid, no axis domain/ticks, generous whitespace — solid refinement,
-          some room to polish further (e.g. label halos)
+        comment: Grid, axis domain, and ticks fully removed; refined legend frame;
+          generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Direct per-cluster labels plus color separation create clear visual
-          hierarchy and an immediately legible grouping story
+        comment: Direct per-cluster labels plus color separation create an immediately
+          legible grouping story with a clear focal point per cluster.
     spec_compliance:
       score: 15
       max: 15
@@ -157,29 +151,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D embedding scatter with cluster coloring and centroid annotations
+        comment: Correct 2D embedding scatter with cluster coloring and centroid annotations.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Distinct colorblind-safe colors + legend, centroid text annotations,
-          moderate size with alpha for overlap, algorithm/parameter subtitle, no axis
-          tick labels — all present
+          density-aware size/alpha, algorithm/parameter subtitle, no tick labels —
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: tsne_1/tsne_2 correctly mapped to x/y, all 700 points visible within
-          canvas
+        comment: tsne_1/tsne_2 correctly mapped to x/y; all 700 points visible within
+          the tightened domain.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title exactly matches the mandated format; legend labels match the
-          cell-type categories
+          cell-type categories.
     data_quality:
       score: 14
       max: 15
@@ -189,23 +183,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 7 distinct clusters with varying cluster_std intended to show compactness
-          differences; t-SNE's normalization makes the resulting size variation between
-          clusters fairly subtle
+        comment: 7 distinct clusters with intended cluster_std variation, though t-SNE
+          somewhat normalizes the visible compactness differences.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Single-cell RNA-seq cell-type clustering is a real, neutral, directly-spec-referenced
-          scenario
+        comment: Single-cell RNA-seq cell-type clustering is a real, neutral scenario
+          directly matching a spec application.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 700 cells across 7 types, 20-dim synthetic features, perplexity=30
-          — all plausible for a scRNA-seq t-SNE tutorial example
+        comment: 700 cells / 7 types / 20-dim features / perplexity=30 all plausible
+          for a scRNA-seq t-SNE example.
     code_quality:
       score: 10
       max: 10
@@ -215,34 +208,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> chart -> save, no functions/classes
+        comment: 'Linear top-level script: imports → data → chart → save, no functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) plus random_state=42 for make_blobs and TSNE
+        comment: Seeded via np.random.seed(42) and random_state=42 for both make_blobs
+          and TSNE.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas, PIL, sklearn); sys.path
-          filtering is harness boilerplate
+        comment: All imports (altair, numpy, pandas, PIL.Image, sklearn) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; the legend selection is a real Vega-Lite
-          feature, not fake interactivity
+        comment: Appropriate complexity; legend-bound selection is genuine Vega-Lite
+          interactivity, not fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current alt.Chart
-          API
+        comment: Saves plot-{THEME}.png (padded to canonical canvas) and plot-{THEME}.html
+          via current vl-convert API.
     library_mastery:
       score: 10
       max: 10
@@ -252,16 +245,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Modern alt.selection_point, alt.layer, alt.Scale/Axis/Legend grammar
-          used expertly
+        comment: Modern alt.selection_point, alt.layer, and Axis/Legend/Scale grammar
+          used expertly.
       - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
         comment: Legend-bound point selection for interactive highlighting is genuinely
-          distinctive to Vega-Lite/Altair and not easily replicated elsewhere
-  verdict: REJECTED
+          distinctive to Vega-Lite/Altair.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
@@ -274,7 +267,9 @@ impl_tags:
   patterns:
   - data-generation
   - groupby-aggregation
-  dataprep: []
+  dataprep:
+  - tsne
   styling:
+  - minimal-chrome
   - alpha-blending
   - edge-highlighting
