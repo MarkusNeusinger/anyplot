@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 83/100 | Created: 2026-05-07
@@ -29,6 +29,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Imprint palette — canonical categorical order, first series always brand green
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 CLUSTER_NAMES = [
     "Machine Learning",
@@ -45,25 +46,33 @@ X, labels = make_blobs(n_samples=900, n_features=20, centers=6, cluster_std=2.5)
 tsne = TSNE(n_components=2, perplexity=30, random_state=42, max_iter=1000)
 embedding = tsne.fit_transform(X)
 
-# Fit axes tightly to the data so the canvas is fully utilised
-x_min, x_max = embedding[:, 0].min(), embedding[:, 0].max()
-y_min, y_max = embedding[:, 1].min(), embedding[:, 1].max()
-x_pad = (x_max - x_min) * 0.12
-y_pad = (y_max - y_min) * 0.12
+# Fit axes to the 2nd-98th percentile of the data rather than the raw min/max —
+# a handful of t-SNE stragglers otherwise inflate the range and leave large
+# empty margins on one side of the canvas (VQ-05 in the previous review).
+x_lo, x_hi = np.percentile(embedding[:, 0], [2, 98])
+y_lo, y_hi = np.percentile(embedding[:, 1], [2, 98])
+x_pad = (x_hi - x_lo) * 0.10
+y_pad = (y_hi - y_lo) * 0.10
 
-# Plot
+# Plot — canonical 3200x1800 landscape canvas (Step 0 contract)
+W, H = 3200, 1800
 p = figure(
-    width=4800,
-    height=2700,
+    width=W,
+    height=H,
     title="NLP Document Clusters · scatter-embedding · bokeh · anyplot.ai",
-    x_range=Range1d(x_min - x_pad, x_max + x_pad),
-    y_range=Range1d(y_min - y_pad, y_max + y_pad),
+    x_range=Range1d(x_lo - x_pad, x_hi + x_pad),
+    y_range=Range1d(y_lo - y_pad, y_hi + y_pad),
     tools="pan,wheel_zoom,box_zoom,reset,hover",
     tooltips=[("Cluster", "@cluster")],
+    toolbar_location=None,  # default toolbar shrinks the saved PNG below `height=`
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=140,  # extra room for the two-line title + subtitle stack
+    min_border_right=50,
 )
 
 p.add_layout(
-    Title(text="t-SNE (perplexity=30)", text_font_size="24pt", text_color=INK_SOFT, text_font_style="italic"), "above"
+    Title(text="t-SNE (perplexity=30)", text_font_size="30pt", text_color=INK_SOFT, text_font_style="italic"), "above"
 )
 
 # Chrome
@@ -72,15 +81,15 @@ p.border_fill_color = PAGE_BG
 p.outline_line_color = None
 
 p.title.text_color = INK
-p.title.text_font_size = "28pt"
-p.title.text_font_style = "normal"
+p.title.text_font_size = "50pt"
+p.title.text_font_style = "bold"
 
 p.xaxis.axis_label = "t-SNE 1"
 p.yaxis.axis_label = "t-SNE 2"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 
 # Hide tick labels — embedding coordinates are not directly interpretable
 p.xaxis.major_label_text_alpha = 0
@@ -95,8 +104,8 @@ p.yaxis.axis_line_color = INK_SOFT
 
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.08
-p.ygrid.grid_line_alpha = 0.08
+p.xgrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.15
 
 # One scatter call per cluster so Bokeh assigns legend entries
 for i, (name, color) in enumerate(zip(CLUSTER_NAMES, IMPRINT, strict=False)):
@@ -109,10 +118,10 @@ for i, (name, color) in enumerate(zip(CLUSTER_NAMES, IMPRINT, strict=False)):
         y="y",
         source=source,
         color=color,
-        size=22,
+        size=14,
         alpha=0.40,
         line_color=PAGE_BG,
-        line_width=0.8,
+        line_width=0.6,
         legend_label=name,
     )
 
@@ -125,7 +134,7 @@ for i, (name, color) in enumerate(zip(CLUSTER_NAMES, IMPRINT, strict=False)):
         x=cx,
         y=cy,
         text=name,
-        text_font_size="18pt",
+        text_font_size="26pt",
         text_color=INK,
         text_align="center",
         text_baseline="middle",
@@ -142,9 +151,9 @@ for i, (name, color) in enumerate(zip(CLUSTER_NAMES, IMPRINT, strict=False)):
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
 p.legend.label_text_color = INK_SOFT
-p.legend.label_text_font_size = "20pt"
-p.legend.glyph_height = 28
-p.legend.glyph_width = 28
+p.legend.label_text_font_size = "34pt"
+p.legend.glyph_height = 34
+p.legend.glyph_width = 34
 p.legend.location = "top_right"
 p.legend.click_policy = "hide"
 
@@ -153,7 +162,6 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot via headless Chrome
-W, H = 4800, 2700
 opts = Options()
 for arg in (
     "--headless=new",
@@ -167,6 +175,11 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Headless Chrome's --window-size sets the OUTER window, which still reserves a
+# phantom title-bar height even headless — pin the viewport exactly via CDP.
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
