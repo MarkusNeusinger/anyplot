@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
-Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 86/100 | Updated: 2026-08-11
+Library: plotnine | Python
 """
 
 import os
@@ -19,6 +18,7 @@ from plotnine import (
     ggplot,
     labs,
     scale_fill_manual,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -43,14 +43,34 @@ df = pd.DataFrame({"Rating": pd.Categorical(ratings, categories=rating_order, or
 mode_rating = df["Rating"].value_counts().idxmax()
 df["Highlight"] = df["Rating"].apply(lambda r: "Mode" if r == mode_rating else "Other")
 
-# Plot - native stat='count' drives both the bars and the count labels
+# Plot - native stat='count' drives the bars and the count labels; the percentage
+# labels read plotnine's own `prop` stat variable, forced to share-of-total (its
+# default is share-of-fill-group) via the aes(group=1) override — a
+# grammar-of-graphics idiom that keeps the annotation fully data-driven.
 plot = (
     ggplot(df, aes(x="Rating", fill="Highlight"))
-    + geom_bar(width=0.65, show_legend=False)
+    + geom_bar(width=0.62, color=PAGE_BG, size=0.6, show_legend=False)
     + geom_text(
-        aes(label=after_stat("count")), stat="count", color=INK, size=8, va="bottom", nudge_y=8, format_string="{:.0f}"
+        aes(label=after_stat("count")),
+        stat="count",
+        color=INK,
+        size=8,
+        va="bottom",
+        nudge_y=10,
+        fontweight="bold",
+        format_string="{:.0f}",
+    )
+    + geom_text(
+        aes(label=after_stat("prop"), group=1),
+        stat="count",
+        color=INK_MUTED,
+        size=6,
+        va="bottom",
+        nudge_y=27,
+        format_string="{:.0%}",
     )
     + scale_fill_manual(values={"Mode": BRAND, "Other": INK_MUTED})
+    + scale_y_continuous(breaks=[0, 100, 200, 300], expand=(0, 0, 0.16, 0))
     + labs(x="Rating", y="Number of Responses", title="count-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
@@ -64,7 +84,7 @@ plot = (
         axis_line=element_line(color=INK_SOFT, size=0.4),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
-        plot_title=element_text(size=12, color=INK),
+        plot_title=element_text(size=12, color=INK, weight="bold"),
         text=element_text(size=7),
     )
 )
