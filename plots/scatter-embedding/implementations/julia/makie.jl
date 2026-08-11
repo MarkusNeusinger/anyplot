@@ -1,7 +1,7 @@
 # anyplot.ai
 # scatter-embedding: t-SNE and UMAP Embedding Visualization
-# Library: Makie.jl 0.21 | Julia 1.11
-# Quality: pending | Created: 2026-08-11
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 89/100 | Created: 2026-08-11
 
 using CairoMakie
 using Colors
