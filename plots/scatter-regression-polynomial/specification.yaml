@@ -6,7 +6,7 @@ title: Scatter Plot with Polynomial Regression
 
 # Specification tracking
 created: 2025-12-25T09:02:27Z
-updated: 2025-12-25T09:02:27Z
+updated: 2026-08-11T12:35:06Z
 issue: 2028
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - scatter
-    - regression
   data_type:
     - numeric
     - continuous
