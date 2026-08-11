@@ -1,0 +1,252 @@
+library: d3
+language: javascript
+specification_id: count-basic
+created: '2026-08-11T06:55:36Z'
+updated: '2026-08-11T07:09:17Z'
+generated_by: claude-sonnet
+workflow_run: 31466627135
+issue: 2033
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct count-plot semantics: raw per-respondent observations are counted at
+    render time via d3.rollup rather than pre-aggregated, matching the spec''s core
+    distinguishing feature'
+  - Bars sorted descending by frequency per the spec's Notes, with bold count labels
+    above each bar for precise reading
+  - 'Opacity-scaled fill (0.6-1.0, driven by count) creates a clear focal point on
+    the leading category while staying strictly within the Imprint palette (single
+    #009E73 source color, alpha only)'
+  - 'Fully theme-adaptive chrome: axis domains removed, subtle y-axis-only gridlines,
+    all text explicitly sized and colored from ANYPLOT_TOKENS, fully legible in both
+    light and dark renders'
+  - Realistic, neutral dataset (developer survey by primary language, n=640) with
+    a plausible long-tail distribution across 7 categories
+  - 'Clean idiomatic d3: d3.rollup for aggregation, scaleBand/scaleLinear, data joins
+    with .join(), no manual DOM manipulation outside the D3 idiom'
+  weaknesses:
+  - Design still reads as a well-executed standard sorted bar chart; a secondary encoding
+    (e.g. a subtle amber reference line/annotation on the leading category) would
+    push aesthetic sophistication further toward publication tier
+  - Library-mastery usage is centered on d3.rollup for the count aggregation; no other
+    d3-distinctive mechanics (custom tick formatting, layered generators, etc.) are
+    exercised
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "count-basic · javascript · d3 · anyplot.ai" (bold, dark) and subtitle "Developer survey · n = 640 respondents · sorted by frequency" (softer gray) centered at top; x-axis title "Primary Programming Language" and y-axis title "Number of Respondents" in dark ink; tick labels (Python, JavaScript, TypeScript, Java, Go, Rust, C++ on x; 0-180 on y) in soft gray; all clearly legible against the light background.
+      Data: 7 vertical bars sorted descending (165, 154, 101, 87, 65, 36, 32), rendered in #009E73 with fill-opacity scaled from 1.0 (Python, leftmost) down to ~0.6 (C++, rightmost), giving a visible emphasis gradient toward the leading category; bold count labels sit directly above each bar; subtle horizontal gridlines only.
+      Legibility verdict: PASS — no light-on-light text, all elements readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/subtitle/axis-title/tick-label structure, now rendered in white/light-gray tones; all text clearly visible against the dark background, no dark-on-dark failures observed.
+      Data: Same 7 bars with identical underlying fill color (#009E73) and the same per-bar opacity values as the light render — the leading bar (Python) remains the most vivid/saturated in both themes, confirming the data-color mapping (fill attribute, not a theme swap) is unchanged between themes; only the alpha-composited appearance shifts naturally with the different background, which is expected and not a theme-based recolor.
+      Legibility verdict: PASS — no dark-on-dark text, brand green #009E73 reads clearly on the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (16-26px); well-proportioned, readable
+          at desktop and at 400px mobile scale in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, subtitle, axis titles, ticks, count
+          labels, or bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 bars with padding 0.35, well-sized and clearly separated for the
+          category count
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue opacity emphasis, no red-green reliance, good contrast
+          in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area ~64% of canvas, balanced margins, nothing cut off, no canvas-gate
+          flag
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles appropriate for count data (no artificial
+          units needed)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both renders; backgrounds #FAF8F1/#1A1A17;
+          chrome fully theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Opacity-fade emphasis and clear typographic hierarchy elevate it
+          above a configured default, short of full publication polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-only gridlines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Descending sort + opacity emphasis creates a clear focal point on
+          the leading category
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine count plot: counts derived from raw per-respondent data
+          via d3.rollup, not pre-aggregated'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Descending sort and count labels above bars, both called out in the
+          spec's Notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=category, Y=count, all 7 categories visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; no legend needed (single series)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 categories (within 3-20 range) with meaningful long-tail variation,
+          not uniform
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Developer survey on primary programming language — real, neutral,
+          comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Counts sum to n=640 as stated in subtitle; proportions plausible
+          for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports->data->plot flow; the only helper is the LCG generator,
+          which the library guide explicitly recommends for deterministic randomness
+          in the browser
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global d3, none unused
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Builds one svg into #container per the mount-node contract, current
+          d3 v7 API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.rollup for aggregation, scaleBand/scaleLinear, axisBottom/axisLeft,
+          selection.data().join() throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3.rollup drives the count aggregation itself — a genuinely d3-distinctive
+          mechanic — but no further library-unique techniques are exercised beyond
+          that
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
