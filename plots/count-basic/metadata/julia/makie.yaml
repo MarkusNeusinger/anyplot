@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: count-basic
 created: '2026-08-11T06:57:03Z'
-updated: '2026-08-11T07:00:49Z'
+updated: '2026-08-11T07:17:06Z'
 generated_by: claude-sonnet
 workflow_run: 31466370147
 issue: 2033
@@ -12,39 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'True count-basic semantics: builds a raw per-session array of device labels and
-    manually tallies occurrences into a Dict rather than starting from precomputed
-    values, correctly demonstrating what differentiates a count plot from a plain
-    bar chart.'
+  - 'Genuine count-basic semantics: builds a raw per-session device array and manually
+    tallies into a Dict rather than starting from precomputed values, correctly showing
+    what differentiates a count plot from a plain bar chart.'
+  - 'Repair attempt fully addressed the prior review''s three concrete asks: added
+    a descriptive title prefix ("Device Type Sessions · count-basic · julia · makie
+    · anyplot.ai"), added percentage-of-total sub-labels beneath the count labels,
+    and added strokewidth/strokecolor bar edges for definition.'
   - 'Correct theme-adaptive chrome throughout: title/axis labels use INK, tick labels
-    use INK_SOFT, background flips FAF8F1 (light) / 1A1A17 (dark), top/right spines
-    removed, y-axis-only grid at low opacity.'
-  - Clean sorted-descending bar layout with precise count labels above each bar, and
-    the single-series legend is correctly omitted.
-  - Correct canvas size (3200x1800) and brand green (#009E73) as the sole data color,
-    identical across both themes.
+    use INK_SOFT, background flips #FAF8F1/#1A1A17 correctly, top/right spines removed,
+    y-axis-only grid at low opacity — both renders pass the readability check.'
+  - Correct canvas size (3200×1800), brand green (#009E73) as the data color, sorted-descending
+    bar order, dual count+percentage annotations, and single-series legend correctly
+    omitted.
   weaknesses:
-  - 'Design Excellence is generic: no descriptive title prefix, no visual emphasis
-    distinguishing the leading category, and no distinctive Makie-specific feature
-    usage beyond basic barplot!/text!/Axis keyword theming.'
-  - Bars lack the subtle stroke/edge the style guide recommends for definition, and
-    no percentage-of-total annotations were added even though the spec explicitly
-    calls them out as an optional enhancement.
+  - 'The intended visual-hierarchy technique does not render: bar_colors gives the
+    leading bar (i==1) opaque BRAND and the remaining bars RGBAf(BRAND..., 0.55) alpha,
+    but pixel-level inspection of both plot-light.png and plot-dark.png shows every
+    bar''s fill is the identical solid RGB(0,158,115) — no tint difference exists
+    anywhere in any bar''s interior. The alpha construction is effectively dead code;
+    all five bars look uniform, so the ''eye lands on the top device type first''
+    comment is not achieved visually.'
+  - Because the color-based emphasis silently fails, Design Excellence still relies
+    mostly on sort order and the (now-added) percentage labels rather than genuine
+    visual differentiation of the leading category.
+  - 'Library Mastery is still fairly generic: strokewidth/strokecolor and hidespines!
+    are now used (good), but no other Makie-distinctive feature (e.g. a legend, colorbar,
+    or layout technique) is demonstrated beyond the basic barplot!/text!/Axis combination.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "count-basic · julia · makie · anyplot.ai" in bold dark ink, top-left aligned axis labels "Device Type" / "Sessions" in dark ink, tick labels ("Mobile", "Desktop", "Tablet", "Smart TV", "Wearable", and y-axis 0/500/1000) in a slightly softer grey — all clearly legible. Only left/bottom spines are visible; a very subtle horizontal grid appears at 500 and 1000.
-      Data: Five vertical bars in brand green (#009E73), sorted descending by count (1150, 820, 340, 95, 45), each with a small dark count label centered just above the bar.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark-ink title "Device Type Sessions · count-basic · julia · makie · anyplot.ai" comfortably sized; dark-ink axis titles "Device Type" / "Sessions"; softer-grey tick labels for the five device categories and the 0/500/1000 y-ticks; a subtle horizontal grid at 500 and 1000; left/bottom spines only.
+      Data: Five bars sorted descending (Mobile 1150, Desktop 820, Tablet 340, Smart TV 95, Wearable 45), each a solid brand green (#009E73) with a thin off-white stroke separating bars, a dark count label centered above each bar, and a smaller grey percentage label beneath the count. Pixel sampling of every bar's interior (Mobile/Desktop/Tablet/Smart TV/Wearable) returns the identical RGB(0,158,115) in every bar — the code's intended alpha=0.55 tint on the four non-leading bars does not actually render; all bars are visually indistinguishable in color.
+      Legibility verdict: PASS (all title/axis/tick/count/percentage text is clearly readable against the light background).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and axis labels now rendered in light/off-white ink, tick labels in a lighter soft grey, spines and grid inverted to light-on-dark equivalents — all text is clearly readable, no dark-on-dark failures observed.
-      Data: Identical brand green (#009E73) bars in the same order and proportions as the light render, confirming data colors are unchanged across themes; count labels above each bar are legible in light grey against the dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and axis titles now in light/off-white ink, tick labels in a lighter soft grey, spines and grid flipped to their light-on-dark equivalents.
+      Data: Data colors are identical to the light render — pixel sampling again returns RGB(0,158,115) for every bar in both renders, confirming chrome-only theme flip and reconfirming the same missing-alpha-tint issue is present in this theme too. Count and percentage labels remain legible in dark-ink / soft-grey against the dark surface.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures; all text and bars are clearly distinguishable from the background).
   criteria_checklist:
     visual_quality:
       score: 29
@@ -55,67 +64,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and clearly readable in both themes
+        comment: All text readable in both themes; fonts explicitly sized
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Count labels well clear of bars, grid, and each other
+        comment: No collisions between labels, bars, or axes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wide, well-spaced bars (width=0.62) appropriate for 5 categories
+        comment: Sparse (5-category) bars are wide, bold, and clearly visible with
+          stroke separation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green, high contrast on both surfaces
+        comment: High-contrast single-hue chart, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, nothing clipped, generous margins
+        comment: 3200x1800 canvas confirmed, title within bounds, no overflow, y-lims
+          give headroom above tallest bar
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Device Type' / 'Sessions' labels, canonical title format
+        comment: Descriptive axis titles, correct mandated title format with descriptive
+          prefix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, correct theme-adaptive FAF8F1/1A1A17 backgrounds'
+        comment: 'Brand green #009E73, correct theme-adaptive #FAF8F1/#1A1A17 chrome
+          in both renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Competent but generic - no descriptive title prefix or extra design
-          flourish
+        comment: Descriptive title prefix and dual count+percentage labels add polish,
+          but the intended leading-bar color emphasis does not render (all bars pixel-identical)
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle y-only grid, generous whitespace
+        comment: Spines removed, subtle y-only grid, stroke-separated bars, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Sort order + count labels give some hierarchy, but no extra emphasis
-          on the leading bar
+        comment: Sort order plus new percentage labels help, but the core hierarchy
+          device (color/alpha emphasis on the top bar) is a no-op in the rendered
+          PNGs
     spec_compliance:
       score: 15
       max: 15
@@ -125,50 +140,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct count plot built from raw per-observation data
+        comment: 'True count-plot semantics: raw per-observation array tallied via
+          Dict, not precomputed'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted descending, count labels on bars, consistent width/spacing
+        comment: Sorted descending, count labels, percentage annotations, consistent
+          bar width/spacing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=device type, Y=count, all 5 categories shown
+        comment: x=category, y=count, all 5 categories shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Canonical title format; legend correctly omitted for single series
+        comment: Title matches mandated format with optional descriptive prefix; legend
+          correctly omitted for single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Core count-plot mechanics covered; optional percentage annotations
-          not added
+        comment: Sorting, count labels, and percentage-of-total annotations now all
+          present per spec notes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Web-analytics device-type sessions, plausible and neutral
+        comment: Plausible, neutral web-analytics device-session distribution
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Session counts 45-1150 are sensible for the domain
+        comment: Session counts (45-1150) are sensible for the domain
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -176,13 +194,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42)
+        comment: Random.seed!(42); final bar order deterministic since counts are
+          distinct
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -191,40 +210,41 @@ review:
         comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake UI
+        passed: false
+        comment: bar_colors alpha-differentiation branch is effectively dead code
+          — it never produces a visible effect in the saved PNGs
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) matches contract
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic barplot!/text!/Axis keyword theming
+        comment: Figure/Axis pattern, barplot!, text! with offset, hidespines!, strokewidth/strokecolor
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: No Makie-distinctive feature beyond basic API usage
+        comment: strokewidth/strokecolor bar edges now demonstrated per prior feedback,
+          but still no colorbar/legend/layout technique to further showcase Makie
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - edge-highlighting
