@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-11
@@ -35,13 +35,16 @@ TITLE = "count-basic · python · altair · anyplot.ai"
 
 # Aggregate counts and each category's share of the total via Altair's
 # declarative transform pipeline, so the percentage annotation is computed
-# inside the chart spec rather than pre-calculated in pandas.
+# inside the chart spec rather than pre-calculated in pandas. `isLeading`
+# flags the top category so it can carry a deliberate focal-point treatment
+# (stroke + full opacity + bold label) instead of a single flat green fill.
 base = (
     alt.Chart(df)
     .transform_aggregate(count="count()", groupby=["Response"])
-    .transform_joinaggregate(total="sum(count)")
+    .transform_joinaggregate(total="sum(count)", max="max(count)")
     .transform_calculate(pct="datum.count / datum.total * 100")
     .transform_calculate(label="format(datum.count, 'd') + ' (' + format(datum.pct, '.0f') + '%)'")
+    .transform_calculate(isLeading="datum.count == datum.max")
 )
 
 # Hover highlight: a real Altair selection, not a decorative effect — fully
@@ -49,11 +52,16 @@ base = (
 hover = alt.selection_point(on="pointerover", fields=["Response"], empty=False)
 
 bars = (
-    base.mark_bar(color=BRAND, cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
+    base.mark_bar(color=BRAND, cornerRadiusTopLeft=4, cornerRadiusTopRight=4, stroke=INK)
     .encode(
-        x=alt.X("Response:N", sort="-y", title="Survey Response"),
+        x=alt.X("Response:N", sort="-y", title="Survey Response", axis=alt.Axis(labelAngle=0)),
         y=alt.Y("count:Q", title="Number of Responses"),
-        opacity=alt.condition(hover, alt.value(1.0), alt.value(0.88)),
+        opacity=alt.when(hover)
+        .then(alt.value(1.0))
+        .when("datum.isLeading")
+        .then(alt.value(1.0))
+        .otherwise(alt.value(0.8)),
+        strokeWidth=alt.condition("datum.isLeading", alt.value(2.5), alt.value(0)),
         tooltip=[
             alt.Tooltip("Response:N", title="Response"),
             alt.Tooltip("count:Q", title="Count"),
@@ -63,9 +71,21 @@ bars = (
     .add_params(hover)
 )
 
-labels = base.mark_text(align="center", baseline="bottom", dy=-6, fontSize=14, fontWeight="bold", color=INK).encode(
-    x=alt.X("Response:N", sort="-y"), y="count:Q", text="label:N"
+# fontWeight isn't a data-driven Vega-Lite encoding channel, so the
+# bold-vs-muted label hierarchy is split into two filtered layers instead of
+# a single conditional encoding.
+label_encode = {"x": alt.X("Response:N", sort="-y"), "y": "count:Q", "text": "label:N"}
+label_leading = (
+    base.transform_filter("datum.isLeading")
+    .mark_text(align="center", baseline="bottom", dy=-6, fontSize=14, fontWeight="bold", color=INK)
+    .encode(**label_encode)
 )
+label_rest = (
+    base.transform_filter("!datum.isLeading")
+    .mark_text(align="center", baseline="bottom", dy=-6, fontSize=12, fontWeight="normal", color=INK_SOFT)
+    .encode(**label_encode)
+)
+labels = label_rest + label_leading
 
 chart = (
     (bars + labels)
