@@ -1,7 +1,7 @@
 // anyplot.ai
 // count-basic: Basic Count Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-08-11
+// Quality: 93/100 | Created: 2026-08-11
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;

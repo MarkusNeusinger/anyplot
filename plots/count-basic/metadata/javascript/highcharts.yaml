@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: count-basic
 created: '2026-08-11T06:44:58Z'
-updated: '2026-08-11T06:48:44Z'
+updated: '2026-08-11T06:58:29Z'
 generated_by: claude-sonnet
 workflow_run: 31465986115
 issue: 2033
@@ -12,46 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - 'Genuine count-plot semantics: raw per-checkout genre observations are generated
-    and tallied in-code (not pre-aggregated), matching the spec''s core distinction
-    from a plain bar chart'
+  - 'Repair directly addressed all three Attempt-1 weaknesses: added a plotLines mean-reference
+    dashed line, a percentage-of-total dataLabels formatter, and borderRadius: 4 on
+    the columns — moving the chart from generic to intentionally designed'
   - 'First series is exactly #009E73 and the remaining bars follow the Imprint canonical
     palette order 1-8 precisely, with identical data colors between light and dark
     renders'
-  - Bars sorted by frequency descending per the spec's notes, with count data labels
-    above each bar for precise reading
-  - All font sizes explicitly set (22px title, 16px axis title, 14px ticks/labels);
-    canvas gate passed exactly at 3200x1800 with no clipping or overlap in either
-    theme
-  - 'Clean, deterministic code: seeded LCG(42), no unused imports, mount-node contract
-    and animation:false followed correctly'
+  - 'Genuine count-plot semantics: 1200 raw per-checkout genre observations are generated
+    with a seeded LCG(42) and tallied in-code, matching the spec''s core distinction
+    from a plain pre-aggregated bar chart'
+  - All font sizes explicitly set (22px title, 16px axis title, 14px ticks, 12px plotLine
+    label); canvas gate passed exactly at 3200x1800 with no clipping in either theme
+  - 'Clean, idiomatic Highcharts usage: mount-node contract respected, animation disabled
+    on chart and series, credits removed, colorByPoint + custom dataLabels.formatter
+    + plotLines used together coherently'
   weaknesses:
-  - 'Design Excellence is generic: a plain column chart with default spacing and no
-    additional visual hierarchy beyond the sort order and brand-green lead bar — no
-    subtle refinements like a highlighted focal bar, muted secondary bars, or a summary
-    annotation to strengthen the storytelling'
-  - 'Library Mastery is minimal: only uses colorByPoint + dataLabels, none of Highcharts''
-    more distinctive column-chart capabilities (e.g. plotLines/plotBands for a mean-reference
-    line, custom dataLabel formatter with percentage-of-total, or column borderRadius)
-    are used to differentiate this from a generic bar-chart implementation'
-  - 'Visual refinement is functional but not polished: gridlines and axis chrome use
-    plain style-guide defaults with no additional refinement (e.g. borderRadius on
-    columns, softened bar edges) that would lift it toward publication-grade polish'
+  - 'The ''Mean: 150'' plotLine label sits only ~2-5px from the right canvas edge
+    in both renders — not clipped (the trailing ''0'' is fully visible with a hairline
+    margin), but tight enough to be worth a small buffer; nudge the label x-offset
+    inward or reduce the right-side plot margin slightly'
+  - 'Data storytelling is improved but still modest: the mean-reference line and percentage
+    labels add context, but there is no direct callout (e.g. labeling the leading
+    genre) that would push it to an immediately-obvious insight'
+  - Library Mastery relies on one standout Highcharts capability (plotLines); a second
+    distinctive touch (e.g. per-point color override via point.color, or dataLabels.crop/overflow
+    tuning) would strengthen differentiation further, though this is optional polish,
+    not a blocking issue
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "count-basic · javascript · highcharts · anyplot.ai" is bold dark text, clearly legible, centered, occupying ~65% of the plot width. Y-axis title "Checkouts" (rotated) and x-axis genre labels (Fiction, Fantasy, Mystery, Sci-Fi, Biography, Romance, History, Poetry) are dark/soft-ink text, fully readable against the light background. Horizontal gridlines are thin and subtle. Count value labels sit directly above each bar in dark text, all legible with no overlap.
-      Data: 8 vertical columns sorted descending by count (238 -> 76). First bar (Fiction) is brand green #009E73; remaining bars cycle through lavender, blue, ochre, matte red, cyan, rose, and lime in canonical Imprint order. No red-green-only encoding.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "count-basic · javascript · highcharts · anyplot.ai" centered near the top (~31% of canvas width, well within bounds, no clipping). Rotated "Checkouts" y-axis title and eight genre category labels (Fiction, Fantasy, Mystery, Sci-Fi, Biography, Romance, History, Poetry) render in dark/soft-ink text on the x-axis. Thin horizontal gridlines are subtle. A dashed "Mean: 150" reference line with its label crosses the plot near the Sci-Fi bar; the label sits close to the right canvas edge but every pixel is visible (no clipping).
+      Data: Eight vertical columns with rounded top corners (borderRadius), sorted descending by count (238 down to 76), each with a "count (percentage%)" data label above it (e.g. "238 (20%)"). First bar is #009E73 (brand green), remaining bars follow the Imprint canonical order (lavender, blue, ochre, matte red, cyan, rose, lime).
+      Legibility verdict: PASS — all title, axis, tick, and data-label text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title and axis text render in light/off-white tone, clearly legible against the dark background. Gridlines are faint but visible. Count value labels above bars are light-colored and readable, no dark-on-dark issue anywhere.
-      Data: Identical bar colors and order to the light render (green, lavender, blue, ochre, red, cyan, rose, lime) — confirms data colors are held constant while only chrome (background/text/grid) flips.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, category labels, and "Mean: 150" reference line now render in light/off-white tone (title/axis text) and soft light-gray (tick labels), fully legible against the dark surface. Gridlines remain subtle. No dark-on-dark failures observed anywhere, including the tight-to-the-edge mean label.
+      Data: Bar colors are pixel-identical to the light render (green, lavender, blue, ochre, red, cyan, rose, lime in the same canonical order and same rounded-corner styling), confirming only chrome (background/text/grid) flips between themes, not data colors.
+      Legibility verdict: PASS — all text readable in the dark theme; brand green and all seven other palette colors remain clearly distinguishable against the near-black surface.
+
+    Note: close pixel-level inspection (4x crop) shows minor chromatic fringing (blue/orange edge pixels) on all text elements uniformly across both renders — a browser sub-pixel font-antialiasing artifact of the render harness, not something the implementation code controls, and invisible at normal viewing scale. Not counted against legibility scoring.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -62,71 +65,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, well-proportioned, readable in both
-          themes and at scale
+        comment: All font sizes explicitly set (22/16/14/12px); fully readable in
+          both themes at full size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, axis text, tick labels, or data labels
+        comment: No text/data collisions; mean-line label sits in empty space to the
+          right of all bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8 wide columns are appropriately sized for the sparse category count
+        comment: Eight columns clearly visible, rounded corners add definition, mean
+          reference line clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; no red-green-only encoding
+        comment: Imprint palette provides adequate contrast and CVD-safe distinction
+          between all 8 bars
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed at exactly 3200x1800, no clipping or overflow
+        comment: Plot fills canvas well with balanced margins; mean label is tight
+          to the right edge but fully within canvas bounds, no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Checkouts' is descriptive; x-axis genre category labels are
-          self-descriptive
+        comment: '''Checkouts'' y-axis title descriptive; genre names on x-axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First bar is exactly #009E73; remaining bars follow canonical Imprint
-          order 1-8; backgrounds theme-correct in both renders'
+        comment: 'First series #009E73, canonical Imprint order for remaining bars,
+          theme-correct chrome in both renders'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean but standard column chart; sort-by-frequency and brand-green
-          lead bar give some intentional hierarchy but nothing beyond that
+        passed: true
+        comment: Mean-reference line, percentage labels, and rounded columns push
+          this clearly above a default column chart
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Y-axis spine omitted and grid is subtle, but no further refinement
-          (e.g. rounded bar corners, softened edges)
+        passed: true
+        comment: Rounded bar corners (new this attempt), subtle grid, spine omission,
+          generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Descending sort creates a basic focal point (Fiction/green first)
-          but there is no additional emphasis or annotation to guide the eye further
+        passed: true
+        comment: Mean-reference line and percentage-of-total labels create real visual
+          hierarchy guiding the reader to above/below-average genres
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Genuine count plot: raw per-checkout records are tallied in-code,
-          not pre-aggregated'
+        comment: Correct count-plot / column chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted descending by frequency, count labels above bars, consistent
-          bar width/spacing
+        comment: Sorted descending by frequency, count labels present, consistent
+          bar width/spacing per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = genre categories, Y = counts, all 8 categories shown
+        comment: Categories on x-axis, counts on y-axis, all 8 genres shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed for single
-          series with category axis
+        comment: Title matches exact mandated format; legend correctly omitted (colorByPoint
+          on single series)
     data_quality:
       score: 15
       max: 15
@@ -167,21 +172,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates raw-record tallying, sorting, and count labeling — all
-          core count-plot aspects
+        comment: 8 categories with varied, realistic frequency distribution (238 down
+          to 76)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Library genre checkouts is a realistic, neutral domain
+        comment: Library checkout genres — real, neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1200 raw observations across 8 weighted genres yields plausible,
-          well-scaled counts (76-238)
+        comment: Plausible checkout volumes and weighted distribution across genres
     code_quality:
       score: 10
       max: 10
@@ -191,50 +195,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only a minimal seeded-RNG helper function; no classes, no over-structuring
+        comment: Data -> Chart, no classes, minimal helper functions (LCG, formatter)
+          appropriate for the API
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG(42) is fully deterministic
+        comment: Seeded LCG(42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only harness globals used
+        comment: No unused imports; Highcharts global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract followed; animation disabled on chart and series
+        comment: Mount-node contract respected, animation disabled, current Highcharts
+          API
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of Highcharts.chart, plotOptions.column, colorByPoint,
-          dataLabels
+        comment: colorByPoint, dataLabels.formatter, plotLines, borderRadius used
+          together idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No distinctive Highcharts-only capabilities used (e.g. plotLines,
-          custom dataLabel formatter, borderRadius)
-  verdict: REJECTED
+        passed: true
+        comment: plotLines mean-reference line with declarative label positioning
+          is a genuinely distinctive Highcharts capability
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
