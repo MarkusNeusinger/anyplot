@@ -31,6 +31,19 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// Redundant shape encoding (on top of hue) so cluster identity survives
+// colorblind confusion at n=8 — each shape maps 1:1 to a cluster/legend entry.
+const POINT_STYLES = [
+  "circle",
+  "triangle",
+  "rect",
+  "rectRot",
+  "star",
+  "crossRot",
+  "rectRounded",
+  "cross",
+];
+
 const clusters = [
   { label: "T cells", cx: -20, cy: 14, sx: 6, sy: 5 },
   { label: "B cells", cx: -28, cy: -10, sx: 5, sy: 6 },
@@ -50,10 +63,46 @@ const datasets = clusters.map((cluster, i) => ({
     y: cluster.cy + gaussian() * cluster.sy,
   })),
   backgroundColor: hexToRgba(t.palette[i % t.palette.length], 0.65),
-  borderWidth: 0,
+  borderColor: t.palette[i % t.palette.length],
+  borderWidth: 1,
+  pointStyle: POINT_STYLES[i % POINT_STYLES.length],
   pointRadius: 4,
   pointHoverRadius: 4,
 }));
+
+// Cluster centroids (mean of the generated points), used by the custom
+// centroid-label plugin below — an explicit per-cluster anchor beyond the
+// legend, per the spec's "optionally annotate centroids" guidance.
+const centroids = datasets.map((dataset) => {
+  const n = dataset.data.length;
+  const sumX = dataset.data.reduce((acc, p) => acc + p.x, 0);
+  const sumY = dataset.data.reduce((acc, p) => acc + p.y, 0);
+  return { label: dataset.label, x: sumX / n, y: sumY / n };
+});
+
+// Native Chart.js plugin (not a chartjs-chart-* community plugin) that draws
+// a halo-outlined label at each cluster centroid directly on the canvas.
+const centroidLabelsPlugin = {
+  id: "centroidLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    ctx.save();
+    ctx.font = "600 13px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
+    centroids.forEach((c) => {
+      const px = scales.x.getPixelForValue(c.x);
+      const py = scales.y.getPixelForValue(c.y) - 16;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = t.pageBg;
+      ctx.strokeText(c.label, px, py);
+      ctx.fillStyle = t.ink;
+      ctx.fillText(c.label, px, py);
+    });
+    ctx.restore();
+  },
+};
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -63,6 +112,7 @@ document.getElementById("container").appendChild(canvas);
 new Chart(canvas, {
   type: "scatter",
   data: { datasets },
+  plugins: [centroidLabelsPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
@@ -89,9 +139,8 @@ new Chart(canvas, {
           color: t.inkSoft,
           font: { size: 14 },
           usePointStyle: true,
-          pointStyle: "circle",
-          boxWidth: 8,
-          boxHeight: 8,
+          boxWidth: 10,
+          boxHeight: 10,
           padding: 14,
         },
       },
