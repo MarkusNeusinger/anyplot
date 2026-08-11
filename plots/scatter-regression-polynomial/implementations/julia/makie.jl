@@ -20,7 +20,7 @@ const IMPRINT_PALETTE = [
     colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
 const BRAND = IMPRINT_PALETTE[1]
-const FIT_COLOR = IMPRINT_PALETTE[3]
+const FIT_COLOR = IMPRINT_PALETTE[2]
 
 # --- Data: cannon-launch trajectory measurements -------------------------------
 n_shots = 90
@@ -55,7 +55,7 @@ eqn_text = "ŷ = $(round(coeffs[3], digits=4))x² $(b_sign) $(abs(round(coeffs[2
 
 # --- Plot -----------------------------------------------------------------------
 title_str = "Projectile Motion · scatter-regression-polynomial · julia · makie · anyplot.ai"
-title_fontsize = round(Int, 20 * 67 / length(title_str))
+title_fontsize = max(18, round(Int, 32 * 67 / length(title_str)))
 
 fig = Figure(
     resolution = (1600, 900),
