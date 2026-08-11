@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bland-altman-basic
 created: '2026-08-11T11:04:36Z'
-updated: '2026-08-11T11:08:37Z'
+updated: '2026-08-11T11:17:20Z'
 generated_by: claude-sonnet
 workflow_run: 31484245083
 issue: 2032
@@ -12,126 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-alt
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 93
 review:
   strengths:
-  - 'Correct Bland-Altman construction: x = mean(A,B), y = A−B, with all three required
-    reference lines (solid bias, dashed ±1.96 SD)'
-  - Bias and limits-of-agreement values are numerically annotated on the plot via
-    plotLines labels in the reserved right margin, never overlapping data
-  - Theme-adaptive chrome is threaded correctly through every element (title, axis
-    titles, ticks, gridlines, plotLine colors) — both renders are fully readable with
-    no dark-on-dark or light-on-light failures
-  - Marker styling (fillOpacity 0.55, pageBg-colored stroke) gives moderate transparency
-    to reveal overlapping points as the spec requests, while the stroke color adapts
-    per theme instead of a hardcoded white edge
-  - Deterministic in-memory LCG data generation, single flat script with no unnecessary
-    abstraction
-  - 'Correct mount-node contract: animation disabled on chart and series, credits
-    disabled, transparent chart background, no explicit width/height'
+  - 'Correctly addressed both prior-attempt weaknesses: tightened device-agreement
+    noise (SD ≈ 3.4, LoA [-7.4, 6.1]) to a clinically realistic range, and added a
+    distinctive Highcharts tooltip.formatter surfacing Device A, Device B, and the
+    paired difference'
+  - Added a shaded plotBand between the ±1.96 SD limits, giving the chart clear visual
+    hierarchy and an 'acceptable range' focal point beyond a raw scatter
+  - 'Removed vertical gridlines (xAxis gridLineWidth: 0), producing a cleaner near-L-frame
+    look versus the previous boxed grid'
+  - 'Correct Bland-Altman construction: solid bias line + dashed ±1.96 SD lines with
+    numeric labels reserved in a dedicated right margin, never overlapping data'
+  - Theme-adaptive chrome fully correct in both renders — identical brand-green (#009E73)
+    data points, all text legible, no dark-on-dark or light-on-light failures
+  - Deterministic in-memory LCG data generation, clean flat script, correct mount-node
+    contract (animation disabled on chart and series, credits disabled, transparent
+    background, no explicit width/height)
   weaknesses:
-  - Simulated device disagreement is fairly wide for a two-sphygmomanometer comparison
-    (SD ≈ 5.6, LoA ≈ [-12.2, 9.9], one outlier near 18 mmHg) — real inter-device BP
-    agreement studies usually show tighter limits; narrowing the noise scale would
-    read as more clinically realistic
-  - 'Design Excellence is competent but generic: aside from the plotLine annotations,
-    styling is close to a standard Highcharts scatter with grid on both axes — a bit
-    more visual hierarchy (e.g. shading the acceptable LoA band, or muting the LoA
-    line labels relative to the bias label more strongly) would lift the storytelling
-    further'
-  - Library Mastery is limited to scatter + plotLines; no distinctive Highcharts-only
-    feature (e.g. custom tooltip formatting for the paired values) is used to set
-    the render apart in the interactive HTML view
+  - Right-margin reference-line labels (Bias / +1.96 SD / −1.96 SD) are legible but
+    purely functional in styling — a subtle elevated-bg chip behind each label would
+    lift typographic polish further
+  - The leftmost data points (~x=100–102) sit close to the axis start with little
+    left-side breathing room; comfortably inside the canvas, but a touch more padding
+    would balance the composition
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), not pure white — matches the required light surface.
-      Chrome: Title "bland-altman-basic · javascript · highcharts · anyplot.ai" is bold dark ink, clearly legible. X-axis title "Mean of Two Devices (mmHg)" and y-axis title "Difference: Device A − Device B (mmHg)" are in a soft dark gray, readable. Tick labels on both axes are legible dark gray against the cream background. Gridlines are thin and subtle on both axes (appropriate for a scatter plot). A solid dark horizontal line marks "Bias: -1.2" and two dashed gray lines mark "+1.96 SD: 9.9" and "−1.96 SD: -12.2", each with a label placed in the reserved right margin — none of the labels overlap data points or each other.
-      Data: ~90 green (#009E73) scatter points with moderate fill transparency (opacity ~0.55) and a light stroke, so overlapping points remain distinguishable. Points scatter fairly evenly across the x-range (~95–185 mmHg) with most differences between the two dashed limit lines and a couple of visible outliers (~18 and ~-16).
-      Legibility verdict: PASS — all title, axis, tick, and annotation text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Title "bland-altman-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top-center. Axis titles "Mean of Two Devices (mmHg)" (x) and "Difference: Device A − Device B (mmHg)" (y) in dark-soft ink, both with units. Tick labels dark-soft, subtle horizontal-only gridlines. Solid dark "Bias: -0.7" line and two dashed gray "+1.96 SD: 6.1" / "−1.96 SD: -7.4" lines, each labeled in a reserved right margin so nothing overlaps data. A faint green-tinted plotBand shades the region between the two limits of agreement.
+      Data: ~90 brand-green (#009E73) scatter points at moderate fill opacity (~0.55) with pageBg-colored stroke, so overlapping points (e.g. two points near x≈103, y≈-5.3) remain distinguishable. A handful of points sit outside the shaded LoA band (e.g. (135, 11), (161, -8.6), (102, -9.8)), correctly illustrating outliers.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), not pure black — matches the required dark surface.
-      Chrome: Title and axis titles render in light/off-white ink, tick labels in a lighter gray — all clearly legible against the dark background. Gridlines are faint light-toned lines, still visible but subtle. The bias plotLine is now a white/light solid line with a light-colored "Bias: -1.2" label; the two LoA dashed lines and their labels use a lighter gray, all legible with no dark-on-dark failures anywhere (title, axis titles, ticks, and plotLine labels all flipped correctly to light ink).
-      Data: Same ~90 points in identical brand green (#009E73), same positions and same transparency as the light render — confirms data colors are theme-independent as required.
-      Legibility verdict: PASS — no dark-on-dark or unreadable elements; every text element and the bias/LoA labels are clearly visible against the near-black surface.
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Title, axis titles, and tick labels all flip to light/off-white ink and remain fully legible. The bias/LoA plotLines and their labels also flip to light tones with no dark-on-dark failures anywhere. The shaded plotBand remains faintly visible as a subtle green tint against the dark surface.
+      Data: Points are the identical brand green (#009E73) in identical positions to the light render, confirming data colors are theme-independent — only chrome flipped.
+      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes; no exceptional
-          refinement beyond the style-guide defaults
+        comment: All font sizes explicit (title 22px, axis titles 16px, ticks/annotations
+          14px); readable in both themes with no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, plotLine labels, or data points; right
-          margin reserved for annotation labels
+        comment: Right-margin annotation labels never collide with data or each other
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size/opacity reasonable for ~90 points (medium density); not
-          the most prominent choice but adequate
+        comment: Marker radius 5 with fillOpacity 0.55 well-suited to ~90 points,
+          overlaps stay visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue brand green with adequate contrast on both surfaces; no
+        comment: Single-series brand green with good contrast on both surfaces, no
           red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped, title within bounds, margin reserved
-          for plotLine labels
+        comment: Balanced margins, reserved right-margin annotation space, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (mmHg)
+        comment: Both axis titles descriptive with units (mmHg)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; data
-          colors identical across themes'
+        comment: 'First series #009E73, theme-correct chrome and backgrounds in both
+          renders'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Theme-adaptive marker stroke and annotated reference lines show above-default
-          polish, but overall look is a fairly standard scatter
+        comment: Shaded LoA band, annotated reference lines, and theme-adaptive stroke
+          show above-default polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace via reserved right margin; grid
-          on both axes forms a boxed look rather than a minimal L-frame
+        comment: Vertical gridlines removed for a cleaner near-L-frame look versus
+          attempt 1's boxed grid; generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Bias/LoA annotations give the plot a clear analytical focal point
-          beyond a raw scatter
+        comment: Shaded acceptable-range band plus labeled bias/LoA lines give a clear
+          analytical focal point
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bland-Altman construction
+        comment: Correct Bland-Altman (mean-difference) scatter construction
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bias line, dashed LoA lines, annotated values, moderate marker transparency
-          all present
+        comment: Bias line, dashed ±1.96 SD lines, and numeric annotations all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = mean(A,B), y = A−B, correctly mapped
+        comment: x = mean(A,B), y = A-B, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; single-series legend correctly
-          omitted
+        comment: Title format correct; legend appropriately omitted for single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -171,21 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Scatter + bias + LoA + annotations cover all plot-type aspects
+        comment: Shows in-range points, overlapping points, and outliers beyond the
+          LoA band
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Paired systolic BP readings from two sphygmomanometers, neutral and
-          plausible
+        comment: Neutral, comprehensible medical-device comparison scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Value range (95-185 mmHg) is realistic; the device-disagreement noise
-          (SD≈5.6, LoA span ≈22) is somewhat wide for real inter-device agreement
+        comment: Noise tightened from attempt 1 (SD now ≈3.4, LoA [-7.4, 6.1]) — a
+          clinically plausible two-sphygmomanometer agreement range
     code_quality:
       score: 10
       max: 10
@@ -195,49 +187,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; minimal RNG helper functions only
+        comment: Flat script, only small RNG helper functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; relies on the provided Highcharts global
+        comment: No imports; only global Highcharts/tokens used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled everywhere, credits
-          disabled
+        comment: Correct mount-node contract, animation disabled, credits disabled
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic scatter + plotLines with styled labels
+        comment: Idiomatic scatter + plotLines + plotBands + tooltip.formatter usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: No Highcharts-distinctive feature beyond plotLines (e.g. custom tooltip
-          formatting for the HTML view) is used
+        passed: true
+        comment: New custom tooltip.formatter surfacing paired device values/difference
+          is a Highcharts-distinctive touch added this attempt
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -248,3 +239,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
