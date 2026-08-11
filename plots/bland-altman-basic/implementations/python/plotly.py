@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-11
@@ -67,55 +67,38 @@ fig.add_trace(
 )
 
 # Mean difference line (bias)
-fig.add_hline(
-    y=mean_diff,
-    line={"color": BRAND, "width": 3},
-    layer="below",
-    annotation_text="Mean",
-    annotation_position="right",
-    annotation_font_size=12,
-    annotation_font_color=INK,
-    annotation_bgcolor=ELEVATED_BG,
-    annotation_bordercolor=BRAND,
-    annotation_borderwidth=1.5,
-    annotation_borderpad=4,
-    row=1,
-    col=1,
-)
+fig.add_hline(y=mean_diff, line={"color": BRAND, "width": 3}, layer="below", row=1, col=1)
 
 # Upper limit of agreement
-fig.add_hline(
-    y=upper_loa,
-    line={"color": ACCENT, "width": 2.5, "dash": "dash"},
-    layer="below",
-    annotation_text="+1.96 SD",
-    annotation_position="right",
-    annotation_font_size=12,
-    annotation_font_color=ACCENT,
-    annotation_bgcolor=ELEVATED_BG,
-    annotation_bordercolor=ACCENT,
-    annotation_borderwidth=1.5,
-    annotation_borderpad=4,
-    row=1,
-    col=1,
-)
+fig.add_hline(y=upper_loa, line={"color": ACCENT, "width": 2.5, "dash": "dash"}, layer="below", row=1, col=1)
 
 # Lower limit of agreement
-fig.add_hline(
-    y=lower_loa,
-    line={"color": ACCENT, "width": 2.5, "dash": "dash"},
-    layer="below",
-    annotation_text="−1.96 SD",
-    annotation_position="right",
-    annotation_font_size=12,
-    annotation_font_color=ACCENT,
-    annotation_bgcolor=ELEVATED_BG,
-    annotation_bordercolor=ACCENT,
-    annotation_borderwidth=1.5,
-    annotation_borderpad=4,
-    row=1,
-    col=1,
-)
+fig.add_hline(y=lower_loa, line={"color": ACCENT, "width": 2.5, "dash": "dash"}, layer="below", row=1, col=1)
+
+# Line-end labels, anchored well inside the row=1,col=1 domain (x domain=0.95)
+# so they never cross into the marginal-histogram column and cover its bars.
+for label_text, label_y, label_color in (
+    ("Mean", mean_diff, BRAND),
+    ("+1.96 SD", upper_loa, ACCENT),
+    ("−1.96 SD", lower_loa, ACCENT),
+):
+    fig.add_annotation(
+        xref="x domain",
+        yref="y",
+        x=0.95,
+        y=label_y,
+        xanchor="right",
+        yanchor="middle",
+        text=label_text,
+        showarrow=False,
+        font={"size": 12, "color": INK if label_color == BRAND else label_color},
+        bgcolor=ELEVATED_BG,
+        bordercolor=label_color,
+        borderwidth=1.5,
+        borderpad=4,
+        row=1,
+        col=1,
+    )
 
 # Boxed summary of the agreement statistics, in one place instead of
 # scattered across three separate line labels
