@@ -1,6 +1,7 @@
 // anyplot.ai
 // count-basic: Basic Count Plot
-// Library: highcharts 12.6.0 | JavaScript 22.23.1
+// Library: Highcharts 12.6.0 | JavaScript 22.23.1
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 93/100 | Created: 2026-08-11
 
 //# anyplot-orientation: landscape
@@ -19,7 +20,16 @@ function lcg(seed) {
 }
 const random = lcg(42);
 
-const genres = ["Fiction", "Fantasy", "Mystery", "Sci-Fi", "Biography", "Romance", "History", "Poetry"];
+const genres = [
+  "Fiction",
+  "Fantasy",
+  "Mystery",
+  "Sci-Fi",
+  "Biography",
+  "Romance",
+  "History",
+  "Poetry",
+];
 const weights = [0.22, 0.18, 0.15, 0.13, 0.1, 0.09, 0.07, 0.06];
 const cumulative = weights.reduce((acc, w, i) => {
   acc.push((acc[i - 1] || 0) + w);
@@ -44,6 +54,9 @@ const categories = sorted.map((d) => d.genre);
 const values = sorted.map((d) => d.count);
 const total = values.reduce((sum, v) => sum + v, 0);
 const mean = total / values.length;
+const leader = sorted[0];
+const trailer = sorted[sorted.length - 1];
+const leadRatio = (leader.count / trailer.count).toFixed(1);
 
 // --- Chart -----------------------------------------------------------------
 Highcharts.chart("container", {
@@ -51,6 +64,7 @@ Highcharts.chart("container", {
     type: "column",
     backgroundColor: "transparent",
     animation: false,
+    spacingRight: 25,
     style: { fontFamily: "inherit" },
   },
   credits: { enabled: false },
@@ -58,6 +72,10 @@ Highcharts.chart("container", {
   title: {
     text: "count-basic · javascript · highcharts · anyplot.ai",
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+  },
+  subtitle: {
+    text: `${leader.genre} leads with ${leader.count} checkouts — ${leadRatio}× ${trailer.genre}'s ${trailer.count}`,
+    style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
     categories,
@@ -79,6 +97,7 @@ Highcharts.chart("container", {
         label: {
           text: `Mean: ${mean.toFixed(0)}`,
           align: "right",
+          x: -10,
           style: { color: t.inkSoft, fontSize: "12px" },
         },
       },
@@ -93,6 +112,8 @@ Highcharts.chart("container", {
       colorByPoint: true,
       dataLabels: {
         enabled: true,
+        crop: false,
+        overflow: "allow",
         color: t.ink,
         style: { fontSize: "14px", fontWeight: "500", textOutline: "none" },
         formatter: function () {
