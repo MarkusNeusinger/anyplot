@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: count-basic
 created: '2025-12-25T12:42:01Z'
-updated: '2026-08-11T07:22:07Z'
+updated: '2026-08-11T07:29:35Z'
 generated_by: claude-sonnet
 workflow_run: 31467764993
 issue: 2033
@@ -12,9 +12,19 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
+  - 'VQ-07 fix verified by direct pixel sampling: all five bars now render byte-identical
+    colors between light and dark renders (e.g. the ''Very Satisfied'' bar is RGB(0,158,115)
+    = #009E73 in both, ''Very Dissatisfied'' is RGB(174,48,48) = #AE3030 in both).
+    The root causes from the prior review -- missing opacity pin and embedded-alpha
+    rgba() tints -- are both resolved: opacity="1" is now set explicitly, and the
+    two tinted sentiment anchors are precomputed opaque hexes (#66C5AB, #CE8383) instead
+    of rgba() blends.'
+  - The _rgba() helper that previously introduced the theme-inconsistency bug has
+    been removed entirely, tightening code back to a flat, function-free KISS structure
+    with only a single list comprehension.
   - 'Full spec compliance: raw categorical responses are counted with collections.Counter
     (not pre-aggregated), count labels are printed above each bar for precise reading,
     and categories are kept in a sensible contextual (Likert) order rather than an
@@ -23,55 +33,33 @@ review:
     give each bar an individual sentiment color and a rich hover tooltip with percentage
     share, rounded_bars for polish, and guide_stroke_dasharray=''none'' to satisfy
     the style guide''s solid-not-dashed grid rule.'
-  - 'Clean, deterministic, minimal code: hardcoded realistic survey data (sums to
-    50 responses, plausible skew), no unused imports, correct output API (render_to_png
-    + render() to .html per the pygal library rules).'
   - 'Canvas gate passes exactly: both plot-light.png and plot-dark.png measure 3200x1800.'
-  - Thoughtful semantic-exception color mapping (positive to green, negative to red,
-    neutral to muted) matching the style guide's documented sentiment/polarity exception
-    for Likert-style categorical data.
   weaknesses:
-  - 'VQ-07 hard-rule violation, pixel-verified: bar fill colors are NOT identical
-    between the light and dark renders. Direct pixel sampling: the ''Very Satisfied''
-    bar (assigned the literal Imprint hex #009E73) is RGB(50,176,140) in plot-light.png
-    but RGB(5,129,95) in plot-dark.png -- a genuinely different composited color,
-    not just a different-looking one due to surrounding contrast. The ''Neutral''
-    bar shows the same shift (150,148,141) -> (126,125,118). Root cause #1: custom_style
-    never sets `opacity` explicitly, so pygal''s default series fill-opacity composites
-    literal-hex bar fills against `plot_background`, and since `plot_background` flips
-    between themes (#FAF8F1 vs #1A1A17), every solid-hex bar''s rendered color flips
-    too. Fix: add `opacity=''1''` to the Style(...) call so literal-hex fills stop
-    blending with the background. Root cause #2 (separate, does not go away with the
-    opacity fix): the ''Dissatisfied'' and ''Satisfied'' bars use the `_rgba(hex,
-    0.6)` helper, which bakes a partial alpha directly into the fill color itself
-    -- rgba(0,158,115,0.6) will always alpha-composite against whatever sits behind
-    it (the plot background), so these two bars can never be theme-invariant while
-    they carry embedded alpha. Measured: tinted red goes from pale salmon RGB(218,164,160)
-    in light to dark maroon RGB(88,35,33) in dark; tinted green goes from pale mint
-    RGB(145,210,188) in light to deep forest RGB(15,81,61) in dark -- a much larger
-    perceptual shift than the literal-hex bars. Fix: replace the two rgba-tinted anchors
-    with concrete, precomputed opaque hex values (e.g. a fixed lighter/darker shade
-    baked to a literal hex, not left as embedded-alpha rgba), so the same category
-    renders the identical hex in both themes.'
-  - 'CQ-01 minor: the `_rgba()` helper function is a small deviation from the flat,
-    function-free KISS style typical of this catalog''s simplest implementations;
-    it is also the mechanism behind the theme-inconsistency weakness above, so resolving
-    that fix (baking to literal opaque hexes) would remove this helper entirely.'
+  - 'Design Excellence is still the weakest category: the sentiment color mapping
+    and rounded bars show real intent (DE-01), but grid/whitespace refinement (DE-02)
+    and storytelling emphasis (DE-03) are only moderate -- e.g. no explicit callout
+    or annotation drawing attention to the dominant ''Satisfied'' response, so the
+    viewer must read the bar heights themselves rather than being guided to the insight.'
+  - Value label color is pinned to a single flat INK tone (value_colors=(INK,)) across
+    all five differently-colored bars; it reads fine here because the bars are light/mid-toned
+    enough for dark-ink contrast in both themes, but this is a coincidence of the
+    current sentiment palette rather than a per-bar contrast calculation -- worth
+    a second look if bar colors are ever swapped for darker fills.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matches spec, not pure white.
-      Chrome: Title "count-basic · python · pygal · anyplot.ai" centered at top, dark ink, ~71% of plot width -- within the expected range for the mandated title. X-axis title "Satisfaction Level" and y-axis title "Number of Responses" both dark ink, clearly readable. Rotated (30 deg) category tick labels (Very Dissatisfied, Dissatisfied, Neutral, Satisfied, Very Satisfied) fully visible with no clipping. Y-axis tick labels (0-20, step 2) legible. Horizontal solid gridlines, subtle and non-dominant. Count value labels (1, 5, 8, 21, 15) printed above each bar in dark ink, all readable.
-      Data: 5 vertical bars, one per satisfaction category, sentiment-colored -- dark red (Very Dissatisfied), pale tinted red (Dissatisfied), gray (Neutral), pale tinted green (Satisfied), full brand green (Very Satisfied). Rounded bar corners, thin darker stroke outline.
+      Background: Warm off-white, sampled RGB(250,248,241) ~= #FAF8F1, matches spec exactly, not pure white.
+      Chrome: Title "count-basic · python · pygal · anyplot.ai" centered at top in dark ink, spans roughly 70-75% of the plot width -- within the expected range for the long mandated title. X-axis title "Satisfaction Level" and y-axis title "Number of Responses" both in dark ink, clearly readable and visually balanced against each other. Rotated (30 deg) category tick labels (Very Dissatisfied, Dissatisfied, Neutral, Satisfied, Very Satisfied) are fully visible with no clipping. Y-axis tick labels (0-20, step 2) legible. Horizontal solid gridlines are subtle, non-dominant, and not dashed. Count value labels (1, 5, 8, 21, 15) are printed above each bar in dark ink, all clearly readable.
+      Data: 5 vertical rounded-corner bars, one per satisfaction category, sentiment-colored: dark red RGB(174,48,48) for Very Dissatisfied, tinted pink/salmon RGB(206,131,131) for Dissatisfied, neutral gray RGB(138,137,129) for Neutral, tinted mint RGB(102,197,171) for Satisfied, full brand green RGB(0,158,115) = #009E73 for Very Satisfied.
       Legibility verdict: PASS -- all text reads cleanly against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matches spec, not pure black.
-      Chrome: Same title, axis titles and tick labels now in light ink, all clearly legible with no dark-on-dark failures. Gridlines subtle. Value labels above bars are legible in light ink.
-      Data: Same 5 bars in the same category order. However, pixel sampling shows the fill colors are NOT byte-identical to the light render: e.g. the "Very Satisfied" bar samples RGB(50,176,140) in light vs RGB(5,129,95) in dark (should be the fixed #009E73 in both); the tinted "Dissatisfied"/"Satisfied" bars shift even more dramatically (pale salmon/mint in light vs dark maroon/forest-green in dark). This is a measurable violation of the "Imprint palette data colors must be identical between light and dark, only chrome flips" rule -- see Weaknesses for root cause and fix.
-      Legibility verdict: PASS for text (no dark-on-dark); FAIL for palette-identity (data colors shift between themes, see VQ-07 note).
+      Background: Warm near-black, sampled RGB(26,26,23) ~= #1A1A17, matches spec exactly, not pure black.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink, all clearly legible with no dark-on-dark failures. Gridlines remain subtle and solid. Value labels above bars are legible in light ink against each bar's fill.
+      Data: Same 5 bars in the same category order. Direct pixel sampling at the same coordinates as the light render confirms byte-identical fill colors: Very Dissatisfied RGB(174,48,48), Dissatisfied RGB(206,131,131), Neutral RGB(138,137,129), Satisfied RGB(102,197,171), Very Satisfied RGB(0,158,115) = #009E73 -- all match the light render exactly. This resolves the prior review's VQ-07 pixel-verified violation (opacity was previously unset and two bars used embedded-alpha rgba() tints, causing colors to composite against the theme-flipping plot_background). This attempt adds an explicit opacity="1" pin and replaces the rgba() tints with precomputed opaque hexes, so only chrome (background/text/grid) flips between themes while data colors stay fixed, as required.
+      Legibility verdict: PASS for text (no dark-on-dark); PASS for palette-identity (data colors now confirmed identical to light render via pixel sampling).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -80,7 +68,7 @@ review:
         max: 8
         passed: true
         comment: All title/axis/tick/value text is readable in both themes at appropriate
-          sizes (title 66, labels 56/44, values 36); no dark-on-dark or light-on-light.
+          explicit sizes (title 66, labels 56/44, values 36); no dark-on-dark or light-on-light.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -107,7 +95,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passes exactly at 3200x1800; title ~71% width is within
+        comment: Canvas gate passes exactly at 3200x1800; title ~70-75% width is within
           the expected range for the mandated title; no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
@@ -117,14 +105,13 @@ review:
         comment: Descriptive 'Satisfaction Level' / 'Number of Responses' axis titles.
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Pixel-verified: bar fill colors are not identical between light
-          and dark renders (e.g. #009E73 bar samples as RGB(50,176,140) light vs RGB(5,129,95)
-          dark). Caused by unset series opacity compositing against plot_background,
-          compounded by embedded-alpha rgba() tints on two bars. See weaknesses for
-          fix.'
+        passed: true
+        comment: 'Pixel-verified fix: bar fill colors are now byte-identical between
+          light and dark renders (e.g. #009E73 bar samples RGB(0,158,115) in both).
+          opacity="1" pin and precomputed opaque hex tints resolved the prior VQ-07
+          violation. Backgrounds are correct #FAF8F1 / #1A1A17.'
     design_excellence:
       score: 11
       max: 20
@@ -149,8 +136,7 @@ review:
         max: 6
         passed: true
         comment: Sentiment color gradation (bad->neutral->good) gives a clear focal
-          point within a single render; undercut somewhat by the cross-theme color-identity
-          issue.
+          point; no explicit annotation calling out the dominant response.
     spec_compliance:
       score: 15
       max: 15
@@ -181,7 +167,7 @@ review:
         max: 3
         passed: true
         comment: Title matches required 'count-basic · python · pygal · anyplot.ai'
-          format exactly; no legend needed (categories are on the x-axis, single series).
+          format exactly; no legend needed (single series, categories on x-axis).
     data_quality:
       score: 15
       max: 15
@@ -191,7 +177,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All categories represented with correct counts and labels.
+        comment: All 5 Likert categories represented with meaningfully varied counts
+          (1 to 21).
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -205,16 +192,16 @@ review:
         passed: true
         comment: 50 total responses, values 1-21, sensible for the domain.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly flat script; one small _rgba() helper function is a minor
-          deviation, also implicated in the VQ-07 bug.
+        comment: Flat script, no functions/classes -- the _rgba() helper from the
+          prior attempt was removed and replaced with precomputed hex constants.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -258,7 +245,7 @@ review:
         passed: true
         comment: Per-bar custom color + rich tooltip via point metadata is a genuinely
           pygal-specific technique.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -269,5 +256,4 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
