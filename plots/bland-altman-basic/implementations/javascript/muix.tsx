@@ -39,9 +39,21 @@ const stdDev = Math.sqrt(variance);
 const upperLimit = bias + 1.96 * stdDev;
 const lowerLimit = bias - 1.96 * stdDev;
 
-const points = meanValues.map((mean, i) => ({ x: mean, y: diffValues[i], id: i }));
+// Points outside the ±1.96 SD limits of agreement get an accent treatment —
+// they're the story the reviewer of a Bland-Altman plot looks for first.
+const withinLimits = [];
+const outsideLimits = [];
+meanValues.forEach((mean, i) => {
+  const diff = diffValues[i];
+  const point = { x: mean, y: diff, id: i };
+  if (diff > upperLimit || diff < lowerLimit) {
+    outsideLimits.push(point);
+  } else {
+    withinLimits.push(point);
+  }
+});
 
-const TITLE_HEIGHT = 60;
+const TITLE_HEIGHT = 66;
 
 // --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
@@ -60,8 +72,8 @@ export default function Chart() {
       <Typography
         sx={{
           color: t.ink,
-          fontSize: 22,
-          fontWeight: 500,
+          fontSize: 26,
+          fontWeight: 600,
           textAlign: "center",
           lineHeight: 1.2,
         }}
@@ -74,10 +86,18 @@ export default function Chart() {
         skipAnimation
         series={[
           {
-            data: points,
-            label: "Patient reading",
+            id: "within",
+            data: withinLimits,
+            label: "Within limits of agreement",
             markerSize: 7,
             color: "rgba(0, 158, 115, 0.6)",
+          },
+          {
+            id: "outside",
+            data: outsideLimits,
+            label: "Outside limits of agreement",
+            markerSize: 11,
+            color: "rgba(174, 48, 48, 0.85)",
           },
         ]}
         xAxis={[
@@ -96,7 +116,17 @@ export default function Chart() {
         ]}
         margin={{ left: 100, right: 140, top: 20, bottom: 90 }}
         grid={{ horizontal: true, vertical: true }}
-        slotProps={{ legend: { hidden: true } }}
+        slotProps={{
+          legend: {
+            position: { vertical: "top", horizontal: "middle" },
+            direction: "row",
+            labelStyle: { fontSize: 13, fill: t.inkSoft },
+          },
+        }}
+        sx={{
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+          "& circle": { stroke: t.pageBg, strokeWidth: 1 },
+        }}
       >
         <ChartsReferenceLine
           y={bias}
@@ -110,14 +140,14 @@ export default function Chart() {
           label={`+1.96 SD: ${upperLimit.toFixed(1)}`}
           labelAlign="end"
           lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 6", strokeWidth: 1.75 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
+          labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
         />
         <ChartsReferenceLine
           y={lowerLimit}
           label={`−1.96 SD: ${lowerLimit.toFixed(1)}`}
           labelAlign="end"
           lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 6", strokeWidth: 1.75 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
+          labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
         />
       </ScatterChart>
     </Box>
