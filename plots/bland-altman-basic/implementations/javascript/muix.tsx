@@ -1,8 +1,7 @@
 // anyplot.ai
 // bland-altman-basic: Bland-Altman Agreement Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-11
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 87/100 | Created: 2026-08-11
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
