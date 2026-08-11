@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:17:25Z'
-updated: '2026-08-11T10:58:47Z'
+updated: '2026-08-11T11:06:02Z'
 generated_by: claude-sonnet
 workflow_run: 31483804397
 issue: 2032
@@ -12,126 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-alt
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
+  - 'Repair fully addressed the attempt-1 weaknesses: outlier points now carry a redundant
+    diamond-shape encoding alongside red color, making the flag CVD-safe rather than
+    color-only'
+  - New subtitle ("Red diamonds mark points outside the 95% limits of agreement")
+    makes the encoding self-explanatory without needing a separate legend
+  - Annotation and axis text sizes were bumped (annotation 11->13pt, tick 10->11pt,
+    axis title 12->13pt), improving mobile-thumbnail legibility
   - 'Implements every required Bland-Altman feature: solid mean-bias line, dashed
-    ±1.96 SD limits of agreement, and annotated SD/bias values.'
-  - Thoughtful semantic coloring — points outside the limits of agreement are flagged
-    in red (Imprint AE3030) against the brand-green in-range points, creating a clear
-    analytical focal point.
-  - Moderate-transparency markers (opacity 0.7) reveal overlapping observations as
-    required by the spec.
-  - Elevated-surface annotation boxes give the SD/bias callouts strong contrast and
-    legibility in both themes.
-  - Correct canvas discipline — follows the altair pad-not-crop pattern, PNG lands
-    exactly on the 3200x1800 target with no clipping.
-  - Clean, idiomatic layered altair composition (mark_point + mark_rule + mark_rect
-    + mark_text), seeded/reproducible data, no unused imports.
-  - Both themes correctly implemented — data colors identical between light/dark,
-    chrome flips correctly, no dark-on-dark or light-on-light failures.
+    +/-1.96 SD limits, annotated SD/bias values with elevated-surface boxes for contrast
+    in both themes'
+  - Moderate-transparency markers (opacity 0.7) correctly reveal overlapping observations
+    per the spec
+  - 'Correct canvas discipline: pad-not-crop pattern followed, PNG lands exactly on
+    the 3200x1800 target, no clipping in either render'
+  - Clean, idiomatic layered altair composition (layer-composition, alt.condition,
+    configure_* chrome), seeded/reproducible data (np.random.seed(42)), no unused
+    imports
+  - Both themes correctly implemented with identical data colors and no dark-on-dark
+    or light-on-light legibility failures
   weaknesses:
-  - Outlier vs. in-range distinction relies primarily on red-vs-green color, a difficult
-    pairing for red-green colorblind viewers; position relative to the dashed LOA
-    lines is a redundant cue but a shape/stroke difference on outlier points would
-    make this fully CVD-safe.
-  - Annotation and tick text (fontSize 10-11) may read small when the plot is scaled
-    down to a ~400px mobile thumbnail — a modest bump for the annotation labels would
-    help.
-  - No legend or inline note clarifies what the red points mean for viewers unfamiliar
-    with Bland-Altman conventions — a small caption ('red = outside limits of agreement')
-    would make the encoding self-explanatory.
-  - Library mastery is solid but conventional — layering and conditional color are
-    used well, but nothing showcases a more distinctive altair capability (e.g. interactive
-    selection binding) beyond what this complexity level requires.
+  - Library mastery remains solid but conventional — layered composition plus conditional
+    shape/color encoding is a nice touch but doesn't showcase a more distinctive altair-specific
+    capability (e.g. interactive selection binding, faceting, or a custom transform)
+  - Visual refinement (spines/border removal, grid, whitespace) is unchanged from
+    attempt 1 — clean but not pushed further toward a more editorial, magazine-quality
+    finish
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with the #FAF8F1 page background token — not pure white, not dark.
-      Chrome: Title "bland-altman-basic · python · altair · anyplot.ai" is bold dark text, centered, comfortably sized (~50% plot width). X-axis label "Mean of Two Methods (mmHg)" and Y-axis label "Difference: Method 1 − Method 2 (mmHg)" are dark, legible, and proportionally balanced. Tick labels are dark gray, subtle gridlines are faint but visible.
-      Data: ~80 semi-transparent circular markers, brand green (#009E73) for in-range observations, a handful in red (#AE3030) for the 4 points falling outside the limits of agreement. A solid green horizontal line marks the mean bias (-2.44); two dashed magenta/purple (#C475FD) horizontal lines mark the +1.96 SD (6.55) and -1.96 SD (-11.44) limits. Three annotation boxes with a light elevated-surface fill and dark bordered text state the SD/bias values, placed clear of the data cloud on the right side of the plot.
-      Legibility verdict: PASS — all title, axis, tick, and annotation text is clearly readable against the light background; no light-on-light issues observed.
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Bold dark title "bland-altman-basic · python · altair · anyplot.ai" centered above the plot, with a new subtitle "Red diamonds mark points outside the 95% limits of agreement" in muted ink. Dark axis titles/tick labels, subtle light-opacity gridlines. Annotation boxes (Mean bias / +1.96 SD / -1.96 SD) use a light elevated-surface fill with a soft border and bold dark text.
+      Data: ~80 semi-transparent green (#009E73) circular markers for in-range observations, 4 red (#AE3030) diamond markers flagging points outside the limits of agreement (redundant shape+color encoding). Solid green mean-bias line (-2.44), two dashed purple (#C475FD) limit-of-agreement lines (+1.96 SD: 6.55, -1.96 SD: -11.44).
+      Legibility verdict: PASS - all title, subtitle, axis, tick, and annotation text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with the #1A1A17 page background token — not pure black, not light.
-      Chrome: Same title and axis labels rendered in light/off-white text, clearly visible against the dark background. Gridlines are faint dark-gray, still perceptible. Annotation boxes switch to a dark elevated-surface fill with light text and a soft border, maintaining contrast.
-      Data: Same green (#009E73) and red (#AE3030) marker colors as the light render — confirmed identical, only the chrome (background, text, grid, annotation box fill) flips theme. Mean-bias line and dashed LOA lines are unchanged and remain clearly visible against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/annotation text is light-colored and reads cleanly against the near-black surface. Brand green remains visible on the dark surface.
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Same layout; title/subtitle and axis/tick text switch to light/off-white tones, annotation boxes switch to a dark elevated fill with light bold text and a soft light-ink border.
+      Data: Marker colors (green in-range circles, red outlier diamonds), the green bias line, and the dashed purple LOA lines are identical to the light render — only chrome (background, text, grid, box fill) flips theme, as required.
+      Legibility verdict: PASS - all title, subtitle, axis, tick, and annotation text is clearly readable against the dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; annotation/tick
-          fontSize (10-11) may read small at ~400px mobile thumbnail.
+        comment: Fontsizes explicitly set and bumped this attempt (annotation 11->13pt,
+          tick 10->11pt, axis title 12->13pt); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; annotation boxes placed clear of the data cloud;
-          intentional point overlap via alpha is by design per spec.
+        comment: No text collisions; annotation boxes clear of the data cloud and
+          the new subtitle
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size (110) and opacity (0.7) well-suited to 80-point density.
+        comment: Marker size/opacity well-suited to 80-point density; outlier diamonds
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Outlier flag relies on red-vs-green, a difficult CVD pairing; position
-          beyond the dashed LOA lines is a redundant but implicit cue.
+        comment: Outlier flag now uses redundant diamond-shape + red color, no longer
+          color-only; fixes attempt-1 CVD-risk finding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, proportions correct, no overflow or cut-off content.
+        comment: Canvas gate passed (3200x1800), no overflow or cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units (mmHg).
+        comment: Both axes descriptive with mmHg units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, LOA lines use palette position 2, both renders
-          theme-correct backgrounds.'
+        comment: 'First series #009E73, LOA lines use palette position 2 (#C475FD),
+          outlier uses semantic-red anchor, theme-correct backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom elevated-surface annotation boxes and semantic outlier coloring
-          show intentional polish beyond defaults.
+        comment: Custom elevated-surface annotation boxes, semantic outlier coloring
+          plus redundant shape encoding, explanatory subtitle
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View border removed, grid subtle (opacity 0.12), generous whitespace
-          via padding.
+        comment: View border removed, subtle grid, generous whitespace; unchanged
+          from attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Mean-bias line plus red-flagged outliers create a clear visual hierarchy
-          and focal point.
+        comment: Bias line + shape/color-flagged outliers plus the new subtitle make
+          the encoding self-explanatory and create a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bland-Altman difference-vs-mean scatter.
+        comment: Correct Bland-Altman difference-vs-mean scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Mean bias line, dashed ±1.96 SD lines, annotated values, moderate
-          transparency all present.
+        comment: Bias line, dashed +/-1.96 SD lines, annotations, moderate transparency
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = mean of methods, Y = method1 - method2, per spec.
+        comment: X = mean of methods, Y = method1 - method2
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed for conditional
-          two-color encoding.
+        comment: Title matches mandated format exactly
     data_quality:
       score: 15
       max: 15
@@ -171,20 +168,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows every Bland-Altman element: scatter, bias, LOA, annotations.'
+        comment: Shows every Bland-Altman element
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral sphygmomanometer comparison scenario.
+        comment: Plausible, neutral sphygmomanometer comparison
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean ~85-155 mmHg, differences -15 to +10 mmHg — sensible for blood
-          pressure comparison.
+        comment: Sensible mmHg ranges for blood pressure comparison
     code_quality:
       score: 10
       max: 10
@@ -194,31 +190,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, sys, altair, numpy, pandas, PIL.Image) used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html correctly, current vl-convert API.
+        comment: Saves plot-{THEME}.png/.html correctly with current API
     library_mastery:
       score: 7
       max: 10
@@ -228,23 +224,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic layered chart composition, alt.condition for conditional
-          color, configure_* chrome.
+        comment: Idiomatic layered composition, alt.condition, configure_* chrome
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Layer composition with mark_rect annotation boxes is a nice touch,
-          but no more advanced altair-distinctive feature (e.g. selection binding)
-          is used.
+        passed: false
+        comment: Layer composition with conditional shape/color and annotation boxes
+          is solid but not a distinctive altair-specific capability beyond this complexity
+          level
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
@@ -252,4 +247,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
