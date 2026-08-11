@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:17:12Z'
-updated: '2026-08-11T10:54:50Z'
+updated: '2026-08-11T11:01:48Z'
 generated_by: claude-sonnet
 workflow_run: 31483502855
 issue: 2032
@@ -12,49 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-alt
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - Marginal histogram panel (make_subplots, shared_yaxes) visualizes the shape of
-    the difference distribution, giving visual evidence for the normality assumption
-    behind the ±1.96 SD limits — a thoughtful addition beyond the base spec.
+  - 'Fixed the attempt-1 review finding: the Mean/+1.96 SD/-1.96 SD line-end labels
+    are now manual add_annotation calls anchored at xref=''x domain'', x=0.95 inside
+    the row=1,col=1 scatter panel, so they no longer bleed across the subplot boundary
+    and cover the marginal histogram bars — confirmed clean in both light and dark
+    renders.'
+  - Marginal histogram (make_subplots, shared_yaxes) visualizes the shape of the difference
+    distribution, giving visual evidence for the normality assumption behind the ±1.96
+    SD limits of agreement — a thoughtful addition beyond the base spec.
   - Shaded band (add_hrect) between the limits of agreement gives an immediate at-a-glance
-    read of the acceptable range before the viewer even parses the dashed lines.
+    read of the acceptable range before the viewer parses the dashed lines.
   - Self-contained stats callout box (bias, +1.96 SD, -1.96 SD, % within limits) satisfies
     the spec's 'annotate the mean and limits of agreement values' requirement cleanly
     in one element.
-  - 'Theme-adaptive chrome is fully correct and verified identical data colors (#009E73
-    observations/bias, #C475FD limits) on both plot-light.png and plot-dark.png, with
-    theme-correct backgrounds and text.'
+  - 'Theme-adaptive chrome is fully correct with identical data colors (#009E73 observations/bias,
+    #C475FD limits) on both plot-light.png and plot-dark.png, and theme-correct backgrounds/text.'
   - Moderate marker opacity (0.65) correctly reveals overlapping observations per
     the spec's explicit instruction.
   - Realistic, well-scaled medical-device-validation dataset (handheld glucose meter
     vs lab reference) with plausible bias (-3.2 mg/dL) and noise magnitude.
   weaknesses:
-  - 'The ''Mean'', ''+1.96 SD'', and ''-1.96 SD'' line-annotation labels (added via
-    add_hline(..., annotation_position="right", row=1, col=1)) sit exactly on the
-    boundary between the main scatter panel and the marginal histogram subplot. Their
-    opaque label boxes bleed into column 2 and visibly cover a slice of the histogram
-    bars in BOTH light and dark renders, hiding real bin-count data behind chrome.
-    Fix: move these annotations off the column boundary — e.g. annotation_position="left"
-    or a manual x/xanchor placed well inside the row=1,col=1 domain — or increase
-    horizontal_spacing / shrink column_widths so there is a visible gap between the
-    panels before the label boxes are placed.'
+  - The top-left stats callout box (bias/±1.96 SD/% within limits) has an opaque elevated
+    background and sits over a region of the scatter panel that does contain a few
+    low-mean-glucose data points, hiding them behind chrome. Minor since the region
+    is comparatively sparse, but consider nudging the box further into empty space
+    or reducing its footprint.
+  - Overall composition (subplot + hrect band + manual annotations + hovertemplate)
+    is plotly-idiomatic but is achievable with comparable effort in other libraries
+    with subplot/annotation support, keeping LM-02 short of a top score.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "bland-altman-basic · python · plotly · anyplot.ai" in dark ink, centered, fully visible and not clipped. X-axis "Mean Glucose (mg/dL)" and Y-axis "Difference (Lab − Handheld) (mg/dL)" labels are dark, descriptive, and carry units. Tick labels are a softer dark gray. Grid lines are thin and subtle. A stats callout box (bias, +1.96 SD, -1.96 SD, % within limits) sits top-left on a cream elevated background with dark text, fully readable. "Mean"/"+1.96 SD"/"-1.96 SD" line-end label boxes are readable but their boxes visibly bleed into the marginal histogram panel, covering part of the histogram bars underneath.
+      Chrome: Title "bland-altman-basic · python · plotly · anyplot.ai" in dark ink, centered, fully visible and not clipped. X-axis "Mean Glucose (mg/dL)" and Y-axis "Difference (Lab − Handheld) (mg/dL)" labels are dark, descriptive, and carry units. Tick labels are a softer dark gray. Grid lines are thin and subtle. A stats callout box (bias, +1.96 SD, -1.96 SD, % within limits) sits top-left on a cream elevated background with dark text, fully readable. The "Mean"/"+1.96 SD"/"-1.96 SD" line-end label boxes are now positioned well inside the scatter panel (x domain=0.95), with a clear visible gap before the marginal histogram column starts — the previous overlap/bleed issue is resolved; histogram bars are fully visible and unobstructed.
       Data: 95 green (#009E73) markers with a thin cream edge stroke, moderate opacity revealing overlaps as required by spec. Solid green mean-difference line at +4.29. Two purple (#C475FD) dashed lines at the ±1.96 SD limits, with a faint purple-tinted shaded band between them. Right panel: a green horizontal histogram of the differences, showing an approximately unimodal, right-of-center distribution centered near the mean line.
-      Legibility verdict: PASS (all text readable; the only issue is the annotation-box/histogram overlap noted above, which is a VQ-02 data-overlap concern, not a legibility failure).
+      Legibility verdict: PASS — all text readable, no overlap with the histogram panel, no clipping at any canvas edge.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title, axis titles, and tick labels are all rendered in light ink (near-white/light-gray) and are clearly legible against the dark background — no dark-on-dark failures found anywhere (title, axes, stats box, or line-end labels). The stats callout box and the "Mean"/"±1.96 SD" label boxes use the dark elevated background (#242420) with light text and colored borders, fully readable.
+      Chrome: Title, axis titles, and tick labels are all rendered in light ink (near-white/light-gray) and are clearly legible against the dark background — no dark-on-dark failures found anywhere (title, axes, stats box, or line-end labels). The stats callout box and the "Mean"/"±1.96 SD" label boxes use the dark elevated background (#242420) with light/colored text, fully readable, and — same as the light render — sit clear of the marginal histogram column with a visible gap.
       Data: Same #009E73 green markers/mean line and #C475FD purple dashed limit lines as the light render — colors confirmed identical across themes; only chrome (background, text, grid) flips. The marginal histogram is the same green, same shape.
-      Legibility verdict: PASS. Same overlap issue as the light render: the "Mean"/"+1.96 SD"/"-1.96 SD" label boxes bleed into the histogram panel and cover part of the bars — this is a data-overlap issue reproduced identically in both themes, not a legibility/contrast failure.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues, no overlap with the histogram panel, no clipping at any canvas edge.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -66,19 +69,20 @@ review:
           annotations 12). Readable in both themes, no overflow, no clipping.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Mean/+1.96 SD/-1.96 SD line-end label boxes bleed across the scatter/histogram
-          subplot boundary and cover part of the histogram bars in both renders. Main
-          content still readable, so not severe, but real data is obscured by chrome.
+        passed: true
+        comment: 'Attempt-1 issue fixed: Mean/+1.96 SD/-1.96 SD label boxes are now
+          anchored inside the scatter panel (x domain=0.95) with a clear gap before
+          the histogram column in both renders. No remaining collisions between text
+          and data.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: Marker size (14) and opacity (0.65) well-adapted to 95-point density;
-          histogram bars clearly visible.
+          histogram bars clearly visible and fully unobstructed.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -92,8 +96,7 @@ review:
         max: 4
         passed: true
         comment: Plot area uses a healthy majority of the canvas, balanced margins,
-          no cut-off content, no isolated legend (legend correctly omitted for single
-          series).
+          no cut-off content, no isolated legend (correctly omitted for single series).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -108,7 +111,7 @@ review:
         comment: 'First series #009E73, limits use Imprint position 2 (#C475FD), backgrounds
           correct FAF8F1/1A1A17, chrome theme-correct in both renders.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -121,11 +124,12 @@ review:
           publication polish.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid and generous whitespace overall, but the annotation-box/histogram
-          overlap is exactly the kind of detail flaw this criterion penalizes.
+        passed: true
+        comment: 'Subtle grid, generous whitespace, and the prior annotation/histogram
+          overlap is now resolved. Minor deduction: stats box footprint slightly obscures
+          a couple of underlying data points.'
       - id: DE-03
         name: Data Storytelling
         score: 5
@@ -243,7 +247,7 @@ review:
         comment: shared_yaxes subplot linkage, add_hrect shading, and custom hovertemplate
           are meaningfully plotly-specific, though the overall composition is replicable
           with more effort in other libraries.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:

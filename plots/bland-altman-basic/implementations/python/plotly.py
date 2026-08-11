@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
 Library: plotly 6.9.0 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-08-11
+Quality: 94/100 | Updated: 2026-08-11
 """
 
 import os
