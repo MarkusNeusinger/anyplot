@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:12:58Z'
-updated: '2026-08-11T12:51:00Z'
+updated: '2026-08-11T13:00:32Z'
 generated_by: claude-sonnet
 workflow_run: 31492626664
 issue: 2028
@@ -12,46 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 92
 review:
   strengths:
+  - 'Directly addresses the attempt-1 feedback: a shaded ''Diminishing returns'' zone
+    (BoxAnnotation + Label) derived from the curve''s own marginal-gain math gives
+    the plot a genuine focal point and storytelling hook tied to the spec''s economics
+    application, not just a generic band+annotation baseline'
+  - New live marginal-gain readout (Span crosshair + Label + js_on_event(MouseMove,
+    CustomJS)) is a real bokeh-distinctive feature — the HTML detail view lets a reader
+    probe dy/dx = 2ax+b anywhere along the curve, something a static-image library
+    cannot offer
   - 'All spec-required and optional features present: prominent R² annotation, visible
     polynomial equation, degree-2 curve visually distinct in Imprint lavender against
-    the green scatter, and a semi-transparent 95% prediction band around the fit'
-  - Confidence band, legend, and R²/equation annotation are all placed in genuine
-    negative space (top-left legend, upper-right annotation) with no overlap onto
-    data points or each other in either render
-  - 'Theme handling is correct and complete: identical data colors (#009E73 scatter,
-    #C475FD curve) in both renders, only chrome (background, ink, grid) flips between
-    #FAF8F1/#1A1A17, and all text remains legible in both themes'
-  - Canvas dimension gate passed (3200x1800) and title follows the exact required
-    '{spec-id} · {language} · {library} · anyplot.ai' format
-  - Deterministic data generation via np.random.seed(42), clean ColumnDataSource usage,
-    and correct modern bokeh API (p.scatter, not deprecated p.circle)
+    the green scatter, and a semi-transparent 95% prediction band with a subtle dashed
+    edge for a defined silhouette'
+  - 'Theme handling is correct and complete in both renders: identical data colors
+    (#009E73 scatter, #C475FD curve), only chrome (background, text, grid, legend,
+    annotation boxes) flips, and all text — including the two new annotations — remains
+    legible against both the light and dark backgrounds'
+  - Canvas dimension gate passed (3200x1800), title follows the exact required format,
+    deterministic data generation (np.random.seed), clean ColumnDataSource usage,
+    current bokeh API (p.scatter, not deprecated p.circle)
   weaknesses:
-  - Aesthetic sophistication is competent but not distinctive — the implementation
-    closely follows the library-prompt boilerplate (figure sizing, Band, Label, HoverTool)
-    rather than adding an original visual idea beyond the documented baseline; consider
-    a subtler band edge treatment or a secondary visual cue (e.g. shaded regions marking
-    diminishing-returns zones) to lift Design Excellence.
-  - 'Visual refinement is only baseline: grid alpha and outline are at the style-guide
-    defaults with no extra polish (e.g. no minor ticks, no refined legend frame treatment)
-    — DE-02 stays low without more deliberate whitespace/typography choices.'
-  - Library mastery is mostly limited to the documented Band/HoverTool/Label pattern
-    set from prompts/library/bokeh.md; no bokeh-distinctive feature (e.g. CustomJS
-    interactivity, linked ranges, glyph hit-testing) demonstrates deeper mastery beyond
-    the standard static-catalog recipe.
+  - Visual refinement is still close to style-guide defaults beyond the new band dashed-edge
+    treatment — grid alpha, legend frame, and plot outline are unchanged from a standard
+    baseline recipe; a subtler outline or refined legend frame would lift DE-02 further
+  - 'The ''Marginal gain: 0.84%/$k at $35k (hover to probe)'' label sits directly
+    over the semi-transparent confidence band, giving it slightly lower effective
+    contrast than the rest of the chrome text in both themes — still legible, but
+    worth nudging to a clearer patch of background or adding a small background_fill
+    on the Label'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white and not dark.
-      Chrome: Bold dark title "scatter-regression-polynomial · bokeh · anyplot.ai" at top-left, fully visible with no clipping. Italicized axis titles "Investment (thousands $)" (x) and "Efficiency Gain (%)" (y) in dark ink. Tick labels in a softer muted ink tone, all legible, no digits cut off at edges. Faint horizontal/vertical gridlines (~15% alpha). Legend box (top-left, off-white translucent background) lists "Data Points" (green dot) and "Polynomial Fit (degree 2)" (lavender line) with dark-ink text, fully readable.
-      Data: Green (#009E73) scatter points with moderate transparency showing a clear diminishing-returns curve from ~(10,33) to ~(100,90). A lavender (#C475FD) polynomial curve tracks the trend. A soft gray shaded confidence band surrounds the curve. An annotation box (upper-right of the curve, off-white translucent background, dark border) shows "R² = 0.9765" and "y = -0.0047x² + 1.17x + 20.07" in dark text, positioned in open space without overlapping any points, the legend, or the curve.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "scatter-regression-polynomial · bokeh · anyplot.ai" fully visible at top. Italic dark axis titles "Investment (thousands $)" / "Efficiency Gain (%)". Tick labels in softer muted ink. Faint gridlines. Legend (top-left, "Data Points" / "Polynomial Fit (degree 2)") on a light elevated background with a thin border. New elements: a faintly shaded "Diminishing returns" zone (right portion of the plot) with an italic gray label at the top, and a dashed vertical crosshair line near x=35 with a "Marginal gain: 0.84%/$k at $35k (hover to probe)" label beneath it. All chrome text is clearly readable against the light background, including the new annotations.
+      Data: Green (#009E73) scatter points trace a clear diminishing-returns curve; a lavender (#C475FD) polynomial curve overlays a soft gray confidence band with a faint dashed lavender edge. R²/equation annotation box ("R² = 0.9765", "y = -0.0047x² + 1.17x + 20.07") sits in open space above the curve on the right, background-filled so it doesn't visually collide with any point.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black and not light.
-      Chrome: Same title, now rendered in light/off-white ink, fully visible. Axis titles and tick labels rendered in light ink tones (soft light gray for ticks, brighter off-white for axis titles) — clearly readable against the dark background, no dark-on-dark failures observed. Gridlines remain faint and subtle. Legend box now has a dark elevated background with light-ink text, fully legible.
-      Data: Scatter points and polynomial curve use the identical #009E73 / #C475FD colors as the light render — confirmed unchanged. The confidence band fill is a slightly lighter gray against the dark background (theme-adaptive fill token), still subtle and non-dominant. The R²/equation annotation box has a dark elevated background with light-ink text, positioned identically to the light render with no overlap onto data, curve, or legend.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and axis titles now rendered in light/off-white ink, tick labels in soft light gray, legend on a dark elevated background — all clearly legible, no dark-on-dark failures. The diminishing-returns shading and marginal-gain crosshair/label are present and legible in the same positions as the light render, with light-gray/white text against the dark surface.
+      Data: Scatter and curve colors identical to the light render (#009E73 / #C475FD confirmed unchanged — only chrome flipped). Confidence band fill and R²/legend/annotation boxes use theme-adaptive elevated dark backgrounds with light-ink text, fully readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -63,73 +65,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, all text readable in both themes; generously
-          large sizes should scale well to mobile
+        comment: All text readable in both themes, including new annotations; marginal-gain
+          label over the confidence band has slightly lower contrast
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend, annotation, curve, and scatter cleanly separated with no
-          collisions in either render
+        comment: No collisions between text, data, legend, or annotation boxes in
+          either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size 12 / alpha 0.65 and line width 3.5 appropriate for ~100-point
-          density
+        comment: Marker size and alpha appropriate for 100-point density; curve and
+          band clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pairing is CVD-safe, not a red-green pair
+        comment: Green/lavender pairing is not a red-green pair; adequate contrast
+          in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); balanced title/axis-label proportions,
-          no overflow
+        comment: Canvas gate passed (3200x1800); title/axis proportions balanced,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units
+        comment: Descriptive axis labels with units (thousands $, %)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series #C475FD per canonical Imprint
-          order; theme-correct backgrounds in both renders'
+        comment: 'First series #009E73, second #C475FD (canonical order); theme-correct
+          backgrounds in both renders'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Competent execution (band, thoughtful annotation placement) but closely
-          follows library-prompt boilerplate rather than an original visual idea
+        passed: true
+        comment: Diminishing-returns zone derived from the curve's own math is a genuine
+          original idea beyond boilerplate
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid/outline at style-guide defaults with no extra polish beyond
-          the required baseline
+        passed: true
+        comment: Dashed band edge is a deliberate touch, but grid/outline remain close
+          to style-guide defaults
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Band + annotation support the trend but no strong additional visual
-          hierarchy or emphasis device
+        passed: true
+        comment: Shaded diminishing-returns regime gives the plot a clear focal point
+          tied to the spec's domain application
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +142,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter + polynomial regression curve
+        comment: Scatter + polynomial regression curve, correct type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: R², equation, distinct curve color, degree-2 default, confidence
-          band, alpha ~0.65 all present
+        comment: R² prominent, equation annotated, degree-2 curve visually distinct,
+          confidence band, moderate scatter alpha
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct, axes show full data range
+        comment: x=Investment, y=Efficiency Gain, axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels are descriptive
+        comment: Title matches required format; legend labels match plotted series
     data_quality:
       score: 15
       max: 15
@@ -168,20 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers all spec-listed aspects: scatter, curve, R², equation, band'
+        comment: Scatter, curve, band, R², equation, and now a domain-relevant annotated
+          zone
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Investment vs. efficiency-gain diminishing-returns scenario, plausible
-          and neutral
+        comment: Manufacturing investment vs. efficiency gain — plausible, neutral
+          domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Value ranges (10-100 $k, 30-90%) are sensible for the domain
+        comment: Investment $10k-100k, efficiency 30-90% — sensible ranges
     code_quality:
       score: 10
       max: 10
@@ -191,7 +195,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes
+        comment: No functions/classes, flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -203,37 +207,37 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used, none extraneous
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, no fake UI, real CustomJS interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png/.html; current bokeh API (p.scatter)
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current bokeh API
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Follows documented ColumnDataSource/figure patterns closely but adds
-          little beyond them
+        passed: true
+        comment: Broad, idiomatic use of ColumnDataSource, Band, BoxAnnotation, Span,
+          Label, HoverTool
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses Band + HoverTool + Label, but no deeper bokeh-distinctive feature
-          (e.g. CustomJS, linked interactivity)
+        passed: true
+        comment: js_on_event(MouseMove, CustomJS) live derivative readout is a genuine
+          bokeh-distinctive capability
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -249,3 +253,4 @@ impl_tags:
   - regression
   styling:
   - alpha-blending
+  - grid-styling

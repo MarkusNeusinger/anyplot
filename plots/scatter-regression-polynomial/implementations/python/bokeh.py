@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
 Library: bokeh 3.9.2 | Python 3.13.14
-Quality: 85/100 | Updated: 2026-08-11
+Quality: 92/100 | Updated: 2026-08-11
 """
 
 import os
