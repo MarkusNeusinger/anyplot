@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-07
+Library: matplotlib 3.11.1 | Python 3.13.12
+Quality: 87/100 | Updated: 2026-08-11
 """
 
 import os
@@ -26,6 +26,10 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
 
 CLUSTER_LABELS = ["Finance", "Healthcare", "Technology", "Sports", "Politics", "Science", "Entertainment"]
+# 7 series sits at the CVD discrimination floor (Imprint palette) — pair each color
+# with a distinct marker shape for redundant encoding, per the style guide's
+# color-restraint table.
+MARKERS = ["o", "s", "^", "D", "v", "P", "X"]
 
 # Data — 1050 document embeddings (150 per topic) in 50-dimensional space
 np.random.seed(42)
@@ -34,12 +38,22 @@ tsne = TSNE(n_components=2, perplexity=30, random_state=42)
 X_2d = tsne.fit_transform(X_high)
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-for i, (label, color) in enumerate(zip(CLUSTER_LABELS, IMPRINT, strict=False)):
+for i, (label, color, marker) in enumerate(zip(CLUSTER_LABELS, IMPRINT, MARKERS, strict=False)):
     mask = labels == i
-    ax.scatter(X_2d[mask, 0], X_2d[mask, 1], c=color, s=90, alpha=0.65, edgecolors=PAGE_BG, linewidth=0.5, label=label)
+    ax.scatter(
+        X_2d[mask, 0],
+        X_2d[mask, 1],
+        c=color,
+        s=90,
+        alpha=0.65,
+        edgecolors=PAGE_BG,
+        linewidth=0.5,
+        marker=marker,
+        label=label,
+    )
 
 # Centroid annotations
 for i, label in enumerate(CLUSTER_LABELS):
@@ -49,7 +63,7 @@ for i, label in enumerate(CLUSTER_LABELS):
         cx,
         cy,
         label,
-        fontsize=13,
+        fontsize=9,
         fontweight="bold",
         color=INK,
         ha="center",
@@ -63,18 +77,33 @@ for i, label in enumerate(CLUSTER_LABELS):
         },
     )
 
+# Outlier callout — surfaces the point furthest from its own cluster centroid,
+# the kind of embedding-quality check this plot type exists to support (DE-03)
+outlier_mask = labels == 5
+outlier_centroid = np.array([X_2d[outlier_mask, 0].mean(), X_2d[outlier_mask, 1].mean()])
+outlier_dists = np.linalg.norm(X_2d[outlier_mask] - outlier_centroid, axis=1)
+outlier_point = X_2d[outlier_mask][np.argmax(outlier_dists)]
+ax.annotate(
+    "farthest from centroid",
+    xy=(outlier_point[0], outlier_point[1]),
+    xytext=(18, -16),
+    textcoords="offset points",
+    fontsize=8,
+    color=INK_MUTED,
+    arrowprops={"arrowstyle": "->", "color": INK_MUTED, "linewidth": 1},
+)
+
 # Style
-ax.set_xlabel("t-SNE 1", fontsize=20, color=INK)
-ax.set_ylabel("t-SNE 2", fontsize=20, color=INK)
+ax.set_xlabel("t-SNE 1", fontsize=10, color=INK)
+ax.set_ylabel("t-SNE 2", fontsize=10, color=INK)
 ax.set_title(
     "Document Topic Embeddings · scatter-embedding · matplotlib · anyplot.ai",
-    fontsize=24,
+    fontsize=11,
     fontweight="medium",
     color=INK,
 )
-ax.tick_params(axis="both", length=0)
-ax.set_xticks([])
-ax.set_yticks([])
+ax.tick_params(axis="both", length=0, colors=INK_SOFT, labelbottom=False, labelleft=False)
+ax.grid(True, alpha=0.15, color=INK, linewidth=0.8)
 
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
@@ -82,7 +111,7 @@ for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 
 # Legend
-leg = ax.legend(fontsize=15, loc="lower right", framealpha=0.9, title="Topic", title_fontsize=16)
+leg = ax.legend(fontsize=8, loc="lower right", framealpha=0.9, title="Topic", title_fontsize=9)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
@@ -95,9 +124,9 @@ fig.text(
     "t-SNE (perplexity=30)  ·  50-dimensional document embeddings  ·  7 topic clusters",
     ha="center",
     va="bottom",
-    fontsize=15,
+    fontsize=8,
     color=INK_MUTED,
 )
 
 plt.tight_layout(rect=[0, 0.04, 1, 1])
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
