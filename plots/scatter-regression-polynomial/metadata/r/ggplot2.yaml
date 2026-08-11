@@ -1,0 +1,232 @@
+library: ggplot2
+language: r
+specification_id: scatter-regression-polynomial
+created: '2026-08-11T13:00:40Z'
+updated: '2026-08-11T13:11:28Z'
+generated_by: claude-sonnet
+workflow_run: 31493627175
+issue: 2028
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses resolved: unused library(dplyr) removed, panel.grid.major
+    now uses INK_SOFT instead of full INK'
+  - Idiomatic geom_smooth(method="lm", formula = y ~ poly(x, 2, raw = TRUE), se =
+    TRUE) delivers fitted curve and confidence band in one call
+  - R² and polynomial equation annotated prominently and legibly in both themes with
+    no overlap
+  - 'Correct Imprint palette usage: brand green points, blue curve, identical across
+    light/dark renders; clean theme-adaptive chrome'
+  - Title fontsize correctly scaled down for the long descriptive+mandated title,
+    avoiding overflow
+  - Realistic, neutral synthetic data (nitrogen fertilizer vs. corn yield) with genuine
+    diminishing-returns quadratic pattern, R²=0.919
+  weaknesses:
+  - Design polish is solid but conventional (DE-01) - relies mostly on ggplot2 defaults
+    for point shape/layering
+  - Data storytelling (DE-03) could be stronger - no explicit marker of the yield-maximizing
+    fertilizer rate at the curve peak
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Bold dark title (scaled for length), dark axis titles, soft-dark tick labels - all readable. Grid lines now subtle (INK_SOFT), fixed from prior attempt's full-INK grid.
+      Data: Green (#009E73) scatter points alpha ~0.65 tracing diminishing-returns curve; blue (#4467A3) polynomial fit line with light confidence ribbon; equation + R^2 annotation top-left, no overlap
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Title, axis titles, tick labels flip to light tones, fully legible - no dark-on-dark issues. Grid lines light gray and subtle.
+      Data: Colors identical to light render (green points, blue curve/ribbon) - confirms only chrome flipped
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes, correctly scaled long title, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, annotation, and data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Point size/alpha appropriate for n=120
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe green/blue distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills canvas well, canvas confirmed 3200x1800
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (kg/ha, t/ha)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, curve uses palette position 3, theme-correct
+          chrome both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette and intentional curve/point contrast, but composition
+          is conventional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid lightened to INK_SOFT (fixed from attempt 1), no border box,
+          generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Curve + annotation create a clear diminishing-returns focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter + polynomial regression
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: R^2, equation annotation, confidence band, degree-2 fit all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed (single series + curve)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows full curve shape: rise, plateau, and decline'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral agricultural scenario (fertilizer vs. yield)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic fertilizer rates and yield values for corn
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Unused library(dplyr) removed since attempt 1
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png, correct filename pattern
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_smooth with explicit formula and se=TRUE is idiomatic ggplot2
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Built-in confidence ribbon via stat_smooth is a ggplot2-distinctive
+          convenience
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - tibble
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
