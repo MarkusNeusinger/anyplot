@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: plotly 6.9.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-11
@@ -94,7 +94,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     xaxis={
-        "title": {"text": "t-SNE Dimension 1", "font": {"size": 22, "color": INK}},
+        "title": {"text": "t-SNE Dimension 1", "font": {"size": 12, "color": INK}},
         "showticklabels": False,
         "showgrid": True,
         "gridcolor": GRID,
@@ -102,7 +102,7 @@ fig.update_layout(
         "zeroline": False,
     },
     yaxis={
-        "title": {"text": "t-SNE Dimension 2", "font": {"size": 22, "color": INK}},
+        "title": {"text": "t-SNE Dimension 2", "font": {"size": 12, "color": INK}},
         "showticklabels": False,
         "showgrid": True,
         "gridcolor": GRID,
