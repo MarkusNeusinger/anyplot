@@ -58,10 +58,27 @@ const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Distinctive Chart.js touches -------------------------------------------
-// Top-to-bottom alpha falloff on each bar (same brand hue in both themes, only
-// the gradient stop opacity differs), a custom draw plugin that renders the
-// exact count above every bar, and a mixed bar+line dataset (dual y-axis) that
+// Top-to-bottom color falloff on each bar (same brand hue in both themes, only
+// the gradient stop mix differs), a custom draw plugin that renders the exact
+// count above every bar, and a mixed bar+line dataset (dual y-axis) that
 // overlays the Pareto cumulative-share curve from the second Imprint color.
+function mixHex(hexA, hexB, weightA) {
+  const a = parseInt(hexA.slice(1), 16);
+  const b = parseInt(hexB.slice(1), 16);
+  const mix = (shift) => {
+    const va = (a >> shift) & 0xff;
+    const vb = (b >> shift) & 0xff;
+    return Math.round(va * weightA + vb * (1 - weightA));
+  };
+  const r = mix(16);
+  const g = mix(8);
+  const bl = mix(0);
+  return `#${((r << 16) | (g << 8) | bl).toString(16).padStart(6, "0")}`;
+}
+
+// Fully opaque bottom stop (blended toward the page background instead of
+// using alpha) so the line dataset drawn on top never composites with the
+// bar and shifts hue.
 function barGradient(context) {
   const { chart } = context;
   const { ctx, chartArea } = chart;
@@ -73,7 +90,7 @@ function barGradient(context) {
     chartArea.bottom,
   );
   gradient.addColorStop(0, t.palette[0]);
-  gradient.addColorStop(1, `${t.palette[0]}99`);
+  gradient.addColorStop(1, mixHex(t.palette[0], t.pageBg, 0.6));
   return gradient;
 }
 
@@ -82,21 +99,27 @@ const countLabelPlugin = {
   afterDatasetsDraw(chart) {
     const { ctx } = chart;
     const meta = chart.getDatasetMeta(0);
+    const lineMeta = chart.getDatasetMeta(1);
     ctx.save();
     ctx.font = "600 15px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
     // Halo stroke in the page background color keeps the label legible even
     // where the cumulative-share line crosses behind it (data-dependent, so
-    // the crossing point can't be avoided by fixed positioning alone).
+    // the crossing point can't be avoided by fixed positioning alone). When
+    // the line point lands close to the default offset, push the label
+    // further up so it clears the dashed stroke entirely.
     ctx.strokeStyle = t.pageBg;
     ctx.lineWidth = 4;
     ctx.lineJoin = "round";
     ctx.fillStyle = t.ink;
     meta.data.forEach((bar, i) => {
       const text = String(chart.data.datasets[0].data[i]);
-      ctx.strokeText(text, bar.x, bar.y - 8);
-      ctx.fillText(text, bar.x, bar.y - 8);
+      const linePoint = lineMeta.data[i];
+      const nearLine = linePoint && Math.abs(linePoint.y - (bar.y - 8)) < 14;
+      const yOffset = nearLine ? 20 : 8;
+      ctx.strokeText(text, bar.x, bar.y - yOffset);
+      ctx.fillText(text, bar.x, bar.y - yOffset);
     });
     ctx.restore();
   },
@@ -118,6 +141,7 @@ new Chart(canvas, {
         categoryPercentage: 0.85,
         barPercentage: 0.9,
         yAxisID: "count",
+        order: 2,
       },
       {
         type: "line",
@@ -127,10 +151,11 @@ new Chart(canvas, {
         backgroundColor: t.palette[1],
         borderWidth: 2,
         borderDash: [6, 4],
-        pointRadius: 4,
+        pointRadius: 6,
         pointBackgroundColor: t.palette[1],
         tension: 0.25,
         yAxisID: "percentage",
+        order: 1,
       },
     ],
   },
