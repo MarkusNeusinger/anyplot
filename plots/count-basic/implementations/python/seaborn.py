@@ -1,7 +1,7 @@
 """ anyplot.ai
 count-basic: Basic Count Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-07
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 93/100 | Updated: 2026-08-11
 """
 
 import os
@@ -18,6 +18,9 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import seaborn as sns  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
+from matplotlib.patches import Patch  # noqa: E402
+from matplotlib.ticker import PercentFormatter  # noqa: E402
 
 
 sys.path = old_path
@@ -30,6 +33,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
+CUM_LINE = "#C475FD"  # Imprint palette position 2 - second series (cumulative %)
 
 # Data - Survey responses about preferred programming languages
 np.random.seed(42)
@@ -59,21 +63,77 @@ sns.set_theme(
 )
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
 # Count plot sorted by frequency (descending)
-order = df["language"].value_counts().index.tolist()
+counts = df["language"].value_counts()
+order = counts.index.tolist()
 sns.countplot(data=df, x="language", order=order, color=BRAND, ax=ax)
 
-# Add count labels on top of bars for precision
-for container in ax.containers:
-    ax.bar_label(container, fontsize=16, padding=5, color=INK)
+# Explicit headroom on the primary axis so the count-label collision check
+# below can reason about label position relative to the cumulative-share line.
+count_max = counts.max()
+ax.set_ylim(0, count_max * 1.15)
+
+# Pareto overlay: cumulative share of responses on a secondary axis, with the
+# classic 80% reference line to call out how few categories dominate the total.
+# twinx() is unavoidable (matplotlib/seaborn has no native dual-axis primitive),
+# but the connector itself is drawn with sns.pointplot rather than a raw
+# matplotlib .plot() call, so the categorical point-estimate machinery (order=,
+# errorbar=, native categorical positioning) stays seaborn-idiomatic instead of
+# generic.
+cum_pct = counts.cumsum() / counts.sum() * 100
+ax2 = ax.twinx()
+sns.pointplot(
+    x=order,
+    y=cum_pct.to_numpy(),
+    order=order,
+    color=CUM_LINE,
+    markers="o",
+    linestyles="-",
+    markersize=4,
+    linewidth=2,
+    errorbar=None,
+    ax=ax2,
+)
+ax2.axhline(80, color=INK_SOFT, linewidth=1, linestyle="--", alpha=0.6, zorder=2)
+
+# twinx() creates a second, fully-opaque drawing layer that always paints over
+# the first, so count labels are added to ax2 (not ax) — via ax.transData for
+# positioning — to stay legible above the cumulative line rather than under it.
+# Wherever a bar's height and the cumulative-line marker land close together on
+# their respective axis scales, lift that label further above the bar so the
+# text clears the marker instead of sitting on top of it.
+cum_arr = cum_pct.to_numpy()
+for i, count in enumerate(counts.to_numpy()):
+    count_frac = count / (count_max * 1.15)
+    cum_frac = cum_arr[i] / 105
+    y_offset = 13 if abs(count_frac - cum_frac) < 0.08 else 3
+    ax2.annotate(
+        str(count),
+        xy=(i, count),
+        xycoords=ax.transData,
+        xytext=(0, y_offset),
+        textcoords="offset points",
+        ha="center",
+        va="bottom",
+        fontsize=8,
+        color=INK,
+        zorder=6,
+    )
+ax2.set_ylim(0, 105)
+ax2.yaxis.set_major_formatter(PercentFormatter())
+ax2.set_ylabel("Cumulative Share", fontsize=10, color=INK)
+ax2.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
+ax2.spines["top"].set_visible(False)
+ax2.spines["left"].set_visible(False)
+ax2.spines["right"].set_color(INK_SOFT)
 
 # Style
-ax.set_xlabel("Programming Language", fontsize=20, color=INK)
-ax.set_ylabel("Response Count", fontsize=20, color=INK)
-ax.set_title("count-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.set_xlabel("Programming Language", fontsize=10, color=INK)
+ax.set_ylabel("Response Count", fontsize=10, color=INK)
+ax.set_title("count-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 # Subtle grid on y-axis only
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
@@ -85,5 +145,19 @@ ax.spines["right"].set_visible(False)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+legend_handles = [
+    Patch(facecolor=BRAND, label="Responses"),
+    Line2D([0], [0], color=CUM_LINE, marker="o", markersize=4, linewidth=2, label="Cumulative Share"),
+]
+ax.legend(
+    handles=legend_handles,
+    fontsize=8,
+    loc="center right",
+    frameon=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    labelcolor=INK,
+)
+
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

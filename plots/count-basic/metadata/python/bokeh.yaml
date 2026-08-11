@@ -2,124 +2,136 @@ library: bokeh
 language: python
 specification_id: count-basic
 created: '2025-12-25T12:42:18Z'
-updated: '2026-05-07T09:24:23Z'
-generated_by: claude-haiku
-workflow_run: 25486767744
+updated: '2026-08-11T07:14:50Z'
+generated_by: claude-sonnet
+workflow_run: 31467354233
 issue: 2033
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - All text explicitly sized and perfectly readable in both light and dark themes
-    (VQ-01=8/8)
-  - Clean code structure following KISS principles with proper reproducibility via
-    seed=42
-  - Strong theme adaptation with correct background colors, text colors, and grid
-    styling for both light and dark themes
-  - Realistic survey response data with good variation in counts (66, 56, 36, 27,
-    15) and appropriate context
-  - 'Proper Bokeh idioms: ColumnDataSource, LabelSet for labels, Selenium screenshot
-    pattern'
+  - Correct Imprint brand green (#009E73) on every bar, identical between light and
+    dark renders, with theme-adaptive chrome (background, title, axis, tick, grid
+    colors) fully threaded through both themes
+  - Bars sorted by frequency descending per the spec's readability guidance, with
+    precise count labels above each bar
+  - Storytelling callout ('22% of all orders') on the leading category adds a clear
+    focal point beyond a plain bar chart
+  - All text sizes explicitly set (title 50pt, axis labels 42pt, ticks 34pt) per the
+    bokeh sizing guide, legible in both themes
+  - 'Idiomatic bokeh usage: ColumnDataSource-driven vbar with categorical x_range,
+    HoverTool with descriptive per-category tooltips (count + share of total) for
+    the interactive HTML, and a documented LabelSet workaround for annotating a categorical
+    axis'
+  - Realistic, neutral e-commerce order-category scenario with plausible proportions
+    summing correctly to the 500-order sample
   weaknesses:
-  - 'CRITICAL: First bar rendered as orange/vermillion instead of brand green (#009E73).
-    Count plot has single categorical variable, so all bars must be identical color.
-    Code specifies color=BRAND for all bars, but rendered output shows first bar in
-    different color—investigate rendering or code execution mismatch.'
+  - 'Minor tick/label collision: the major tick marks appear to visually merge with
+    the end of each rotated x-axis category label (e.g. a small stray mark right after
+    ''Electronics'', ''Clothing'', etc.) in both renders — shorten the tick line or
+    add a touch more padding between tick and label.'
+  - Axis labels ('Product Category', 'Number of Orders') are descriptive but carry
+    no explicit unit annotation — acceptable as-is since 'Number of Orders' is self-describing,
+    but a unit suffix would be marginally clearer.
+  - The amber (#DDCC77) semantic anchor is documented in the style guide for warning/caution
+    roles; using it here for a positive 'leading category' callout is a mild semantic
+    stretch — consider INK_SOFT/neutral styling for a purely informational callout,
+    reserving amber for actual warning states.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, correct theme surface color
-      Chrome: Title "count-basic · bokeh · anyplot.ai" (28pt, dark text) clearly readable; x-axis label "Response Category" (22pt, dark text) readable; y-axis label "Number of Responses" (22pt, dark text) readable; category tick labels rotated 0.4 rad, no overlap; count labels (66, 56, 36, 27, 15) positioned 10pt above bars in gray text (22pt), all readable
-      Data: First bar (66) is orange/vermillion (#D55E00 or similar); bars 2-5 (56, 36, 27, 15) are brand green (#009E73). Y-axis grid is subtle (10% alpha). Bar edges are soft with alpha=0.85. Spacing between bars is clear.
-      Legibility verdict: PASS for text readability; FAIL for palette consistency (first bar should be green like the others for a single-series count plot)
+      Background: Warm off-white (#FAF8F1-consistent), not pure white and not dark — matches the light-theme page surface.
+      Chrome: Bold dark title "count-basic · python · bokeh · anyplot.ai" centered at top, clearly legible. Italic axis titles "Product Category" (x) and "Number of Orders" (y) in dark ink. Rotated (~28°) category tick labels and y-axis numeric ticks in a softer dark gray, all legible. Subtle horizontal gridlines barely visible behind the bars. An italic amber "22% of all orders" callout sits above the leading bar.
+      Data: Eight vertical bars in solid Imprint brand green (#009E73) with a subtle darker outline, sorted descending — Electronics (108), Clothing (94), Home & Garden (83), Books (52), Sports (45), Toys (44), Beauty (42), Groceries (32) — each with a black count label directly above it.
+      Legibility verdict: PASS — all title, axis, tick, and annotation text is clearly readable against the light background; no light-on-light issues. Minor cosmetic note: rotated tick labels appear to touch their adjacent axis tick mark.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, correct theme surface color
-      Chrome: Title rendered in light text (appears to be #F0EFE8), clearly readable against dark background; axis labels in light text, readable; tick labels in light gray (#B8B7B0), readable; count labels in light text above bars, readable; NO dark-on-dark failures observed
-      Data: Bars are identical to light render - first bar is orange, bars 2-5 are green. This confirms consistent color application across both themes. Grid styling matches light render with subtle appearance.
-      Legibility verdict: PASS for text readability in dark theme; FAIL for palette consistency (same color issue as light render)
+      Background: Warm near-black (#1A1A17-consistent), not pure black and not light.
+      Chrome: Same bold title now rendered in light/off-white ink, clearly legible against the dark surface. Axis titles in light ink, tick labels in a lighter soft gray — no dark-on-dark failures anywhere. Gridlines remain subtle. The amber callout text keeps the same amber hue and reads clearly against the dark background.
+      Data: The same eight bars in the identical brand green (#009E73) as the light render — confirmed unchanged data color, only chrome flipped. Same values, same sort order, same count labels (now in light ink).
+      Legibility verdict: PASS — all text is clearly light-colored against the near-black background; no dark-on-dark issues. Same minor tick/label touch-point noted above persists in this render too.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title (28pt), axis labels (22pt), tick labels (18pt), count labels
-          (22pt) all explicitly set and readable in both themes
+        comment: All font sizes explicitly set (50/42/34pt), readable in both themes;
+          minor deduction for the tick/label touch-point artifact
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements; labels positioned with adequate spacing
-          and rotation
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars clearly visible; count labels positioned above with offset;
-          grid subtle and non-competing
+        comment: No text-on-text or text-on-data overlap, but the rotated category
+          tick labels visually merge with their major tick mark in both renders
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 bars at width=0.7 with solid 0.85-alpha fill are clearly visible
+          and well-sized for the category count
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good contrast between elements (though
-          palette applied inconsistently)
+        comment: Single-hue bars with strong contrast against both surfaces; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent use of 4800×2700 px canvas; balanced margins; plot fills
-          appropriate proportion
+        comment: Plot fills the canvas well with balanced margins via min_border reservations;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Response Category'' and ''Number of Responses'''
+        comment: Descriptive 'Product Category' / 'Number of Orders' labels
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-compliant: First bar is orange, not brand green (#009E73). Single-series
-          count plot should use identical color for all bars.'
+        passed: true
+        comment: 'First (only) series is #009E73 in both themes; backgrounds and chrome
+          are theme-correct; amber used only for the non-categorical callout'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured defaults; no exceptional design choices. Color inconsistency
-          appears accidental rather than intentional.
+        passed: true
+        comment: Thoughtful brand-green fill with subtle edge line, count labels,
+          and a callout annotation — clearly above bare library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: y-grid subtle (10% alpha), x-grid removed, generous
-          whitespace, clean bar styling'
+        comment: L-shaped spines, subtle 10% y-grid, generous margins — good refinement,
+          not fully minimal
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Data sorted by frequency descending; count labels support interpretation;
-          some visual hierarchy through bar height
+        comment: Descending sort plus the leading-category share callout creates a
+          clear focal point and hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -129,25 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart for frequency counting
+        comment: Correct count/bar plot counting raw categorical occurrences
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Count aggregation, sorting, labels, axes all present
+        comment: Descending sort, count labels, optional percentage annotation, consistent
+          bar width/spacing — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis categories, Y-axis counts correctly assigned
+        comment: Categories on x, counts on y, all 8 categories visible, y-axis starts
+          at 0
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend (appropriate for single series)
+        comment: Title matches the exact mandated format; single-series legend correctly
+          omitted
     data_quality:
       score: 15
       max: 15
@@ -157,20 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range of counts shown (66→56→36→27→15) with clear variation
+        comment: 8 categories (within the 3-20 recommended range) with a realistic
+          wide spread of counts (32-108)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Survey response scenario is realistic and neutral
+        comment: Neutral, comprehensible e-commerce order-category scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample size and probability distribution are realistic and proportionally
-          correct
+        comment: Counts sum correctly to the 500-order sample and roughly track the
+          specified category probabilities
     code_quality:
       score: 10
       max: 10
@@ -180,60 +196,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow without functions or classes
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: seed=42 ensures deterministic output
+        comment: np.random.seed(7) set explicitly
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary dependencies
+        comment: Every import (numpy, bokeh, selenium, pathlib) is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, no over-engineering or fake functionality
+        comment: No fake UI or over-engineering, appropriate complexity for the interactivity
+          added
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: PNG and HTML files for both themes'
+        comment: Saves plot-{theme}.png and plot-{theme}.html via the current bokeh.io
+          API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical ColumnDataSource + categorical x_range + vbar pattern,
+          exactly as recommended
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Excellent use of figure(), ColumnDataSource, vbar(), LabelSet, theme
-          tokens, and Selenium pattern
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses ColumnDataSource and LabelSet (Bokeh-specific); proper Selenium
-          screenshot approach
+        comment: HoverTool with multi-field tooltips for the interactive HTML, plus
+          a documented LabelSet workaround for annotating a categorical axis
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - html-export
   - annotations
-  - columndatasource
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - columndatasource
+  - groupby-aggregation
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - edge-highlighting
