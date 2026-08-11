@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-11
@@ -47,7 +47,7 @@ source = ColumnDataSource(data={"mean": mean_values, "diff": diff_values})
 p = figure(
     width=3200,
     height=1800,
-    title="bland-altman-basic · bokeh · anyplot.ai",
+    title="bland-altman-basic · python · bokeh · anyplot.ai",
     x_axis_label="Mean of Two Methods (mmHg)",
     y_axis_label="Difference (Method 1 - Method 2) (mmHg)",
     toolbar_location=None,
@@ -63,7 +63,15 @@ agreement_zone = BoxAnnotation(bottom=lower_loa, top=upper_loa, fill_color=INK, 
 p.add_layout(agreement_zone)
 
 scatter_renderer = p.scatter(
-    x="mean", y="diff", source=source, size=14, color=BRAND, alpha=0.7, legend_label="Observations"
+    x="mean",
+    y="diff",
+    source=source,
+    size=14,
+    color=BRAND,
+    alpha=0.7,
+    line_color=PAGE_BG,
+    line_width=1,
+    legend_label="Observations",
 )
 p.add_tools(
     HoverTool(tooltips=[("Mean", "@mean{0.2f} mmHg"), ("Difference", "@diff{0.2f} mmHg")], renderers=[scatter_renderer])
@@ -137,7 +145,11 @@ p.ygrid.grid_line_alpha = 0.15
 
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+# No-frame treatment: bokeh's `outline_line_color` draws a single rectangle
+# around the whole plot area (no per-side spine control like matplotlib), so
+# a full box is the only "outline" option — skip it in favor of the axis
+# lines alone for a cleaner, less boxed-in look.
+p.outline_line_color = None
 
 if p.legend:
     p.legend.label_text_font_size = "34pt"
