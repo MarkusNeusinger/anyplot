@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: 94/100 | Updated: 2026-08-11
+Quality: pending | Updated: 2026-08-11
 """
 
 import os
@@ -77,9 +77,25 @@ ax.set_ylim(0, count_max * 1.15)
 
 # Pareto overlay: cumulative share of responses on a secondary axis, with the
 # classic 80% reference line to call out how few categories dominate the total.
+# twinx() is unavoidable (matplotlib/seaborn has no native dual-axis primitive),
+# but the connector itself is drawn with sns.pointplot rather than a raw
+# matplotlib .plot() call, so the categorical point-estimate machinery (order=,
+# errorbar=, native categorical positioning) stays seaborn-idiomatic instead of
+# generic.
 cum_pct = counts.cumsum() / counts.sum() * 100
 ax2 = ax.twinx()
-ax2.plot(range(len(order)), cum_pct.to_numpy(), color=CUM_LINE, marker="o", markersize=4, linewidth=2, zorder=3)
+sns.pointplot(
+    x=order,
+    y=cum_pct.to_numpy(),
+    order=order,
+    color=CUM_LINE,
+    markers="o",
+    linestyles="-",
+    markersize=4,
+    linewidth=2,
+    errorbar=None,
+    ax=ax2,
+)
 ax2.axhline(80, color=INK_SOFT, linewidth=1, linestyle="--", alpha=0.6, zorder=2)
 
 # twinx() creates a second, fully-opaque drawing layer that always paints over
