@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 count-basic: Basic Count Plot
-Library: plotnine | Python
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 94/100 | Updated: 2026-08-11
 """
 
 import os
