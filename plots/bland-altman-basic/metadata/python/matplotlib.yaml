@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:16:47Z'
-updated: '2026-08-11T10:47:38Z'
+updated: '2026-08-11T10:55:09Z'
 generated_by: claude-sonnet
 workflow_run: 31483204542
 issue: 2032
@@ -12,77 +12,77 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-alt
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 93
 review:
   strengths:
+  - 'All four Review-1 weaknesses directly addressed: the redundant top-left legend
+    was removed (right-side line annotations are now the single source of truth),
+    marker size increased to s=130 with alpha=0.65, a matplotlib-distinctive blended-transform
+    (transforms.blended_transform_factory) anchors the annotations to the axes fraction
+    with arrow-connected callouts for the LOA lines, and the simulated data now includes
+    proportional/heteroscedastic error that widens with the mean — the exact pattern
+    Bland-Altman plots are designed to expose'
   - 'Correct Bland-Altman construction: X = mean of paired methods, Y = method1 -
-    method2, matching the spec exactly'
-  - 'All required features present: solid bias line, dashed +-1.96 SD limits of agreement,
-    direct value annotations, and moderate transparency (alpha=0.6) that reveals overlapping
-    points'
-  - 'Full Imprint palette compliance: brand green #009E73 for the primary series,
-    canonical position-2 lavender #C475FD for the limits-of-agreement lines, correct
-    theme-adaptive chrome (background/text/grid/legend) in both light and dark renders
-    with no dark-on-dark or light-on-light failures'
-  - 'Clean, reproducible KISS code: np.random.seed(42), only used imports, no fake
-    functionality, correct plot-{THEME}.png output'
+    method2, matching the spec exactly, with all required features present (solid
+    bias line, dashed +-1.96 SD limits of agreement, direct value annotations, moderate
+    transparency)'
+  - 'Full Imprint palette compliance and theme-adaptive chrome: brand green #009E73
+    for the primary series, canonical position-2 lavender #C475FD for the limits-of-agreement
+    lines, identical data colors across both renders, no dark-on-dark or light-on-light
+    failures, no edge clipping in either theme'
+  - 'Clean, reproducible KISS code: np.random.seed(42), only used imports (transforms
+    import is actually used), no fake functionality, correct plot-{THEME}.png output'
   - Realistic, neutral medical device-comparison scenario (two sphygmomanometers)
     with physiologically plausible blood pressure values and bias magnitude
   weaknesses:
-  - 'Redundant value display: the top-left legend (Mean/+1.96 SD/-1.96 SD) and the
-    right-side text annotations (Bias/+1.96 SD/-1.96 SD) show the exact same three
-    numbers twice — pick one presentation (recommend keeping the right-side line annotations
-    and dropping the legend box entirely) for a cleaner, less cluttered layout'
-  - 'Marker sizing is at the low end for n=80 points: s=100, alpha=0.6 versus the
-    guideline''s s=100-200/alpha=0.7-0.9 for 30-100 points — nudge size up slightly
-    (e.g. s=120-140) while keeping alpha around 0.6-0.7 to preserve overlap visibility'
-  - Library usage is fairly generic (scatter + axhline + text) and could be replicated
-    near-identically in most other plotting libraries — consider a matplotlib-distinctive
-    touch, e.g. ax.annotate() with arrow connectors for the LOA labels, or a blended
-    transform (transforms.blended_transform_factory) to anchor the right-side annotations
-    to the axes fraction in y so they stay aligned regardless of data range, instead
-    of computing x_max from get_xlim()
-  - Simulated data uses only a constant bias plus homoscedastic random noise; real
-    Bland-Altman analyses often reveal proportional/heteroscedastic bias (variance
-    widening as the mean increases) — adding a touch of that would better showcase
-    the feature the plot type is specifically designed to expose
+  - Scatter alpha=0.65 sits just below the guideline's 0.7-0.9 range for n=80 points
+    (s=130 is correctly within 100-200) — a small nudge to alpha=0.7-0.75 would better
+    match the density heuristic, though overlap is already visible
+  - The newly added proportional/heteroscedastic bias is subtle in the rendered plot
+    — the widening of scatter spread at higher mean values is only mildly visible;
+    increasing error_scale's slope slightly would make the pattern the plot type is
+    designed to expose more unmistakable
+  - Design polish is strong but stops short of full publication-level refinement (DE-01/DE-02)
+    — e.g. the title/annotation typography is functional rather than distinctive;
+    further weight/size hierarchy tuning could push this higher
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bland-altman-basic · python · matplotlib · anyplot.ai" in dark ink, clearly legible. X-axis label "Mean of Two Methods (mmHg)" and Y-axis label "Difference (Method 1 - Method 2) (mmHg)" both dark and readable. Tick labels in muted gray, subtle y-axis-only gridlines. Legend box (upper-left, off-white fill, gray border) lists Mean/+1.96 SD/-1.96 SD and does not overlap any scatter point. Right-side annotations ("Bias: -2.44", "+1.96 SD: 6.55", "-1.96 SD: -11.44") sit with clear margin before the canvas edge — no clipping.
-      Data: ~80 green (#009E73) semi-transparent circular markers scattered around a solid green bias line (-2.44) and two dashed lavender (#C475FD) limit-of-agreement lines (+6.55 / -11.44), plus a faint dotted zero-reference line. Overlapping points are visibly distinguishable thanks to alpha=0.6.
+      Chrome: Title "bland-altman-basic · python · matplotlib · anyplot.ai" in dark ink (~62% of plot width), clearly legible. X-axis label "Mean of Two Methods (mmHg)" and Y-axis label "Difference (Method 1 - Method 2) (mmHg)" both dark and readable, well-balanced in size against each other. Tick labels in muted gray, subtle y-axis-only gridlines (alpha≈0.10). No legend box — the bias line and both limits-of-agreement lines are labeled directly via axes-fraction-anchored annotations flush against the right margin ("Bias: -2.41", "+1.96 SD: 10.08" and "-1.96 SD: -14.90" with arrow connectors to their respective dashed lines). All annotation text sits with a clear, comfortable margin before the canvas edge — verified via pixel crop, no clipping.
+      Data: ~80 green (#009E73) semi-transparent circular markers (s=130, alpha=0.65) scattered around a solid green bias line (-2.41) and two dashed lavender (#C475FD) limit-of-agreement lines (+10.08 / -14.90), plus a faint dotted zero-reference line. Overlapping points remain visibly distinguishable.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and both axis labels rendered in light/off-white ink, fully legible against the dark background. Tick labels in a light muted gray. Legend box uses an elevated dark fill with a light border and light text — no dark-on-dark failures anywhere. Grid remains subtle.
-      Data: Same #009E73 green markers and #C475FD lavender dashed LOA lines as the light render — data colors are pixel-identical between themes; only the chrome (background, text, grid, legend box) flips. Right-side annotation text is fully readable in light ink against the dark background.
+      Chrome: Title and both axis labels rendered in light/off-white ink, fully legible against the dark background. Tick labels in light muted gray. No dark-on-dark failures anywhere; annotation text ("Bias: -2.41", LOA labels) renders in light ink, fully readable, with the same comfortable right-margin clearance as the light render.
+      Data: Same #009E73 green markers and #C475FD lavender dashed LOA lines as the light render — data colors are pixel-identical between themes; only the chrome (background, text, grid) flips.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes, no overflow
+        comment: All font sizes explicit, readable in both themes, title ~62% of width
+          with no overflow, balanced axis label/tick sizing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend does not overlap any data point; right-side annotations have
-          clear margin
+        comment: No legend clutter anymore; right-side annotations have clear margin,
+          verified via pixel crop, no overlap with data or each other
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Visible but s=100/alpha=0.6 sits at the low end of the recommended
-          range for n=80
+        comment: s=130 correctly within the 100-200 guideline for n=80, but alpha=0.65
+          sits just under the recommended 0.7-0.9 range
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -94,8 +94,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Balanced proportions, plot fills a healthy majority of the canvas,
-          nothing cut off
+        comment: Canvas gate passed (3200x1800); balanced proportions, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -110,30 +110,30 @@ review:
         comment: 'First series #009E73, LOA lines use canonical position 2 (#C475FD),
           theme-correct chrome in both renders'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful color pairing and typography, but redundant legend+annotation
-          duplication holds it below publication-level
+        passed: true
+        comment: Redundant legend removed; direct arrow-connected line labels read
+          as intentional, thoughtful hierarchy, clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid, spines removed, generous whitespace, but the duplicated
-          legend/annotation values read as clutter rather than polish
+        passed: true
+        comment: Subtle grid, spines removed, generous whitespace on the right for
+          annotations; clutter from Review 1 eliminated
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Bias/LOA lines with direct value callouts guide the reader to the
-          key metrics beyond a plain data dump
+        passed: true
+        comment: Bias/LOA lines with arrow-connected value callouts guide the reader
+          directly to the key metrics without needing to cross-reference a legend
     spec_compliance:
       score: 15
       max: 15
@@ -162,19 +162,20 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match the plotted
-          lines
+        comment: Title matches mandated format exactly; direct line-labels replace
+          the legend and match the plotted lines
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Shows constant bias + random noise but no proportional/heteroscedastic
-          bias, the pattern Bland-Altman plots are specifically good at revealing
+        passed: true
+        comment: Now includes proportional/heteroscedastic bias (variance widening
+          with the mean) in addition to constant bias — the pattern Bland-Altman plots
+          are designed to expose; effect is present but subtle
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -208,7 +209,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all used
+        comment: os, matplotlib.pyplot, matplotlib.transforms, numpy — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -220,26 +221,27 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, no deprecated calls
+        comment: Saves plot-{THEME}.png, no deprecated calls, no bbox_inches='tight'
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Axes-method usage (ax.scatter/ax.axhline/ax.annotate), idiomatic
+          use of the transforms module
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct Axes-method usage (ax.scatter/ax.axhline/ax.text), matches
-          library conventions
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic technique set — could be replicated near-identically in most
-          other plotting libraries
-  verdict: REJECTED
+        comment: transforms.blended_transform_factory anchoring annotations to axes-fraction
+          x / data y, combined with arrowprops callouts, is a matplotlib-distinctive
+          technique not trivially replicated in most other libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
