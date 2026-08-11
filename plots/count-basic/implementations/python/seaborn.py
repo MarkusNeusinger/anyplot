@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-11
@@ -70,6 +70,11 @@ counts = df["language"].value_counts()
 order = counts.index.tolist()
 sns.countplot(data=df, x="language", order=order, color=BRAND, ax=ax)
 
+# Explicit headroom on the primary axis so the count-label collision check
+# below can reason about label position relative to the cumulative-share line.
+count_max = counts.max()
+ax.set_ylim(0, count_max * 1.15)
+
 # Pareto overlay: cumulative share of responses on a secondary axis, with the
 # classic 80% reference line to call out how few categories dominate the total.
 cum_pct = counts.cumsum() / counts.sum() * 100
@@ -80,12 +85,19 @@ ax2.axhline(80, color=INK_SOFT, linewidth=1, linestyle="--", alpha=0.6, zorder=2
 # twinx() creates a second, fully-opaque drawing layer that always paints over
 # the first, so count labels are added to ax2 (not ax) — via ax.transData for
 # positioning — to stay legible above the cumulative line rather than under it.
+# Wherever a bar's height and the cumulative-line marker land close together on
+# their respective axis scales, lift that label further above the bar so the
+# text clears the marker instead of sitting on top of it.
+cum_arr = cum_pct.to_numpy()
 for i, count in enumerate(counts.to_numpy()):
+    count_frac = count / (count_max * 1.15)
+    cum_frac = cum_arr[i] / 105
+    y_offset = 13 if abs(count_frac - cum_frac) < 0.08 else 3
     ax2.annotate(
         str(count),
         xy=(i, count),
         xycoords=ax.transData,
-        xytext=(0, 3),
+        xytext=(0, y_offset),
         textcoords="offset points",
         ha="center",
         va="bottom",
@@ -104,7 +116,7 @@ ax2.spines["right"].set_color(INK_SOFT)
 # Style
 ax.set_xlabel("Programming Language", fontsize=10, color=INK)
 ax.set_ylabel("Response Count", fontsize=10, color=INK)
-ax.set_title("count-basic · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_title("count-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 # Subtle grid on y-axis only
