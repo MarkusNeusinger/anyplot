@@ -1,0 +1,257 @@
+library: ggplot2
+language: r
+specification_id: scatter-embedding
+created: '2026-08-11T09:06:15Z'
+updated: '2026-08-11T09:19:55Z'
+generated_by: claude-sonnet
+workflow_run: 31475761927
+issue: 5236
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses are fixed: the unused `library(dplyr)` import is gone,
+    and the optional cluster-centroid label annotations from the spec are now implemented
+    via a `geom_label` layer on aggregated centroids'
+  - 'Imprint palette applied in correct canonical order (positions 1-6) with identical
+    data hues between light and dark renders; first series is brand green #009E73'
+  - Redundant shape + color encoding (circle/triangle/square/diamond/plus/asterisk)
+    for the 6 cell-type clusters, matching the style guide's 5-6 series accessibility
+    guidance
+  - Centroid labels use a theme-adaptive elevated background box (ELEVATED_BG at alpha
+    0.85) with ink-colored bold text, staying legible over the scattered points in
+    both themes
+  - Correctly omits axis tick labels/marks per the spec note that embedding coordinates
+    aren't directly interpretable, while keeping descriptive axis titles (UMAP 1 /
+    UMAP 2)
+  - Subtitle states both the algorithm and key parameter ("UMAP projection (n_neighbors
+    = 15)") as required by the spec
+  - Realistic elongated, rotated cluster geometry (per-cluster rotation matrix) rather
+    than plain isotropic blobs, giving an authentic non-linear-embedding look
+  - Theme-adaptive chrome (background, ink, ink-soft, legend/elevated surface) correctly
+    threaded through; both renders are fully legible with no dark-on-dark or light-on-light
+    issues
+  weaknesses:
+  - At the CD8+ T cells / NK cells cluster boundary the two point clouds still visually
+    blend somewhat despite the shape difference; slightly lower alpha or larger cluster
+    separation would sharpen the boundary
+  - Design execution is solid but still fairly close to theme_minimal defaults outside
+    the centroid-label touch — no additional standout polish such as an emphasized
+    focal cluster or a more refined legend treatment
+  - geom_point(..., stroke = 0.4) has no visible effect since shapes 16/17/15/18/3/8
+    are solid/stroke-only glyphs without a separate fill aesthetic (stroke only affects
+    shapes 21-25) — harmless but dead styling, remove or switch to an open shape family
+    if an edge highlight is actually wanted
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
+      Chrome: Bold dark title "scatter-embedding · r · ggplot2 · anyplot.ai" top-left, gray-ink subtitle "UMAP projection (n_neighbors = 15) of PBMC single-cell RNA-seq profiles" beneath it. Axis titles "UMAP 1" (bottom) and "UMAP 2" (left, rotated) in dark ink; no tick labels or tick marks (correct per spec — embedding coordinates aren't directly interpretable). A boxed legend titled "Cell type" sits at the right with 6 entries, each showing a distinct color + marker shape (circle, triangle, square, diamond, plus, asterisk). New in this attempt: each of the 6 clusters now carries an on-chart centroid label (e.g. "CD4+ T cells", "Dendritic cells") in a bold, ink-colored, elevated-background callout box.
+      Data: Six well-separated, elongated clusters of scattered points — CD4+ T cells (green circles, upper-left), CD8+ T cells (lavender triangles, lower-middle), B cells (blue squares, upper-right), NK cells (ochre diamonds, lower-left, adjacent to CD8+), Monocytes (red plus marks, lower-right), Dendritic cells (cyan asterisks, upper-middle). First series is the brand green #009E73 as required.
+      Legibility verdict: PASS — all title, subtitle, axis titles, legend text, and the new centroid labels are clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
+      Chrome: Same title, subtitle, and centroid-label callouts now rendered in light ink against the dark background/dark elevated callout fill. Axis titles in light ink, legend box uses a dark elevated surface with light text — all fully legible, no dark-on-dark failures observed anywhere (title, axis titles, legend text, or centroid labels).
+      Data: Identical cluster positions, shapes, and colors to the light render — green, lavender, blue, ochre, red, cyan hues are unchanged, confirming the Imprint data palette stayed constant across themes while only chrome flipped.
+      Legibility verdict: PASS — all chrome elements, including the new centroid-label boxes, read cleanly against the dark surface; brand green remains vivid on both backgrounds.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; title fontsize
+          formula applied correctly; new centroid labels also legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text collisions; centroid label boxes sit cleanly over
+          data with background contrast; legend clear of plot area
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker size 1.8 + alpha 0.5 appropriate for ~2700 points; CD8+/NK
+          boundary still blends slightly
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Shape + color redundant encoding for 6 series, CVD-safe Imprint palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, nothing clipped, generous margins, new
+          labels fit within plot area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: UMAP 1 / UMAP 2 descriptive; tick labels correctly omitted per spec
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette canonical order 1-6, identical across themes, correct
+          theme backgrounds
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom theme tokens, shape redundancy, and a styled centroid-label
+          callout layer show deliberate design work beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid and ticks removed, single axis line kept; moderate refinement,
+          no additional standout polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: On-chart centroid labels let the viewer read cluster identity directly
+          without cross-referencing the legend — a genuine storytelling improvement
+          over attempt 1
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D scatter embedding plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colored clusters, legend, alpha for overlap, algorithm+param subtitle,
+          no tick labels, centroid labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y are the two embedding dimensions, all points plotted
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match cell types
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Now covers clustering, legend, subtitle, AND the optional centroid
+          label annotations — full feature coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral PBMC single-cell RNA-seq domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~2700 points total, within the spec's 500-5000 range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Unused library(dplyr) import from attempt 1 has been removed; only
+          ggplot2/tibble/ragg remain, all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper scale_color_manual/scale_shape_manual, theme_minimal base,
+          aggregate() + geom_label layer for centroids
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combined shape+color aesthetic mapping plus a separate geom_label
+          layer with inherit.aes = FALSE over aggregated centroids — genuine layer-composition
+          mastery
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
