@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-11
@@ -60,9 +60,10 @@ anyplot_theme = theme(
 # boxed label so clusters are identifiable even with the legend collapsed.
 plot = (
     ggplot(df, aes(x="tsne_1", y="tsne_2", color="cell_type"))
+    + geom_density2d(size=0.4, alpha=0.5, bins=4, show_legend=False)
     + geom_point(
-        size=2.5,
-        alpha=0.6,
+        size=2.1,
+        alpha=0.5,
         tooltips=layer_tooltips().line("Cell type|@cell_type").line("t-SNE 1|@tsne_1").line("t-SNE 2|@tsne_2"),
     )
     + geom_label(
@@ -80,7 +81,7 @@ plot = (
         x="t-SNE 1",
         y="t-SNE 2",
         color="Cell Type",
-        title="scatter-embedding · letsplot · anyplot.ai",
+        title="scatter-embedding · python · letsplot · anyplot.ai",
         subtitle="t-SNE (perplexity=30) · Single-cell RNA-seq Cell Type Clusters",
     )
     + ggsize(800, 450)
