@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-11
@@ -20,7 +20,7 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
-    layer_labels,
+    scale_fill_manual,
     scale_y_continuous,
     theme,
 )
@@ -36,34 +36,59 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"  # Imprint palette position 1 — always first series
+# Fixed white-blend tint (not composited against the theme background) so the
+# soft bars render as the exact same hex on light and dark surfaces -- only
+# the modal bar uses full-strength BRAND. A real alpha/opacity would instead
+# blend with PAGE_BG and produce two different visible colors per theme.
+BRAND_SOFT = "#66C4A9"
 
 # Data - raw per-observation customer satisfaction survey responses (one row
 # per respondent). Likert order is kept (Excellent -> Very Poor) rather than
 # sorted by frequency: a reader's mental model of the scale matters more
 # here than a strict count ranking.
 response_order = ["Excellent", "Good", "Average", "Poor", "Very Poor"]
-responses = ["Excellent"] * 45 + ["Good"] * 78 + ["Average"] * 52 + ["Poor"] * 23 + ["Very Poor"] * 12
+counts = {"Excellent": 45, "Good": 78, "Average": 52, "Poor": 23, "Very Poor": 12}
+modal_response = max(counts, key=counts.get)
+responses = [r for r, n in counts.items() for _ in range(n)]
 df = pd.DataFrame({"Response": pd.Categorical(responses, categories=response_order, ordered=True)})
+df["Modal"] = df["Response"] == modal_response
 
 total = len(df)
 avg_count = total / len(response_order)
 
 # Create count plot - geom_bar()'s default stat='count' tallies the raw
-# observations directly (no manual pre-aggregation), and layer_labels()
-# reads the same computed ..count../..sumpct.. variables to annotate each
-# bar with its count and share of the total.
+# observations directly (no manual pre-aggregation). The modal response
+# ("Good") renders in full-strength brand green while the rest use a fixed
+# lighter tint of the same hue -- a second layer of visual emphasis beyond
+# bar height alone, without introducing a second Imprint hue or a legend.
+# Two geom_text(stat='count') layers annotate each bar with its count (bold,
+# larger) and share of the total (lighter, smaller), giving the in-bar
+# labels a deliberate typographic hierarchy instead of one flat style.
 plot = (
     ggplot(df, aes(x="Response"))
     + geom_hline(yintercept=avg_count, linetype="dashed", color=INK_SOFT, size=0.6, alpha=0.8)
-    + geom_text(x=4.6, y=avg_count, label="avg", color=INK_SOFT, size=3.0, vjust=-0.6, hjust=0)
-    + geom_bar(
-        fill=BRAND,
-        alpha=0.9,
-        width=0.62,
-        color=PAGE_BG,
-        size=0.6,
-        labels=layer_labels().format("..sumpct..", ".0f").line("@{..count..}").line("@{..sumpct..}%"),
+    + geom_text(x=4.6, y=avg_count, label="avg", color=INK_SOFT, size=3.8, fontface="bold", vjust=-0.6, hjust=0)
+    + geom_bar(aes(fill="Modal"), width=0.62, color=PAGE_BG, size=0.6, show_legend=False)
+    + geom_text(
+        aes(y="..count..", label="..count.."),
+        stat="count",
+        color="white",
+        size=4.3,
+        fontface="bold",
+        vjust=1,
+        nudge_y=-3.5,
     )
+    + geom_text(
+        aes(y="..count..", label="..sumpct.."),
+        stat="count",
+        label_format="{.0f}%",
+        color="white",
+        alpha=0.85,
+        size=3.0,
+        vjust=1,
+        nudge_y=-8,
+    )
+    + scale_fill_manual(values={True: BRAND, False: BRAND_SOFT}, guide="none")
     + labs(
         x="Customer Satisfaction Rating",
         y="Number of Responses",
