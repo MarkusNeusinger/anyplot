@@ -1,3 +1,7 @@
+// anyplot.ai
+// scatter-embedding: t-SNE and UMAP Embedding Visualization
+// Library: highcharts 12.6.0 | JavaScript 22.23.1
+// Quality: 88/100 | Created: 2026-08-11
 //# anyplot-orientation: landscape
 // anyplot.ai
 // scatter-embedding: t-SNE and UMAP Embedding Visualization
