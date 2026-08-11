@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-regression-polynomial: Scatter Plot with Polynomial Regression
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-08-11
+// Library: d3 7.9.0 | JavaScript 22.23.1
+// Quality: 87/100 | Created: 2026-08-11
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
