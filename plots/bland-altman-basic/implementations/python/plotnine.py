@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-11
@@ -26,7 +26,7 @@ from plotnine import (  # noqa: E402
     ggplot,
     ggsave,
     labs,
-    scale_color_manual,
+    scale_fill_manual,
     theme,
 )
 
@@ -59,6 +59,8 @@ agreement = np.where(outside_limits, "Outside limits of agreement", "Within limi
 df = pd.DataFrame({"mean": mean_values, "difference": differences, "agreement": agreement})
 
 label_x = np.min(df["mean"]) * 0.98
+n_outside = int(outside_limits.sum())
+pct_outside = 100 * n_outside / n
 
 # Plot — Imprint palette: brand green for in-range pairs, matte red (semantic
 # "error / outside tolerance" anchor) for pairs outside the 95% limits of agreement
@@ -73,6 +75,7 @@ anyplot_theme = theme(
     axis_title=element_text(size=10, color=INK),
     axis_text=element_text(size=8, color=INK_SOFT),
     plot_title=element_text(size=12, color=INK),
+    plot_subtitle=element_text(size=9, color=INK_SOFT),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(size=8, color=INK_SOFT),
     legend_title=element_blank(),
@@ -82,7 +85,7 @@ anyplot_theme = theme(
 
 plot = (
     ggplot(df, aes(x="mean", y="difference"))
-    + geom_point(aes(color="agreement"), size=2.5, alpha=0.6)
+    + geom_point(aes(fill="agreement"), color=ELEVATED_BG, stroke=0.35, size=3.0, alpha=0.7)
     + geom_hline(yintercept=mean_diff, color=INK_SOFT, linetype="solid", size=1)
     + geom_hline(yintercept=upper_limit, color=INK_SOFT, linetype="dashed", size=0.8, alpha=0.7)
     + geom_hline(yintercept=lower_limit, color=INK_SOFT, linetype="dashed", size=0.8, alpha=0.7)
@@ -105,11 +108,12 @@ plot = (
         ha="left",
         nudge_y=-1.3,
     )
-    + scale_color_manual(values={"Within limits of agreement": BRAND, "Outside limits of agreement": OUTLIER})
+    + scale_fill_manual(values={"Within limits of agreement": BRAND, "Outside limits of agreement": OUTLIER})
     + labs(
         x="Mean of Two Methods (mmHg)",
         y="Difference (Method 1 - Method 2, mmHg)",
         title="bland-altman-basic · python · plotnine · anyplot.ai",
+        subtitle=f"{n_outside}/{n} pairs ({pct_outside:.0f}%) fall outside the limits of agreement",
     )
     + anyplot_theme
 )
