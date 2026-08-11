@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:13:20Z'
-updated: '2026-08-11T12:49:48Z'
+updated: '2026-08-11T12:57:18Z'
 generated_by: claude-sonnet
 workflow_run: 31492458671
 issue: 2028
@@ -12,59 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/plotly/plot-dark.html
-quality_score: 83
+quality_score: 91
 review:
   strengths:
-  - 'Correct plot type: scatter with a degree-2 polynomial fit overlaid, exactly matching
-    the spec''s primary requirement'
-  - R² (0.9633) and the polynomial equation are displayed prominently in a callout
-    box, as required by the spec
-  - 'Realistic, neutral, domain-plausible data: building energy consumption vs. outdoor
-    temperature forms a genuine U-shaped (heating+cooling) curve, not a synthetic-looking
-    parabola'
-  - 'Theme-adaptive chrome is correctly implemented — both renders use the correct
-    #FAF8F1/#1A1A17 backgrounds, and all text (title, axis labels, ticks, legend,
-    annotation) is legible in both themes with no dark-on-dark or light-on-light failures'
-  - 'Imprint palette correctly applied: first series (scatter) is #009E73, the regression
-    line uses the next canonical position (#C475FD lavender), identical across both
-    themes'
-  - Marker opacity (0.65) matches the spec's recommended 0.6-0.7 range for showing
-    density
-  - Title fontsize is explicitly scaled via a length-based formula so the long mandated
-    title plus descriptive prefix doesn't overflow or clip
-  - Clean, reproducible KISS-structured code with np.random.seed(42), only necessary
-    imports, and correct output naming (plot-{THEME}.png/.html)
+  - 'Polynomial equation double-sign bug from attempt 1 is fixed: explicit sign_b/sign_c
+    branching now renders ''y = 0.1215x² - 3.63x + 56.3'' instead of the previous
+    ''+ -3.63x'' artifact'
+  - New 95% confidence band (fill='toself' around the fit, lavender at 15% opacity)
+    adds a genuinely distinctive plotly technique and reinforces the regression's
+    uncertainty visually
+  - New 'Balance point' annotation + diamond marker highlights the curve's vertex
+    (minimum energy temperature) — directly elevates data storytelling by surfacing
+    the real-world insight instead of leaving the fit as a bare line
+  - Legend and callout boxes now use borderwidth=0 with an elevated-bg fill instead
+    of the previous bordered rectangles, matching the style guide's Decoration Removal
+    Checklist
+  - 'Title now reads ''Energy vs. Temperature: Quadratic Regression · ...'', so the
+    descriptive prefix itself references polynomial/quadratic regression as the spec
+    asks, not just the spec-id substring'
+  - Y-axis label now specifies 'Energy Consumption (kWh/day)', resolving the prior
+    ambiguous time-base unit
+  - 'Theme-adaptive chrome correct in both renders: #FAF8F1/#1A1A17 backgrounds, all
+    text legible, data colors (#009E73 green scatter, #C475FD lavender fit) identical
+    across themes'
+  - R² (0.9633) and the polynomial equation are displayed prominently in a callout,
+    satisfying the spec's core requirement
+  - Clean, reproducible KISS-structured code — np.random.seed(42), only necessary
+    imports (numpy, plotly.graph_objects, os), correct plot-{THEME}.png/.html output
+    naming
   weaknesses:
-  - 'Polynomial equation annotation has a double-sign artifact: f"y = {a:.4f}x² +
-    {b:.2f}x + {c:.1f}" renders as ''y = 0.1215x² + -3.63x + 56.3'' because b is negative
-    — branch on the sign of b (and c) so it reads ''y = 0.1215x² - 3.63x + 56.3'''
-  - Legend and R²/equation callout both use a visible bordered rectangle (borderwidth=1)
-    — the style guide's Decoration Removal Checklist calls for removing box frames
-    around legends/callouts for a cleaner look; consider a borderless elevated-bg
-    fill instead, or a much lighter border opacity
-  - 'Design Excellence is only moderate: the plot is well-configured but doesn''t
-    yet reach publication-level polish — e.g. no visual emphasis on the curve''s minimum
-    (the actual ''optimal temperature'' insight), which would elevate the data storytelling'
-  - 'Mandated title''s optional descriptive prefix (''Building Energy Consumption'')
-    doesn''t itself reference ''polynomial regression'' — the spec asks for a title
-    that mentions polynomial regression; today that only comes from the spec-id substring.
-    Consider a prefix like ''Energy vs. Temperature: Quadratic Fit'' to make the descriptive
-    portion self-explanatory'
-  - With ~100 points, some markers visibly cluster/overlap in the mid-curve trough
-    region — a slightly smaller marker size or slightly lower opacity there would
-    keep the density read cleaner without losing prominence
+  - With ~100 points, markers still visibly cluster/overlap in the mid-curve trough
+    region (unchanged from attempt 1) — a slightly smaller marker size or lower opacity
+    there would keep the density read cleaner
+  - 'Library Mastery is still moderate: aside from the new fill=''toself'' confidence
+    band and hovertemplate strings, the scatter+line construction remains close to
+    what most other libraries would produce with minor syntax changes'
+  - Design Excellence, while improved by the confidence band and balance-point emphasis,
+    still stops short of top-tier polish — e.g. no secondary visual cue (like a subtle
+    vertical reference line at the vertex x-position) tying the annotation back to
+    the axis
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 target — not pure white, not dark.
-      Chrome: Title "Building Energy Consumption · scatter-regression-polynomial · plotly · anyplot.ai" is centered at top in dark ink, fully visible with no clipping. Axis titles "Outdoor Temperature (°C)" and "Energy Consumption (kWh)" are dark and clearly readable. Tick labels are a softer gray, still legible. A bordered legend box (top-left, cream fill) lists "Measured Data" and "Polynomial Fit (degree 2)". A second bordered callout (bottom-right) shows "R² = 0.9633" and the fit equation. Subtle light-gray gridlines run on both axes.
-      Data: Green (#009E73) circular markers with a thin light-colored edge trace a clear U-shaped cloud from ~(-10°C, 95kWh) down to a trough near (15°C, 30kWh) and back up to ~(40°C, 105kWh). A lavender/purple (#C475FD) line traces the degree-2 fit through the cloud, clearly distinct in hue and weight (3.5px) from the scatter.
+      Chrome: Title "Energy vs. Temperature: Quadratic Regression · scatter-regression-polynomial · plotly · anyplot.ai" is centered at top in dark ink, fully visible with no clipping. Axis titles "Outdoor Temperature (°C)" and "Energy Consumption (kWh/day)" are dark and clearly readable. Tick labels are a softer gray, still legible. A borderless legend (top-left, cream elevated-bg fill) lists "Measured Data" and "Polynomial Fit (degree 2)". A borderless callout (bottom-right) shows "R² = 0.9633" and the corrected equation "y = 0.1215x² - 3.63x + 56.3" (no double-sign artifact). A small "Balance point" annotation with an arrow points to a black diamond marker near the curve's minimum. Subtle light-gray gridlines run on both axes.
+      Data: Green (#009E73) circular markers with a thin light-colored edge trace a clear U-shaped cloud from ~(-10°C, ~100 kWh/day) down to a trough near (15°C, ~30 kWh/day) and back up to ~(40°C, ~105 kWh/day). A lavender/purple (#C475FD) line traces the degree-2 fit through the cloud, with a matching semi-transparent lavender confidence band around it, clearly distinct in hue and weight from the scatter.
       Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 target — not pure black, not light.
-      Chrome: Title and axis titles render in light off-white ink, fully visible. Tick labels are a lighter warm-gray, still legible against the dark surface. The legend and callout boxes flip to a dark elevated fill (#242420-ish) with a light border, text rendered light-colored. Gridlines are faint light lines at low opacity, visible but subtle.
-      Data: Scatter markers and regression line are unchanged — same #009E73 green and #C475FD lavender as the light render, confirming the data-color-identity rule holds across themes.
-      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axis labels, ticks, legend, annotation) is clearly readable against the near-black background.
+      Chrome: Title and axis titles render in light off-white ink, fully visible. Tick labels are a lighter warm-gray, still legible against the dark surface. The legend and callout flip to a dark elevated fill (#242420-ish), text rendered light-colored, still borderless. The "Balance point" annotation and diamond marker (now light-colored with lavender edge) remain clearly visible against the dark confidence band. Gridlines are faint light lines at low opacity, visible but subtle.
+      Data: Scatter markers and regression line are unchanged — same #009E73 green and #C475FD lavender as the light render, confirming the data-color-identity rule holds across themes; the confidence band is the same lavender at low opacity, reading correctly on the dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axis labels, ticks, legend, annotation, callout) is clearly readable against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -82,14 +80,15 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions
+        comment: No text-on-text or text-on-data collisions, including the new Balance
+          point annotation
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
         comment: Markers visible and appropriately sized for ~100 points, but some
-          clustering/overlap in the trough region
+          clustering/overlap persists in the trough region
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -101,47 +100,48 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills most of the canvas, legend and callout
-          sit within the plot area, nothing cut off
+        comment: Canvas verified at 3200x1800; balanced margins, plot fills most of
+          the canvas, legend/callout/annotation sit within the plot area, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles include units (°C, kWh)
+        comment: Both axis titles include units (°C, kWh/day) — time base now specified
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, line uses canonical position 2 (#C475FD);
+        comment: 'First series #009E73, fit line uses canonical position 2 (#C475FD);
           backgrounds and chrome theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful palette pairing and explicit sizing, but stops short of
-          publication-level polish
+        passed: true
+        comment: Confidence band and balance-point emphasis raise polish above the
+          prior generic fit-line-only look, still short of top-tier
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Grid is subtle and whitespace generous, but legend/callout keep visible
-          border boxes the style guide recommends removing
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color contrast between fit line and scatter plus the R²/equation
-          callout create a clear focal point, though the curve's minimum (the real-world
-          insight) isn't emphasized
+        comment: Legend/callout/annotation are now borderless elevated-bg fills per
+          the Decoration Removal Checklist; grid subtle, whitespace generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Balance point annotation + diamond marker gives the chart a clear
+          real-world focal point (optimal temperature), directly addressing the prior
+          review's storytelling gap
     spec_compliance:
       score: 15
       max: 15
@@ -157,8 +157,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: R², equation annotation, moderate-alpha points, distinct fit line
-          all present
+        comment: R², corrected equation annotation, moderate-alpha points, distinct
+          fit line, and optional confidence band all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -170,19 +170,19 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          match the two series
+        comment: Title matches mandated format; descriptive prefix now explicitly
+          names 'Quadratic Regression'; legend labels match the two series
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full U-shaped curve with realistic noise shown across the entire
-          temperature range
+        comment: Full U-shaped curve with realistic noise, confidence band, and vertex
+          highlight cover all aspects of the plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -192,13 +192,12 @@ review:
           neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Value ranges are plausible; kWh unit lacks an explicit time base
-          (per day/hour), a minor ambiguity
+        comment: Value ranges plausible; kWh/day now removes the prior time-base ambiguity
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -221,11 +220,10 @@ review:
         comment: Only numpy, plotly.graph_objects, os — all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Equation f-string produces a double-sign artifact ('+ -3.63x') for
-          the negative coefficient
+        passed: true
+        comment: Double-sign equation bug fixed with explicit sign_b/sign_c branching
       - id: CQ-05
         name: Output & API
         score: 1
@@ -234,7 +232,7 @@ review:
         comment: Correct plot-{THEME}.png/.html naming, current write_image/write_html
           API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -242,15 +240,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct graph_objects usage with proper trace/layout separation
+        comment: Correct graph_objects usage with proper trace/layout separation and
+          custom hovertemplates
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic scatter+line usage that could be replicated in most other
-          libraries with minor syntax changes
-  verdict: REJECTED
+        comment: fill='toself' confidence band and per-trace hovertemplate customization
+          are genuinely plotly-specific, but overall construction is still close to
+          a generic scatter+line
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
