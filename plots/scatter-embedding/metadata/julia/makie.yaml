@@ -1,0 +1,265 @@
+library: makie
+language: julia
+specification_id: scatter-embedding
+created: '2026-08-11T09:11:36Z'
+updated: '2026-08-11T09:25:51Z'
+generated_by: claude-sonnet
+workflow_run: 31475918198
+issue: 5236
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses are directly and cleanly fixed: legend labelsize
+    raised 11→13, all spines removed via hidespines! (matches the style guide''s ''minimal
+    scatter'' alternative), and a visible T-cell emphasis (larger/alpha-boosted markers
+    + bolder larger centroid label) paired with an insight footnote'
+  - 'Correct Imprint categorical palette in exact canonical order across all 8 clusters,
+    first series brand green #009E73, data colors pixel-identical between light and
+    dark renders'
+  - Solves the n=8 series color-discrimination problem (below the CVD floor per the
+    style guide) with direct per-cluster centroid text labels as a redundant, non-color
+    cue
+  - Both themes render correctly with fully theme-adaptive chrome (text, grid, legend
+    box, centroid labels) — no dark-on-dark or light-on-light failures
+  - 'Realistic, well-structured synthetic data: anisotropic clusters with varying
+    spread/rotation/density, organic overlap between adjacent clusters, plausible
+    single-cell immune-atlas scenario'
+  - Clean idiomatic Makie code — per-group scatter! for legend entries, fig[row,col]
+    grid layout combining Axis + Legend + footnote Label in one Figure, KISS structure,
+    Random.seed!(42)
+  weaknesses:
+  - T-cell emphasis is present but subtle (markersize 11 vs 9, alpha 0.8 vs 0.65,
+    centroid fontsize 17 vs 15) — a viewer scanning the plot without reading the footnote
+    may not immediately notice the emphasized cluster; a slightly larger size delta
+    would strengthen DE-03 without becoming heavy-handed
+  - Bold centroid text labels sit directly over the densest part of each cluster's
+    points, locally occluding some markers underneath (e.g. 'T cells', 'Dendritic
+    cells') — legible and spec-sanctioned as direct labeling, but a subtle background
+    halo/stroke behind each label would improve marker visibility right around the
+    text
+  - Library Mastery is solid but still fairly close to the standard per-group-legend
+    + hidespines! idiom for Makie categorical scatter plots — a further Makie-distinctive
+    touch (e.g. Makie.Point2f-based nearest-neighbor jitter, DataInspector, or a custom
+    Legend patch element) would help LM-02 without adding complexity for its own sake
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark-ink title "Immune Cell Atlas · scatter-embedding · julia · makie · anyplot.ai" and softer subtitle "UMAP (n_neighbors = 15, min_dist = 0.1)" above the plot. Axis labels "UMAP 1"/"UMAP 2" present; tick labels/marks intentionally hidden (correct per spec — embedding coordinates aren't directly interpretable). All spines removed (no L-frame or box around the axis). Subtle light-gray gridlines cross both axes at a handful of positions. Legend sits directly beside the plot in a lightly elevated framed box with 8 entries. A one-line footnote ("T cells form the largest population...") sits bottom-left. All text is clearly readable against the light background — no light-on-light issues.
+      Data: Eight organically-shaped, well-separated clusters render in Imprint palette canonical order — T cells brand green #009E73 (first, slightly larger/more opaque markers), B cells lavender, NK cells blue, Monocytes ochre, Dendritic cells matte red, Erythrocytes cyan, Platelets rose, Neutrophils lime — each with a bold dark centroid text label (T cells' label is bolder/larger than the rest).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout with title/axis labels/footnote/centroid labels flipped to light cream/white ink, subtitle to soft light gray, gridlines to light-toned, legend box to the dark elevated surface (#242420-consistent) with light-ink text. Spines still fully removed. No dark-on-dark failures detected anywhere — every text element (title, subtitle, axis labels, centroid labels, legend, footnote) is clearly legible against the dark surface.
+      Data: Colors are pixel-identical to the light render — brand green first series unchanged, all 8 hues match; only chrome flipped as expected.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; legend labelsize raised from 11 to
+          13 (fixed since attempt 1), well-balanced against title=20/axis=14; readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text collisions; centroid labels sit legibly over their
+          cluster (intentional direct labeling per spec, not a defect)
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markersize 9-11 with alpha 0.65-0.8 well matched to ~90-165-point
+          clusters (medium density band)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 8-hue Imprint palette plus redundant text labels compensates for
+          the below-CVD-floor n=8 discrimination limit
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well; legend adjacent to plot, footnote integrated
+          in the grid, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive UMAP 1 / UMAP 2 axis labels, full mandated title with
+          descriptive prefix
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, first series #009E73, identical data colors
+          across themes, theme-correct chrome in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color+direct-label design, hidden spines, clean typography
+          — strong design, not yet fully publication-ready polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Spines fully removed (fixed since attempt 1), subtle grid, generous
+          whitespace, elevated legend box, integrated footnote — well polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: T-cell emphasis (size/alpha/label) plus an explicit insight footnote
+          create a clear focal point, though the visual emphasis delta is fairly subtle
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D embedding scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-accessible per-cluster color + legend, centroid label
+          annotations, alpha-blended moderate marker size, algorithm+parameter subtitle,
+          hidden tick labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y correctly mapped to UMAP 1/UMAP 2, all data visible within axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labels match
+          cell-type data exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 clusters with varying spread, rotation, density, and size, plus
+          scattered outlier points — shows realistic embedding structure
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, comprehensible single-cell immune-atlas UMAP scenario,
+          matching the spec's bioinformatics application example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Cluster sizes (925 total cells across 8 populations) and relative
+          proportions are plausible for an immune-atlas dataset
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → theme tokens → data → figure → save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics — all used (Statistics for
+          mean())
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI, comments explain non-obvious
+          design decisions
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current CairoMakie
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct per-group scatter! + Legend(fig, ax) pattern, hidespines!,
+          text! centroid labels — solid idiomatic CairoMakie usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Combines Axis + Legend + footnote Label in one Figure grid layout
+          — a Makie-distinctive composable-layout touch, but still close to the standard
+          categorical-scatter idiom overall
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

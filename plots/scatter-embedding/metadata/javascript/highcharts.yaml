@@ -1,0 +1,258 @@
+library: highcharts
+language: javascript
+specification_id: scatter-embedding
+created: '2026-08-11T09:01:34Z'
+updated: '2026-08-11T09:17:07Z'
+generated_by: claude-sonnet
+workflow_run: 31475453632
+issue: 5236
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Marker radius increased from 4px to 6px CSS (per the prior review's VQ-03 feedback)
+    — points now read as clearly more prominent for the 600-point plot, at both desktop
+    and mobile scale
+  - 'Imprint palette used in exact canonical order (green → lavender → blue → ochre
+    → matte red) across all 5 clusters, first series correctly #009E73'
+  - Distinct marker symbols per cluster (circle, diamond, triangle, square, triangle-down)
+    provide redundant shape encoding alongside color
+  - Theme-adaptive chrome remains fully correct in both renders — no dark-on-dark
+    or light-on-light failures, identical data colors between light and dark
+  - Deterministic LCG-seeded data generation (seed=42), clean single-purpose code
+    with no fake interactivity
+  - Subtitle correctly states the algorithm and key parameter ('UMAP projection (n_neighbors=15)');
+    tick labels correctly disabled on both axes per the spec's guidance
+  weaknesses:
+  - 'Centroid data labels still sit directly on top of the densest part of each cluster
+    in both themes — the attempted fix (dataLabels.y: -16, verticalAlign: ''bottom'')
+    only nudges the label 16px and does not move it clear of the point cloud. Zoomed
+    crops of the ''Shipping'' label show marker diamonds with visible bites taken
+    out of them where the opaque text + textOutline halo sits directly on top of markers,
+    hiding data underneath. This is the same weakness flagged in the previous review
+    and is not meaningfully resolved. Fix: anchor each label outside the cluster''s
+    bounding box (e.g., above the cluster''s max-y with a thin connector line/leader,
+    or push further via a fixed pixel offset computed per-cluster) rather than a small
+    offset from the centroid itself.'
+  - Library Mastery is still generic — marker-shape-per-series and a label-only overlay
+    series are useful but not deeply Highcharts-distinctive; the previous review's
+    suggestion to lean into a more distinctive Highcharts capability (e.g. a richer
+    tooltip formatter with per-cluster stats, dataLabels overlap-avoidance via allowOverlap:false
+    + a smarter layout engine, or series-level boost) was not adopted in this revision.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "scatter-embedding · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "UMAP projection (n_neighbors=15) of support-ticket embeddings, colored by topic cluster" in softer gray, both clearly legible and not clipped at the top edge. Axis titles "UMAP Dimension 1" / "UMAP Dimension 2" in soft dark gray, similarly sized and balanced. No tick labels on either axis (intentional per spec). Grid lines are thin and subtle. Legend at the bottom lists all 5 cluster names in dark, readable text with matching colored/shaped swatches, not isolated from the plot.
+      Data: Five clearly separated clusters - "Billing" (green circles, top-left), "Shipping" (lavender diamonds, top-right), "Product Quality" (blue triangles, center), "Account Access" (ochre squares, bottom-left), "Returns" (red inverted-triangles, bottom-right). First series is #009E73 brand green. Marker radius is visibly larger than the prior attempt (now prominent, not sparse-looking). Each cluster is labeled directly on the plot in bold dark text with a light halo/outline for contrast, but the label bounding box sits inside the densest part of each cluster and visibly covers/hides several markers underneath it (confirmed via zoomed crop on "Shipping" - partial diamond fragments are visible poking out from behind the text, meaning full markers are occluded).
+      Legibility verdict: PASS - all text itself is clearly readable against the light background, no light-on-light issues. (Note: the overlap is text-over-data, not text-over-text, and is scored under VQ-02.)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title and subtitle render in white/light-gray, fully legible against the dark background. Axis titles and legend text are light gray, matching the theme. Grid lines remain thin and subtle, in a light, low-opacity tone. No dark-on-dark failures observed - title, subtitle, axis titles, legend, and centroid labels are all clearly visible.
+      Data: Identical cluster colors and shapes to the light render (#009E73 green, lavender, blue, ochre, matte red) - confirms data colors are held constant across themes and only chrome flipped. The same centroid-label-over-marker overlap issue is present here too (confirmed via zoomed "Shipping" crop) - the white text + dark halo sits on top of and hides diamond markers directly beneath it.
+      Legibility verdict: PASS - all text itself is clearly readable against the dark background, no dark-on-dark failures found. (Overlap issue is the same as light render, scored under VQ-02.)
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, subtitle/legend/ticks
+          14px, axis titles 16px); readable in both themes, no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Centroid labels still sit directly over the densest part of each
+          cluster and visibly hide markers beneath them (confirmed via zoomed crop
+          on 'Shipping' in both themes) — the y:-16 offset added since the last review
+          is too small to clear the point cloud; unresolved repeat weakness
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radius increased from 4px to 6px per prior feedback — now
+          prominent and well-adapted to the 600-point density with alpha 0.6
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct marker shapes per cluster add redundant encoding beyond
+          color, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills canvas well, legend adjacent to plot,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles referencing the specific method (UMAP Dimension
+          1/2); no natural units for embedding dimensions
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Exact canonical Imprint order across all 5 series, first series
+          #009E73, theme-correct backgrounds and chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Distinct marker shapes, direct centroid labeling, and a semantically
+          fitting palette assignment go clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace; axis lines remain visible rather
+          than fully removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Centroid labels let the viewer read the cluster structure immediately
+          without consulting the legend, though the label/marker overlap slightly
+          undercuts the polish
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colored clusters with legend, centroid annotations, alpha for overlap,
+          subtitle with algorithm+parameter, no tick labels - all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y correctly mapped to embedding dimensions, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match cluster
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Varied cluster spreads, realistic outlier points, multiple distinct
+          groups
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Support-ticket topic embeddings - real, neutral, comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coordinate ranges plausible for a UMAP/t-SNE projection
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → data → chart flow, only tiny deterministic RNG helpers
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only the global Highcharts/tokens
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality; enableMouseTracking:false on the label
+          overlay is a tidy touch
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, credits disabled
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Highcharts.chart usage with a label-only overlay series
+          for centroids
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Marker-shape-per-series and a label-only series are useful but not
+          deeply Highcharts-specific; prior suggestion to adopt a more distinctive
+          capability wasn't taken up
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
