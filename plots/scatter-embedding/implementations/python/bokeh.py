@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-11
@@ -40,9 +40,16 @@ CLUSTER_NAMES = [
     "Bioinformatics",
 ]
 
-# Data — synthetic high-dimensional document embeddings reduced via t-SNE
+# Data — synthetic high-dimensional document embeddings reduced via t-SNE.
+# Cluster centers and spreads are varied (rather than uniform) to mimic the
+# ambiguity real embeddings show: Data Engineering is nudged close to Machine
+# Learning so the two overlap slightly, and cluster_std differs per group.
 np.random.seed(42)
-X, labels = make_blobs(n_samples=900, n_features=20, centers=6, cluster_std=2.5)
+n_features = 20
+centers = np.random.uniform(-10, 10, size=(6, n_features))
+centers[1] = centers[0] + np.random.normal(scale=1.5, size=n_features)
+cluster_std = [2.5, 3.2, 2.1, 2.9, 1.9, 3.5]
+X, labels = make_blobs(n_samples=900, n_features=n_features, centers=centers, cluster_std=cluster_std)
 tsne = TSNE(n_components=2, perplexity=30, random_state=42, max_iter=1000)
 embedding = tsne.fit_transform(X)
 
@@ -59,7 +66,7 @@ W, H = 3200, 1800
 p = figure(
     width=W,
     height=H,
-    title="NLP Document Clusters · scatter-embedding · bokeh · anyplot.ai",
+    title="NLP Document Clusters · scatter-embedding · python · bokeh · anyplot.ai",
     x_range=Range1d(x_lo - x_pad, x_hi + x_pad),
     y_range=Range1d(y_lo - y_pad, y_hi + y_pad),
     tools="pan,wheel_zoom,box_zoom,reset,hover",
