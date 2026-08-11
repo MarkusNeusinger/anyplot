@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: bokeh 3.9.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-08-11
@@ -27,6 +27,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Imprint palette position 1
+AMBER = "#DDCC77"  # callout accent, outside the categorical pool
 
 # Data - order counts across product categories in an e-commerce store
 np.random.seed(7)
@@ -42,6 +43,7 @@ categories, counts = np.unique(orders, return_counts=True)
 sorted_indices = np.argsort(-counts)
 categories = categories[sorted_indices].tolist()
 counts = counts[sorted_indices].tolist()
+leading_share = counts[0] / sum(counts) * 100
 
 # Create data source (explicit per-bar fill color list, never a bare scalar,
 # so every bar unambiguously resolves to the same brand green)
@@ -51,6 +53,7 @@ source = ColumnDataSource(
         "count": counts,
         "label": [str(c) for c in counts],
         "fill_color": [BRAND] * len(categories),
+        "callout": [f"{leading_share:.0f}% of all orders"] + [""] * (len(categories) - 1),
     }
 )
 
@@ -61,7 +64,7 @@ p = figure(
     x_range=categories,
     width=3200,
     height=1800,
-    title="count-basic · bokeh · anyplot.ai",
+    title="count-basic · python · bokeh · anyplot.ai",
     x_axis_label="Product Category",
     y_axis_label="Number of Orders",
     toolbar_location=None,  # avoids the ~30-50px toolbar shrinking the PNG below 3200x1800
@@ -101,6 +104,25 @@ labels = LabelSet(
 )
 p.add_layout(labels)
 
+# Focal callout on the leading category — surfaces its share of the total
+# order volume, adding a storytelling cue beyond plain descending sort.
+# Driven off the same categorical source as `labels` (via the "callout"
+# column, blank for every row but the leader) rather than a standalone
+# `Label`, since bokeh 3.9.2's Label.x rejects a bare categorical factor.
+leading_callout = LabelSet(
+    x="category",
+    y="count",
+    text="callout",
+    source=source,
+    text_align="center",
+    text_baseline="bottom",
+    y_offset=52,
+    text_font_size="26pt",
+    text_font_style="italic",
+    text_color=AMBER,
+)
+p.add_layout(leading_callout)
+
 # Style the plot — sizes per prompts/library/bokeh.md "Sizing for 3200x1800"
 p.title.text_font_size = "50pt"
 p.title.align = "center"
@@ -129,7 +151,9 @@ p.y_range.start = 0
 p.y_range.end = max(counts) * 1.15
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+# No full rectangular outline — rely on the left/bottom axis lines for an
+# L-shaped frame, matching the style guide's default spine treatment.
+p.outline_line_color = None
 
 # Save files in script directory
 script_dir = Path(__file__).parent
