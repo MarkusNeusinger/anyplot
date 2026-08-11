@@ -58,6 +58,9 @@ function fitDegree2(xs, ys) {
 const [coefC, coefB, coefA] = fitDegree2(nitrogen, cropYield); // y = coefC + coefB*x + coefA*x^2
 const predict = (x) => coefC + coefB * x + coefA * x * x;
 
+const peakX = -coefB / (2 * coefA); // vertex of the fitted parabola (optimum nitrogen rate)
+const peakY = predict(peakX);
+
 const yMean = cropYield.reduce((s, y) => s + y, 0) / cropYield.length;
 const ssRes = cropYield.reduce((s, y, i) => s + (y - predict(nitrogen[i])) ** 2, 0);
 const ssTot = cropYield.reduce((s, y) => s + (y - yMean) ** 2, 0);
@@ -129,7 +132,7 @@ chart.setOption({
     scale: true,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
-    axisTick: { lineStyle: { color: t.inkSoft } },
+    axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
   yAxis: {
@@ -141,7 +144,7 @@ chart.setOption({
     scale: true,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
-    axisTick: { lineStyle: { color: t.inkSoft } },
+    axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
   series: [
@@ -163,8 +166,8 @@ chart.setOption({
       stack: "confidence-band",
       symbol: "none",
       lineStyle: { opacity: 0 },
-      itemStyle: { color: t.palette[2], opacity: 0.15 },
-      areaStyle: { color: t.palette[2], opacity: 0.15 },
+      itemStyle: { color: t.palette[1], opacity: 0.15 },
+      areaStyle: { color: t.palette[1], opacity: 0.15 },
       data: bandWidthData,
       silent: true,
       tooltip: { show: false },
@@ -189,9 +192,29 @@ chart.setOption({
       symbol: "none",
       smooth: false,
       data: curveData,
-      lineStyle: { color: t.palette[2], width: 4 },
-      itemStyle: { color: t.palette[2] },
+      lineStyle: { color: t.palette[1], width: 4 },
+      itemStyle: { color: t.palette[1] },
       z: 10,
+      markLine: {
+        silent: true,
+        symbol: "none",
+        label: {
+          formatter: "Optimum: " + peakX.toFixed(0) + " kg/ha",
+          color: t.inkSoft,
+          fontSize: 12,
+          position: "insideEndTop",
+        },
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        data: [{ xAxis: peakX }],
+      },
+      markPoint: {
+        silent: true,
+        symbol: "circle",
+        symbolSize: 9,
+        itemStyle: { color: t.palette[1], borderColor: t.pageBg, borderWidth: 2 },
+        label: { show: false },
+        data: [{ coord: [peakX, peakY], name: "Peak" }],
+      },
     },
   ],
   graphic: [
