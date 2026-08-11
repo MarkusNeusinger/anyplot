@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:11:57Z'
-updated: '2026-08-11T12:46:12Z'
+updated: '2026-08-11T12:52:43Z'
 generated_by: claude-sonnet
 workflow_run: 31492132714
 issue: 2028
@@ -12,50 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - 'Correct Imprint palette compliance: scatter points use brand green #009E73 (position
-    1), confidence band and regression curve use lavender #C475FD (position 2) in
-    canonical order'
-  - 'Both renders fully theme-correct: backgrounds match #FAF8F1/#1A1A17, all text
-    (title, axis labels, ticks, legend, annotation) uses theme-adaptive INK/INK_SOFT
-    tokens with no dark-on-dark or light-on-light failures'
-  - 'All spec-required features present: polynomial fit curve (degree 2), R² prominently
-    displayed, polynomial equation annotated, 95% confidence band, moderate scatter
-    alpha (0.7)'
-  - 'Clean KISS code: seeded reproducible data (np.random.seed(42)), only necessary
-    imports, no deprecated matplotlib API, correct canvas via figsize/dpi with bbox_inches
-    left at default (None)'
-  - Title format and legend labels match spec requirements exactly; legend cleanly
-    placed outside the axes so it never collides with the top-left annotation box
+  - 'Directly addressed every attempt-1 weakness: scatter markers bumped s=100/alpha=0.7
+    -> s=140/alpha=0.8 (now inside the 100-200pt density band), annotation-box fontsize
+    raised 8 -> 9pt, and a matplotlib-distinctive patheffects halo was added to lift
+    the fit line off the scatter cloud in both themes'
+  - New vertex/'Peak return' callout gives the chart a concrete focal point that names
+    the diminishing-returns insight the spec asks for, meaningfully raising data storytelling
+    over attempt 1
+  - 'Correct Imprint palette usage: brand green (#009E73) for scatter as position
+    1, lavender (#C475FD) as position 2 for band/curve, identical data colors across
+    light and dark renders'
+  - 'Both renders are fully theme-correct: background, title, axis labels, tick labels,
+    grid, legend frame, and annotation box all flip correctly with no dark-on-dark
+    or light-on-light failures'
+  - 'Clean KISS script: reproducible seed, only necessary imports, exact canvas dims
+    via figsize/dpi with no bbox_inches=''tight'', mathtext-typeset equation annotation'
+  - 'All spec-required features present: quadratic fit, R² displayed prominently,
+    equation annotation, semi-transparent confidence band, moderate scatter alpha'
   weaknesses:
-  - Scatter markers (s=100, alpha=0.7) sit at the low end of the 30-100pt density
-    guideline (100-200 recommended) — bump marker size slightly for more visual weight
-  - 'Design excellence is good but not exceptional: consider a stronger focal-point
-    technique (e.g. a subtle marker highlight near the curve peak, or path effects
-    on the fit line) to push visual hierarchy further'
-  - Library Mastery is solid but generic — the fill_between confidence band and annotate()
-    equation box are common patterns; a more matplotlib-distinctive touch (e.g. mathtext
-    rendering for the equation, patheffects, or a secondary inset axes for residuals)
-    would raise LM-02
-  - Annotation box text at fontsize=8 is smaller than ideal for a primary callout
-    (equation + R²) — consider 9-10pt for stronger presence at mobile scale
+  - Confidence band uses a single constant residual-std width across the whole x-range
+    instead of x-dependent uncertainty (naturally wider near the data extremes) —
+    a minor statistical simplification for an 'approximate' band, but a true prediction-interval
+    formula would be more rigorous
+  - Legend still reserves ~32% of canvas width on the right; an inside-axes or bottom-anchored
+    legend could reclaim horizontal space for the data area without new collisions
+  - Design Excellence is improved but still short of publication-tier — e.g. the confidence-band
+    fill and scatter alpha are uniform rather than emphasizing the higher-density/lower-variance
+    core of the curve
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Dark ink title "scatter-regression-polynomial · python · matplotlib · anyplot.ai" at top, dark axis labels "Investment (units)" / "Return (units)", soft dark-gray tick labels, subtle horizontal y-axis gridlines. Annotation box (top-left) with dark ink text on a warm elevated cream fill, soft border. Legend box (right of plot, outside axes) with dark-gray text on the same elevated cream fill. All chrome is clearly readable against the light background.
-      Data: Brand-green (#009E73) scatter points with a faint cream-colored edge, a light-lavender semi-transparent confidence band, and a vivid lavender/magenta (#C475FD) polynomial fit curve tracing a concave (inverted-U) diminishing-returns shape.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), not pure white — matches spec token.
+      Chrome: Dark-ink title "scatter-regression-polynomial · python · matplotlib · anyplot.ai" at top; dark axis labels "Investment (units)" / "Return (units)"; soft dark-gray tick labels; subtle horizontal y-axis gridlines. Top-left callout box (elevated cream fill, soft ink-soft border) shows the mathtext-typeset quadratic equation and R²=0.859. Legend sits outside the axes on a matching elevated-cream box with a bordered frame.
+      Data: Brand-green (#009E73) scatter points with a page-colored edge ring, size ~140pt and alpha 0.8, clearly visible and well-separated even in the dense mid-curve cluster. Lavender (#C475FD) polynomial fit line with a soft page-colored halo (patheffects) lifting it off the point cloud, tracing a clean concave "rise-plateau-decline" shape. Light-lavender semi-transparent 95% confidence band envelopes the fit line. An open-circle marker with a short leader line and "Peak return" label marks the parabola's vertex, calling out the diminishing-returns insight.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, annotation box, "Peak return" label) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Light cream title and axis labels, lighter-gray tick labels, subtle light horizontal gridlines. Annotation box now has a dark-elevated fill with light cream text and a soft light-gray border. Legend box similarly flips to dark-elevated fill with light-gray text. No dark-on-dark text found — every chrome element is legible against the near-black surface.
-      Data: Scatter points remain the identical brand green #009E73, confidence band remains the identical lavender fill (visually reads slightly more saturated purple against the dark backdrop, same hex), and the fit curve remains the identical #C475FD magenta/lavender — confirming data colors are unchanged between themes.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17), not pure black — matches spec token.
+      Chrome: Title and axis labels flip to light cream (#F0EFE8), tick labels to lighter gray (#B8B7B0), gridlines to subtle light lines. The equation/R² callout box and the legend both flip to the dark-elevated fill (#242420) with light-cream/light-gray text and ink-soft borders. "Peak return" label and leader line flip to the light ink-soft tone.
+      Data: Confirmed identical to the light render — same brand-green scatter, same lavender confidence band, same lavender/magenta fit curve with its halo, same vertex marker — only chrome tokens changed between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axis labels, ticks, legend, callout box, "Peak return" label) reads clearly against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,71 +64,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks/legend
-          8pt), readable in both themes; title spans ~67% of width, well within proportion
-          guidance
+        comment: All font sizes explicit and readable in both themes; 'Peak return'
+          callout at 8pt is small but legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits outside the axes, annotation box top-left — no collisions
-          with data or other text
+        comment: Legend outside axes, equation box top-left, vertex callout mid-chart
+          — no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: s=100/alpha=0.7 is at the low end of the 30-100pt density band (100-200
-          recommended); visible but could be more prominent
+        comment: s=140/alpha=0.8 now inside the 100-200pt density band; markers well-separated
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe green/purple pairing, no red-green reliance
+        comment: Green/lavender pairing has good contrast and is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills majority of canvas, nothing cut off;
-          canvas-dimension gate passed
+        comment: Canvas-dimension gate passed; balanced margins; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Investment (units), Return (units)'
+        comment: Descriptive axis labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series brand green #009E73, second color canonical Imprint
-          position 2 (#C475FD), theme-correct chrome and backgrounds in both renders'
+        comment: Position 1 brand green, position 2 lavender, theme-correct chrome
+          in both renders
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Thoughtful two-color scheme, styled annotation callout — above a
-          plain default but not publication-tier
+        passed: false
+        comment: Patheffects halo + mathtext equation + vertex highlight add real
+          polish, still short of publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Top/right spines removed, subtle y-axis grid, generous whitespace
-          with externally placed legend
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, refined halo on
+          fit line
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Concave fit curve, confidence band, and equation/R² annotation together
-          create a clear visual hierarchy and focal point at the curve's peak
+        passed: true
+        comment: New 'Peak return' callout names the diminishing-returns insight directly
+          at the curve's vertex
     spec_compliance:
       score: 15
       max: 15
@@ -137,27 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter with fitted polynomial regression curve, correct type
+        comment: Scatter with polynomial regression curve
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Polynomial curve, R², equation annotation, confidence band, moderate-alpha
-          scatter — all present
+        comment: Fit curve, R², equation annotation, confidence band, moderate alpha
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Investment on x, Return on y, full data range visible
+        comment: x/y mapped correctly, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels (Data points,
-          95% confidence band, Polynomial fit) match the series
+        comment: Title matches mandated format; legend labels match series
     data_quality:
       score: 14
       max: 15
@@ -166,21 +166,20 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Clear rise-plateau-decline quadratic shape with realistic noise scatter
-          around the fit
+        passed: true
+        comment: Clear rise-plateau-decline curvature with realistic noise
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible investment/return diminishing-returns economics
-          scenario
+        comment: Neutral investment/return economics scenario, plausible values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: R²=0.859 and value ranges are sensible for the domain
+        comment: Sensible axis ranges for the domain
     code_quality:
       score: 10
       max: 10
@@ -190,7 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → fit → plot → save, no functions/classes
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -202,41 +201,42 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all used
+        comment: Only os, patheffects, pyplot, numpy — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no over-engineering, no fake UI
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, bbox_inches left at default, current API
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Axes-based API throughout (ax.scatter/plot/fill_between/annotate),
-          correct subplots_adjust for legend margin
+        passed: true
+        comment: Axes-based API throughout, correct subplots_adjust for legend margin
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        comment: fill_between confidence band and styled annotate() bbox are common
-          patterns; nothing uniquely matplotlib-specific (e.g. mathtext, patheffects)
-  verdict: REJECTED
+        passed: true
+        comment: patheffects.Stroke halo, mathtext equation typesetting, poly1d vertex
+          calculation — genuinely matplotlib-distinctive vs. attempt 1
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - patheffects
   patterns:
   - data-generation
   - explicit-figure
