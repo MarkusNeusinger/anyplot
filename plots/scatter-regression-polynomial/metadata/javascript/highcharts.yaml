@@ -1,0 +1,266 @@
+library: highcharts
+language: javascript
+specification_id: scatter-regression-polynomial
+created: '2026-08-11T12:57:29Z'
+updated: '2026-08-11T13:13:36Z'
+generated_by: claude-sonnet
+workflow_run: 31493293864
+issue: 2028
+language_version: 22.23.1
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Semi-transparent 90% prediction band (theme-adaptive `muted` anchor, alpha 0.16)
+    drawn via a custom SVG renderer path directly addresses the Attempt 1 feedback
+    and adds genuine visual sophistication despite highcharts-more (arearange) not
+    being vendored
+  - '"Diminishing returns" plotBand annotation clearly marks the plateau region (~150
+    kg/hectare onward), giving the chart an immediate, legible focal insight that
+    was explicitly requested after Attempt 1'
+  - Polynomial fit computed correctly via normal equations + Gaussian elimination
+    with a deterministic fixed-seed LCG; R² and the fitted equation are displayed
+    prominently in the subtitle
+  - 'First series correctly uses Imprint brand green #009E73 at alpha 0.65 (within
+    the spec''s 0.6-0.7 recommendation); fit curve at canonical palette position 2
+    (#C475FD); the prediction band correctly uses the `muted` semantic anchor for
+    its confidence-band-fill role rather than an arbitrary hex'
+  - 'Theme chrome fully threaded through tokens — both renders are legible, backgrounds
+    match #FAF8F1/#1A1A17, and all data colors (scatter, fit line, band) are identical
+    across themes'
+  - Realistic, neutral agronomic scenario (fertilizer dose vs. crop yield) with a
+    genuine diminishing-returns quadratic pattern plus Gaussian noise
+  - Title format matches the mandated pattern exactly; legend now includes an accurate
+    "90% Prediction Band" entry via a clever empty-column-series + custom legendSymbol
+    trick
+  weaknesses:
+  - Library Mastery is still moderate outside the render-event/renderer.path() workaround
+    — the base scatter+spline combination remains close to replicable in other libraries
+  - KISS structure (CQ-01) stays at a modest score given the number of helper functions
+    (rand, gaussian, polyfit, hexToRgba) plus the new chart.events.render callback
+    — justified by the lack of a stats library and the missing arearange module in
+    vanilla JS, but worth noting for future simplification if highcharts-more ever
+    becomes available
+  - The plateau threshold (quarter-of-initial-slope heuristic) is a reasonable visual
+    approximation rather than an exact statistical breakpoint — already documented
+    honestly in code comments, no action needed
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark title "scatter-regression-polynomial · javascript · highcharts · anyplot.ai" with a softer dark-gray subtitle showing the fit equation and R² ("y = -0.0002x² + 0.092x + 1.73 | R² = 0.899"). Axis titles "Fertilizer Applied (kg/hectare)" and "Crop Yield (tons/hectare)" in dark gray, subtle grid on both axes (correct per style guide for scatter plots). A shaded "Diminishing returns" plot band spans the right portion of the x-axis (~150-200 kg/hectare) with an italic label. Legend at bottom center: "Field Trials", "Quadratic Fit", "90% Prediction Band". All text is clearly readable against the light background — no light-on-light issues.
+      Data: ~80 semi-transparent brand-green (#009E73) scatter points trace a clear diminishing-returns curve (steep rise, then plateau ~10.5-11 t/ha past ~150 kg/ha), overlaid with a solid lavender (#C475FD) quadratic fit line and a light-gray semi-transparent 90% prediction band that pinches near the data center and widens at the extremes. First series confirmed #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same title/subtitle now rendered in white/light-gray, axis titles and tick labels in light gray, grid in a subtle light tone, legend text light-colored. The "Diminishing returns" plot band and its italic label remain clearly visible and legible against the dark background. No dark-on-dark failures observed on any text element.
+      Data: Data colors are identical to the light render — same green scatter points, lavender fit line, and gray prediction band, confirming only chrome flipped as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
+          14px, band label 12px); readable in both themes; title fits without overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text, legend, data, or the new plotBand label
+          in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 80-point medium-density scatter, radius 5.5 markers at alpha 0.65,
+          clearly visible but not maximally density-optimized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green scatter vs. lavender fit line vs. muted gray band gives strong
+          hue + luminance separation on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins; legend near the
+          plot; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis titles descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, fit line canonical position 2 (#C475FD), band
+          uses theme-adaptive muted anchor; backgrounds match Imprint tokens; identical
+          data colors across themes'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: prediction band + plateau shading elevate the chart
+          clearly above defaults, though not fully publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle both-axis grid (correct for scatter per style guide), clean
+          legend, generous whitespace, band shading is a refined detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: The labeled diminishing-returns plot band gives the chart a clear,
+          immediately visible focal insight matching the underlying data pattern
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter + polynomial regression chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Scatter points, quadratic fit, R², equation annotation, and optional
+          confidence band all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels (including the
+          new band entry) are accurate
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows the core diminishing-returns curve with realistic noise, but
+          no additional distributional edge cases
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world agronomic scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fertilizer dose and crop yield ranges/proportions are plausible and
+          internally consistent
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions (rand, gaussian, polyfit, hexToRgba) plus a chart.events.render
+          callback are necessary in vanilla JS without a stats library or arearange
+          module
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only ANYPLOT_TOKENS and Highcharts global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the workaround required (no fake UI, clear
+          comments explaining the arearange substitute)
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled everywhere, current
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, idiomatic Highcharts.chart() series/axis/plotBands configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom renderer.path() drawn from chart.events.render with axis.toPixels()
+          coordinate mapping, plus plotBands annotation and a legendSymbol override
+          on an empty series — genuinely Highcharts-specific techniques not easily
+          replicated elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
