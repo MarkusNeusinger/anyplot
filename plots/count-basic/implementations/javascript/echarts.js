@@ -41,6 +41,7 @@ const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 const categories = ranked.map(([language]) => language);
 const frequencies = ranked.map(([, count]) => count);
 const total = frequencies.reduce((sum, count) => sum + count, 0);
+const average = Math.round(total / frequencies.length);
 
 // The leader (rank 1) is rendered at full opacity with a bolder label; the rest
 // sit at reduced opacity so the top bar reads as an immediate focal point.
@@ -64,8 +65,11 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "count-basic · javascript · echarts · anyplot.ai",
+    subtext: "600 survey responses, ranked by frequency — leader spotlighted",
     left: "center",
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+    subtextStyle: { color: t.inkSoft, fontSize: 14 },
+    itemGap: 10,
   },
   tooltip: {
     trigger: "axis",
@@ -76,7 +80,7 @@ chart.setOption({
       return `${p.name}<br/>${p.value} responses (${pct}%)`;
     },
   },
-  grid: { left: 90, right: 60, top: 100, bottom: 80 },
+  grid: { left: 90, right: 60, top: 130, bottom: 80 },
   xAxis: {
     type: "category",
     data: categories,
@@ -114,6 +118,24 @@ chart.setOption({
       emphasis: {
         focus: "series",
         itemStyle: { opacity: 1, shadowBlur: 12, shadowColor: "rgba(0, 0, 0, 0.25)" },
+      },
+      // Spotlight band: a translucent brand-green column behind the leader
+      // category, from axis floor to chart ceiling — reinforces the focal
+      // point beyond the bar's own opacity contrast.
+      markArea: {
+        silent: true,
+        itemStyle: { color: "rgba(0, 158, 115, 0.08)" },
+        data: [[{ xAxis: categories[0] }, { xAxis: categories[0] }]],
+      },
+      // Reference line at the mean count — a distinctive ECharts feature
+      // (markLine) rendered in the theme's neutral/structural ink tone so it
+      // reads as chart scaffolding, not a competing data series.
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.ink, opacity: 0.35, type: "dashed", width: 1.5 },
+        label: { color: t.inkSoft, fontSize: 12, formatter: "avg {c}" },
+        data: [{ yAxis: average }],
       },
     },
   ],
