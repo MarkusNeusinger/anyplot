@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: scatter-embedding
 created: '2026-08-11T09:12:05Z'
-updated: '2026-08-11T09:17:16Z'
+updated: '2026-08-11T09:27:02Z'
 generated_by: claude-sonnet
 workflow_run: 31476227575
 issue: 5236
@@ -12,49 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - Correct Imprint palette canonical order with brand green first; both renders confirmed
-    theme-correct (background, text, halo boxes all flip correctly, data colors identical)
-  - Deterministic seeded RNG; per-cluster covariance (elongation + rotation) makes
-    clusters look like genuine t-SNE output instead of uniform circles
-  - 'Full spec compliance: alpha-blended markers for overlap, centroid labels with
-    legible halo, subtitle with algorithm + parameter, axis titles present with tick
-    labels correctly omitted'
-  - Clean minimal-scatter execution -- all spines/grid/ticks removed, generous whitespace,
-    legend well separated from the plot
-  - Solid idiomatic modern D3 (.join(), scaleOrdinal, d3.mean/d3.extent) and correct
-    mount-node/theme-token contract usage
+  - 'All attempt-1 weaknesses fixed with real changes, not cosmetic tweaks: legend
+    swatch opacity now matches data-point opacity (0.62 both), centroid halo boxes
+    strengthened (0.82→0.95 fill-opacity plus a new stroke) so labels stay legible
+    over dense point mass, and cluster centers were pushed further apart so the Technology/Finance
+    boundary no longer bleeds.'
+  - 'Genuine D3-distinctive technique added: d3.polygonHull traces each cluster''s
+    convex hull into a soft tinted region drawn beneath the markers — a real DOM-computed-geometry
+    technique that directly answers the LM-02 gap flagged in attempt 1, not a generic
+    scatter port.'
+  - 'Theme-adaptive chrome is correct in both renders: identical data hues in light/dark,
+    background/text/halo/legend all flip correctly, no dark-on-dark or light-on-light
+    failures.'
+  - 'Full spec compliance: CVD-safe Imprint-colored clusters with legend, optional
+    centroid-label annotations, alpha-blended markers for overlap, subtitle noting
+    algorithm + parameter, and axes deliberately left tick-less since embedding coordinates
+    aren''t directly interpretable.'
+  - 'Clean, deterministic, idiomatic code: seeded LCG + Box-Muller RNG, flat KISS
+    structure, modern d3 join()/scaleOrdinal/scaleLinear/d3.mean/d3.extent usage,
+    no imports beyond the injected d3 global.'
   weaknesses:
-  - Legend swatch opacity (0.85) doesn't match data-point opacity (0.62) -- align
-    them for visual consistency
-  - Centroid halo boxes overlap directly on top of dense point clusters, partially
-    hiding markers beneath -- consider nudging labels slightly outside the densest
-    region or increasing halo opacity/contrast
-  - For 6 categorical series (the style guide's borderline zone), no marker-shape/linestyle
-    redundancy was added beyond the text labels -- a subtle secondary encoding would
-    strengthen accessibility further
-  - Significant point overlap between adjacent clusters (notably Technology/Finance)
-    blurs the boundary -- slightly increasing inter-cluster center distance or reducing
-    spread would read cleaner while still looking organic
-  - 'Library-mastery opportunity left on the table: no use of D3-distinctive features
-    like d3-contour/convex-hull cluster outlines or quadtree-based label placement'
+  - Marker sizing (r=5.5, fill-opacity 0.62) sits at the edge of the style guide's
+    density guidance for the aggregate 600-point dataset — shaving alpha slightly
+    (~0.5-0.55) or marker radius by 1px in the densest clusters (Finance, Sports)
+    would further reduce local overplotting.
+  - Legend label text (15px CSS) is on the smaller side once the 400px mobile srcset
+    scales it down — a modest bump would improve small-viewport legibility.
+  - LM-02 could go one step further with quadtree-based centroid-label collision avoidance
+    (rather than fixed placement at the mean), though the new convex-hull technique
+    already meaningfully lifts library mastery over the prior attempt.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 -- not pure white.
-      Chrome: Bold dark title, gray subtitle, gray axis titles (no tick labels), dark centroid labels on light halo boxes, legend with dark cluster-name text -- all clearly readable against the light background.
-      Data: Six clusters colored in canonical Imprint order -- Technology=#009E73 (brand green, first series), Sports=lavender, Politics=blue, Health=ochre, Finance=matte red, Entertainment=cyan. Moderate marker size (r=5.5) with alpha 0.62 for overlap handling.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), not pure white, not dark — matches the required light surface.
+      Chrome: Bold dark title "scatter-embedding · javascript · d3 · anyplot.ai" centered at top, gray subtitle "NLP document embeddings · t-SNE (perplexity=30)" beneath it. Six elongated, rotated point clouds (Technology, Sports, Politics, Health, Finance, Entertainment) sit in a loose ring layout, now clearly separated from one another (Technology/Finance no longer overlap as they did in attempt 1). Each cluster has a soft, color-tinted convex-hull outline drawn beneath its points, plus a bold cluster-name label on an opaque light halo box with a thin border near its centroid — the box reads cleanly over the dense point mass beneath it. Gray "t-SNE dimension 1" / "t-SNE dimension 2" axis titles are present with no numeric tick labels, matching the spec's guidance that embedding coordinates aren't directly interpretable. A legend with color swatches (opacity now matching the data markers) and cluster names sits to the right of the plot.
+      Data: First series (Technology) is Imprint brand green #009E73; remaining clusters use canonical palette positions 2-6 (lavender, blue, ochre, matte red, cyan) in domain order.
+      Legibility verdict: PASS — title, subtitle, centroid labels, axis titles, and legend are all clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 -- not pure black.
-      Chrome: Title/subtitle/axis titles/legend text all flip to light tones; centroid halo boxes flip to dark elevated fill with white text. No dark-on-dark failures observed.
-      Data: Same six cluster colors as light render, confirmed identical -- only chrome flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17), not pure black, not light — matches the required dark surface.
+      Chrome: Title and subtitle correctly flip to white/light-gray. Centroid halo boxes flip to a dark elevated fill with light text and a subtle border — no dark-on-dark failures. Axis titles and legend text flip to light gray, fully legible. Convex-hull outlines remain visible as subtle tinted regions against the dark background.
+      Data: The six cluster hues (green, lavender, blue, ochre, matte red, cyan) are pixel-identical to the light render — only background, text, and halo/legend chrome adapted to the theme, exactly as required.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures found.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,73 +66,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicit-sized and readable in both themes; legend text
-          at 15px CSS is on the smaller side for the ~400px mobile srcset
+        comment: All font sizes explicit and readable in both themes; legend text
+          at 15px CSS is on the smaller side for the ~400px mobile srcset.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text collisions, but centroid halo boxes sit atop dense
-          point clusters, partially obscuring markers
+        comment: Centroid halo opacity raised to 0.95 with a new stroke fixes the
+          attempt-1 issue of boxes blending into dense clusters beneath them.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: r=5.5, alpha 0.62 reasonable for ~600 points, just above the medium-density
-          band
+        comment: r=5.5 / fill-opacity 0.62 reasonable for ~600 points total, just
+          above the guide's medium-density band.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues; direct cluster-name labels give redundant
-          encoding for the 6-series borderline case
+        comment: CVD-safe Imprint hues plus redundant encoding via direct labels and
+          now hull-shape boundaries.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No overflow/clipping, balanced axis labels, canvas size on target
+        comment: No overflow/clipping, balanced axis labels, canvas on target 3200x1800.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive dimension labels appropriate for unitless embedding axes
+        comment: Descriptive dimension labels appropriate for unitless embedding axes.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first, canonical 1-6 order, correct theme-adaptive backgrounds
-          in both renders
+        comment: Brand green first, canonical position 1-6 order, correct theme-adaptive
+          backgrounds in both renders.
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Elongated/rotated per-cluster covariance and halo-backed labels show
-          real thought beyond generic defaults
+        comment: New convex-hull cluster outlines plus elongated/rotated per-cluster
+          covariance and halo-backed labels lift polish over the attempt-1 baseline
+          scatter.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: All spines/grid/ticks removed for a clean minimal-scatter look, generous
-          whitespace
+        comment: All spines/grid/ticks removed for a clean minimal-scatter look; generous
+          whitespace around plot and legend.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clear grouping via color + labels but no single deliberate focal
-          point/emphasis technique
+        passed: true
+        comment: Hull outlines give each cluster a deliberate visual boundary beyond
+          color alone, adding hierarchy on top of the direct-label grouping.
     spec_compliance:
       score: 15
       max: 15
@@ -138,26 +143,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter plot with 2D embedding-style clustering
+        comment: Scatter plot with 2D embedding-style clustering.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colored clusters + legend, centroid annotations, alpha-blended markers,
-          subtitle, no tick labels
+        comment: CVD-safe colored clusters + legend, centroid label annotations, alpha-blended
+          markers, algorithm/parameter subtitle, no axis tick labels.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y map to embedding dims with full data range shown
+        comment: x/y map to embedding dims 1/2; full data range shown with padding.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels match cluster names
+        comment: Title matches mandated format exactly; legend labels match cluster
+          names.
     data_quality:
       score: 15
       max: 15
@@ -167,20 +173,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers every spec bullet
+        comment: 'Covers every spec bullet: coloring, legend, centroid annotation,
+          alpha for overlap, subtitle, tick-less axes.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral NLP topic categories
+        comment: Plausible, neutral NLP topic categories (Technology/Sports/Politics/Health/Finance/Entertainment).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coordinate ranges and per-cluster counts consistent with typical
-          t-SNE output
+        comment: Coordinate ranges and per-cluster point counts (85-120, total 600)
+          consistent with typical t-SNE output and spec's 500-5000 guidance.
     code_quality:
       score: 10
       max: 10
@@ -190,58 +197,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes, flat top-to-bottom script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG + Box-Muller, deterministic
+        comment: Fixed-seed LCG + Box-Muller, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond injected d3 global
+        comment: No imports; only the injected d3 global is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, appropriate complexity
+        comment: No fake interactivity, appropriately scoped complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Single svg into #container sized from ANYPLOT_SIZE, no animation'
+        comment: 'Builds one svg into #container sized from window.ANYPLOT_SIZE; no
+          animation/transitions.'
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Modern .join() pattern, scaleOrdinal/scaleLinear, d3.mean/d3.extent,
+          d3.polygonHull, and correct theme-token usage throughout.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Modern .join() pattern, scaleOrdinal/scaleLinear, d3.mean/d3.extent
-          helpers
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: getBBox() halo sizing is a genuine real-DOM technique, but no d3-contour/hull
-          or quadtree label placement
+        comment: d3.polygonHull convex-hull cluster outlines and getBBox()-driven
+          dynamic label sizing are genuine DOM-computed D3 techniques; quadtree-based
+          label collision avoidance would be the next step.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - convex-hull
   patterns:
   - data-generation
   - iteration-over-groups
+  - groupby-aggregation
   dataprep: []
   styling:
   - alpha-blending
