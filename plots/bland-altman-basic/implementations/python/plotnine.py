@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 88/100 | Updated: 2026-08-11
+Quality: 93/100 | Updated: 2026-08-11
 """
 
 import os

@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bland-altman-basic
 created: '2026-05-07T11:05:16Z'
-updated: '2026-08-11T11:00:01Z'
+updated: '2026-08-11T11:07:44Z'
 generated_by: claude-sonnet
 workflow_run: 31483951495
 issue: 2032
@@ -12,58 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-alt
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - 'Correct Bland-Altman construction: x = mean of the pair, y = method1 - method2,
-    solid mean-difference line, dashed ±1.96 SD limit lines, and all three values
-    annotated on the plot -- every required feature from the spec is present.'
-  - 'Excellent semantic use of the Imprint palette: brand green (#009E73) for in-range
-    pairs and the matte-red semantic anchor (#AE3030) for pairs outside the limits
-    of agreement -- a textbook ''bad/error -> red'' semantic exception per the style
-    guide that doubles as a data-storytelling device (outliers pop immediately).'
-  - 'Theme-adaptive chrome correctly threaded through both renders: light background
-    is warm off-white, dark background is warm near-black, all text is readable in
-    both, and the data colors are identical across themes.'
-  - Moderate point transparency (alpha=0.6) matches the spec's explicit request to
-    'reveal overlapping observations'.
-  - Clean, idiomatic ggplot-style layer composition (aes-driven color mapping, scale_color_manual,
-    layered geom_hline/geom_text), reproducible (seeded), no extraneous imports, correct
-    plot-{THEME}.png output via ggsave.
-  - 'Realistic, neutral data: two blood-pressure measurement methods centered around
-    a physiologically plausible ~130 mmHg mean with a small consistent bias (-2.18)
-    -- good real-world grounding.'
+  - 'All three attempt-1 weaknesses were fixed precisely as suggested: marker edge
+    stroke, an outlier-count/percentage subtitle callout, and the labs(subtitle=...)
+    plotnine touch'
+  - 'Correct Bland-Altman construction end-to-end: mean-difference line, dashed ±1.96
+    SD limit lines, and all three values annotated on the plot'
+  - 'Excellent semantic use of the Imprint palette: brand green for in-range pairs,
+    matte-red semantic anchor for out-of-range pairs, with position providing a CVD-safe
+    redundant cue'
+  - Theme-adaptive chrome correctly threaded through both renders — readable text,
+    correct backgrounds, pixel-identical data colors across themes
+  - Reproducible, clean, idiomatic ggplot-style layer composition; correct output
+    API and canvas dimensions
   weaknesses:
-  - 'Design Excellence reads as a well-configured default rather than distinctly polished:
-    no custom font family, no white/pale edge stroke on markers, no additional spacing
-    refinement beyond the base theme -- add edgecolors=''white'' (or the theme-adaptive
-    elevated-bg tone) on geom_point for extra definition on the semi-transparent overlapping
-    points, per the style guide''s ''Data Element Styling'' section.'
-  - Data storytelling stops at color-coding the outliers -- consider a small callout
-    summarizing the count/percentage of pairs outside the limits of agreement (e.g.
-    '4/100 outside limits') to push the insight further.
-  - The composition (scatter + hlines + text annotations) is fairly generic and could
-    be replicated in almost any grammar-of-graphics library -- consider leveraging
-    a more plotnine-distinctive touch (e.g. a subtitle via labs(), or facet-ready
-    structure) to raise Library Mastery.
-  - Marker size (2.5) and alpha (0.6) are legible but slightly conservative for a
-    100-point medium-density scatter -- sizing up marginally (e.g. 3.0) with a subtle
-    edge stroke would add polish without hurting overlap-revealing transparency.
+  - Design Excellence reads as a well-executed application of the standard anyplot
+    ggplot theme rather than a distinctly refined composition beyond the two fixes
+    applied this round
+  - Overall chart composition (scatter + hlines + text annotations) remains generic
+    to grammar-of-graphics libraries in general; a more plotnine-distinctive mechanism
+    could differentiate Library Mastery further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Title "bland-altman-basic · python · plotnine · anyplot.ai" in dark ink, centered, ~65-70% of plot width, fully visible with no clipping. Axis titles "Mean of Two Methods (mmHg)" and "Difference (Method 1 - Method 2, mmHg)" in dark ink, both readable. Tick labels in soft grey, readable. Legend box top-right with "Outside limits of agreement" (red swatch) and "Within limits of agreement" (green swatch), fully legible with a visible border matching the elevated background token. Solid grey mean line labeled "Mean: -2.18" and two dashed grey limit lines labeled "+1.96 SD: 12.78" / "-1.96 SD: -17.13", all annotation text legible and not overlapping any markers.
-      Data: ~96 green points (#009E73, brand green) and 4 red points (#AE3030, matte-red semantic anchor) at alpha 0.6, revealing overlap where points cluster. Red points sit correctly outside the dashed limit lines (both above and below), confirming the semantic color mapping is data-driven and correct.
-      Legibility verdict: PASS -- no light-on-light or unreadable text anywhere.
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "bland-altman-basic · python · plotnine · anyplot.ai" in dark ink, fully visible. New subtitle "5/100 pairs (5%) fall outside the limits of agreement" in soft grey directly below. Axis titles and tick labels dark/soft-grey ink, all readable. Legend box (right) with "Outside limits of agreement" (red) / "Within limits of agreement" (green) fully legible. Mean line and dashed +/-1.96 SD lines with adjacent text annotations, all clear of markers.
+      Data: ~95 green points (#009E73) and 5 red points (#AE3030) at alpha 0.7 with a subtle elevated-bg edge stroke; red points correctly fall outside the dashed limit lines.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Title, axis titles, and tick labels have all flipped to light tones (white/light-grey) and remain fully readable against the dark background. Grid lines are faint and subtle. Legend box border and text are light-colored and legible, with the same elevated dark-grey fill token distinguishing it from the page background. Mean-line and limit-line annotations are legible in light grey, matching the theme-adaptive ink-soft token.
-      Data: Same green/red point colors and positions as the light render -- confirmed identical (#009E73 / #AE3030), only the chrome (background, text, grid, legend frame) changed between themes.
-      Legibility verdict: PASS -- no dark-on-dark failures observed; all text and data remain clearly distinguishable from the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title, subtitle, axis titles, and tick labels flipped to light tones, fully readable — no dark-on-dark failures. Grid faint and subtle. Legend border/text and mean/SD annotations light-colored and legible against the dark elevated-tone legend box.
+      Data: Colors identical to light render (#009E73 / #AE3030) — only chrome flipped between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -71,78 +56,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis title 10pt, axis
-          text 8pt, legend 8pt); well-proportioned, no overflow, readable in both
-          themes.
+        comment: All sizes explicitly set, readable in both themes, no dark-on-dark/light-on-light
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; annotation labels for mean/SD lines are
-          cleanly offset from markers via nudge_y.
+        comment: Annotations cleanly offset via nudge_y, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: size=2.5, alpha=0.6 for 100 points is visible and reveals overlap
-          as the spec requests; could be marginally larger/more defined (edge stroke)
-          for extra polish.
+        comment: size=3.0, alpha=0.7, plus new elevated-bg edge stroke give clear
+          marker definition
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red pair is the CVD-optimized Imprint brand+semantic-anchor
-          combo, and outliers are redundantly encoded by position (outside the dashed
-          limit lines), not color alone.
+        comment: Green/red pair redundantly encoded by position relative to the dashed
+          limit lines
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a large, balanced portion of the canvas; legend sits
-          close to the plot, not isolated.
+        comment: Balanced proportions, nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels are descriptive and include units (mmHg).
+        comment: Descriptive with units (mmHg)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First/majority series is brand green #009E73; outliers use the matte-red
-          semantic anchor #AE3030 (bad/error role) -- correct semantic exception.
-          Backgrounds and chrome are theme-correct in both renders, data colors identical
-          across themes.'
+        comment: Brand green first/majority series, matte-red semantic anchor for
+          outliers, theme-correct chrome
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        comment: Thoughtful semantic color use, but otherwise reads as a well-configured
-          library default -- no custom typography or additional polish beyond the
-          base theme tokens.
+        passed: true
+        comment: Marker edge stroke added this round gives deliberate definition beyond
+          a bare default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Top/right spines removed, subtle grid (alpha 0.05-0.10), styled legend
-          box with elevated background -- good refinement, but no marker edge stroke
-          or other finishing touches.
+        passed: true
+        comment: Spines removed, subtle grid, styled legend box; unchanged from attempt
+          1
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Color contrast on outliers creates an immediate focal point (visual
-          hierarchy present), but no explicit callout/summary pushes the insight further.
+        passed: true
+        comment: New subtitle callout quantifies the outlier count/percentage as an
+          explicit focal point
     spec_compliance:
       score: 15
       max: 15
@@ -151,24 +129,27 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct Bland-Altman mean-difference scatter.
+        passed: true
+        comment: Correct Bland-Altman agreement plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Mean line, dashed ±1.96 SD limit lines, annotated values, and moderate
-          point transparency all present.
+        passed: true
+        comment: Mean line, dashed LoA lines, annotated values, moderate transparency
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: x = mean of pair, y = method1 - method2, matching the spec exactly.
+        passed: true
+        comment: x=mean of pair, y=method1-method2, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches the mandated format exactly; legend labels ('Outside/Within
-          limits of agreement') match the data-derived category.
+        passed: true
+        comment: Mandated title format, legend labels match categories
     data_quality:
       score: 15
       max: 15
@@ -177,20 +158,20 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: 100 paired observations with outliers both above and below the limits
-          of agreement, plus normal in-range scatter.
+        passed: true
+        comment: In-range scatter plus outliers above and below limits, all annotated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Two blood-pressure measurement methods, a real and neutral medical-device-validation
-          scenario.
+        passed: true
+        comment: Blood-pressure measurement comparison, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Mean ~130 mmHg with a small consistent bias and physiologically plausible
-          spread.
+        passed: true
+        comment: n=100, physiologically plausible mmHg mean/spread
     code_quality:
       score: 10
       max: 10
@@ -199,54 +180,58 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Imports -> data -> plot -> save, no functions/classes.
+        passed: true
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: np.random.seed(42) set.
+        passed: true
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only used imports (numpy, pandas, plotnine components).
+        passed: true
+        comment: Only used symbols imported
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Clean, appropriate complexity, no fake functionality.
+        passed: true
+        comment: No fake UI, straightforward flow
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-{THEME}.png via ggsave with correct dpi/width/height for
-          the landscape canvas.
+        passed: true
+        comment: ggsave to plot-{THEME}.png, correct dpi/width/height for 3200x1800
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Solid ggplot-grammar composition (aes-driven color mapping, scale_color_manual,
-          layered geoms), though a fairly standard layer stack.
+        passed: true
+        comment: Solid ggplot-grammar composition with aes-driven fill mapping and
+          theme() tokens
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Uses plotnine's data-driven aesthetic mapping and layer composition,
-          but the overall approach could be replicated in most grammar-of-graphics
-          libraries.
-  verdict: REJECTED
+        passed: true
+        comment: labs(subtitle=...) and data-driven categorical fill mapping applied
+          per attempt-1 feedback
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
