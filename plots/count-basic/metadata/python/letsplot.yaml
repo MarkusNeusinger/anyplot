@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: count-basic
 created: '2025-12-25T12:44:50Z'
-updated: '2026-08-11T07:25:12Z'
+updated: '2026-08-11T07:32:36Z'
 generated_by: claude-sonnet
 workflow_run: 31468033704
 issue: 2033
@@ -12,49 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Modal-bar visual emphasis (full brand green vs. soft tint on the rest) creates
+  - 'Palette compliance fixed: BRAND_SOFT now uses the documented `muted` semantic
+    anchor (#6B6A63 light / #A8A79F dark) instead of the prior custom off-palette
+    hex #66C4A9, exactly as attempt-1 review recommended'
+  - 'Title now includes the full mandated pattern with the ''python'' language segment:
+    ''count-basic · python · letsplot · anyplot.ai'''
+  - Modal-bar visual emphasis (full brand green vs. muted anchor on the rest) creates
     an immediate focal point without needing a legend or a second Imprint hue
   - Dual geom_text layers (count + share %) give the in-bar labels genuine typographic
-    hierarchy (bold/larger vs. lighter/smaller)
-  - Dashed 'avg' reference line adds useful comparative context beyond raw bar heights
+    hierarchy (bold/larger vs. lighter/smaller), and a dashed 'avg' reference line
+    adds comparative context beyond raw bar heights
   - Fully deterministic data construction (fixed dict, no RNG) with a realistic, neutral
-    customer-satisfaction survey context
-  - Theme-adaptive chrome verified correct in both renders — PAGE_BG/INK/INK_SOFT
-    tokens threaded through title, axes, ticks, grid, and caption
-  - Canonical 800×450 @ scale=4 canvas, passes the canvas dimension gate
+    customer-satisfaction survey context; canonical 800×450 @ scale=4 canvas passes
+    the dimension gate
+  - Theme-adaptive chrome correctly threaded through both renders — PAGE_BG/INK/INK_SOFT
+    tokens on title, axes, ticks, grid, and caption
   weaknesses:
-  - 'Title omits the ''python'' language segment — reads ''count-basic · letsplot
-    · anyplot.ai'' instead of the required ''count-basic · python · letsplot · anyplot.ai''
-    (compare sibling implementations plots/count-basic/implementations/python/{bokeh,plotnine,pygal}.py,
-    which all include ''· python ·''). Fix: update the labs(title=...) string.'
-  - 'BRAND_SOFT = ''#66C4A9'' is a custom hex not present in the Imprint palette or
-    its 3 semantic anchors (amber/neutral/muted), used to de-emphasize non-modal bars.
-    Style guide: ''Never introduce custom hex values when the Imprint palette already
-    covers the need.'' Fix: use the `muted` semantic anchor (#6B6A63 light / #A8A79F
-    dark) for non-modal bars, or apply true alpha against PAGE_BG instead of a fixed
-    tint hex.'
-  - Percentage labels are quite small (geom_text size=3.0mm, ~8.5pt) relative to the
-    count labels (size=4.3mm) — legible but close to the lower bound for mobile-width
-    readability; consider nudging up slightly.
-  - 'LM-02: the stat=''count'' + ''..sumpct..'' computed aesthetic is a standard grammar-of-graphics
-    feature shared with plotnine/ggplot2, not something that distinctly showcases
-    lets-plot''s own strengths (its native interactivity/tooltips weren''t specially
-    customized beyond the default HTML export).'
+  - 'Dark-theme in-bar text contrast regressed slightly with the palette fix: white
+    bold count/% labels on the non-modal bars now sit on #A8A79F (the dark-theme muted
+    anchor), an approx. 2.4:1 contrast ratio — noticeably weaker than the light-theme
+    equivalent (#6B6A63, ~5.4:1) or the modal green bar (~3.4:1). Still legible but
+    visibly softer. Fix: switch in-bar label color to INK (dark) for non-modal bars
+    specifically in dark theme, or use a darker muted tone for BRAND_SOFT in dark
+    mode.'
+  - 'LM-02 unchanged from attempt 1: stat=''count'' + ''..sumpct..'' is standard ggplot2-grammar
+    functionality shared with plotnine, not something that showcases a lets-plot-specific
+    strength (native interactivity/tooltips weren''t customized beyond the default
+    HTML export).'
+  - Percentage labels remain quite small (geom_text size=3.4mm, ~9.7pt) relative to
+    the count labels (size=4.3mm) — legible but close to the lower bound for mobile-width
+    readability, as noted in the prior review.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "count-basic · letsplot · anyplot.ai" top-left; axis titles "Customer Satisfaction Rating" (x) and "Number of Responses" (y) in dark ink; grey tick labels; subtle horizontal y-axis-only gridlines; dashed grey "avg" reference line with inline label near y≈42; small grey caption "n = 210 survey respondents" bottom-right. All chrome text is clearly readable against the light background.
-      Data: Five vertical bars for Excellent/Good/Average/Poor/Very Poor. Four bars use a soft green tint (#66C4A9); the modal "Good" bar (78, tallest) uses full-strength Imprint brand green (#009E73). Each bar carries a bold white count label and a smaller, semi-transparent white percentage label stacked beneath it, both fully inside the bar with no overlap.
+      Chrome: Bold dark title "count-basic · python · letsplot · anyplot.ai" top-left (now correctly includes the 'python' segment); axis titles "Customer Satisfaction Rating" (x) and "Number of Responses" (y) in dark ink; grey tick labels; subtle horizontal y-axis-only gridlines (x-gridlines removed); dashed grey "avg" reference line with inline "avg" label near y≈42; small grey caption "n = 210 survey respondents" bottom-right. All chrome text is clearly readable against the light background.
+      Data: Five vertical bars for Excellent/Good/Average/Poor/Very Poor (45/78/52/23/12). Four non-modal bars use the muted anchor tone #6B6A63 (warm dark gray); the modal "Good" bar (78, tallest) uses full-strength Imprint brand green #009E73. Each bar carries a bold white count label and a smaller, semi-transparent white percentage label stacked beneath it, both fully inside the bar with no overlap or clipping.
       Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title now rendered in light/white bold text; axis titles in light ink; tick labels and caption in light grey; dashed "avg" line and label in light grey, clearly visible against the dark surface. All chrome elements are legible — no dark-on-dark failures observed.
-      Data: Identical bar colors to the light render — soft green tint (#66C4A9) for non-modal bars, full brand green (#009E73) for the modal "Good" bar — confirming the Imprint data colors are held constant across themes and only chrome flipped. Count and percentage labels remain white and legible on both the soft-tint and full-brand bars.
-      Legibility verdict: PASS.
+      Chrome: Same title rendered in light/white bold text; axis titles in light ink; tick labels and caption in light grey; dashed "avg" line and label in light grey, clearly visible against the dark surface. All chrome elements (title, axis labels, ticks, grid, caption) are legible — no dark-on-dark failures observed.
+      Data: Modal "Good" bar identical brand green #009E73, confirming the Imprint accent color is held constant across themes — only chrome flipped, as required. However, the four non-modal bars now use the dark-theme muted anchor #A8A79F (a lighter warm gray than the light-theme's #6B6A63), and the white bold count/percentage labels on top of that lighter bar color read with noticeably softer contrast than in the light render or on the green bar — still legible on close inspection but a real regression worth flagging (not a hard dark-on-dark failure since text is still lighter than its background, but weaker than ideal).
+      Legibility verdict: PASS (with a noted contrast softness on non-modal bar labels — see weaknesses).
   criteria_checklist:
     visual_quality:
       score: 28
@@ -62,18 +64,19 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Explicit sizes, bold hierarchy, readable in both themes; percentage
-          labels a bit small
+        comment: 'Explicit sizes, bold hierarchy, readable in both themes, but dark-theme
+          non-modal bar labels (white on #A8A79F) have noticeably softer contrast
+          (~2.4:1) than light theme (~5.4:1)'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Count/percentage label stack cleanly, no collisions with ticks or
-          the avg line
+        comment: Count/percentage label stack cleanly, no collisions with ticks, avg
+          line, or each other
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -86,53 +89,55 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Modal vs. non-modal encoded by lightness on one hue, not red/green;
-          white text contrast adequate
+        comment: Modal vs. non-modal encoded by lightness/saturation on one hue, not
+          red/green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced axis labels, no overflow or clipping, canvas gate passed
+        comment: Canvas gate passed (3200x1800); balanced axis labels, title ~50%
+          width, no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels
+        comment: Descriptive axis labels with clear units (responses)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'BRAND_SOFT #66C4A9 is a custom hex outside the Imprint palette/anchors;
-          brand green and theme backgrounds otherwise correct'
+        passed: true
+        comment: 'Fixed: BRAND_SOFT now uses the muted semantic anchor (#6B6A63/#A8A79F)
+          instead of a custom hex; brand green #009E73 identical both themes; backgrounds
+          correct'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Modal highlight + avg line + label hierarchy show real design intent,
-          above generic defaults
+        comment: Modal highlight + avg line + label hierarchy + now-compliant palette
+          show real design intent, above generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: X-grid removed, subtle y-grid, clean L-shaped axis lines, generous
-          whitespace
+        comment: X-grid removed, subtle y-grid only, clean axis lines, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear focal point (modal bar) and comparative context (avg line)
+        comment: Clear focal point (modal bar), comparative context (avg line), dual-tier
+          labels guide the reader
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -147,8 +152,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Ordered categories (justified), count labels, percentage annotations,
-          consistent bar width all present
+        comment: Ordered categories (justified Likert order), count labels, percentage
+          annotations, consistent bar width all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -158,11 +163,11 @@ review:
           the max
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing the 'python' language segment required by the mandated
-          pattern (sibling python implementations include it)
+        passed: true
+        comment: 'Fixed: title now includes the required ''python'' language segment;
+          no legend needed since modal encoding is visually self-evident'
     data_quality:
       score: 15
       max: 15
@@ -235,14 +240,15 @@ review:
         score: 1
         max: 5
         passed: false
-        comment: stat='count' + ..sumpct.. is shared with plotnine/ggplot2, not distinctly
-          lets-plot; no special use of lets-plot's own interactivity
+        comment: stat='count' + '..sumpct..' is shared with plotnine/ggplot2, not
+          distinctly lets-plot; no special use of lets-plot's own interactivity
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
