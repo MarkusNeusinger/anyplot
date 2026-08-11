@@ -1,0 +1,221 @@
+library: d3
+language: javascript
+specification_id: bland-altman-basic
+created: '2026-08-11T11:09:34Z'
+updated: '2026-08-11T11:22:46Z'
+generated_by: claude-sonnet
+workflow_run: 31484993787
+issue: 2032
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths: []
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Dark navy/near-black title "Blood Pressure Cuff Comparison · bland-altman-basic · javascript · d3 · anyplot.ai" centered at top, comfortably readable. X-axis label "Mean of Two Methods (mmHg)" and Y-axis label "Difference: Reference − Test Cuff (mmHg)" both dark and legible. Tick labels on both axes dark gray, legible. Subtle light-gray gridlines on both axes, visible but not dominant. Solid black bias line labeled "Bias: -2.9 mmHg" and two dashed black limit-of-agreement lines labeled "+1.96 SD: 7.9" and "-1.96 SD: -13.8", all readable against the light background.
+      Data: ~100 semi-transparent teal-green (#009E73) circles scattered between x=85-158 (mean mmHg) and y=-15 to +13 (difference), with visible darker overlap where points stack (opacity 0.55 working as intended).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Off-white/cream title, light-gray axis labels and tick labels, all clearly readable against the dark background — no dark-on-dark failures observed. Gridlines are subtle dark-gray, still visible. Solid and dashed reference lines are off-white and their labels are legible.
+      Data: Same teal-green (#009E73) circles at identical positions and opacity as the light render — confirms only chrome flipped, not data color.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at appropriate sizes (15-18px on
+          a 3200px canvas)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; annotation labels sit clear of the plot
+          area in the right margin
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size (r=7) and alpha (0.55) well chosen for 100 points, overlap
+          visibly reveals darker stacked points as spec requires
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue series, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 landscape gate passed; title/axis labels well-proportioned,
+          no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (mmHg)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 via tokens.palette[0]; correct FAF8F1/1A1A17
+          backgrounds in both themes'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic styling — only the mandated Imprint color, no extra design
+          touch beyond spec minimum
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Top/right spines absent (native to axisBottom/axisLeft), subtle grid,
+          generous margins — modest refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Solid-vs-dashed line hierarchy plus direct labeling aids reading,
+          but no extra emphasis on out-of-limit points
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Bland-Altman mean-vs-difference scatter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bias line, dashed +-1.96 SD lines, annotated values, moderate transparency
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = mean(method1,method2), y = method1-method2, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; direct labels substitute for a legend
+          appropriately
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All plot-type aspects shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral systolic BP cuff comparison
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible mmHg ranges and differences
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, only small RNG helper functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Builds single svg into #container per mount-node contract, no animation'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper d3 scales/axes/data-join usage, d3-array helpers (mean/deviation/extent)
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Standard gridline-via-tickSize trick and common d3-array stats; nothing
+          more distinctive
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
