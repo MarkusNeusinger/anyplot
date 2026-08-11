@@ -22,14 +22,14 @@ const pairCount = 90;
 const points = [];
 for (let i = 0; i < pairCount; i++) {
   const trueSystolic = 100 + lcg() * 80;
-  const deviceA = trueSystolic + randNormal() * 4;
-  const deviceB = trueSystolic + 2.5 + randNormal() * 5;
+  const deviceA = trueSystolic + randNormal() * 2.5;
+  const deviceB = trueSystolic + 1.5 + randNormal() * 3;
   const mean = (deviceA + deviceB) / 2;
   const diff = deviceA - deviceB;
-  points.push([mean, diff]);
+  points.push({ x: mean, y: diff, deviceA, deviceB });
 }
 
-const diffs = points.map((p) => p[1]);
+const diffs = points.map((p) => p.y);
 const bias = diffs.reduce((a, b) => a + b, 0) / diffs.length;
 const variance =
   diffs.reduce((a, b) => a + (b - bias) ** 2, 0) / (diffs.length - 1);
@@ -59,8 +59,7 @@ Highcharts.chart("container", {
     },
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
-    gridLineColor: t.grid,
-    gridLineWidth: 1,
+    gridLineWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   yAxis: {
@@ -73,6 +72,14 @@ Highcharts.chart("container", {
     gridLineColor: t.grid,
     gridLineWidth: 1,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: [
+      {
+        from: lowerLoA,
+        to: upperLoA,
+        color: Highcharts.color(t.palette[0]).setOpacity(0.07).get(),
+        zIndex: 0,
+      },
+    ],
     plotLines: [
       {
         value: bias,
@@ -122,6 +129,18 @@ Highcharts.chart("container", {
     ],
   },
   legend: { enabled: false },
+  tooltip: {
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    style: { color: t.ink, fontSize: "13px" },
+    formatter: function () {
+      return (
+        `Device A: ${this.point.deviceA.toFixed(1)} mmHg<br>` +
+        `Device B: ${this.point.deviceB.toFixed(1)} mmHg<br>` +
+        `<b>Difference: ${this.point.y.toFixed(1)} mmHg</b>`
+      );
+    },
+  },
   plotOptions: {
     series: { animation: false },
     scatter: {
