@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-08-11
@@ -75,6 +75,7 @@ anyplot_theme = theme(
     legend_text=element_text(color=INK_SOFT, size=8),
     legend_title=element_text(color=INK, size=9),
     legend_key=element_rect(fill=PAGE_BG),
+    legend_margin=10,
 )
 
 plot = (
@@ -95,7 +96,7 @@ plot = (
     + scale_color_manual(values=IMPRINT)
     + coord_fixed(ratio=1)
     + labs(
-        title="scatter-embedding · plotnine · anyplot.ai",
+        title="scatter-embedding · python · plotnine · anyplot.ai",
         subtitle="t-SNE (perplexity=30) · 1200 cells · 6 clusters",
         x="t-SNE Dimension 1",
         y="t-SNE Dimension 2",
