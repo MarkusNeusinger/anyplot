@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 count-basic: Basic Count Plot
 Library: pygal 3.1.3 | Python 3.13.14
-Quality: 88/100 | Updated: 2026-08-11
+Quality: 90/100 | Updated: 2026-08-11
 """
 
 import os
