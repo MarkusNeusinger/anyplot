@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: count-basic
 created: '2026-08-11T07:01:02Z'
-updated: '2026-08-11T07:36:12Z'
+updated: '2026-08-11T07:48:54Z'
 generated_by: claude-sonnet
 workflow_run: 31468845195
 issue: 2033
@@ -12,123 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 95
 review:
   strengths:
-  - Counts raw simulated ticket records (deterministic LCG, seed 42) instead of plotting
-    pre-computed values, matching the count-plot definition in the spec
-  - Bars sorted descending by frequency with in-bar value labels (barLabel="value"),
-    exactly matching the spec's 'sort by frequency' and 'consider count labels' notes
-  - Mean reference line (ChartsReferenceLine) adds real analytical value, showing
-    which categories run above/below average ticket volume
-  - Explicit font sizes throughout (title 22px, axis labels 16px, ticks 15px) with
-    balanced X/Y proportions and no overlap in either theme
-  - Correct Imprint palette (#009E73 first/only series) and theme-correct chrome in
-    both renders — cream/near-black backgrounds, light/dark text that flips correctly
-  - 'Clean idiomatic MUI X usage: band-scale xAxis, disableTicks/disableLine for a
-    minimal-chrome look, horizontal-only grid, skipAnimation set'
+  - Correctly implements count-plot semantics (raw records generated, then counted)
+    rather than plotting pre-aggregated values
+  - 'Clear data storytelling: subtitle states the takeaway, reinforced by the average
+    reference line and a bolder leading-bar label'
+  - Theme-adaptive throughout — brand green identical across renders, ink tokens correctly
+    flip chrome, verified legible down to the 400px thumbnail
+  - Idiomatic, fairly advanced MUI X usage (composed ChartsReferenceLine, ownerState-based
+    functional slotProps)
   weaknesses:
-  - 'Design Excellence is still close to a well-configured default: a single flat
-    green fill with no gradient/texture/secondary accent — consider a subtle bar-top
-    highlight, alternating opacity for the reference categories, or a callout annotation
-    on the top bar to push past ''competent'' into ''publication-ready'''
-  - Data storytelling relies only on the sort order + average line; no explicit annotation
-    surfaces the takeaway (e.g., 'Technical tickets are 69% above average') — a short
-    annotation near the top bar would sharpen the insight
-  - 'Y-axis ''tickFontSize: 36'' is used purely as a layout-offset hack (per the code
-    comment) to prevent the y-axis label colliding with 3-digit tick values — works
-    visually here but is fragile if data ranges change; consider increasing ''left''
-    margin instead for a more robust fix'
+  - The 'Avg 103' reference-line label (13px) is noticeably smaller than the rest
+    of the chrome (15-16px) — could be bumped slightly for better parity, though still
+    legible
+  - Bar value labels sit mid-bar rather than above the bar tops; fine at the current
+    bar heights but worth keeping in mind if data ranges shrink in future edits
+  - The yTickFontSize offset-derivation comment is a bit elaborate for what it does
+    (reserving axis-label offset space) — functionally correct, just could be simplified
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "count-basic · javascript · muix · anyplot.ai" in dark ink top-left, fully readable. X-axis label "Support Ticket Category" and Y-axis label "Number of Tickets" both dark ink, same font size, well balanced. Tick labels (0-200 on Y, six category names on X) in a slightly softer dark gray, all legible with no overlap. Subtle horizontal gridlines only. Dashed "Avg 103" reference line with label clearly visible above the shorter bars.
-      Data: Six vertical bars, all filled in brand green (#009E73), sorted descending (174, 147, 114, 95, 55, 35), each with a bold in-bar value label in dark text that is clearly legible against the green fill.
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no dark-on-light or light-on-light failures.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "count-basic · javascript · muix · anyplot.ai" and subtitle "Technical tickets run 68% above the category average" in dark ink, top-left. Axis labels ("Support Ticket Category", "Number of Tickets") and tick labels in dark/soft ink, all clearly readable. Subtle horizontal gridlines. Dashed average reference line ("Avg 103") in soft ink gray.
+      Data: All 6 bars are brand green #009E73 with a thin ink-colored edge stroke. In-bar value labels (174, 147, 114, 95, 55, 35) rendered in dark ink, clearly legible against the green fill; leading "Technical" bar's label is bolder/larger as an emphasis cue.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink/gray, clearly legible against the dark background. Gridlines are a faint light gray, still visible but subtle. The dashed average reference line and its "Avg 103" label are light-colored and stand out against the dark bars/background.
-      Data: Same six bars in the identical brand green (#009E73) as the light render — confirmed unchanged data color across themes. In-bar value labels flip to white/light text on the green fill, remaining legible.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome text is light-colored and readable, data color is identical to the light render.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Title, subtitle, axis labels, tick labels, gridlines, and reference line all flip to light ink/gray tones. All fully readable — no dark-on-dark failures.
+      Data: Bars remain the identical #009E73 green as the light render — confirmed no data-color drift. In-bar value labels switch to light ink (#F0EFE8-ish), clearly legible against the green fill.
+      Legibility verdict: PASS
+
+    Both renders additionally checked at the generated 400px thumbnail (plot-light_400.png / plot-dark_400.png) — all text, including the smallest "Avg 103" reference-line label, remains legible at that scale.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks
-          15px); well-proportioned, no overflow, balanced X/Y sizing, readable in
-          both themes
+        comment: All font sizes explicit; readable in both themes and at 400px thumbnail;
+          smallest element (Avg label, 13px) still legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, bars, or the reference-line label
+        comment: No collisions between any text/data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 6 bars with generous width and clear in-bar value labels, appropriate
-          for a low-cardinality count plot
+        comment: 6 bars appropriately sized and spaced (categoryGapRatio 0.4)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue series, high-contrast text on bars in both themes, no
-          red-green dependency
+        comment: Single-hue data with theme-adaptive ink text on top; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas with balanced margins; no cut-off content
+        comment: Chart fills the large majority of canvas, balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Number of Tickets'' / ''Support Ticket Category'' are descriptive'
+        comment: Descriptive axis labels with implicit units (Number of Tickets)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73; theme-correct #FAF8F1/#1A1A17 backgrounds,
-          identical data color across themes'
+        comment: 'First series #009E73, identical across themes; backgrounds and chrome
+          theme-correct'
     design_excellence:
-      score: 11
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured MUI default: flat single-color fill, no gradient/texture;
-          the average reference line is a nice touch but overall reads as a standard
-          bar chart'
+        passed: true
+        comment: Subtitle-driven insight, bolded leading-bar label, reference line
+          show intentional hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Horizontal-only grid, axis lines/ticks removed, rounded bar corners
-          — real refinement, but bars are plain flat fills with no further polish
+        passed: true
+        comment: Axis lines/ticks disabled, subtle horizontal-only grid, thin bar-edge
+          stroke, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Descending sort + average line create some hierarchy, but no explicit
-          annotation surfaces the takeaway for the viewer
+        passed: true
+        comment: Subtitle states the takeaway directly, reinforced by average line
+          and emphasized top bar
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +130,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct count plot — counts raw simulated records rather than plotting
-          pre-aggregated values
+        comment: 'Genuine count plot: raw records generated and counted via Map, not
+          pre-aggregated'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted by frequency descending, count labels on bars, consistent
-          bar width/spacing
+        comment: Sorted descending, count labels on bars, consistent width/spacing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = category, Y = count, all 6 categories visible with headroom (max*1.15)
+        comment: Category on X, count on Y, all categories visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches 'count-basic · javascript · muix · anyplot.ai' exactly;
-          legend correctly hidden for single series
+        comment: Title format correct; legend appropriately hidden for single series
     data_quality:
       score: 15
       max: 15
@@ -169,23 +159,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clear frequency spread across 6 categories (174 down to 35) showing
-          a realistic distribution shape
+        comment: Meaningful spread from 174 to 35, clear leading category
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Support-ticket categories are a real, neutral, comprehensible business
-          scenario
+        comment: Support-ticket categories, neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weighted LCG sampling (0.30/0.24/0.18/0.14/0.09/0.05) yields proportions
-          that closely track the intended weights and are plausible for a support
-          queue
+        comment: Plausible ticket volumes and category proportions
     code_quality:
       score: 10
       max: 10
@@ -195,8 +181,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small LCG helper is the recommended pattern per the muix library
-          guide for deterministic browser-side RNG; otherwise linear data->chart flow
+        comment: Linear data-to-chart flow, minimal helper (LCG RNG)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,38 +193,39 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: BarChart, ChartsReferenceLine, Box, Typography — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No over-engineering, no fake functionality
+        comment: No over-engineering, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports a component sized to window.ANYPLOT_SIZE with skipAnimation,
-          matching the harness contract
+        comment: Sized from window.ANYPLOT_SIZE, skipAnimation set, current MUI X
+          API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic xAxis/yAxis config, slotProps, sx theming for grid stroke
+        comment: Composed ChartsReferenceLine, functional slotProps keyed on ownerState,
+          proper band-scale axis config
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ChartsReferenceLine and barLabel="value" are genuinely MUI X community-distinctive
-          features, not trivially replicated in other libraries
-  verdict: REJECTED
+        comment: OwnerState-driven per-bar label styling and composed reference line
+          are MUI X-specific patterns
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -248,4 +234,4 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - edge-highlighting
