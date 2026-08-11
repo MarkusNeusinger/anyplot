@@ -1,0 +1,248 @@
+library: muix
+language: javascript
+specification_id: count-basic
+created: '2026-08-11T07:01:02Z'
+updated: '2026-08-11T07:10:14Z'
+generated_by: claude-sonnet
+workflow_run: 31466888992
+issue: 2033
+language_version: 22.23.1
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Bars sorted descending by frequency (174 → 35), giving the chart an immediate,
+    legible ranking narrative
+  - In-bar value labels (barLabel="value") make exact counts readable without a separate
+    data table
+  - Data is generated as raw per-ticket observations and counted via a Map, honoring
+    the count-plot spec (counting from raw data, not pre-aggregated values)
+  - Deterministic LCG-seeded synthetic data (620 support tickets across 6 categories)
+    with plausible, neutral real-world framing and sensible category-to-category ratios
+  - Clean single-series Imprint green (#009E73) identical between light and dark renders;
+    only chrome (background, ink, grid) adapts to theme
+  - Horizontal-only grid keeps the plot uncluttered; y-axis headroom (max*1.15) prevents
+    the tallest bar's label from touching the plot top
+  - Legend correctly hidden for the single-series case since the x-axis label already
+    identifies the category dimension
+  weaknesses:
+  - 'Design Excellence is only moderate: bars are a single flat color with rounded
+    corners but no further custom polish (e.g., no subtle value-driven emphasis on
+    the top category, no custom axis line removal) — axis lines (MuiChartsAxis-line)
+    remain visible on both bottom and left rather than being reduced/removed for a
+    more refined look'
+  - 'Library Mastery is fairly generic: uses BarChart with band xAxis, barLabel, and
+    grid — solid idiomatic usage but doesn''t showcase more distinctive MUI X capabilities
+    (e.g., custom bar coloring per threshold, ChartsTooltip customization, ChartsReferenceLine
+    for a mean/threshold marker) that would differentiate it further'
+  - At the 400px mobile-scale thumbnail, x-axis category tick labels (e.g., "Feature
+    Request") are noticeably small and start to compress toward legibility limits,
+    though still readable
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface.
+      Chrome: Title "count-basic · javascript · muix · anyplot.ai" in dark ink, top-left, clearly readable. X-axis title "Support Ticket Category" and y-axis title "Number of Tickets" in dark ink, both legible. Tick labels (category names and 0-200 y-axis scale) in a slightly softer dark gray, all readable. Horizontal grid lines are subtle light gray, visible but unobtrusive.
+      Data: Single series of vertical bars in Imprint brand green (#009E73), sorted descending (Technical 174, Billing 147, Shipping 114, Account 95, Feature Request 55, Other 35). Bold black value labels centered inside each bar, clearly legible against the green fill.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface.
+      Chrome: Title, axis titles, and tick labels have flipped to light/off-white ink, clearly legible against the dark background. Grid lines are subtle dark-gray, visible but unobtrusive. No dark-on-dark or hard-to-read chrome elements observed.
+      Data: Same six bars in the identical Imprint green (#009E73) as the light render, with in-bar value labels flipped to white/light text for contrast against the green fill on the dark canvas. Bar heights and order match the light render exactly.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at full size; x-axis category labels
+          get small at the 400px mobile thumbnail but remain legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, bars, or labels in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 categories, wide well-spaced bars with clear in-bar value labels
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue series, no red/green dual-encoding concern, adequate contrast
+          in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); balanced axis labels, no overflow
+          or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles (Support Ticket Category / Number of Tickets)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint #009E73, identical across themes; backgrounds
+          match #FAF8F1 / #1A1A17'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Rounded bar corners and in-bar labels show some polish, but overall
+          it's a fairly standard single-color bar chart without deeper custom styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Horizontal-only grid and generous margins are refined, but bottom/left
+          axis lines remain rather than being minimized
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Descending sort creates a clear ranking narrative with an obvious
+          focal point (Technical), but no further emphasis technique is used
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical bar count plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted descending, count labels on bars, consistent bar width/spacing
+          per spec notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, count on y, all 6 categories shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches required format; legend correctly hidden for
+          single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Counts derived from raw per-ticket records rather than pre-aggregated
+          values, matching the count-plot definition
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Support-ticket categories are plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 620 tickets across 6 categories with sensible weighted distribution
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only a small seeded-RNG helper plus the default-exported component
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: BarChart, Box, Typography all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Sizes to window.ANYPLOT_SIZE, skipAnimation set, harness owns save
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct default-export component, band xAxis, colors from tokens,
+          skipAnimation
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses barLabel, categoryGapRatio, and grid config beyond the bare
+          minimum, but doesn't reach for more distinctive MUI X features like ChartsReferenceLine
+          or custom tooltip/legend components
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
