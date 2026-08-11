@@ -80,22 +80,27 @@ ax = Axis(
     xticksvisible      = false,
     yticksvisible      = false,
     backgroundcolor    = PAGE_BG,
-    leftspinecolor     = INK_SOFT,
-    bottomspinecolor   = INK_SOFT,
-    topspinevisible    = false,
-    rightspinevisible  = false,
     xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15f0),
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15f0),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
 )
 
+# Embedding coordinates carry no meaningful axis position, so drop the frame
+# entirely (style guide's "minimal scatter" spine alternative) rather than
+# keeping the default L-shape around hidden ticks.
+hidespines!(ax)
+
 # --- Points, one scatter! call per cluster for a clean discrete legend -------
+# T cells is the largest population (165 of 925 cells, ~18%); a modest bump
+# in marker size/opacity gives it visual priority over the other 7 clusters.
+largest = argmax(sizes)
 for i in 1:n_clusters
     mask = group_idx .== i
+    emphasized = i == largest
     scatter!(ax, xs[mask], ys[mask];
-        color       = (IMPRINT_PALETTE[i], 0.65),
-        markersize  = 9,
+        color       = (IMPRINT_PALETTE[i], emphasized ? 0.8 : 0.65),
+        markersize  = emphasized ? 11 : 9,
         strokewidth = 0,
         label       = cell_types[i],
     )
@@ -108,7 +113,7 @@ for i in 1:n_clusters
     text!(ax, cx, cy;
         text     = cell_types[i],
         color    = INK,
-        fontsize = 15,
+        fontsize = i == largest ? 17 : 15,
         font     = :bold,
         align    = (:center, :center),
     )
@@ -121,9 +126,21 @@ Legend(
     framecolor      = INK_SOFT,
     backgroundcolor = ELEVATED_BG,
     labelcolor      = INK,
-    labelsize       = 11,
+    labelsize       = 13,
     patchsize       = (16, 16),
     margin          = (8, 8, 8, 8),
+)
+
+# --- Footnote — layout-level polish + the storytelling cue behind the -------
+# --- T-cell emphasis above (Makie's grid layout takes a footnote row as ----
+# --- naturally as a plot column). --------------------------------------------
+Label(
+    fig[2, 1:2],
+    "T cells form the largest population in this atlas — 165 of 925 profiled cells (~18%).",
+    fontsize  = 12,
+    color     = INK_SOFT,
+    halign    = :left,
+    padding   = (4, 0, 0, 0),
 )
 
 # --- Save --------------------------------------------------------------------
