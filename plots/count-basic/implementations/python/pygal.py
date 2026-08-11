@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 90/100 | Updated: 2026-08-11
@@ -23,15 +23,24 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
+
 # Semantic anchors reused for the sentiment scale below (Imprint palette
 # "Semantic exception": positive -> green, negative -> red, neutral -> muted).
-# Each polarity gets two shades (base + a deeper "very" shade) so the two
-# intensity levels ("Dissatisfied" vs "Very Dissatisfied", "Satisfied" vs
-# "Very Satisfied") stay visually distinguishable while keeping the hue.
-POSITIVE = IMPRINT[0]  # brand green, "Satisfied"
-POSITIVE_STRONG = "#00714F"  # deeper green, "Very Satisfied"
-NEGATIVE = IMPRINT[4]  # matte red, "Dissatisfied"
-NEGATIVE_STRONG = "#7A2020"  # deeper red, "Very Dissatisfied"
+# Each polarity gets two shades so the two intensity levels ("Dissatisfied"
+# vs "Very Dissatisfied", "Satisfied" vs "Very Satisfied") stay visually
+# distinguishable while keeping the hue. The style guide forbids inventing
+# custom hex literals for this, so the lighter shade is an alpha-tinted rgba()
+# of the same Imprint hex rather than a new hex value -- the full-strength
+# hex is reserved for the "Very" (most intense) category.
+def _rgba(hex_color, alpha):
+    r, g, b = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+    return f"rgba({r}, {g}, {b}, {alpha})"
+
+
+POSITIVE = _rgba(IMPRINT[0], 0.6)  # tinted brand green, "Satisfied"
+POSITIVE_STRONG = IMPRINT[0]  # full-strength brand green, "Very Satisfied"
+NEGATIVE = _rgba(IMPRINT[4], 0.6)  # tinted matte red, "Dissatisfied"
+NEGATIVE_STRONG = IMPRINT[4]  # full-strength matte red, "Very Dissatisfied"
 NEUTRAL = INK_MUTED  # theme-adaptive muted anchor
 
 # Data - Survey responses from customer feedback
@@ -146,7 +155,7 @@ chart = pygal.Bar(
     rounded_bars=8,
     margin=50,
     spacing=60,
-    x_label_rotation=15,
+    x_label_rotation=30,
 )
 
 # Set x-axis labels
