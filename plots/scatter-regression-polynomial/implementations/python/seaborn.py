@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-07
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-08-11
 """
 
 import os
@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 
 # Theme tokens
@@ -19,8 +21,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-BRAND = "#009E73"  # Okabe-Ito position 1 — first series
-ACCENT = "#C475FD"  # Okabe-Ito position 2 — polynomial curve
+BRAND = "#009E73"  # Imprint palette position 1 — first series
+ACCENT = "#C475FD"  # Imprint palette position 2 — polynomial curve
 
 # Data: Environmental energy efficiency scenario
 np.random.seed(42)
@@ -34,26 +36,19 @@ y = -0.4 * x**2 + 9.6 * x + 65 + np.random.randn(n_points) * 4
 # Prepare data for seaborn
 df = pd.DataFrame({"Building Age (years)": x, "Energy Efficiency Score": y})
 
-# Fit polynomial regression (degree 2 - quadratic)
+# Coefficients + R² for the annotation (seaborn's regplot fits internally for
+# the drawn curve/band, but doesn't expose the fitted params — recompute here)
 coeffs = np.polyfit(x, y, 2)
 poly = np.poly1d(coeffs)
 y_pred = poly(x)
-
-# Calculate R² score
 ss_res = np.sum((y - y_pred) ** 2)
 ss_tot = np.sum((y - np.mean(y)) ** 2)
 r2 = 1 - (ss_res / ss_tot)
-
-# Coefficient signs for equation display
 a, b, c = coeffs
 
-# Generate smooth curve for plotting
-x_smooth = np.linspace(x.min(), x.max(), 200)
-y_smooth = poly(x_smooth)
-
-# Calculate confidence band based on residual standard error
-residuals = y - y_pred
-std_err = np.std(residuals)
+# Vertex of the fitted parabola — the "diminishing returns" peak the spec calls out
+x_peak = -b / (2 * a)
+y_peak = poly(x_peak)
 
 # Plot setup with theme-adaptive styling
 sns.set_theme(
@@ -67,37 +62,57 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
     },
 )
 
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Scatter points with Okabe-Ito brand color
-sns.scatterplot(
+# Distinctive seaborn feature: regplot's built-in polynomial fit (order=2)
+# draws the scatter, the degree-2 curve, and a bootstrapped 95% CI band in
+# a single statistically-aware call, rather than hand-rolling numpy fill_between.
+sns.regplot(
     data=df,
     x="Building Age (years)",
     y="Energy Efficiency Score",
+    order=2,
+    ci=95,
     ax=ax,
-    s=200,
-    alpha=0.65,
-    color=BRAND,
-    edgecolor=PAGE_BG,
-    linewidth=0.5,
-    label="Building Data",
+    scatter_kws={"s": 75, "alpha": 0.6, "color": BRAND, "edgecolor": PAGE_BG, "linewidths": 0.5},
+    line_kws={"color": ACCENT, "linewidth": 3},
 )
 
-# Polynomial regression curve
-ax.plot(x_smooth, y_smooth, color=ACCENT, linewidth=4, label="Polynomial Fit (degree 2)")
+# regplot doesn't label its artists — build a legend from proxy handles
+legend_handles = [
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        color="none",
+        markerfacecolor=BRAND,
+        markeredgecolor=PAGE_BG,
+        markersize=9,
+        alpha=0.6,
+        label="Building Data",
+    ),
+    Line2D([0], [0], color=ACCENT, linewidth=3, label="Polynomial Fit (degree 2)"),
+    Patch(facecolor=ACCENT, alpha=0.35, edgecolor=ACCENT, linewidth=0.8, label="95% Confidence Band"),
+]
+ax.legend(
+    handles=legend_handles, fontsize=8, loc="upper left", framealpha=0.9, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
+)
 
-# Confidence band with theme-adaptive fill
-ax.fill_between(
-    x_smooth,
-    y_smooth - 1.96 * std_err,
-    y_smooth + 1.96 * std_err,
-    color=ACCENT,
-    alpha=0.15,
-    label="95% Confidence Band",
+# Callout at the curve's vertex — reinforces the "diminishing returns" story
+ax.plot([x_peak], [y_peak], marker="o", markersize=7, markerfacecolor="none", markeredgecolor=INK, markeredgewidth=1.5)
+ax.annotate(
+    "Peak efficiency",
+    xy=(x_peak, y_peak),
+    xytext=(x_peak + 2.5, y_peak - 8),
+    fontsize=8,
+    color=INK_SOFT,
+    arrowprops={"arrowstyle": "-", "color": INK_SOFT, "linewidth": 0.8},
 )
 
 # Equation and R² annotation with theme-adaptive box
@@ -109,23 +124,22 @@ ax.annotate(
     annotation_text,
     xy=(0.97, 0.97),
     xycoords="axes fraction",
-    fontsize=18,
+    fontsize=9,
     verticalalignment="top",
     horizontalalignment="right",
-    bbox={"boxstyle": "round,pad=0.7", "facecolor": ELEVATED_BG, "alpha": 0.9, "edgecolor": INK_SOFT, "linewidth": 1},
+    bbox={"boxstyle": "round,pad=0.6", "facecolor": ELEVATED_BG, "alpha": 0.9, "edgecolor": INK_SOFT, "linewidth": 1},
 )
 
 # Labels and title
-ax.set_xlabel("Building Age (years)", fontsize=20, color=INK)
-ax.set_ylabel("Energy Efficiency Score", fontsize=20, color=INK)
-ax.set_title("scatter-regression-polynomial · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Legend positioning (upper left to avoid data overlap)
-ax.legend(fontsize=16, loc="upper left", framealpha=0.9, facecolor=ELEVATED_BG, edgecolor=INK_SOFT)
+ax.set_xlabel("Building Age (years)", fontsize=10, color=INK)
+ax.set_ylabel("Energy Efficiency Score", fontsize=10, color=INK)
+ax.set_title(
+    "scatter-regression-polynomial · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK
+)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 # Grid styling
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 # Spine visibility (L-shaped default)
 ax.spines["top"].set_visible(False)
@@ -134,4 +148,4 @@ for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
