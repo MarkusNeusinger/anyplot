@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-07
+Library: pygal 3.1.3 | Python 3.13.12
+Quality: 91/100 | Updated: 2026-08-11
 """
 
 import os
@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
+# Imprint palette
 BRAND = "#009E73"  # First series
 ACCENT = "#C475FD"  # Second series
 
@@ -43,9 +43,13 @@ r_squared = 1 - (ss_res / ss_tot)
 x_curve = np.linspace(x.min(), x.max(), 200)
 y_curve = poly(x_curve)
 
-# Polynomial equation
+# Polynomial equation, folded into the curve's own legend label so it always
+# renders (a prior attempt added it as a separate empty series, which pygal
+# never draws since it has no data points)
 a, b, c = coeffs
-equation = f"y = {a:.2f}x² + {b:.2f}x + {c:.2f}"
+b_sign = "+" if b >= 0 else "-"
+c_sign = "+" if c >= 0 else "-"
+equation = f"y = {a:.2f}x² {b_sign} {abs(b):.2f}x {c_sign} {abs(c):.2f}"
 
 # Custom style
 custom_style = Style(
@@ -55,29 +59,31 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=(BRAND, ACCENT),
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
+    opacity_hover=".9",
+    transition="200ms ease-in",
 )
 
 # Create chart
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     title="scatter-regression-polynomial · pygal · anyplot.ai",
     x_title="Sunlight Exposure (hours)",
     y_title="Plant Growth (cm)",
     show_legend=True,
-    legend_at_bottom=False,
-    dots_size=8,
+    legend_at_bottom=True,
+    legend_at_bottom_columns=1,
+    dots_size=6,
     show_x_guides=True,
     show_y_guides=True,
     x_label_rotation=0,
-    stroke_style={"width": 3},
 )
 
 # Prepare data as (x, y) tuples
@@ -85,11 +91,8 @@ scatter_data = [(float(x[i]), float(y[i])) for i in range(len(x))]
 curve_data = [(float(x_curve[i]), float(y_curve[i])) for i in range(len(x_curve))]
 
 # Add series
-chart.add("Data Points", scatter_data, stroke=False, dots_size=8, opacity=0.7)
-chart.add(f"Polynomial Fit (R²={r_squared:.3f})", curve_data, stroke=True, show_dots=False, dots_size=0)
-
-# Add equation annotation as a legend subtitle
-chart.add(f"Equation: {equation}", [], stroke=False, dots_size=0, show_legend=False)
+chart.add("Data Points", scatter_data, stroke=False, dots_size=6, opacity=0.7)
+chart.add(f"Fit: {equation}  (R²={r_squared:.3f})", curve_data, stroke=True, show_dots=False, dots_size=0)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
