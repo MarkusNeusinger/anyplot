@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-08-11
@@ -29,8 +29,9 @@ x = np.linspace(0.5, 10, n_points)
 # Quadratic relationship: yield increases then plateaus (diminishing returns)
 y_true = -0.6 * x**2 + 7.5 * x + 8
 y = y_true + np.random.randn(n_points) * 2.5
-# Clip to realistic range (crop yield must be positive)
-y = np.clip(y, 1, 30)
+# Clip to realistic range (crop yield must be positive); ceiling sits well
+# above the curve's peak (~31.4) so it never flattens the plateau region.
+y = np.clip(y, 1, 36)
 
 # Fit polynomial regression (degree 2)
 coeffs = np.polyfit(x, y, 2)
@@ -48,6 +49,10 @@ band_halfwidth = 1.96 * resid_se
 # Create equation string
 a, b, c = coeffs
 equation = f"y = {a:.2f}x² + {b:.2f}x + {c:.2f}"
+
+# Peak of the fitted curve (vertex of the parabola) - focal point for the story
+x_peak = -b / (2 * a)
+y_peak = np.polyval(coeffs, x_peak)
 
 # Prepare DataFrames
 df_points = pd.DataFrame({"Fertilizer (kg/ha)": x, "Crop Yield (tons/ha)": y})
@@ -93,6 +98,22 @@ curve = (
     alt.Chart(df_curve).mark_line(size=3, color=SECONDARY).encode(x="Fertilizer (kg/ha):Q", y="Crop Yield (tons/ha):Q")
 )
 
+# Peak marker + label - highlights the optimal fertilizer rate as the focal point
+peak_df = pd.DataFrame({"Fertilizer (kg/ha)": [x_peak], "Crop Yield (tons/ha)": [y_peak]})
+peak_label_df = pd.DataFrame({"x": [x_peak], "y": [y_peak], "text": [f"Peak: {y_peak:.1f} t/ha @ {x_peak:.1f} kg/ha"]})
+
+peak_marker = (
+    alt.Chart(peak_df)
+    .mark_point(shape="diamond", size=200, filled=True, color=INK, stroke=PAGE_BG, strokeWidth=1.5)
+    .encode(x="Fertilizer (kg/ha):Q", y="Crop Yield (tons/ha):Q")
+)
+
+peak_label = (
+    alt.Chart(peak_label_df)
+    .mark_text(align="center", baseline="bottom", dy=-12, fontSize=11, fontWeight="bold", color=INK)
+    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="text:N")
+)
+
 # Annotation for R² and equation
 r2_text_df = pd.DataFrame({"x": [0.5], "y": [28.5], "text": [f"R² = {r_squared:.3f}"]})
 eq_text_df = pd.DataFrame({"x": [0.5], "y": [26.3], "text": [equation]})
@@ -111,12 +132,12 @@ eq_annotation = (
 
 # Combine layers
 chart = (
-    (band + scatter + curve + r2_annotation + eq_annotation)
+    (band + scatter + curve + peak_marker + peak_label + r2_annotation + eq_annotation)
     .properties(
         width=620,
         height=320,
         background=PAGE_BG,
-        title=alt.Title("scatter-regression-polynomial · altair · anyplot.ai", fontSize=16, anchor="middle"),
+        title=alt.Title("scatter-regression-polynomial · python · altair · anyplot.ai", fontSize=16, anchor="middle"),
     )
     .configure_axis(
         labelFontSize=10,
