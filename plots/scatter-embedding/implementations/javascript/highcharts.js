@@ -47,7 +47,7 @@ const clusterSeries = clusters.map((cluster) => {
     name: cluster.name,
     data,
     opacity: 0.6,
-    marker: { radius: 4, symbol: cluster.symbol },
+    marker: { radius: 6, symbol: cluster.symbol },
   };
 });
 
@@ -60,11 +60,13 @@ const centroidSeries = {
   dataLabels: {
     enabled: true,
     format: "{point.name}",
+    verticalAlign: "bottom",
+    y: -16,
     style: {
       color: t.ink,
       fontSize: "14px",
       fontWeight: "600",
-      textOutline: `3px ${t.pageBg}`,
+      textOutline: `4px ${t.pageBg}`,
     },
   },
   data: clusters.map((cluster) => ({
@@ -80,7 +82,11 @@ Highcharts.chart("container", {
     type: "scatter",
     backgroundColor: "transparent",
     animation: false,
+    zoomType: "xy",
     style: { fontFamily: "inherit" },
+    resetZoomButton: {
+      theme: { fill: t.elevatedBg, stroke: t.grid, style: { color: t.ink } },
+    },
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -113,7 +119,11 @@ Highcharts.chart("container", {
     itemHoverStyle: { color: t.ink },
   },
   tooltip: {
-    pointFormat: "x: {point.x:.2f}, y: {point.y:.2f}",
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    style: { color: t.ink, fontSize: "13px" },
+    headerFormat: '<span style="font-weight:600">{series.name}</span><br/>',
+    pointFormat: "UMAP Dim 1: {point.x:.2f}  ·  UMAP Dim 2: {point.y:.2f}",
   },
   plotOptions: {
     series: { animation: false },
