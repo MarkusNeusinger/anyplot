@@ -1,7 +1,7 @@
 // anyplot.ai
 // count-basic: Basic Count Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.1
-// Quality: 92/100 | Created: 2026-08-11
+// Quality: pending | Created: 2026-08-11
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -43,14 +43,25 @@ const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
 const labels = sorted.map(([label]) => label);
 const values = sorted.map(([, value]) => value);
 
+// Pareto overlay: running share of all tickets covered as categories are
+// added left-to-right along the descending sort. This is the spec's own
+// "optional percentage annotations" note, expressed as a genuine Chart.js
+// mixed-type dataset (bar + line, dual y-axis) rather than a plain % label.
+let runningTotal = 0;
+const cumulativeShare = values.map((value) => {
+  runningTotal += value;
+  return (runningTotal / ticketCount) * 100;
+});
+
 // --- Mount ------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Distinctive Chart.js touches -------------------------------------------
 // Top-to-bottom alpha falloff on each bar (same brand hue in both themes, only
-// the gradient stop opacity differs) plus a custom draw plugin that renders
-// the exact count above every bar for precise reading, per the spec's note.
+// the gradient stop opacity differs), a custom draw plugin that renders the
+// exact count above every bar, and a mixed bar+line dataset (dual y-axis) that
+// overlays the Pareto cumulative-share curve from the second Imprint color.
 function barGradient(context) {
   const { chart } = context;
   const { ctx, chartArea } = chart;
@@ -72,12 +83,20 @@ const countLabelPlugin = {
     const { ctx } = chart;
     const meta = chart.getDatasetMeta(0);
     ctx.save();
-    ctx.fillStyle = t.ink;
     ctx.font = "600 15px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
+    // Halo stroke in the page background color keeps the label legible even
+    // where the cumulative-share line crosses behind it (data-dependent, so
+    // the crossing point can't be avoided by fixed positioning alone).
+    ctx.strokeStyle = t.pageBg;
+    ctx.lineWidth = 4;
+    ctx.lineJoin = "round";
+    ctx.fillStyle = t.ink;
     meta.data.forEach((bar, i) => {
-      ctx.fillText(String(chart.data.datasets[0].data[i]), bar.x, bar.y - 8);
+      const text = String(chart.data.datasets[0].data[i]);
+      ctx.strokeText(text, bar.x, bar.y - 8);
+      ctx.fillText(text, bar.x, bar.y - 8);
     });
     ctx.restore();
   },
@@ -90,11 +109,28 @@ new Chart(canvas, {
     labels,
     datasets: [
       {
+        type: "bar",
         label: "Support Tickets",
         data: values,
         backgroundColor: barGradient,
         borderRadius: 4,
-        maxBarThickness: 110,
+        maxBarThickness: 140,
+        categoryPercentage: 0.85,
+        barPercentage: 0.9,
+        yAxisID: "count",
+      },
+      {
+        type: "line",
+        label: "Cumulative Share",
+        data: cumulativeShare,
+        borderColor: t.palette[1],
+        backgroundColor: t.palette[1],
+        borderWidth: 2,
+        borderDash: [6, 4],
+        pointRadius: 4,
+        pointBackgroundColor: t.palette[1],
+        tension: 0.25,
+        yAxisID: "percentage",
       },
     ],
   },
@@ -103,7 +139,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 40, right: 30, bottom: 10, left: 10 } },
+    layout: { padding: { top: 40, right: 10, bottom: 10, left: 10 } },
     plugins: {
       title: {
         display: true,
@@ -119,7 +155,10 @@ new Chart(canvas, {
         font: { size: 14, style: "italic" },
         padding: { bottom: 24 },
       },
-      legend: { display: false },
+      legend: {
+        display: true,
+        labels: { color: t.ink, font: { size: 14 }, boxWidth: 22 },
+      },
       tooltip: { enabled: false },
     },
     scales: {
@@ -133,13 +172,33 @@ new Chart(canvas, {
           font: { size: 16 },
         },
       },
-      y: {
+      count: {
+        type: "linear",
+        position: "left",
         beginAtZero: true,
         ticks: { color: t.inkSoft, font: { size: 14 }, precision: 0 },
         grid: { color: t.grid },
         title: {
           display: true,
           text: "Count",
+          color: t.ink,
+          font: { size: 16 },
+        },
+      },
+      percentage: {
+        type: "linear",
+        position: "right",
+        min: 0,
+        max: 100,
+        ticks: {
+          color: t.inkSoft,
+          font: { size: 14 },
+          callback: (value) => `${value}%`,
+        },
+        grid: { display: false },
+        title: {
+          display: true,
+          text: "Cumulative Share",
           color: t.ink,
           font: { size: 16 },
         },
