@@ -2,41 +2,59 @@ library: plotly
 language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:17:12Z'
-updated: '2026-05-07T11:10:34Z'
-generated_by: claude-haiku
-workflow_run: 25491601976
+updated: '2026-08-11T11:01:48Z'
+generated_by: claude-sonnet
+workflow_run: 31483502855
 issue: 2032
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 94
 review:
   strengths:
-  - Excellent visual legibility in both light and dark themes with no contrast issues
-  - Proper use of Okabe-Ito palette and theme-adaptive chrome throughout
-  - Well-positioned annotations that do not interfere with data visibility
-  - Clean, reproducible code with appropriate data representation for medical device
-    validation
-  - All specification requirements met with correct Bland-Altman plot structure
+  - 'Fixed the attempt-1 review finding: the Mean/+1.96 SD/-1.96 SD line-end labels
+    are now manual add_annotation calls anchored at xref=''x domain'', x=0.95 inside
+    the row=1,col=1 scatter panel, so they no longer bleed across the subplot boundary
+    and cover the marginal histogram bars — confirmed clean in both light and dark
+    renders.'
+  - Marginal histogram (make_subplots, shared_yaxes) visualizes the shape of the difference
+    distribution, giving visual evidence for the normality assumption behind the ±1.96
+    SD limits of agreement — a thoughtful addition beyond the base spec.
+  - Shaded band (add_hrect) between the limits of agreement gives an immediate at-a-glance
+    read of the acceptable range before the viewer parses the dashed lines.
+  - Self-contained stats callout box (bias, +1.96 SD, -1.96 SD, % within limits) satisfies
+    the spec's 'annotate the mean and limits of agreement values' requirement cleanly
+    in one element.
+  - 'Theme-adaptive chrome is fully correct with identical data colors (#009E73 observations/bias,
+    #C475FD limits) on both plot-light.png and plot-dark.png, and theme-correct backgrounds/text.'
+  - Moderate marker opacity (0.65) correctly reveals overlapping observations per
+    the spec's explicit instruction.
+  - Realistic, well-scaled medical-device-validation dataset (handheld glucose meter
+    vs lab reference) with plausible bias (-3.2 mg/dL) and noise magnitude.
   weaknesses:
-  - Design excellence held back by conventional styling rather than distinctive aesthetic
-    choices
-  - Library mastery limited to standard plotly features without advanced capabilities
+  - The top-left stats callout box (bias/±1.96 SD/% within limits) has an opaque elevated
+    background and sits over a region of the scatter panel that does contain a few
+    low-mean-glucose data points, hiding them behind chrome. Minor since the region
+    is comparatively sparse, but consider nudging the box further into empty space
+    or reducing its footprint.
+  - Overall composition (subplot + hrect band + manual annotations + hovertemplate)
+    is plotly-idiomatic but is achievable with comparable effort in other libraries
+    with subplot/annotation support, keeping LM-02 short of a top score.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly themed
-      Chrome: Title in dark ink (28px), axis labels (22px), tick labels (18px) - all clearly readable with dark text on light background
-      Data: Green markers (#009E73) with 0.65 opacity showing 95 paired glucose measurements; green mean line at 4.29; orange dashed LoA lines at ±19.10/-10.51
-      Legibility verdict: PASS - all text and elements have strong contrast and are fully readable
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "bland-altman-basic · python · plotly · anyplot.ai" in dark ink, centered, fully visible and not clipped. X-axis "Mean Glucose (mg/dL)" and Y-axis "Difference (Lab − Handheld) (mg/dL)" labels are dark, descriptive, and carry units. Tick labels are a softer dark gray. Grid lines are thin and subtle. A stats callout box (bias, +1.96 SD, -1.96 SD, % within limits) sits top-left on a cream elevated background with dark text, fully readable. The "Mean"/"+1.96 SD"/"-1.96 SD" line-end label boxes are now positioned well inside the scatter panel (x domain=0.95), with a clear visible gap before the marginal histogram column starts — the previous overlap/bleed issue is resolved; histogram bars are fully visible and unobstructed.
+      Data: 95 green (#009E73) markers with a thin cream edge stroke, moderate opacity revealing overlaps as required by spec. Solid green mean-difference line at +4.29. Two purple (#C475FD) dashed lines at the ±1.96 SD limits, with a faint purple-tinted shaded band between them. Right panel: a green horizontal histogram of the differences, showing an approximately unimodal, right-of-center distribution centered near the mean line.
+      Legibility verdict: PASS — all text readable, no overlap with the histogram panel, no clipping at any canvas edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly themed
-      Chrome: Title in light text, axis labels, tick labels all in light ink (#F0EFE8) or soft gray (#B8B7B0) - all clearly readable with light text on dark background
-      Data: Green markers (#009E73) identical to light render; green mean line; orange dashed LoA lines
-      Legibility verdict: PASS - no dark-on-dark legibility issues; all text is readable and properly theme-adapted
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title, axis titles, and tick labels are all rendered in light ink (near-white/light-gray) and are clearly legible against the dark background — no dark-on-dark failures found anywhere (title, axes, stats box, or line-end labels). The stats callout box and the "Mean"/"±1.96 SD" label boxes use the dark elevated background (#242420) with light/colored text, fully readable, and — same as the light render — sit clear of the marginal histogram column with a visible gap.
+      Data: Same #009E73 green markers/mean line and #C475FD purple dashed limit lines as the light render — colors confirmed identical across themes; only chrome (background, text, grid) flips. The marginal histogram is the same green, same shape.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues, no overlap with the histogram panel, no clipping at any canvas edge.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -47,66 +65,79 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes
+        comment: All font sizes explicitly set (title 18, axis titles 13, ticks 11,
+          annotations 12). Readable in both themes, no overflow, no clipping.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; annotations positioned on right margin
+        comment: 'Attempt-1 issue fixed: Mean/+1.96 SD/-1.96 SD label boxes are now
+          anchored inside the scatter panel (x domain=0.95) with a clear gap before
+          the histogram column in both renders. No remaining collisions between text
+          and data.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size 14px with 0.65 opacity; lines clearly distinguishable
+        comment: Marker size (14) and opacity (0.65) well-adapted to 95-point density;
+          histogram bars clearly visible and fully unobstructed.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; colorblind-safe
+        comment: Green vs purple is CVD-safe and paired with solid-vs-dashed line
+          styling for redundant encoding; white marker edges aid definition.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions; right margin accommodates annotations
+        comment: Plot area uses a healthy majority of the canvas, balanced margins,
+          no cut-off content, no isolated legend (correctly omitted for single series).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct format
+        comment: Both axes descriptive with units (mg/dL).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct; both renders theme-adaptive'
+        comment: 'First series #009E73, limits use Imprint position 2 (#C475FD), backgrounds
+          correct FAF8F1/1A1A17, chrome theme-correct in both renders.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Professional design but follows conventions; lacks distinctive aesthetic
-          choices
+        passed: true
+        comment: Marginal histogram, shaded LOA band, and a coherent stats callout
+          box go clearly beyond a bare scatter — strong design, short of flawless
+          publication polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Minimal chrome, subtle grid, good margins; could refine further
+        passed: true
+        comment: 'Subtle grid, generous whitespace, and the prior annotation/histogram
+          overlap is now resolved. Minor deduction: stats box footprint slightly obscures
+          a couple of underlying data points.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clear hierarchy and focal point; effectively communicates agreement
+        passed: true
+        comment: Shaded band + histogram + stats box combine to make the agreement
+          story ('94.7% within limits') immediately legible without requiring the
+          viewer to do their own math.
     spec_compliance:
       score: 15
       max: 15
@@ -116,25 +147,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bland-Altman scatter plot with reference lines
+        comment: Correct Bland-Altman difference-vs-mean scatter.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: scatter, mean line, LoA limits with annotations'
+        comment: Mean-difference line, dashed ±1.96 SD lines, annotated values, moderate
+          marker transparency — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis and Y-axis correctly mapped per specification
+        comment: X = mean of pair, Y = method1-method2 difference, matches spec exactly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend appropriately hidden
+        comment: Title matches mandated format exactly; single-series legend correctly
+          omitted.
     data_quality:
       score: 15
       max: 15
@@ -144,19 +177,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All Bland-Altman aspects shown
+        comment: Spread of points both inside and outside the LOA (94.7% within =
+          visible outliers), asymmetric bias visible in histogram.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world glucose meter validation scenario
+        comment: Handheld glucose meter vs lab reference is a real, neutral medical-device-validation
+          scenario matching the spec's own example applications.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scales appropriate for domain
+        comment: Glucose mean ~120 mg/dL, bias -3.2 mg/dL, SD ~7.4 mg/dL are all plausible
+          for a handheld-vs-lab glucose comparison.
     code_quality:
       score: 10
       max: 10
@@ -166,33 +202,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple straightforward code
+        comment: Flat imports -> data -> stats -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded RNG for deterministic output
+        comment: np.random.seed(73) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, numpy, go, make_subplots all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or unnecessary complexity
+        comment: Clean and appropriately complex for a two-panel figure; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and API
+        comment: write_image/write_html to plot-{THEME}.png/.html, current plotly
+          API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -200,21 +237,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper use of plotly API and conventions
+        comment: Idiomatic go.Figure + make_subplots + add_hline/add_hrect/add_annotation
+          usage.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Standard plotly features; no advanced capabilities
+        passed: true
+        comment: shared_yaxes subplot linkage, add_hrect shading, and custom hovertemplate
+          are meaningfully plotly-specific, though the overall composition is replicable
+          with more effort in other libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - subplots
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting

@@ -2,12 +2,12 @@ library: letsplot
 language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:18:27Z'
-updated: '2026-05-07T11:21:37Z'
-generated_by: claude-haiku
-workflow_run: 25492147690
+updated: '2026-08-11T11:15:33Z'
+generated_by: claude-sonnet
+workflow_run: 31484393471
 issue: 2032
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/letsplot/plot-light.html
@@ -15,32 +15,43 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-alt
 quality_score: 92
 review:
   strengths:
-  - Excellent theme-adaptive implementation with proper color tokens threaded through
-    all elements
-  - Perfect legibility in both light and dark renders with no contrast failures
-  - Correct Bland-Altman implementation with all required statistical features (bias
-    line, LOA limits, annotations)
-  - Realistic medical device validation scenario with plausible blood pressure data
-  - Clean, reproducible code with clear calculations and proper transparency handling
-  - Strong visual hierarchy through intentional color choices (green for primary findings,
-    orange for secondary bounds)
+  - 'Correct Bland-Altman construction: x = mean of the two methods, y = method1 -
+    method2, sample SD (ddof=1) for the LOA calculation'
+  - 'All three attempt-1 weaknesses fully resolved: title now reads ''bland-altman-basic
+    · python · letsplot · anyplot.ai'', the ''Mean bias'' label is anchored at a fixed
+    x (data max + 3x padding) with a clear visible gap from the nearest point, and
+    major gridlines now use a subtle rgba(...,0.15) token instead of full-opacity
+    ink'
+  - 'Full required feature set: solid mean-bias line, dashed ±1.96 SD limits-of-agreement
+    lines, shaded agreement band, and numeric annotations for all three reference
+    values'
+  - 'Imprint palette used correctly (#009E73 bias/points, #C475FD LOA) and pixel-identical
+    across light/dark renders; only chrome flips'
+  - Theme-adaptive chrome correctly threaded through backgrounds, grid, text, and
+    label fills in both renders
+  - Moderate point transparency (alpha=0.7) as the spec explicitly requests
+  - Interactive hover tooltips exposing method1/method2/mean/diff per point, useful
+    in the HTML detail view
+  - Clean, reproducible, single-pass script with only used imports and correct theme-suffixed
+    output filenames
   weaknesses:
-  - 'Design Excellence below potential: annotation styling could be more refined with
-    margin-aligned labels or distinct background treatment'
-  - 'Library usage somewhat generic: demonstrates idiomatic letsplot but does not
-    showcase unique features beyond standard ggplot2 patterns'
+  - Aesthetic sophistication is good (shaded band, color-coordinated annotation boxes)
+    but still reads closer to a well-executed default than a highly distinctive design
+  - 'Library-distinctive usage stays moderate: layer_tooltips() and rounded geom_label
+    boxes are nice, but the implementation doesn''t otherwise lean on letsplot-specific
+    features beyond standard grammar-of-graphics layering'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white — excellent choice
-      Chrome: Title "bland-altman-basic · letsplot · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Mean of Two Methods (mmHg)" and "Difference (Method 1 - Method 2) (mmHg)" in INK color, readable. Tick labels in INK_SOFT (#4A4A44), gray-ish, adequately visible. Grid in subtle light gray.
-      Data: Eighty scatter points in brand green (#009E73) with alpha=0.7 show overlapping observations. Mean bias line solid teal at -2.55 mmHg. Upper LOA dashed orange (#D55E00) at +7.84 mmHg. Lower LOA dashed orange at -12.93 mmHg. Annotation labels with elevated background boxes positioned on left margin, values clearly visible.
-      Legibility verdict: PASS — all elements readable, no text conflicts, excellent contrast
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title reads "bland-altman-basic · python · letsplot · anyplot.ai" (correct mandated format, fixed from attempt 1) in dark ink, fully legible and not clipped at the top edge. Both axis titles ("Mean of Two Methods (mmHg)" and "Difference (Method 1 - Method 2) (mmHg)") render in dark ink and are fully visible. Tick labels are a softer dark gray, clearly readable. Gridlines are now subtle (rgba ink at ~15% alpha) — visible but no longer competing with data, an improvement over attempt 1's full-opacity grid.
+      Data: 80 semi-transparent green (#009E73) points, a solid green "Mean bias: -2.55 mmHg" line, two dashed purple (#C475FD) LOA lines ("+1.96 SD: 7.84 mmHg" / "-1.96 SD: -12.93 mmHg"), and a pale lavender shaded band between the LOA lines. All annotation label boxes are right-aligned at a fixed x position past the data range (previously anchored to the data max and overlapping the rightmost point) — zoomed inspection confirms a clear visible gap between the nearest data point and the "Mean bias" label box, so the attempt-1 overlap is resolved. No text overlaps data or other text; no elements are clipped at any canvas edge.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black — perfect theme adaptation
-      Chrome: Title in light ink (#F0EFE8), clearly visible against dark surface. Axis labels in same light ink, readable. Tick labels in lighter gray (#B8B7B0), adequately visible. Grid subtle but present.
-      Data: Scatter points identical teal (#009E73) as light render — no color shift. Mean bias line solid teal, prominent. LOA lines dashed orange (#D55E00), same colors as light render (chromatic elements only flip, not data colors). Annotation boxes with elevated dark background (#242420) for contrast.
-      Legibility verdict: PASS — no dark-on-dark failures, all text readable, data colors preserved from light render, brand green visible and distinguishable
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and axis titles switch to light ink and remain clearly legible against the dark surface — no dark-on-dark failures anywhere. Gridlines are thin and light, subtle against the dark panel, matching the same low-alpha treatment as the light render.
+      Data: Green points, green bias line, and purple LOA lines/band are pixel-identical to the light render — confirmed, only chrome (background, grid, text) flips. Label boxes use the dark elevated-surface fill with colored borders and stay legible; same fixed-anchor gap from the rightmost point as in the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,47 +62,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized (title 24, labels 20, ticks 16, annotations
-          12) and readable in both themes
+        comment: Title fixed to include 'python' language segment; all text readable
+          in both themes at full size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; annotations positioned with y_offset=0.8 on left margin
+        comment: Mean bias label now anchored at a fixed x past the data range with
+          a clear visible gap from the nearest point, resolving attempt-1's overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points size=6 with alpha=0.7 reveal overlaps; lines clearly visible
+        comment: 80 points at alpha=0.7 with moderate size clearly visible without
+          overplotting
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) is CVD-safe'
+        comment: Green/purple pairing has adequate contrast, not solely red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600×900 scaled 3× with generous whitespace, no clipping
+        comment: 3200x1800 canvas confirmed, no cropping, good proportions, canvas
+          gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels include units (mmHg); title follows spec format
+        comment: Descriptive axis labels with units (mmHg)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand #009E73 for data; LOA #D55E00; backgrounds #FAF8F1/#1A1A17
-          correct'
+        comment: '#009E73 first series, #C475FD secondary, correct theme-adaptive
+          backgrounds in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -99,20 +113,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Professional polish with intentional color hierarchy; annotation
-          styling refined
+        comment: Shaded agreement band + color-coordinated annotation boxes go beyond
+          generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Uses theme_minimal(); subtle grid; stroke=0.5 on points
+        comment: Grid now uses a subtle rgba(...,0.15) token per the style guide,
+          fixed from attempt 1's full-opacity ink
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear visual hierarchy through color; annotations guide interpretation
+        comment: Shaded band + bold bias line create a clear focal point on the agreement
+          zone
     spec_compliance:
       score: 15
       max: 15
@@ -122,25 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bland-Altman scatter plot
+        comment: Correct Bland-Altman construction
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Scatter, bias line, ±1.96 SD limits, annotations all present
+        comment: Bias line, dashed LOA lines, annotations all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=mean, Y=difference; all data visible
+        comment: x = mean, y = method1 - method2, correct per spec
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; descriptive axes with units
+        comment: Title now matches mandated '{spec-id} · python · letsplot · anyplot.ai'
+          format, fixed from attempt 1
     data_quality:
       score: 15
       max: 15
@@ -150,20 +167,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete Bland-Altman plot with all aspects
+        comment: Shows points, bias, LOA lines, band, and value annotations
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Blood pressure device validation; realistic data with appropriate
-          noise
+        comment: Plausible sphygmomanometer blood-pressure comparison, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: BP values (100-160 mmHg) realistic; method differences plausible
+        comment: n=80, realistic mmHg ranges and bias/SD magnitudes
     code_quality:
       score: 10
       max: 10
@@ -173,52 +189,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear script, no unnecessary abstractions
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (np.random.seed(42))
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (os, numpy, pandas, lets_plot)
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; clear Bland-Altman calculations
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html
+        comment: Saves plot-{THEME}.png and .html with current ggsave/ggsize API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Canonical ggplot2-style grammar with proper layer composition
+        comment: Good grammar-of-graphics layering (geom_rect + geom_point + geom_hline
+          + geom_label)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses letsplot basics (ggsize, ggsave, theme elements) but generic
-          beyond ggplot2
+        comment: layer_tooltips() hover detail and rounded geom_label boxes are nice
+          touches but usage stays fairly generic overall
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
+  - html-export
   - annotations
   - layer-composition
   patterns:
