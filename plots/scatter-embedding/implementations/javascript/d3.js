@@ -24,13 +24,16 @@ const randNormal = () => {
 // --- Data: synthetic NLP document embeddings, projected via t-SNE ----------
 // Each topic cluster gets its own center, elongation, and rotation so the
 // blobs read like genuine t-SNE output rather than perfect circles.
+// Centers pushed further from the origin (vs. a tighter first draft) and the
+// Technology/Finance ellipses de-aligned + slimmed so their spreads no longer
+// bleed into one another near the top of the ring.
 const clusterDefs = [
-  { name: "Technology", n: 120, cx: -6.5, cy: 5.5, sx: 1.6, sy: 0.9, angle: 0.4 },
-  { name: "Sports", n: 95, cx: 6.5, cy: 5.5, sx: 1.1, sy: 1.4, angle: -0.3 },
-  { name: "Politics", n: 110, cx: -7, cy: -4.5, sx: 1.3, sy: 1.1, angle: 0.9 },
-  { name: "Health", n: 85, cx: 5.5, cy: -5, sx: 1.0, sy: 1.6, angle: -0.6 },
-  { name: "Finance", n: 100, cx: 0, cy: 8.5, sx: 1.8, sy: 0.8, angle: 0.1 },
-  { name: "Entertainment", n: 90, cx: 0, cy: -8.5, sx: 1.5, sy: 0.9, angle: -0.2 },
+  { name: "Technology", n: 120, cx: -9.1, cy: 7.7, sx: 1.3, sy: 0.9, angle: -0.15 },
+  { name: "Sports", n: 95, cx: 9.1, cy: 7.7, sx: 1.1, sy: 1.4, angle: -0.3 },
+  { name: "Politics", n: 110, cx: -9.8, cy: -6.3, sx: 1.3, sy: 1.1, angle: 0.9 },
+  { name: "Health", n: 85, cx: 7.7, cy: -7, sx: 1.0, sy: 1.6, angle: -0.6 },
+  { name: "Finance", n: 100, cx: 0, cy: 11.9, sx: 1.5, sy: 0.8, angle: 0.1 },
+  { name: "Entertainment", n: 90, cx: 0, cy: -11.9, sx: 1.5, sy: 0.9, angle: -0.2 },
 ];
 
 const points = [];
@@ -66,6 +69,27 @@ const color = d3.scaleOrdinal().domain(clusterDefs.map((c) => c.name)).range(t.p
 // --- SVG mount ------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+// --- Cluster hull outlines (d3.polygonHull) --------------------------------
+// A genuine D3-distinctive technique: trace each cluster's convex hull in
+// pixel space to give the grouping a deliberate visual boundary/focal shape
+// beyond color alone, drawn beneath the points so markers stay on top.
+const hullG = g.append("g").attr("class", "hulls");
+for (const c of clusterDefs) {
+  const hull = d3.polygonHull(
+    points.filter((p) => p.cluster === c.name).map((p) => [x(p.x), y(p.y)])
+  );
+  if (!hull) continue;
+  hullG
+    .append("path")
+    .attr("d", `M${hull.map((p) => p.join(",")).join("L")}Z`)
+    .attr("fill", color(c.name))
+    .attr("fill-opacity", 0.08)
+    .attr("stroke", color(c.name))
+    .attr("stroke-opacity", 0.4)
+    .attr("stroke-width", 1.5)
+    .attr("stroke-linejoin", "round");
+}
 
 // --- Points (moderate size + alpha to handle overlap at n=600) -------------
 g.selectAll("circle")
@@ -106,7 +130,9 @@ centroidG.each(function (d) {
     .attr("height", bbox.height + 6)
     .attr("rx", 4)
     .attr("fill", t.elevatedBg)
-    .attr("fill-opacity", 0.82);
+    .attr("fill-opacity", 0.95)
+    .attr("stroke", t.grid)
+    .attr("stroke-width", 1);
 });
 
 // --- Axis labels (no tick labels — embedding coordinates are not directly
@@ -144,7 +170,7 @@ legendItems
   .attr("cx", 8)
   .attr("cy", 0)
   .attr("fill", (d) => color(d.name))
-  .attr("fill-opacity", 0.85);
+  .attr("fill-opacity", 0.62);
 
 legendItems
   .append("text")
