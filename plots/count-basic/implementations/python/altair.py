@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
-Library: altair 6.2.2 | Python 3.13.14
-Quality: 92/100 | Updated: 2026-08-11
+Library: altair | Python 3.13
+Quality: pending | Updated: 2026-08-11
 """
 
 import os
@@ -63,7 +63,7 @@ bars = (
     .add_params(hover)
 )
 
-labels = base.mark_text(align="center", baseline="bottom", dy=-6, fontSize=13, fontWeight="bold", color=INK).encode(
+labels = base.mark_text(align="center", baseline="bottom", dy=-6, fontSize=14, fontWeight="bold", color=INK).encode(
     x=alt.X("Response:N", sort="-y"), y="count:Q", text="label:N"
 )
 
@@ -76,9 +76,9 @@ chart = (
         title=alt.Title(
             TITLE,
             subtitle=f"n = {len(df)} survey responses",
-            fontSize=16,
+            fontSize=18,
             color=INK,
-            subtitleFontSize=12,
+            subtitleFontSize=13,
             subtitleColor=INK_SOFT,
         ),
     )
@@ -90,8 +90,8 @@ chart = (
         gridOpacity=0.12,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=10,
-        titleFontSize=12,
+        labelFontSize=11,
+        titleFontSize=13,
     )
 )
 
