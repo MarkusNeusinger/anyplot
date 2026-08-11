@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-11
@@ -28,20 +28,21 @@ IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#9
 # "Semantic exception": positive -> green, negative -> red, neutral -> muted).
 # Each polarity gets two shades so the two intensity levels ("Dissatisfied"
 # vs "Very Dissatisfied", "Satisfied" vs "Very Satisfied") stay visually
-# distinguishable while keeping the hue. The style guide forbids inventing
-# custom hex literals for this, so the lighter shade is an alpha-tinted rgba()
-# of the same Imprint hex rather than a new hex value -- the full-strength
-# hex is reserved for the "Very" (most intense) category.
-def _rgba(hex_color, alpha):
-    r, g, b = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
-    return f"rgba({r}, {g}, {b}, {alpha})"
-
-
-POSITIVE = _rgba(IMPRINT[0], 0.6)  # tinted brand green, "Satisfied"
+# distinguishable while keeping the hue. The lighter shade is a precomputed
+# *opaque* hex (Imprint hex blended 60% over white) rather than an rgba()
+# with embedded alpha -- an alpha-carrying fill would composite against
+# plot_background, which flips between themes and breaks palette identity
+# (VQ-07); the full-strength hex is reserved for the "Very" (most intense)
+# category.
+POSITIVE = "#66C5AB"  # brand green blended 60% over white, "Satisfied"
 POSITIVE_STRONG = IMPRINT[0]  # full-strength brand green, "Very Satisfied"
-NEGATIVE = _rgba(IMPRINT[4], 0.6)  # tinted matte red, "Dissatisfied"
+NEGATIVE = "#CE8383"  # matte red blended 60% over white, "Dissatisfied"
 NEGATIVE_STRONG = IMPRINT[4]  # full-strength matte red, "Very Dissatisfied"
-NEUTRAL = INK_MUTED  # theme-adaptive muted anchor
+# Fixed muted gray (average of the light/dark INK_MUTED tones) rather than
+# the theme-adaptive INK_MUTED itself: this is a *data* series color, so it
+# must stay palette-identical across themes like the other four bars (VQ-07)
+# -- only chrome (title, ticks, gridlines) is allowed to flip with the theme.
+NEUTRAL = "#8A8981"
 
 # Data - Survey responses from customer feedback
 responses = [
@@ -120,6 +121,10 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
+    # Pin fill opacity so literal-hex bars render at full strength instead of
+    # compositing against plot_background (which flips between themes and
+    # would otherwise break palette identity across light/dark, VQ-07).
+    opacity="1",
     # Print-value text otherwise defaults to black/white per bar-fill
     # luminance (pygal's Style.value_colors heuristic) rather than the
     # theme-adaptive ink used everywhere else -- pin it to INK so the counts
