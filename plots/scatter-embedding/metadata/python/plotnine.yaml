@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:24:14Z'
-updated: '2026-08-11T09:05:21Z'
+updated: '2026-08-11T09:11:16Z'
 generated_by: claude-sonnet
 workflow_run: 31475145185
 issue: 5236
@@ -12,9 +12,11 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 90
 review:
   strengths:
+  - Title now correctly reads 'scatter-embedding · python · plotnine · anyplot.ai',
+    fixing the missing language token flagged in the previous review
   - 'Canonical Imprint palette in correct order across all six clusters, first series
     is #009E73, identical data colors between light and dark renders'
   - 'Theme-adaptive chrome is correctly threaded through: warm off-white / warm near-black
@@ -35,31 +37,32 @@ review:
   - 'Clean, reproducible, KISS-structured code: fixed seeds throughout, only used
     imports, no functions/classes'
   weaknesses:
-  - 'Title is ''scatter-embedding · plotnine · anyplot.ai'' but the mandated format
-    is ''{spec-id} · {language} · {library} · anyplot.ai'' — the required ''python''
-    language token is missing entirely. Fix: labs(title="scatter-embedding · python
-    · plotnine · anyplot.ai", ...).'
-  - 'The ''Cluster'' legend title text touches/overlaps the legend box''s top and
-    left border in BOTH the light and dark render (the ''C'' crosses the left border
-    line, ascenders touch the top border line) — insufficient legend title padding.
-    Fix: increase legend_title padding/margin or legend box internal margins (e.g.
-    via legend_box_margin / legend_margin in theme()) so the title clears the border.'
+  - 'The legend title ''Cluster'' still touches/overlaps its own box''s top and left
+    border in BOTH the light and dark render (the ''C'' crosses the left border line,
+    ascenders touch the top border line). The attempted fix in this attempt (adding
+    legend_margin=10) did NOT resolve it — legend_margin controls the outer spacing
+    between the legend box and the plot panel, not the internal padding between the
+    legend title text and its own border. Fix: add internal padding directly on the
+    title text, e.g. legend_title=element_text(color=INK, size=9, margin={''b'': 6,
+    ''l'': 6}), or increase legend_key_size / legend box width so the title has room
+    to clear the border.'
   - NK cells (orange) and Neutrophils (cyan) clusters, and separately B cells (purple)
-    and Dendritic cells (red) clusters, overlap heavily enough that the two ellipses
-    and centroid labels in each pair sit very close together — still readable but
-    slightly muddies the at-a-glance cluster separation story; consider nudging label
+    and Dendritic cells (red) clusters, still overlap heavily enough that the two
+    ellipses and centroid labels in each pair sit very close together — still readable
+    but slightly muddies the at-a-glance cluster separation story; this was flagged
+    in the previous review and not addressed in this attempt. Consider nudging label
     positions apart or increasing point alpha contrast between adjacent clusters if
     repair touches this area.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "scatter-embedding · plotnine · anyplot.ai" in dark ink, clearly legible; subtitle "t-SNE (perplexity=30) · 1200 cells · 6 clusters" in softer gray, legible; axis titles "t-SNE Dimension 1" / "t-SNE Dimension 2" in dark ink, legible; no axis tick labels (intentional per spec, since t-SNE coordinates are not directly interpretable); subtle light grid lines; legend box titled "Cluster" on the right with a light cream fill and dark border, listing all 6 cluster names with matching color swatches — all legend text legible, though the "Cluster" title text touches the box's top/left border (minor padding bug, see weaknesses).
-      Data: Six clusters shown as semi-transparent (alpha 0.7) circular points — T cells (#009E73 green, top-right, well separated), B cells (#C475FD purple) and Dendritic cells (#AE3030 red) adjacent/overlapping (left-center), Monocytes (#4467A3 blue, bottom-left, well separated), NK cells (#BD8233 ochre) and Neutrophils (#2ABCCD cyan) adjacent/overlapping (bottom-right). Each cluster has a dashed 68%-confidence ellipse and a bold centroid label in a light box. First series is confirmed #009E73.
+      Chrome: Title "scatter-embedding · python · plotnine · anyplot.ai" in dark ink, clearly legible and now includes the correct language token; subtitle "t-SNE (perplexity=30) · 1200 cells · 6 clusters" in softer gray, legible; axis titles "t-SNE Dimension 1" / "t-SNE Dimension 2" in dark ink, legible; no axis tick labels (intentional per spec, since t-SNE coordinates are not directly interpretable); subtle light grid lines; legend box titled "Cluster" on the right with a light cream fill and dark border, listing all 6 cluster names with matching color swatches — all legend text legible, though the "Cluster" title text still touches the box's top/left border (unresolved padding bug, see weaknesses).
+      Data: Six clusters shown as semi-transparent (alpha 0.7) circular points — T cells (#009E73 green, top-right, well separated, with one natural t-SNE outlier point near the NK/Neutrophils region), B cells (#C475FD purple) and Dendritic cells (#AE3030 red) adjacent/overlapping (left-center), Monocytes (#4467A3 blue, bottom-left, well separated), NK cells (#BD8233 ochre) and Neutrophils (#2ABCCD cyan) adjacent/overlapping (bottom-right). Each cluster has a dashed 68%-confidence ellipse and a bold centroid label in a light box. First series is confirmed #009E73.
       Legibility verdict: PASS (all text readable against the light background; the legend-title/border touch is a design nit, not a legibility failure).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and subtitle rendered in light ink (white/soft-white), clearly legible against the dark background; axis titles light-colored and legible; grid lines subtle light-gray on dark; legend box now has a dark fill with light border and light text — all legible. Centroid label boxes correctly flip to a dark fill (#242420-ish) with white bold text, confirmed via close-up crop — no dark-on-dark failure. Same "Cluster" legend-title/border touch issue reproduces here, confirming it's a layout bug rather than a theme-specific issue.
+      Chrome: Title and subtitle rendered in light ink (white/soft-white), clearly legible against the dark background; axis titles light-colored and legible; grid lines subtle light-gray on dark; legend box has a dark fill with light border and light text — all legible. Centroid label boxes correctly flip to a dark fill with white bold text — no dark-on-dark failure. Same "Cluster" legend-title/border touch issue reproduces here, confirming it is a fixed-position layout bug rather than a theme-specific issue, and confirming legend_margin=10 did not change the internal title padding.
       Data: Same six cluster colors as the light render — #009E73 green (T cells), #C475FD purple (B cells), #4467A3 blue (Monocytes), #BD8233 ochre (NK cells), #AE3030 red (Dendritic cells), #2ABCCD cyan (Neutrophils) — confirmed identical to light render; only chrome (background/text/legend fill) changed between themes.
       Legibility verdict: PASS (no dark-on-dark or light-on-light failures found in either the main chrome or the centroid label boxes).
   criteria_checklist:
@@ -79,8 +82,9 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: '''Cluster'' legend title text touches/overlaps its own box border
-          in both renders; all other text is clear of overlap'
+        comment: '''Cluster'' legend title text still touches/overlaps its own box
+          border in both renders despite the attempted legend_margin fix; all other
+          text is clear of overlap'
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -101,7 +105,7 @@ review:
         max: 4
         passed: true
         comment: Good canvas utilization and balanced margins overall; legend internal
-          padding around its title is cramped
+          padding around its title remains cramped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -133,7 +137,8 @@ review:
         max: 6
         passed: true
         comment: Subtle grid, spines/border removed, generous whitespace, but the
-          legend-title padding bug shows a lapse in polish
+          legend-title padding bug shows a lapse in polish that survived a repair
+          attempt
       - id: DE-03
         name: Data Storytelling
         score: 5
@@ -143,7 +148,7 @@ review:
           hierarchy; slightly muddied where NK/Neutrophils and B/Dendritic clusters
           overlap
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -167,11 +172,12 @@ review:
         comment: x/y correctly mapped to tsne_1/tsne_2, axes show all data
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Legend labels correct, but title is missing the required 'python'
-          language token from the mandated format
+        comment: Title now matches the mandated '{spec-id} · {language} · {library}
+          · anyplot.ai' format exactly, including the previously-missing 'python'
+          token; legend labels correct
     data_quality:
       score: 15
       max: 15
@@ -249,7 +255,7 @@ review:
         passed: true
         comment: stat_ellipse density contours and inherit_aes=False geom_label direct-labeling
           are distinctive grammar-of-graphics techniques
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn

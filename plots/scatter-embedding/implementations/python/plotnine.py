@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-08-11
+Quality: 90/100 | Updated: 2026-08-11
 """
 
 import os
