@@ -1,11 +1,11 @@
 // anyplot.ai
 // count-basic: Basic Count Plot
 // Library: d3 7.9.0 | JavaScript 22.23.1
-// Quality: 91/100 | Created: 2026-08-11
+// Quality: 95/100 | Created: 2026-08-11
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 130, right: 60, bottom: 120, left: 130 };
+const margin = { top: 170, right: 60, bottom: 120, left: 130 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -50,6 +50,7 @@ const counts = Array.from(
   ),
   ([language, count]) => ({ language, count }),
 ).sort((a, b) => d3.descending(a.count, b.count));
+const meanCount = d3.mean(counts, (d) => d.count);
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -84,7 +85,9 @@ const xAxis = g
   .append("g")
   .attr("transform", `translate(0,${ih})`)
   .call(d3.axisBottom(x).tickSize(0).tickPadding(14));
-const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6).tickSize(0).tickPadding(12));
+const yAxis = g
+  .append("g")
+  .call(d3.axisLeft(y).ticks(6).tickFormat(d3.format(",d")).tickSize(0).tickPadding(12));
 for (const axis of [xAxis, yAxis]) {
   axis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
   axis.select(".domain").remove();
@@ -112,7 +115,32 @@ g.selectAll("rect")
   .attr("stroke-opacity", 0.15)
   .attr("stroke-width", 1);
 
+// --- Mean reference line (secondary encoding beyond sort/opacity) --------------
+// A dashed amber rule at the across-category mean lets the eye split the long
+// tail into above-/below-average languages at a glance. Drawn before the count
+// labels so their page-bg halo (below) can mask the line where they land close
+// to it, instead of the line cutting through the digits.
+g.append("line")
+  .attr("x1", 0)
+  .attr("x2", iw)
+  .attr("y1", y(meanCount))
+  .attr("y2", y(meanCount))
+  .attr("stroke", t.amber)
+  .attr("stroke-width", 2)
+  .attr("stroke-dasharray", "6,5");
+
+g.append("text")
+  .attr("x", iw)
+  .attr("y", y(meanCount) - 10)
+  .attr("text-anchor", "end")
+  .attr("fill", t.amber)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text(`Mean = ${d3.format(",.0f")(meanCount)}`);
+
 // --- Count labels above bars ---------------------------------------------------
+// A page-bg halo (paint-order: stroke) keeps the mean line above from visually
+// clashing with labels that land close to it (e.g. Java at 87 vs. mean 91).
 g.selectAll(".count-label")
   .data(counts)
   .join("text")
@@ -121,9 +149,32 @@ g.selectAll(".count-label")
   .attr("y", (d) => y(d.count) - 14)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 6)
+  .attr("stroke-linejoin", "round")
+  .style("paint-order", "stroke")
   .style("font-size", "16px")
   .style("font-weight", "600")
   .text((d) => d.count);
+
+// --- Leading-category annotation (d3-shape symbol generator) -------------------
+// A small amber diamond over the top bar calls out the mode without adding a
+// second data color, exercising d3.symbol alongside the rollup/scale/axis idiom.
+const leader = counts[0];
+const leaderX = x(leader.language) + x.bandwidth() / 2;
+const leaderY = y(leader.count) - 40;
+g.append("path")
+  .attr("d", d3.symbol().type(d3.symbolDiamond).size(140)())
+  .attr("transform", `translate(${leaderX},${leaderY})`)
+  .attr("fill", t.amber);
+g.append("text")
+  .attr("x", leaderX)
+  .attr("y", leaderY - 14)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.amber)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text("Most common");
 
 // --- Axis titles -----------------------------------------------------------------
 g.append("text")
