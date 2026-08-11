@@ -1,0 +1,259 @@
+library: ggplot2
+language: r
+specification_id: bland-altman-basic
+created: '2026-08-11T11:02:04Z'
+updated: '2026-08-11T11:15:05Z'
+generated_by: claude-sonnet
+workflow_run: 31484541804
+issue: 2032
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Correct Bland-Altman construction: bias line, dashed ±1.96 SD limits-of-agreement
+    lines, a shaded LoA band, and value annotations are all present and numerically
+    consistent'
+  - 'Smart semantic color use: the matte red (#AE3030) for the limits-of-agreement
+    boundaries doubles as the Imprint palette''s semantic ''risk/boundary'' anchor,
+    while blue (#4467A3) marks the central bias reference — creates clear visual hierarchy
+    without extra chart junk'
+  - 'Realistic, spec-matching data: paired systolic blood pressure readings from two
+    sphygmomanometers on 90 subjects, mirroring the specification''s own example scenario,
+    with a plausible bias and spread'
+  - Moderate point transparency (alpha = 0.6) correctly reveals overlapping observations
+    as explicitly required by the spec
+  - Canvas is exactly 3200×1800 (landscape) in both renders; theme-adaptive chrome
+    (background, grid, ink tokens) flips correctly between light and dark while data
+    colors stay identical
+  weaknesses:
+  - The '-1.96 SD = -15.8' annotation overlaps a nearby data point in both light and
+    dark renders (the marker sits directly against the final '6' character) — nudge
+    the annotation's x position (e.g. increase the offset from annotation_x, or check
+    for a data-point collision) or move it further outside the point cloud.
+  - 'Annotation text for the bias and LoA labels reuses the same palette hex in dark
+    mode as light mode, giving borderline-low contrast against the near-black #1A1A17
+    background (blue #4467A3 ≈3.1:1, red #AE3030 ≈2.7:1 against plain background)
+    — still legible but not optimal. Consider a lightened/desaturated variant of these
+    colors specifically for dark-theme annotation text; the reference lines themselves
+    should keep the identical data color across themes.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "bland-altman-basic · r · ggplot2 · anyplot.ai" top-left, clearly readable. Axis titles "Mean of Device A and Device B (mmHg)" (x) and "Difference: Device A − Device B (mmHg)" (y) in dark ink, tick labels in a softer gray-ink, all legible. Subtle vertical/horizontal gridlines visible but unobtrusive. A thin neutral-gray solid line marks y=0.
+      Data: 90 green (#009E73) points at alpha≈0.6, revealing overlapping observations as required. A solid blue (#4467A3) horizontal line marks the bias (-2.6 mmHg) with a matching blue text annotation. Two dashed red (#AE3030) horizontal lines mark +1.96 SD (10.5) and -1.96 SD (-15.8), each with a matching red text annotation, and a very light red-tinted ribbon fills the region between them (the limits-of-agreement band). First/primary data series is confirmed #009E73.
+      Legibility verdict: PASS overall, with one localized issue — the "-1.96 SD = -15.8" annotation text touches/slightly overlaps a data point directly beneath its final digit (confirmed via pixel crop). All other text is cleanly separated from data and fully readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and axis titles render in light ink, clearly readable against the dark surface. Tick labels in a lighter soft-gray, legible. Gridlines are faint but visible. The y=0 reference line remains visible as a light neutral line.
+      Data: Data point color is identical to the light render (#009E73), confirming color consistency across themes. Bias line and its annotation remain blue (#4467A3); LoA lines and their annotations remain red (#AE3030) — same hex as light render, correctly following the "chrome flips, data colors stay fixed" rule. The LoA ribbon reads as a subtle warm maroon tint against the near-black background, visually distinguishing the "within limits" band from the region outside it — an effective, storytelling-relevant touch. No black-on-black or invisible text was found; however, the reused blue/red annotation-text colors sit at moderate-to-borderline contrast against the dark background (visually legible in the render, but numerically closer to the low end of readable contrast, especially the red).
+      Legibility verdict: PASS — all text is readable, no dark-on-dark failures. Same annotation/data-point overlap present as in the light render (theme-independent, caused by the point's fixed data position relative to the fixed annotation position).
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set via theme(); readable and well-proportioned
+          in both themes; title kept compact for the long mandated string.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Minimal overlap: the ''-1.96 SD = -15.8'' annotation touches a nearby
+          data point in both renders; all other text is cleanly separated.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker size 2.5 with alpha 0.6 for n=90 correctly reveals overlapping
+          observations per spec; moderate clustering in the dense center is expected/intentional.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: 'Annotation text reuses line hex for dark-mode text; blue (#4467A3)
+          and especially red (#AE3030) sit at borderline-low contrast (~3.1:1 / ~2.7:1)
+          against #1A1A17 — legible but not optimal.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas measured exactly 3200x1800 (landscape); no canvas-gate failure;
+          balanced margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis titles are descriptive and include units (mmHg).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/only data series is #009E73; bias/LoA reference lines use
+          Imprint palette members (#4467A3, #AE3030) with red matching its semantic
+          ''risk/boundary'' role; backgrounds are #FAF8F1/#1A1A17 and chrome is theme-correct
+          in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color mapping (red=boundary, blue=central tendency)
+          and shaded LoA band go clearly beyond a library default; not fully publication-ready
+          due to the dark-mode annotation contrast issue.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid subtle, most spines removed via theme_minimal, generous whitespace;
+          refinement undercut slightly by the annotation/point collision.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The shaded limits-of-agreement band plus color-coded bias/LoA lines
+          and value annotations give the viewer an immediate read on which points
+          fall inside vs. outside the acceptable range.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Bland-Altman / difference plot construction.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bias line, dashed ±1.96 SD lines, annotated values, and moderate
+          point transparency are all present as required.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = mean of the pair, Y = difference (method1-method2 equivalent);
+          axes show all data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated '{spec-id} · r · ggplot2 · anyplot.ai'
+          format; no legend needed for a single data series and the annotations serve
+          as inline labels.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Realistic scatter with bias and visible spread/outliers; a slightly
+          wider range of proportional-bias behavior would push this to full marks.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world scenario (blood pressure device comparison) matching
+          the spec's own suggested example.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: SBP values (100-165 mmHg), bias (-2.6 mmHg), and LoA (±~13 mmHg)
+          are all clinically plausible for sphygmomanometer comparison.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, tibble, ragg, scales all used (scales for alpha()).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no over-engineering, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave() with ragg::agg_png, saved as plot-{theme}.png.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic layered grammar-of-graphics: geom_ribbon with inherit.aes=FALSE,
+          geom_hline, annotate(), and theme() composition.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: The ribbon-band layering with an independent data frame is a nice
+          ggplot2-specific pattern, though not the most singular distinctive-feature
+          usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

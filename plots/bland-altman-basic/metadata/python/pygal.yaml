@@ -2,12 +2,12 @@ library: pygal
 language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:16:31Z'
-updated: '2026-05-07T11:12:50Z'
-generated_by: claude-haiku
-workflow_run: 25492065034
+updated: '2026-08-11T11:19:50Z'
+generated_by: claude-sonnet
+workflow_run: 31484101312
 issue: 2032
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/pygal/plot-light.html
@@ -15,86 +15,95 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-alt
 quality_score: 91
 review:
   strengths:
-  - Correct plot type and calculations — Bland-Altman logic accurately implemented;
-    mean and LOA computed correctly
-  - Perfect theme handling — Both light and dark renders properly adapted; brand green
-    maintained; all chrome colors theme-appropriate
-  - Clean, reproducible code — Seed-based determinism; no bloat; easy to understand
-    and modify
-  - Clear visual hierarchy — Reference lines distinguish mean (solid) from LOA (dashed);
-    legend annotates calculated values
-  - Full specification compliance — All required features present and readable at
-    full resolution
+  - 'Outlier callout added directly in response to prior feedback: the point furthest
+    from the bias line is re-plotted larger (dots_size=22) in a distinct Imprint red
+    (#AE3030), with a legend label stating its value and whether it falls outside
+    the limits of agreement — gives the plot a clear focal point'
+  - Theme-adaptive Style tokens correctly threaded through the whole chart — chrome
+    flips cleanly while Imprint data colors stay identical across light and dark renders
+  - Statistically correct construction (mean bias + ±1.96 SD LoA with ddof=1), values
+    surfaced via legend labels for both the reference lines and the new outlier series
+  - dot_opacity=0.65 gives the moderate transparency the spec explicitly asks for
+    to reveal overlapping observations
+  - Dashed stroke_style cleanly distinguishes LoA lines from the solid bias line;
+    dots_size=0 turns two-point series into clean reference lines without visual clutter
+  - Clean 3200×1800 canvas, no clipping anywhere, canvas gate passed
   weaknesses:
-  - Limited design polish — Spines visible on all sides (pygal default); could remove
-    top/right for refinement
-  - No point transparency control — Specification suggests moderate transparency;
-    pygal's scatter API doesn't expose point alpha, so overlapping points rely only
-    on size and color for separation
-  - Minimal library-specific features — Implementation uses pygal's core API without
-    exploring distinctive capabilities
+  - Mean bias/LoA values are still only annotated via the bottom legend text, not
+    with in-plot text near the lines themselves — readable, but requires looking away
+    from the data to connect a line to its value
+  - 'Visual hierarchy beyond the new outlier callout remains fairly flat: no shaded
+    band between the upper/lower limits of agreement to visually delimit the acceptable-agreement
+    zone'
+  - Y-axis title wraps to two lines and consumes a fair amount of left margin — not
+    a defect, but worth trimming if a shorter phrasing exists
+  - The outlier series duplicates a point already present in the Measurements series
+    (same coordinate plotted twice, once green underneath and once red on top) — works
+    visually but is a slightly redundant data encoding worth noting
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white
-      Chrome: Title "bland-altman-basic · pygal · anyplot.ai" clearly visible; axis labels "Mean of Two Methods (mmHg)" and "Difference (Method 1 - Method 2) (mmHg)" readable in dark text; tick labels legible; grid lines subtle but visible
-      Data: 50 green data points (#009E73, brand green) scatter across plot; solid horizontal line (mean bias at -1.1 mmHg) in brownish color; two dashed lines (LOA at +14.4 and -17.6 mmHg) in contrasting colors; legend lists all three series with calculated values
-      Legibility verdict: PASS — all text readable; no light-on-light failures; data points distinct and visible
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Title "bland-altman-basic · pygal · anyplot.ai" fully visible in dark ink at the top, no clipping. X-axis title "Mean of Two Methods (mmHg)" and the two-line Y-axis title "Difference (Method 1 - Method 2) (mmHg)" are dark and clearly legible, as are all tick labels. Dashed gray gridlines are subtle but visible.
+      Data: 50 teal-green (#009E73) scatter dots at ~0.65 alpha spread across ~90-155 mmHg mean values. A solid purple (#C475FD) mean-bias line and dashed blue-gray (#4467A3) upper / tan-brown (#BD8233) lower limits-of-agreement lines span the full plot width. A single larger red (#AE3030) dot near x=102, y=-22.8 calls out the outlier furthest from the bias line, with a legend entry noting it falls outside the LoA. Bottom legend spells out numeric values for Mean Bias, Upper LoA, Lower LoA, and the Outlier.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct surface color, not pure black
-      Chrome: Title, axis labels, and tick labels all rendered in light colors and clearly readable; grid lines subtle and visible
-      Data: Green data points (#009E73) identical to light render — confirms proper theme separation (only chrome flips, data colors stay constant); reference lines adapted to dark surface with proper contrast; legend text in light colors
-      Legibility verdict: PASS — no dark-on-dark failures; brand green (#009E73) prominent and readable on dark background; all elements distinguish well from surface
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Title, axis titles, tick labels, and legend text all flip to light ink and remain clearly legible — no dark-on-dark failures anywhere. Gridlines remain subtle against the dark surface.
+      Data: Scatter dots, mean-bias line, both LoA lines, and the red outlier callout use identical colors to the light render (only chrome flipped, as required) — confirmed by direct visual comparison.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, and ticks readable in both themes at full resolution
+        comment: All text readable in both themes; Y-axis title wraps to two lines
+          but stays legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Scatter points distinct; legend legible and properly positioned
+        comment: No collisions anywhere, including the new outlier series
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, and grid elements visible in both renders
+        comment: 10px dots + alpha 0.65 well-suited to 50 sparse points; 22px outlier
+          dot clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; no red-green sole signal; adequate contrast
+        comment: Adequate contrast, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 proportions; nothing cut off; adequate margins
+        comment: 3200x1800 canvas gate passed, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units; title includes spec-id, library, site
+        comment: Descriptive with mmHg units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Main series in brand green (#009E73); lines use Okabe-Ito positions
-          2–4; backgrounds correct; both renders theme-correct
+        comment: 'First series #009E73, remaining series follow canonical Imprint
+          order, correct theme backgrounds, identical data colors across themes'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -102,22 +111,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom Style object with explicit theme tokens; careful font sizing;
-          professional appearance
+        comment: Theme-adaptive Style plus the new distinct-color/size outlier accent
+          lift it above generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid enabled (both axes); spines visible (pygal default); could be
-          refined
+        comment: Subtle grid, generous whitespace, no clutter
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clear focal point; reference lines create hierarchy; legend with
-          values aids interpretation
+        comment: Outlier callout now gives a clear focal point; still no shaded LoA
+          band to delimit the agreement zone
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bland-Altman scatter with reference lines
+        comment: pygal.XY scatter is correct for Bland-Altman
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Mean difference line, ±1.96 SD LOA lines, scatter points, annotated
-          values in legend
+        comment: Mean-of-pair x, difference y, mean-bias line, dashed +-1.96 SD LoA
+          lines, values annotated via legend, plus outlier callout
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = mean of methods, Y = difference; 50 paired observations appropriate
-          for LOA estimation
+        comment: x/y computed correctly, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct; legend labels match series
+        comment: Mandated title format; descriptive, value-annotated legend labels
     data_quality:
       score: 15
       max: 15
@@ -157,20 +164,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Measurements, bias, and LOA all visualized; full distribution shown
+        comment: Scatter + bias line + both LoA lines + outlier callout present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Blood pressure readings realistic; differences plausible; neutral
-          medical context
+        comment: Plausible sphygmomanometer comparison, neutral framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Data range well-suited to canvas; scale readable and sensible
+        comment: n=50 within recommended range, sensible mmHg magnitudes
     code_quality:
       score: 10
       max: 10
@@ -180,33 +186,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only os, numpy, pygal used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; clean theme token logic
+        comment: No fake interactivity, clean outlier-detection logic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Correct plot-{THEME}.png / .html outputs
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -214,20 +220,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of pygal.XY, Style object, proper render methods; competent
-          but not distinctive
+        comment: Style carries all theme tokens as documented, idiomatic XY config
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
         passed: true
-        comment: Style customization and multi-color reference lines; could explore
-          more capabilities
+        comment: Layers multiple styled series (dasharray strokes, dots_size=0 reference
+          lines, oversized accent dot) to demonstrate pygal's per-series styling flexibility
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
