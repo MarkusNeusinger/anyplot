@@ -50,6 +50,17 @@ const sd = Math.sqrt(variance);
 const upperLoA = bias + 1.96 * sd;
 const lowerLoA = bias - 1.96 * sd;
 
+// Irregular (non-round-number) axis padding so the auto-computed tick grid
+// never lands exactly on the plot boundary — a round min/max there produces
+// a splitLine coincident with the edge, which reads as a false box border.
+const means = points.map((p) => p[0]);
+const xPad = (Math.max(...means) - Math.min(...means)) * 0.065;
+const xMin = Math.min(...means) - xPad;
+const xMax = Math.max(...means) + xPad;
+const yPad = (Math.max(...diffs) - Math.min(...diffs)) * 0.08;
+const yMin = Math.min(...diffs) - yPad;
+const yMax = Math.max(...diffs) + yPad;
+
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -76,25 +87,37 @@ chart.setOption({
   },
   xAxis: {
     type: "value",
-    scale: true,
+    min: xMin,
+    max: xMax,
     name: "Mean of Two Methods (mmHg)",
     nameLocation: "middle",
     nameGap: 45,
     nameTextStyle: { color: t.ink, fontSize: 16 },
-    axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLabel: {
+      color: t.inkSoft,
+      fontSize: 14,
+      showMinLabel: false,
+      showMaxLabel: false,
+    },
+    axisLine: { onZero: false, lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
   yAxis: {
     type: "value",
-    scale: true,
+    min: yMin,
+    max: yMax,
     name: "Difference: Device − Reference (mmHg)",
     nameLocation: "middle",
     nameGap: 70,
     nameTextStyle: { color: t.ink, fontSize: 16 },
-    axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLabel: {
+      color: t.inkSoft,
+      fontSize: 14,
+      showMinLabel: false,
+      showMaxLabel: false,
+    },
+    axisLine: { onZero: false, lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
@@ -104,6 +127,11 @@ chart.setOption({
       data: points,
       symbolSize: 14,
       itemStyle: { color: t.palette[0], opacity: 0.6 },
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.palette[0], opacity: 0.08 },
+        data: [[{ yAxis: lowerLoA }, { yAxis: upperLoA }]],
+      },
       markLine: {
         symbol: "none",
         silent: true,
