@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-08-11
@@ -58,7 +58,7 @@ segment_colors = {
 }
 n_segments = len(segment_names)
 
-X, y = make_blobs(n_samples=1500, n_features=32, centers=n_segments, cluster_std=2.5, random_state=42)
+X, y = make_blobs(n_samples=1500, n_features=32, centers=n_segments, cluster_std=8.0, random_state=42)
 
 tsne = TSNE(n_components=2, perplexity=30, random_state=42, max_iter=1000)
 X_embedded = tsne.fit_transform(X)
@@ -76,7 +76,7 @@ sns.scatterplot(
     hue="segment",
     hue_order=segment_names,
     palette=segment_colors,
-    alpha=0.55,
+    alpha=0.5,
     s=45,
     edgecolors=PAGE_BG,
     linewidth=0.3,
@@ -84,8 +84,9 @@ sns.scatterplot(
 )
 
 # Pad the data range so centroid labels near the edges (e.g. the rightmost
-# cluster) never reach the legend placed just outside the axes
-ax.margins(x=0.18, y=0.10)
+# cluster) never reach the legend placed just outside the axes, and the
+# leftmost cluster's label clears the left spine
+ax.margins(x=0.20, y=0.12)
 
 # Annotate segment centroids
 for name in segment_names:
@@ -124,7 +125,7 @@ ax.spines["bottom"].set_color(INK_SOFT)
 
 # Legend — placed outside the axes so it never overlaps a cluster (t-SNE
 # layout is data-dependent and any in-plot corner risks landing on a cluster)
-sns.move_legend(ax, "center left", bbox_to_anchor=(1.05, 0.5))
+sns.move_legend(ax, "center left", bbox_to_anchor=(1.02, 0.5))
 legend = ax.get_legend()
 legend.set_title("Segment", prop={"size": 11, "weight": "medium"})
 legend.get_title().set_color(INK)
@@ -146,5 +147,5 @@ fig.text(
     color=INK_SOFT,
 )
 
-plt.tight_layout(rect=[0, 0, 0.76, 0.90])
+plt.tight_layout(rect=[0, 0, 0.97, 0.90])
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
