@@ -2,125 +2,136 @@ library: seaborn
 language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:11:57Z'
-updated: '2026-05-07T12:58:59Z'
-generated_by: claude-haiku
-workflow_run: 25496962747
+updated: '2026-08-11T12:54:59Z'
+generated_by: claude-sonnet
+workflow_run: 31492294667
 issue: 2028
-python_version: 3.13.13
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 89
 review:
   strengths:
-  - Perfect visual quality with clear text legibility in both themes
-  - Authentic polynomial regression visualization with R² = 0.963 showing excellent
-    model fit
-  - Comprehensive specification compliance - all required features (curve, confidence
-    band, equation, R² value) present and well-executed
-  - Clean, simple code structure (KISS principle) with proper reproducibility via
-    seeding
-  - Flawless theme-adaptive design - data colors identical between light and dark,
-    only chrome adapts correctly
-  - Confidence band and annotation box add statistical rigor and professional polish
-  - Proper Okabe-Ito palette usage with brand green (#009E73) and accent orange (#D55E00)
+  - 'All three attempt-1 weaknesses fixed: confidence-band legend swatch is now clearly
+    visible (alpha 0.15 → 0.35), scatter markers no longer blob together in the dense
+    midsection (s=110→75, alpha=0.65→0.6), and a new peak-vertex annotation directly
+    reinforces the spec''s diminishing-returns story'
+  - 'Idiomatic, distinctive seaborn usage: sns.regplot(order=2, ci=95) draws scatter
+    + degree-2 fit + bootstrapped 95% CI band in one statistically-aware call instead
+    of hand-rolled numpy fill_between'
+  - 'All spec-required features present: R2 and polynomial equation annotated prominently,
+    degree-2 curve visually distinct (solid contrasting purple line), confidence band
+    included, point alpha=0.6 within the recommended 0.6-0.7 range'
+  - Theme-adaptive chrome correctly threaded through sns.set_theme rc params and explicit
+    color kwargs (scatter edgecolor, legend facecolor/edgecolor, annotation bbox)
+    - both renders theme-correct with identical data colors
+  - Canvas is exactly 3200x1800 (figsize=(8,4.5), dpi=400, no bbox_inches='tight');
+    title matches the mandated {spec-id} . python . seaborn . anyplot.ai format exactly
+  - 'Clean, reproducible, KISS code: single np.random.seed(42), no functions/classes,
+    only used imports'
   weaknesses:
-  - Design Excellence could be elevated with more intentional visual hierarchy or
-    unique styling choices beyond standard defaults
-  - Library Mastery is good but uses conventional seaborn patterns - could leverage
-    more distinctive seaborn-specific features or techniques
+  - Dense midsection (x approx 8-18, near the parabola peak) still shows some marker
+    overlap even after the size/alpha reduction - individual points are distinguishable
+    but not fully separated
+  - Data storytelling relies on a single peak-vertex callout; the regplot-based fit
+    itself is a fairly standard/documented seaborn pattern rather than a highly distinctive
+    technique
+  - Grid is y-axis-only; the default style guide suggests both axes for scatter plots
+    (minor deviation, not a deduction-worthy defect on its own since the plot reads
+    cleanly)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title, axis labels, and tick labels all clearly visible in dark text (#1A1A17). Annotation box has light background with dark text, perfectly readable. Legend positioned upper left with elevated background (#FFFDF6).
-      Data: Green (#009E73) scatter points with white edges and alpha=0.65, very visible. Orange (#D55E00) polynomial curve with linewidth=4 is prominent and distinct. Semi-transparent orange confidence band (alpha=0.15) adds visual interest without obscuring data.
-      Legibility verdict: PASS - All elements are clearly readable at full resolution with excellent contrast
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "scatter-regression-polynomial · python · seaborn · anyplot.ai" is dark and clearly legible, centered at top. Axis labels "Building Age (years)" / "Energy Efficiency Score" and tick labels are dark/soft-dark and fully readable. Top-left legend box (elevated off-white fill, soft border) lists "Building Data" (green dot), "Polynomial Fit (degree 2)" (purple line), "95% Confidence Band" (pale lavender patch - now clearly visible after the alpha increase to 0.35). Top-right box shows the fitted equation "y = -0.39x² + 9.39x + 65.20" and "R² = 0.963" in dark text on an off-white box. A "Peak efficiency" annotation with a thin leader line points to the parabola's vertex (~x=12), rendered in soft-dark text.
+      Data: Green (#009E73) scatter points with light (page-background-colored) edges trace a clear rise-then-fall parabola; a purple (#C475FD) regression curve overlays it with a thin, tight confidence band (band is very narrow given the high R²).
+      Legibility verdict: PASS - all text reads cleanly against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title, axis labels, and tick labels all clearly visible in light text (#F0EFE8). Annotation box has dark background (#242420) with light text. Legend has dark frame with light text, fully readable.
-      Data: Green (#009E73) scatter points are IDENTICAL to light render. Orange (#D55E00) polynomial curve and confidence band are IDENTICAL to light render. Only chrome (background, text, legend) has flipped between themes as expected.
-      Legibility verdict: PASS - No dark-on-dark failures. All text is light-colored on dark background with excellent contrast. Data colors are theme-independent and consistent.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, axis labels, and tick labels render in light tones and are clearly legible. Legend and equation annotation boxes use a dark elevated fill with light text and a visible border - fully readable. The "95% Confidence Band" legend swatch is now visibly distinct against the dark box (previously a known weak point in attempt 1, fixed here). "Peak efficiency" annotation text renders in a soft light-gray tone, readable against the near-black background - no dark-on-dark failure.
+      Data: Green scatter points and purple regression curve/band are visually identical in hue to the light render - confirms only chrome (background, text, legend/annotation box fills) flipped between themes.
+      Legibility verdict: PASS - all text reads cleanly against the dark background, no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
-          All readable in both themes.
+        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks/legend/annotation
+          8-9pt); readable in both themes, no clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend positioned upper left, annotation
-          upper right.
+        comment: Legend, equation box, and peak annotation are all clear of data and
+          each other
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Markers clearly visible (size=200, alpha=0.65). Polynomial curve
-          distinct (linewidth=4).
+        comment: Marker size/alpha reduced (s=75, alpha=0.6) to fix attempt-1 overplotting;
+          midsection near the peak still shows minor overlap
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) is colorblind-safe with good
-          contrast.'
+        comment: Green/purple contrast is CVD-safe, markers have light edge for definition
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape format with good proportions, nothing cut off, adequate
-          whitespace.
+        comment: Canvas confirmed exactly 3200x1800px, balanced margins, no cut-off
+          content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. Axis labels are descriptive.
+        comment: Descriptive axis labels with units (years); title mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, accent #D55E00. Backgrounds correct (#FAF8F1
-          light, #1A1A17 dark). Perfect theme adaptation.'
+        comment: 'First series #009E73, curve uses Imprint position 2 (#C475FD); backgrounds
+          theme-correct in both renders; data colors identical across themes'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Professional polish with confidence band and themed annotation box.
-          Competent design but relatively conventional.
+        comment: Full theme-adaptive Imprint styling with elevated-surface panels;
+          solid but not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: L-shaped spines, subtle grid (10% alpha), white marker edges, generous
-          whitespace. Excellent refinement.
+        comment: Spines removed, subtle y-only grid, generous whitespace; style guide
+          suggests both-axis grid for scatter but this is a minor deviation
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear visualization of non-linear relationship. R² and confidence
-          band show uncertainty. Good visual hierarchy.
+        comment: New peak-vertex annotation with leader line directly reinforces the
+          spec's diminishing-returns theme - clear visual hierarchy and focal point,
+          up from attempt 1's generic 3/6
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with polynomial regression.
+        comment: Scatter + polynomial regression fit + CI band, exactly as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: scatter, curve, confidence band, equation,
-          R² value, labels, title.'
+        comment: R2, equation annotation, distinct curve color, confidence band, correct
+          alpha range, degree-2 default all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly assigned. Data range appropriate.
+        comment: X=Building Age, Y=Energy Efficiency Score, full data range visible
+          on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'spec-id · library · anyplot.ai' correct. Legend labels
-          clear.
+        comment: Title matches mandated format exactly; legend labels match plotted
+          series
     data_quality:
       score: 15
       max: 15
@@ -160,20 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of polynomial regression plot type.
+        comment: Full rise-peak-decline parabola shown with realistic noise across
+          the whole domain
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Building age vs efficiency is realistic, plausible, and physically
-          meaningful.
+        comment: Building age vs energy efficiency score is a real, neutral, comprehensible
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Age 0-25 years and efficiency 50-130 are sensible. 90 points appropriate.
+        comment: Age range 0-25 years and efficiency score trajectory are plausible
+          for the domain
     code_quality:
       score: 10
       max: 10
@@ -183,59 +197,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, direct code without unnecessary functions/classes.
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for determinism.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib, numpy, pandas, seaborn.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI or over-engineering.
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses correct format plot-{THEME}.png.
+        comment: Saves plot-{THEME}.png with bbox_inches left at default
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses seaborn axes-level API (scatterplot), sns.set_theme() for theming.
-          Idiomatic and well-executed.
+        comment: sns.regplot is the expert high-level API choice for this exact task
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses standard seaborn patterns. No distinctly library-specific features
-          beyond basic plotting.
+        comment: regplot's built-in fit+CI is a real strength but a fairly standard,
+          well-documented usage pattern
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   - explicit-figure
   dataprep:
   - regression
   styling:
-  - grid-styling
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
