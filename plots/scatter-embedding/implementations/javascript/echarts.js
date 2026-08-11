@@ -31,8 +31,18 @@ const CLUSTERS = [
   { label: "Erythrocytes", cx: -1.5, cy: -7.0, sx: 1.1, sy: 1.4, rot: 0.6, n: 80 },
   { label: "Platelets", cx: 7.5, cy: -6.0, sx: 0.7, sy: 0.7, rot: 0.0, n: 35 },
 ];
+const nMin = Math.min(...CLUSTERS.map((c) => c.n));
+const nMax = Math.max(...CLUSTERS.map((c) => c.n));
 
-const clusterSeries = CLUSTERS.map((c) => {
+// Denser clusters get slightly lower opacity so overplotting stays legible;
+// sparser clusters render a touch bolder — a deliberate, density-aware
+// marker treatment rather than one flat alpha for every series.
+function densityOpacity(n) {
+  const frac = (n - nMin) / (nMax - nMin);
+  return 0.78 - frac * 0.24;
+}
+
+const clusterSeries = CLUSTERS.map((c, idx) => {
   const points = [];
   for (let i = 0; i < c.n; i++) {
     const gx = gauss() * c.sx;
@@ -46,25 +56,61 @@ const clusterSeries = CLUSTERS.map((c) => {
     type: "scatter",
     data: points,
     symbolSize: 11,
-    itemStyle: { opacity: 0.65, borderColor: t.pageBg, borderWidth: 0.5 },
+    // Color pinned to the canonical Imprint index (not render order) so the
+    // legend/z-order reshuffle below never changes which hue a cell type gets.
+    itemStyle: {
+      color: t.palette[idx],
+      opacity: densityOpacity(c.n),
+      borderColor: t.pageBg,
+      borderWidth: 0.5,
+    },
     emphasis: { itemStyle: { opacity: 1, borderWidth: 1.5 } },
+    n: c.n,
   };
-});
+})
+  // Deliberate z-ordering: draw the densest clusters first (bottom layer) so
+  // smaller, sparser clusters always render on top and stay fully visible
+  // instead of being buried under a larger neighbor.
+  .sort((a, b) => b.n - a.n);
+
+// A thin scatter of unassigned/background cells between clusters — real
+// UMAP/t-SNE projections rarely produce perfectly clean, noise-free blobs.
+const NOISE_N = 26;
+const noisePoints = [];
+for (let i = 0; i < NOISE_N; i++) {
+  const a = CLUSTERS[Math.floor(rnd() * CLUSTERS.length)];
+  const b = CLUSTERS[Math.floor(rnd() * CLUSTERS.length)];
+  const frac = 0.25 + rnd() * 0.5;
+  const jx = gauss() * 0.5;
+  const jy = gauss() * 0.5;
+  noisePoints.push([a.cx + (b.cx - a.cx) * frac + jx, a.cy + (b.cy - a.cy) * frac + jy]);
+}
+const noiseSeries = {
+  name: "noise",
+  type: "scatter",
+  silent: true,
+  data: noisePoints,
+  symbolSize: 7,
+  itemStyle: { color: t.inkSoft, opacity: 0.28 },
+};
 
 const centroidLabels = {
   name: "centroids",
   type: "scatter",
   silent: true,
   symbolSize: 0,
-  data: CLUSTERS.map((c) => ({ value: [c.cx, c.cy], name: c.label })),
+  // Nudge the label above each cluster's centroid rather than dead center,
+  // so it sits over sparser edge points instead of the densest core.
+  data: CLUSTERS.map((c) => ({ value: [c.cx, c.cy + c.sy * 0.95], name: c.label })),
   label: {
     show: true,
     formatter: "{b}",
     color: t.ink,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 600,
-    textShadowColor: t.pageBg,
-    textShadowBlur: 6,
+    padding: [3, 7],
+    borderRadius: 4,
+    backgroundColor: t.elevatedBg,
   },
 };
 
@@ -84,11 +130,12 @@ chart.setOption({
   },
   legend: {
     data: CLUSTERS.map((c) => c.label),
+    icon: "circle",
     orient: "vertical",
     right: 24,
     top: "middle",
-    itemWidth: 14,
-    itemHeight: 14,
+    itemWidth: 12,
+    itemHeight: 12,
     itemGap: 16,
     textStyle: { color: t.ink, fontSize: 15 },
   },
@@ -97,6 +144,10 @@ chart.setOption({
     formatter: (p) => p.seriesName,
   },
   grid: { left: 60, right: 240, top: 110, bottom: 70 },
+  // Minimal frame (style-guide "remove all spines" alternative for clean
+  // scatter plots): no axis line, no split lines — just the descriptive
+  // dimension names, since embedding coordinates carry no interpretable
+  // ticks and a full box border reads as unnecessary chartjunk here.
   xAxis: {
     type: "value",
     name: "UMAP dimension 1",
@@ -105,8 +156,8 @@ chart.setOption({
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
     axisLabel: { show: false },
     axisTick: { show: false },
-    axisLine: { onZero: false, lineStyle: { color: t.inkSoft } },
-    splitLine: { show: true, lineStyle: { color: t.grid } },
+    axisLine: { show: false },
+    splitLine: { show: false },
   },
   yAxis: {
     type: "value",
@@ -116,10 +167,10 @@ chart.setOption({
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
     axisLabel: { show: false },
     axisTick: { show: false },
-    axisLine: { onZero: false, lineStyle: { color: t.inkSoft } },
-    splitLine: { show: true, lineStyle: { color: t.grid } },
+    axisLine: { show: false },
+    splitLine: { show: false },
   },
-  series: [...clusterSeries, centroidLabels],
+  series: [noiseSeries, ...clusterSeries, centroidLabels],
 });
 
 chart.on("finished", () => {
