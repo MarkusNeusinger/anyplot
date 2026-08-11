@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-07
@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette - first series is always #009E73
+# Imprint palette - first series is always #009E73
 BRAND = "#009E73"
 ACCENT = "#C475FD"
 
@@ -56,26 +56,26 @@ fig.add_trace(
         y=energy_consumption,
         mode="markers",
         name="Measured Data",
-        marker={"size": 18, "color": BRAND, "opacity": 0.65, "line": {"width": 1.5, "color": PAGE_BG}},
+        marker={"size": 12, "color": BRAND, "opacity": 0.65, "line": {"width": 1, "color": PAGE_BG}},
     )
 )
 
 # Polynomial regression curve
 fig.add_trace(
-    go.Scatter(x=x_fit, y=y_fit, mode="lines", name="Polynomial Fit (degree 2)", line={"color": ACCENT, "width": 4})
+    go.Scatter(x=x_fit, y=y_fit, mode="lines", name="Polynomial Fit (degree 2)", line={"color": ACCENT, "width": 3.5})
 )
+
+# Title fontsize scaled from the 16px/67-char baseline (title is 81 chars)
+title_text = "Building Energy Consumption · scatter-regression-polynomial · plotly · anyplot.ai"
+title_fontsize = max(round(16 * 67 / len(title_text)), 11)
 
 # Layout with theme-adaptive chrome
 fig.update_layout(
-    title={
-        "text": "Building Energy Consumption · scatter-regression-polynomial · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    autosize=False,
+    title={"text": title_text, "font": {"size": title_fontsize, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Outdoor Temperature (°C)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Outdoor Temperature (°C)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
         "gridwidth": 1,
         "gridcolor": GRID,
@@ -83,8 +83,8 @@ fig.update_layout(
         "zeroline": False,
     },
     yaxis={
-        "title": {"text": "Energy Consumption (kWh)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Energy Consumption (kWh)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
         "gridwidth": 1,
         "gridcolor": GRID,
@@ -92,7 +92,7 @@ fig.update_layout(
         "zeroline": False,
     },
     legend={
-        "font": {"size": 18, "color": INK_SOFT},
+        "font": {"size": 10, "color": INK_SOFT},
         "x": 0.02,
         "y": 0.98,
         "bgcolor": ELEVATED_BG,
@@ -101,7 +101,7 @@ fig.update_layout(
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin={"l": 100, "r": 80, "t": 120, "b": 100},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
     annotations=[
         {
             "x": 0.98,
@@ -110,7 +110,7 @@ fig.update_layout(
             "yref": "paper",
             "text": f"R² = {r_squared:.4f}<br>{equation}",
             "showarrow": False,
-            "font": {"size": 18, "color": INK},
+            "font": {"size": 11, "color": INK},
             "bgcolor": ELEVATED_BG,
             "bordercolor": INK_SOFT,
             "borderwidth": 1,
@@ -121,6 +121,6 @@ fig.update_layout(
     ],
 )
 
-# Save as PNG and HTML with theme-suffixed filenames
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Save as PNG and HTML with theme-suffixed filenames — canonical 3200×1800 canvas
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
