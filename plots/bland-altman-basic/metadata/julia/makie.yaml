@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: bland-altman-basic
 created: '2026-08-11T11:03:26Z'
-updated: '2026-08-11T11:09:31Z'
+updated: '2026-08-11T11:17:30Z'
 generated_by: claude-sonnet
 workflow_run: 31484690176
 issue: 2032
@@ -12,48 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-alt
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Correct Bland-Altman statistics — bias and ±1.96 SD limits of agreement computed
-    via Statistics.mean/std and rendered as a solid bias line plus dashed LOA lines
-    using idiomatic hlines!
-  - Both renders are pixel-consistent for data color and correctly flip chrome (background,
-    text, grid, spines) between light and dark themes with no dark-on-dark or light-on-light
-    failures
-  - On-plot value annotations (Bias, +1.96 SD, -1.96 SD) use distinct align/offset
-    per line to stay clear of the axis frame and of each other — verified no text/marker
-    overlap at native resolution
-  - Moderate point transparency (alpha=0.65) satisfies the spec's 'reveal overlapping
-    observations' requirement without obscuring the scatter
-  - Realistic, neutral domain data (new automated BP cuff vs. mercury reference across
+  - Shaded limits-of-agreement band (band!) gives the acceptable-range region distinct
+    visual weight and is a genuinely distinctive Makie feature added over attempt
+    1
+  - Reference lines now use the theme-adaptive neutral INK token instead of the semantic-red
+    palette slot, fixing the attempt-1 VQ-07 finding
+  - Explicit LinearTicks(7) on both axes produces much denser, more readable gridlines
+    than Makie's prior auto-tick default, fixing the attempt-1 VQ-01 finding
+  - Correct Bland-Altman statistics (bias, +/-1.96 SD limits of agreement) computed
+    via Statistics.mean/std and rendered with idiomatic hlines!/band!
+  - Both renders are pixel-consistent for data color and correctly flip chrome (title,
+    labels, ticks, spines, grid) between light and dark themes
+  - Moderate alpha (0.65) plus a subtle marker stroke satisfies the spec's 'reveal
+    overlapping observations' requirement without muddying the point cloud
+  - Realistic, neutral domain data (automated cuff vs. mercury reference sphygmomanometer,
     90 subjects) at an appropriate mmHg scale
-  - No AR-08 (fake interactivity) or AR-09 (edge clipping) issues found in either
-    render; canvas is the correct 3200x1800
+  - No AR-08 / AR-09 issues found in either render; canvas is exactly 3200x1800
   weaknesses:
-  - X-axis (~105-190 mmHg) and Y-axis (~-8 to 20 mmHg) each show only 3 major gridlines/tick
-    labels from Makie's auto-tick algorithm, making it hard to read intermediate values
-    precisely — pass explicit xticks/yticks to Axis(...) for denser labeling.
-  - Bias and limits-of-agreement reference lines use IMPRINT_PALETTE[5] (matte red,
-    the semantic anchor reserved for bad/loss/error) rather than the theme-adaptive
-    'neutral' anchor the style guide recommends for the reference-line role — reconsider
-    unless the red-for-'outside-acceptable-range' framing is intentional.
-  - Design is competent and statistically correct but conventional for this plot type
-    — no additional distinctive Makie feature (e.g. a shaded band!/poly! for the LOA
-    region, or a marginal density strip for the difference distribution) that would
-    elevate it beyond a solid baseline execution.
+  - The '+1.96 SD = 14.0' annotation is anchored at x_max with align=(:right,:bottom);
+    since x_max is the actual rightmost data point's mean value, that same point sits
+    directly under/behind the leading 'S' of 'SD' in both renders — a real (if minor)
+    marker/text overlap, not just proximity
+  - The 'Bias = 4.1' annotation likewise sits immediately above a data point that
+    touches the bias line at x_max, leaving very little breathing room between marker
+    and label
+  - Design is competent and now has one distinctive touch (the shaded band) but remains
+    a fairly conventional Bland-Altman layout beyond that — a marginal density strip
+    for the difference distribution or similar would push Design Excellence further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "bland-altman-basic · julia · makie · anyplot.ai" centered at top; dark-ink x-axis label "Mean of Two Devices (mmHg)" and y-axis label "Difference: New − Reference (mmHg)"; softer-ink tick labels (0/10/20 on y, 125/150/175 on x); only left+bottom spines visible (top/right removed); faint horizontal/vertical gridlines at ~15% opacity. All chrome clearly legible against the light background.
-      Data: 90 semi-transparent brand-green (#009E73) scatter points (mean vs. difference), a solid matte-red bias line labeled "Bias = 4.1", and two dashed matte-red limit-of-agreement lines labeled "+1.96 SD = 14.0" and "−1.96 SD = -5.7". Annotation text sits directly above/below its line, right-aligned near the rightmost data point, with no glyph/marker overlap on close inspection.
-      Legibility verdict: PASS.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "bland-altman-basic · julia · makie · anyplot.ai" centered at top; dark-ink axis labels "Mean of Two Devices (mmHg)" / "Difference: New − Reference (mmHg)"; softer-ink tick labels on both axes with denser LinearTicks(7) gridlines (105/120/135/150/165/180 on x, -5/0/5/10/15/20 on y); only left+bottom spines visible; faint gridlines; a light shaded band spans the limits-of-agreement region.
+      Data: 90 semi-transparent brand-green (#009E73) scatter points (alpha 0.65, thin light-colored stroke); a solid neutral-ink bias line labeled "Bias = 4.1"; two dashed neutral-ink limit-of-agreement lines labeled "+1.96 SD = 14.0" and "−1.96 SD = -5.7".
+      Legibility verdict: PASS overall — all title/axis/tick text is clearly readable against the light background. One localized issue: the rightmost data point (at x_max, where both annotations are anchored) sits directly under/behind the "+1.96 SD = 14.0" text and touches the "Bias = 4.1" line/label — a real but minor marker/text overlap, not a legibility failure of the surrounding chrome.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/axis-label/tick-label layout, now rendered in light ink (#F0EFE8 primary, #B8B7B0 secondary) against the dark surface; spines and gridlines flipped to the light-toned equivalents. All text is clearly visible with no dark-on-dark failures.
-      Data: Same 90 scatter points in the identical brand green, same bias/LOA line positions and matte-red color, same annotation text and placement — confirmed pixel-for-pixel consistent with the light render's data layer; only chrome changed.
-      Legibility verdict: PASS.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical layout with chrome flipped to light ink (title/axis labels in light off-white, ticks in a lighter gray) and light-toned spines/gridlines; same shaded LOA band, now visible as a slightly lighter rectangle against the near-black surface.
+      Data: Scatter points, bias/LOA line positions, brand-green color, and annotation placement are pixel-consistent with the light render; only chrome changed, confirming theme-adaptive tokens were threaded through correctly.
+      Legibility verdict: PASS overall — no dark-on-dark failures, all chrome text reads clearly against the dark background. Same localized marker/annotation overlap near x_max as in the light render (data-layer issue, not a theme-adaptation failure).
   criteria_checklist:
     visual_quality:
       score: 27
@@ -61,79 +61,74 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes and sized explicitly, but only 3
-          major gridlines/ticks per axis makes precise value reading harder given
-          the wide data range.
+        comment: Readable in both themes; explicit LinearTicks(7) on both axes now
+          gives dense, well-spaced gridlines (fixes attempt-1 finding)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: No text/marker collisions found at native resolution, including the
-          annotation text placed near the rightmost scatter point.
+        passed: false
+        comment: Rightmost data point (at x_max) sits directly under the '+1.96 SD
+          = 14.0' text and touches the 'Bias = 4.1' line/label in both renders — real
+          marker/text overlap, not severe enough for 0
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: markersize=14 with alpha=0.65 is appropriate for 90 points; overlapping
-          observations remain visible.
+        comment: markersize=14, alpha=0.65 appropriate for 90 points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-on-cream/near-black and matte-red reference lines both have
-          good contrast; not relying on red-green alone since it's a single data series.
+        comment: Good contrast in both themes; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, no cutoff, comfortable margins.
+        comment: Exact 3200x1800 canvas, no cutoff, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with mmHg units on both axes.
+        comment: Descriptive with mmHg units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: First series is correct brand green and backgrounds are theme-correct,
-          but the bias/LOA reference lines use IMPRINT_PALETTE[5] (semantic bad/error
-          red) where the style guide's 'neutral' anchor is the documented role for
-          reference lines.
+        passed: true
+        comment: 'First series #009E73; reference lines/band now use theme-adaptive
+          neutral INK token instead of semantic red (fixes attempt-1 finding); both
+          renders theme-correct'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: true
-        comment: Thoughtful annotation placement and a deliberate (if debatable) semantic
-          color choice, but overall a fairly standard Bland-Altman layout.
+        comment: Shaded LOA band and careful right-aligned annotations lift this above
+          a default scatter, but the overall layout is still a fairly conventional
+          Bland-Altman plot
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Top/right spines removed, subtle grid, generous whitespace, white-on-background
-          marker stroke for definition.
+        comment: Spines removed, subtle grid, generous whitespace, marker stroke for
+          definition, band adds tonal refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Bias/LOA lines with inline numeric labels create a clear focal point
-          for interpreting agreement, without a legend box.
+        comment: Shaded band plus labeled bias/LOA lines give a clear, immediately
+          legible focal point for the agreement region
     spec_compliance:
       score: 15
       max: 15
@@ -143,28 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements a Bland-Altman (mean-difference) scatter plot.
+        comment: Correct Bland-Altman difference plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bias line, dashed ±1.96 SD limit lines, on-plot annotations of the
-          values, and moderate-transparency points are all present.
+        comment: Bias line, dashed +/-1.96 SD lines, annotations, moderate transparency,
+          plus shaded LOA band
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = mean of the two devices, Y = new − reference; matches the spec's
-          difference/average convention.
+        comment: X = mean of pair, Y = new - reference
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated 'bland-altman-basic · julia · makie ·
-          anyplot.ai' format; legend correctly omitted for the single data series.
+        comment: Correct title format; legend correctly omitted for single series
     data_quality:
       score: 15
       max: 15
@@ -174,22 +167,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all core Bland-Altman elements: scatter, bias, both LOA lines,
-          and their numeric annotations.'
+        comment: Shows full pair set, bias, and both LOA bounds
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral medical-device validation scenario (automated
-          cuff vs. mercury reference) across 90 subjects.
+        comment: Automated cuff vs. mercury reference, 90 subjects, neutral medical-device-validation
+          framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Systolic BP range (~105-190 mmHg) and mmHg-scale differences/bias
-          are realistic for the domain.
+        comment: Realistic systolic BP range (~105-190 mmHg) and mmHg differences
     code_quality:
       score: 10
       max: 10
@@ -199,58 +190,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no unnecessary functions/classes.
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set before data generation.
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics all used.
+        comment: Only CairoMakie, Colors, Random, Statistics used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately concise; no fake UI or simulated interactivity.
+        comment: No fake UI, clean idiomatic flow
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via save(..., px_per_unit=2) — current CairoMakie
-          API.
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2)
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/scatter!/hlines!/band!/text!/LinearTicks usage
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses Makie's Axis/scatter!/hlines!/text! idiomatically for chrome,
-          data, and reference lines.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Sticks to basic scatter/hlines/text primitives; no distinctive Makie-specific
-          feature (e.g. band!/poly! for a shaded LOA region) that would set it apart.
+        comment: Shaded band! region for the LOA band is a distinctive Makie-specific
+          touch added over attempt 1, addressing that finding directly
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
