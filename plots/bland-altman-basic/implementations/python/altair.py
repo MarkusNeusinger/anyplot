@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-11
@@ -51,7 +51,9 @@ x_max = df["Mean"].max() + 5
 y_min = min(df["Difference"].min(), lower_loa) - 3
 y_max = max(df["Difference"].max(), upper_loa) + 3
 
-# Scatter points — flagged red when outside the 95% limits of agreement
+# Scatter points — flagged red + diamond shape when outside the 95% limits of
+# agreement (redundant shape encoding keeps the flag CVD-safe, not color-only)
+outlier_predicate = f"datum.Difference > {upper_loa} || datum.Difference < {lower_loa}"
 scatter = (
     alt.Chart(df)
     .mark_point(size=110, filled=True, opacity=0.7)
@@ -62,9 +64,8 @@ scatter = (
             title="Difference: Method 1 − Method 2 (mmHg)",
             scale=alt.Scale(domain=[y_min, y_max], zero=False),
         ),
-        color=alt.condition(
-            f"datum.Difference > {upper_loa} || datum.Difference < {lower_loa}", alt.value(OUTLIER), alt.value(BRAND)
-        ),
+        color=alt.condition(outlier_predicate, alt.value(OUTLIER), alt.value(BRAND)),
+        shape=alt.condition(outlier_predicate, alt.value("diamond"), alt.value("circle")),
         tooltip=[
             alt.Tooltip("Mean:Q", format=".1f", title="Mean"),
             alt.Tooltip("Difference:Q", format=".1f", title="Difference"),
@@ -94,8 +95,8 @@ annotation_df = pd.DataFrame(
         "text": [f"Mean bias: {mean_diff:.2f}", f"+1.96 SD: {upper_loa:.2f}", f"-1.96 SD: {lower_loa:.2f}"],
     }
 )
-box_pad_x = (x_max - x_min) * 0.11
-box_pad_y = (y_max - y_min) * 0.035
+box_pad_x = (x_max - x_min) * 0.125
+box_pad_y = (y_max - y_min) * 0.045
 box_df = annotation_df.assign(
     x0=annotation_df["x"] - 2 * box_pad_x,
     x1=annotation_df["x"] + 0.3,
@@ -114,7 +115,7 @@ annotation_boxes = (
 )
 annotations = (
     alt.Chart(annotation_df)
-    .mark_text(align="right", fontSize=11, fontWeight="bold", color=INK)
+    .mark_text(align="right", fontSize=13, fontWeight="bold", color=INK)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[x_min, x_max], zero=False)),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[y_min, y_max], zero=False)),
@@ -126,14 +127,24 @@ annotations = (
 title_text = "bland-altman-basic · python · altair · anyplot.ai"
 title_fontsize = round(16 * min(1.0, 67 / len(title_text)))
 
-# Combine layers, enable pan/zoom, and apply theme-adaptive chrome
+# Combine layers, enable pan/zoom, and apply theme-adaptive chrome.
+# Subtitle spells out the red/diamond = outlier semantics so the encoding is
+# self-explanatory without a separate legend.
 chart = (
     (annotation_boxes + scatter + mean_line + loa_lines + annotations)
     .properties(
         width=620,
         height=320,
         background=PAGE_BG,
-        title=alt.Title(title_text, fontSize=title_fontsize, anchor="middle", color=INK),
+        title=alt.Title(
+            title_text,
+            subtitle="Red diamonds mark points outside the 95% limits of agreement",
+            fontSize=title_fontsize,
+            subtitleFontSize=12,
+            subtitleColor=INK_SOFT,
+            anchor="middle",
+            color=INK,
+        ),
     )
     .interactive()
     .configure_view(fill=PAGE_BG, stroke=None)
@@ -144,8 +155,8 @@ chart = (
         gridOpacity=0.12,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=10,
-        titleFontSize=12,
+        labelFontSize=11,
+        titleFontSize=13,
     )
     .configure_title(color=INK, fontSize=title_fontsize)
 )
