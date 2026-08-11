@@ -19,10 +19,10 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-BRAND = "#009E73"  # Okabe-Ito position 1 - first categorical series
-ACCENT = "#C475FD"  # Okabe-Ito position 2 - for regression line
+BRAND = "#009E73"  # Imprint palette position 1 - always first series
+ACCENT = "#C475FD"  # Imprint palette position 2 - regression line
 
 # Data - Simulating diminishing returns pattern (economics example)
 np.random.seed(42)
@@ -67,29 +67,45 @@ equation = f"y = {a:.3f}x² + {b:.3f}x + {c:.2f}"
 plot = (
     ggplot()
     # Confidence band with no border
-    + geom_ribbon(aes(x="x", ymin="y_lower", ymax="y_upper"), data=df_curve, fill=BRAND, alpha=0.15, color=None)
+    + geom_ribbon(
+        aes(x="x", ymin="y_lower", ymax="y_upper"),
+        data=df_curve,
+        fill=BRAND,
+        alpha=0.15,
+        color=None,
+        tooltips=layer_tooltips().line("95% band|@y_lower – @y_upper"),
+    )
     # Scatter points
-    + geom_point(aes(x="x", y="y"), data=df_points, color=BRAND, size=5, alpha=0.65)
+    + geom_point(
+        aes(x="x", y="y"),
+        data=df_points,
+        color=BRAND,
+        size=2.5,
+        alpha=0.65,
+        tooltips=layer_tooltips().line("Advertising spend|$@x k").line("Sales revenue|$@y k"),
+    )
     # Polynomial regression line
-    + geom_line(aes(x="x", y="y"), data=df_curve, color=ACCENT, size=2.5)
+    + geom_line(
+        aes(x="x", y="y"), data=df_curve, color=ACCENT, size=1.5, tooltips=layer_tooltips().line("Fitted revenue|$@y k")
+    )
     # Labels and title
     + labs(
         x="Advertising Spend (thousands $)",
         y="Sales Revenue (thousands $)",
-        title="scatter-regression-polynomial · letsplot · anyplot.ai",
+        title="scatter-regression-polynomial · python · letsplot · anyplot.ai",
     )
     # Annotations for R² and equation
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=pd.DataFrame({"x": [x.max() - 5], "y": [y.max() + 5], "label": [f"R² = {r2:.3f}"]}),
-        size=18,
+        size=5,
         color=INK,
         hjust=1,
     )
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=pd.DataFrame({"x": [x.max() - 5], "y": [y.max() - 2], "label": [equation]}),
-        size=14,
+        size=4,
         color=INK_SOFT,
         hjust=1,
     )
@@ -97,19 +113,20 @@ plot = (
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),  # drop box border - L-shaped frame from axis_line only
         panel_grid_major=element_line(color=RULE, size=0.3),
         panel_grid_minor=element_blank(),
-        plot_title=element_text(size=24, face="bold", color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# Save as PNG (scale 4x for 3200x1800)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 
 # Save as HTML for interactive viewing
 ggsave(plot, f"plot-{THEME}.html", path=".")
