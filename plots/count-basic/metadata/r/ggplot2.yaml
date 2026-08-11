@@ -1,0 +1,265 @@
+library: ggplot2
+language: r
+specification_id: count-basic
+created: '2026-08-11T06:48:31Z'
+updated: '2026-08-11T07:04:02Z'
+generated_by: claude-sonnet
+workflow_run: 31466240615
+issue: 2033
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Idiomatic geom_bar() with stat="count" on raw, uncounted survey responses, matching
+    the spec's emphasis on automatic tallying
+  - Bars correctly sorted descending by frequency with precise count labels above
+    each bar
+  - 'Theme-adaptive chrome correctly implemented in both renders: backgrounds match
+    #FAF8F1 (light) / #1A1A17 (dark) exactly, data color #009E73 identical across
+    themes, all text legible with no dark-on-dark or light-on-light failures'
+  - Clean minimal-chrome treatment — vertical gridlines and axis ticks removed, only
+    subtle horizontal gridlines retained
+  - Correct canvas size (3200×1800 landscape), no clipped or overflowing elements
+    at any edge
+  - Reproducible (set.seed(42)), clean imports, correct ggsave/ragg::agg_png API usage
+  - Redundant axis.text.x theme declaration flagged in the prior review has been removed
+    from the source (line-level fix confirmed by diff)
+  weaknesses:
+  - 'CRITICAL — rendered artifacts do not match the current implementation: plots/count-basic/implementations/r/ggplot2.R
+    (post commit 11c40e771) computes a per-category color vector (scale_fill_manual
+    with a muted tint for non-leading bars and full #009E73 for the leading ''Strongly
+    Agree'' bar) and percentage-annotated labels (sprintf("%d (%.0f%%)", n, pct))
+    — i.e. labels like ''157 (33%)''. The reviewed plot-light.png/plot-dark.png instead
+    show all five bars in the identical pure #009E73 (verified by pixel sampling,
+    including the smallest bar) and plain count-only labels (''157'', not ''157 (33%)''),
+    which exactly matches the PRE-repair code (single hardcoded fill, label=n). This
+    means plot_images/ is a stale render from before the review-feedback fix commit,
+    not a valid preview of the code being reviewed. This looks like a render/pipeline
+    caching issue, not a code defect — re-render plot-light.png and plot-dark.png
+    from the current ggplot2.R before the next review; do not edit the R source further
+    based on ''missing focal point / missing percentages'' feedback, since the source
+    already contains both.'
+  - Design excellence cannot be credited yet because the intended focal-point highlight
+    (leader bar in full brand green vs muted tint for the rest) and the percentage
+    annotations are not visible in the artifact under review — once re-rendered correctly
+    this should meaningfully improve DE-01/DE-03 versus the prior 86-score attempt
+  - No additional weaknesses beyond the stale-render issue and the design-excellence
+    items already pending verification
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "count-basic · r · ggplot2 · anyplot.ai" top-left in dark ink, fully visible and not clipped. Axis titles "Survey Response" (x) and "Count" (y) in dark ink, tick labels ("Strongly Agree" ... "Strongly Disagree", and 0/50/100/150) in a softer dark gray. Only horizontal major gridlines are shown; no vertical gridlines, no axis ticks.
+      Data: Five vertical bars, all rendered in the identical pure brand green #009E73 (verified by pixel-sampling all five bars, including the shortest "Strongly Disagree" bar — no muted/lightened tint difference is visible anywhere), sorted descending — Strongly Agree (157), Agree (152), Neutral (78), Disagree (64), Strongly Disagree (29) — each labeled with only its raw count (e.g. "157"), no percentage suffix.
+      Legibility verdict: PASS — all title, axis, tick, and count-label text is clearly readable against the light background.
+      Mismatch note: the current ggplot2.R (post repair commit) defines a scale_fill_manual with a muted tint for non-leading bars and a sprintf-based "N (P%)" label — neither is visible here, indicating this PNG was not regenerated from the current source.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and axis labels rendered in light ink/off-white, tick labels in a lighter soft gray. Horizontal gridlines rendered in a light, subdued tone, still visible but not dominant.
+      Data: Bars are the identical pure #009E73 as the light render (data color correctly held constant across themes), with count-only labels ("157", "152", "78", "64", "29") in light/white text above each bar — same missing muted-tint/percentage issue as the light render.
+      Legibility verdict: PASS — no dark-on-dark issues; all text is clearly legible against the near-black background.
+      Mismatch note: identical stale-render symptom as the light render — confirms this is a rendering-pipeline issue affecting both theme outputs consistently, not a per-theme rendering bug.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title 12pt, axis titles 10pt, tick labels 8pt);
+          all text readable in both themes with no dark-on-dark/light-on-light failures
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Count labels sit clear of bar tops thanks to 12% y-axis expansion;
+          no text/data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar width (0.65) appropriate for 5 sparse categories
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue brand green, good contrast on both backgrounds, no red-green
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, no cut-off elements, no canvas-gate flag
+          present
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive x/y axis labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds match #FAF8F1/#1A1A17 exactly,
+          both renders theme-correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean brand-palette treatment with intentional descending order,
+          but the rendered artifact still shows a standard theme_minimal bar chart
+          without the leader-highlight polish the current source code defines
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Ticks and vertical gridlines removed, subtle horizontal grid only;
+          the code-level duplicate axis.text.x declaration has been cleaned up, but
+          this is not a visual criterion
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Descending sort + count labels give hierarchy, but the intended focal-point
+          device (leader bar in full green vs muted tint for the rest) is not visible
+          in the reviewed render — cannot credit until re-rendered
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_bar() with stat="count" on raw uncounted data is exactly a count
+          plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Auto-counting, descending sort, count labels all present per spec
+          notes; percentage annotation is optional per spec and present in source
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=category, y=count, all 5 categories shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'count-basic · r · ggplot2 · anyplot.ai'; no
+          legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full distribution shown, sorted, labeled with exact counts
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral Likert-scale survey data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 480 total responses, per-category counts 29-157, sensible magnitudes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; the previously flagged duplicate axis.text.x
+          declaration has been removed
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality; leader/muted color
+          vector is a clean, readable technique
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_bar()/stat="count" is the canonical ggplot2 pattern for count
+          plots; dplyr pipe used cleanly for ordering
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Source now defines a per-category scale_fill_manual highlight technique,
+          but since it is not visible in the reviewed render it cannot yet be credited
+          as a distinctive, verified feature
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - grid-styling
