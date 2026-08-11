@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 count-basic: Basic Count Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-08-11
@@ -36,11 +36,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"  # Imprint palette position 1 — always first series
-# Fixed white-blend tint (not composited against the theme background) so the
-# soft bars render as the exact same hex on light and dark surfaces -- only
-# the modal bar uses full-strength BRAND. A real alpha/opacity would instead
-# blend with PAGE_BG and produce two different visible colors per theme.
-BRAND_SOFT = "#66C4A9"
+# `muted` semantic anchor (theme-adaptive) de-emphasizes the non-modal bars
+# without introducing a custom hex outside the Imprint palette/anchors.
+BRAND_SOFT = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data - raw per-observation customer satisfaction survey responses (one row
 # per respondent). Likert order is kept (Excellent -> Very Poor) rather than
@@ -58,9 +56,9 @@ avg_count = total / len(response_order)
 
 # Create count plot - geom_bar()'s default stat='count' tallies the raw
 # observations directly (no manual pre-aggregation). The modal response
-# ("Good") renders in full-strength brand green while the rest use a fixed
-# lighter tint of the same hue -- a second layer of visual emphasis beyond
-# bar height alone, without introducing a second Imprint hue or a legend.
+# ("Good") renders in full-strength brand green while the rest use the
+# muted anchor -- a second layer of visual emphasis beyond bar height
+# alone, without introducing a second Imprint hue or a legend.
 # Two geom_text(stat='count') layers annotate each bar with its count (bold,
 # larger) and share of the total (lighter, smaller), giving the in-bar
 # labels a deliberate typographic hierarchy instead of one flat style.
@@ -84,7 +82,7 @@ plot = (
         label_format="{.0f}%",
         color="white",
         alpha=0.85,
-        size=3.0,
+        size=3.4,
         vjust=1,
         nudge_y=-8,
     )
@@ -92,7 +90,7 @@ plot = (
     + labs(
         x="Customer Satisfaction Rating",
         y="Number of Responses",
-        title="count-basic · letsplot · anyplot.ai",
+        title="count-basic · python · letsplot · anyplot.ai",
         caption=f"n = {total} survey respondents",
     )
     + scale_y_continuous(expand=[0, 0, 0.16, 0], limits=[0, 90])
