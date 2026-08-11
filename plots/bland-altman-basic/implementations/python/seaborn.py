@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-08-11
@@ -76,6 +76,10 @@ sns.scatterplot(x=mean_values, y=differences, s=100, alpha=0.7, color=BRAND, edg
 # is approximately normal.
 sns.rugplot(y=differences, ax=ax, height=0.03, color=BRAND, alpha=0.5, lw=1)
 
+# Shaded band between the limits of agreement — reinforces the ±1.96 SD
+# envelope as a single focal region before the individual lines are read.
+ax.axhspan(lower_loa, upper_loa, color=ACCENT_1, alpha=0.08, zorder=0)
+
 # Mean difference line (bias)
 ax.axhline(y=mean_diff, color=BRAND, linewidth=2.5, label=f"Mean: {mean_diff:.2f} mmHg")
 
@@ -129,9 +133,10 @@ sns.despine(ax=ax)
 # Grid - subtle, both axes (scatter plot)
 ax.grid(True, axis="both", alpha=0.15, linewidth=0.8, color=INK)
 
-# Legend, positioned and styled via seaborn's move_legend
+# Legend, positioned and styled via seaborn's move_legend — lower-right,
+# clear of both the y-axis rug ticks and the right-edge value annotations
 ax.legend(fontsize=8)
-sns.move_legend(ax, "upper left", frameon=True, facecolor=ELEVATED_BG, edgecolor=INK_SOFT, framealpha=1.0)
+sns.move_legend(ax, "lower right", frameon=True, facecolor=ELEVATED_BG, edgecolor=INK_SOFT, framealpha=1.0)
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
