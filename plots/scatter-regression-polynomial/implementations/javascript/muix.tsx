@@ -26,28 +26,6 @@ function randNormal(rand: () => number) {
 }
 
 // --- Least-squares polynomial fit via normal equations (Gauss-Jordan) -------
-function solveLinearSystem(matrixA: number[][], vectorB: number[]) {
-  const size = vectorB.length;
-  const augmented = matrixA.map((row, i) => [...row, vectorB[i]]);
-  for (let col = 0; col < size; col += 1) {
-    let pivotRow = col;
-    for (let row = col + 1; row < size; row += 1) {
-      if (Math.abs(augmented[row][col]) > Math.abs(augmented[pivotRow][col])) {
-        pivotRow = row;
-      }
-    }
-    [augmented[col], augmented[pivotRow]] = [augmented[pivotRow], augmented[col]];
-    const pivot = augmented[col][col];
-    for (let c = col; c <= size; c += 1) augmented[col][c] /= pivot;
-    for (let row = 0; row < size; row += 1) {
-      if (row === col) continue;
-      const factor = augmented[row][col];
-      for (let c = col; c <= size; c += 1) augmented[row][c] -= factor * augmented[col][c];
-    }
-  }
-  return augmented.map((row) => row[size]);
-}
-
 function polyFit(xs: number[], ys: number[], degree: number) {
   const size = degree + 1;
   const ata: number[][] = Array.from({ length: size }, () => new Array(size).fill(0));
@@ -64,7 +42,25 @@ function polyFit(xs: number[], ys: number[], degree: number) {
       for (let c = 0; c < size; c += 1) ata[r][c] += powers[r] * powers[c];
     }
   }
-  return solveLinearSystem(ata, aty); // ascending powers: [c0, c1, c2, ...]
+  // Gauss-Jordan elimination on the augmented [ata | aty] system, in place.
+  const augmented = ata.map((row, i) => [...row, aty[i]]);
+  for (let col = 0; col < size; col += 1) {
+    let pivotRow = col;
+    for (let row = col + 1; row < size; row += 1) {
+      if (Math.abs(augmented[row][col]) > Math.abs(augmented[pivotRow][col])) {
+        pivotRow = row;
+      }
+    }
+    [augmented[col], augmented[pivotRow]] = [augmented[pivotRow], augmented[col]];
+    const pivot = augmented[col][col];
+    for (let c = col; c <= size; c += 1) augmented[col][c] /= pivot;
+    for (let row = 0; row < size; row += 1) {
+      if (row === col) continue;
+      const factor = augmented[row][col];
+      for (let c = col; c <= size; c += 1) augmented[row][c] -= factor * augmented[col][c];
+    }
+  }
+  return augmented.map((row) => row[size]); // ascending powers: [c0, c1, c2, ...]
 }
 
 function evalPoly(coeffs: number[], x: number) {
@@ -129,11 +125,11 @@ const yPad = (Math.max(...yAllValues) - Math.min(...yAllValues)) * 0.1;
 const yDomainMin = Math.min(0, Math.min(...yAllValues) - yPad);
 const yDomainMax = Math.max(...yAllValues) + yPad;
 
-const regressionColor = t.palette[2]; // blue — distinct from the brand-green points
+const regressionColor = t.palette[1]; // lavender — canonical Imprint position 2
 
-const formatSigned = (value: number, decimals: number) =>
-  `${value >= 0 ? "+" : "-"} ${Math.abs(value).toFixed(decimals)}`;
-const equationLabel = `h(x) = ${coeffs[2].toFixed(4)}x² ${formatSigned(coeffs[1], 3)}x ${formatSigned(coeffs[0], 2)}`;
+const linearTerm = `${coeffs[1] >= 0 ? "+" : "-"} ${Math.abs(coeffs[1]).toFixed(3)}`;
+const constantTerm = `${coeffs[0] >= 0 ? "+" : "-"} ${Math.abs(coeffs[0]).toFixed(2)}`;
+const equationLabel = `h(x) = ${coeffs[2].toFixed(4)}x² ${linearTerm}x ${constantTerm}`;
 const fitLabel = `R² = ${rSquared.toFixed(3)}`;
 
 const title = "scatter-regression-polynomial · javascript · muix · anyplot.ai";
@@ -192,7 +188,14 @@ export default function Chart() {
         horizontal
         sx={{ "& line": { stroke: t.grid, strokeOpacity: 0.15 } }}
       />
-      <LinePlot skipAnimation slotProps={{ line: { style: { strokeWidth: 3.5 } } }} />
+      <LinePlot
+        skipAnimation
+        slotProps={{
+          line: {
+            style: { strokeWidth: 3.5, filter: `drop-shadow(0 0 1px ${t.ink})` },
+          },
+        }}
+      />
       <ScatterPlot />
       <ChartsXAxis />
       <ChartsYAxis />
@@ -209,7 +212,16 @@ export default function Chart() {
       <text x={112} y={72} fontSize={15} fill={t.inkSoft}>
         {equationLabel}
       </text>
-      <text x={112} y={96} fontSize={19} fontWeight={700} fill={regressionColor}>
+      <text
+        x={112}
+        y={96}
+        fontSize={19}
+        fontWeight={700}
+        fill={regressionColor}
+        stroke={t.ink}
+        strokeWidth={0.5}
+        paintOrder="stroke"
+      >
         {fitLabel}
       </text>
     </ChartContainer>
