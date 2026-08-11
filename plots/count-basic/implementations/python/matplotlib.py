@@ -1,7 +1,7 @@
 """ anyplot.ai
 count-basic: Basic Count Plot
 Library: matplotlib 3.11.1 | Python 3.13.14
-Quality: 92/100 | Updated: 2026-08-11
+Quality: 94/100 | Updated: 2026-08-11
 """
 
 import os
@@ -9,6 +9,7 @@ import sys
 
 
 sys.path.pop(0)
+import matplotlib.patheffects as path_effects
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import to_rgba
@@ -74,15 +75,18 @@ value_labels = ax.bar_label(
 )
 value_labels[0].set_fontsize(13)
 value_labels[0].set_fontweight("bold")
+# Path-effect stroke on the leading label — a matplotlib-specific text-rendering
+# trick (draws a background-colored outline pass under the glyphs) that makes the
+# winner pop a little further without adding a second color or a heavier box.
+value_labels[0].set_path_effects([path_effects.withStroke(linewidth=4, foreground=PAGE_BG)])
 # Mask the average line where a label would otherwise cross it
 for lbl in value_labels:
     lbl.set_bbox({"facecolor": PAGE_BG, "edgecolor": "none", "pad": 3})
 
-# Style — minimalist: no y-axis, values are direct-labeled on the bars instead
+# Style — minimalist: no y-axis labels, values are direct-labeled on the bars instead
 ax.set_xlabel("Survey Response", fontsize=11, color=INK)
 ax.set_title("count-basic · python · matplotlib · anyplot.ai", fontsize=13, fontweight="medium", color=INK)
-ax.tick_params(axis="x", labelsize=9, colors=INK_SOFT)
-ax.set_yticks([])
+ax.tick_params(axis="x", labelsize=10, colors=INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["left"].set_visible(False)
@@ -90,6 +94,14 @@ ax.spines["bottom"].set_color(INK_SOFT)
 
 # Headroom for the two-line bar labels above the tallest bar
 ax.set_ylim(0, counts.max() * 1.35)
+
+# Faint reference gridlines (no numeric labels) give returning readers a scale
+# anchor without reintroducing a full y-axis — the direct bar labels stay the
+# primary reading mode.
+ax.set_yticks(np.linspace(0, counts.max() * 1.35, 5))
+ax.set_yticklabels([])
+ax.tick_params(axis="y", length=0)
+ax.yaxis.grid(True, color=INK, alpha=0.08, linewidth=0.8, zorder=0)
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
