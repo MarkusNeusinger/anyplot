@@ -2,127 +2,151 @@ library: plotly
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:23:24Z'
-updated: '2026-05-07T10:29:21Z'
+updated: '2026-08-11T09:05:45Z'
 generated_by: claude-sonnet
-workflow_run: 25489880437
+workflow_run: 31474686322
 issue: 5236
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 87
 review:
   strengths:
-  - 'Correct Okabe-Ito palette with #009E73 as first series (Technology cluster)'
-  - Actual TSNE computation on 50-dimensional synthetic data — not fake 2D blobs
-  - Centroid annotations with themed boxes aid cluster comprehension
-  - Full theme adaptation including annotation bgcolor/bordercolor/font
-  - All font sizes explicitly set to spec values (title 28px, axis 22px, legend 16-18px)
-  - Axis tick labels correctly suppressed per spec requirement
-  - Produces both PNG and HTML outputs with correct filenames
-  - Uses make_blobs in 50-D then TSNE — realistic document embedding simulation
+  - Correct 3200×1800 landscape canvas via width=800/height=450/scale=4 — no clipping
+    on any edge, canvas gate passed
+  - 'Attempt 1''s axis-title-vs-title hierarchy bug is fixed: xaxis/yaxis title font
+    size reduced from 22 to 12, clearly below the main title'
+  - 'Thoughtful semantic-exception color choice: Erythrocytes get the matte-red anchor
+    (#AE3030) for the blood association instead of its ordinal palette position 6,
+    explained in a code comment'
+  - Centroid annotation labels deliberately offset below each cluster (yanchor="top",
+    computed y_margin) so they never cover data points
+  - 'All spec features present: colorblind-accessible palette + legend, optional centroid
+    annotations, moderate alpha-blended markers with density-appropriate opacity,
+    algorithm/parameter subtitle, hidden tick labels since t-SNE coordinates aren''t
+    directly interpretable'
+  - 'Fully reproducible: np.random.seed(42) plus random_state=42 on both make_blobs
+    and TSNE'
+  - Theme-adaptive chrome correctly threaded through backgrounds, fonts, gridlines,
+    legend, hoverlabel, and annotation boxes; data colors are pixel-identical between
+    light and dark renders
+  - Spines removed (showline=False on both axes) and grid kept subtle — clean minimal-scatter
+    look with generous margins
   weaknesses:
-  - Design Excellence is solid but not exceptional — centroid label boxes blend into
-    clusters somewhat; bolder contrast between box fill and surrounding scatter could
-    improve readability
-  - DE-01 could reach 6/8 with more typographic hierarchy (e.g. heavier title weight,
-    slightly larger subtitle contrast)
-  - 'LM-02 limited: plotly HTML interactivity and hover templates are distinctive
-    features that were not leveraged — hover data could show topic probabilities or
-    point IDs'
-  - Axis spine lines remain visible; removing them would add further visual refinement
+  - 'Typography hierarchy is inverted again, just relocated: legend title (18px×scale4=72
+    source-px) and annotation labels (17px bold → 68 source-px) now render visibly
+    larger than the main chart title (13px → 52 source-px). The attempt-1 fix only
+    addressed axis titles; legend.title.font.size and legend.font.size and the annotation
+    font size were never brought below the title. Reduce legend.title.font.size to
+    ~12-13, legend.font.size to ~10-11, and the centroid annotation font size to ~13-14
+    so the main title stays the single largest, most dominant text element per the
+    style guide''s typography hierarchy.'
+  - 'Library Mastery remains generic: only basic hovertemplate customization and add_annotation
+    are used — no plotly-distinctive capability (e.g. px faceting, updatemenus, subplots)
+    that would differentiate this from a minimal go.Scatter usage.'
+  - Subtitle (rendered via the <sup> tag, inheriting ~70-80% of the 13px title size)
+    is quite small once scaled to mobile width — still legible at full resolution
+    but tight; consider a couple points larger for mobile comfort now that headroom
+    exists below the (fixed) axis titles.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "Document Topic Clusters · scatter-embedding · plotly · anyplot.ai" with subtitle in dark ink — clearly readable. Axis labels "t-SNE Dimension 1" / "t-SNE Dimension 2" in dark color, no tick labels (correct for embedding axes). Subtle grid lines at ~10% opacity. Legend box at top-right with ELEVATED_BG fill.
-      Data: 6 clusters in strict Okabe-Ito order — Technology (#009E73 teal), Science (#D55E00 orange), Sports (#0072B2 blue), Politics (#CC79A7 pink), Entertainment (#E69F00 gold), Health (#56B4E9 sky blue). Markers size=8 with opacity=0.65 and PAGE_BG edge lines. Centroid annotation boxes on each cluster.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background. No light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 target — not pure white, not dark.
+      Chrome: Bold dark title "Single-Cell RNA-Seq Clustering · scatter-embedding · python · plotly · anyplot.ai" centered at top, with a smaller gray subtitle "t-SNE (perplexity=30) | 1,500 synthetic transcriptomes across 6 cell types" beneath it. Dark axis titles "t-SNE Dimension 1" / "t-SNE Dimension 2" with tick labels correctly hidden (t-SNE coordinates aren't directly interpretable). Subtle light-gray gridlines on both axes. Bordered legend box top-right titled "Cell Type" listing all six categories with color swatches. All text is clearly readable against the light background — no light-on-light issues found.
+      Data: Six well-separated point clusters using the Imprint palette in canonical order except Erythrocytes, which takes the matte-red anchor (#AE3030) for its blood association instead of its ordinal slot — T Cells green (#009E73), B Cells lavender (#C475FD), NK Cells blue (#4467A3), Monocytes ochre (#BD8233), Dendritic Cells cyan (#2ABCCD), Erythrocytes red (#AE3030). Each cluster has a bordered white/cream annotation box directly beneath it naming the cell type, offset so it never covers the data points. First series (T Cells) is confirmed #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title and axis labels render in #F0EFE8 (near-white ink) — readable against dark background. Legend box uses ELEVATED_BG (#242420). Centroid annotation boxes use ELEVATED_BG with INK (#F0EFE8) text — legible. No dark-on-dark failures detected.
-      Data: Identical Okabe-Ito colors to light render — Technology teal, Science orange, Sports blue, Politics pink, Entertainment gold, Health sky blue. Only chrome elements (background, text, grid, legend/annotation boxes) have flipped to dark-theme values.
-      Legibility verdict: PASS — all text readable against near-black background. Data colors unchanged between themes.
+      Background: Warm near-black, matches #1A1A17 target — not pure black, not light.
+      Chrome: Same title, subtitle, and axis titles now rendered in light cream/gray text; gridlines, legend box, and annotation boxes all flip to dark-elevated fills (#242420) with light borders and light text. All text (title, axis titles, legend, annotation boxes) is clearly readable — no dark-on-dark failures found anywhere.
+      Data: The six cluster colors are pixel-identical to the light render — only chrome flipped, as required. Erythrocytes red (#AE3030) still reads clearly against the near-black background.
+      Legibility verdict: PASS
+
+    Canvas measured at 3200×1800 (landscape) with no clipping on any edge (title, legend, axis titles, and annotation boxes all fully inside the canvas in both renders); the canvas-dimension gate file was absent, confirming the automated size check passed.
+
+    Typography hierarchy note (affects VQ-01/DE-01 scoring, not legibility pass/fail): legend title (18px) and centroid annotation labels (17px bold) render visibly larger than the main chart title (13px) once scale=4 is applied — the title should remain the single largest, most dominant text element per the style guide.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis 22px, legend 16-18px.
-          Both themes readable.'
+        comment: 'All text readable in both themes with no light-on-light/dark-on-dark
+          issues, but hierarchy is inverted: legend title (18px) and annotation labels
+          (17px bold) render larger than the main title (13px).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clusters well-separated, centroid labels do not collide.
+        comment: No collisions between text, legend, annotations, or data in either
+          render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: size=8 with opacity=0.65 appropriate for ~250 points per cluster.
-          Markers clearly visible.
+        comment: Marker size 9 with opacity 0.65 and subtle same-bg edge stroke appropriately
+          handles the ~250-point-per-cluster density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe. Good luminance contrast between clusters.
+        comment: Imprint palette is CVD-safe; clusters are spatially separated with
+          direct text labels providing redundant encoding beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape, plot fills canvas well, balanced margins (80px),
-          legend placed right.
+        comment: 3200×1800 canvas confirmed, title ~62% width, no overflow or clipping
+          in either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: t-SNE Dimension 1 / t-SNE Dimension 2 — correct for embedding axes
-          (no units expected).
+        comment: Descriptive axis titles (t-SNE Dimension 1/2); tick labels correctly
+          hidden since coordinates aren't directly interpretable.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Technology). Strict Okabe-Ito order. Backgrounds
-          #FAF8F1 light / #1A1A17 dark. All chrome tokens correct in both renders.'
+        comment: 'First series #009E73 confirmed; semantic-exception red for Erythrocytes
+          documented; backgrounds match #FAF8F1/#1A1A17 in both themes.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above well-configured defaults: themed annotation boxes, correct
-          palette, subtitle. Not yet FiveThirtyEight level.'
+        passed: false
+        comment: Thoughtful semantic color choice and annotation styling, but the
+          persisting typography hierarchy inversion undercuts the case for fully intentional
+          hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle 10% opacity grid, tick labels suppressed, warm backgrounds.
-          Axis spine lines still visible.
+        comment: Spines removed, grid subtle (10% opacity), generous margins and whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Centroid annotations directly label clusters, guiding the viewer.
-          Clear visual hierarchy via distinct Okabe-Ito colors. t-SNE structure tells
-          the separation story.
+        comment: Direct centroid labels plus spatial cluster separation create a clear,
+          guided reading with distinct focal points.
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +156,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter plot with actual TSNE dimensionality reduction on 50-D synthetic
-          data.
+        comment: Correct 2D embedding scatter plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: colored clusters, legend, centroid annotations, alpha=0.65,
-          subtitle with algorithm+parameter, no tick labels.'
+        comment: Colorblind-safe palette + legend, centroid annotations, moderate
+          alpha-blended markers, algorithm/parameter subtitle, hidden tick labels.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y = t-SNE dimensions 1 and 2. All 1500 points visible across 6
-          clusters.
+        comment: x/y map to t-SNE dimensions 1/2; all points shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains scatter-embedding · plotly · anyplot.ai. Legend shows
-          all 6 topic labels.
+        comment: Title matches required format with descriptive prefix; legend labels
+          match the six cell types.
     data_quality:
       score: 15
       max: 15
@@ -164,22 +186,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 clusters with distinct positions and varying spatial spread. Demonstrates
-          cluster separation, the key insight of embedding visualization.
+        comment: Covers clustering, coloring, legend, centroid labels, and algorithm/parameter
+          subtitle.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Document topic clustering (Technology/Science/Sports/Politics/Entertainment/Health)
-          is a genuine NLP use case. Neutral topic categories.
+        comment: Named immune cell types on a synthetic single-cell RNA-seq embedding
+          — plausible and neutral, explicitly labeled synthetic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1500 points (within 500-5000 spec range). 50-D make_blobs + TSNE
-          is a realistic synthetic embedding workflow.
+        comment: 1,500 points across 6 clusters, within the spec's 500-5000 point
+          guidance.
     code_quality:
       score: 10
       max: 10
@@ -189,54 +211,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data (theme tokens, synthetic data, TSNE) → Plot (traces,
-          annotations, layout) → Save. No functions or classes.
+        comment: Flat script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and TSNE(random_state=42) both set.
+        comment: np.random.seed(42) plus random_state=42 on make_blobs and TSNE.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 5 imports used: os, numpy, plotly.graph_objects, sklearn.datasets.make_blobs,
-          sklearn.manifold.TSNE.'
+        comment: Only os, numpy, plotly.graph_objects, sklearn make_blobs/TSNE — all
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Loop over topics for traces and annotations
-          is appropriate.
+        comment: Appropriately concise; no fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No deprecated functions.
+        comment: Saves plot-{theme}.png via write_image and plot-{theme}.html via
+          write_html.
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: go.Figure with add_trace per group, add_annotation for centroids,
-          update_layout with full theme config, write_image + write_html. Expertly
-          idiomatic.
+        comment: Standard go.Figure/go.Scatter per-trace pattern, correctly used.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses plotly-specific add_annotation with bgcolor/bordercolor, HTML
-          export. Hover templates and custom hover data (distinctive plotly strengths)
-          not leveraged.
+        passed: false
+        comment: hovertemplate and add_annotation are basic API usage; no plotly-distinctive
+          capability (px faceting, updatemenus, subplots) demonstrated.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -248,7 +266,8 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - tsne
+  - dimensionality-reduction
   styling:
   - alpha-blending
   - edge-highlighting
+  - minimal-chrome
