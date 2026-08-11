@@ -1,8 +1,10 @@
 // anyplot.ai
 // count-basic: Basic Count Plot
-// Library: muix 7.29.1 | JavaScript 22.23.1
+// Library: MUI X Charts | React | Node 22
+// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: 88/100 | Created: 2026-08-11
 import { BarChart } from "@mui/x-charts/BarChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -51,6 +53,7 @@ for (const ticketType of rawTickets) {
 const sortedEntries = [...countByType.entries()].sort((a, b) => b[1] - a[1]);
 const categories = sortedEntries.map(([category]) => category);
 const counts = sortedEntries.map(([, count]) => count);
+const meanCount = counts.reduce((sum, c) => sum + c, 0) / counts.length;
 
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width; // 1600 CSS px (landscape mount)
@@ -88,38 +91,54 @@ export default function Chart() {
               data: categories,
               label: "Support Ticket Category",
               disableTicks: true,
-              labelStyle: { fontSize: 15, fill: t.ink },
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              disableLine: true,
+              labelStyle: { fontSize: 16, fill: t.ink },
+              tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
               categoryGapRatio: 0.4,
             },
           ]}
           yAxis={[
             {
               label: "Number of Tickets",
-              labelStyle: { fontSize: 15, fill: t.ink },
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              labelStyle: { fontSize: 16, fill: t.ink },
+              tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
               // tickFontSize only sizes the *reserved layout offset* between the
               // tick labels and the axis label (tickLabelStyle.fontSize above
               // wins for the rendered glyph size) — bumped so 3-digit counts
               // don't collide with the vertical "Number of Tickets" label.
-              tickFontSize: 34,
+              tickFontSize: 36,
               disableTicks: true,
+              disableLine: true,
               max: Math.max(...counts) * 1.15,
             },
           ]}
           series={[{ data: counts, label: "Tickets" }]}
           barLabel="value"
-          margin={{ top: 14, right: 40, bottom: 90, left: 90 }}
+          margin={{ top: 14, right: 40, bottom: 90, left: 96 }}
           grid={{ horizontal: true }}
           slotProps={{
             legend: { hidden: true },
-            barLabel: { style: { fontSize: 14, fontWeight: 600, fill: t.ink } },
+            barLabel: { style: { fontSize: 15, fontWeight: 600, fill: t.ink } },
           }}
           sx={{
-            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
             "& .MuiChartsGrid-line": { stroke: t.grid },
           }}
-        />
+        >
+          {/* Mean reference line: turns "6 bars" into "which categories run
+              above/below the average ticket volume" — lands in open canvas at
+              the right (short bars), never crossing the in-bar value labels. */}
+          <ChartsReferenceLine
+            y={meanCount}
+            label={`Avg ${Math.round(meanCount)}`}
+            labelAlign="end"
+            lineStyle={{
+              stroke: t.inkSoft,
+              strokeDasharray: "6 4",
+              strokeWidth: 1.5,
+            }}
+            labelStyle={{ fill: t.inkSoft, fontSize: 13, fontWeight: 500 }}
+          />
+        </BarChart>
       </Box>
     </Box>
   );
