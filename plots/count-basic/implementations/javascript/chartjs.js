@@ -1,7 +1,7 @@
 // anyplot.ai
 // count-basic: Basic Count Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.1
-// Quality: 88/100 | Created: 2026-08-11
+// Quality: 94/100 | Created: 2026-08-11
 
 const t = window.ANYPLOT_TOKENS;
 
