@@ -1,14 +1,32 @@
 """ anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-07
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-08-11
 """
 
 import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *
+from lets_plot import (
+    LetsPlot,
+    aes,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_hline,
+    geom_label,
+    geom_point,
+    geom_rect,
+    ggplot,
+    ggsave,
+    ggsize,
+    labs,
+    layer_tooltips,
+    theme,
+    theme_minimal,
+)
 
 
 LetsPlot.setup_html()
@@ -19,11 +37,11 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID_COLOR = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette
+# Imprint palette
 BRAND = "#009E73"  # Position 1 - first categorical series
-SECONDARY = "#C475FD"  # Position 2
-ACCENT = "#4467A3"  # Position 3
+SECONDARY = "#C475FD"  # Position 2 - limits of agreement
 
 # Data: Simulated blood pressure readings from two sphygmomanometers
 np.random.seed(42)
@@ -47,18 +65,25 @@ std_diff = np.std(diff_values, ddof=1)
 upper_loa = mean_diff + 1.96 * std_diff
 lower_loa = mean_diff - 1.96 * std_diff
 
-# Create DataFrame
-df = pd.DataFrame({"mean": mean_values, "diff": diff_values})
+# Point-level data - also drives the interactive hover tooltips
+df = pd.DataFrame({"method1": method1, "method2": method2, "mean": mean_values, "diff": diff_values})
 
-# Annotation data - position labels at the left side with offset from line
-annot_x = df["mean"].min() + 2
-y_offset = 0.8
+# Agreement band: shaded rectangle spanning the limits of agreement
+x_pad = (df["mean"].max() - df["mean"].min()) * 0.05
+band_df = pd.DataFrame(
+    {"xmin": [df["mean"].min() - x_pad], "xmax": [df["mean"].max() + x_pad], "ymin": [lower_loa], "ymax": [upper_loa]}
+)
+
+# Annotation labels, right-aligned with extra headroom past the data range so the
+# label never sits on top of whichever point happens to be rightmost
+annot_x = df["mean"].max() + x_pad * 3
+y_offset = 1.0
 annot_df = pd.DataFrame(
     {
         "x": [annot_x, annot_x, annot_x],
         "y": [mean_diff + y_offset, upper_loa + y_offset, lower_loa - y_offset],
         "label": [
-            f"Mean Bias: {mean_diff:.2f} mmHg",
+            f"Mean bias: {mean_diff:.2f} mmHg",
             f"+1.96 SD: {upper_loa:.2f} mmHg",
             f"-1.96 SD: {lower_loa:.2f} mmHg",
         ],
@@ -69,47 +94,64 @@ annot_df = pd.DataFrame(
 # Build plot with theme-adaptive styling
 plot = (
     ggplot()
-    + geom_point(aes(x="mean", y="diff"), data=df, color=BRAND, size=6, alpha=0.7, stroke=0.5)
-    + geom_hline(yintercept=mean_diff, color=BRAND, size=1.5)
-    + geom_hline(yintercept=upper_loa, color=SECONDARY, size=1.2, linetype="dashed")
-    + geom_hline(yintercept=lower_loa, color=SECONDARY, size=1.2, linetype="dashed")
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), data=band_df, fill=SECONDARY, alpha=0.08, size=0
+    )
+    + geom_point(
+        aes(x="mean", y="diff"),
+        data=df,
+        color=BRAND,
+        size=2.5,
+        alpha=0.7,
+        stroke=0.4,
+        tooltips=layer_tooltips()
+        .line("Method 1|@method1")
+        .line("Method 2|@method2")
+        .line("Mean|@mean")
+        .line("Difference|@diff"),
+    )
+    + geom_hline(yintercept=mean_diff, color=BRAND, size=1.2)
+    + geom_hline(yintercept=upper_loa, color=SECONDARY, size=0.7, linetype="dashed")
+    + geom_hline(yintercept=lower_loa, color=SECONDARY, size=0.7, linetype="dashed")
     + geom_label(
         aes(x="x", y="y", label="label"),
         data=annot_df[annot_df["line_type"] == "bias"],
-        size=12,
+        size=4,
         color=BRAND,
         fill=ELEVATED_BG,
-        hjust=0,
+        hjust=1,
         label_padding=0.3,
+        label_r=0.1,
     )
     + geom_label(
         aes(x="x", y="y", label="label"),
         data=annot_df[annot_df["line_type"] == "loa"],
-        size=12,
+        size=4,
         color=SECONDARY,
         fill=ELEVATED_BG,
-        hjust=0,
+        hjust=1,
         label_padding=0.3,
+        label_r=0.1,
     )
     + labs(
         x="Mean of Two Methods (mmHg)",
         y="Difference (Method 1 - Method 2) (mmHg)",
-        title="bland-altman-basic · letsplot · anyplot.ai",
+        title="bland-altman-basic · python · letsplot · anyplot.ai",
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid_major=element_line(color=INK, size=0.3, linetype="solid"),
+        panel_grid_major=element_line(color=GRID_COLOR, size=0.3, linetype="solid"),
         panel_grid_minor=element_blank(),
-        plot_title=element_text(size=24, color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=16, color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.5),
     )
 )
 
 # Save PNG and HTML with theme-suffixed filenames
-ggsave(plot, f"plot-{THEME}.png", scale=3, path=".")
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
 ggsave(plot, f"plot-{THEME}.html", path=".")
