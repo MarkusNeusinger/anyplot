@@ -2,117 +2,133 @@ library: altair
 language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:12:18Z'
-updated: '2026-05-07T13:05:32Z'
-generated_by: claude-haiku
-workflow_run: 25497277770
+updated: '2026-08-11T13:02:28Z'
+generated_by: claude-sonnet
+workflow_run: 31492795267
 issue: 2028
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 89
 review:
   strengths:
-  - Perfect theme adaptation in both light and dark renders with readable text
-  - Correct Okabe-Ito palette usage with good visual contrast
-  - All spec requirements met and excellently presented
-  - Clean, reproducible code with explicit font sizing
-  - Professional annotations (R² and equation) enhance data storytelling
-  - Realistic and plausible data demonstrating the quadratic relationship
+  - Title now correctly reads 'scatter-regression-polynomial · python · altair · anyplot.ai'
+    — the attempt-1 SC-04 fix landed cleanly.
+  - Clip ceiling raised from 30 to 36 (well above the curve's ~31.4 peak) so the plateau
+    region no longer shows an artificial flat row of points — the DQ-03 clipping artifact
+    from attempt 1 is resolved.
+  - 'New peak marker (diamond) + ''Peak: 30.9 t/ha @ 6.4 kg/ha'' label gives the chart
+    a clear focal point and directly strengthens data storytelling — exactly the DE-03
+    fix requested in attempt 1.'
+  - Confidence band, regression curve, and R²/equation annotation are all present
+    and correctly derived from the same np.polyfit(x, y, 2) fit, matching the spec's
+    'display R² prominently' and 'annotate with the polynomial equation' notes.
+  - 'Both light and dark renders are fully theme-correct: warm off-white/near-black
+    backgrounds, no dark-on-dark or light-on-light text, identical data colors between
+    themes (only chrome flips).'
   weaknesses:
-  - Design Excellence is solid but not exceptional; feels like a well-executed default
-    rather than custom aesthetic
-  - Could leverage more of Altair's interactive features (selection, cross-filtering)
-    to push Library Mastery higher
+  - Design execution is competent but still fairly standard for this catalog stage
+    (band + curve + peak marker + annotation is now a common recipe) — grid, spines,
+    and typography are all default-refined rather than distinctively customized.
+  - Hover-driven size/opacity condition remains the only distinctly altair-flavored
+    technique — no faceting, scale/legend customization, or other Vega-Lite-unique
+    capability to showcase deeper library mastery.
+  - The peak label sits close to nearby scatter points around x=6.5-7.5 in the plateau
+    region; not overlapping in the current render, but there is limited clearance
+    — worth keeping an eye on if data/seed ever changes.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title "scatter-regression-polynomial · altair · anyplot.ai" is clearly visible in dark text. Axis labels "Fertilizer (kg/ha)" and "Crop Yield (tons/ha)" with units are readable. Tick labels (0-30 on Y, 0-10 on X) are clearly visible. R² annotation (0.853) and equation are prominently positioned in upper left in bold and secondary text. Grid lines are subtle but visible.
-      Data: Green scatter points (#009E73) showing 80 data points with moderate transparency. Orange regression curve (#D55E00) smoothly fits through the scatter, clearly visually distinct.
-      Legibility verdict: PASS - All text is readable with good contrast against the light background. No overlap or legibility issues.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "scatter-regression-polynomial · python · altair · anyplot.ai" centered at top (language token now present). X-axis labeled "Fertilizer (kg/ha)" (0.0-10.0), Y-axis labeled "Crop Yield (tons/ha)" (0-40). Subtle light-gray gridlines on both axes. Tick labels in soft dark gray.
+      Data: Green (#009E73) scatter points with a thin light stroke trace a rising-then-plateauing-then-falling arc. A solid purple (#C475FD) regression curve overlays the scatter with a semi-transparent purple confidence band. A dark diamond marker sits at the curve's vertex with a bold "Peak: 30.9 t/ha @ 6.4 kg/ha" label above it. Bold "R² = 0.825" and lighter "y = -0.55x² + 7.05x + 8.46" annotations sit in the upper-left, clear of data. The plateau region (x ≈ 4-9) no longer shows an artificial flat cap of points - values vary naturally up to ~34.
+      Legibility verdict: PASS - all text (title, axis titles, tick labels, annotations, peak label) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title and axis labels are now in light text (#F0EFE8) with excellent contrast against the dark background. Tick labels use secondary light color (#B8B7B0). R² and equation annotations remain readable. Grid lines are subtle and visible. No dark-on-dark failures detected.
-      Data: Green scatter points (#009E73) are identical to light render. Orange regression curve (#D55E00) is identical to light render. Only the chrome has changed (background, text colors, grid colors flipped to dark theme).
-      Legibility verdict: PASS - All text is readable with proper light-colored text on dark background. No dark-on-dark contrast failures. Data colors are unchanged from light render.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title and axis labels, now rendered in white/light-gray text, centered at top and along the axes. Gridlines are faint but still visible against the dark surface.
+      Data: Identical green (#009E73) scatter points and purple (#C475FD) curve/band as the light render - only chrome (background, text, grid) flips between themes, confirming palette consistency. The peak diamond marker now uses a light fill (theme-adaptive INK token) with a dark stroke so it stays visible against the dark confidence band; the peak label is rendered in light text and remains fully legible.
+      Legibility verdict: PASS - no dark-on-dark failures; all text and data markers are clearly distinguishable from the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28, labels=22, ticks=18); perfectly
-          readable in both themes
+        comment: Explicit font sizes throughout; all text (title, axes, ticks, R²/equation,
+          peak label) readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; R² and equation well-positioned in upper left
+        comment: New peak marker/label placed clear of scatter, curve, and other annotations;
+          no collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 80 scatter points well-sized; orange regression curve clearly distinguishable
+        comment: 80 points at moderate size/opacity with hover emphasis; peak diamond
+          is prominent and distinct.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good luminance contrast between green
-          and orange
+        comment: Green/purple pairing has strong contrast and is not a red-green-only
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 55-70% of canvas with balanced margins; well-proportioned
+        comment: Canvas gate passed (no drift file present); title, axes, and legend
+          proportions balanced, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Fertilizer (kg/ha), Crop Yield (tons/ha)'
+        comment: Axis titles include units (kg/ha, tons/ha).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; second #D55E00; backgrounds correct; text
-          theme-adaptive; data colors identical across themes'
+        comment: 'First series #009E73; secondary uses correct Imprint slot 2 (#C475FD);
+          backgrounds match theme tokens in both renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Well-configured Okabe-Ito palette with explicit typography. Professional
-          but feels like a strong default rather than exceptional
+        comment: Custom palette, confidence band, and peak-vertex annotation add real
+          polish above generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid (opacity 0.10), clean axis configuration, good whitespace
-          balance
+        passed: false
+        comment: View border removed, subtle grid opacity — solid but standard refinement,
+          unchanged from attempt 1.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear visual hierarchy with orange curve as focal point. Annotations
-          effectively communicate relationship strength and form
+        comment: New peak marker + label gives a clear focal point and sharpens the
+          story, directly addressing attempt-1 feedback.
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter plot with polynomial regression curve correctly implemented
+        comment: Correct scatter + polynomial (degree-2) regression.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: scatter, degree-2 curve, R², equation, transparency,
-          labels'
+        comment: R², equation, confidence band, moderate-alpha scatter, and now a
+          peak annotation all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; data fills axes appropriately
+        comment: X/Y correctly mapped; full data range shown on both axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed (two clearly distinguished
-          series)
+        comment: Title now reads 'scatter-regression-polynomial · python · altair
+          · anyplot.ai' — the missing language token from attempt 1 is fixed.
     data_quality:
       score: 15
       max: 15
@@ -152,20 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete quadratic relationship shown across full range
+        comment: Scatter, curve, band, R², equation, and peak annotation all shown
+          together.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Crop yield vs. fertilizer is classic real-world agricultural example;
-          neutral scenario
+        comment: Fertilizer vs. crop yield is plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values are plausible; diminishing returns pattern is realistic
+        comment: Clip ceiling raised to 36 (well above the ~31.4 peak) — the attempt-1
+          artificial flat-cap artifact is gone; values vary naturally.
     code_quality:
       score: 10
       max: 10
@@ -175,56 +192,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, fit, layers, configure, save. No unnecessary
-          functions'
+        comment: No functions/classes, flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at beginning
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, altair, numpy, pandas'
+        comment: All imports used (os, altair, numpy, pandas, PIL.Image).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. No fake UI
+        comment: No fake UI; real hover interactivity via alt.selection_point.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current API
+        comment: Saves plot-{THEME}.png (padded to canonical canvas) and plot-{THEME}.html
+          via current altair API.
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent use of Altair''s declarative API: mark_circle, mark_line,
-          layer composition, configure_axis, theme-adaptive configuration'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Layer composition, text annotations, theme-adaptive tokens. Could
-          explore more interactive features unique to Altair
+        comment: Layered chart composition, alt.Title, configure_* chaining are idiomatic
+          altair.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Hover selection with conditional encoding is still the only distinctly
+          altair-flavored feature; no faceting or other Vega-Lite-unique capability.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - layer-composition
   - annotations
+  - hover-tooltips
+  - layer-composition
   - html-export
   patterns:
   - data-generation
@@ -232,3 +251,4 @@ impl_tags:
   - regression
   styling:
   - alpha-blending
+  - edge-highlighting
