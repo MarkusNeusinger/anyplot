@@ -138,6 +138,40 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The pipeline's safety net had three holes, and one of them was armed** — follow-up to #10179,
+  which stopped PRs *entering* the dead-end; this stops them *staying* there.
+  (1) `watchdog-stuck-jobs.yml` called `gh workflow run` bare under `set -euo pipefail`, so a
+  single unroutable dispatch aborted the entire scan and every PR after it went unscanned — the
+  safety net failing silently, where nothing else is watching. Five of fourteen scheduled scans
+  died this way on 2026-08-02..04 with HTTP 422 `Cannot trigger a 'workflow_dispatch' on a
+  disabled workflow`, because `daily-regen.yml` is disabled manually while the watchdog's
+  cron-liveness rescue keeps trying to revive it — and the log announced `→ dispatching` *before*
+  attempting, so the run reported rescues it never performed. Dispatch failures are now counted
+  and reported, never fatal, with a disabled target called out as the non-transient case it is;
+  the log line now follows the attempt. This was live: `daily-regen` last ran 16:51 UTC against a
+  10 h liveness threshold, so the next scan after 02:51 UTC would have died again.
+  (2) `ai-rejected` + `ai-attempt-N` matched **no** watchdog case — Case 2 excluded any verdict
+  label, Case 4 excluded any attempt label — which is exactly the state `impl-review.yml` leaves
+  behind when its `impl-repair` dispatch fails, as its own comment says. PR #9949 sat in it for
+  ten days. Case 2 now excludes only `ai-approved` (Case 3's business); the existing age guard
+  and `watchdog:repair-rescued-N` marker keep it from racing an in-flight repair.
+  (3) `ai-review-rescued` was written once and cleared by nothing, so it meant "this PR was ever
+  rescued" rather than "this failure streak was already rescued" — any PR that failed review
+  twice in its life was permanently outside automation, which described 9 of the 11 PRs stuck on
+  2026-08-05. A successful review now clears it along with `ai-review-failed`.
+  (4) The cron-liveness rescue treated a manually disabled `daily-regen` as a starved schedule.
+  It is not: the maintainer switches that workflow off and on to manage the monthly token budget,
+  so reviving it would override a deliberate decision, and "starved, re-dispatching" was simply a
+  false report — one that could never succeed anyway, since a disabled workflow rejects
+  `workflow_dispatch`. Section C now reads the workflow state first and skips the rescue for any
+  disabled state, quietly for `disabled_manually` and loudly for GitHub's 60-day
+  `disabled_inactivity`. Verified with harnesses that extract `dispatch()` verbatim from the YAML
+  and replicate the Case 2 and Section C guards exactly: 25 cases covering a disabled target,
+  transient failure and success, a 100 KiB error message, counter propagation through the real
+  `while ... done < <(...)` scan loop, the six Case 2 label shapes, and the full workflow-state ×
+  quiet-window × gap matrix — each regression case checked to actually fail against the
+  pre-fix code (#10180).
+
 - **A correctly rejected plot was reported as a crashed review, deadlocking the PR** —
   `impl-review.yml` used quality score `0` as its sentinel for "the AI review produced no
   output", but `0` is also a score the review prompt *mandates*: the Stage 1 auto-reject gates

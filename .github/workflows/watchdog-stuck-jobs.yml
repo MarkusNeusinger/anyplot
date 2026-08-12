@@ -64,14 +64,54 @@ jobs:
           STALE_SEC=$(( STALE_HOURS * 3600 ))
           NOW=$(date -u +%s)
 
+          DISPATCH_FAILURES=0
+
+          # A failed dispatch must never abort the scan. This function used to
+          # call `gh workflow run` bare under `set -e`, so a single unroutable
+          # dispatch killed the whole run and every PR after it went unscanned
+          # — the safety net failing silently, in the one place where nothing
+          # else is watching. That is what happened on 2026-08-02..04: five of
+          # fourteen scheduled scans died on HTTP 422 "Cannot trigger a
+          # 'workflow_dispatch' on a disabled workflow" because daily-regen.yml
+          # was disabled manually, while the log line above the failure had
+          # already announced "→ dispatching". The announcement now follows the
+          # attempt instead of preceding it, so the log cannot claim a dispatch
+          # that did not happen.
           dispatch() {
             local label="$1"; shift
             if [[ "$DRY_RUN" == "true" ]]; then
               echo "::notice::[dry-run] $label → gh workflow run $*"
-            else
-              echo "::notice::$label → dispatching"
-              gh workflow run "$@"
+              return 0
             fi
+
+            local err
+            if err=$(gh workflow run "$@" 2>&1); then
+              echo "::notice::$label → dispatched"
+              return 0
+            fi
+
+            # Truncate with parameter expansion, never a pipeline. The obvious
+            # `printf '%s' "$err" | head -c 300 | tr '\n' ' '` reintroduces the
+            # very bug this function exists to fix: once the message exceeds
+            # the pipe buffer, `head` exits after its 300 bytes, `printf` takes
+            # SIGPIPE and returns 141, `pipefail` propagates that to the
+            # assignment, and `set -e` kills the scan — in the error path, so
+            # only a pathological message would ever expose it. Measured on
+            # this runner: 60 000 bytes survives, 70 000 exits 141. Parameter
+            # expansion forks nothing and cannot fail. `::warning::` is
+            # line-oriented, so newlines must go or everything after the first
+            # one leaks into the raw log.
+            err=${err//$'\n'/ }
+            err=${err:0:300}
+            if [[ "$err" == *"disabled workflow"* ]]; then
+              # Not transient and not something a retry fixes — a human turned
+              # the workflow off. Report it plainly and keep scanning.
+              echo "::warning::${label} → SKIPPED, target workflow is disabled: ${err}"
+            else
+              echo "::warning::${label} → dispatch FAILED: ${err}"
+            fi
+            DISPATCH_FAILURES=$(( DISPATCH_FAILURES + 1 ))
+            return 0
           }
 
           ensure_label() {
@@ -125,11 +165,23 @@ jobs:
             fi
 
             # Case 2: stalled repair handoff
-            #   has ai-attempt-N + quality:M, no ai-approved/ai-rejected,
+            #   has ai-attempt-N + quality:M, not ai-approved,
             #   PR untouched for stale_hours → re-dispatch impl-repair
+            #
+            #   `ai-rejected` used to be excluded here, which left
+            #   `ai-rejected` + `ai-attempt-N` matching NO case at all: Case 2
+            #   rejected it for having a verdict, Case 4 for having an attempt
+            #   label. That combination is the exact state impl-review.yml
+            #   leaves behind when its impl-repair dispatch fails — its own
+            #   comment says so and tries to drop `ai-rejected` to escape into
+            #   this case, which only works when that removal also succeeds.
+            #   PR #9949 sat in it for ten days. Excluding only `ai-approved`
+            #   (Case 3's business) closes the hole; the age guard keeps a
+            #   normal in-flight repair from being re-dispatched, and the
+            #   `watchdog:repair-rescued-N` marker keeps it one-shot.
             if echo " $labels " | grep -qE " ai-attempt-[0-9]+ " \
                && echo " $labels " | grep -qE " quality:[0-9]+ " \
-               && ! echo " $labels " | grep -qE " (ai-approved|ai-rejected) " \
+               && ! echo " $labels " | grep -qE " ai-approved " \
                && (( age > STALE_SEC )); then
               attempt=$(echo " $labels " | grep -oP "ai-attempt-\K[0-9]+" | sort -nr | head -1)
               marker="watchdog:repair-rescued-$attempt"
@@ -310,9 +362,29 @@ jobs:
           # immediately after dispatch and would spill into it). Like the
           # cron, the window is UTC-fixed: it matches Berlin evening under
           # CEST and sits an hour earlier in local terms under CET.
+          #
+          # A manually disabled daily-regen is an INTENTIONAL operator state,
+          # not a starved schedule: the maintainer switches it off and on to
+          # manage the monthly token budget. Reviving it would override that
+          # decision, and "starved, re-dispatching" is simply a false report.
+          # Without this check the rescue also cannot succeed — a disabled
+          # workflow rejects workflow_dispatch with HTTP 422 — so every scan
+          # would log a warning and burn a dispatch failure for as long as the
+          # maintainer keeps it off, which is exactly the noise that hid the
+          # real breakage before. `disabled_inactivity` is GitHub switching
+          # schedules off after 60 days of repo inactivity; that one is worth
+          # flagging loudly, but it is equally undispatchable, so both states
+          # skip the rescue and only the message differs.
           LIVENESS_HOURS=10
           HOUR=$(date -u +%-H)
-          if (( HOUR >= 17 && HOUR <= 21 )); then
+          REGEN_STATE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/daily-regen.yml" \
+            --jq '.state' 2>/dev/null || echo "unknown")
+
+          if [[ "$REGEN_STATE" == "disabled_manually" ]]; then
+            echo "::notice::daily-regen liveness: workflow is disabled manually — intentional, rescue skipped"
+          elif [[ "$REGEN_STATE" == disabled_* ]]; then
+            echo "::warning::daily-regen liveness: workflow state is '${REGEN_STATE}' — cannot be dispatched, rescue skipped"
+          elif (( HOUR >= 17 && HOUR <= 21 )); then
             echo "::notice::daily-regen liveness: inside/adjacent to quiet window (UTC hour $HOUR) — check skipped"
           else
             # --branch main: schedule runs (and rescue dispatches) live on the
@@ -339,4 +411,15 @@ jobs:
             fi
           fi
 
-          echo "::notice::Watchdog scan complete"
+          # Surface the tally. Individual failures are warned about inline, but
+          # a scan that dispatched nothing successfully now looks identical to
+          # a quiet, healthy one unless the total is stated — and an
+          # always-green watchdog that quietly rescues nothing is the failure
+          # mode this whole PR is about. Deliberately not `exit 1`: aborting is
+          # what took the scan down in the first place, and a red run would
+          # hide the summary behind a failed step.
+          if (( DISPATCH_FAILURES > 0 )); then
+            echo "::warning::Watchdog scan complete — ${DISPATCH_FAILURES} dispatch(es) failed (see warnings above)"
+          else
+            echo "::notice::Watchdog scan complete — all dispatches succeeded"
+          fi

@@ -468,6 +468,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SCORE: ${{ steps.score.outputs.score }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           LABEL="quality:${SCORE}"
           gh label create "$LABEL" --color "0e8a16" --description "Quality score ${SCORE}/100" 2>/dev/null || true
@@ -481,6 +482,24 @@ jobs:
             echo "::notice::Removing stale quality labels: $STALE"
             gh pr edit "$PR_NUM" --remove-label "$STALE" 2>/dev/null || true
           fi
+
+          # Reaching this step means the review produced real output, so the
+          # previous failure streak is over. `ai-review-rescued` is the
+          # one-shot token both impl-review-retry.yml and watchdog Case 1
+          # check before rescuing; nothing ever cleared it, so it meant "this
+          # PR was rescued once, ever" instead of "this failure streak was
+          # already rescued once". A PR that failed review twice at any point
+          # in its life was therefore permanently outside automation — 9 of
+          # the 11 PRs stuck on 2026-08-05 carried this pair. Clearing both
+          # labels on a successful review restores the intended semantics.
+          # Deleted via the REST API: `gh pr edit --remove-label` fails on
+          # this repo with a GraphQL "Projects (classic) is being deprecated"
+          # error on repository.pullRequest.projectCards.
+          for OLD in ai-review-failed ai-review-rescued; do
+            if gh api -X DELETE "repos/${REPOSITORY}/issues/${PR_NUM}/labels/${OLD}" >/dev/null 2>&1; then
+              echo "::notice::Cleared ${OLD} — review succeeded, failure streak reset"
+            fi
+          done
 
           # Retry on transient GitHub API failures (e.g. 504) — without this,
           # a single 5xx leaves the PR stuck with no quality label and the
