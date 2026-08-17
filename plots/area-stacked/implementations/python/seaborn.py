@@ -1,8 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-07
+Quality: 82/100 | Updated: 2026-08-17
 """
+
+import os
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -11,56 +13,95 @@ import pandas as pd
 import seaborn as sns
 
 
-# Set seaborn style
-sns.set_theme(style="whitegrid")
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data: Monthly revenue by product category over 2 years
+# Imprint palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data: monthly energy consumption by sector over two years, with seasonality
 np.random.seed(42)
-months = pd.date_range("2023-01", periods=24, freq="ME")
+months = pd.date_range("2024-01", periods=24, freq="ME")
 
-# Create realistic revenue trends with seasonality
-base_electronics = 45 + np.sin(np.linspace(0, 4 * np.pi, 24)) * 8
-base_clothing = 35 + np.sin(np.linspace(0.5, 4.5 * np.pi, 24)) * 6
-base_home = 25 + np.sin(np.linspace(1, 5 * np.pi, 24)) * 5
-base_sports = 20 + np.sin(np.linspace(1.5, 5.5 * np.pi, 24)) * 4
+industrial_base = 48 + np.sin(np.linspace(0, 4 * np.pi, 24)) * 4
+residential_base = 34 + np.sin(np.linspace(np.pi, 5 * np.pi, 24)) * 9
+commercial_base = 26 + np.sin(np.linspace(0.6, 4.6 * np.pi, 24)) * 5
+transport_base = 16 + np.sin(np.linspace(1.2, 5.2 * np.pi, 24)) * 3
+agriculture_base = 9 + np.sin(np.linspace(1.8, 5.8 * np.pi, 24)) * 2
 
-# Add slight growth trend and noise
-growth = np.linspace(1, 1.15, 24)
-electronics = (base_electronics * growth + np.random.randn(24) * 2).clip(20)
-clothing = (base_clothing * growth + np.random.randn(24) * 1.5).clip(15)
-home = (base_home * growth + np.random.randn(24) * 1.2).clip(10)
-sports = (base_sports * growth + np.random.randn(24) * 1).clip(8)
+growth = np.linspace(1.0, 1.18, 24)
+industrial = (industrial_base * growth + np.random.randn(24) * 1.5).clip(30)
+residential = (residential_base * growth + np.random.randn(24) * 1.5).clip(15)
+commercial = (commercial_base * growth + np.random.randn(24) * 1.2).clip(12)
+transport = (transport_base * growth + np.random.randn(24) * 0.8).clip(8)
+agriculture = (agriculture_base * growth + np.random.randn(24) * 0.5).clip(4)
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+sectors = ["Industrial", "Residential", "Commercial", "Transport", "Agriculture"]
+series = [industrial, residential, commercial, transport, agriculture]
 
-# Define colors - Python Blue as primary, then harmonious palette
-colors = ["#306998", "#FFD43B", "#4ECDC4", "#FF6B6B"]
-labels = ["Electronics", "Clothing", "Home & Garden", "Sports"]
+# Plot — see default-style-guide.md "Visual Sizing Defaults" for canvas + sizing
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Stack the areas (ordered by typical size, largest at bottom)
-ax.stackplot(months, electronics, clothing, home, sports, labels=labels, colors=colors, alpha=0.85)
+ax.stackplot(months, *series, labels=sectors, colors=IMPRINT_PALETTE, alpha=0.92, edgecolor=PAGE_BG, linewidth=0.6)
 
-# Style the plot
-ax.set_xlabel("Month", fontsize=20)
-ax.set_ylabel("Revenue (Million $)", fontsize=20)
-ax.set_title("area-stacked · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+# A crisp ink-colored line traces the cumulative total for emphasis
+total = np.sum(series, axis=0)
+ax.plot(months, total, color=INK, linewidth=1.2, alpha=0.6, linestyle=(0, (1, 1.5)))
 
-# Format x-axis dates
+ax.set_xlabel("Month", fontsize=12, color=INK)
+ax.set_ylabel("Consumption (GWh)", fontsize=12, color=INK)
+ax.set_title("area-stacked · python · seaborn · anyplot.ai", fontsize=13, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=10, colors=INK_SOFT)
+
 ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
-plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
+plt.setp(ax.xaxis.get_majorticklabels(), rotation=40, ha="right")
 
-# Configure legend
-ax.legend(loc="upper left", fontsize=16, framealpha=0.9, title="Product Category", title_fontsize=18)
+# Legend sits outside the stacked area (fully filled top-to-bottom, no clear
+# gap to dock a legend inside) so it never occludes data.
+legend = ax.legend(
+    loc="upper left",
+    bbox_to_anchor=(1.01, 1.0),
+    fontsize=9,
+    framealpha=0.95,
+    title="Sector",
+    title_fontsize=10,
+    labelcolor=INK,
+)
+legend.get_frame().set_edgecolor(INK_SOFT)
+legend.get_title().set_color(INK)
 
-# Subtle grid
-ax.grid(True, alpha=0.3, linestyle="--")
+# Subtle y-axis grid only, per style guide
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
-# Ensure baseline starts at zero
+# L-shaped frame
+sns.despine(ax=ax)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
+
 ax.set_ylim(bottom=0)
+ax.margins(x=0)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
