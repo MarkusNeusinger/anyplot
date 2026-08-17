@@ -2,9 +2,9 @@ library: plotnine
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:39:55Z'
-updated: '2026-08-17T12:42:14Z'
+updated: '2026-08-17T13:03:24Z'
 generated_by: claude-sonnet
-workflow_run: 32029662441
+workflow_run: 32032116614
 issue: 2022
 language_version: 3.13.15
 library_version: 0.15.8
@@ -12,177 +12,172 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Theme-adaptive chrome is threaded correctly through INK/INK_SOFT tokens — both
-    light and dark renders are fully legible with no dark-on-dark or light-on-light
-    failures
-  - The dashed 'Total' line + label overlay explicitly surfaces the cumulative-traffic
-    story the specification calls out, going beyond a bare stacked area
-  - 'Correct Imprint palette in canonical order (#009E73, #C475FD, #4467A3, #BD8233),
-    identical data colors across both themes'
-  - 'Idiomatic plotnine grammar-of-graphics usage: geom_area(outline_type=''upper'')
-    gives a distinctive edge highlight, layered with geom_line/geom_text and scale_fill_manual'
-  - Baseline correctly starts at zero (expand=(0, 0, 0.08, 0)), avoiding the misleading-proportions
-    pitfall the spec warns about
-  - Clean, deterministic, reproducible code (np.random.seed(42)), no over-engineering,
-    no fake interactivity
+  - 'Imprint palette applied in canonical order with the first series correctly at
+    #009E73, and both renders keep the four data colors identical while only chrome
+    (background, ink, grid) flips between light and dark.'
+  - Baseline at zero and series ordered largest-at-bottom (Organic Search) exactly
+    as the spec's 'Notes' section requests, making the stack easy to read.
+  - Adds a dashed cumulative 'Total' trend line plus an end-of-series label — goes
+    beyond the spec's minimum requirements to make the composition-vs-total story
+    explicit, a genuine data-storytelling win.
+  - 'Clean theme-adaptive chrome: PAGE_BG/INK/INK_SOFT tokens threaded through plot/panel
+    background, title, axis text, and legend correctly for both themes.'
+  - Subtle upper-edge outline on the area bands plus a near-invisible y-only grid
+    and no spines gives a polished, uncluttered look.
+  - Single-script KISS structure, seeded (np.random.seed(42)) for reproducibility,
+    correct 8x4.5in / 3200x1800px landscape canvas, and clean imports with nothing
+    unused.
   weaknesses:
-  - 'Series stacking order is inverted relative to the spec: ''Organic Search'' (the
-    largest series) renders at the TOP of the stack and ''Social Media'' (the smallest)
-    at the very bottom — the opposite of the spec''s ''Order series by size (largest
-    at bottom) for easier reading'' note. The code comment claims position_stack(reverse=True)
-    puts Organic Search at the bottom, but the rendered output shows the opposite;
-    flip the reverse flag (or drop it) and re-check the resulting fill order against
-    source_order to fix this.'
-  - Legend keeps a visible box border/frame (legend_background border=INK_SOFT) —
-    the style guide's decoration-removal checklist suggests dropping box frames around
-    legends for a more polished look.
+  - Legend frame renders as a solid black border in BOTH the light and dark renders
+    (legend_background=element_rect(fill=ELEVATED_BG, color=None) falls back to matplotlib's
+    default black edge instead of a theme-derived color) — the chrome doesn't actually
+    adapt between themes here. Set the legend border explicitly from INK_SOFT (or
+    make it fully transparent) so it matches the rest of the theme-adaptive elements.
+  - The 'Total' geom_text label uses size=7, which in plotnine's geom_text is mm-based
+    (~2.845x factor, so ~20pt) — notably larger than the 8pt axis tick text it sits
+    next to. It reads fine in the render but is inconsistent with the annotation sizing
+    guidance (annotation size should be ~2.5-4mm, not on the same numeric scale as
+    element_text). Reduce to ~3-4 for visual consistency.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1, not pure white.
-      Chrome: bold dark title "area-stacked · python · plotnine · anyplot.ai" at top; axis titles "Month" (x) and "Monthly Visitors (thousands)" (y) in dark ink; rotated 45° date tick labels (Jan 2023 ... Jan 2025) in soft dark gray; thin subtle horizontal gridlines only; bordered legend box "Traffic Source" at right listing Organic Search / Direct / Referral / Social Media with color swatches.
-      Data: four stacked bands from bottom to top — Social Media (ochre #BD8233), Referral (blue #4467A3), Direct (lavender #C475FD), Organic Search (green #009E73) — each with a subtle ink outline on its upper edge; a dashed dark "Total" trend line runs along the top of the stack with a "Total" text label at the right end.
-      Legibility verdict: PASS (title, axis titles, tick labels, and legend text are all clearly readable against the light background; no overlap or clipping observed).
+      Background: Warm off-white (#FAF8F1), matches the light-theme spec, not pure white.
+      Chrome: Bold dark title "area-stacked · python · plotnine · anyplot.ai" clearly readable at top. Rotated (45deg) dark-gray x-axis tick labels (month/year) are legible. Y-axis title "Monthly Visitors (thousands)" (rotated) and dark axis titles are crisp. A near-invisible horizontal grid (y-only, low alpha) is present but not distracting. Legend box "Traffic Source" with 4 swatches and black text sits at the right, fully readable, though its border renders solid black (see weaknesses).
+      Data: Four stacked bands bottom-to-top: Organic Search (#009E73, first series correct), Direct (#C475FD), Referral (#4467A3), Social Media (#BD8233) — canonical Imprint order, largest series (Organic Search) at the bottom per spec. A dashed dark line traces the running total across the top of the stack, with a small "Total" label at the right end. Baseline starts at 0.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17, not pure black.
-      Chrome: title, axis titles, and tick labels flip to light/off-white and soft light-gray tones; gridlines remain subtle; legend box background lightens to the elevated dark tone with a light-gray border; the dashed "Total" line and label render in off-white instead of dark ink.
-      Data: identical four-color stack (Social Media ochre, Referral blue, Direct lavender, Organic Search green) — same hex values as the light render, confirming only chrome flipped.
-      Legibility verdict: PASS (all text is light-colored against the dark background; no dark-on-dark failures observed; brand green remains clearly visible).
+      Background: Warm near-black (#1A1A17), matches the dark-theme spec, not pure black.
+      Chrome: Title, axis titles, and tick labels all render in light ink/off-white and are clearly readable against the dark background — no dark-on-dark failures observed. Grid remains subtle. Legend text is light-colored and readable against the dark elevated legend background, though the legend border is still solid black in this render too — not obviously wrong (readable), but not theme-adaptive either.
+      Data: Same four band colors, same stacking order, same dashed "Total" line and label as the light render — confirmed identical data colors, only chrome flipped as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); title, axis titles, tick
-          labels, and legend all well-proportioned and readable in both themes
+        comment: All text explicitly sized and readable in both themes; rotated x-tick
+          labels remain legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions observed; Total label sits clear of the legend
-          box
+        comment: No collisions between text, legend, or data elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Area bands and dashed total line clearly visible with appropriate
-          alpha (0.85) and outline strokes
+        comment: 24-point series with appropriately sized area bands and a clearly
+          visible dashed total line; no overplotting.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette hues are CVD-safe and distinguishable, reinforced
-          by subtle ink outlines
+        comment: Imprint palette (green/purple/blue/brown) is CVD-safe; no red-green
+          as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large, balanced portion of the canvas with legend adjacent,
-          nothing cut off
+        comment: Canvas gate passed (3200x1800 landscape); title ~55-60% width, nothing
+          clipped, balanced axis labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units ('Monthly Visitors (thousands)')
+        comment: Descriptive axis titles with units ('Monthly Visitors (thousands)',
+          'Month').
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Canonical Imprint order (#009E73, #C475FD, #4467A3, #BD8233), identical
-          across themes, correct theme-adaptive backgrounds'
+        passed: false
+        comment: 'First series is #009E73 and multi-series order matches canonical
+          Imprint order; backgrounds are theme-correct. Deducted because the legend
+          border renders solid black in both themes instead of adapting via theme
+          tokens.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        passed: true
-        comment: Thoughtful edge-outline styling and cumulative-total overlay, clearly
-          above library defaults
+        comment: Custom palette, subtle band outlines, and a deliberate cumulative-total
+          overlay show intentional polish beyond defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Grid subtle, spines effectively removed, generous whitespace; legend
-          box border is a minor unpolished detail
+        comment: Spines removed via theme_minimal, grid reduced to a faint y-only
+          line, generous whitespace; legend border is the one un-refined detail.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Dashed Total line + label creates a clear secondary focal point beyond
-          raw stacking
+        comment: The dashed 'Total' line with end label creates a clear secondary
+          focal point on top of the size-ordered stack, guiding the viewer to both
+          composition and trend.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct stacked area chart via geom_area + position_stack
+        comment: Correct stacked area chart via geom_area + position_stack.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: true
-        comment: Legend, semi-transparent fills, zero baseline all present; series
-          order violates the spec's 'largest at bottom' note (Organic Search renders
-          at the top)
+        comment: Distinct harmonious colors, largest-at-bottom ordering, legend present,
+          semi-transparent fills (alpha=0.85), zero baseline — all spec notes satisfied.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: Date on x, Visitors on y, full range visible
+        comment: X=Date, Y=Visitors, fill=Source; all 24 months and 4 series shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title matches required format exactly; legend labels match Source
-          categories
+        comment: Title matches 'area-stacked · python · plotnine · anyplot.ai' exactly;
+          legend labels match category names.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: true
-        comment: 24 months, 4 series with distinct trends and magnitudes, though no
-          series shows a clear decline
+        comment: Demonstrates stacking, individual contributions, and cumulative total
+          in one view.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Website traffic sources by month is a real, neutral business scenario
+        comment: Website traffic sources over 24 months — plausible, neutral, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Values and relative proportions among traffic sources are realistic
+        comment: Visitor counts (thousands) in a sensible range with realistic month-over-month
+          variation and trend.
     code_quality:
       score: 10
       max: 10
@@ -191,32 +186,28 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Linear imports → data → plot → save, no functions/classes
+        comment: No functions or classes; flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) makes output deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Only used imports
+        comment: All imports (including mizani.comma_format) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: Appropriately complex, no fake functionality
+        comment: Appropriate complexity for the plot; no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: plot.save('plot-{THEME}.png', dpi=400, ...) current API
+        comment: Saves plot-{THEME}.png via plot.save with matching width/height/dpi
+          for the landscape template.
     library_mastery:
       score: 7
       max: 10
@@ -225,19 +216,19 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Strong grammar-of-graphics composition (geom layers + scale + theme)
-          though stacking direction bug undercuts full mastery
+        comment: Idiomatic grammar-of-graphics composition (geom_area + geom_line
+          + geom_text layered, scale_fill_manual, theme_minimal).
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: geom_area(outline_type='upper') is a plotnine-specific capability
-          not trivially replicated elsewhere
+        comment: Uses plotnine-specific geom_area(outline_type='upper') and explicit
+          position_stack(reverse=True) factor-order control — real library-specific
+          mastery, though not the library's most advanced features.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - mizani
   techniques:
   - annotations
   - layer-composition
@@ -249,4 +240,4 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
