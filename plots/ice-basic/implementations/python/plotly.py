@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 90/100 | Created: 2026-05-07
@@ -60,22 +60,23 @@ for j, val in enumerate(sqft_grid):
 
 pdp = ice_preds.mean(axis=0)
 
-# ICE line colors from viridis mapped to house age
+# ICE line colors from the Imprint sequential colormap, mapped to house age
+IMPRINT_SEQ = ["#009E73", "#4467A3"]
 age_norm = (house_age - house_age.min()) / (house_age.max() - house_age.min())
-raw_colors = pc.sample_colorscale("viridis", age_norm.tolist())
+raw_colors = pc.sample_colorscale(IMPRINT_SEQ, age_norm.tolist())
 ice_colors = [c.replace("rgb(", "rgba(").replace(")", ", 0.30)") for c in raw_colors]
 
 # Plot
 fig = go.Figure()
 
-# ICE lines colored by house age (viridis)
+# ICE lines colored by house age (Imprint sequential)
 for i in range(n_houses):
     fig.add_trace(
         go.Scatter(
             x=sqft_grid,
             y=ice_preds[i],
             mode="lines",
-            line=dict(width=1.5, color=ice_colors[i]),
+            line=dict(width=1, color=ice_colors[i]),
             showlegend=False,
             hoverinfo="skip",
         )
@@ -88,7 +89,7 @@ fig.add_trace(
         y=pdp,
         mode="lines",
         name="Partial Dependence (PDP)",
-        line=dict(width=5, color=BRAND),
+        line=dict(width=3.5, color=BRAND),
         showlegend=True,
     )
 )
@@ -101,7 +102,7 @@ fig.add_trace(
         x=sqft,
         y=[y_rug] * n_houses,
         mode="markers",
-        marker=dict(symbol="line-ns", size=18, color=INK_SOFT, line=dict(width=1.5, color=INK_SOFT)),
+        marker=dict(symbol="line-ns", size=10, color=INK_SOFT, line=dict(width=1, color=INK_SOFT)),
         showlegend=False,
         hoverinfo="skip",
     )
@@ -114,14 +115,14 @@ fig.add_trace(
         y=[None],
         mode="markers",
         marker=dict(
-            colorscale="viridis",
+            colorscale=[[0.0, IMPRINT_SEQ[0]], [1.0, IMPRINT_SEQ[1]]],
             color=[house_age.min(), house_age.max()],
             cmin=house_age.min(),
             cmax=house_age.max(),
             colorbar=dict(
-                title=dict(text="House Age (yrs)", font=dict(size=18, color=INK_SOFT)),
-                tickfont=dict(size=16, color=INK_SOFT),
-                thickness=22,
+                title=dict(text="House Age (yrs)", font=dict(size=11, color=INK_SOFT)),
+                tickfont=dict(size=10, color=INK_SOFT),
+                thickness=14,
                 len=0.75,
                 x=1.02,
                 bgcolor=ELEVATED_BG,
@@ -137,12 +138,13 @@ fig.add_trace(
 
 # Style
 fig.update_layout(
+    autosize=False,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    title=dict(text="ice-basic · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    title=dict(text="ice-basic · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(
-        title=dict(text="Square Footage", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
+        title=dict(text="Square Footage (sq ft)", font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
         gridcolor=GRID,
         linecolor=INK_SOFT,
         zerolinecolor=GRID,
@@ -150,8 +152,8 @@ fig.update_layout(
         mirror=False,
     ),
     yaxis=dict(
-        title=dict(text="Predicted Sale Price (USD)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
+        title=dict(text="Predicted Sale Price (USD)", font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
         gridcolor=GRID,
         linecolor=INK_SOFT,
         zerolinecolor=GRID,
@@ -163,15 +165,15 @@ fig.update_layout(
         bgcolor=ELEVATED_BG,
         bordercolor=INK_SOFT,
         borderwidth=1,
-        font=dict(size=18, color=INK_SOFT),
+        font=dict(size=10, color=INK_SOFT),
         x=0.02,
         y=0.98,
         xanchor="left",
         yanchor="top",
     ),
-    margin=dict(l=80, r=140, t=80, b=80),
+    margin=dict(l=70, r=110, t=60, b=50),
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
