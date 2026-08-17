@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-20
+Library: letsplot 4.11.0 | Python 3.13.15
+Quality: 91/100 | Updated: 2026-08-17
 """
 
 import os
