@@ -2,120 +2,146 @@ library: altair
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:39:41Z'
-updated: '2026-05-07T15:21:46Z'
-generated_by: claude-haiku
-workflow_run: 25504654596
+updated: '2026-08-17T12:37:15Z'
+generated_by: claude-sonnet
+workflow_run: 32029497222
 issue: 2022
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.15
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 94
 review:
   strengths:
-  - Perfect visual quality with no text legibility issues in either theme
-  - Excellent theme adaptation with correct palette colors identical across light
-    and dark renders
-  - Clean, reproducible code with proper KISS structure
-  - Expert use of Altair's encoding and configuration system
-  - Realistic, well-structured example data showing product revenue composition
-  - Proper stacking order (largest at bottom) aids readability
-  - All spec requirements met with no omissions
+  - 'Title format is now correct: "area-stacked · python · altair · anyplot.ai" —
+    the attempt-1 SC-04 blocker is fixed'
+  - New "Revenue decline begins" annotation (point + text layered on the total-revenue
+    trace) gives the plot a genuine focal point and directly addresses the prior DE-03
+    feedback
+  - 'Correct Imprint palette in canonical order (Software #009E73, Hardware #C475FD,
+    Services #4467A3, Support #BD8233), pixel-identical data colors between light
+    and dark renders'
+  - Series stacked largest-to-smallest bottom-to-top per spec, with stack="zero" for
+    a true zero baseline
+  - 'Legend refined from attempt 1: two-line title ("Product Category" / "ordered
+    by size"), tighter symbol spacing (rowPadding, labelOffset), no symbol stroke'
+  - Both themes fully readable with ink tokens threaded through every chrome element
+    (title, axes, ticks, legend, annotation)
+  - Canvas correctly padded to the exact 3200×1800 target, no clipping at any edge
+  - Clean, reproducible, KISS code (single seed, no functions/classes) with idiomatic
+    alt.layer composition of area + line + point + text
   weaknesses:
-  - Design Excellence could be enhanced with additional visual refinement (e.g., per-series
-    opacity variation, gradient fills, or more sophisticated styling)
-  - Data storytelling could be more pronounced through additional visual emphasis
-    or narrative choice
+  - The new "Revenue decline begins" annotation text (INK color) sits directly over
+    the Services/Support area fill rather than in whitespace — measured contrast is
+    only ~3.6-3.8:1 against the blended area colors in both themes (borderline for
+    WCAG large-text 3:1, below normal-text 4.5:1). Still legible because the text
+    is bold, but consider a subtle light halo/background pill behind the text (or
+    nudging dy so it sits above the total line in the page-background band) for a
+    more robust contrast margin.
+  - Legend still uses a boxed frame (strokeColor=INK_SOFT) around the swatches — the
+    style guide's decoration checklist prefers removing box frames around legends
+    where possible for a more refined look
+  - 'Design Excellence is strong but not yet top-tier: color harmony and layering
+    show real intent, but the overall composition (legend box, straightforward area
+    fills) stops just short of publication-grade polish'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "area-stacked · altair · anyplot.ai" in dark text, X-axis "Month" and Y-axis "Revenue ($ thousands)" labels clearly visible in dark text, all tick labels readable, legend with "Product Category" title and category labels all readable
-      Data: Four stacked areas in Okabe-Ito colors - Software (#009E73, green) at bottom, Hardware (#D55E00, orange), Services (#0072B2, blue), Support (#CC79A7, reddish-purple) at top; first series is correct green; all boundaries distinct with 0.85 opacity
-      Legibility verdict: PASS - all text readable, no overlap, grid subtle and appropriate
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "area-stacked · python · altair · anyplot.ai" centered at top (language segment now present, fixing the attempt-1 defect). "Month" and "Revenue ($ thousands)" axis titles and rotated (-45°) tick labels render in dark/soft-dark ink, all clearly legible. Y-axis grid is subtle (opacity ~0.12); x-axis grid is off. Legend "Product Category / ordered by size" sits on the right in an off-white elevated box with a thin border and four swatches (Software/Hardware/Services/Support).
+      Data: Four stacked areas in canonical Imprint order — Software (#009E73, bottom, largest), Hardware (#C475FD), Services (#4467A3), Support (#BD8233, top, smallest) — with a subtle front-to-back opacity gradient (0.80→0.95), plus a dark dashed line tracing the summed total along the top of the stack. A circular marker + bold "Revenue decline begins" text callout sits at the March 2024 inflection point, overlapping the Services/Support boundary. First series is confirmed #009E73.
+      Legibility verdict: PASS overall. Minor caveat: the annotation text is dark INK directly over the mid-tone blue/ochre area fill, giving borderline contrast (~3.6-3.8:1) rather than crisp — still readable due to bold weight, but not optimal.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title in light text, axis labels in light colors, all tick labels visible and readable in light tones, legend readable with light text on dark background
-      Data: All four area colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7) - confirms proper theme-independent data colors; boundaries distinct
-      Legibility verdict: PASS - no dark-on-dark issues, all text light-colored and readable, grid maintains visibility, perfect theme adaptation
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now render in light ink (#F0EFE8 / #B8B7B0) against the dark surface — fully legible, no dark-on-dark failures anywhere (title, axis labels, ticks, legend box and border all switch to light/dark-elevated correctly). The dashed total line switches to a light dashed stroke, still clearly visible. The annotation point and text also switch to light ink and remain legible against the data area fills.
+      Data: The four area colors are pixel-identical to the light render (#009E73 / #C475FD / #4467A3 / #BD8233), confirming only chrome (background, text, grid, legend box) flips between themes. Brand green #009E73 reads well on the dark surface.
+      Legibility verdict: PASS overall, with the same borderline-contrast caveat on the annotation text as the light render (now measured against the darker blended area fills, ~3.6-3.8:1).
+
+    Both renders pass the theme-readability check (no light-on-light or dark-on-dark failures); the annotation contrast is a minor polish item, not a legibility failure.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable in both themes
+        comment: All font sizes explicitly set, well-proportioned in both themes;
+          the annotation text over the data area fill is legible but borderline-contrast
+          (see weaknesses), keeping this just short of 8
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; x-axis labels well-spaced with -45° angle
+        comment: No text-on-text or text-on-legend collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four stacked areas clearly visible with appropriate opacity (0.85);
-          distinct boundaries
+        comment: Area boundaries, dashed total line, and decline-point marker all
+          clearly visible and appropriately sized for 24-month density
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Okabe-Ito palette CVD-safe; good contrast between adjacent areas
+        passed: false
+        comment: Annotation text over the Services/Support area fill measures ~3.6-3.8:1
+          contrast in both themes — below the 4.5:1 normal-text target, though acceptable
+          for bold large text
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect layout: 60-70% canvas utilization; well-balanced margins;
-          legend appropriately positioned'
+        comment: Plot fills the majority of the canvas, legend sits directly adjacent,
+          balanced margins, canvas padded to exact 3200x1800 target with no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units; title in correct format
+        comment: '"Month" and "Revenue ($ thousands)" — descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds and theme-adaptive
-          chrome in both renders'
+        comment: 'First series #009E73, canonical Imprint order for all 4 series,
+          identical across themes; theme-correct chrome in both renders'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Professional appearance with good color harmony; lacks additional
-          refinement like gradient fills or per-series opacity variation
+        passed: true
+        comment: Opacity gradient, total-line overlay, and callout annotation show
+          real design intent; legend box frame and otherwise straightforward area
+          fills keep it short of top-tier
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid (gridOpacity=0.10); clean design; could benefit from
-          explicit spine removal or additional styling
+        passed: true
+        comment: Subtle grid, no x grid, generous whitespace, refined legend spacing
+          (rowPadding/labelOffset/no symbol stroke) — improved from attempt 1's generic
+          legend, still uses a boxed legend frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Clear visual hierarchy through color; stacking order aids readability;
-          could be more pronounced
+        passed: true
+        comment: The new decline-point callout plus dashed total trace gives the plot
+          a clear focal point — viewer immediately sees where and when the sustained
+          revenue decline begins
     spec_compliance:
       score: 15
       max: 15
@@ -125,25 +151,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart with stack="zero"
+        comment: Correct stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple series, proper stacking, legend with tooltips all present
+        comment: Distinct harmonious colors, size-ordered stacking, legend, semi-transparent
+          fills, zero baseline — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis time, Y-axis stacked revenue, color by category; all correct
+        comment: Month on x, Revenue on y, stack="zero", all 24 months x 4 categories
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title now reads "area-stacked · python · altair · anyplot.ai" (attempt-1
+          defect fixed); legend labels match category names exactly
     data_quality:
       score: 15
       max: 15
@@ -153,20 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 4 categories with varying contributions across
-          24 months'
+        comment: Shows stacking, cumulative total, zero baseline, an inflection/decline
+          period, and 4 differently-shaped series trends
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world scenario (tech company revenue); neutral and plausible
+        comment: Neutral, plausible business scenario — monthly revenue by product
+          category
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic ranges; proper proportions; all positive values
+        comment: Revenue magnitudes and relative category sizes ($20-300k) are sensible
+          for a mid-size company's product-line breakdown
     code_quality:
       score: 10
       max: 10
@@ -176,31 +207,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear: imports → data → chart → save'
+        comment: Linear imports -> data -> chart -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); fully deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: os, altair, numpy, pandas, PIL.Image — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, clean, appropriate complexity
+        comment: Appropriate complexity for a 4-layer composition, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves correctly as plot-{THEME}.png/html; current API
+        comment: Saves plot-{THEME}.png via current vl-convert API plus plot-{THEME}.html
+          for interactivity
     library_mastery:
       score: 9
       max: 10
@@ -210,26 +242,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of alt.Chart(), encoding, mark_area(), stack, Order encoding,
-          configurations
+        comment: Declarative encodings, alt.layer composition, Order/Opacity channels,
+          alt.Title with list-based multi-line legend title — expert use of Altair's
+          grammar-of-graphics API
       - id: LM-02
         name: Distinctive Features
         score: 4
-        max: 5
-        passed: false
-        comment: Uses .interactive(), tooltip formatting, Legend configuration, configure_axis/view
-          for themes, alt.Order()
+        max: 4
+        passed: true
+        comment: Multi-layer composition (area + line + point + text) with Order/Opacity
+          encoding channels is genuinely Altair-idiomatic and not trivially replicated
+          in imperative libraries
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - hover-tooltips
-  - html-export
+  - layer-composition
+  - annotations
   - custom-legend
+  - html-export
   patterns:
   - data-generation
-  - wide-to-long
+  - groupby-aggregation
   dataprep:
+  - time-series
   - cumulative-sum
   styling:
   - alpha-blending
