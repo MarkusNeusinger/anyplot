@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 area-stacked: Stacked Area Chart
 Library: bokeh 3.9.2 | Python 3.13.15
 Quality: 93/100 | Updated: 2026-08-17
