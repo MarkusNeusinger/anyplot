@@ -5,7 +5,6 @@
 
 library(ggplot2)
 library(dplyr)
-library(tidyr)
 library(scales)
 library(ragg)
 
@@ -17,13 +16,14 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 
-# Imprint palette (see prompts/default-style-guide.md "Categorical Palette")
+# Imprint palette, canonical order 1-5 (see prompts/default-style-guide.md
+# "Categorical Palette")
 IMPRINT_PALETTE <- c(
   "#009E73",  # 1 — Industrial (largest, brand green)
-  "#4467A3",  # 3 — Transportation
-  "#C475FD",  # 2 — Residential
+  "#C475FD",  # 2 — Transportation
+  "#4467A3",  # 3 — Residential
   "#BD8233",  # 4 — Commercial
-  "#2ABCCD"   # 6 — Agriculture
+  "#AE3030"   # 5 — Agriculture
 )
 
 # --- Data -----------------------------------------------------------------
@@ -44,19 +44,26 @@ df <- tibble(
   twh        = as.vector(consumption)
 )
 
+# Transportation has the steepest growth trend (electrification shifting
+# demand its way) — a slightly higher fill opacity gives it a subtle focal
+# point among the five stacked layers without adding a callout annotation.
+alpha_by_sector <- c(Industrial = 0.82, Transportation = 0.97, Residential = 0.82,
+                      Commercial = 0.82, Agriculture = 0.82)
+
 # --- Plot -------------------------------------------------------------------
-p <- ggplot(df, aes(x = year, y = twh, fill = sector)) +
-  geom_area(position = position_stack(reverse = TRUE), alpha = 0.88,
+p <- ggplot(df, aes(x = year, y = twh, fill = sector, alpha = sector)) +
+  geom_area(position = position_stack(reverse = TRUE),
             color = PAGE_BG, linewidth = 0.3) +
   scale_fill_manual(values = IMPRINT_PALETTE, name = "Sector",
                      guide = guide_legend(reverse = TRUE)) +
+  scale_alpha_manual(values = alpha_by_sector, guide = "none") +
   scale_x_continuous(breaks = seq(2010, 2024, by = 2), expand = c(0, 0)) +
-  scale_y_continuous(labels = label_number(suffix = " TWh"),
+  scale_y_continuous(labels = label_number(),
                       expand = expansion(mult = c(0, 0.05))) +
   labs(
     title = "area-stacked · r · ggplot2 · anyplot.ai",
     x     = "Year",
-    y     = "Energy Consumption"
+    y     = "Energy Consumption (TWh)"
   ) +
   theme_minimal(base_size = 8) +
   theme(
