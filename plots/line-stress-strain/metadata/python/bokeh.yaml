@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: line-stress-strain
 created: '2026-03-20T21:23:53Z'
-updated: '2026-08-17T19:35:17Z'
+updated: '2026-08-17T19:48:38Z'
 generated_by: claude-sonnet
 workflow_run: 32060311515
 issue: 4413
@@ -12,127 +12,134 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stre
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Correct Imprint palette with semantically meaningful color assignments (brand
-    green main curve, amber for yield/warning, lavender for UTS, red for fracture/failure)
-    — theme-correct in both light and dark renders with identical data colors.
-  - 'All required spec features present: region labels (Elastic, Strain Hardening,
-    Necking), critical point markers (Yield, UTS, Fracture) with distinct shapes,
-    0.2% offset line, and Young''s modulus text annotation.'
-  - 'Idiomatic bokeh 3.x usage: ColumnDataSource, unified scatter(marker=...) API,
-    HoverTool with vline mode for interactive strain/stress/region inspection, Span
-    for reference lines, custom Legend/LegendItem construction.'
-  - 'Clean theme-adaptive chrome: subtle grid (alpha=0.15), spines/outline removed,
-    elevated semi-transparent legend box, correct background colors (#FAF8F1 / #1A1A17)
-    in both themes with fully readable text.'
-  - Realistic, factually sound mild-steel tensile test data (E=210 GPa, yield=250
-    MPa, UTS=400 MPa) with clean KISS code structure and clean imports.
+  - 'Idiomatic, feature-rich bokeh usage: HoverTool with formatted per-region tooltips,
+    BoxAnnotation for the necking zone, Span reference lines, an Arrow/VeeHead leader,
+    and a manually constructed Legend/LegendItem'
+  - 'Thoughtful semantic color mapping beyond canonical order: brand green for the
+    curve, amber for the yield threshold, matte red for the fracture point (matches
+    the style guide''s bad/failure semantic anchor), lavender for UTS'
+  - 'All spec-required features present: labeled elastic / strain-hardening / necking
+    regions, 0.2%-offset yield point, UTS, fracture point, Young''s modulus text annotation,
+    and an offset line correctly parallel to the elastic slope'
+  - The necking region is subtly shaded as an underlay band, creating a clear focal
+    point that guides the eye toward the fracture outcome (good data storytelling)
+  - Key points use distinct marker shapes (circle / triangle / square) in addition
+    to color, giving redundant encoding
+  - Clean KISS-structured, deterministic code; correct theme-adaptive chrome in both
+    renders; PNG + HTML artifacts saved per the library convention
   weaknesses:
-  - '"Elastic" region label is positioned at strain≈0.11, deep in the strain-hardening
-    x-range, while the actual elastic region is compressed to strain 0–0.0012 (essentially
-    against the y-axis). This mismatches the label with the curve segment it names
-    — reposition the "Elastic" label close to the y-axis (or add a short leader line/arrow
-    pointing to the near-vertical elastic segment) so the correspondence is unambiguous.'
-  - Design is professionally correct but visually conservative — no dedicated slope-reference
-    line for the elastic modulus (only a text annotation), and grid/legend styling
-    stays close to a 'good default' rather than showing distinctive art-directed flourishes.
-    Consider a subtle dashed reference line extending the elastic slope, or additional
-    visual hierarchy (e.g., a lightly shaded necking zone) to elevate Design Excellence.
-  - Interactive features used (HoverTool, Span, custom Legend) are solid but fairly
-    standard bokeh patterns; consider a more distinctive feature such as a Band/Whisker
-    annotation around the offset-line region or a CustomJSHover for richer tooltip
-    formatting to better showcase bokeh-specific strengths.
+  - The 'Elastic Slope (E)' reference line (dashed, in the legend) is drawn almost
+    exactly on top of the real near-vertical elastic segment and is very short, so
+    it is practically invisible as its own element in the rendered PNG despite having
+    a dedicated legend entry — extend it further past the curve or offset it slightly
+    so both lines read as distinct.
+  - 'Light-theme contrast: the amber ''Yield Point (250 MPa)'' label (~1.5:1 against
+    #FAF8F1) and the lavender ''UTS (400 MPa)'' label (~2.7:1) both fall well under
+    the WCAG 3:1 threshold for large text — exactly the amber/lavender-on-cream gap
+    called out in the style guide. Since both mark a critical threshold, add the recommended
+    thin ink-color stroke/halo to the text on the light render (dark-theme contrast
+    is already fine).'
+  - The gray leader arrow from the 'Elastic' label to the curve is drawn at an arbitrary
+    shallow slope with no physical meaning; since it is far more visually prominent
+    than the (barely visible) actual elastic-slope reference line, a reader could
+    mistake the arrow itself for a slope indicator. Consider a shorter, clearly pointer-style
+    arrow so it reads unambiguously as a label leader.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "line-stress-strain · python · bokeh · anyplot.ai" in dark ink, fully readable, comfortably sized (well under 90% of plot width, no clipping). X-axis label "Engineering Strain (mm/mm)" and Y-axis label "Engineering Stress (MPa)" in dark ink, clearly readable with units. Tick labels in soft dark gray, legible. Grid lines subtle (low alpha), visible but not dominant.
-      Data: Main stress-strain curve in brand green (#009E73), 0.2% offset dashed line in amber, Yield Point (amber circle), Ultimate Tensile Strength (lavender triangle), Fracture Point (red square) — all clearly distinguishable from the background and from each other via both color and shape. Region labels "Elastic", "Strain Hardening", "Necking" placed in open space below/around the curve; annotation text ("Yield Point (250 MPa)", "UTS (400 MPa)", "Fracture", "E = 210 GPa") color-matched to their respective elements, no overlap with curve or with each other. Legend box (elevated, semi-transparent) sits in the empty area lower-right, not isolated from the plot.
-      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "line-stress-strain · python · bokeh · anyplot.ai" in dark ink, fully visible with generous top margin. Axis titles "Engineering Strain (mm/mm)" / "Engineering Stress (MPa)" in dark ink, tick labels in a softer gray. Subtle gridlines at ~15% alpha. Legend box (cream elevated fill, thin gray border) sits inside the necking-shaded region at lower right, near the fracture point it explains.
+      Data: Brand-green (#009E73) stress-strain curve rising steeply (elastic), curving through strain hardening, peaking at the lavender UTS triangle (400 MPa), then descending through the rose-tinted necking band to the red fracture square. Amber circle marks the yield point (250 MPa) with a dashed amber 0.2%-offset line parallel to the elastic segment. A short dashed green "Elastic Slope (E)" reference line sits almost exactly on top of the real curve near the origin — hard to see as a separate element. A gray leader arrow with "Elastic" text points at the near-vertical segment. Region labels ("Elastic", "Strain Hardening", "Necking") and point labels ("Yield Point", "UTS", "Fracture", "E = 210 GPa") are placed with no overlap.
+      Legibility verdict: PASS overall. The amber and lavender annotation text (Yield Point / UTS labels) have low mathematical contrast against the cream background (~1.5:1 and ~2.7:1, both under WCAG's 3:1) but remain visually parseable at this bold weight/size — flagged as a weakness rather than a hard failure.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title in light/white ink, fully readable. Axis labels and tick labels rendered in light tones (white title/axis-labels, soft light-gray ticks), clearly visible against the dark background — no dark-on-dark failures observed. Grid lines subtle, visible but unobtrusive.
-      Data: Curve and marker colors are identical to the light render (brand green main line, amber offset line/yield point, lavender UTS triangle, red fracture square) — only the chrome (background, text, grid, legend box) flipped to the dark theme as expected. Legend box uses the dark elevated background, text legible.
-      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark issues found.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as light — title and axis titles now in light ink (#F0EFE8), tick labels in a lighter soft gray, gridlines at ~15% alpha against the dark surface. Legend box uses the dark elevated fill (#242420) with a light-gray border; fully legible.
+      Data: All data colors are pixel-identical to the light render — same brand-green curve, same amber/lavender/red markers and offset/reference lines, same rose-tinted necking band (now reads as a warm dark-maroon tint against the near-black background). Only the chrome flipped.
+      Legibility verdict: PASS. No dark-on-dark failures — every title, axis label, tick label, and annotation is clearly readable against the near-black surface. The amber and lavender annotation text actually have good contrast here (~11:1 and ~6.5:1) since they're light colors against a dark background, so the light-theme contrast weakness does not apply in this render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable and well-proportioned in
-          both themes; title/axis labels stay legible at ~400px mobile scale.
+        comment: All font sizes explicitly set (24-50pt); readable and well-proportioned
+          in both themes; no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No text-on-text or text-on-data collisions observed
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Line width and 26px key-point markers well sized for a ~340-point
-          curve.
+        comment: Curve, offset line, and key-point markers are well sized, but the
+          dedicated 'Elastic Slope (E)' reference line is nearly invisible, overlapping
+          the real curve almost exactly
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Key points distinguishable by color AND shape (circle/triangle/square);
-          no red-green-only signaling.
+        comment: Amber and lavender annotation text on the light-theme cream background
+          fall under WCAG's 3:1 threshold (~1.5:1 and ~2.7:1) — the known amber/lavender-on-cream
+          gap from the style guide; no ink-stroke applied to threshold labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, good canvas utilization, nothing cut off.
+        comment: Plot fills a large, balanced portion of the 3200x1800 canvas; legend
+          sits near the data it explains; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (MPa, mm/mm).
+        comment: Both axis labels are descriptive with units (MPa, mm/mm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; UTS/fracture use semantically-assigned Imprint
-          palette members; amber anchor for yield; theme-correct backgrounds in both
-          renders.'
+        comment: 'First series is #009E73; fracture point uses matte red as an intentional
+          failure-semantic exception; backgrounds and chrome are theme-correct in
+          both renders'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful semantic color use above a plain default, but not publication-level
-          distinctive.
+        passed: true
+        comment: Thoughtful semantic color choices and layered annotations clearly
+          above library defaults, short of fully publication-ready due to the elastic-line/arrow
+          ambiguity
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid, spines/outline removed, elevated legend box — solid
-          refinement, not flawless.
+        passed: true
+        comment: Subtle grid, generous whitespace, elevated legend box; minor deduction
+          for the visually busy elastic-region annotations
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Region/point labels create hierarchy, but the 'Elastic' label sits
-          far from the actual (compressed) elastic segment, undermining the narrative.
+        passed: true
+        comment: Shaded necking band and labeled critical points create a clear focal
+          point and narrative toward fracture
     spec_compliance:
       score: 15
       max: 15
@@ -142,27 +149,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line-chart stress-strain curve.
+        comment: Correct engineering stress-strain line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Region labels, key-point markers, offset line, and modulus annotation
-          all present.
+        comment: Elastic/plastic/necking regions labeled, yield/UTS/fracture marked,
+          elastic modulus annotated, 0.2% offset line drawn parallel to elastic slope
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Strain on X, stress on Y, full curve visible within axis bounds.
+        comment: Strain on x, stress on y; full curve visible within axis bounds
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match the data
-          series.
+        comment: Title matches the mandated format exactly; legend labels match the
+          plotted series
     data_quality:
       score: 15
       max: 15
@@ -172,21 +179,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows elastic, yield, strain-hardening, necking, and fracture — all
-          key stress-strain behaviors.
+        comment: Elastic, yield plateau, strain hardening, and necking-to-fracture
+          are all represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world mild-steel tensile test scenario.
+        comment: Neutral, comprehensible mild-steel tensile test scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: E=210 GPa, yield=250 MPa, UTS=400 MPa, ~35% elongation — plausible
-          for ductile mild steel.
+        comment: E=210 GPa, yield=250 MPa, UTS=400 MPa, ~35% fracture strain are all
+          realistic mild-steel values within the spec's suggested strain range
     code_quality:
       score: 10
       max: 10
@@ -196,34 +203,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Sequential script, no functions/classes.
+        comment: 'Flat script: imports, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data is otherwise deterministic.
+        comment: np.random.seed(42); data otherwise deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, bokeh models, selenium).
+        comment: Only used imports (numpy, bokeh, selenium)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/functionality.
+        comment: Appropriate complexity for the richness of the visualization, no
+          fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png/.html via the sanctioned output_file+Selenium
-          pattern for this library.
+        comment: Saves plot-{theme}.png and plot-{theme}.html; current bokeh API
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -231,16 +238,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource, modern unified scatter(marker=...) API, proper
-          Legend/LegendItem construction.
+        comment: Expert use of figure(), ColumnDataSource, and bokeh's model/layout
+          API
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Uses HoverTool, Span, and custom Legend — solid but fairly standard
-          bokeh patterns, not pushed further.
-  verdict: REJECTED
+        passed: true
+        comment: HoverTool, BoxAnnotation, Span, Arrow/VeeHead, and a hand-built Legend
+          are bokeh-distinctive and not trivially replicated elsewhere
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -250,8 +257,9 @@ impl_tags:
   - custom-legend
   - html-export
   patterns:
-  - columndatasource
   - data-generation
+  - columndatasource
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
