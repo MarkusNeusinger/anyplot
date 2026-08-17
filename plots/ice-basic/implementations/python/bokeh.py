@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: bokeh 3.9.2 | Python 3.13.15
 Quality: 89/100 | Created: 2026-08-17
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, Range1d
+from bokeh.models import ColumnDataSource, HoverTool, Range1d
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -68,7 +68,13 @@ y_span = y_max - y_min
 rug_y0 = y_min - 0.09 * y_span
 rug_y1 = y_min - 0.03 * y_span
 
-source = ColumnDataSource(data={"xs": [feature_grid.tolist()] * n_obs, "ys": [row.tolist() for row in ice_price_k]})
+source = ColumnDataSource(
+    data={
+        "xs": [feature_grid.tolist()] * n_obs,
+        "ys": [row.tolist() for row in ice_price_k],
+        "obs_id": list(range(n_obs)),
+    }
+)
 
 # Plot
 title = "ice-basic · python · bokeh · anyplot.ai"
@@ -86,7 +92,7 @@ p = figure(
 )
 p.y_range = Range1d(rug_y0 - 0.02 * y_span, y_max + 0.08 * y_span)
 
-p.multi_line(
+ice_renderer = p.multi_line(
     xs="xs",
     ys="ys",
     source=source,
@@ -95,9 +101,19 @@ p.multi_line(
     line_width=1.5,
     legend_label="Individual houses (ICE)",
 )
-p.line(feature_grid, pdp_price_k, line_color=INK, line_width=5, legend_label="Average effect (PDP)")
+p.line(feature_grid, pdp_price_k, line_color=INK, line_width=6, legend_label="Average effect (PDP)")
 p.segment(
     x0=square_footage, y0=rug_y0, x1=square_footage, y1=rug_y1, line_color=INK_SOFT, line_alpha=0.4, line_width=1.5
+)
+
+# HoverTool showcases bokeh's distinctive HTML interactivity (toolbar_location=None
+# only hides the button row — hover still fires on mouse move over a line).
+p.add_tools(
+    HoverTool(
+        renderers=[ice_renderer],
+        tooltips=[("Observation", "@obs_id"), ("Sq Ft", "$x{0,0}"), ("Price", "$y{0.0}k")],
+        mode="mouse",
+    )
 )
 
 # Style
@@ -127,6 +143,8 @@ p.ygrid.grid_line_alpha = 0.15
 
 p.legend.location = "top_left"
 p.legend.label_text_font_size = "34pt"
+p.legend.glyph_width = 60
+p.legend.glyph_height = 40
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
 p.legend.label_text_color = INK_SOFT
