@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-stacked: Stacked Area Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-08-17
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 82/100 | Updated: 2026-08-17
 """
 
 import os
