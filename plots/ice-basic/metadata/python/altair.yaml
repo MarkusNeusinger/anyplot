@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: ice-basic
 created: '2026-05-07T16:53:20Z'
-updated: '2026-08-17T22:52:14Z'
+updated: '2026-08-17T23:01:37Z'
 generated_by: claude-sonnet
 workflow_run: 32077122501
 issue: 5238
@@ -12,47 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
   - 'Correct Imprint palette compliance: ICE curves use brand #009E73, PDP overlay
-    uses the canonical second series color #C475FD, and both renders use the correct
-    theme-adaptive backgrounds (#FAF8F1 light / #1A1A17 dark) with identical data
-    colors.'
+    uses the canonical second-series #C475FD, and both renders use the correct theme-adaptive
+    backgrounds (#FAF8F1 light / #1A1A17 dark) with identical data colors.'
+  - 'Genuine data-driven storytelling: a divergent-observation callout programmatically
+    finds the individual curve that deviates furthest from the PDP average and labels
+    it with its magnitude and direction ("Obs #38: $98K above average"), directly
+    surfacing the heterogeneity ICE plots exist to reveal — a real improvement over
+    the prior attempt''s generic label duplicating the legend.'
   - 'Real interactivity, not faked: alt.selection_point(on=''pointerover'') drives
     the opacity condition so hovering a curve highlights it in the HTML export, while
-    the default (unselected) branch matches the static PNG state exactly.'
-  - Rug plot along the x-axis showing the observed square-footage distribution, directly
-    implementing one of the spec's suggested enhancements.
+    the unselected default branch matches the static PNG exactly.'
+  - Rug plot along the x-axis showing the observed square-footage distribution, implementing
+    one of the spec's suggested enhancements.
   - 'Clear visual hierarchy: thin, low-alpha (0.10) ICE lines form a density band
-    while the bold, opaque PDP line plus a matching text annotation reinforce the
-    average-effect message.'
+    while the bold, opaque PDP line reinforces the average-effect message; axis domain
+    lines were removed (domain=False) since the prior review, tightening the chrome.'
   - Canvas lands exactly on 3200x1800 via the mandated pad-only approach with no clipped
     text on either render.
   - Reproducible (np.random.seed(42), random_state=42) and a clean single-script structure
     with no wrapper functions.
   weaknesses:
+  - 'Title is ''ice-basic · altair · anyplot.ai'' but the mandated format is ''{spec-id}
+    · {language} · {library} · anyplot.ai'' — the ''python'' language segment is missing
+    (compare e.g. plots/acf-pacf/implementations/python/altair.py which correctly
+    uses ''acf-pacf · python · altair · anyplot.ai''). Fix: change the title string
+    to ''ice-basic · python · altair · anyplot.ai''.'
   - Centered ICE (c-ICE) variant suggested in the spec notes was not implemented —
-    shifting all lines to start at zero would make the heterogeneity in effect *shape*
+    shifting all lines to start at zero would make heterogeneity in effect *shape*
     (vs. baseline level) easier to compare.
   - No second-feature color-coding of the individual curves, so potential interaction
     effects (e.g. curves that respond differently by bedroom count) stay hidden inside
     the uniform green band.
-  - 'Design stops short of exceptional: axis domain lines remain visible rather than
-    stripped to a fully minimal-chrome look, and the annotation duplicates the legend''s
-    ''Partial Dependence'' label without adding further insight (e.g. calling out
-    a specific divergent observation).'
+  - 'Design stops short of exceptional: while axis domain lines were removed since
+    the last pass, the overall polish (typography weight variation, more generous
+    whitespace) still reads as ''strong default'' rather than publication-grade.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "ice-basic · altair · anyplot.ai" centered above the plot; dark bold axis titles "Square Footage (sq ft)" and "Predicted Price ($K)"; medium-gray tick labels on both axes; subtle light-gray gridlines at 10% opacity; white legend box (top-right) with "ICE Curves" / "Partial Dependence" entries; all elements clearly visible against the light background.
-      Data: ~100 individual ICE curves in translucent brand green (#009E73) forming a density band that widens with square footage; a bold, fully opaque purple (#C475FD) Partial Dependence line running through the middle of the band; a matching purple "Partial Dependence" text annotation floating in open space mid-chart; a gray rug plot along the x-axis marking observed square-footage values. First series is the brand green as required.
+      Chrome: Bold dark title "ice-basic · altair · anyplot.ai" centered above the plot (missing the mandated "python" language segment — see weaknesses); dark bold axis titles "Square Footage (sq ft)" and "Predicted Price ($K)"; medium-gray tick labels on both axes; subtle light-gray gridlines at ~10% opacity; no visible axis domain/spine lines; white legend box (top-right, black border) with "ICE Curves" / "Partial Dependence" entries; a bold green annotation "Obs #38: $98K above average" sits in open space mid-left, clear of the legend and of the curve band; all elements clearly visible against the light background.
+      Data: ~100 individual ICE curves in translucent brand green (#009E73) forming a density band that widens with square footage; one individual curve re-drawn at full opacity (still brand green) to mark the most-divergent observation; a bold, fully opaque lavender (#C475FD) Partial Dependence line running through the band; a gray rug plot along the x-axis marking observed square-footage values. First series is the brand green as required.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and axis titles render in light/white text, clearly legible; tick labels in light gray; gridlines subtle but visible on the dark surface; legend box uses a dark elevated fill with a light border and light text — no dark-on-dark failures anywhere.
-      Data: Same brand green ICE band and purple PDP line/annotation as the light render — data colors are identical between themes, confirming only chrome flipped.
+      Chrome: Title and axis titles render in light/white text, clearly legible; tick labels in light gray; gridlines subtle but visible on the dark surface; legend box uses a dark elevated fill with a light border and light text; the divergent-observation annotation renders in the same brand green, clearly legible against the dark background — no dark-on-dark failures anywhere.
+      Data: Same brand-green ICE band, highlighted divergent curve, and lavender PDP line as the light render — data colors are identical between themes, confirming only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -64,8 +72,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes; no dark-on-dark
-          or light-on-light issues
+        comment: All font sizes explicitly set, readable in both themes at desktop
+          and mobile scale, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -78,19 +86,20 @@ review:
         max: 6
         passed: true
         comment: Low-alpha ICE lines correctly show density for ~100 overlapping observations;
-          bold PDP line stands out
+          bold PDP line and highlighted divergent curve stand out
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple pairing is CVD-safe, no red-green-only signal
+        comment: Green/lavender pairing is CVD-safe, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, nothing clipped, good proportions
+        comment: Exact 3200x1800 canvas, nothing clipped, good proportions, legend
+          near plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -102,10 +111,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Brand green first series, canonical second-series purple, correct
+        comment: Brand green first series, canonical second-series lavender, correct
           theme backgrounds on both renders
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -113,24 +122,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, layered composition, thoughtful annotation — solid
-          but not maximal polish
+        comment: Custom palette, layered composition, data-driven divergent-observation
+          callout — solid but not maximal polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid and elevated legend background, but axis domain lines
-          still visible
+        passed: true
+        comment: Subtle grid, elevated legend background, axis domain lines removed
+          since last pass; still some room for more generous whitespace/typography
+          variation
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Bold PDP overlay + annotation creates a focal point, but no callout
-          on specific heterogeneity/divergence
+        passed: true
+        comment: Divergent-observation callout with quantified $ deviation creates
+          a genuine focal point on heterogeneity, addressing the prior review's weakness
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -155,10 +165,12 @@ review:
           spec exactly
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format matches mandated pattern; legend labels accurate
+        passed: false
+        comment: 'Legend labels are accurate, but the title omits the mandated ''python''
+          language segment: ''ice-basic · altair · anyplot.ai'' should be ''ice-basic
+          · python · altair · anyplot.ai'''
     data_quality:
       score: 14
       max: 15
@@ -168,8 +180,8 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers ICE curves, PDP overlay, rug plot; skips optional c-ICE and
-          second-feature color-coding
+        comment: Covers ICE curves, PDP overlay, rug plot, divergent-observation callout;
+          skips optional c-ICE and second-feature color-coding
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -210,7 +222,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for ICE plot, genuine interactivity
+        comment: Appropriate complexity for ICE plot, genuine interactivity, no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1

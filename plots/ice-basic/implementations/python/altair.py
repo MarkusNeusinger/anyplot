@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: altair 6.2.2 | Python 3.13.15
-Quality: 86/100 | Updated: 2026-08-17
+Quality: 87/100 | Updated: 2026-08-17
 """
 
 import os
