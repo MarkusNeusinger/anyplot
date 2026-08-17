@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 84/100 | Updated: 2026-08-17
@@ -20,6 +20,7 @@ from plotnine import (
     geom_text,
     ggplot,
     labs,
+    position_stack,
     scale_fill_manual,
     scale_x_date,
     scale_y_continuous,
@@ -85,17 +86,19 @@ anyplot_theme = theme(
     plot_title=element_text(size=12, weight="bold", color=INK),
     axis_title=element_text(size=10, color=INK),
     axis_text=element_text(size=8, color=INK_SOFT),
-    axis_text_x=element_text(angle=45, hjust=1),
+    axis_text_x=element_text(angle=45, hjust=1, margin={"t": 6, "unit": "pt"}),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(size=8, color=INK_SOFT),
     legend_title=element_text(size=9, color=INK),
 )
 
 # Create stacked area chart: a subtle ink outline on each band's upper edge
-# (outline_type) plus a dashed total-traffic overlay for the cumulative read
+# (outline_type) plus a dashed total-traffic overlay for the cumulative read.
+# position_stack(reverse=True) keeps the largest series (Organic Search) at
+# the bottom of the stack, matching source_order and the spec's size ordering.
 plot = (
     ggplot(df, aes(x="Date", y="Visitors", fill="Source"))
-    + geom_area(alpha=0.85, outline_type="upper", color=INK_SOFT, size=0.35)
+    + geom_area(alpha=0.85, outline_type="upper", color=INK_SOFT, size=0.35, position=position_stack(reverse=True))
     + geom_line(
         totals, aes(x="Date", y="Visitors"), color=INK, linetype="dashed", size=0.8, alpha=0.8, inherit_aes=False
     )
@@ -109,7 +112,7 @@ plot = (
         inherit_aes=False,
     )
     + scale_fill_manual(values=colors)
-    + scale_x_date(date_labels="%b %Y", date_breaks="3 months", expand=(0.01, 0, 0.02, 40))
+    + scale_x_date(date_labels="%b %Y", date_breaks="3 months", expand=(0.02, 12, 0.02, 40))
     + scale_y_continuous(labels=comma_format(), expand=(0, 0, 0.08, 0))
     + labs(
         title="area-stacked · python · plotnine · anyplot.ai",
