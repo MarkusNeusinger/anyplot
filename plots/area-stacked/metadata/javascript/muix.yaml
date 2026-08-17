@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: area-stacked
 created: '2026-08-17T12:47:19Z'
-updated: '2026-08-17T12:53:57Z'
+updated: '2026-08-17T13:03:00Z'
 generated_by: claude-sonnet
 workflow_run: 32031188375
 issue: 2022
@@ -12,134 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Correct, idiomatic MUI X stacked-area pattern (LineChart + area:true + stack),
-    matching the library's documented approach for this chart type
-  - 'Full Imprint palette compliance: colors pulled directly from t.palette.slice(0,4),
-    first series is #009E73, identical data colors across light/dark renders'
-  - Explicit font sizing throughout (21px title, 16px axis label, 14px tick/legend)
-    with clean legibility in both themes — no dark-on-dark or light-on-light issues
-    found
-  - Deterministic seeded LCG (seed 42) for reproducible data generation; realistic,
-    neutral 'website traffic sources' business scenario with plausible per-channel
-    growth and seasonality
-  - Title format, legend labels, X/Y data mapping, and zero baseline (yAxis min:0)
-    all correctly implemented per spec
-  - Series ordered largest-at-bottom (Organic Search -> Direct -> Referral -> Social)
-    per the spec's explicit ordering note; semi-transparent fills (fillOpacity 0.82)
-    aid overlap readability at band boundaries
-  - Clean margins, no clipping or overlap issues in either render, legend positioned
-    close to the plot, good canvas utilization (~90%+ width, ~80%+ height used by
-    the chart)
+  - 'Correct stacked area chart: LineChart + area:true + stack (the idiomatic MUI
+    X pattern, since there is no separate AreaChart component) with all 4 series ordered
+    largest-to-smallest so Organic Search anchors the base, matching the spec''s ordering
+    guidance.'
+  - 'Genuine storytelling beyond a generic area chart: a dashed ''Avg total: 9.4k''
+    ChartsReferenceLine plus a derived-from-data callout (''Social: fastest-growing
+    channel, +114% since Jan 2024'') give the chart a clear analytical focal point.'
+  - 'Full Imprint palette compliance: brand green (#009E73) first, canonical positions
+    1-4 for the remaining series, identical data colors between light/dark, and correctly
+    theme-flipped chrome (background, ink, grid) in both renders.'
+  - Deterministic, in-memory data via a fixed-seed LCG (browser has no seeded RNG);
+    clean imports; correct MUI X component contract (default export, skipAnimation,
+    sized to window.ANYPLOT_SIZE).
+  - 'Baseline starts at zero (yAxis min: 0) avoiding misleading proportions, per spec
+    notes; legend clearly identifies all 4 series.'
   weaknesses:
-  - DE-03 Data Storytelling is at baseline — the chart displays the four channels
-    without any added narrative or visual-emphasis technique; consider a subtle spotlight
-    on the fastest-growing channel (Social) or a light total-visits reference to give
-    the viewer an immediate takeaway beyond raw composition
-  - DE-01/DE-02 read close to a well-configured library default rather than a genuinely
-    art-directed chart — consider a small typographic hierarchy tweak (e.g. slightly
-    heavier title weight) or a subtle gradient/edge treatment on the area fills to
-    lift aesthetic sophistication above the current baseline
-  - LM-02 Distinctive Features is moderate — the sx slot-class overrides (MuiAreaElement-root,
-    MuiLineElement-root) and 'stack' grouping are used, but no truly MUI X-unique
-    capability (e.g. ChartsReferenceLine for a total/average line, custom tooltip
-    formatting) is showcased that would set this apart from a generic stacked-area
-    implementation in another library
-  - 'Minor/no-deduction note: the title occupies only ~40% of canvas width (measured),
-    below the ~50-70% expected range for a custom-prefixed title — not a legibility
-    problem (fully readable, no overflow) but leaves headroom unused; a slightly larger
-    title fontsize would better balance the layout'
+  - 'The ''Avg total: 9.4k'' reference-line label sits directly over the Social (ochre)
+    fill near the right edge with fairly small text (12px) and no background pad —
+    readable but visually crowded against the busy area fill; consider a small background
+    chip or repositioning above the line.'
+  - No horizontal gridlines are rendered, only y-axis ticks at 1k increments across
+    an 11k range — a subtle gridline would make precise value reading easier without
+    adding visual noise.
+  - Design Excellence is mostly carried by the two storytelling annotations; beyond
+    that the chart relies on MUI X defaults (no additional grid/background styling),
+    so overall visual refinement is good but not exceptional.
+  - 'Header comment block (''// Library: muix 7.29.1 | JavaScript 22.23.2'') deviates
+    from the documented header style in prompts/library/muix.md (which includes a
+    License line and ''MUI X Charts | React | Node 22'' format) — cosmetic only, gets
+    rewritten by impl-review anyway.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Website Traffic Sources · area-stacked · javascript · muix · anyplot.ai" in dark ink, clearly visible at the top-left. X-axis label "Month" and Y-axis label "Monthly Visits" (rotated) both in dark ink, fully legible. Tick labels ("Jan 2024" .. "Jan 2026" on X; "0k".."11k" on Y) are dark and crisp against the light background. Legend at the bottom center reads "Organic Search / Direct / Referral / Social" with small colored line swatches, all legible.
-      Data: Four stacked area bands from bottom to top — Organic Search (brand green #009E73, largest), Direct (light purple/orchid), Referral (medium blue), Social (amber/ochre, smallest at start, grows over time). Bands are separated by thin 2px boundary strokes, fills are semi-transparent (~0.82 opacity), all clearly distinguishable by hue. Baseline starts at 0k as required.
-      Legibility verdict: PASS — all text readable, no overlap, no clipping observed at either canvas edge.
+      Chrome: Title "Website Traffic Sources · area-stacked · javascript · muix · anyplot.ai" top-left in dark ink, bold; growth callout top-right ("Social: fastest-growing channel, +114% since Jan 2024") with a matching orange dot; y-axis "Monthly Visits" (0k-11k) and x-axis "Month" (Jan 2024-Jan 2026) labels clearly visible in dark ink; legend centered at bottom with 4 labeled swatches (Organic Search, Direct, Referral, Social).
+      Data: Four stacked areas bottom-to-top: green (Organic Search, #009E73), lavender (Direct), blue (Referral), ochre (Social) — matches Imprint canonical positions 1-4. Dashed reference line labeled "Avg total: 9.4k" crosses the chart. Baseline starts at 0.
+      Legibility verdict: PASS — all title, axis, tick, legend, and annotation text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis labels, tick labels, and legend all rendered in light/off-white text, fully legible against the dark background. No dark-on-dark failures found — checked axis ticks, Y-axis rotated label, and legend text specifically via cropped close-ups.
-      Data: Same four bands in identical colors to the light render (green, purple, blue, amber) — confirmed only chrome (background/text) flips between themes, data colors are unchanged.
-      Legibility verdict: PASS — all text readable, no dark-on-dark issues, brand green remains clearly visible against the dark surface.
+      Chrome: Same layout as light render with ink flipped to light/white — title, axis labels, tick labels, legend text, and the reference-line label are all light-colored and clearly legible against the dark background. No dark-on-dark failures observed.
+      Data: Area fill colors are pixel-identical to the light render (green, lavender, blue, ochre) — confirms only chrome flips between themes, not data colors.
+      Legibility verdict: PASS — all text reads clearly against the dark background; brand green remains vivid and distinguishable from the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (21/16/14px); readable in both themes,
-          no overflow or clipping
+        comment: Explicit font sizes throughout, readable in both themes; reference-line
+          label is small (12px) and sits over a busy fill
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render
+        comment: No text/data collisions observed
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 24-month density well suited to smooth area fills with crisp boundary
-          strokes
+        comment: Area fills with fillOpacity 0.82, no markers on area (showMark false)
+          — appropriate for 24-point series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four hues (green/purple/blue/amber) distinguishable without relying
-          on red-green
+        comment: Imprint palette is CVD-safe by construction, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills most of the canvas, balanced margins, legend close to
-          plot
+        comment: Good proportions, title ~45% width, no overflow/clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Month'' and ''Monthly Visits'' are descriptive'
+        comment: '''Month'' and ''Monthly Visits'' are descriptive with implicit units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'colors=t.palette.slice(0,4): first series #009E73, canonical Imprint
-          order, theme-correct chrome in both renders'
+        comment: Brand green first, canonical 1-4 order, correct theme-adaptive backgrounds
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured default: Imprint palette + explicit typography,
-          but no distinctive art direction beyond that'
+        passed: true
+        comment: Reference line + derived growth callout show intentional analytical
+          hierarchy beyond a default chart
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No grid, thin legend swatches, alpha-blended fills, explicit stroke
-          width — some refinement above bare defaults
+        comment: Spines absent by default MUI X SVG rendering, but little additional
+          explicit grid/background refinement
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data displayed but not interpreted — no emphasis, annotation, or
-          focal point beyond default stacking order
+        passed: true
+        comment: Avg-total reference line and fastest-growing-channel callout create
+          a clear focal point and guide the viewer
     spec_compliance:
       score: 15
       max: 15
@@ -149,27 +140,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart (LineChart + area:true + stack)
+        comment: Correct stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Continuous x-axis, 4 stacked series, legend, largest-at-bottom order,
-          semi-transparent fills, zero baseline — all present
+        comment: Stacking, legend, zero baseline, semi-transparent fills all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=month, Y=monthly visits, all series values represented
+        comment: x=date (time scale), y=stacked series values, axes show full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          series
+        comment: Title matches required format with descriptive prefix; legend labels
+          match series
     data_quality:
       score: 15
       max: 15
@@ -179,21 +169,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Growth trends, per-channel seasonality (different sin phases), converging
-          band widths over time
+        comment: 4 series, 24 months, shows both composition and trend
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website traffic sources scenario — real, neutral, business/tech domain
+        comment: Plausible, neutral web-traffic-source scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible visit counts and growth rate (~35% over 2 years) for a
-          growing site
+        comment: Values in the 4k-11k monthly-visits range are sensible for a mid-size
+          site
     code_quality:
       score: 10
       max: 10
@@ -203,34 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> Data -> Chart component, no unnecessary abstraction
+        comment: Only the required Chart component plus a tiny LCG helper
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42), fully deterministic
+        comment: Fixed-seed LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: LineChart, Box, Typography — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake UI
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the harness mount contract with skipAnimation; current MUI
-          X API
+        comment: Correct default-export component contract, skipAnimation set
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -238,24 +226,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Textbook MUI X stacked-area pattern (LineChart + area + stack), valueFormatter,
-          slotProps.legend
+        comment: LineChart+area+stack is the correct MUI X idiom for stacked areas;
+          proper valueFormatter usage on both axes
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses MUI X slot-class sx overrides and stack grouping, but no showcase
-          feature (e.g. ChartsReferenceLine) that's uniquely MUI X
-  verdict: REJECTED
+        passed: true
+        comment: ChartsReferenceLine and custom legend slotProps go beyond basic usage
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - mui-material
   techniques:
-  - stacked-area
+  - annotations
+  - custom-legend
+  - reference-line
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
   - alpha-blending
-  - edge-highlighting
+  - publication-ready
