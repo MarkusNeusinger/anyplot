@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-multi: Multi-Series Radar Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-07
@@ -27,7 +27,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette (first series always #009E73)
+# Imprint palette (first series always #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Set seaborn theme with theme-adaptive colors
@@ -64,8 +64,8 @@ products = {
 angles = np.linspace(0, 2 * np.pi, n_categories, endpoint=False).tolist()
 angles += angles[:1]  # Close the polygon
 
-# Create figure with polar subplot (square format for radar)
-fig, ax = plt.subplots(figsize=(12, 12), subplot_kw={"projection": "polar"})
+# Create figure with polar subplot (square format for radar) — canonical 2400x2400 canvas
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, subplot_kw={"projection": "polar"}, facecolor=PAGE_BG)
 
 # Plot each product series
 for idx, (product_name, values) in enumerate(products.items()):
@@ -75,16 +75,16 @@ for idx, (product_name, values) in enumerate(products.items()):
     ax.fill(angles, values_closed, alpha=0.25, color=IMPRINT[idx], label=product_name)
 
     # Outline with larger markers
-    ax.plot(angles, values_closed, "o-", linewidth=3, markersize=10, color=IMPRINT[idx])
+    ax.plot(angles, values_closed, "o-", linewidth=2.5, markersize=8, color=IMPRINT[idx])
 
 # Set category labels on each axis
 ax.set_xticks(angles[:-1])
-ax.set_xticklabels(categories, fontsize=18, color=INK)
+ax.set_xticklabels(categories, fontsize=11, color=INK)
 
 # Set radial ticks and limits
 ax.set_ylim(0, 100)
 ax.set_yticks([20, 40, 60, 80, 100])
-ax.set_yticklabels(["20", "40", "60", "80", "100"], fontsize=14, color=INK_SOFT)
+ax.set_yticklabels(["20", "40", "60", "80", "100"], fontsize=9, color=INK_SOFT)
 
 # Style gridlines
 ax.yaxis.grid(True, linestyle="--", alpha=0.15, linewidth=0.8, color=INK)
@@ -95,19 +95,22 @@ for spine in ax.spines.values():
     spine.set_color(INK_SOFT)
     spine.set_linewidth(1.5)
 
-# Add title
-ax.set_title("radar-multi · seaborn · pyplots.ai", fontsize=24, pad=30, fontweight="bold", color=INK)
+# Title — the mandated "radar-multi · python · seaborn · anyplot.ai" is 43 chars,
+# under the 67-char baseline, so the style-guide default fontsize (12pt) applies unscaled.
+# fig.suptitle (not ax.set_title) keeps the title clear of the top axis label and the legend.
+fig.suptitle("radar-multi · python · seaborn · anyplot.ai", y=0.98, fontsize=12, fontweight="medium", color=INK)
 
-# Add legend with theme-adaptive styling
+# Add legend with theme-adaptive styling, placed below the plot clear of the axis labels
 legend = ax.legend(
-    loc="upper right",
-    bbox_to_anchor=(1.15, 1.1),
-    fontsize=16,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.08),
+    ncol=3,
+    fontsize=9,
     framealpha=0.95,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
 )
 legend.get_frame().set_linewidth(1)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(top=0.86, bottom=0.16, left=0.08, right=0.92)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)  # bbox_inches MUST stay default (None)
