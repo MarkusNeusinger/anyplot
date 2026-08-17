@@ -138,6 +138,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Plot of the day now respects dark mode** — the landing-page terminal card always showed the
+  light preview image because `GET /insights/plot-of-the-day` only returned the legacy
+  `preview_url` (a synonym for the light variant); the response now carries
+  `preview_url_light` / `preview_url_dark`, so the already theme-aware frontend picks the dark
+  render automatically (user bug report, in German, on `/roc-curve/python/altair`) (#10308).
 - **A correctly rejected plot was reported as a crashed review, deadlocking the PR** —
   `impl-review.yml` used quality score `0` as its sentinel for "the AI review produced no
   output", but `0` is also a score the review prompt *mandates*: the Stage 1 auto-reject gates
