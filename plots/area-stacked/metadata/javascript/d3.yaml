@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: area-stacked
 created: '2026-08-17T12:42:35Z'
-updated: '2026-08-17T13:19:34Z'
+updated: '2026-08-17T13:27:02Z'
 generated_by: claude-sonnet
 workflow_run: 32033372584
 issue: 2022
@@ -12,58 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - Correct Imprint palette in canonical order (green Industrial, lavender Transportation,
-    blue Commercial, ochre Residential, red Agriculture), identical data colors between
-    light and dark renders
-  - Series correctly ordered largest-at-bottom to smallest-at-top per the spec, with
-    baseline anchored at zero
+  - 'Both Attempt 1 weaknesses directly resolved: end-label contrast fix (ink-colored
+    stroke outline) and data-scale/context mismatch fix ("Germany" now matches the
+    country-scale totals)'
+  - Correct Imprint palette in canonical order, identical data colors between light
+    and dark renders
+  - Series correctly ordered largest-at-bottom to smallest-at-top per the spec, baseline
+    anchored at zero
   - 'Distinctive D3 touch: end-of-series value labels and the growth-insight callout
-    are computed directly from the d3.stack() layer data rather than a separate lookup,
-    which is genuinely idiomatic low-level D3 usage'
-  - Data-storytelling callout box (total growth '1,180 -> 1,462 TWh (+24%)' plus top-growing
-    sector) gives the chart an immediate, clear takeaway
-  - Exact mandated title format, correct legend labels matching the data categories,
-    explicit font sizing throughout, strong canvas utilization (~70-80%), no edge
-    clipping in either render
-  - Theme-adaptive chrome (background, grid, axis text, legend, callout box) correctly
-    threaded through both light and dark renders
-  - Clean KISS code structure, deterministic hard-coded data, current D3 v7 API (d3.stack,
-    d3.area, scaleOrdinal, selection.join)
+    are computed directly from the d3.stack() layer data'
+  - Data-storytelling callout box (total growth + top-growing sector) gives an immediate,
+    clear takeaway
+  - Exact mandated title format, correct legend labels, explicit font sizing throughout,
+    strong canvas utilization, no edge clipping
+  - Theme-adaptive chrome correctly threaded through both renders
   weaknesses:
-  - 'The color-matched end-of-series value labels (505/384/273/221/79) fill with the
-    raw series color and have no outline. Computed contrast against their background
-    falls below WCAG readability thresholds for several: lavender #C475FD and ochre
-    #BD8233 on the light #FAF8F1 background (~2.7:1 and ~3.1:1), and red #AE3030 on
-    the dark #1A1A17 background (~2.7:1) -- all below the ~4.5:1 needed for 13px bold
-    text. Since these labels carry critical numeric data, add a thin ink-colored stroke/outline
-    per the style guide''s ''Optional outline pattern'' section, or switch the label
-    fill to the theme-adaptive ink/inkSoft token instead of the raw series color.'
-  - The code comment describes the dataset as 'global energy consumption by sector'
-    but the totals (1,180-1,462 TWh across all five sectors) are country/regional
-    scale -- real global energy consumption runs in the tens of thousands of TWh per
-    year. Either rescale the values to a genuinely global magnitude or reframe the
-    context to a specific country/region so the labeled scope matches the numbers.
-  - All five sectors grow smoothly and monotonically at fairly similar rates across
-    the 15 years -- a touch more variation (a flatter or dipping sector, or a one-year
-    plateau) would better showcase feature coverage for a stacked-area chart.
+  - All five sectors still grow smoothly and monotonically at fairly similar rates
+    across the 15 years - a touch more variation (a flatter or dipping sector, or
+    a one-year plateau) would better showcase feature coverage for a stacked-area
+    chart. Minor, non-blocking.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Title "area-stacked · javascript · d3 · anyplot.ai" in bold dark text at top, clearly visible. Y-axis title "Energy Consumption (TWh)" (rotated) and x-axis title "Year" in dark ink, both readable. Tick labels on both axes in a softer dark gray, readable. A single faint horizontal gridline near the 1,600 tick is visible in the whitespace above the data; elsewhere gridlines are hidden behind the filled areas by design. A callout box (light elevated cream fill, thin border) in the top-left reads "Total energy consumption / 1,180 -> 1,462 TWh (+24%) / Industrial led the gain: +85 TWh (+20%)" in dark text -- fully legible. A legend at the right lists Industrial/Transportation/Commercial/Residential/Agriculture with color swatches, in dark gray text -- legible.
-      Data: Five stacked area bands from bottom to top: Industrial (brand green #009E73, largest), Transportation (lavender), Commercial (blue), Residential (ochre), Agriculture (red, thinnest at top). Thin light-colored strokes separate each band. Color-matched end-of-series numeric labels (505, 384, 273, 221, 79) sit just left of the legend. The lavender "384" and ochre "221" labels are noticeably paler/lower-contrast against the cream background than the blue and red labels, though still distinguishable given their bold weight.
-      Legibility verdict: PASS overall, with a caveat -- the lavender and ochre end-value labels read as low-contrast against the light background (computed ~2.7-3.1:1, below the ~4.5:1 target for text this size).
+      Background: Warm off-white, consistent with #FAF8F1 - PASS
+      Chrome: Title "area-stacked · javascript · d3 · anyplot.ai", axis titles "Year" / "Energy Consumption (TWh)", tick labels, legend, and callout box text are all dark and clearly readable
+      Data: Five stacked bands (Industrial #009E73 green at base, Transportation lavender, Commercial blue, Residential ochre, Agriculture red at top) - first series confirmed brand green #009E73
+      End labels: 505/384/273/221/79 now carry a dark ink-colored stroke outline (confirmed via pixel crop) - all legible including previously weak lavender "384" and ochre "221"
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Title, axis titles, and tick labels all flip to light-colored text and remain clearly readable against the dark background -- no dark-on-dark failures observed. The callout box uses a dark elevated fill with light text, fully legible. Legend text is light gray and legible against the dark background.
-      Data: Same five stacked bands in the identical colors as the light render (Industrial green, Transportation lavender, Commercial blue, Residential ochre, Agriculture red) -- data colors confirmed unchanged between themes, only chrome flipped. Band separators now render as thin dark strokes (matching the dark page background) instead of light ones. The color-matched end-of-series labels are present again; here the red "79" label (Agriculture) is the low-contrast one against the dark background (computed ~2.7:1), while lavender/ochre/blue/green read comfortably against the dark surface.
-      Legibility verdict: PASS overall, with the same caveat mirrored to the opposite series -- the red end-value label is low-contrast against the dark background.
+      Background: Warm near-black, consistent with #1A1A17 - PASS
+      Chrome: All text (title, axis titles, tick labels, legend, callout) flips to light-colored and stays readable - no dark-on-dark failures
+      Data: Colors identical to light render (confirmed unchanged) - only chrome flipped, band separator strokes switch from light to dark
+      End labels: now carry a light ink-colored stroke outline (confirmed via pixel crop) - previously weak red "79" (Agriculture) is now clearly legible against the dark surface
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -71,51 +58,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; strong legibility overall, minor softness
-          on color-matched end labels
+        comment: All font sizes explicit, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked bands are large and clearly visible; appropriate for 15 time
-          points x 5 series
+        comment: Bands and labels clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Color-matched end-of-series labels (lavender/ochre on light bg, red
-          on dark bg) fall below ~4.5:1 contrast with no outline applied despite carrying
-          critical numeric data
+        passed: true
+        comment: Stroke outline on end-labels fixes prior low-contrast lavender/ochre/red
+          cases
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~70-80% of canvas, balanced margins, legend adjacent to
-          plot, no cut-off content
+        comment: Good proportions, no cut-off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis label includes units (TWh); descriptive labels throughout
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; remaining series follow canonical Imprint
-          order; identical across themes; correct theme-adaptive backgrounds'
+        comment: Canonical Imprint order, theme-correct chrome
     design_excellence:
-      score: 16
+      score: 18
       max: 20
       items:
       - id: DE-01
@@ -123,22 +105,20 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Above default: intentional hierarchy via callout, color-matched
-          labels, curved area transitions'
+        comment: Callout, color-matched labels, curved transitions above default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Subtle y-only grid, generous whitespace, thoughtful separators between
-          bands; contrast miss on labels holds back full marks
+        comment: Subtle grid, generous whitespace, label-outline fix closes prior
+          polish gap
       - id: DE-03
         name: Data Storytelling
         score: 6
         max: 6
         passed: true
-        comment: Explicit growth callout (+24% total, top-growing sector) gives an
-          immediate, clear insight
+        comment: Growth callout gives immediate insight
     spec_compliance:
       score: 15
       max: 15
@@ -148,29 +128,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart with all series stacked via d3.stack()
+        comment: Correct stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Legend present, largest-at-bottom ordering, zero baseline, semi-transparent
-          fill all present
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=year (continuous), Y=stacked series values, axes show full data
-          range
+        comment: X/Y correctly assigned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact mandated format; legend labels match series names
+        comment: Exact mandated title, correct legend labels
     data_quality:
-      score: 11
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -178,22 +156,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows stacking, varying growth rates per sector; lacks any dip/plateau
-          variation
+        comment: All sectors grow smoothly/monotonically, little variation
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Plausible, neutral business/science scenario (energy consumption
-          by sector)
+        comment: Plausible, neutral business/energy scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Comment claims 'global' energy consumption but totals (~1,200-1,500
-          TWh) are country/regional scale, not global magnitude
+        passed: true
+        comment: 'Fixed: ''Germany'' framing now matches country-scale totals'
     code_quality:
       score: 10
       max: 10
@@ -203,31 +178,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, no functions/classes
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data arrays
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global is used, no unused imports
+        comment: No extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Clean, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, current D3 v7 API, no deprecated calls
+        comment: Correct mount-node contract
     library_mastery:
       score: 9
       max: 10
@@ -237,15 +212,14 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of d3.stack(), d3.area(), scaleOrdinal, data joins
+        comment: Idiomatic d3.stack()/d3.area() usage
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: End labels and growth callout read directly off the raw d3.stack()
-          layer data -- a genuinely D3-idiomatic technique
-  verdict: REJECTED
+        comment: End labels/callout read directly off d3.stack() layer data
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -253,9 +227,9 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
+  - publication-ready
   - alpha-blending
   - edge-highlighting
