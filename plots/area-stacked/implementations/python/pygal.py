@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 85/100 | Updated: 2026-08-17
@@ -21,7 +21,11 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
 # Data - National electricity consumption by sector, 2010-2024 (TWh)
-# Ordered largest at bottom for easier reading
+# Stack order is fixed by each sector's average magnitude across the full
+# 15-year range (largest at bottom), not by any single year's snapshot -
+# a fixed order keeps the stack visually stable instead of reshuffling
+# bands as ranks cross over (e.g. Transportation overtakes Commercial only
+# in the final years, 2023-2024).
 years = [str(y) for y in range(2010, 2025)]
 
 industrial = [420, 425, 415, 430, 445, 450, 440, 460, 475, 470, 430, 465, 485, 495, 505]
@@ -63,12 +67,16 @@ chart = pygal.StackedLine(
     x_labels_major_count=8,
     show_minor_x_labels=False,
     legend_at_bottom=True,
+    legend_at_bottom_columns=4,
     legend_box_size=34,
     truncate_legend=-1,
     show_dots=False,
+    interpolate="hermite",
+    interpolation_parameters={"type": "cardinal", "c": 0.5},
+    interpolation_precision=120,
     value_formatter=lambda v: f"{v:,.0f} TWh",
     margin=60,
-    margin_bottom=150,
+    margin_bottom=120,
     spacing=50,
 )
 
