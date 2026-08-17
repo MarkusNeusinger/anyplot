@@ -1,6 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
-Library: letsplot 4.9.0 | Python 3.13.13
+Library: letsplot 4.11.0 | Python 3.13.12
 Quality: 85/100 | Created: 2026-05-07
 """
 
@@ -20,7 +20,8 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
-    scale_color_viridis,
+    layer_tooltips,
+    scale_color_gradient,
     theme,
     theme_void,
 )
@@ -52,7 +53,7 @@ inner_r = 1.5
 spacing = 1.0
 angle = np.pi / 2 - 2 * np.pi * (year_num + frac_year)
 r = inner_r + spacing * (year_num + frac_year)
-df = pd.DataFrame({"x": r * np.cos(angle), "y": r * np.sin(angle), "temp": temp})
+df = pd.DataFrame({"x": r * np.cos(angle), "y": r * np.sin(angle), "temp": temp, "date": dates.strftime("%b %-d, %Y")})
 
 # Radial grid lines at each month start
 grid_rows = []
@@ -88,31 +89,44 @@ for i, mname in enumerate(MONTHS):
     month_rows.append({"x": outer_r * np.cos(ang_m), "y": outer_r * np.sin(ang_m), "label": mname})
 month_df = pd.DataFrame(month_rows)
 
-# Theme: void base + custom chrome
+# Title: mandated tokens plus a short descriptive prefix; fontsize scales down
+# linearly past the 67-char baseline (see prompts/plot-generator.md).
+title = "Daily Temperatures 2019–2023 · spiral-timeseries · python · letsplot · anyplot.ai"
+title_fontsize = round(16 * min(1.0, 67 / len(title)))
+
+# Theme: void base + custom chrome. Legend pinned to the bottom (horizontal
+# colorbar) — a right-side legend next to coord_fixed() triggers a lets-plot
+# export bug where the panel/legend width negotiation leaves an unfilled
+# (black) margin top and bottom of the PNG; bottom placement sidesteps it.
 anyplot_theme = theme_void() + theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    plot_title=element_text(color=INK, size=24),
+    plot_title=element_text(color=INK, size=title_fontsize),
+    legend_position="bottom",
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=16),
-    legend_title=element_text(color=INK, size=16),
+    legend_text=element_text(color=INK_SOFT, size=10),
+    legend_title=element_text(color=INK, size=12),
 )
-
-title = "Daily Temperatures 2019–2023 · spiral-timeseries · letsplot · anyplot.ai"
 
 plot = (
     ggplot()
     + geom_segment(
         data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, alpha=0.25, size=0.5
     )
-    + geom_path(data=df, mapping=aes(x="x", y="y", color="temp"), size=2.5)
-    + scale_color_viridis(name="Temp (°C)")
+    + geom_path(
+        data=df,
+        mapping=aes(x="x", y="y", color="temp"),
+        size=2.5,
+        tooltips=layer_tooltips().line("@date").line("Temp|@temp°C"),
+    )
+    # Imprint sequential colormap (brand green -> blue) for single-polarity magnitude
+    + scale_color_gradient(low="#009E73", high="#4467A3", name="Temp (°C)")
     + geom_text(data=year_df, mapping=aes(x="x", y="y", label="label"), color=INK, size=14)
     + geom_text(data=month_df, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=11)
     + coord_fixed()
     + labs(title=title)
     + anyplot_theme
-    + ggsize(900, 900)
+    + ggsize(600, 600)
 )
 
 ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
