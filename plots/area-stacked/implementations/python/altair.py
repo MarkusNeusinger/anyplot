@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: altair 6.2.2 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-17
@@ -53,6 +53,11 @@ df["StackOrder"] = df["Category"].map(stack_order)
 # Total revenue overlay, drawn as a dashed line tracing the top of the stack
 totals = df.groupby("Month", as_index=False)["Revenue"].sum().rename(columns={"Revenue": "Total"})
 
+# Annotation: callout the sustained revenue decline that starts ~Mar 2024
+decline_month = pd.Timestamp("2024-03-01")
+decline_total = float(totals.loc[totals["Month"] == decline_month, "Total"].iloc[0])
+annotation_df = pd.DataFrame({"Month": [decline_month], "Total": [decline_total], "Label": ["Revenue decline begins"]})
+
 # Imprint palette: first series ALWAYS #009E73
 colors = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 # Subtle back-to-front opacity gradient (bottom layer softer, top layer crisper)
@@ -88,12 +93,15 @@ area_chart = (
             "Category:N",
             scale=alt.Scale(domain=category_order, range=colors),
             legend=alt.Legend(
-                title="Product Category",
+                title=["Product Category", "ordered by size"],
                 titleFontSize=10,
+                titleFontWeight="bold",
                 labelFontSize=10,
                 orient="right",
-                symbolSize=90,
+                symbolSize=80,
                 symbolStrokeWidth=0,
+                labelOffset=4,
+                rowPadding=6,
                 labelColor=INK_SOFT,
                 titleColor=INK,
                 fillColor=ELEVATED_BG,
@@ -124,13 +132,25 @@ total_line = (
     )
 )
 
+# Point + label calling out where the sustained decline begins
+decline_point = (
+    alt.Chart(annotation_df)
+    .mark_point(shape="circle", size=60, filled=True, color=INK, opacity=0.9)
+    .encode(x="Month:T", y="Total:Q")
+)
+decline_text = (
+    alt.Chart(annotation_df)
+    .mark_text(align="right", dx=-10, dy=-6, fontSize=10, fontWeight="bold", color=INK)
+    .encode(x="Month:T", y="Total:Q", text="Label:N")
+)
+
 chart = (
-    alt.layer(area_chart, total_line)
+    alt.layer(area_chart, total_line, decline_point, decline_text)
     .properties(
         width=620,
         height=320,
         background=PAGE_BG,
-        title=alt.Title("area-stacked · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
+        title=alt.Title("area-stacked · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
     .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT)
     .configure_view(stroke=None, fill=PAGE_BG)
