@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:38:22Z'
-updated: '2026-08-17T12:35:42Z'
+updated: '2026-08-17T12:40:23Z'
 generated_by: claude-sonnet
 workflow_run: 32029836190
 issue: 2022
@@ -12,12 +12,16 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Correct chart type (pygal.StackedLine with fill=True) with all four series stacked
-    largest-at-bottom (Industrial > Residential > Commercial > Transportation) as
-    the spec's Notes recommend
+  - 'Zero-baseline requirement now fixed: `range=(0, 1400)` was added to pygal.StackedLine,
+    and both renders confirm the stack''s bottom edge sits exactly on the 0 TWh gridline
+    instead of floating above it — this directly resolves the sole blocker from the
+    prior REJECTED attempt'
+  - Correct chart type (pygal.StackedLine with fill=True) with all four series stacked,
+    largest-at-bottom for most of the series (Industrial > Residential > Commercial)
+    as the spec's Notes recommend
   - 'Imprint palette used correctly: first series Industrial is #009E73, remaining
     series follow the canonical order, and plot backgrounds are the exact #FAF8F1
     / #1A1A17 theme tokens'
@@ -31,31 +35,26 @@ review:
   - Clean, reproducible, deterministic KISS script with only used imports and no fake
     interactivity
   weaknesses:
-  - 'Y-axis baseline does NOT start at zero, directly violating the spec''s explicit
-    Notes requirement (''Ensure baseline starts at zero to avoid misleading proportions'').
-    Measuring the rendered PNG: the ''1,300 TWh'' and ''600 TWh'' gridlines sit 826px
-    apart (118px per 100 TWh), and the bottom axis line for the rightmost (2024) column
-    sits at only ~365 TWh on that scale, not 0 TWh — StackedLine has no `range` kwarg
-    set, so pygal auto-scaled the y-axis to the data span instead of anchoring at
-    zero. Fix: pass `range=(0, 1400)` (or similar headroom above the max stacked total
-    of ~1305 TWh) to `pygal.StackedLine(...)`.'
-  - 'Design Excellence is close to library defaults: no explicit visual hierarchy,
+  - 'Design Excellence is still close to library defaults: no explicit visual hierarchy,
     focal point, or annotation calling out the 2020 dip/rebound — DE-01/DE-02/DE-03
-    all near baseline.'
+    remain near baseline, unchanged from the prior attempt'
   - LM-02 (Distinctive Features) is only lightly used — no interpolation, secondary
-    axis, or other pygal-distinctive technique beyond formatter/legend/label tuning.
+    axis, or other pygal-distinctive technique beyond formatter/legend/label tuning
+  - 'Minor: stacking order is fixed at ''largest at bottom'' using average magnitude
+    (Industrial > Residential > Commercial > Transportation), but by 2024 Transportation
+    (250 TWh) actually exceeds Commercial (225 TWh) while still stacked above it —
+    a small deviation from the spec''s ordering guidance in the later years'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "area-stacked · pygal · anyplot.ai" in dark ink, centered, ~55-60% of plot width. X-axis title "Year" and rotated y-axis title "Electricity Consumption (TWh)" both dark and readable. Tick labels (years, TWh values) dark and legible. Subtle horizontal dashed gridlines at 100 TWh intervals. Legend at bottom in a 2x2 grid (Industrial, Residential / Commercial, Transportation) with color swatches matching the stack.
-      Data: Four stacked areas from bottom to top — Industrial (#009E73 green, largest), Residential (#C475FD purple), Commercial (#4467A3 blue), Transportation (#BD8233 orange) — at ~0.85 opacity, no dots, smooth interpolation between the 15 yearly points (2010-2024). A visible dip across all bands around 2020.
+      Chrome: Title "area-stacked · pygal · anyplot.ai" in dark ink, centered, ~55-60% of plot width. X-axis title "Year" and rotated y-axis title "Electricity Consumption (TWh)" both dark and readable. Tick labels (years, TWh values) dark and legible. Subtle horizontal dashed gridlines at 100 TWh intervals, now spanning the full 0-1,400 TWh range. Legend at bottom in a 2x2 grid (Industrial, Residential / Commercial, Transportation) with color swatches matching the stack.
+      Data: Four stacked areas from bottom to top — Industrial (#009E73 green, largest), Residential (#C475FD purple), Commercial (#4467A3 blue), Transportation (#BD8233 orange) — at ~0.85 opacity, no dots, smooth interpolation between the 15 yearly points (2010-2024). A visible dip across all bands around 2020. The stack's bottom edge now sits exactly on the "0 TWh" gridline in both renders — the zero-baseline fix (range=(0, 1400)) is confirmed visually.
       Legibility verdict: PASS — all text reads clearly against the light background.
-      Note: the visible y-axis gridlines only go down to "500 TWh" and the colored stack's bottom edge sits noticeably above where a true zero baseline would be (confirmed by pixel measurement — see Weaknesses), i.e. the chart does not start its baseline at zero as the spec requires.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, axis titles, and tick labels all rendered in light ink (#F0EFE8-equivalent), clearly visible against the dark background. Gridlines are faint but present. Legend text and swatches equally legible.
-      Data: Same four data colors as the light render (#009E73, #C475FD, #4467A3, #BD8233) — confirmed identical, only chrome (background/text/grid) flipped as required.
+      Chrome: Title, axis titles, and tick labels all rendered in light ink (#F0EFE8-equivalent), clearly visible against the dark background. Gridlines are faint but present, spanning the same 0-1,400 TWh range as the light render. Legend text and swatches equally legible.
+      Data: Same four data colors as the light render (#009E73, #C475FD, #4467A3, #BD8233) — confirmed identical, only chrome (background/text/grid) flipped as required. Stack bottom also sits exactly on the "0 TWh" gridline, matching the light render.
       Legibility verdict: PASS — no dark-on-dark failures; every label, tick, and legend entry is clearly readable against the near-black surface.
   criteria_checklist:
     visual_quality:
@@ -136,7 +135,7 @@ review:
         comment: No annotation or emphasis calling out the 2020 dip/rebound or overall
           growth trend
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -147,11 +146,11 @@ review:
         comment: pygal.StackedLine with fill=True is a correct stacked area chart
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Baseline does not start at zero — no `range` kwarg set, so pygal
-          auto-scaled the y-axis, violating the spec's explicit Notes requirement
+        passed: true
+        comment: 'Fixed this attempt: range=(0, 1400) anchors the baseline at zero
+          as the spec''s Notes require; confirmed visually in both renders'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -223,16 +222,16 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Style object, StackedLine, value_formatter — idiomatic, but missing
-          `range=(0, ...)` for the zero-baseline requirement
+        comment: Style object, StackedLine, value_formatter, and now range=(0, ...)
+          for the zero-baseline requirement — fully idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 2
@@ -240,7 +239,7 @@ review:
         passed: false
         comment: Some distinctive config (legend_at_bottom, x_labels_major_count,
           truncate_legend) but nothing beyond formatter/label tuning
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
