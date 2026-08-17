@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 90/100 | Created: 2026-05-07
+Quality: pending | Updated: 2026-08-17
 """
 
 import os
@@ -19,6 +19,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Continuous data: single-polarity Imprint sequential scale (brand green -> blue)
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
 
 # Data: Daily average temperatures 2019–2023 (temperate northern hemisphere)
 np.random.seed(42)
@@ -84,7 +87,7 @@ for m, mname in enumerate(month_names):
         y=r_label * np.sin(mt),
         text=mname,
         showarrow=False,
-        font=dict(size=20, color=INK, family="Arial, sans-serif"),
+        font=dict(size=12, color=INK, family="Arial, sans-serif"),
         xanchor="center",
         yanchor="middle",
     )
@@ -102,27 +105,27 @@ fig.add_trace(
     )
 )
 
-# 4. Temperature-colored markers (daily resolution, Viridis scale)
+# 4. Temperature-colored markers (daily resolution, Imprint sequential scale)
 fig.add_trace(
     go.Scatter(
         x=x_sp,
         y=y_sp,
         mode="markers",
         marker=dict(
-            size=10,
+            size=5,
             color=temperature,
-            colorscale="Viridis",
+            colorscale=imprint_seq,
             cmin=TMIN,
             cmax=TMAX,
             showscale=True,
             colorbar=dict(
-                title=dict(text="Temp (°C)", font=dict(size=20, color=INK)),
-                tickfont=dict(size=17, color=INK_SOFT),
+                title=dict(text="Temp (°C)", font=dict(size=12, color=INK)),
+                tickfont=dict(size=10, color=INK_SOFT),
                 tickvals=[-5, 0, 5, 10, 15, 20, 25],
                 bgcolor=ELEVATED_BG,
                 bordercolor=INK_SOFT,
                 borderwidth=1,
-                thickness=24,
+                thickness=14,
                 len=0.65,
                 x=1.03,
             ),
@@ -142,7 +145,7 @@ for k, yr in enumerate(range(2019, 2024)):
         y=yr_r,
         text=f"<b>{yr}</b>",
         showarrow=False,
-        font=dict(size=17, color=INK_MUTED, family="Arial, sans-serif"),
+        font=dict(size=10, color=INK_MUTED, family="Arial, sans-serif"),
         xanchor="center",
         yanchor="bottom",
         bgcolor=PAGE_BG,
@@ -152,13 +155,14 @@ for k, yr in enumerate(range(2019, 2024)):
 # Layout (square canvas for circular chart)
 ax_lim = r_label + 0.5
 fig.update_layout(
+    autosize=False,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    width=1200,
-    height=1200,
+    width=600,
+    height=600,
     title=dict(
-        text="Daily Temperatures · spiral-timeseries · plotly · anyplot.ai",
-        font=dict(size=26, color=INK, family="Arial, sans-serif"),
+        text="spiral-timeseries · python · plotly · anyplot.ai",
+        font=dict(size=16, color=INK, family="Arial, sans-serif"),
         x=0.5,
         xanchor="center",
         y=0.98,
@@ -166,10 +170,10 @@ fig.update_layout(
     ),
     xaxis=dict(range=[-ax_lim, ax_lim], scaleanchor="y", scaleratio=1, visible=False),
     yaxis=dict(range=[-ax_lim, ax_lim], visible=False),
-    margin=dict(l=20, r=120, t=55, b=20),
+    margin=dict(l=10, r=60, t=28, b=10),
     showlegend=False,
 )
 
-# Save
-fig.write_image(f"plot-{THEME}.png", width=1200, height=1200, scale=3)
+# Save — 600x600 @ scale=4 -> 2400x2400 (canonical square target)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
