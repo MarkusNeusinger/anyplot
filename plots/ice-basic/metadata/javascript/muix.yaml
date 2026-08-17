@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: ice-basic
 created: '2026-08-17T23:10:33Z'
-updated: '2026-08-17T23:17:29Z'
+updated: '2026-08-17T23:26:15Z'
 generated_by: claude-sonnet
 workflow_run: 32078667122
 issue: 5238
@@ -12,60 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'Correctly implements the core ICE-plot contract: 70 low-alpha individual prediction
-    curves (within the spec''s 50-200 observation range) overlaid with a bold, opaque
-    PDP average line rendered via the theme-adaptive `neutral`/ink token, matching
-    the style guide''s sanctioned semantic use for reference/baseline lines.'
-  - 'Deterministic, seeded (mulberry32(42)) synthetic data encodes a genuine feature
-    interaction: a ~25% ''luxury'' subgroup with distinct curvature produces a real
-    fan-out divergence at high square footage, giving the plot actual interpretability
-    value instead of near-identical parallel lines.'
-  - 'Handles a known MUI X layout gotcha cleanly: the rotated y-axis label is rendered
-    in a dedicated column instead of relying on MUI X''s fixed-offset native label,
-    which the code comments correctly identify as colliding with wide ''$800k''-style
-    tick labels.'
-  - 'Both renders are pixel-verified at exactly 3200x1800 with theme-correct backgrounds
-    (#FAF8F1 / #1A1A17), zero edge clipping on any side, and an identical data-series
-    hue between light and dark — only chrome adapts.'
-  - Title, legend, and axis labels follow the mandated format and are unit-labeled
-    ('Square Footage (sq ft)', 'Predicted Price ($)').
+  - 'Fixed the prior title-proportion weakness: the title now spans ~57.3% of canvas
+    width (verified via pixel scan), squarely inside the 50-70% target band, vs. ~39%
+    in the previous attempt.'
+  - Adds explicit second-feature color-coding for the luxury subgroup (Imprint palette[3]
+    ochre vs. brand green) plus a dashed ChartsReferenceLine annotation ('Luxury subgroup
+    diverges →') that names the exact interaction effect the spec's Applications section
+    calls out - directly resolves the prior review's storytelling and 'unused spec-suggested
+    enhancement' weaknesses.
+  - 'Clean harness contract: default export, skipAnimation, sized to window.ANYPLOT_SIZE,
+    deterministic mulberry32(42) seed for reproducibility.'
+  - 'Both renders pixel-verified at exactly 3200x1800 with theme-correct backgrounds
+    (#FAF8F1 / #1A1A17) and zero edge clipping on any side; data colors identical
+    between light and dark, only chrome flips.'
+  - Legend correctly collapses ~70 individual ICE curves down to 3 meaningful entries
+    (Standard homes / Luxury subgroup / Average prediction) via selective labeling,
+    instead of one legend row per line.
   weaknesses:
-  - Title occupies only ~39% of the plot width (measured via pixel scan), well below
-    the ~70-85% expected for a title of this length (68 chars, mandated format + descriptive
-    prefix). TITLE_FONT_SIZE = round(22 * min(1, 67/TITLE.length)) barely scales down
-    at length 68 vs the hardcoded 67 reference, but the actual MUI X render is much
-    narrower than the generic formula assumes — increase the title fontsize (try ~30-34px)
-    so it reads with proper visual presence rather than looking undersized relative
-    to the 3200px canvas.
-  - 'Design Excellence is only moderately above library defaults: a single accent
-    hue (green fan + ink PDP line) with no additional typographic hierarchy or annotation.
-    Consider a subtle callout/annotation near the divergent ''luxury'' subgroup fan-out
-    to explicitly name the interaction effect the spec highlights as the ICE plot''s
-    key value (''detecting when a feature''s effect varies across the population'').'
-  - 'Optional-but-valuable ICE enhancements from the spec''s notes are unused: no
-    rug plot along the x-axis showing the feature_value distribution, and no color-coding
-    of the ~25% luxury subgroup by a second feature — both are explicitly suggested
-    in the spec and would make the interaction effect explicit rather than only inferable
-    from line divergence.'
-  - 'Library Mastery is solid but generic: the sx CSS-selector override for the PDP
-    line''s stroke width is a clever escape hatch but not a headline MUI X-distinctive
-    capability (e.g. ChartsReferenceLine, axis highlighting, per-series curve interpolation)
-    that would set this apart from a generic line-chart implementation.'
+  - Tick label font sizes on both axes are not explicitly set (relies on the MUI X
+    ThemeProvider default) - legible in both themes, but stops short of the 'all font
+    sizes explicitly set' bar for a perfect VQ-01.
+  - DE-01 is still primarily a well-styled default line chart rather than a fully
+    custom-designed visualization; the 'Standard homes' fan of ~52 overlapping thin
+    lines reads slightly busy at full density even with alpha=0.18.
+  - 'LM-02: ChartsReferenceLine is a nice touch but not a headline MUI X-distinctive
+    capability (e.g. per-series curve interpolation, axis highlighting, composed multi-chart-type
+    usage) - usage remains fairly generic to what most modern charting libraries could
+    produce.'
+  - Spec's optional suggestions - a rug plot along the x-axis for the feature_value
+    distribution, or a centered/c-ICE variant - remain unused; not required, but would
+    add further interpretive depth.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, pixel-sampled at RGB(250,248,241) — matches #FAF8F1 exactly.
-      Chrome: Title "House Price Predictions · ice-basic · javascript · muix · anyplot.ai" in dark ink, top-left, fully readable but occupies only ~39% of canvas width (measured left/right extent of non-background pixels in the title row) — smaller than the ~70-85% expected for a title this long. A single legend entry "Average prediction (PDP)" with a dark square swatch sits centered near the top, not overlapping any data. Subtle horizontal gridlines only (no vertical clutter). Y-axis title "Predicted Price ($)" rendered rotated in a dedicated left column (a deliberate workaround for MUI X's native label collision with wide "$800k"-style tick labels); x-axis title "Square Footage (sq ft)" below the plot. All chrome text is dark-on-light and clearly legible; no clipping detected at any of the four canvas edges (verified via pixel scan of the outermost 3px border on all sides — pure background throughout).
-      Data: ~70 individual translucent green (#009E73-based, alpha 0.18) prediction curves fan out from a tight cluster near (900 sqft, $210k) to a wide spread at (3800 sqft, roughly $290k-$780k), visually revealing a divergent "luxury" subgroup among the majority trend. A bold, opaque black PDP curve (ink token, 3.5px stroke) cuts through the middle of the fan, clearly showing the average effect against the individual noise.
-      Legibility verdict: PASS — all text readable, no light-on-light or overlap issues; only the title's proportional size is smaller than the style-guide expectation (a VQ-05/VQ-01 soft-check note, not a legibility failure).
+      Background: Warm off-white, pixel-sampled at RGB(250,248,241) - matches #FAF8F1 exactly.
+      Chrome: Title "House Price Predictions · ice-basic · javascript · muix · anyplot.ai" in dark ink, top-left, spans pixel columns 21-1854 of 3200 (~57.3% of canvas width, measured via pixel scan) - squarely inside the 50-70% target band, a clear fix over the prior attempt's ~39%. Legend row shows 3 entries ("Standard homes" mint swatch, "Luxury subgroup (diminishing returns)" ochre swatch, "Average prediction (PDP)" black swatch), centered near the top, none overlapping data or each other. A dashed ochre ChartsReferenceLine near x=2940 sqft carries the label "Luxury subgroup diverges →" in soft ink, positioned just above the plot area without colliding with the legend or curves. Subtle horizontal-only gridlines. Y-axis title "Predicted Price ($)" rendered rotated in a dedicated left column; x-axis title "Square Footage (sq ft)" below the plot. All chrome text is dark-on-light and clearly legible; no clipping detected at any of the four canvas edges.
+      Data: ~52 translucent mint-green curves (brand green #009E73 at alpha 0.18) and ~18 translucent ochre curves (Imprint palette[3] at alpha 0.35) fan out from a tight cluster near (900 sqft, $210k). The green "standard" fan continues rising through $650-780k at 3800 sqft, while the ochre "luxury" fan visibly bends over and plateaus/declines to $290-470k past the ~2940 sqft reference line - a clear, readable diminishing-returns interaction. A bold, opaque black PDP curve (ink token, 3.5px stroke) cuts through the fan showing the pooled average, positioned between the two subgroups' trends.
+      Legibility verdict: PASS - all text readable, no light-on-light or overlap issues, title proportion now within the expected band.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, pixel-sampled at RGB(26,26,23) — matches #1A1A17 exactly.
-      Chrome: Title, axis labels, and tick labels render in light/cream text, fully readable against the dark surface — no dark-on-dark failures found anywhere. The legend swatch flips to a light/cream square (matching the PDP line's flipped ink color), remaining fully legible. Gridlines are faint but visible. No clipping detected at any of the four canvas edges (same pixel-scan verification as the light render).
-      Data: The individual ICE curves render in the same brand-green hue as the light version — the underlying RGBA data color is unchanged, only its visual appearance against the darker backdrop differs, which is expected and correct (data colors must stay identical; only chrome flips). The PDP curve renders in the light/cream ink token, correctly flipped for contrast — this matches the style guide's sanctioned "neutral" semantic-anchor rule for reference/baseline lines (theme-adaptive by design, same hex as text/gridlines).
-      Legibility verdict: PASS — no dark-on-dark text, brand green remains visible on the dark surface, data colors confirmed identical to the light render aside from the intentional, sanctioned ink-token flip on the PDP reference line.
+      Background: Warm near-black, pixel-sampled at RGB(26,26,23) - matches #1A1A17 exactly.
+      Chrome: Title, legend text, axis titles, and reference-line label render in light/cream text, fully readable against the dark surface - no dark-on-dark failures found anywhere. Title spans the same pixel columns (21-1854, ~57.3% of width) as the light render. Legend swatches keep their data hues (mint green, ochre) while the PDP swatch flips to a light/cream square matching the PDP line's flipped ink color. Gridlines are faint but visible; reference line remains dashed ochre, matching light render.
+      Data: The individual ICE curves render in the identical mint-green and ochre hues as the light version - only the chrome (background, text, PDP line color) flips per the theme-adaptive "neutral" ink-token rule; the categorical data colors themselves are unchanged, confirmed via visual comparison against the light render.
+      Legibility verdict: PASS - no dark-on-dark text, all chrome and data elements remain clearly distinguishable on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -76,77 +67,82 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; title occupies
-          only ~39% of canvas width vs. the ~70-85% expected for this title length
-          — a minor proportional shortfall, not a legibility failure.
+        comment: Title and axis-label font sizes are explicitly computed/set and the
+          title now sits at ~57.3% of canvas width (fixed from prior ~39%); tick labels
+          rely on the MUI X ThemeProvider default rather than an explicit tickLabelStyle,
+          so short of a perfect score.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between legend, axis labels, ticks, or data in either
-          render.
+        comment: No collisions between legend, title, axis labels, reference-line
+          label, or data in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 70 lines at alpha=0.18 avoid overplotting clutter while the bold
-          3.5px PDP line stays clearly visible.
+        comment: ~70 lines split across alpha 0.18 (standard) and 0.35 (luxury) avoid
+          overplotting clutter while the bold 3.5px PDP line and dashed reference
+          line stay clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green fan vs. dark/light ink PDP line differentiated by hue, width,
-          and alpha — not reliant on hue alone.
+        comment: Green fan vs. ochre subgroup vs. dark/light ink PDP line differentiated
+          by hue, width, and alpha - not reliant on hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
         comment: Canvas verified 3200x1800 exactly; plot area fills the large majority
-          of the canvas; no cut-off content on any edge.
+          of the canvas with balanced margins; no cut-off content on any edge; title
+          now within target proportion.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Predicted Price ($)'' and ''Square Footage (sq ft)'' — descriptive
+        comment: '''Predicted Price ($)'' and ''Square Footage (sq ft)'' - descriptive
           with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is Imprint green #009E73; backgrounds are #FAF8F1/#1A1A17;
-          PDP line uses the sanctioned theme-adaptive ''neutral'' ink token for a
-          reference/baseline line.'
+        comment: 'First series is Imprint green #009E73; luxury subgroup uses Imprint
+          palette[3] ochre; PDP line uses the sanctioned theme-adaptive ''neutral''
+          ink token; backgrounds are #FAF8F1/#1A1A17 in both renders.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured library default: single accent hue plus ink reference
-          line, no additional custom palette or typographic hierarchy.'
+        passed: true
+        comment: Thoughtful two-tone subgroup coloring plus a dashed reference-line
+          annotation goes clearly above a bare library default, though it stops short
+          of a fully custom, publication-ready composition.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Deliberate horizontal-only grid, custom y-label column to avoid clutter,
-          generous margins — some refinement above bare defaults.
+        comment: Deliberate horizontal-only grid, custom y-label column to avoid tick-label
+          collisions, generous margins, subtle dashed reference line styling.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Bold opaque PDP line vs. faint translucent ICE fan creates clear
-          visual hierarchy and an immediate focal point (average vs. individual variance).
+        comment: Bold opaque PDP line, color-coded luxury subgroup, and an explicit
+          annotation naming the divergence point together give the viewer an immediate,
+          clearly signposted insight into the feature interaction.
     spec_compliance:
       score: 15
       max: 15
@@ -163,42 +159,39 @@ review:
         max: 4
         passed: true
         comment: Low-alpha individual lines and bold opaque PDP overlay both present,
-          matching the spec notes; optional extras (rug plot, c-ICE, subgroup color-coding)
-          are 'Consider' suggestions, not requirements.
+          plus optional subgroup color-coding suggested by the spec notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: feature_value on x, prediction on y, observation_id defines each
-          ICE line — correct mapping across the full data range.
+          ICE line - correct mapping across the full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title matches the mandated format with descriptive prefix; legend
-          label 'Average prediction (PDP)' accurately describes the series.
+          labels accurately describe each series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows individual variance, average trend, and an embedded subgroup-divergence
-          effect; docked slightly since optional depth features (rug plot, explicit
-          subgroup color-coding) that would make heterogeneity more explicit aren't
-          used.
+        comment: Shows individual variance, average trend, and an explicitly color-coded
+          subgroup-divergence effect - full coverage of the ICE plot's key features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
         comment: Neutral, realistic house-price/GradientBoostingRegressor scenario
-          matching the spec's own example almost verbatim.
+          matching the spec's own example.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -228,7 +221,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart imported and used.
+        comment: Only LineChart and ChartsReferenceLine imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -251,20 +244,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic series/xAxis/yAxis/grid/tooltip/margin/valueFormatter usage;
-          doesn't reach for more advanced composed-chart primitives.
+        comment: Idiomatic series/xAxis/yAxis/grid/tooltip/margin/valueFormatter/ChartsReferenceLine
+          usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sx CSS-selector override for per-series stroke width is a MUI X-specific
-          technique beyond generic default usage, though not a headline library-unique
-          capability.
-  verdict: REJECTED
+        comment: ChartsReferenceLine annotation and sx CSS-selector stroke-width override
+          are MUI X-specific techniques, though not a headline library-unique capability.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   patterns:
   - data-generation
