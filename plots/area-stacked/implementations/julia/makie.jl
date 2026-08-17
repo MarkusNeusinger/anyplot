@@ -50,7 +50,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title               = "area-stacked · julia · makie · anyplot.ai",
-    titlesize           = 20,
+    titlesize           = 25,
     titlecolor          = INK,
     xlabel              = "Month",
     ylabel              = "Revenue (\$ thousands)",
@@ -73,18 +73,31 @@ ax = Axis(
     xticklabelrotation  = pi / 6,
 )
 
-band!(ax, months, baseline, cum1; color = (IMPRINT_PALETTE[1], 0.85), label = "Electronics")
-band!(ax, months, cum1, cum2; color = (IMPRINT_PALETTE[2], 0.85), label = "Home Goods")
-band!(ax, months, cum2, cum3; color = (IMPRINT_PALETTE[3], 0.85), label = "Apparel")
-band!(ax, months, cum3, cum4; color = (IMPRINT_PALETTE[4], 0.85), label = "Sporting Goods")
+# Electronics is the dominant series (largest, bottom-most); its fill intensity
+# ramps up left-to-right via per-vertex alpha on `band!` — a Makie-specific
+# capability (Band recipe accepts a per-point color vector) that doubles as the
+# chart's focal point, drawing the eye toward its accelerating contribution.
+electronics_fill = [RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b,
+                           0.55 + 0.35 * (m - 1) / (length(months) - 1)) for m in months]
 
-lines!(ax, months, cum1; color = IMPRINT_PALETTE[1], linewidth = 1.5)
-lines!(ax, months, cum2; color = IMPRINT_PALETTE[2], linewidth = 1.5)
-lines!(ax, months, cum3; color = IMPRINT_PALETTE[3], linewidth = 1.5)
-lines!(ax, months, cum4; color = IMPRINT_PALETTE[4], linewidth = 1.5)
+band!(ax, months, baseline, cum1; color = electronics_fill)
+band!(ax, months, cum1, cum2; color = (IMPRINT_PALETTE[2], 0.85))
+band!(ax, months, cum2, cum3; color = (IMPRINT_PALETTE[3], 0.85))
+band!(ax, months, cum3, cum4; color = (IMPRINT_PALETTE[4], 0.85))
+
+lines!(ax, months, cum1; color = IMPRINT_PALETTE[1], linewidth = 2.5)
+lines!(ax, months, cum2; color = IMPRINT_PALETTE[2], linewidth = 2)
+lines!(ax, months, cum3; color = IMPRINT_PALETTE[3], linewidth = 2)
+lines!(ax, months, cum4; color = IMPRINT_PALETTE[4], linewidth = 2)
 
 ylims!(ax, 0, nothing)
-axislegend(ax, position = :lt, labelcolor = INK_SOFT, framevisible = false)
+
+# Manual legend elements: the Electronics band uses a per-point color vector
+# (for the gradient fill above), so its swatch is built explicitly with the
+# flat brand-green color rather than inferred from the plot object.
+legend_labels = ["Electronics", "Home Goods", "Apparel", "Sporting Goods"]
+legend_elements = [PolyElement(color = (c, 0.85)) for c in IMPRINT_PALETTE]
+axislegend(ax, legend_elements, legend_labels; position = :lt, labelcolor = INK_SOFT, framevisible = false)
 
 # --- Save -----------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
