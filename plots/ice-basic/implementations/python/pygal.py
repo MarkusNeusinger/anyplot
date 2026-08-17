@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 80/100 | Updated: 2026-08-17
@@ -30,6 +30,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 ICE_COLOR = IMPRINT_PALETTE[0]  # Imprint palette position 1 — ICE lines
 PDP_COLOR = IMPRINT_PALETTE[1]  # Imprint palette position 2 — PDP line
+PDP_HALO_COLOR = PAGE_BG  # background-colored outline so PDP reads through dense ICE bands
 
 # Data: house price predictions from GradientBoostingRegressor
 np.random.seed(42)
@@ -55,8 +56,9 @@ for i in range(n_obs):
 
 pdp_curve = ice_curves.mean(axis=0)
 
-# Style: ICE lines use brand green, PDP uses lavender for contrast
-colors_tuple = (ICE_COLOR,) * n_obs + (PDP_COLOR,)
+# Style: ICE lines use brand green, PDP uses lavender for contrast; a background-colored
+# halo line is drawn just beneath the PDP line so it stays legible where curves converge
+colors_tuple = (ICE_COLOR,) * n_obs + (PDP_HALO_COLOR, PDP_COLOR)
 
 custom_style = Style(
     background=PAGE_BG,
@@ -83,7 +85,7 @@ chart = pygal.Line(
     style=custom_style,
     width=3200,
     height=1800,
-    title="ice-basic · pygal · anyplot.ai",
+    title="ice-basic · python · pygal · anyplot.ai",
     x_title="Square Footage",
     y_title="Predicted Price ($ thousands)",
     show_dots=False,
@@ -110,8 +112,12 @@ chart.add(
 for i in range(1, n_obs):
     chart.add(None, [round(float(v), 1) for v in ice_curves[i]], stroke_style={"width": 2, "opacity": 0.3})
 
-# PDP line — bold, fully opaque, labeled
-chart.add("PDP (average)", [round(float(v), 1) for v in pdp_curve], stroke_style={"width": 10, "opacity": 1.0})
+# PDP line — a wide background-colored halo drawn first, then the bold, fully opaque
+# PDP curve on top; the halo keeps the average visible where ICE curves converge into
+# dense bands (e.g. sqft 1875-3443) instead of blending into the green mass
+pdp_values = [round(float(v), 1) for v in pdp_curve]
+chart.add(None, pdp_values, stroke_style={"width": 18, "opacity": 0.95})
+chart.add("PDP (average)", pdp_values, stroke_style={"width": 12, "opacity": 1.0})
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
