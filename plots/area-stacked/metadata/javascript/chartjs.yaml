@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: area-stacked
 created: '2026-08-17T12:42:00Z'
-updated: '2026-08-17T13:17:25Z'
+updated: '2026-08-17T13:26:56Z'
 generated_by: claude-sonnet
 workflow_run: 32033189192
 issue: 2022
@@ -12,129 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - 'Correct Chart.js stacked-area technique: line datasets with fill:''origin''/''-1''
-    and y.stacked:true, beginAtZero true — baseline anchored at zero as the spec requires'
-  - 'Full Imprint palette compliance across both renders: brand green #009E73 first,
-    canonical positions 1-4 for the 4 series, data colors identical between light
-    and dark, only chrome flips'
-  - 'Genuine data storytelling: two annotated callouts (holiday traffic bump, Organic
-    Search +71% growth) built via custom afterDatasetsDraw plugins give the chart
-    a clear narrative instead of leaving patterns for the viewer to infer'
-  - 'Distinctive library usage: custom elevatedLegendBg plugin (beforeDraw) draws
-    a proper Imprint ''callout card'' behind the legend instead of a bare default
-    legend row — goes beyond basic Chart.js config'
-  - Series correctly ordered largest-to-smallest bottom-to-top (Direct > Organic Search
-    > Referral > Social) per the spec's 'largest at bottom' guidance, verified consistent
-    from Jan '23 through Dec '24
-  - Deterministic LCG-seeded synthetic data (seed=42), realistic and neutral web-traffic-by-source
-    scenario, sensible thousands-visits scale
-  - Theme-adaptive chrome correctly threaded via ANYPLOT_TOKENS in both renders; grid
-    guideline followed (x-axis grid off, y-axis grid subtle only)
-  - Title format exactly matches 'area-stacked · javascript · chartjs · anyplot.ai';
-    axis titles descriptive with units ('Website Visits (thousands)', 'Month')
+  - 'CQ-04 duplication from the prior review is fully resolved: both callouts now
+    share a single parameterized makeCallout(id, pointIndex, text) factory instead
+    of duplicated drawing logic'
+  - Elevated legend card gained a drop shadow plus a hairline border (t.grid stroke)
+    on top of the rounded fill, pushing the 'callout card' treatment further from
+    generic toward a genuine Imprint elevated-surface component
+  - 'Correct Chart.js stacked-area technique: line datasets with fill:''origin''/''-1'',
+    y.stacked, beginAtZero all combine into a proper zero-anchored stacked area'
+  - 'Full Imprint palette compliance in both themes: brand green #009E73 first, canonical
+    order for the remaining three series, data colors verified pixel-identical between
+    light and dark renders'
+  - Two annotated callouts (holiday traffic bump, Organic Search +71% growth) give
+    the chart genuine narrative hierarchy beyond a raw data dump
+  - Deterministic LCG-seeded data (seed=42), realistic neutral website-traffic scenario,
+    sensible scale, and the largest-at-bottom stacking order (Direct > Organic Search
+    > Referral > Social) holds across all 24 months
   weaknesses:
-  - holidayCallout and organicGrowthCallout plugins duplicate the same dashed-leader/dot/label
-    drawing logic almost verbatim — refactor into a single parameterized callout plugin
-    (index, text) to avoid the copy-paste (CQ-04).
-  - The elevatedLegendBg card is a nice touch but stays fairly generic (plain rounded
-    rect + soft shadow) — a subtle border or tighter typographic pairing with the
-    legend text would push it further from 'good default' toward distinctive (DE-01).
-  - pointRadius:0 hides all markers on the top stack line, so only the two annotation
-    dots mark actual data points — acceptable for a smooth area chart but slightly
-    reduces the sense of discrete monthly readings (VQ-03).
+  - pointRadius:0 still leaves no marker affordance anywhere on the four lines other
+    than the two annotation dots — a carry-over from attempt 1 that wasn't addressed
+    in this repair
+  - Both callout dots anchor to chart.getDatasetMeta(series.length - 1), i.e. the
+    top of the total stack, even though the second callout's text is specifically
+    about Organic Search's own growth — the dot doesn't sit on Organic Search's own
+    boundary line, which is a minor mismatch between what the marker visually indicates
+    and what the label claims
+  - The elevated legend card is a full-width strip rather than a tightly-wrapped card
+    sized to its content; the new border/shadow help, but a narrower, content-hugging
+    card would read more intentional
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "area-stacked · javascript · chartjs · anyplot.ai" in bold dark ink, clearly readable. Legend sits inside a rounded elevated card (white-ish fill, soft shadow) with four swatches: Direct (green), Organic Search (lavender), Referral (blue), Social (ochre). Y-axis title "Website Visits (thousands)" and X-axis title "Month" both dark ink, fully legible. X tick labels (Jan '23 ... Nov '24) and Y tick labels (0-4,000) in soft gray, readable. Subtle horizontal grid lines only (x-axis grid disabled per style guide). Two dashed-leader annotations ("Holiday traffic bump" near Nov '23, "Organic Search +71% since Jan '23" near Aug '24) in soft ink, positioned above the stack apex with no overlap on data or other text.
-      Data: Four stacked areas from bottom to top: Direct (#009E73 brand green, largest), Organic Search (#C475FD lavender), Referral (#4467A3 blue), Social (#BD8233 ochre, smallest) — matches canonical Imprint palette order 1-4. Areas are semi-transparent (alpha 0.75) with solid 2px borders. Stack baseline sits at zero. Series ordering (largest at bottom) holds consistently across the full 24-month range.
-      Legibility verdict: PASS — all title, axis, tick, legend, and annotation text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, sampled ~#FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark-ink title "area-stacked · javascript · chartjs · anyplot.ai" centered at top, fully visible with no clipping. Legend sits inside a rounded elevated card (now with a subtle drop shadow and a hairline border on the card edge) with four swatches: Direct (green), Organic Search (lavender/purple), Referral (blue-gray), Social (ochre/tan). Axis titles "Website Visits (thousands)" / "Month" and tick labels render in dark/soft-gray ink — all legible. Subtle y-axis-only horizontal grid.
+      Data: Four areas stacked bottom-to-top from a zero baseline: Direct (largest, green, #009E73) -> Organic Search (lavender) -> Referral (blue-gray) -> Social (ochre, smallest), matching the spec's "largest at bottom" guidance and the canonical Imprint palette order. Two dashed-leader annotations ("Holiday traffic bump" near Nov '23, "Organic Search +71% since Jan '23" near the right side) sit cleanly above the stack apex with no overlap with other text or data.
+      Legibility verdict: PASS — no light-on-light issues, no clipping at any canvas edge (checked all four corners + top strip).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title in bold near-white ink, clearly readable. Legend card now uses the dark elevated fill (#242420-ish) with the same rounded-rect + shadow treatment, swatches and light-gray text fully legible. Axis titles in light ink, tick labels in soft light-gray, all readable. Grid lines subtle and visible against the dark surface. Both annotation callouts render in light ink with the same dashed leaders and dot markers, fully legible with no dark-on-dark text.
-      Data: Same four stacked areas in the same colors and same relative order as the light render (#009E73, #C475FD, #4467A3, #BD8233) — confirmed identical to light render; only the chrome (background, text, legend card fill, grid) flipped to the dark tokens.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome and annotation text reads clearly against the near-black background.
+      Background: Warm near-black, sampled ~#1A1A17 — not pure black, not light.
+      Chrome: Title and axis text render in near-white/light-gray ink, fully legible. The legend card flips to its dark elevated fill with the same rounded/shadow/border treatment; card border and shadow are visible against the dark background. Grid lines stay subtle but visible.
+      Data: Swatch and fill colors are pixel-verified identical to the light render (green/lavender/blue-gray/ochre) — only chrome (background, text, card fill, grid) flipped, consistent with the theme-adaptive requirement. Both annotation callouts remain legible in light ink with no dark-on-dark failures.
+      Legibility verdict: PASS — no dark-on-dark text, no clipping at any canvas edge (checked all four corners + top strip).
+
+    Both renders pass the theme-readability check (5c) and the edge-clipping check (AR-09) with no issues. Canvas dimensions verified at 3200x1800 for both renders (canvas gate file absent — gate passed).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All title/axis/tick/legend/annotation text clearly readable in both
-          themes, sizes appropriately hierarchical
+        comment: All font sizes explicitly set (title 22, legend 16, tick 14, axis
+          title 16); readable in both themes with no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; annotations well clear of stack and each
-          other
+        comment: No overlap between title, legend, axis text, or annotations
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Area fills clearly visible and distinct; pointRadius:0 leaves no
-          marker affordance for individual monthly readings beyond the two annotation
-          dots
+        comment: pointRadius:0 leaves no marker affordance beyond the two annotation
+          dots (carried over from attempt 1, unresolved)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 series within Imprint's 'no redundant encoding needed' range (n=3-4),
-          no red-green sole signal
+        comment: Good contrast, semi-transparent fills distinguish overlapping bands,
+          CVD-safe Imprint palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; good proportions, nothing cut off, balanced margins
+        comment: Good canvas utilization, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (Website Visits (thousands), Month)
+        comment: 'Descriptive with units: ''Website Visits (thousands)'', ''Month'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first, canonical order 1-4, identical data colors across
-          themes, correct theme backgrounds
+        comment: 'First series #009E73, canonical order, backgrounds theme-correct,
+          data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom elevated legend card + two data-story callouts; solid polish
-          but card styling stays fairly generic
+        comment: Elevated legend card now has drop shadow + hairline border on top
+          of the rounded fill, plus two data-driven annotation callouts — clearly
+          above a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-axis-only subtle grid per guideline, generous whitespace, semi-transparent
-          fills
+        comment: Y-axis-only grid, generous whitespace, semi-transparent fills, refined
+          legend-card edge treatment
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Two annotated callouts (holiday bump, Organic Search growth) create
-          real narrative hierarchy
+        comment: Two annotated callouts give real narrative hierarchy; growth-rate
+          callout dot anchors to the total-stack line rather than Organic Search's
+          own boundary, slightly undercutting the story
     spec_compliance:
       score: 15
       max: 15
@@ -144,27 +144,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Chart.js stacked-area pattern (line+fill, y.stacked)
+        comment: Correct stacked area chart (line+fill origin/-1, y.stacked)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend, semi-transparent fills, zero baseline, largest-at-bottom
-          ordering all present
+        comment: Zero baseline, legend, largest-at-bottom ordering, semi-transparent
+          fills all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = time (months), Y = stacked visit counts, correct throughout
+        comment: X=time, Y=stacked visits, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels match series
-          names
+        comment: Title matches '{spec-id} · javascript · chartjs · anyplot.ai' exactly;
+          legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -174,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 24 months, 4 series, full stacking/ordering/legend feature set from
-          spec
+        comment: Shows growth trends, a seasonal bump, and differing per-series growth
+          rates
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral web-traffic-by-source business scenario
+        comment: Neutral, realistic website-traffic-by-source scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible thousands-of-visits values with labeled unit
+        comment: Sensible visit counts and growth rates for the domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -197,35 +197,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; helper functions are idiomatic (LCG, hexToRgba, plugins)
+        comment: Linear imports->data->chart structure; small helper functions stay
+          simple
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic
+        comment: Deterministic seed=42 LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; Chart global used correctly
+        comment: No imports needed; only used browser globals
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: holidayCallout and organicGrowthCallout plugins are near-duplicate
-          code, should be parameterized into one
+        passed: true
+        comment: 'Fixed from attempt 1: duplicated callout logic now consolidated
+          into a single makeCallout factory'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract followed, animation:false set, current Chart.js
+        comment: Follows mount-node contract, animation:false, current Chart.js 4.x
           API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -233,23 +234,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked-area idiom for Chart.js, interaction.mode index,
-          proper scale config
+        comment: Canonical Chart.js stacked-line-as-area pattern, interaction mode
+          index
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom plugin-based legend card and annotation drawing go beyond
-          basic API, though duplicated across two plugins
+        comment: Custom canvas plugins (beforeDraw legend card, afterDatasetsDraw
+          callouts) leverage Chart.js's plugin system distinctively, now deduped into
+          one factory
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
