@@ -1,21 +1,25 @@
 // anyplot.ai
 // area-stacked: Stacked Area Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-17
+// Quality: pending | Created: 2026-08-17
 
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
-// Electricity consumption by sector for a regional utility service area,
-// 2010-2024 (TWh, illustrative). Ranking follows real-world sector order
-// (residential and commercial are the two largest loads, industrial third);
-// transportation is the small-but-fast-growing EV-charging load.
+// Electricity consumption by sector for a large multi-state utility holding
+// company's service territory, 2010-2024 (TWh, illustrative) — a ~185 TWh
+// footprint by 2024, in line with real multi-state utility holding companies
+// rather than a small national grid.
+// 2020 pulls commercial and industrial demand down (offices/plants idled)
+// while residential ticks up (work-from-home) and the EV-charging
+// transportation load keeps accelerating regardless of the downturn — a more
+// directionally varied pattern than a uniform up-trend across all sectors.
 const years = Array.from({ length: 15 }, (_, i) => String(2010 + i));
 
-const residential = [700, 695, 715, 690, 725, 735, 705, 730, 745, 738, 750, 758, 748, 765, 780];
-const commercial = [615, 620, 628, 632, 640, 645, 652, 658, 665, 670, 676, 683, 690, 697, 705];
-const industrial = [480, 475, 490, 485, 495, 488, 500, 495, 505, 498, 508, 502, 510, 505, 515];
-const transportation = [5, 6, 7, 9, 11, 14, 18, 23, 30, 39, 51, 65, 82, 98, 115];
+const residential = [58, 57, 59, 57, 60, 61, 58, 60, 61, 61, 66, 63, 61, 63, 64];
+const commercial = [51, 52, 53, 53, 54, 55, 56, 57, 58, 59, 48, 54, 58, 60, 62];
+const industrial = [40, 40, 41, 40, 42, 41, 42, 41, 43, 42, 35, 40, 42, 43, 44];
+const transportation = [0.5, 0.6, 0.8, 1.0, 1.3, 1.7, 2.2, 2.9, 3.8, 5.0, 6.2, 8.0, 10.2, 12.5, 15.0];
 
 // Order largest-to-smallest so the stack reads largest-at-bottom.
 const series = [
@@ -79,7 +83,7 @@ chart.setOption({
       smooth: 0.2,
       showSymbol: false,
       // Transportation carries the story of this dataset (EV-charging load
-      // growing ~23x over the period) — a bolder stroke pulls the eye to it
+      // growing ~30x over the period) — a bolder stroke pulls the eye to it
       // even though its absolute magnitude is the smallest of the four.
       lineStyle: { width: isTransportation ? 3.5 : 2, color: t.palette[i] },
       itemStyle: { color: t.palette[i] },
@@ -89,6 +93,9 @@ chart.setOption({
       areaStyle: { color: t.palette[i], opacity: isTransportation ? 1 : 0.82 },
       emphasis: { focus: "series" },
       data: s.data,
+      // Both annotations live on Transportation since it's drawn last (on
+      // top of the other bands), so the dashed line and the shaded band
+      // stay visible instead of being occluded by later area fills.
       ...(isTransportation && {
         markLine: {
           silent: true,
@@ -102,6 +109,18 @@ chart.setOption({
             position: "insideEndTop",
           },
           data: [{ xAxis: "2018" }],
+        },
+        markArea: {
+          silent: true,
+          itemStyle: { color: t.grid },
+          label: {
+            color: t.inkSoft,
+            fontSize: 12,
+            fontWeight: 600,
+            position: "insideBottom",
+            formatter: "2020 downturn",
+          },
+          data: [[{ xAxis: "2019" }, { xAxis: "2021" }]],
         },
       }),
     };
