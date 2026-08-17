@@ -26,7 +26,8 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   history, and font bundling for provenance violations (first run recorded a verified baseline
   and flagged `plots/bar-basic`'s two tracked plot renders as a known wart); `/write-docs` is
   the docs editing contract (layer choice, `docs/index.md` sync surfaces, cross-file sync
-  duties). All three are wired into the CLAUDE.md skill-routing table and the `/open-pr` gates.
+  duties). All three are wired into the CLAUDE.md skill-routing table and the `/open-pr` gates
+  (#10316).
 - **AI crawler policy, written down and served** — `app/public/robots.txt` now states the whole
   policy itself (content signals incl. the Art. 4 EU-DSM training reservation, the welcomed
   retrieval/citation agents, the declined training collectors), so it holds with or without
@@ -112,14 +113,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   modified via Edit/Write tools only in interactive sessions; PR follow-through gains the
   merge-race rule (hold pushes after "green and review-clean", recover via fresh branch +
   cherry-pick); and `CLAUDE.md` ↔ `.github/copilot-instructions.md` carry a general
-  keep-in-sync duty.
+  keep-in-sync duty (#10316).
 - **`/open-pr` works in cloud sessions** — a new §0 detects `gh` vs. GitHub MCP tooling and
   maps every PR/CI/review step to its `mcp__github__*` equivalent (subscribe instead of
   polling; the Cloud Build deploy watch stays local-only); the gates table now routes
-  `alembic/` diffs to `/verify-migrations` and `docs/` diffs to `/write-docs`.
+  `alembic/` diffs to `/verify-migrations` and `docs/` diffs to `/write-docs` (#10316).
 - **`docs/workflows/report-issue.md` is indexed** — the doc existed but was missing from all
   three `docs/index.md` surfaces (Quick Links, structure tree, layer section); found by the new
-  `/write-docs` drift check.
+  `/write-docs` drift check (#10316).
 - **Hot listing paths stop fetching every code blob** — MCP `list_specs` /
   `search_specs_by_tags` and `/libraries/{id}/images` used `get_all_with_code()`, dragging the
   full multi-MB code corpus through the DB per request; the MCP tools now resolve code
@@ -170,7 +171,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `ix_impls_quality_score`, `ix_impls_impl_tags` GIN, `ix_feedback_created_at` DESC,
   `ix_feedback_ip_hash_created_at`) were never declared on the ORM models, so any future
   `alembic revision --autogenerate` would have proposed dropping them; found by the first
-  `/verify-migrations` run (`alembic check`), the models now declare all seven.
+  `/verify-migrations` run (`alembic check`), the models now declare all seven (#10316).
 - **Plot of the day now respects dark mode** — the landing-page terminal card always showed the
   light preview image because `GET /insights/plot-of-the-day` only returned the legacy
   `preview_url` (a synonym for the light variant); the response now carries
