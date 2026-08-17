@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: area-stacked
 created: '2026-08-17T12:36:10Z'
-updated: '2026-08-17T12:41:47Z'
+updated: '2026-08-17T12:49:19Z'
 generated_by: claude-sonnet
 workflow_run: 32030338281
 issue: 2022
@@ -12,140 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - Baseline correctly starts at zero and series are ordered largest-at-bottom (Industrial
-    > Transportation > Residential > Commercial > Agriculture), exactly matching the
-    spec's notes
-  - Semi-transparent fills (alpha=0.88) with thin PAGE_BG-colored strokes between
-    stacked areas give clean edge definition between layers, doubling as the style
-    guide's recommended WCAG outline pattern for the lower-contrast lavender/ochre/cyan
-    palette members
-  - Theme-adaptive chrome (PAGE_BG/INK/INK_SOFT) is threaded through every text and
-    grid element consistently; both light and dark renders are fully legible with
-    no dark-on-dark or light-on-light failures
-  - Legend order is reversed via guide_legend(reverse = TRUE) so it reads top-to-bottom
-    in the same order the stack visually appears, an intuitive touch
-  - 'Minimal, polished chrome: top/right spines removed (L-shaped axis.line), tick
-    marks removed, only a subtle Y-axis grid retained, legend background/key blank
-    with no box frame'
-  - All font sizes explicitly set (title, axis title, axis text, legend) and well-proportioned
-    at full resolution with no overlap or overflow
-  - Correct title format and legend labels matching the data categories exactly
-  - Data tells a plausible energy-transition story (industrial share declining, transportation/residential
-    share rising) via the trend_twh vector, adding realistic variation rather than
-    flat series
+  - 'Correct chart type: geom_area with position_stack(reverse=TRUE) and a zero baseline,
+    matching the spec''s stacked-area requirement'
+  - Canonical Imprint palette order 1-5, with the brand green (#009E73) correctly
+    assigned to the largest sector (Industrial)
+  - 'Thoughtful data storytelling touch: legend order is reversed to visually mirror
+    the top-to-bottom stacking order in the chart'
+  - Theme-adaptive chrome correctly threaded through both renders - no dark-on-dark
+    or light-on-light legibility failures
+  - 'Clean, minimal chrome: no panel border, only a subtle major-y gridline, spines
+    removed via theme_minimal'
+  - Canvas dimensions correct (3200x1800 landscape), no clipped text or elements at
+    any edge
+  - Reproducible (set.seed(42)), clean imports, idiomatic ggplot2 (scale_fill_manual,
+    guide_legend, scales::label_number)
   weaknesses:
-  - 'VQ-07: Palette assignment isn''t canonical order and has no stated semantic justification
-    — position 3 (#4467A3 blue) is used for the 2nd series (Transportation) instead
-    of position 2 (#C475FD lavender), and position 5 (#AE3030 red) is skipped in favor
-    of position 6 (#2ABCCD cyan) for the 5th series (Agriculture). Either apply canonical
-    order 1→5 (green, lavender, blue, ochre, red) across Industrial→Transportation→Residential→Commercial→Agriculture,
-    or add a code comment explaining the semantic reassignment if intentional.'
-  - 'CQ-03: `library(tidyr)` is imported but never used anywhere in the script (no
-    pivot_longer/pivot_wider/gather/spread calls) — remove the unused import.'
-  - 'DE-03: Beyond the spec-mandated largest-at-bottom ordering, there is no additional
-    visual emphasis or focal point (e.g., a callout on the industrial-to-transportation
-    share shift) to give the chart a stronger story — consider a subtle annotation
-    or color/weight emphasis on the most interesting trend.'
-  - 'VQ-06 (minor, not penalized this round): the y-axis title ''Energy Consumption''
-    doesn''t include units itself — units only appear via the tick-label suffix ''
-    TWh''. Consider ''Energy Consumption (TWh)'' for extra clarity if touching this
-    area during repair.'
+  - The alpha differentiation on Transportation (0.97 vs 0.82 for the other four sectors)
+    intended to create a subtle focal point is nearly imperceptible in the final render
+    - the visual hierarchy goal from the code comment doesn't come through; either
+    drop it or use a more visible technique (e.g. a slightly bolder stroke or direct
+    label) if emphasis on Transportation's growth trend is meant to be readable.
+  - Because the area alpha is below 1.0, the horizontal reference gridlines (200/400/600
+    TWh) faintly show through the fills as thin lines cutting across the color bands
+    in both themes - a minor textured artifact; verify this is the intended look or
+    bump area alpha closer to 1.0 for fully flat fills.
+  - DE-01/DE-03 polish is solid but incremental over the baseline theme_minimal look
+    - no additional refinement (e.g., direct end-of-line value labels, a callout for
+    the Transportation growth trend) was added to push the storytelling further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "area-stacked · r · ggplot2 · anyplot.ai" in dark ink top-left; y-axis title "Energy Consumption" (rotated) with tick labels "0 TWh" through "600 TWh"; x-axis title "Year" with tick labels 2010-2024 every 2 years; legend titled "Sector" at right listing Agriculture, Commercial, Residential, Transportation, Industrial (top-to-bottom, mirroring the visual stack). All chrome text is dark ink, clearly legible against the light background.
-      Data: Five stacked area layers, bottom-to-top: Industrial (brand green #009E73, largest), Transportation (blue #4467A3), Residential (lavender #C475FD), Commercial (ochre #BD8233), Agriculture (cyan #2ABCCD, smallest). Each layer is separated by a thin cream-colored stroke matching the page background, giving crisp edge definition. Baseline sits at 0 TWh.
-      Legibility verdict: PASS — no light-on-light or unreadable elements.
+      Background: Warm off-white (#FAF8F1), consistent with the spec surface, not pure white.
+      Chrome: Title "area-stacked · r · ggplot2 · anyplot.ai" in dark ink at top-left, clearly legible. Axis titles "Year" (x) and "Energy Consumption (TWh)" (y) both dark and readable. Tick labels (years 2010-2024, values 0-600) in soft dark gray, all legible. A single subtle horizontal gridline set (200/400/600) is visible but not dominant. Legend "Sector" at right with five color swatches (Agriculture, Commercial, Residential, Transportation, Industrial) and dark, readable labels.
+      Data: Five stacked areas from bottom to top - Industrial (#009E73 green, largest), Transportation (#C475FD lavender), Residential (#4467A3 blue), Commercial (#BD8233 ochre), Agriculture (#AE3030 red, smallest) - baseline starts at 0, thin PAGE_BG-colored strokes separate each band.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis titles/labels, and legend as the light render, all re-rendered in light off-white/gray ink. All chrome elements remain clearly legible against the dark background — no dark-on-dark failures observed (title, tick labels, legend text all confirmed readable).
-      Data: Identical five data colors to the light render (green/blue/lavender/ochre/cyan unchanged), confirming the Imprint data hues are held constant across themes. The inter-layer boundary strokes now render near-black (matching the dark PAGE_BG token), still providing clear separation between adjacent color layers.
-      Legibility verdict: PASS — no dark-on-dark or unreadable elements.
+      Background: Warm near-black (#1A1A17), consistent with spec surface, not pure black.
+      Chrome: Same title now in light ink, clearly legible against the dark background. Axis titles and tick labels rendered in light/soft-light tones, both fully readable - no dark-on-dark failures observed. Gridlines still subtle but visible. Legend swatches and labels legible in light text against the dark legend background.
+      Data: Same five stacked areas in identical colors (Industrial green, Transportation lavender, Residential blue, Commercial ochre, Agriculture red) - confirms data colors are unchanged from the light render, only chrome (background/text/gridlines) flipped as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); well-proportioned, readable
-          in both themes, no overflow
+        comment: All text explicitly sized and readable in both themes; no dark-on-dark
+          or light-on-light issues
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data collisions
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Stacked areas with PAGE_BG boundary strokes are clearly distinguishable
-          at this density
+        comment: Thin PAGE_BG strokes separate stacked bands well; intended alpha
+          emphasis on Transportation is barely perceptible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Boundary strokes add non-hue-dependent contrast between adjacent
-          low-contrast palette members (lavender/cyan)
+        comment: Adequate contrast, CVD-relevant colors (green/red) are separated
+          by 3 other bands in the stack so remain distinguishable by position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills roughly 60-70% of canvas with balanced margins; legend
-          sits adjacent to plot, not isolated
+        comment: Correct 3200x1800 canvas, no clipping, sensible margins, title well
+          within width bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Year' self-explanatory; y-axis unit visible via ' TWh' tick
-          suffix
+        comment: Descriptive axis titles with units (TWh, Year)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Colors are all from the Imprint palette and first series is #009E73,
-          but assignment order (positions 1,3,2,4,6) isn''t canonical and has no stated
-          semantic justification'
+        passed: true
+        comment: 'Canonical Imprint order, first series (largest sector) is brand
+          green, backgrounds match #FAF8F1/#1A1A17 exactly'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Thoughtful design choices: reversed legend order, boundary strokes
-          solving a specific contrast problem, deliberate hierarchy — above a bare
-          configured default'
+        comment: Custom palette, refined typography sizing; the alpha-based focal-point
+          attempt is too subtle to register as intentional polish
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed (L-shaped axis.line), ticks removed, subtle
-          Y-only grid, blank legend chrome — matches the decoration-removal checklist
-          closely
+        comment: Spines removed, grid restricted to faint major-y lines, generous
+          whitespace via legend margin
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed with spec-mandated size ordering but no additional
-          emphasis or focal point beyond that baseline requirement
+        passed: true
+        comment: Legend order mirrors visual stack order (nice touch), but the Transportation
+          growth-trend focal point doesn't read clearly from the render
     spec_compliance:
       score: 15
       max: 15
@@ -155,52 +140,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart
+        comment: Genuine stacked area chart via geom_area + position_stack
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: x continuous axis, 5 series, legend, largest-at-bottom, semi-transparent
-          fills, zero baseline — all present
+        comment: Distinct colors, legend present, largest-at-bottom ordering, zero
+          baseline all satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, full data range visible
+        comment: x=year, y=twh, full 2010-2024 range shown on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; legend labels match sector names
+        comment: Title exactly matches mandated format; legend labels match sector
+          names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows composition shift over time (declining industrial share, rising
-          transport/residential) with plausible noise; not maximal edge-case coverage
+        comment: 5 series (within 2-8), 15 time points (within 10-100), full stacking
+          behavior shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world energy-consumption-by-sector scenario
+        comment: Energy consumption by sector is plausible, neutral, real-world domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TWh magnitudes and sector proportions are plausible for a mid-size
-          economy
+        comment: 40-220 TWh per sector, ~600-650 TWh total - sensible magnitude for
+          a region's annual energy consumption
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -208,33 +194,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear imports -> data -> plot -> save structure
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(tidyr) is imported but never used anywhere in the script
+        passed: true
+        comment: ggplot2, dplyr (tibble), scales (label_number), ragg (agg_png) all
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately concise, no fake functionality
+        comment: Appropriate complexity, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct canvas size
+        comment: ggsave with ragg::agg_png, correct plot-{THEME}.png naming
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -242,23 +229,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic grammar-of-graphics usage: position_stack(reverse=TRUE),
-          scale_fill_manual + guide_legend(reverse=TRUE), scales::label_number'
+        comment: position_stack(reverse=TRUE), guide_legend(reverse=TRUE), scale_alpha_manual
+          - idiomatic grammar-of-graphics composition
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses ggplot2-specific reversed-stack/reversed-legend combo and scales
-          label formatting; not a groundbreaking use of the library
-  verdict: REJECTED
+        comment: Reversed legend/stack pairing is a nice ggplot2-specific touch, but
+          the alpha-emphasis feature doesn't land visually
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending

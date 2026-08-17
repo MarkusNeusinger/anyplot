@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' area-stacked: Stacked Area Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 88/100 | Created: 2026-08-17
+#' Quality: 85/100 | Created: 2026-08-17
 
 library(ggplot2)
 library(dplyr)
