@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-multi: Multi-Series Radar Chart
 Library: letsplot 4.11.0 | Python 3.13.15
-Quality: 70/100 | Updated: 2026-08-17
+Quality: 87/100 | Updated: 2026-08-17
 """
 
 import math
