@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 82/100 | Updated: 2026-08-17
@@ -56,6 +56,7 @@ chart = pygal.StackedLine(
     x_title="Year",
     y_title="Electricity Consumption (TWh)",
     fill=True,
+    range=(0, 1400),
     show_y_guides=True,
     show_x_guides=False,
     x_label_rotation=0,
