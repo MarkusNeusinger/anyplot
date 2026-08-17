@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:39:22Z'
-updated: '2026-08-17T12:25:00Z'
+updated: '2026-08-17T12:34:46Z'
 generated_by: claude-sonnet
 workflow_run: 32028984012
 issue: 2022
@@ -12,52 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 92
 review:
   strengths:
+  - 'Repair directly addressed all Attempt 1 feedback: sns.lineplot now traces the
+    cumulative total (a genuine seaborn call, not raw ax.plot), the legend is borderless
+    via sns.move_legend, and a growth-callout annotation gives the chart an explicit
+    focal insight'
   - Series order matches the spec requirement exactly — largest (Industrial) at bottom
-    rising to smallest (Agriculture) at top, aiding readability.
-  - 'First series correctly uses Imprint brand green (#009E73), with the remaining
-    four series following the canonical Imprint order (#C475FD, #4467A3, #BD8233,
-    #AE3030) — identical across both themes.'
-  - Explicit theme-adaptive chrome via sns.set_theme(rc=...) — all text, spines, and
-    legend frame use correct light/dark tokens with no dark-on-dark or light-on-light
-    failures.
-  - Background-colored edges between stacked bands add clean visual separation without
-    extra chrome, and the dotted ink total-trend overlay adds a secondary layer of
-    insight.
-  - Baseline pinned to zero and x-margins removed — accurate, undistorted proportions
-    per the spec's 'avoid misleading proportions' note.
-  - No canvas clipping — title, legend, and rotated x-tick labels all sit comfortably
-    within the 3200×1800 canvas with generous margins.
+    rising to smallest (Agriculture) at top
+  - First series correctly uses Imprint brand green (#009E73), remaining series follow
+    canonical Imprint order, identical across both themes
+  - Per-sector seasonal shapes are now differentiated (flat baseload sine for Industrial
+    vs. a cubed wave for weather-driven Residential) rather than uniform amplitude
+    across all five sectors
+  - Theme-adaptive chrome via sns.set_theme(rc=...) with no dark-on-dark or light-on-light
+    failures; background-colored edges cleanly separate stacked bands in both themes
+  - Baseline pinned to zero, x-margins removed, canvas exactly 3200×1800 with no clipped
+    text at any edge
   weaknesses:
-  - 'LM-01/LM-02: The stacking geometry is drawn with pure-matplotlib ax.stackplot();
-    seaborn itself is only used for sns.set_theme()/sns.despine() styling, not any
-    seaborn-specific plotting API — leverage more seaborn-idiomatic constructs (e.g.,
-    a seaborn palette-driven overlay, or sns.lineplot for the total trace) to raise
-    Library Mastery.'
-  - 'DE-02: Refinement is solid (subtle y-grid, despined, edge-highlighted bands)
-    but stops short of exceptional — e.g., the legend frame is a plain bordered box;
-    consider a lighter/borderless legend treatment or tighter title-typography alignment.'
-  - 'DE-03: The dotted total-line adds hierarchy, but there''s no explicit callout
-    of the key insight (e.g., which sector dominates or grew fastest) — a small annotation
-    or highlighted band could sharpen the story further.'
-  - 'DQ-01: Seasonal amplitude is fairly uniform in shape across the five sectors
-    — varying the seasonal pattern per sector a bit more (e.g., a sharper winter peak
-    for Residential vs. a flatter Industrial curve) would better showcase composition
-    dynamics.'
+  - The growth-callout annotation arrow sweeps in a long, smooth arc from near the
+    start of the x-axis to the final data point, tracing a shape that does not follow
+    the actual (much choppier) total line — a viewer could mistake the smooth arc
+    for a second, contradictory trend line rather than a decorative pointer. Consider
+    a shorter, more localized arrow anchored closer to its text.
+  - The core stacking geometry still relies on matplotlib's ax.stackplot() rather
+    than a seaborn-native call, since seaborn has no built-in stacked-area API — the
+    repair added genuine seaborn touches (lineplot, move_legend, despine, set_palette)
+    around it, but Library Mastery is capped by this structural constraint
+  - Fill opacity (alpha=0.92) is only marginally transparent; a slightly lower alpha
+    would better honor the spec's 'semi-transparent fills' suggestion, though it is
+    not required since bands don't overlap
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "area-stacked · python · seaborn · anyplot.ai" in dark ink, comfortably sized and centered with generous margin above and below. "Month" and "Consumption (GWh)" axis labels are dark and clearly legible. Rotated (40°) x-axis month/year tick labels and horizontal y-axis tick labels are dark-gray and fully readable, none clipped at any canvas edge. Legend ("Sector") sits in a bordered box to the right of the plot with a title and five swatches, all fully inside the canvas.
-      Data: Five stacked bands in Imprint order bottom-to-top: Industrial (#009E73 brand green), Residential (#C475FD lavender), Commercial (#4467A3 blue), Transport (#BD8233 ochre), Agriculture (#AE3030 red). Bands are separated by thin background-colored edge lines for clarity, and a dotted dark line traces the cumulative total along the top of the stack.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "area-stacked · python · seaborn · anyplot.ai" renders in dark ink, centered, well within canvas bounds. "Month" and "Consumption (GWh)" axis labels are dark and legible; rotated (40°) month/year tick labels and horizontal y-axis ticks are dark-gray and fully readable, none clipped at any edge. A borderless legend ("Sector") sits to the right with five color swatches, fully inside the canvas. A dotted dark line traces the cumulative total across the top of the stack, and a smooth gray annotation arrow with "+13% growth over two years" text points from the upper-left area toward the final data point.
+      Data: Five stacked bands in canonical Imprint order bottom-to-top: Industrial (#009E73), Residential (#C475FD), Commercial (#4467A3), Transport (#BD8233), Agriculture (#AE3030), separated by thin off-white edge lines.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light ink/gray tones and are clearly legible against the dark background. The legend box uses the elevated dark surface fill with light text, fully readable. No dark-on-dark failures anywhere (title, ticks, legend, axis labels all confirmed legible).
-      Data: Identical five-color stack in the same order and hex values as the light render — Industrial green through Agriculture red are unchanged; only the chrome (background, text, grid, legend frame, band-edge lines) flips to dark-theme tokens. The dotted total-trend line now renders in light ink, still visible against the busy red top band.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark issues detected.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels all render in light ink/gray and are clearly legible against the dark background; the legend uses light text with no border. The dotted total-trend line and the growth-annotation arrow both render in light tones and stay visible against the dark red top band. Band-separator edge lines flip to dark, matching the theme.
+      Data: Colors are identical to the light render — Industrial #009E73, Residential #C475FD, Commercial #4467A3, Transport #BD8233, Agriculture #AE3030 — only chrome (background, text, grid, legend, edge lines) flips to dark-theme tokens.
+      Legibility verdict: PASS — no dark-on-dark failures detected anywhere.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -68,50 +65,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 13pt, axis labels 12pt, ticks
-          10pt, legend 9-10pt); readable in both themes with no overflow or clipping.
+        comment: All font sizes explicit, readable in both themes, no clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked bands are clearly visible with edge-highlighted boundaries;
-          well-adapted to the 24-point monthly series.
+        comment: Stacked bands clearly distinguishable with edge-highlighted boundaries
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette plus edge-highlighting between bands gives redundant
-          boundary encoding beyond hue; no red-green-only signal.
+        comment: Imprint palette with edge highlighting gives redundant boundary encoding
+          beyond hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced layout, legend docked next to the plot, no wasted space,
-          nothing cut off.
+        comment: Canvas exactly 3200x1800, title ~58% width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Consumption (GWh)'' includes units; ''Month'' is clear and descriptive.'
+        comment: '"Consumption (GWh)" includes units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; remaining series follow canonical Imprint
-          order; backgrounds and chrome are theme-correct in both renders.'
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -119,24 +113,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Thoughtful touches beyond default: theme-adaptive rc block, edge-highlighted
-          stacked bands, dotted total-trend overlay — clearly above a stock stackplot
-          but not fully publication-grade.'
+        comment: Theme-adaptive chrome, edge-highlighted bands, dotted total overlay;
+          growth-arrow adds polish but its long smooth sweep risks reading as a second
+          trend line
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines despined, subtle y-grid (alpha 0.15), generous margins, styled
-          legend with title — good refinement, stops short of exceptional.
+        comment: Borderless legend, subtle y-grid, despined axes — improved from the
+          bordered-legend Attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Dotted total-line creates a secondary visual layer highlighting the
-          aggregate trend atop the composition — but no explicit callout of a specific
-          insight.
+        comment: Growth-callout annotation gives an explicit focal insight, addressing
+          Attempt 1 feedback
     spec_compliance:
       score: 15
       max: 15
@@ -146,52 +139,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked-area chart via ax.stackplot with all series present.
+        comment: Correct stacked-area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: legend, size-ordered stacking (largest
-          at bottom), zero baseline, semi-transparent fills.'
+        comment: Legend, size-ordered stacking, zero baseline, near-opaque fills
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = time (months), Y = stacked consumption; axes show the full data
-          range.
+        comment: X = time, Y = stacked consumption, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels match sector
-          names.
+        comment: Mandated title format, legend labels match sector names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows seasonality, overall growth trend, and differing sector magnitudes;
-          seasonal amplitude shape could vary a bit more per sector.
+        comment: Differentiated per-sector seasonal shapes, growth trend, varying
+          magnitudes — improved from Attempt 1's uniform amplitude
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral energy-consumption-by-sector scenario.
+        comment: Realistic, neutral energy-consumption-by-sector scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and relative sector magnitudes (industrial largest, agriculture
-          smallest) align with real-world energy consumption patterns.
+        comment: Sector magnitudes align with plausible real-world energy consumption
     code_quality:
       score: 10
       max: 10
@@ -201,62 +190,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear imports → data → plot → save.
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, mdates, plt, np, pd, sns) are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake functionality.
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with dpi=400 and no bbox_inches='tight'.
+        comment: plot-{THEME}.png, dpi=400, no bbox_inches='tight'
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Theming, sns.lineplot overlay, sns.move_legend, sns.despine, sns.set_palette
+          all genuinely seaborn; stackplot itself remains matplotlib since seaborn
+          has no native stacked-area API
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct seaborn theming setup (sns.set_theme/despine), but the stacking
-          geometry itself is drawn with matplotlib's ax.stackplot — seaborn's own
-          plotting API isn't used for the data marks.
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic usage — the theme/despine pattern could apply to any matplotlib-based
-          chart; no seaborn-distinctive feature employed.
-  verdict: REJECTED
+        comment: sns.move_legend and sns.despine are seaborn-distinctive conveniences,
+          up from generic theming-only in Attempt 1
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - manual-ticks
   patterns:
   - data-generation
-  - explicit-figure
   dataprep:
-  - cumulative-sum
   - time-series
   styling:
   - alpha-blending
   - edge-highlighting
   - grid-styling
-  - publication-ready
