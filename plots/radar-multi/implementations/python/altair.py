@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-multi: Multi-Series Radar Chart
 Library: altair 6.2.2 | Python 3.13.15
 Quality: 72/100 | Updated: 2026-08-17
@@ -174,16 +174,20 @@ value_labels = (
     .encode(x="x:Q", y="y:Q", text="value:N", color=alt.value(INK_SOFT))
 )
 
-# Create filled polygons for each series
+# Create filled polygons for each series. `mark_area()` fills toward an
+# implicit baseline (it is designed for y=f(x) functions), so feeding it a
+# closed, non-monotonic radar-polygon path produces spurious fill spikes. A
+# `mark_line` with `interpolate="linear-closed"` instead closes the path as
+# a true polygon and fills it directly -- the standard Vega-Lite technique
+# for radar/spider charts.
 fill_layers = []
 for series_name, fill_color in zip(series_list, IMPRINT, strict=True):
     series_df = df[df["series"] == series_name].copy()
 
-    # Use mark_area for proper polygon fill
     fill_layer = (
         alt.Chart(series_df)
-        .mark_area(fillOpacity=0.25)
-        .encode(x=x_enc, y=y_enc, color=alt.value(fill_color), opacity=fill_opacity, order="order:Q")
+        .mark_line(interpolate="linear-closed", fill=fill_color, fillOpacity=0.25, strokeWidth=0)
+        .encode(x=x_enc, y=y_enc, opacity=fill_opacity, order="order:Q")
     )
     fill_layers.append(fill_layer)
 
