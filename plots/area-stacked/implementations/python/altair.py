@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-stacked: Stacked Area Chart
 Library: altair 6.2.2 | Python 3.13.15
-Quality: 89/100 | Updated: 2026-08-17
+Quality: 94/100 | Updated: 2026-08-17
 """
 
 import os
