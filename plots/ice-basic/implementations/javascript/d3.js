@@ -1,16 +1,12 @@
 // anyplot.ai
 // ice-basic: Individual Conditional Expectation (ICE) Plot
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-17
-//# anyplot-orientation: landscape
-// anyplot.ai
-// ice-basic: Individual Conditional Expectation (ICE) Plot
-// Library: d3 7.9.0 | JavaScript 22
 // Quality: pending | Created: 2026-08-17
+//# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 100, right: 70, bottom: 110, left: 130 };
+const margin = { top: 100, right: 96, bottom: 110, left: 130 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -38,7 +34,7 @@ const patients = d3.range(nPatients).map((id) => {
   const curve = doseGrid.map(
     (dose) => maxEffect * (1 - Math.exp((-sensitivity * dose) / 130)) + noise,
   );
-  return { id, observedDose, curve };
+  return { id, observedDose, sensitivity, curve };
 });
 
 const pdpCurve = doseGrid.map((_, j) => d3.mean(patients, (p) => p.curve[j]));
@@ -47,6 +43,14 @@ const pdpCurve = doseGrid.map((_, j) => d3.mean(patients, (p) => p.curve[j]));
 const x = d3.scaleLinear().domain(d3.extent(doseGrid)).range([0, iw]);
 const yMax = d3.max(patients, (p) => d3.max(p.curve));
 const y = d3.scaleLinear().domain([0, yMax]).nice().range([ih, 0]);
+
+// Continuous color encoding: ICE-line hue reveals sensitivity (metabolism
+// rate) as a second feature, exposing which patient subgroup drives the
+// steepest early response — an interaction effect hidden by the flat PDP.
+const sensitivityExtent = d3.extent(patients, (p) => p.sensitivity);
+const seqColor = d3
+  .scaleSequential(d3.interpolateRgbBasis(t.seq))
+  .domain(sensitivityExtent);
 
 // --- SVG mount -----------------------------------------------------------
 const svg = d3
@@ -97,9 +101,9 @@ g.selectAll(".ice-line")
   .join("path")
   .attr("class", "ice-line")
   .attr("fill", "none")
-  .attr("stroke", t.palette[0])
+  .attr("stroke", (p) => seqColor(p.sensitivity))
   .attr("stroke-width", 1.2)
-  .attr("stroke-opacity", 0.18)
+  .attr("stroke-opacity", 0.3)
   .attr("d", (p) => lineGen(p.curve));
 
 // --- PDP average overlay — bold, opaque -------------------------------------
@@ -109,6 +113,39 @@ g.append("path")
   .attr("stroke", t.palette[1])
   .attr("stroke-width", 4)
   .attr("d", lineGen);
+
+// --- Divergence annotation — bracket calling out the spread at max dose ----
+const lastIdx = doseGrid.length - 1;
+const finalValues = patients.map((p) => p.curve[lastIdx]);
+const [spreadMin, spreadMax] = d3.extent(finalValues);
+const bracketX = iw + 14;
+const bracket = g.append("g");
+bracket
+  .append("line")
+  .attr("x1", bracketX)
+  .attr("x2", bracketX)
+  .attr("y1", y(spreadMin))
+  .attr("y2", y(spreadMax))
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5);
+for (const v of [spreadMin, spreadMax]) {
+  bracket
+    .append("line")
+    .attr("x1", bracketX - 5)
+    .attr("x2", bracketX + 5)
+    .attr("y1", y(v))
+    .attr("y2", y(v))
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", 1.5);
+}
+bracket
+  .append("text")
+  .attr("x", bracketX + 9)
+  .attr("y", (y(spreadMin) + y(spreadMax)) / 2)
+  .attr("dy", "0.35em")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "12px")
+  .text(`Δ${Math.round(spreadMax - spreadMin)}pp`);
 
 // --- Rug plot: distribution of observed dosages along the x-axis -----------
 g.selectAll(".rug")
@@ -124,13 +161,30 @@ g.selectAll(".rug")
   .attr("stroke-width", 1);
 
 // --- Legend — placed in the empty low-dose/low-effect corner ---------------
+const gradientId = "ice-sensitivity-gradient";
+svg
+  .append("defs")
+  .append("linearGradient")
+  .attr("id", gradientId)
+  .attr("x1", "0%")
+  .attr("x2", "100%")
+  .selectAll("stop")
+  .data(d3.range(0, 1.001, 0.1))
+  .join("stop")
+  .attr("offset", (d) => `${d * 100}%`)
+  .attr("stop-color", (d) =>
+    seqColor(
+      sensitivityExtent[0] + d * (sensitivityExtent[1] - sensitivityExtent[0]),
+    ),
+  );
+
 const legend = g.append("g").attr("transform", "translate(16, 14)");
 const legendItems = [
   {
-    label: "Individual patients (ICE)",
-    color: t.palette[0],
-    opacity: 0.5,
-    width: 2,
+    label: "Individual patients (by sensitivity)",
+    color: `url(#${gradientId})`,
+    opacity: 0.8,
+    width: 3,
   },
   {
     label: "Population average (PDP)",
