@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
-Library: plotnine 0.15.8 | Python 3.13.12
-Quality: pending | Updated: 2026-08-17
+Library: plotnine 0.15.8 | Python 3.13.15
+Quality: 89/100 | Updated: 2026-08-17
 """
 
 import os
