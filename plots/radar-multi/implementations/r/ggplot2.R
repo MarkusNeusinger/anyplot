@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' radar-multi: Multi-Series Radar Chart
-#' Library: ggplot2 3.5 | R 4.4
-#' Quality: pending | Created: 2026-08-17
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 82/100 | Created: 2026-08-17
 
 library(ggplot2)
 library(dplyr)
