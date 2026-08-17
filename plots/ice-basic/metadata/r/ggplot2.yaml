@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: ice-basic
 created: '2026-08-17T22:56:40Z'
-updated: '2026-08-17T23:01:25Z'
+updated: '2026-08-17T23:08:21Z'
 generated_by: claude-sonnet
 workflow_run: 32077900615
 issue: 5238
@@ -12,50 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 92
 review:
   strengths:
+  - 'Attempt 1''s three flagged weaknesses are all resolved: gridlines now use INK_SOFT
+    instead of full INK (DE-02), individual-line alpha/linewidth reduced (0.16→0.12,
+    0.45→0.35) easing disentanglement in the dense cluster (VQ-03), and the per-observation
+    curve construction was rewritten from an lapply() loop to a vectorized expand_grid()/left_join()/mutate()
+    pipeline (CQ-01)'
   - Color-codes ICE lines by house age (a second feature) to reveal a genuine interaction
     effect — older builds plateau above ~2200 sq ft while newer builds keep climbing
     — directly satisfying the spec's interaction-detection and second-feature color-coding
     notes
-  - 'Bold, theme-adaptive PDP overlay line (INK token: black in light, cream in dark)
-    clearly separates the average trend from the faint individual ICE curves'
+  - 'Bold, theme-adaptive PDP overlay line (INK token: black in light, near-white
+    in dark) clearly separates the average trend from the faint individual ICE curves'
   - Rug plot on the x-axis shows the distribution of observed feature values as suggested
     in the spec notes
   - 'Both renders are theme-correct: warm off-white/near-black backgrounds, readable
-    text in both themes, and identical data colors with only chrome flipping; first
-    categorical series is Imprint green (#009E73)'
-  - Correct 3200×1800 canvas, exact mandated title format, reproducible via set.seed(42),
-    clean single-file dual-theme script
+    text in both themes, identical data colors with only chrome flipping; first categorical
+    series is Imprint green #009E73'
   weaknesses:
-  - Horizontal gridlines use the full INK color (not INK_SOFT) in both themes, giving
-    them nearly the same visual weight as the axis text — a fainter grid would let
-    the ICE curves stand out more (VQ-05/DE-02).
-  - The optional centered ICE (c-ICE) variant suggested in the spec notes was not
-    implemented — would strengthen comparison of individual curve shapes independent
-    of intercept.
-  - Per-observation curve generation uses an anonymous function passed to lapply()
-    — idiomatic R, but a flatter/vectorized construction would fit the KISS code-quality
-    bar more closely (CQ-01).
-  - In the densest overplotting region (green 'Newer build' cluster, upper-right),
-    individual ICE lines become hard to distinguish from one another — a slightly
-    lower alpha or thinner linewidth there could improve differentiation (VQ-03).
+  - The optional centered ICE (c-ICE) variant suggested in the spec notes is still
+    not implemented — would strengthen comparison of individual curve shapes independent
+    of intercept, but this is explicitly a "consider" item, not required
+  - guide_legend(override.aes = ...) and geom_rug() are the only distinctive ggplot2-specific
+    techniques beyond standard layered geoms; an additional touch (e.g. annotate()
+    calling out the interaction crossover point, or faceting a c-ICE inset) would
+    lift Library Mastery further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "ice-basic · r · ggplot2 · anyplot.ai" in dark ink, top-left. Axis titles "Home Size (sq ft)" (x) and "Predicted Sale Price" (y) in dark ink, tick labels ($200K–$800K, 1000–3000) in softer gray. Horizontal gridlines at $200K increments are present but rendered in full dark ink, fairly prominent rather than subtle. Legend "House Age" at right with green/purple swatches, clearly separated from the plot area with no overlap.
-      Data: Green semi-transparent lines (Newer build <15 yr) trend steeply upward from ~$270K to over $800K; purple/lavender semi-transparent lines (Older build 15+ yr) trend more gently and plateau around $400–450K. The two clusters visibly diverge after ~2000 sq ft, showing the age-driven interaction effect. A bold black PDP line runs through the middle from ~$270K to ~$550K. Gray rug ticks along the bottom axis show the observed feature-value distribution clustering around 1800–2500 sq ft. First categorical series is Imprint green (#009E73), matching the palette rule.
-      Legibility verdict: PASS — all text is readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark)
+      Chrome: Title "ice-basic · r · ggplot2 · anyplot.ai" in dark ink top-left, well within canvas bounds. Axis titles "Home Size (sq ft)" / "Predicted Sale Price" in dark ink at 10pt. Tick labels ($200K-$800K, 1000-3000 sq ft) in softer gray at 8pt. Legend "House Age" at right with two color swatches, no overlap with plot area. Faint horizontal-only gridlines (INK_SOFT), noticeably lighter than attempt 1's full-INK gridlines. All chrome clearly readable.
+      Data: Dense fan of near-transparent green lines (Newer build <15 yr, color #009E73) climbing steeply toward $800K+; lavender-purple lines (Older build 15+ yr, color #C475FD) visibly plateau around $400-450K, revealing an age-driven interaction. Bold opaque black PDP line (INK token) runs through the fan as the average trend. Gray rug ticks along x-axis show observed feature-value distribution, denser around 2000-2800 sq ft.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis titles, and tick labels now rendered in white/light gray, clearly legible against the dark background. Gridlines flip to light lines, following the same (fairly prominent) pattern as the light render. Legend and rug ticks remain legible.
-      Data: Colors are identical to the light render (green/purple hues unchanged); the PDP overlay correctly flips to a cream/white bold curve for contrast against the dark background — only chrome changed, as required.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data elements are clearly distinguishable from the dark background.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light)
+      Chrome: Same title, axis titles, and tick labels now render in white/light gray, clearly legible. No dark-on-dark issues found anywhere. Gridlines flip to light gray tone, legend and rug ticks remain legible.
+      Data: Data colors (green #009E73 / lavender #C475FD) are pixel-identical to the light render — confirmed only chrome changed. PDP line correctly flips from black to near-white (INK token) for contrast against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,50 +61,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All titles, axis labels, and ticks readable in both themes at full
-          size; explicit font sizes set throughout.
+        comment: Explicit sizes throughout, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, and data elements.
+        comment: No collisions between text, data, legend, or rug
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Alpha=0.16 on 100 individual lines is well-chosen for density, though
-          the densest green cluster (upper-right) still gets hard to disentangle.
+        comment: Reduced alpha/linewidth from attempt 1 eases disentanglement of dense
+          cluster
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. purple series are distinguishable under common CVD types;
-          not relying on red-green alone.
+        comment: Green/lavender pairing is CVD-safe, not red-green dependent
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, balanced axis label sizes, no overflow
-          or cut-off elements.
+        comment: 3200x1800 confirmed, title within bounds, nothing cropped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (sq ft, $ formatted as K).
+        comment: Both axes descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is Imprint green #009E73; correct light/dark chrome
-          backgrounds; data colors identical across themes.'
+        comment: Imprint palette order correct, both renders theme-correct
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -114,23 +108,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Color-by-age storytelling plus PDP overlay and rug plot show intentional
-          design beyond generic defaults.
+        comment: Color-by-age storytelling, PDP overlay, legend override.aes polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, x-gridlines suppressed, generous whitespace; but
-          y-gridlines use full INK color rather than a softer tone, reading heavier
-          than ideal.
+        comment: Gridlines now INK_SOFT (fixed from attempt 1's full INK), minor/vertical
+          gridlines suppressed
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Bold PDP line creates a clear focal point against faint individual
-          curves; age-based coloring guides the viewer to the interaction effect.
+        comment: Bold PDP focal line against faint backdrop; age coloring surfaces
+          the plateau interaction
     spec_compliance:
       score: 15
       max: 15
@@ -140,29 +132,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements an ICE plot (one line per observation) with
-          PDP overlay.
+        comment: 'Correct ICE plot: one line per observation, PDP overlay'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Low-alpha individual lines, bold PDP overlay, rug plot, and second-feature
-          color-coding all present.
+        comment: feature_value, prediction, observation_id all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=feature_value (home size), y=prediction (price); axes cover full
-          data range.
+        comment: X/Y correct, axes cover full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches 'ice-basic · r · ggplot2 · anyplot.ai'; legend labels
-          match the house-age factor levels.
+        comment: Exact mandated title format, clear legend labels
     data_quality:
       score: 14
       max: 15
@@ -172,75 +160,72 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers ICE lines, PDP, rug, and second-feature coloring; only the
-          optional c-ICE centering variant is missing.
+        comment: 4 of 5 spec notes implemented; optional c-ICE variant missing
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: House price vs. square footage model is realistic and neutral.
+        comment: House price vs. square footage, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 800-3500 sq ft and $200K-$800K are sensible ranges for US residential
-          housing.
+        comment: 800-3500 sq ft, $200K-$800K sensible ranges
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly flat script, but per-observation curve generation uses an
-          anonymous function inside lapply() rather than a vectorized approach.
+        comment: lapply() loop replaced with vectorized expand_grid()/left_join()/mutate()
+          pipeline
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top of script.
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (ggplot2, dplyr, scales, ragg) are actually used.
+        comment: tidyr now genuinely used for expand_grid()
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; appropriate complexity for
-          the data generation.
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at correct dimensions.
+        comment: ggsave with ragg::agg_png, correct filename pattern
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic use of geom_line, scale_color_manual, theme_minimal, and
-          dplyr piping.
+        comment: Vectorized tidyr pipeline, scale_color_manual, label_dollar(), theme_minimal()
+          layering
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_rug and guides(override.aes) are distinctive ggplot2-specific
-          touches beyond generic usage.
+        comment: geom_rug() and guide_legend override.aes are genuine touches, but
+          limited beyond that
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -250,7 +235,6 @@ impl_tags:
   patterns:
   - data-generation
   - groupby-aggregation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
