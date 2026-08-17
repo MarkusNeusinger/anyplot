@@ -2,9 +2,9 @@ library: bokeh
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:40:16Z'
-updated: '2026-08-17T12:29:37Z'
+updated: '2026-08-17T12:57:04Z'
 generated_by: claude-sonnet
-workflow_run: 32029329180
+workflow_run: 32031772718
 issue: 2022
 language_version: 3.13.15
 library_version: 3.9.2
@@ -15,45 +15,43 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stac
 quality_score: 93
 review:
   strengths:
-  - 'Perfect Imprint palette compliance: Electronics=#009E73 (brand green, first series),
-    Clothing/Home & Garden/Sports follow canonical positions 2-4, identical across
+  - 'Correct Imprint palette in canonical order with first series #009E73; chrome
+    (background, text, grid, legend) is theme-correct and identical data colors across
     both renders'
-  - 'Theme chrome is fully correct in both themes: #FAF8F1 warm off-white light background,
-    #1A1A17 warm near-black dark background, all text uses INK/INK_SOFT tokens with
-    no dark-on-dark or light-on-light failures'
-  - 'Genuine data storytelling: a dashed total-revenue trend line plus a ''+23% over
-    2 years'' callout label gives the composition chart a clear, immediately visible
-    focal point beyond the implicit stacking story'
-  - 'Correct canvas discipline: toolbar_location=None and min_border_* reservations
-    produce a clean 3200x1800 PNG with no toolbar-shrink and no clipped text at any
-    edge'
-  - Per-series HoverTool with Month/Category/Value tooltips adds real interactive
-    value in the HTML detail view without harming the static PNG
-  - Baseline correctly starts at zero, series ordered largest-to-smallest by average
-    value, legend clearly identifies all four categories
-  - Clean KISS script structure with np.random.seed(42) for reproducibility and only
-    used imports
+  - 'Idiomatic bokeh: purpose-built varea_stack() derives the stacking bounds from
+    a ColumnDataSource, and HoverTool''s $name variable resolves per-band tooltips
+    without a manual loop'
+  - Thoughtful total-revenue dashed trend line + "Total +23% over 2 years" callout
+    gives the composition a clear focal point beyond the implicit stacking story
+  - All font sizes explicitly set (50pt/42pt/34pt), fully readable at full size in
+    both themes, no edge clipping on any element (verified title, axes, legend, tick
+    labels at all four canvas edges)
+  - Series ordered largest-to-smallest bottom-to-top (Electronics > Clothing > Home
+    & Garden > Sports) per spec Notes, baseline starts at zero
+  - Clean KISS structure, reproducible via np.random.seed(42), no unused imports,
+    no fake interactivity
   weaknesses:
-  - 'Title is ''area-stacked · bokeh · anyplot.ai'' but the mandated format is ''{spec-id}
-    · {language} · {library} · anyplot.ai'' — the ''python'' language segment is missing.
-    Fix: title = "area-stacked · python · bokeh · anyplot.ai".'
-  - Stacking is done manually (cumsum loop + one p.varea() call per series) instead
-    of bokeh's purpose-built p.varea_stack(stackers=[...], source=source) helper,
-    which exists specifically for this chart type in bokeh 3.9.2 and would also auto-populate
-    the $name hover variable per stacked band. Not incorrect, but misses the library's
-    idiomatic high-level API for a stacked area chart.
+  - Design reads as a well-executed configuration rather than truly distinctive (DE-01)
+    — a more custom typographic treatment or fully removed grid would push polish
+    further toward publication-ready
+  - Only one explicit annotation (the growth callout); a second, subtler emphasis
+    (e.g. labeling the fastest-growing category) would strengthen the data-storytelling
+    beyond the single total-line overlay
+  - LM-02 relies on varea_stack + $name hover, which are useful but not maximally
+    distinctive to bokeh — a CustomJS-driven interaction or Span/BoxAnnotation reference
+    would showcase more bokeh-unique capability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark "area-stacked · bokeh · anyplot.ai" title top-left, italic "Revenue ($K)" y-axis label and italic "Month" x-axis label, dark tick labels rotated ~35° on the x-axis (every 3 months, Jan 2023 - Dec 2024), subtle warm-grey gridlines. All chrome text renders in dark ink and is clearly readable against the light background.
-      Data: Four stacked areas bottom-to-top: Electronics (#009E73 brand green), Clothing (#C475FD lavender), Home & Garden (#4467A3 blue), Sports (#BD8233 ochre) — matches canonical Imprint order with green first. A thin dark dashed line traces the top of the stack (total revenue) with a filled dot on the final month and a boxed "Total +23% over 2 years" annotation near the top. Baseline starts at 0. Legend (top-right, outside plot) lists all four categories with matching color swatches.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "area-stacked · python · bokeh · anyplot.ai" at top-left, fully visible with no clipping. Italic dark axis labels "Revenue ($K)" (y) and "Month" (x). Rotated x tick labels (Jan 2023 ... Dec 2024) and y tick labels (0-500) in medium-gray, all clearly legible. Subtle horizontal gridlines (~10% alpha). Legend box (top-right, elevated cream fill, soft border) lists Electronics/Clothing/Home & Garden/Sports with color swatches. A neutral dashed line traces the stack's top edge with an end-point marker and an elevated callout box reading "Total +23% over 2 years".
+      Data: Four stacked area bands in canonical Imprint order — Electronics #009E73 (bottom, largest), Clothing #C475FD, Home & Garden #4467A3, Sports #BD8233 (top) — at fill_alpha 0.85, ordered largest-to-smallest bottom-to-top per spec.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable; no clipping at any canvas edge (checked title/top, axis labels/bottom, y-ticks/left, legend/right).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same layout as light render but title/axis labels/tick labels flip to light ink (white/soft-grey), gridlines subtle light-on-dark. No dark-on-dark or light-on-light failures observed anywhere — title, axis labels, tick labels, legend text, and the annotation box text are all clearly legible against the dark surface.
-      Data: Same four fill colors as the light render (#009E73, #C475FD, #4467A3, #BD8233) — confirmed identical, only the chrome (background/text/grid/legend box) flips theme. The dashed total-line flips to a light color and remains visible against both the page background and the top Sports band.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout as light — title, axis labels, and callout box now render in light ink (#F0EFE8 primary / #B8B7B0 secondary) against the dark surface. Legend background flips to the dark elevated fill (#242420) with light text. Gridlines remain subtle.
+      Data: Identical four data colors to the light render (#009E73 / #C475FD / #4467A3 / #BD8233) — only the chrome flipped, confirming palette consistency across themes.
+      Legibility verdict: PASS — no dark-on-dark failures found; all title/axis/tick/legend text is clearly light-colored against the dark background.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -64,52 +62,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 50pt, axis labels 42pt, ticks
-          34pt); readable at full size and at 400px mobile thumbnail in both themes;
-          no overflow or clipping.
+        comment: All font sizes explicitly set (50/42/34pt); fully readable in both
+          themes; no clipping at any edge
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, axes, legend, tick labels, or the growth
-          annotation box.
+        comment: No text/data collisions; growth callout sits clear of the legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked areas (alpha 0.85) and 24-point monthly cadence are clearly
-          visible; total-line and final-point marker sized appropriately.
+        comment: Area bands and total-line/marker well sized for 24 monthly points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four hues span green/purple/blue/ochre with distinct luminance, no
-          red-green-only encoding.
+        comment: CVD-safe Imprint palette, adequate alpha separation between bands
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the 3200x1800 canvas with balanced
-          margins; legend sits adjacent to the plot, not isolated.
+        comment: Plot fills a large majority of the canvas, balanced margins, legend
+          attached to plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Revenue ($K)'' and ''Month'' are descriptive with units.'
+        comment: '"Revenue ($K)" has units, "Month" is descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining series in canonical Imprint order,
-          identical across themes; backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: 'First series #009E73, canonical order for remaining 3 series, theme-correct
+          chrome both renders'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -117,25 +111,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful typography hierarchy and the growth-callout overlay push
-          this clearly above a default stacked-area render.
+        comment: Strong design with thoughtful colors and a custom total-line overlay;
+          not quite FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle 0.10-alpha gridlines and soft outline color show refinement,
-          though the annotation/legend boxes keep a fairly boxy look.
+        comment: Subtle grid (10% alpha), soft outline, refined legend/callout boxes;
+          grid still present rather than removed
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: The '+23% over 2 years' callout on the total-revenue trend line gives
-          the viewer an immediate, explicit insight on top of the implicit composition
-          story.
+        comment: Total-revenue trend line + growth-% callout creates a clear focal
+          point on top of the stacking story
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,28 +136,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart with all series stacked bottom-to-top.
+        comment: Correct stacked area chart via varea_stack()
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct harmonious colors, legend, zero baseline, largest-to-smallest
-          ordering all present.
+        comment: Series ordered largest-to-smallest, legend present, zero baseline,
+          semi-transparent fills
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=month, Y=cumulative revenue, all data visible within axis range.
+        comment: X=month, Y=stacked revenue, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend labels correct, but title omits the mandated 'python' language
-          segment ('area-stacked · bokeh · anyplot.ai' instead of 'area-stacked ·
-          python · bokeh · anyplot.ai').
+        passed: true
+        comment: Title format exact match, legend labels correct
     data_quality:
       score: 15
       max: 15
@@ -174,22 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four series with distinct shapes (linear growth, seasonal sine, linear
-          growth, seasonal cosine) show real variation, not uniform bands.
+        comment: Shows composition, per-series trend/seasonality, and explicit cumulative
+          total
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly revenue by retail product category is a real, neutral business
-          scenario.
+        comment: Neutral, plausible monthly revenue-by-category business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue values ($20K-$500K range) and the 23% two-year growth are
-          plausible for a retail category mix.
+        comment: Realistic dollar magnitudes and growth trend
     code_quality:
       score: 10
       max: 10
@@ -199,51 +188,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save script, no functions/classes.
+        comment: Imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (numpy, pandas, bokeh, selenium, pathlib) are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity.
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via the documented Selenium
-          pattern.
+        comment: plot-{theme}.png/.html via current bokeh API
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: true
-        comment: Correct ColumnDataSource + varea usage and a properly external Legend
-          object, but manually computes cumsum and loops p.varea() per series instead
-          of bokeh's purpose-built p.varea_stack() helper for stacked areas.
-      - id: LM-02
-        name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: Per-series HoverTool with custom tooltips, FixedTicker with major_label_overrides,
-          and a Label annotation leverage bokeh's interactive/model-based API distinctively.
+        comment: varea_stack + ColumnDataSource + HoverTool $name is textbook bokeh
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses some bokeh-specific features but not the most distinctive ones
+          (e.g. CustomJS)
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -251,15 +237,13 @@ impl_tags:
   techniques:
   - hover-tooltips
   - annotations
-  - custom-legend
-  - html-export
   - manual-ticks
+  - html-export
+  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   - columndatasource
   dataprep:
-  - cumulative-sum
   - time-series
   styling:
   - alpha-blending

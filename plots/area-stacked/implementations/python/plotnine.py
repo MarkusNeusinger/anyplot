@@ -1,7 +1,7 @@
 """ anyplot.ai
 area-stacked: Stacked Area Chart
 Library: plotnine 0.15.8 | Python 3.13.15
-Quality: 89/100 | Updated: 2026-08-17
+Quality: 91/100 | Updated: 2026-08-17
 """
 
 import os
@@ -87,15 +87,16 @@ anyplot_theme = theme(
     axis_title=element_text(size=10, color=INK),
     axis_text=element_text(size=8, color=INK_SOFT),
     axis_text_x=element_text(angle=45, hjust=1, margin={"t": 6, "unit": "pt"}),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_background=element_rect(fill=ELEVATED_BG, color=None),
     legend_text=element_text(size=8, color=INK_SOFT),
     legend_title=element_text(size=9, color=INK),
 )
 
 # Create stacked area chart: a subtle ink outline on each band's upper edge
 # (outline_type) plus a dashed total-traffic overlay for the cumulative read.
-# position_stack(reverse=True) keeps the largest series (Organic Search) at
-# the bottom of the stack, matching source_order and the spec's size ordering.
+# position_stack(reverse=True) puts the first factor level (Organic Search,
+# the largest series) at the bottom of the stack, matching source_order and
+# the spec's "largest at bottom" size ordering.
 plot = (
     ggplot(df, aes(x="Date", y="Visitors", fill="Source"))
     + geom_area(alpha=0.85, outline_type="upper", color=INK_SOFT, size=0.35, position=position_stack(reverse=True))
