@@ -2,12 +2,12 @@ library: plotly
 language: python
 specification_id: ice-basic
 created: '2026-05-07T16:48:06Z'
-updated: '2026-05-07T17:09:38Z'
+updated: '2026-08-17T22:54:49Z'
 generated_by: claude-sonnet
-workflow_run: 25509381541
+workflow_run: 32076813774
 issue: 5238
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.15
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/plotly/plot-light.html
@@ -15,114 +15,124 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 quality_score: 90
 review:
   strengths:
-  - 'Excellent multi-layer ICE design: viridis age encoding reveals interaction effect
-    while brand-green PDP creates a dominant focal point'
-  - Proper continuous colormap (viridis) applied to house age — correct palette compliance
-    for continuous data
-  - sys.path protection hack prevents plotly.py filename from shadowing the plotly
-    package — necessary and well-implemented
-  - GradientBoostingRegressor with real feature engineering creates a genuinely informative
-    ICE plot demonstrating heterogeneous effects
-  - Rug plot elegantly integrated below the main data area with proper y-range accounting
+  - 'Title now matches the mandated format exactly: "ice-basic · python · plotly ·
+    anyplot.ai" (fixed from the prior attempt''s missing language segment)'
+  - New annotation ("House age divergence widest here") gives the house-age interaction
+    signal an explicit callout, sharpening the data story the reviewer asked for last
+    round
+  - Theme-adaptive chrome is threaded through every element (title, axes, ticks, grid,
+    legend, colorbar, annotation) — both renders pass the light/dark legibility check
+    with no dark-on-dark or light-on-light failures
+  - 'imprint_seq continuous colormap (#009E73 → #4467A3) correctly used for the house-age
+    color-coding, matching the style guide''s two-stop gradient definition exactly;
+    PDP overlay stays #009E73'
+  - 'All spec notes implemented: low-alpha semi-transparent ICE lines, bold opaque
+    PDP overlay, a rug plot for the observed square-footage distribution, and color-coding
+    by a second feature (house age) to surface interaction effects'
+  - Canvas exactly matches the landscape hard target (width=800, height=450, scale=4
+    → 3200×1800), no drift — canvas gate passed
+  - Clean, reproducible, idiomatic plotly code — dummy-trace colorbar idiom, plotly.colors.sample_colorscale
+    utility, seeded data/model (seed=42, random_state=42), no fake interactivity
   weaknesses:
-  - 'Code/image discrepancy: annotation callout visible in both renders (''Wide spread
-    reveals heterogeneous price sensitivity across individual homes'') is absent from
-    the current code — fig.add_annotation() is missing; images appear to be from a
-    prior iteration and the annotation will not appear on re-run'
-  - X-axis label 'Square Footage' lacks explicit unit notation '(sq ft)' in parentheses
-    per style guide convention
-  - DE-01 could reach stronger score with more refined typography (custom font family,
-    explicit title weight) and cleaning up any remaining default Plotly chrome elements
+  - Design Excellence still leans on the standard theme-token template (bordered legend/colorbar
+    boxes) shared across the catalog — the annotation helps but a more distinctive
+    treatment (e.g. a wider perceptual color spread for house age, or subtle size/weight
+    variation among ICE lines) would push DE-01 further
+  - Title occupies only ~30-35% of the canvas width at fontsize=16 — comfortably readable
+    but conservative; a touch larger would use the available space better without
+    risking overflow
+  - LM-02 usage (sample_colorscale + dummy-trace colorbar idiom) is solid but is a
+    fairly common cross-library pattern for continuous color-coding — not something
+    unique to plotly beyond the API syntax
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — confirmed correct
-      Chrome: Title "ice-basic · plotly · anyplot.ai" centered, dark ink, clearly readable. X-axis label "Square Footage" and y-axis label "Predicted Sale Price (USD)" in dark ink, readable. Tick labels in muted dark tone, readable. Legend "Partial Dependence (PDP)" in top-left with elevated-background frame, readable. Colorbar "House Age (yrs)" on right side, readable.
-      Data: 120 ICE lines colored by viridis colorscale (house age 1–50 years), semi-transparent (alpha=0.30). Bold green #009E73 PDP line (width=5) clearly dominant. Rug plot tick marks along x-axis below main data area. Viridis colorbar on right side. Annotation callout box visible in upper-right quadrant (NOTE: not in current code — apparent stale image).
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Title "ice-basic · python · plotly · anyplot.ai" centered at top in dark ink, fully visible, not clipped. X-axis "Square Footage (sq ft)" and Y-axis "Predicted Sale Price (USD)" with $-formatted ticks from $200,000 to $700,000+, both in dark/soft-ink tones. Grid lines subtle warm-gray. A boxed legend (top-left, "Partial Dependence (PDP)") and a boxed colorbar labeled "House Age (yrs)" (right edge) both use the elevated cream background with a visible border, fully inside the canvas.
+      Data: 120 thin, semi-transparent (alpha 0.30) ICE lines colored on a green-to-blue gradient (#009E73 → #4467A3) by house age, forming a staircase pattern reflecting the tree-based model. A bold, opaque brand-green (#009E73) PDP line is overlaid on top as the clear focal point. A new annotation "House age divergence widest here" with an arrow points to the region of maximum spread (upper-right, high square footage). A rug plot along the bottom shows the distribution of observed square-footage values in soft-ink tick marks.
+      Legibility verdict: PASS — all title, axis, tick, legend, colorbar, and annotation text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — confirmed correct
-      Chrome: Title, axis labels, tick labels all render in light/muted tones against dark background. No dark-on-dark failures observed. Legend and colorbar text in light muted tones, readable. All chrome elements flip correctly to light theme.
-      Data: ICE line viridis colors identical to light render (only chrome flips). PDP line remains #009E73, clearly visible on dark surface. Rug plot markers visible. Annotation callout box present.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Identical layout to the light render. Title/axis-title text is light off-white (#F0EFE8), tick/legend/colorbar/annotation text uses the lighter secondary-ink tone (#B8B7B0), grid lines flip to a light subtle tone, and the legend/colorbar/annotation boxes use the dark elevated background (#242420) with a visible border.
+      Data: The green-to-blue ICE-line gradient and the brand-green PDP line are pixel-identical in hue to the light render — confirms only chrome flipped, not data colors. Rug-plot marks render in light gray, clearly visible against the dark background.
+      Legibility verdict: PASS — all chrome text (title, axes, ticks, legend, colorbar, annotation) is readable against the dark background; no dark-on-dark failures observed anywhere, including the annotation box and colorbar title.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, tick/legend/colorbar 16-18px all explicitly
-          set; readable in both themes
+        comment: All font sizes explicitly set, readable in both themes; title is
+          conservatively sized (~30-35% width) but never clipped
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; ICE line overlap is intentional/spec-required
-          density representation
+        comment: Legend, colorbar, and new annotation box are all clear of the ICE
+          line bundle in both renders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ICE lines width=1.5 alpha=0.30 appropriate for 120 obs; PDP width=5
-          dominates; rug markers size=18 visible
+        comment: 120 lines at width=1/alpha=0.30 with a bold width=3.5 PDP overlay
+          is well-tuned for this density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis perceptually uniform and CVD-safe; green PDP provides strong
-          luminance contrast
+        comment: Green-to-blue gradient is CVD-safe, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700px; balanced margins; colorbar outside plot area; rug strip
-          cleanly integrated
+        comment: Canvas gate passed (3200x1800), balanced margins, legend/colorbar
+          near the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has (USD) unit; x-axis 'Square Footage' is self-descriptive
+        comment: Both axes descriptive with units (sq ft, USD)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous age encoding (correct); PDP uses brand green
-          #009E73; correct backgrounds both themes'
+        comment: 'PDP/first series is #009E73, imprint_seq (#009E73->#4467A3) used
+          for continuous house-age encoding, theme-correct backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Intentional multi-layer design with viridis+green hierarchy; above
-          defaults but not FiveThirtyEight-level
+        passed: false
+        comment: Polished but still follows the catalog-standard theme-token template
+          rather than a distinctive treatment
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Subtle 10%-opacity grid; styled legend/colorbar with elevated frames;
-          generous margins; some default chrome remains
+        passed: false
+        comment: Subtle grid, generous margins, styled boxes; not a fully minimal
+          frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear hierarchy via PDP focal point; viridis age encoding reveals
-          interaction; rug plot adds distributional context
+        comment: New annotation calling out the divergence band plus the age-color
+          gradient gives the plot a clear, immediate insight
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ICE plot with individual lines per observation + PDP overlay
+        comment: 'Correct ICE plot: one line per observation plus PDP overlay'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Individual lines with alpha; bold PDP; rug plot; color coding by
-          house age; 120 obs x 80 grid points
+        comment: Low-alpha ICE lines, bold PDP overlay, rug plot, second-feature color-coding
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Square footage on x-axis; predicted sale price on y-axis; all 120
-          observations visible
+        comment: X=square footage grid, Y=predicted sale price, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'ice-basic · plotly · anyplot.ai'; legend 'Partial Dependence
-          (PDP)'; colorbar 'House Age (yrs)'
+        comment: Title now reads "ice-basic · python · plotly · anyplot.ai" exactly;
+          legend label matches the PDP series
     data_quality:
       score: 15
       max: 15
@@ -163,22 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows ICE heterogeneity, PDP average, age-interaction via viridis,
-          distributional context via rug, GBR step-wise effects
+        comment: Shows individual heterogeneity, average effect, feature-interaction
+          color-coding, and observed-value distribution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price prediction with GBR; square footage as primary feature;
-          realistic real estate domain
+        comment: Neutral, plausible real-estate GradientBoostingRegressor scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sqft 800-3500 (realistic); prices $200K-$700K (mid-market); house
-          age 1-50 years; seed=42
+        comment: Coefficients and resulting price ranges ($160k-$720k) are realistic
+          for the feature ranges given
     code_quality:
       score: 10
       max: 10
@@ -188,35 +196,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data generation -> model training -> ICE computation
-          -> plot -> save'
+        comment: Linear imports -> data -> model -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and random_state=42 for GBR
+        comment: np.random.seed(42) and random_state=42 on the regressor
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 6 imports (os, sys, numpy, plotly.colors, plotly.graph_objects,
-          sklearn) used
+        comment: numpy, plotly.colors, plotly.graph_objects, sklearn.ensemble all
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path fix justified; rgb->rgba string replacement concise; dummy
-          trace colorbar is established Plotly pattern
+        comment: Appropriate complexity for a model-backed ICE plot, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: write_image plot-{THEME}.png 4800x2700 and write_html plot-{THEME}.html
-          with CDN
+        comment: write_image(plot-{THEME}.png) + write_html, current plotly API
     library_mastery:
       score: 7
       max: 10
@@ -226,27 +231,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Figure() + go.Scatter() multi-trace; update_layout() comprehensive
-          styling; theme tokens consistently applied
+        comment: go.Figure/go.Scatter, sample_colorscale, dummy-trace colorbar idiom,
+          add_annotation - correct high-level API usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: pc.sample_colorscale() Plotly-specific color sampling; dummy scatter
-          for standalone colorbar; write_html with CDN
+        passed: false
+        comment: sample_colorscale + dummy-trace colorbar + line-ns rug marker are
+          solid plotly-specific idioms but not exceptional
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - colorbar
-  - html-export
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - regression
+  dataprep: []
   styling:
   - alpha-blending
   - custom-colormap
+  - publication-ready
