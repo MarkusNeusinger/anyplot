@@ -1,7 +1,7 @@
 """ anyplot.ai
 area-stacked: Stacked Area Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-07
+Library: letsplot 4.11.0 | Python 3.13.15
+Quality: 89/100 | Updated: 2026-08-17
 """
 
 import os
@@ -19,6 +19,7 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_fill_manual,
     scale_x_continuous,
     scale_y_continuous,
@@ -35,8 +36,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette (first series always #009E73)
+# Imprint palette (first series always #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Monthly revenue by product category over 2 years
@@ -73,35 +75,42 @@ df["MonthNum"] = df.groupby("Category").cumcount()
 category_order = ["Electronics", "Clothing", "Home & Garden", "Sports"]
 df["Category"] = pd.Categorical(df["Category"], categories=category_order, ordered=True)
 
+# Richer tooltip: category, month, and formatted revenue (lets-plot-distinctive
+# interactive feature, beyond a generic ggplot2-style port)
+area_tooltips = layer_tooltips().line("@Category").format("@Revenue", ".0f").line("Revenue|@Revenue k USD")
+
 # Create stacked area chart
 plot = (
     ggplot(df, aes(x="MonthNum", y="Revenue", fill="Category"))
-    + geom_area(alpha=0.85, position="stack", size=0.5, color=PAGE_BG)
+    + geom_area(alpha=0.85, position="stack", size=0.5, color=PAGE_BG, tooltips=area_tooltips)
     + scale_fill_manual(values=IMPRINT)
     + scale_x_continuous(
         name="Month", breaks=[0, 6, 12, 18, 23], labels=["Jan 2023", "Jul 2023", "Jan 2024", "Jul 2024", "Dec 2024"]
     )
     + scale_y_continuous(name="Revenue (Thousands USD)")
-    + labs(title="area-stacked · letsplot · anyplot.ai", fill="Product Category")
+    + labs(title="area-stacked · python · letsplot · anyplot.ai", fill="Product Category")
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK_SOFT, size=0.5),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
+        panel_grid_major_x=element_blank(),
+        panel_grid_major_y=element_line(color=RULE, size=0.5),
         panel_grid_minor=element_blank(),
-        plot_title=element_text(size=24, face="bold", color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_line_x=element_line(color=INK_SOFT),
+        axis_line_y=element_line(color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_position="right",
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale 3x for 4800x2700 px)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# Save as PNG (scale 4x for 3200x1800 px)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 
 # Save interactive HTML version
 ggsave(plot, f"plot-{THEME}.html", path=".")
