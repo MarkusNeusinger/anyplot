@@ -2,117 +2,138 @@ library: pygal
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:38:22Z'
-updated: '2026-05-07T15:29:57Z'
-generated_by: claude-haiku
-workflow_run: 25504892118
+updated: '2026-08-17T12:40:23Z'
+generated_by: claude-sonnet
+workflow_run: 32029836190
 issue: 2022
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.15
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/pygal/plot-dark.html
-quality_score: 92
+quality_score: 85
 review:
   strengths:
-  - Perfect theme adaptation with correct colors for both light (#FAF8F1) and dark
-    (#1A1A17) surfaces
-  - All text elements (title, axis labels, tick labels) explicitly sized and fully
-    readable in both themes
-  - Okabe-Ito palette correctly applied with brand green (#009E73) as first series,
-    followed by canonical order
-  - Clean stacked area implementation using pygal.StackedLine with fill=True
-  - Data is realistic and well-structured (monthly revenue by product category)
-  - Proper legend placement and formatting with all series labeled
-  - Excellent layout with generous margins and no element overlap
+  - 'Zero-baseline requirement now fixed: `range=(0, 1400)` was added to pygal.StackedLine,
+    and both renders confirm the stack''s bottom edge sits exactly on the 0 TWh gridline
+    instead of floating above it — this directly resolves the sole blocker from the
+    prior REJECTED attempt'
+  - Correct chart type (pygal.StackedLine with fill=True) with all four series stacked,
+    largest-at-bottom for most of the series (Industrial > Residential > Commercial)
+    as the spec's Notes recommend
+  - 'Imprint palette used correctly: first series Industrial is #009E73, remaining
+    series follow the canonical order, and plot backgrounds are the exact #FAF8F1
+    / #1A1A17 theme tokens'
+  - Both renders are fully legible — theme tokens (INK, INK_SOFT, INK_MUTED) are threaded
+    through title, axis labels, ticks and legend with no dark-on-dark or light-on-light
+    failures
+  - 'Thoughtful pygal-specific configuration: value_formatter with thousands separator
+    and unit suffix, legend_at_bottom, x_labels_major_count=8 to thin 15 year labels,
+    show_minor_x_labels=False, opacity=.85 for the semi-transparent fills the spec
+    suggests'
+  - Clean, reproducible, deterministic KISS script with only used imports and no fake
+    interactivity
   weaknesses:
-  - Design Excellence could be raised through more distinctive visual refinement (custom
-    palette variations, refined typography hierarchy)
-  - Library Mastery is minimal - could leverage more pygal-specific features like
-    custom value formatters or advanced legend positioning
+  - 'Design Excellence is still close to library defaults: no explicit visual hierarchy,
+    focal point, or annotation calling out the 2020 dip/rebound — DE-01/DE-02/DE-03
+    remain near baseline, unchanged from the prior attempt'
+  - LM-02 (Distinctive Features) is only lightly used — no interpolation, secondary
+    axis, or other pygal-distinctive technique beyond formatter/legend/label tuning
+  - 'Minor: stacking order is fixed at ''largest at bottom'' using average magnitude
+    (Industrial > Residential > Commercial > Transportation), but by 2024 Transportation
+    (250 TWh) actually exceeds Commercial (225 TWh) while still stacked above it —
+    a small deviation from the spec''s ordering guidance in the later years'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct per style guide
-      Chrome: Title "area-stacked · pygal · anyplot.ai" visible at top. Y-axis labeled "Revenue ($K)" on left in dark ink. X-axis labeled "Month" at bottom. All tick labels on both axes clearly readable in dark text against light background. Grid lines are subtle and visible.
-      Data: Four stacked areas representing Electronics (brand green #009E73 at bottom), Clothing (orange #D55E00), Home & Garden (blue #0072B2), and Books (reddish-purple #CC79A7) at top. Series order shows largest (Electronics) at bottom for easier reading. All areas are distinct and colors match Okabe-Ito palette perfectly.
-      Legend: Positioned at bottom center with all 4 series labeled and color-coded.
-      Legibility verdict: PASS - All text fully readable, no light-on-light issues, proper contrast throughout.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "area-stacked · pygal · anyplot.ai" in dark ink, centered, ~55-60% of plot width. X-axis title "Year" and rotated y-axis title "Electricity Consumption (TWh)" both dark and readable. Tick labels (years, TWh values) dark and legible. Subtle horizontal dashed gridlines at 100 TWh intervals, now spanning the full 0-1,400 TWh range. Legend at bottom in a 2x2 grid (Industrial, Residential / Commercial, Transportation) with color swatches matching the stack.
+      Data: Four stacked areas from bottom to top — Industrial (#009E73 green, largest), Residential (#C475FD purple), Commercial (#4467A3 blue), Transportation (#BD8233 orange) — at ~0.85 opacity, no dots, smooth interpolation between the 15 yearly points (2010-2024). A visible dip across all bands around 2020. The stack's bottom edge now sits exactly on the "0 TWh" gridline in both renders — the zero-baseline fix (range=(0, 1400)) is confirmed visually.
+      Legibility verdict: PASS — all text reads clearly against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct per style guide
-      Chrome: Title and axis labels all clearly visible in light text (#F0EFE8 and #A8A79F) against dark background. No dark-on-dark failures. Grid lines remain subtle and visible.
-      Data: Identical color arrangement to light render - same stacking order and color values (#009E73, #D55E00, #0072B2, #CC79A7). Confirms chrome-only theme adaptation without color drift.
-      Legend: Positioned at bottom with clear labels and proper color matching.
-      Legibility verdict: PASS - All text fully readable, no contrast issues, dark backgrounds properly handled with light ink.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels all rendered in light ink (#F0EFE8-equivalent), clearly visible against the dark background. Gridlines are faint but present, spanning the same 0-1,400 TWh range as the light render. Legend text and swatches equally legible.
+      Data: Same four data colors as the light render (#009E73, #C475FD, #4467A3, #BD8233) — confirmed identical, only chrome (background/text/grid) flipped as required. Stack bottom also sits exactly on the "0 TWh" gridline, matching the light render.
+      Legibility verdict: PASS — no dark-on-dark failures; every label, tick, and legend entry is clearly readable against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All fonts explicitly sized via custom_style; readable in both themes
+        comment: Explicit font sizes for title/axis/tick/legend/value, readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: Thinned x-labels (x_labels_major_count=8) avoid crowding; legend
+          well separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All areas clearly visible and distinguishable
+        comment: Filled stacked areas at opacity .85 with no dots is appropriate for
+          15-point series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Green/purple/blue/orange combination is distinguishable, no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, generous margins, nothing cut off
+        comment: 3200x1800 canvas gate passed; nothing clipped; generous bottom margin
+          for legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title and axis labels descriptive with units
+        comment: '"Year" and "Electricity Consumption (TWh)" — descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order, backgrounds correct'
+        comment: 'First series #009E73; canonical Imprint order; correct theme backgrounds
+          in both renders'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Professional custom style with theme tokens, good hierarchy
+        passed: false
+        comment: Custom Style tokens tuned for the canvas, but overall look is a fairly
+          standard area chart
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid, generous whitespace, clean aesthetic
+        passed: false
+        comment: Subtle grid, generous whitespace/margins, but no additional refinement
+          beyond defaults
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear focal point through stacking order and color
+        passed: false
+        comment: No annotation or emphasis calling out the 2020 dip/rebound or overall
+          growth trend
     spec_compliance:
       score: 15
       max: 15
@@ -122,48 +143,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart
+        comment: pygal.StackedLine with fill=True is a correct stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: stacking, multiple series, distinct colors,
-          legend'
+        comment: 'Fixed this attempt: range=(0, 1400) anchors the baseline at zero
+          as the spec''s Notes require; confirmed visually in both renders'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct, axes show all data
+        comment: X=year, Y=stacked TWh per sector; all 4 series and 15 years mapped
+          correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format, legend labels correct
+        comment: Title matches mandated format; legend labels match series names
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows composition, trends, multiple series
+        comment: 4 series, 15 time points shows composition + cumulative total well
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Revenue data plausible and neutral
+        comment: Plausible national electricity-consumption-by-sector data, neutral
+          topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values for product revenue
+        comment: TWh magnitudes and yearly growth/dip are sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -173,53 +196,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, straightforward
+        comment: No functions/classes, flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data, no randomness
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and os, both used
+        comment: Only os, pygal, pygal.style.Style — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or complexity issues
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: StackedLine with fill=True, custom Style, standard API
+        comment: Style object, StackedLine, value_formatter, and now range=(0, ...)
+          for the zero-baseline requirement — fully idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Minimal use of distinctive pygal features
+        comment: Some distinctive config (legend_at_bottom, x_labels_major_count,
+          truncate_legend) but nothing beyond formatter/label tuning
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns: []
   dataprep: []
   styling:
-  - theme-adaptive
-  - okabe-ito-palette
+  - alpha-blending
