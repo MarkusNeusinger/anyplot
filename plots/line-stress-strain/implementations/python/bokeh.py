@@ -1,14 +1,34 @@
-""" pyplots.ai
+"""anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-20
+Library: bokeh 3.9.2 | Python 3.14
 """
 
-import numpy as np
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, Span
-from bokeh.plotting import figure, save
+import os
+import time
+from pathlib import Path
 
+import numpy as np
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, Span
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — first series always brand green
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+color_main = IMPRINT_PALETTE[0]  # brand green — main stress-strain curve
+color_yield = "#DDCC77"  # amber anchor — yield point / offset line (warning/threshold semantics)
+color_uts = IMPRINT_PALETTE[1]  # lavender — ultimate tensile strength
+color_fracture = IMPRINT_PALETTE[4]  # matte red — fracture point (failure semantics)
+color_region = INK_SOFT
 
 # Data — Mild steel tensile test simulation
 np.random.seed(42)
@@ -64,20 +84,19 @@ uts_point_stress = uts
 fracture_point_strain = fracture_strain
 fracture_point_stress = stress_necking[-1]
 
-# Colorblind-safe palette
-color_main = "#306998"  # Python blue
-color_yield = "#D4A84B"  # Gold
-color_uts = "#8B5CF6"  # Purple (replaces red)
-color_fracture = "#0EA5E9"  # Sky blue (replaces green)
-color_region = "#6B7280"  # Neutral gray
-
 # Plot
+title = "line-stress-strain · python · bokeh · anyplot.ai"
 p = figure(
-    width=4800,
-    height=2700,
-    title="line-stress-strain · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title=title,
     x_axis_label="Engineering Strain (mm/mm)",
     y_axis_label="Engineering Stress (MPa)",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
 # Subtle horizontal reference lines at yield and UTS
@@ -86,18 +105,18 @@ p.add_layout(
         location=yield_strength,
         dimension="width",
         line_color=color_yield,
-        line_alpha=0.2,
+        line_alpha=0.3,
         line_dash="dotted",
         line_width=2,
     )
 )
 p.add_layout(
-    Span(location=uts, dimension="width", line_color=color_uts, line_alpha=0.2, line_dash="dotted", line_width=2)
+    Span(location=uts, dimension="width", line_color=color_uts, line_alpha=0.3, line_dash="dotted", line_width=2)
 )
 
 # Main curve with region data for HoverTool
 source = ColumnDataSource(data={"strain": strain, "stress": stress, "region": region_labels})
-main_line = p.line(x="strain", y="stress", source=source, line_width=5, color=color_main)
+main_line = p.line(x="strain", y="stress", source=source, line_width=6, color=color_main)
 
 # HoverTool — Bokeh-distinctive interactive feature
 hover = HoverTool(
@@ -108,63 +127,63 @@ hover = HoverTool(
 )
 p.add_tools(hover)
 
-# 0.2% offset line — thicker and more visible
+# 0.2% offset line
 offset_source = ColumnDataSource(data={"strain": offset_strain_line, "stress": offset_stress_line})
 offset_line = p.line(x="strain", y="stress", source=offset_source, line_width=4, line_dash="dashed", color=color_yield)
 
-# Key points — larger markers for clarity
+# Key points — sized for 3200x1800 canvas
 yield_glyph = p.scatter(
     x=[yield_point_strain],
     y=[yield_point_stress],
-    size=32,
+    size=26,
     color=color_yield,
     marker="circle",
-    line_color="white",
+    line_color=PAGE_BG,
     line_width=3,
 )
 
 uts_glyph = p.scatter(
     x=[uts_point_strain],
     y=[uts_point_stress],
-    size=32,
+    size=26,
     color=color_uts,
     marker="triangle",
-    line_color="white",
+    line_color=PAGE_BG,
     line_width=3,
 )
 
 fracture_glyph = p.scatter(
     x=[fracture_point_strain],
     y=[fracture_point_stress],
-    size=32,
+    size=26,
     color=color_fracture,
     marker="square",
-    line_color="white",
+    line_color=PAGE_BG,
     line_width=3,
 )
 
-# Region labels — repositioned to reduce left-side congestion
+# Region labels
 p.add_layout(
-    Label(x=0.008, y=130, text="Elastic", text_font_size="22pt", text_color=color_region, text_font_style="italic")
+    Label(x=0.11, y=60, text="Elastic", text_font_size="24pt", text_color=color_region, text_font_style="italic")
 )
 
 p.add_layout(
     Label(
-        x=0.08, y=280, text="Strain Hardening", text_font_size="22pt", text_color=color_region, text_font_style="italic"
+        x=0.10, y=300, text="Strain Hardening", text_font_size="24pt", text_color=color_region, text_font_style="italic"
     )
 )
 
 p.add_layout(
-    Label(x=0.27, y=380, text="Necking", text_font_size="22pt", text_color=color_region, text_font_style="italic")
+    Label(x=0.27, y=380, text="Necking", text_font_size="24pt", text_color=color_region, text_font_style="italic")
 )
 
-# Key point annotations — repositioned to spread out and avoid left-side crowding
+# Key point annotations — spread out to avoid left-side crowding
 p.add_layout(
     Label(
-        x=yield_point_strain + 0.018,
-        y=yield_point_stress - 25,
+        x=yield_point_strain + 0.02,
+        y=yield_point_stress - 55,
         text=f"Yield Point ({yield_point_stress} MPa)",
-        text_font_size="18pt",
+        text_font_size="20pt",
         text_color=color_yield,
         text_font_style="bold",
     )
@@ -175,7 +194,7 @@ p.add_layout(
         x=uts_point_strain - 0.075,
         y=uts_point_stress + 18,
         text=f"UTS ({uts_point_stress} MPa)",
-        text_font_size="18pt",
+        text_font_size="20pt",
         text_color=color_uts,
         text_font_style="bold",
     )
@@ -183,28 +202,28 @@ p.add_layout(
 
 p.add_layout(
     Label(
-        x=fracture_point_strain - 0.04,
-        y=fracture_point_stress - 40,
+        x=fracture_point_strain - 0.045,
+        y=fracture_point_stress - 45,
         text="Fracture",
-        text_font_size="18pt",
+        text_font_size="20pt",
         text_color=color_fracture,
         text_font_style="bold",
     )
 )
 
-# Young's modulus annotation — moved right to reduce elastic region crowding
+# Young's modulus annotation — placed above the elastic label, clear of the offset line
 p.add_layout(
     Label(
-        x=0.025,
-        y=50,
+        x=0.11,
+        y=140,
         text=f"E = {youngs_modulus // 1000} GPa",
-        text_font_size="18pt",
+        text_font_size="20pt",
         text_color=color_main,
         text_font_style="bold",
     )
 )
 
-# Legend — positioned inside the plot near the data
+# Legend — elevated box, positioned lower-right away from curve congestion
 legend = Legend(
     items=[
         LegendItem(label="Stress-Strain Curve", renderers=[main_line]),
@@ -213,55 +232,77 @@ legend = Legend(
         LegendItem(label="Ultimate Tensile Strength", renderers=[uts_glyph]),
         LegendItem(label="Fracture Point", renderers=[fracture_glyph]),
     ],
-    location=(2800, 200),
+    location=(2350, 550),
 )
-legend.label_text_font_size = "18pt"
-legend.glyph_height = 30
-legend.glyph_width = 30
-legend.spacing = 10
-legend.padding = 20
-legend.margin = 20
-legend.background_fill_color = "#FAFAFA"
-legend.background_fill_alpha = 0.9
-legend.border_line_color = "#E5E7EB"
-legend.border_line_alpha = 0.6
+legend.label_text_font_size = "20pt"
+legend.label_text_color = INK_SOFT
+legend.glyph_height = 34
+legend.glyph_width = 34
+legend.spacing = 12
+legend.padding = 24
+legend.margin = 24
+legend.background_fill_color = ELEVATED_BG
+legend.background_fill_alpha = 0.95
+legend.border_line_color = INK_SOFT
+legend.border_line_alpha = 0.4
 legend.border_line_width = 2
 p.add_layout(legend, "center")
 
-# Style
-p.title.text_font_size = "28pt"
+# Theme-adaptive chrome
+p.title.text_font_size = "50pt"
 p.title.text_font_style = "normal"
-p.title.text_color = "#374151"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-p.xaxis.axis_label_text_color = "#4B5563"
-p.yaxis.axis_label_text_color = "#4B5563"
-p.xaxis.major_label_text_color = "#6B7280"
-p.yaxis.major_label_text_color = "#6B7280"
-p.xaxis.axis_line_color = "#D1D5DB"
-p.yaxis.axis_line_color = "#D1D5DB"
-p.xaxis.major_tick_line_color = "#D1D5DB"
-p.yaxis.major_tick_line_color = "#D1D5DB"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
 p.xgrid.grid_line_alpha = 0.15
 p.ygrid.grid_line_alpha = 0.15
-p.xgrid.grid_line_color = "#9CA3AF"
-p.ygrid.grid_line_color = "#9CA3AF"
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
 
 p.outline_line_color = None
-p.toolbar_location = None
-p.background_fill_color = "#FAFAFA"
-p.border_fill_color = "white"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
 p.y_range.start = -10
 p.y_range.end = 450
 p.x_range.start = -0.005
 p.x_range.end = 0.38
 
-# Save
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="line-stress-strain · bokeh · pyplots.ai")
+# Save — write HTML, then screenshot with headless Chrome (export_png's chromedriver
+# probe fails on this box; see prompts/library/bokeh.md)
+output_file(f"plot-{THEME}.html", title=title)
+save(p)
+
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
