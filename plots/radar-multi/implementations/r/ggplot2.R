@@ -4,9 +4,6 @@
 #' Quality: 82/100 | Created: 2026-08-17
 
 library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -52,17 +49,26 @@ radar_df <- tibble::tibble(
   )
 )
 
+# Faint alternating ring bands (drawn back-to-front: wide band first, then a
+# narrower band painted in the page color to punch out the "gap") give the
+# grid a touch of depth beyond the mandated gridlines alone.
+ring_hi <- data.frame(attribute = factor(attributes, levels = attributes), score = 80)
+ring_lo <- data.frame(attribute = factor(attributes, levels = attributes), score = 60)
+
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(radar_df, aes(x = attribute, y = score, group = phone, color = phone, fill = phone)) +
+  geom_polygon(data = ring_hi, aes(x = attribute, y = score), inherit.aes = FALSE, fill = INK, alpha = 0.05) +
+  geom_polygon(data = ring_lo, aes(x = attribute, y = score), inherit.aes = FALSE, fill = PAGE_BG) +
   geom_polygon(alpha = 0.25, linewidth = 1.0) +
-  geom_point(size = 2.5) +
+  geom_point(size = 3.2) +
   coord_radar(start = -pi / 2) +
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20), expand = expansion(mult = c(0, 0.18))) +
   scale_color_manual(values = IMPRINT_PALETTE) +
   scale_fill_manual(values = IMPRINT_PALETTE) +
   labs(
     title = "radar-multi · r · ggplot2 · anyplot.ai",
-    x = NULL, y = NULL, color = NULL, fill = NULL
+    caption = "Each phone leads on a different axis — no single winner across all six attributes",
+    x = NULL, y = "Score (0-100)", color = NULL, fill = NULL
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -75,12 +81,15 @@ p <- ggplot(radar_df, aes(x = attribute, y = score, group = phone, color = phone
     panel.grid.minor   = element_blank(),
     axis.text.x        = element_text(color = INK, size = 10),
     axis.text.y        = element_text(color = INK_SOFT, size = 8),
-    plot.title         = element_text(color = INK, size = 12, hjust = 0.5),
+    axis.title.y       = element_text(color = INK_SOFT, size = 7, hjust = 0.85, margin = margin(r = 4)),
+    plot.title         = element_text(color = INK, size = 12, face = "bold", hjust = 0.5),
+    plot.caption       = element_text(color = INK_SOFT, size = 7, hjust = 0.5, margin = margin(t = 8)),
     legend.position    = "bottom",
     legend.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
     legend.text        = element_text(color = INK_SOFT, size = 8),
     legend.title       = element_blank()
-  )
+  ) +
+  guides(fill = guide_legend(override.aes = list(alpha = 0.5)))
 
 # --- Save -------------------------------------------------------------------
 ggsave(
