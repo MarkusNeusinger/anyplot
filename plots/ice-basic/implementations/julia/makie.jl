@@ -21,6 +21,9 @@ const IMPRINT_PALETTE = [
 ]
 const BRAND          = IMPRINT_PALETTE[1]  # ALWAYS first series
 const ANYPLOT_NEUTRAL = INK                # baseline / reference line
+const ANYPLOT_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"  # confidence-band fill
+const RESPONDER_COLOR     = BRAND                 # responders — primary story, brand green
+const NONRESPONDER_COLOR  = IMPRINT_PALETTE[3]    # non-responders — blue, CVD-safe contrast to green
 
 # --- Data ---------------------------------------------------------------
 # ICE curves from a gradient-boosted risk model: predicted relapse-risk
@@ -49,6 +52,14 @@ for i in 1:n_patients
 end
 
 pdp_curve = vec(mean(risk_curves; dims = 2))
+
+# Interquartile spread at each grid point, to anchor the eye against the
+# dense haze of 80 overlapping semi-transparent lines.
+band_lo = [quantile(risk_curves[j, :], 0.25) for j in 1:n_grid]
+band_hi = [quantile(risk_curves[j, :], 0.75) for j in 1:n_grid]
+
+first_responder    = findfirst(responder)
+first_nonresponder = findfirst(!, responder)
 
 # Observed dosages actually recorded per patient, for the x-axis rug.
 observed_dosage = clamp.(45 .+ randn(n_patients) .* 22, 0, 100)
@@ -82,18 +93,32 @@ ax = Axis(
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    xgridvisible       = false,
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
 )
 
+band!(
+    ax, dosage_grid, band_lo, band_hi;
+    color = (ANYPLOT_MUTED, 0.15),
+    label = "Interquartile spread (25th–75th pct)",
+)
+
 for i in 1:n_patients
+    group_color = responder[i] ? RESPONDER_COLOR : NONRESPONDER_COLOR
+    label = if i == first_responder
+        "Responders (ICE)"
+    elseif i == first_nonresponder
+        "Non-responders (ICE)"
+    else
+        nothing
+    end
     lines!(
         ax, dosage_grid, risk_curves[:, i];
-        color     = (BRAND, 0.16),
+        color     = (group_color, 0.16),
         linewidth = 1.3,
-        label     = i == 1 ? "Individual patients (ICE)" : nothing,
+        label     = label,
     )
 end
 
