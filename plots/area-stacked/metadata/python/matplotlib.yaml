@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:38:56Z'
-updated: '2026-08-17T12:24:06Z'
+updated: '2026-08-17T12:31:20Z'
 generated_by: claude-sonnet
 workflow_run: 32028804459
 issue: 2022
@@ -12,52 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - Correct Imprint palette in canonical order (Industrial=#009E73, Commercial=#C475FD,
-    Residential=#4467A3, Transportation=#BD8233), with identical data colors and correctly
-    flipped theme-adaptive chrome (background, text, grid, legend frame) across both
-    light and dark renders.
-  - Thoughtful alpha-based visual hierarchy (0.88 -> 0.70 from largest to smallest
-    sector) plus a thin edge-stroke boundary line at each layer, going beyond a default
-    stackplot look to make the composition easier to read.
-  - Series correctly ordered largest-at-bottom per the spec's explicit guidance, baseline
-    pinned to zero (set_ylim(bottom=0)), and no edge clipping or text overlap in either
-    render (verified pixel-by-pixel around the legend/data boundary).
-  - 'Realistic, neutral, well-scaled data: monthly grid electricity consumption by
-    sector over 3 years, with plausible magnitudes, distinct seasonal phase/amplitude
-    per sector, and a steady growth trend.'
-  - 'Clean KISS code: explicit np.random.seed(42), no unused imports, correct canvas
-    (3200x1800, verified against the gate) and output naming.'
+  - Title now correctly reads "area-stacked · python · matplotlib · anyplot.ai" with
+    the mandatory language token, fixing the sole SC-04 blocker from attempt 1.
+  - Legend is now borderless per the Decoration Removal Checklist, and pairs with
+    a new growth-trend annotation ("+19% total consumption over 3 years") that gives
+    the chart a clear focal point beyond the alpha hierarchy.
+  - 'Correct Imprint palette in canonical order (#009E73 → #C475FD → #4467A3 → #BD8233),
+    identical data colors in both renders, fully theme-adaptive chrome, and warm off-white/near-black
+    backgrounds matching spec (#FAF8F1 / #1A1A17).'
+  - Deliberate alpha-based visual hierarchy (0.88→0.70) plus thin edge-stroke boundaries
+    between layers, and the code comment now explicitly justifies the manual cumsum+fill_between
+    approach over ax.stackplot() (per-layer alpha/edge-stroke control that stackplot's
+    uniform styling can't express).
+  - Series correctly ordered largest-at-bottom per spec, zero baseline, no overlap
+    or clipping in either render; realistic, well-scaled data (grid electricity consumption
+    by sector, 36 months, plausible seasonality and growth trend).
+  - Clean, reproducible KISS code (seeded, correct canvas dimensions, correct output
+    naming, only used imports).
   weaknesses:
-  - 'Title is missing the mandatory language token: current title is ''area-stacked
-    · matplotlib · anyplot.ai'' but the required format (prompts/plot-generator.md
-    → ''Title Format (MANDATORY)'') is ''{spec-id} · {language} · {library} · anyplot.ai''
-    → must read ''area-stacked · python · matplotlib · anyplot.ai''.'
-  - Legend keeps a visible bordered frame (leg.get_frame().set_edgecolor + linewidth=0.8);
-    the style guide's Decoration Removal Checklist recommends removing box frames
-    around legends for a cleaner look, or at least lightening/removing the border.
-  - 'Design Excellence is solid but not yet publication-tier: no explicit visual emphasis
-    or callout on the overall growth trend across the 3-year span, so the story (''total
-    consumption rose steadily while composition shifted'') isn''t made explicit beyond
-    the alpha hierarchy.'
-  - Uses a manual np.cumsum + fill_between loop instead of matplotlib's dedicated
-    ax.stackplot() API; the manual approach is defensible for the per-layer alpha/edge-stroke
-    control it enables, but it isn't the library's single most idiomatic call for
-    this exact chart type.
+  - 'Library Mastery is still generic: no matplotlib-distinctive feature (e.g. custom
+    transforms, colormapped fills, path effects) beyond fill_between/annotate, which
+    are common to most plotting libraries — LM-02 stays low.'
+  - The growth-trend annotation is a nice single focal point, but there is no secondary
+    storytelling device (e.g. highlighting one sector's disproportionate growth) to
+    push DE-03 further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 (sampled ~#FAF8F1 / rgb(250,248,241)) - not pure white.
-      Chrome: Title "area-stacked · matplotlib · anyplot.ai" in dark ink, centered, ~55-60% of plot width, no clipping. Y-axis label "Electricity Consumption (GWh)" and x-axis label "Month" in dark ink, both readable. Tick labels in softer dark grey, legible. Thin y-axis-only gridlines at 15% alpha, visible only in the sky above the stacked area. Legend (upper-left, bordered box, off-white/elevated fill) lists Industrial/Commercial/Residential/Transportation with color swatches; verified via pixel sampling that the legend box sits directly above the data without ever obscuring readable content - text and data never overlap.
-      Data: Four stacked area bands in Imprint order - Industrial (#009E73, bottom, largest), Commercial (#C475FD), Residential (#4467A3), Transportation (#BD8233, top, smallest) - with graduated alpha (0.88 down to 0.70) and a thin 1.3px edge stroke at each boundary for definition. First series confirmed as the brand green #009E73.
-      Legibility verdict: PASS - all text clearly readable against the light background, no dark-on-light or light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Title "area-stacked · python · matplotlib · anyplot.ai" in dark ink, centered, comfortably within the canvas. Y-axis label "Electricity Consumption (GWh)" and x-axis label "Month" in dark ink; tick labels in softer grey. Borderless legend (upper-left) lists Industrial/Commercial/Residential/Transportation with matching color swatches, sitting above the colored fill with no overlap. Growth-trend annotation "+19% total consumption over 3 years" top-right with an arrow pointing to the end of the stacked total, fully inside the frame with margin to spare.
+      Data: Four stacked bands in Imprint canonical order — Industrial #009E73 (bottom, largest), Commercial #C475FD, Residential #4467A3, Transportation #BD8233 (top, smallest) — with graduated alpha (0.88→0.70) and thin same-hue edge strokes at each boundary for definition. Baseline at zero.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, annotation) is clearly readable against the light background; no clipping at any edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink (title/axis labels near-white #F0EFE8, tick labels/legend text in lighter grey #B8B7B0), clearly legible against the dark background. Legend frame now uses the dark elevated background (#242420) with a light-grey border. Gridlines flipped to a light, low-alpha stroke, still subtle.
-      Data: Same four bands in the identical Imprint colors as the light render (#009E73 / #C475FD / #4467A3 / #BD8233) - confirmed pixel-identical hues, only the chrome (background, text, grid, legend frame) flipped.
-      Legibility verdict: PASS - no dark-on-dark failures; every title/axis/tick/legend element is clearly visible against the near-black surface, and the brand green remains vivid on both surfaces.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Same layout, chrome flipped to light ink — title, axis labels, and tick labels in light off-white/soft grey. Legend text flips to light grey, still borderless. Growth-trend annotation text and arrow flip to light ink/soft grey, fully legible.
+      Data: The four stacked bands render in the identical Imprint hues as the light version (#009E73/#C475FD/#4467A3/#BD8233) — only the chrome (background, text, grid, legend) flipped, confirming theme-adaptive tokens were threaded through correctly.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axes, ticks, legend, annotation) reads clearly against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -68,80 +61,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks/legend
-          8pt); title ~55-60% width, no overflow or clipping; readable in both themes.
+        comment: Title, axis labels, ticks, legend, annotation all explicitly sized
+          and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'Pixel-verified: legend box sits directly above the data stack without
-          ever covering colored fill or text; no overlap anywhere.'
+        comment: Legend sits clear of the fill area; annotation and arrow don't collide
+          with any other element
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Areas sized for the 36-point medium-density series; alpha gradient
-          plus 1.3px edge strokes keep every layer clearly distinguishable.
+        comment: Alpha hierarchy (0.88-0.70) plus edge strokes keep all four bands
+          clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe by design; edge strokes add extra separation
-          between adjacent bands beyond hue alone.
+        comment: Green/purple/blue/amber palette, adequate contrast, no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Axes bounding box occupies the large majority of the 3200x1800 canvas
-          with balanced margins; canvas-dimension gate passed (3200x1800).
+        comment: Canvas is 3200x1800; title, labels, and annotation stay within bounds
+          with no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis label includes units (GWh); x-axis label 'Month' is sufficient
-          given the tick labels show explicit months/years.
+        comment: Descriptive labels with units (GWh); title matches mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining series in canonical order 2-4; backgrounds
-          and all chrome correctly theme-adaptive in both renders.'
+        comment: 'Canonical Imprint order starting at #009E73; correct theme-adaptive
+          backgrounds'
     design_excellence:
-      score: 14
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'Strong design: deliberate alpha hierarchy by sector size plus edge-stroke
-          boundaries, clearly above matplotlib defaults, but not yet a fully distinctive
-          publication-level treatment.'
+        comment: Deliberate alpha hierarchy, edge-stroke boundaries, and growth-trend
+          callout well above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Subtle y-only grid, top/right spines removed, generous whitespace
-          - good refinement, but the legend still keeps a visible bordered frame the
-          style guide recommends removing.
+        comment: Top/right spines removed, grid subtle, generous whitespace, legend
+          now borderless (fixed from attempt 1)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Alpha hierarchy and largest-at-bottom ordering guide the eye and
-          create emphasis, but there is no explicit callout on the overall trend (steady
-          multi-year growth) to elevate this further.
+        comment: New growth-trend annotation gives a clear focal point on top of the
+          alpha hierarchy; a secondary emphasis device would push this to full marks
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -149,30 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart via cumulative fill_between layers.
+        comment: Correct stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, largest-at-bottom ordering, legend, semi-transparent
-          fills, zero baseline - all present.
+        comment: Distinct colors, size-ordered stacking, legend, semi-transparent
+          fills, zero baseline all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=month index with date-formatted ticks, Y=consumption; axes show
-          the full data range (xlim tight to 0..35).
+        comment: Time on x, stacked values on y, categories correctly labeled
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Legend is correct, but the title omits the mandatory language token:
-          reads ''area-stacked · matplotlib · anyplot.ai'' instead of the required
-          ''area-stacked · python · matplotlib · anyplot.ai'' (prompts/plot-generator.md,
-          Title Format MANDATORY).'
+        passed: true
+        comment: Title fixed to include the mandatory 'python' language token; legend
+          labels match series
     data_quality:
       score: 15
       max: 15
@@ -182,23 +168,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Each sector shows a distinct seasonal phase/amplitude plus a steady
-          growth trend, with a realistic dip/rebound cycle - shows composition and
-          trend together.
+        comment: Stacking, baseline, legend, layering all demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Grid electricity consumption by sector is a real, neutral, comprehensible
-          business/infrastructure scenario.
+        comment: Grid electricity consumption by sector — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: GWh magnitudes and month-over-month growth rates are plausible for
-          a regional grid; positivity clamps avoid impossible negative consumption.
+        comment: Values in thousands of GWh, sensible for regional grid consumption
     code_quality:
       score: 10
       max: 10
@@ -208,62 +190,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes.
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy - all used.
+        comment: Only os, matplotlib.pyplot, numpy, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the visualization, no fake functionality.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, no bbox_inches='tight', no deprecated calls.
+        comment: Saves plot-{THEME}.png with default bbox_inches
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct Axes-based API usage; uses a manual cumsum + fill_between
-          loop rather than matplotlib's dedicated ax.stackplot(), traded for per-layer
-          alpha/edge-stroke control.
+        comment: Manual cumsum+fill_between is now explicitly justified in-code as
+          a deliberate tradeoff for per-layer alpha/edge-stroke control that stackplot
+          can't express
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic technique (fill_between + cumsum) easily replicated in any
-          plotting library with minor syntax changes.
-  verdict: REJECTED
+        comment: No matplotlib-distinctive feature beyond fill_between/annotate, which
+          are common across plotting libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
-  - explicit-figure
   - iteration-over-groups
+  - explicit-figure
   dataprep:
   - cumulative-sum
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
