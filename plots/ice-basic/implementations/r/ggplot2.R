@@ -5,6 +5,7 @@
 
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 library(scales)
 library(ragg)
 
@@ -42,18 +43,25 @@ plateau_sqft    <- ifelse(house_age == "Older build (15+ yr)",
 wiggle_amplitude <- rnorm(n_houses, mean = 0, sd = 9000)
 wiggle_phase     <- runif(n_houses, 0, 2 * pi)
 
-ice_df <- bind_rows(lapply(seq_len(n_houses), function(i) {
-  effective_sqft <- pmin(sqft_grid, plateau_sqft[i]) +
-    0.18 * pmax(sqft_grid - plateau_sqft[i], 0)
-  predicted_price <- base_price[i] + price_per_sqft[i] * effective_sqft +
-    wiggle_amplitude[i] * sin(sqft_grid / 650 + wiggle_phase[i])
-  tibble::tibble(
-    observation_id = i,
-    house_age = house_age[i],
-    feature_value = sqft_grid,
-    prediction = predicted_price
-  )
-}))
+house_params <- tibble::tibble(
+  observation_id   = seq_len(n_houses),
+  house_age        = house_age,
+  base_price       = base_price,
+  price_per_sqft   = price_per_sqft,
+  plateau_sqft     = plateau_sqft,
+  wiggle_amplitude = wiggle_amplitude,
+  wiggle_phase     = wiggle_phase
+)
+
+ice_df <- expand_grid(observation_id = seq_len(n_houses), feature_value = sqft_grid) %>%
+  left_join(house_params, by = "observation_id") %>%
+  mutate(
+    effective_sqft = pmin(feature_value, plateau_sqft) +
+      0.18 * pmax(feature_value - plateau_sqft, 0),
+    prediction = base_price + price_per_sqft * effective_sqft +
+      wiggle_amplitude * sin(feature_value / 650 + wiggle_phase)
+  ) %>%
+  select(observation_id, house_age, feature_value, prediction)
 
 pdp_df <- ice_df %>%
   group_by(feature_value) %>%
@@ -68,7 +76,7 @@ p <- ggplot() +
   geom_line(
     data = ice_df,
     aes(x = feature_value, y = prediction, group = observation_id, color = house_age),
-    alpha = 0.16, linewidth = 0.45
+    alpha = 0.12, linewidth = 0.35
   ) +
   geom_rug(
     data = observed_sqft,
@@ -95,7 +103,7 @@ p <- ggplot() +
     panel.background    = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major.x  = element_blank(),
     panel.grid.minor    = element_blank(),
-    panel.grid.major.y  = element_line(color = INK, linewidth = 0.25),
+    panel.grid.major.y  = element_line(color = INK_SOFT, linewidth = 0.2),
     axis.line           = element_line(color = INK_SOFT),
     axis.title          = element_text(color = INK, size = 10),
     axis.text           = element_text(color = INK_SOFT, size = 8),
