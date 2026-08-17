@@ -2,47 +2,55 @@ library: matplotlib
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:38:56Z'
-updated: '2026-05-07T15:19:03Z'
-generated_by: claude-haiku
-workflow_run: 25504197723
+updated: '2026-08-17T12:31:20Z'
+generated_by: claude-sonnet
+workflow_run: 32028804459
 issue: 2022
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.15
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 94
 review:
   strengths:
-  - Perfect visual quality across all criteria
-  - Excellent theme adaptation with no legibility issues in either render
-  - All Okabe-Ito colors correctly applied with proper ordering
-  - Proper spine removal and subtle grid styling
-  - Realistic, well-scaled data scenario with appropriate time series context
-  - Clean, idiomatic matplotlib code with no unnecessary complexity
-  - Custom tick labels improve readability significantly
+  - Title now correctly reads "area-stacked · python · matplotlib · anyplot.ai" with
+    the mandatory language token, fixing the sole SC-04 blocker from attempt 1.
+  - Legend is now borderless per the Decoration Removal Checklist, and pairs with
+    a new growth-trend annotation ("+19% total consumption over 3 years") that gives
+    the chart a clear focal point beyond the alpha hierarchy.
+  - 'Correct Imprint palette in canonical order (#009E73 → #C475FD → #4467A3 → #BD8233),
+    identical data colors in both renders, fully theme-adaptive chrome, and warm off-white/near-black
+    backgrounds matching spec (#FAF8F1 / #1A1A17).'
+  - Deliberate alpha-based visual hierarchy (0.88→0.70) plus thin edge-stroke boundaries
+    between layers, and the code comment now explicitly justifies the manual cumsum+fill_between
+    approach over ax.stackplot() (per-layer alpha/edge-stroke control that stackplot's
+    uniform styling can't express).
+  - Series correctly ordered largest-at-bottom per spec, zero baseline, no overlap
+    or clipping in either render; realistic, well-scaled data (grid electricity consumption
+    by sector, 36 months, plausible seasonality and growth trend).
+  - Clean, reproducible KISS code (seeded, correct canvas dimensions, correct output
+    naming, only used imports).
   weaknesses:
-  - Design could feature more intentional visual hierarchy through scale variation
-    or emphasis techniques
-  - Alpha value on areas (0.85) is good but could explore subtle edge styling for
-    stronger definition
+  - 'Library Mastery is still generic: no matplotlib-distinctive feature (e.g. custom
+    transforms, colormapped fills, path effects) beyond fill_between/annotate, which
+    are common to most plotting libraries — LM-02 stays low.'
+  - The growth-trend annotation is a nice single focal point, but there is no secondary
+    storytelling device (e.g. highlighting one sector's disproportionate growth) to
+    push DE-03 further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified, providing excellent contrast.
-      Chrome: Title ("area-stacked · matplotlib · anyplot.ai"), axis labels ("Month", "Monthly Visitors (count)"), and tick labels are all clearly visible in dark text (#1A1A17) against the light background. Custom month labels ("Jan 2023", "Jun 2023", etc.) improve readability.
-      Data: Four stacked areas in Okabe-Ito order: #009E73 (Organic Search, bottom), #D55E00 (Direct), #0072B2 (Social Media), #CC79A7 (Referral, top). All colors are distinct and easily distinguishable. Alpha blending (0.85) allows visualization of overlapping areas.
-      Legend: Upper left with light background (#FFFDF6), proper text color (#4A4A44), and subtle border. No overlap with data.
-      Grid: Subtle y-axis grid at 15% alpha, supports data reading without competing.
-      Legibility verdict: PASS — all text is highly readable, colors are vibrant, and the composition is clean.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Title "area-stacked · python · matplotlib · anyplot.ai" in dark ink, centered, comfortably within the canvas. Y-axis label "Electricity Consumption (GWh)" and x-axis label "Month" in dark ink; tick labels in softer grey. Borderless legend (upper-left) lists Industrial/Commercial/Residential/Transportation with matching color swatches, sitting above the colored fill with no overlap. Growth-trend annotation "+19% total consumption over 3 years" top-right with an arrow pointing to the end of the stacked total, fully inside the frame with margin to spare.
+      Data: Four stacked bands in Imprint canonical order — Industrial #009E73 (bottom, largest), Commercial #C475FD, Residential #4467A3, Transportation #BD8233 (top, smallest) — with graduated alpha (0.88→0.70) and thin same-hue edge strokes at each boundary for definition. Baseline at zero.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, annotation) is clearly readable against the light background; no clipping at any edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified.
-      Chrome: Title and axis labels are clearly visible in light text (#F0EFE8). Tick labels use #B8B7B0 (INK_SOFT) and are fully readable against the dark background. No "dark-on-dark" failures.
-      Data: Okabe-Ito colors are identical to light render (only chrome flipped). All four series are clearly visible and distinguishable.
-      Legend: Same styling as light render but with dark theme background (#242420) and light text—perfectly adapted.
-      Grid: Subtle grid remains visible and supports readability.
-      Legibility verdict: PASS — both title and all labels are clearly readable. The dark theme adaptation is flawless with no text-contrast issues. Brand green (#009E73) remains vibrant and visible.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Same layout, chrome flipped to light ink — title, axis labels, and tick labels in light off-white/soft grey. Legend text flips to light grey, still borderless. Growth-trend annotation text and arrow flip to light ink/soft grey, fully legible.
+      Data: The four stacked bands render in the identical Imprint hues as the light version (#009E73/#C475FD/#4467A3/#BD8233) — only the chrome (background, text, grid, legend) flipped, confirming theme-adaptive tokens were threaded through correctly.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axes, ticks, legend, annotation) reads clearly against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,70 +61,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes properly scaled; readable in both light and dark renders
+        comment: Title, axis labels, ticks, legend, annotation all explicitly sized
+          and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend positioned without overlap; all elements well-spaced
+        comment: Legend sits clear of the fill area; annotation and arrow don't collide
+          with any other element
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four area series clearly visible with alpha=0.85; boundaries
-          well-defined
+        comment: Alpha hierarchy (0.88-0.70) plus edge strokes keep all four bands
+          clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette positions 1-4; colorblind-safe; high contrast
+        comment: Green/purple/blue/amber palette, adequate contrast, no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape appropriate; generous margins; nothing cut off
+        comment: Canvas is 3200x1800; title, labels, and annotation stay within bounds
+          with no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format; labels descriptive with units
+        comment: Descriptive labels with units (GWh); title matches mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; positions 1-4 in order; backgrounds correct;
-          both renders theme-compliant'
+        comment: 'Canonical Imprint order starting at #009E73; correct theme-adaptive
+          backgrounds'
     design_excellence:
-      score: 16
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Professional polish with thoughtful use of alpha blending and custom
-          tick labels; room for more distinctive styling
+        comment: Deliberate alpha hierarchy, edge-stroke boundaries, and growth-trend
+          callout well above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: L-shaped spines; subtle y-axis grid; generous whitespace; custom
-          labels enhance readability
+        comment: Top/right spines removed, grid subtle, generous whitespace, legend
+          now borderless (fixed from attempt 1)
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear visual hierarchy with largest series at bottom; stacked layout
-          guides viewer through composition; temporal trends evident
+        comment: New growth-trend annotation gives a clear focal point on top of the
+          alpha hierarchy; a secondary emphasis device would push this to full marks
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart using ax.stackplot()
+        comment: Correct stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple series (4 categories), legend, continuous axis, stacking
-          all present
+        comment: Distinct colors, size-ordered stacking, legend, semi-transparent
+          fills, zero baseline all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time (months), Y=count; zero baseline maintained; all data visible
+        comment: Time on x, stacked values on y, categories correctly labeled
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match categories
+        comment: Title fixed to include the mandatory 'python' language token; legend
+          labels match series
     data_quality:
       score: 15
       max: 15
@@ -155,22 +168,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows individual contributions, cumulative totals, trends, and composition
-          changes
+        comment: Stacking, baseline, legend, layering all demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website traffic scenario is real-world plausible; growth patterns
-          realistic; neutral topic
+        comment: Grid electricity consumption by sector — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis (0-100k+) and X-axis (24 months) scales appropriate; zero
-          baseline preserved
+        comment: Values in thousands of GWh, sensible for regional grid consumption
     code_quality:
       score: 10
       max: 10
@@ -180,33 +190,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; direct and straightforward
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, matplotlib, numpy); all used
+        comment: Only os, matplotlib.pyplot, numpy, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; appropriate complexity; clean variable naming
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API usage
+        comment: Saves plot-{THEME}.png with default bbox_inches
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -214,25 +224,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses ax.stackplot() idiomatically; proper axes methods; theme-aware
-          tokens
+        comment: Manual cumsum+fill_between is now explicitly justified in-code as
+          a deliberate tradeoff for per-layer alpha/edge-stroke control that stackplot
+          can't express
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Custom legend styling, alpha blending, theme tokens show library
-          knowledge; could be more distinctive
+        passed: false
+        comment: No matplotlib-distinctive feature beyond fill_between/annotate, which
+          are common across plotting libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - cumulative-sum
   styling:
   - alpha-blending
-  - publication-ready
+  - edge-highlighting
