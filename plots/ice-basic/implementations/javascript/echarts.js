@@ -67,6 +67,7 @@ const iceSeries = curves.map((curve) => ({
   showSymbol: false,
   silent: true,
   lineStyle: { color: t.palette[0], width: 1.3, opacity: 0.18 },
+  itemStyle: { color: t.palette[0] },
   z: 1,
 }));
 
@@ -76,6 +77,7 @@ const pdpSeries = {
   data: grid.map((x, j) => [x, pdp[j]]),
   showSymbol: false,
   lineStyle: { color: t.ink, width: 4 },
+  itemStyle: { color: t.ink },
   z: 3,
 };
 
@@ -96,6 +98,7 @@ const chart = echarts.init(document.getElementById("container"));
 // --- Option -----------------------------------------------------------------
 chart.setOption({
   animation: false,
+  color: t.palette,
   backgroundColor: "transparent",
   title: {
     text: "House Price ICE · ice-basic · javascript · echarts · anyplot.ai",
@@ -111,7 +114,13 @@ chart.setOption({
     itemWidth: 30,
     itemHeight: 14,
   },
-  tooltip: { trigger: "item" },
+  tooltip: {
+    trigger: "item",
+    formatter: (params) => {
+      const [sqft, price] = params.data;
+      return `${params.seriesName}<br/>${Math.round(sqft).toLocaleString()} sq ft → $${Math.round(price).toLocaleString()}`;
+    },
+  },
   grid: { left: 115, right: 60, top: 130, bottom: 90 },
   xAxis: {
     type: "value",
