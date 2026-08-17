@@ -73,14 +73,7 @@ ax = Axis(
     xticklabelrotation  = pi / 6,
 )
 
-# Electronics is the dominant series (largest, bottom-most); its fill intensity
-# ramps up left-to-right via per-vertex alpha on `band!` — a Makie-specific
-# capability (Band recipe accepts a per-point color vector) that doubles as the
-# chart's focal point, drawing the eye toward its accelerating contribution.
-electronics_fill = [RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b,
-                           0.55 + 0.35 * (m - 1) / (length(months) - 1)) for m in months]
-
-band!(ax, months, baseline, cum1; color = electronics_fill)
+band!(ax, months, baseline, cum1; color = (IMPRINT_PALETTE[1], 0.85))
 band!(ax, months, cum1, cum2; color = (IMPRINT_PALETTE[2], 0.85))
 band!(ax, months, cum2, cum3; color = (IMPRINT_PALETTE[3], 0.85))
 band!(ax, months, cum3, cum4; color = (IMPRINT_PALETTE[4], 0.85))
@@ -91,10 +84,19 @@ lines!(ax, months, cum3; color = IMPRINT_PALETTE[3], linewidth = 2)
 lines!(ax, months, cum4; color = IMPRINT_PALETTE[4], linewidth = 2)
 
 ylims!(ax, 0, nothing)
+xlims!(ax, 0.5, 29)
 
-# Manual legend elements: the Electronics band uses a per-point color vector
-# (for the gradient fill above), so its swatch is built explicitly with the
-# flat brand-green color rather than inferred from the plot object.
+# Data-storytelling focal point: an end-of-line value label for Electronics
+# (the dominant series), placed in the margin whitespace beyond the last data
+# point so it reads against the page background — not against the colored
+# fill — and stays legible in both themes without fighting CairoMakie's
+# per-vertex triangulated color interpolation on `band!`.
+lines!(ax, [months[end], months[end] + 1], [cum1[end], cum1[end]];
+       color = INK_SOFT, linewidth = 1)
+text!(ax, months[end] + 1.2, cum1[end];
+      text = "Electronics\n\$$(round(Int, electronics[end]))k",
+      color = INK, fontsize = 13, align = (:left, :center))
+
 legend_labels = ["Electronics", "Home Goods", "Apparel", "Sporting Goods"]
 legend_elements = [PolyElement(color = (c, 0.85)) for c in IMPRINT_PALETTE]
 axislegend(ax, legend_elements, legend_labels; position = :lt, labelcolor = INK_SOFT, framevisible = false)
