@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-multi: Multi-Series Radar Chart
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 99/100 | Updated: 2026-05-07
 """
 
 import math
@@ -116,16 +115,16 @@ value_label_df = pd.DataFrame(value_label_rows)
 plot = (
     ggplot()
     # Gridlines (concentric circles)
-    + geom_line(aes(x="x", y="y", group="radius"), data=grid_df, color=INK_SOFT, size=0.6, alpha=0.2, linetype="dashed")
+    + geom_line(aes(x="x", y="y", group="radius"), data=grid_df, color=INK_SOFT, size=0.4, alpha=0.2, linetype="dashed")
     # Spokes (radial lines)
-    + geom_line(aes(x="x", y="y", group="group"), data=spoke_df, color=INK_SOFT, size=0.6, alpha=0.3)
+    + geom_line(aes(x="x", y="y", group="group"), data=spoke_df, color=INK_SOFT, size=0.4, alpha=0.3)
     # Filled polygons for each series (lower alpha for 4 overlapping series)
     + geom_polygon(aes(x="x", y="y", fill="series", group="series"), data=df, alpha=0.2)
     # Lines connecting points
-    + geom_line(aes(x="x", y="y", color="series", group="series"), data=df, size=2.5)
+    + geom_line(aes(x="x", y="y", color="series", group="series"), data=df, size=1.2)
     # Points at each vertex (exclude the closing point to avoid double dot)
-    + geom_point(aes(x="x", y="y", color="series"), data=df[df["order"] < n], size=7)
-    # Custom color palette (Okabe-Ito)
+    + geom_point(aes(x="x", y="y", color="series"), data=df[df["order"] < n], size=3.5)
+    # Custom color palette (Imprint)
     + scale_fill_manual(values=IMPRINT)
     + scale_color_manual(values=IMPRINT)
     # Axis limits for square plot
@@ -133,14 +132,14 @@ plot = (
     + scale_y_continuous(limits=(-160, 160))
     # Title and legend
     + labs(title="Smartphone Comparison · radar-multi · letsplot · anyplot.ai", fill="Product", color="Product")
-    # Square format for symmetric radar chart
-    + ggsize(1200, 1200)
+    # Square format for symmetric radar chart (600x600 @ scale=4 -> 2400x2400)
+    + ggsize(600, 600)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=22, color=INK),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=16, color=INK),
+        legend_title=element_text(size=13, color=INK),
+        legend_text=element_text(size=12, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
         axis_title=element_blank(),
@@ -152,11 +151,11 @@ plot = (
 )
 
 # Add category labels as text
-plot = plot + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=16, color=INK)
+plot = plot + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=5.5, color=INK)
 
 # Add grid value labels
-plot = plot + geom_text(aes(x="x", y="y", label="label"), data=value_label_df, size=14, color=INK_SOFT)
+plot = plot + geom_text(aes(x="x", y="y", label="label"), data=value_label_df, size=4.5, color=INK_SOFT)
 
 # Save outputs
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
