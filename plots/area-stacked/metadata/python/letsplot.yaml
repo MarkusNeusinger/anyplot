@@ -2,40 +2,56 @@ library: letsplot
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:40:35Z'
-updated: '2026-05-07T15:36:34Z'
-generated_by: claude-haiku
-workflow_run: 25505122148
+updated: '2026-08-17T12:47:07Z'
+generated_by: claude-sonnet
+workflow_run: 32030167491
 issue: 2022
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.15
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-dark.html
-quality_score: 93
+quality_score: 89
 review:
   strengths:
-  - 'Perfect theme adaptation with warm color tokens (#FAF8F1 light, #1A1A17 dark)'
-  - Excellent use of Okabe-Ito palette with correct first-series brand color (#009E73)
-  - Comprehensive theme customization covering all chrome elements
-  - Clear visual hierarchy through category ordering (largest at bottom)
-  - Properly sized typography for high-resolution render
-  - Reproducible synthetic data with realistic seasonality patterns
-  - Clean idiomatic lets-plot/ggplot2 usage throughout
-  - Both PNG and HTML outputs generated
-  weaknesses: []
+  - Full four-sided panel border and vertical gridlines from the prior review are
+    both removed — now a clean L-shaped implicit frame with subtle horizontal-only
+    gridlines
+  - Correct stacked-area chart with baseline pinned at zero and series ordered largest-to-smallest
+    bottom-to-top, exactly per spec notes
+  - 'Full theme-adaptive chrome: background, text, grid, and legend all branch correctly
+    on ANYPLOT_THEME; Imprint data colors are pixel-identical between light and dark
+    renders'
+  - Added a lets-plot-distinctive richer tooltip (layer_tooltips with formatted category/month/revenue
+    lines) directly addressing prior Library Mastery feedback
+  - Clean, idiomatic lets-plot code (geom_area + position="stack" + scale_fill_manual),
+    reproducible via np.random.seed(42), correct plot-{THEME}.png/.html output naming
+    with scale=4
+  - Title format compliant, axis labels descriptive with units, legend well placed
+    with no overlap or clipping in either render
+  weaknesses:
+  - No visual hierarchy or storytelling beyond the raw stack — all four series carry
+    equal visual weight, no focal point or emphasis calling out a specific trend (e.g.
+    the mid-2024 dip)
+  - Legend still uses a boxed frame (legend_background element_rect with visible border)
+    — consider a borderless legend or matching the plot's minimal-chrome direction
+    for a fully polished look
+  - Aesthetic sophistication is solid but not exceptional — the white/black area-boundary
+    strokes are a nice touch but the overall composition is still a fairly standard
+    ggplot2-style stacked area port
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1)
-      Chrome: Title, axis labels, ticks all clearly visible in dark text (INK #1A1A17), legend on right with light elevated background (#FFFDF6)
-      Data: Stacked areas in Okabe-Ito colors (Electronics #009E73 teal, Clothing #D55E00 orange, Home & Garden #0072B2 blue, Sports #CC79A7 reddish-purple)
-      Legibility verdict: PASS - All elements readable, no light-on-light failures
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface, not pure white.
+      Chrome: Bold dark title "area-stacked · python · letsplot · anyplot.ai" top-left; dark-ink axis titles "Revenue (Thousands USD)" and "Month"; soft-gray tick labels; subtle horizontal-only gridlines (no vertical gridlines, no four-sided panel border — only an implicit L-shaped left/bottom axis line); boxed "Product Category" legend on the right listing Electronics/Clothing/Home & Garden/Sports. All chrome elements clearly readable against the light background.
+      Data: Four stacked areas from bottom to top — brand green (#009E73) Electronics (largest), lavender (#C475FD) Clothing, blue (#4467A3) Home & Garden, ochre (#BD8233) Sports (smallest) — with thin off-white boundary strokes between layers, baseline pinned at 0, visible seasonal wave across the 24 months.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17)
-      Chrome: Title, axis labels, ticks all clearly visible in light text (INK #F0EFE8), legend background darker elevated color (#242420)
-      Data: Data colors IDENTICAL to light render (confirms theme-independent coloring)
-      Legibility verdict: PASS - All elements readable, no dark-on-dark failures, good contrast throughout
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface, not pure black.
+      Chrome: Same layout with light-ink title/axis titles, lighter-gray tick labels, gridlines still subtly visible, legend box using the dark elevated fill (#242420) with light text and a soft border. No dark-on-dark failures observed.
+      Data: The four data colors are pixel-identical to the light render (only chrome flipped); boundary strokes between area layers are now near-black instead of off-white, correctly matching the page background token in each theme. Brand green stays vivid on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -46,66 +62,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicit, perfectly readable in both themes
+        comment: All font sizes explicitly set, well-proportioned, readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: No overlap between text, legend, or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All series clearly visible and distinguishable
+        comment: Area fills and boundary strokes clearly visible and well adapted
+          to 24-month density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe
+        comment: Good contrast, CVD-safe, series distinguishable by both color and
+          stack position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions and balance
+        comment: Full panel border and vertical gridlines from the prior review are
+          removed; balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Descriptive axis labels with units (Revenue in Thousands USD)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito first series #009E73, correct backgrounds, theme-correct
-          chrome'
+        comment: 'First series #009E73, remaining series in canonical Imprint order,
+          theme-correct chrome in both renders'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Intentional palette and theme tokens, professional styling
+        passed: false
+        comment: Thoughtful palette use and boundary-stroke detail, but still a fairly
+          standard ggplot2-style composition
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Subtle grid, clean styling, straightforward execution
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear hierarchy through stacking, visible patterns
+        comment: Subtle single-axis grid, implicit L-shaped frame, generous whitespace;
+          legend retains a visible box border
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: No visual hierarchy or emphasis beyond the raw stack; unaddressed
+          from prior review
     spec_compliance:
       score: 15
       max: 15
@@ -121,19 +144,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: Zero baseline, largest-at-bottom ordering, semi-transparent fills,
+          legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct, all data visible
+        comment: X/Y correctly assigned, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format and labels
+        comment: Title format exact match; legend labels match data categories
     data_quality:
       score: 15
       max: 15
@@ -143,19 +167,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of stacked area
+        comment: Shows seasonality, trend, and multi-series composition
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world scenario
+        comment: Neutral, realistic monthly revenue-by-category scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values and proportions
+        comment: Plausible revenue magnitudes and proportions
     code_quality:
       score: 10
       max: 10
@@ -165,54 +189,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes
+        comment: Linear imports/data/plot/save, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct naming
+        comment: Correct plot-{THEME}.png/.html output, current API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert ggplot2-style usage
+        comment: Idiomatic geom_area/position=stack/scale_fill_manual usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML export and theme tokens
+        comment: layer_tooltips with formatted per-series tooltip content is a lets-plot-distinctive
+          interactive feature (not visible in static PNG, credited per fairness rules)
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - cumulative-sum
+  - time-series
   styling:
   - alpha-blending
+  - edge-highlighting
