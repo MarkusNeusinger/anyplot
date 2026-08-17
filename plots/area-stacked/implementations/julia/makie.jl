@@ -1,7 +1,7 @@
 # anyplot.ai
 # area-stacked: Stacked Area Chart
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 85/100 | Created: 2026-08-17
+# Quality: 79/100 | Created: 2026-08-17
 
 using CairoMakie
 using Colors
