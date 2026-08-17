@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: bokeh 3.9.2 | Python 3.13.15
-Quality: 89/100 | Created: 2026-08-17
+Quality: 92/100 | Created: 2026-08-17
 """
 
 import os

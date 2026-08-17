@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: ice-basic
 created: '2026-08-17T22:43:27Z'
-updated: '2026-08-17T22:48:45Z'
+updated: '2026-08-17T22:55:45Z'
 generated_by: claude-sonnet
 workflow_run: 32076965905
 issue: 5238
@@ -12,68 +12,63 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Idiomatic bokeh usage: ColumnDataSource + a single multi_line() call batch-renders
-    all 80 ICE curves instead of looping p.line() calls per observation.'
+  - 'Directly addresses the attempt-1 LM-02 weakness: a HoverTool is now attached
+    to the multi_line ICE renderer, surfacing observation_id/square-footage/price
+    on hover — a genuine bokeh-distinctive interactive feature that adds real value
+    in the HTML detail view without touching the static PNG.'
+  - 'Directly addresses the attempt-1 legend-swatch weakness: p.legend.glyph_width/glyph_height
+    were bumped and the PDP line_width raised 5→6, so the legend key now visually
+    echoes the bold overlay line instead of looking like a thin dash.'
+  - 'Idiomatic bokeh usage preserved: ColumnDataSource + a single multi_line() call
+    batch-renders all 80 ICE curves, now extended with an obs_id field feeding the
+    new HoverTool tooltips instead of a per-observation loop.'
   - Canvas is exactly 3200x1800 in both renders, toolbar disabled, and min_border
-    reservations prevent any clipping of the 50pt title / 42pt axis labels / 34pt
-    ticks.
-  - Theme-adaptive chrome is correctly threaded through title, axis labels, ticks,
-    grid, legend, and outline in both themes; Imprint brand green (#009E73) for the
-    ICE lines is pixel-identical between light and dark.
-  - The PDP average line correctly uses the style guide's 'neutral' semantic-anchor
-    token (ink-colored, same hex as text/gridlines) rather than an arbitrary custom
-    hex, so it intentionally flips black-on-light / white-on-dark as a structural
-    reference line rather than a categorical series.
-  - Rug plot along the x-axis (an optional spec suggestion) is implemented cleanly
-    via a single vectorized segment() call and adds real distributional context without
-    competing with the ICE/PDP lines.
-  - Realistic synthetic data with a genuine square-footage x house-age interaction
-    baked into the price generator, so the ICE curves show real heterogeneity (fan-out
-    at higher square footage) rather than parallel identical lines.
-  - 'Density-appropriate styling: alpha=0.25 for 80 overlapping individual lines plus
-    a bold width=5 PDP overlay creates a clear focal point, matching exactly what
-    an ICE plot needs to communicate (individual variability vs. average trend).'
+    reservations still prevent any clipping of the 50pt title / 42pt axis labels /
+    34pt ticks.
+  - Theme-adaptive chrome (title, axis labels, ticks, grid, legend, outline) is correctly
+    threaded through both themes; Imprint brand green (#009E73) for the ICE lines
+    is pixel-identical between light and dark, and the ink-toned PDP reference line
+    correctly flips black-on-light / white-on-dark.
+  - Rug plot along the x-axis adds real distributional context via a single vectorized
+    segment() call, and the alpha=0.25 ICE lines plus bold PDP overlay remain a density-appropriate,
+    clear focal point.
   weaknesses:
-  - 'LM-02: No HoverTool or other bokeh-native interactivity is added — the plot.html
-    output is functionally static (only pan/zoom removed via toolbar_location=None).
-    Adding a HoverTool showing observation_id/feature_value/prediction on the ICE
-    lines would showcase bokeh''s distinctive interactive strength in the HTML detail
-    view without affecting the PNG.'
   - Spec's suggested centered-ICE (c-ICE) variant and color-coding lines by a second
-    feature are both skipped (both optional 'consider' notes) — either would add another
-    dimension of insight the spec explicitly calls valuable for comparing effect shapes
-    across observations.
-  - Legend swatch for 'Average effect (PDP)' is a thin dash that doesn't visually
-    echo the bold 5px line width actually used for that series in the plot area —
-    a slightly thicker legend line would make the key more representative at a glance.
+    feature (e.g. house_age) are still skipped — either would add another dimension
+    of insight the spec explicitly calls valuable for comparing effect shapes and
+    revealing interaction effects across observations.
+  - HoverTool tooltips only cover the ICE lines, not the PDP average line or the rug
+    ticks — adding a tooltip to the PDP line (e.g. showing the averaged price at that
+    square footage) would round out the interactive story now that HoverTool is wired
+    up.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold black title "ice-basic · python · bokeh · anyplot.ai" top-left, fully visible with no clipping. Italic axis labels "Square Footage" (x) and "Predicted Price ($k)" (y) in dark ink, clearly readable. Tick labels in a softer dark gray, legible at both axes. A subtle horizontal-only grid (y-axis grid at low alpha, x-grid hidden) is visible without dominating. Legend box top-left ("Individual houses (ICE)", "Average effect (PDP)") has a light elevated background and dark text, fully readable, and does not overlap any data (data in that x/y region sits well below the legend box).
-      Data: ICE lines rendered in translucent brand green (#009E73, alpha 0.25), showing density/overlap of 80 individual house curves. The PDP average line is bold and near-black (ink-colored, matching the style guide's neutral/reference-line token), standing out clearly as the focal point. A rug plot of thin gray vertical ticks runs along the bottom, showing the distribution of observed square-footage values.
+      Chrome: Bold black title "ice-basic · python · bokeh · anyplot.ai" top-left, fully visible with no clipping. Italic axis labels "Square Footage" (x) and "Predicted Price ($k)" (y) in dark ink, clearly readable. Tick labels in a softer dark gray, legible at both axes. A subtle horizontal-only grid (y-axis grid at low alpha, x-grid hidden) is visible without dominating. Legend box top-left ("Individual houses (ICE)", "Average effect (PDP)") has a light elevated background and dark text, fully readable, with visibly thicker glyph swatches than the prior attempt, and does not overlap any data.
+      Data: ICE lines rendered in translucent brand green (#009E73, alpha 0.25), showing density/overlap of 80 individual house curves that fan out increasingly at higher square footage. The PDP average line is bold (width 6) and near-black (ink-colored, theme-adaptive neutral reference-line token), standing out clearly as the focal point. A rug plot of thin gray vertical ticks runs along the bottom, showing the distribution of observed square-footage values.
       Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, and tick labels all render in light/white tones and are clearly visible against the dark background — no dark-on-dark failures. Grid and outline remain subtle. Legend box has a dark elevated background with light text, fully readable, positioned identically to the light render with no overlap.
-      Data: ICE lines are the same translucent brand green (#009E73) as in the light render — confirmed pixel-identical hue, only chrome (background/text/grid/legend) has flipped. The PDP average line is now bold near-white (again the theme-adaptive neutral/reference-line token), maintaining the same strong focal-point contrast against the dark surface. Rug plot ticks are a lighter gray, still visible but appropriately subtle.
+      Chrome: Title, axis labels, and tick labels all render in light/white tones and are clearly visible against the dark background — no dark-on-dark failures. Grid and outline remain subtle. Legend box has a dark elevated background with light text, fully readable, positioned identically to the light render with no overlap, same thicker glyph swatches.
+      Data: ICE lines are the same translucent brand green (#009E73) as in the light render — confirmed pixel-identical hue, only chrome (background/text/grid/legend) has flipped. The PDP average line is now bold near-white (same theme-adaptive neutral token), maintaining the same strong focal-point contrast against the dark surface. Rug plot ticks are a lighter gray, still visible but appropriately subtle.
       Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
         comment: All font sizes explicit (title 50pt, axis label 42pt, tick 34pt,
-          legend 34pt), readable in both themes; legend swatch for PDP line is thin
-          relative to the actual bold line.
+          legend 34pt), readable in both themes; legend glyph_width/height increase
+          now makes the PDP swatch representative of the bold width-6 line.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -85,7 +80,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: alpha=0.25 for 80 overlapping ICE lines plus bold width=5 PDP overlay
+        comment: alpha=0.25 for 80 overlapping ICE lines plus bold width=6 PDP overlay
           is density-appropriate.
       - id: VQ-04
         name: Color Accessibility
@@ -100,7 +95,7 @@ review:
         max: 4
         passed: true
         comment: Confirmed exact 3200x1800 canvas in both PNGs; toolbar disabled;
-          min_border reservations prevent clipping.
+          min_border reservations prevent clipping; no canvas-gate failure file present.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -113,8 +108,8 @@ review:
         max: 2
         passed: true
         comment: 'First series #009E73 identical across themes; PDP line correctly
-          uses the documented neutral/reference-line token, not an arbitrary hex;
-          backgrounds correct both themes.'
+          uses the documented neutral/reference-line token; backgrounds correct both
+          themes.'
     design_excellence:
       score: 14
       max: 20
@@ -124,8 +119,9 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: rug plot addition and layered ICE+PDP composition,
-          but no further custom polish (fonts, annotations, second-feature encoding).'
+        comment: 'Above default: rug plot, layered ICE+PDP composition, and now a
+          HoverTool detail layer; no further custom polish (fonts, annotations, second-feature
+          encoding).'
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -181,8 +177,9 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Low-alpha individual lines, bold PDP overlay, and rug plot all implemented;
-          optional c-ICE variant and second-feature color-coding skipped.
+        comment: Low-alpha individual lines, bold PDP overlay, rug plot, and now hover
+          tooltips all implemented; optional c-ICE variant and second-feature color-coding
+          still skipped.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -218,14 +215,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, time, Path, numpy, bokeh, selenium, sklearn) are
-          used.
+        comment: All imports (os, time, Path, numpy, bokeh incl. HoverTool, selenium,
+          sklearn) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake/simulated functionality.
+        comment: Appropriate complexity, no fake/simulated functionality; HoverTool
+          is real bokeh interactivity, not simulated.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -233,7 +231,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html via current bokeh API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -241,16 +239,18 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource + multi_line() for batch-rendering 80 lines is the
-          recommended bokeh pattern, better than a per-observation p.line() loop.
+        comment: ColumnDataSource + multi_line() for batch-rendering 80 lines remains
+          the recommended bokeh pattern.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: No HoverTool or other bokeh-native interactivity is used; the HTML
-          output doesn't showcase what's distinctive about an interactive library
-          beyond static styling.
+        passed: true
+        comment: HoverTool now attached to the ICE renderer with per-observation tooltips
+          (observation id, sq ft, price), showcasing bokeh's signature interactivity
+          in the HTML output; one point held back since the PDP line and rug ticks
+          have no hover affordance and the optional second-feature color-coding is
+          unused.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -258,6 +258,7 @@ impl_tags:
   - selenium
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - columndatasource
