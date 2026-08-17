@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-stacked: Stacked Area Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-17
+// Quality: 92/100 | Created: 2026-08-17
 
 const t = window.ANYPLOT_TOKENS;
 
