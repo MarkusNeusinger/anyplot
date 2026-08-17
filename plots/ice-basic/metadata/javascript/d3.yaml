@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: ice-basic
 created: '2026-08-17T23:04:32Z'
-updated: '2026-08-17T23:09:28Z'
+updated: '2026-08-17T23:20:10Z'
 generated_by: claude-sonnet
 workflow_run: 32078362749
 issue: 5238
@@ -12,53 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 96
 review:
   strengths:
-  - 'Full ICE-plot feature set: 90 individual patient curves at low alpha (0.18) revealing
-    density and heterogeneous dose-response shapes, a bold opaque PDP overlay (stroke-width
-    4) as the population average, and a rug plot along the x-axis showing the observed-dose
+  - 'Individual ICE lines are now color-coded by patient sensitivity via d3.scaleSequential(interpolateRgbBasis(t.seq))
+    — this directly implements the spec''s Notes suggestion (''Color-coding lines
+    by a second feature can help reveal interaction effects'') and visibly reveals
+    the subgroup structure: steeper, faster-responding curves render blue, flatter
+    slow-responders render green'
+  - New divergence-bracket annotation at max dose (bracket + 'Δ49pp' label) quantifies
+    the spread across patients — a concrete emphasis technique that turns 'there is
+    spread' into 'here is exactly how much spread and where it's measured'
+  - 'Distinctive D3 technique: a data-bound <linearGradient> built via selectAll(''stop'').data(d3.range(...)).join(''stop'')
+    renders the exact same continuous scale as a legend swatch — an idiom that leverages
+    D3''s low-level SVG control rather than a one-line port from a higher-level library'
+  - 'Full ICE-plot feature set retained: 90 individual patient curves at low alpha
+    (0.3), bold opaque PDP overlay (stroke-width 4, palette position 2 for maximum
+    contrast against the green-to-blue fan), and a rug plot showing observed-dose
     distribution'
-  - 'Correct Imprint palette usage: individual curves use #009E73 (palette position
-    1), PDP overlay uses #C475FD (palette position 2), identical across both light
-    and dark renders'
-  - All font sizes explicitly set with a clear typographic hierarchy (title 22px bold,
-    axis labels 16px, ticks/legend 14px), fully readable in both themes
-  - 'Clean theme-adaptive chrome: y-axis-only gridlines at subtle opacity, L-shaped
-    spines (left+bottom domain kept), warm off-white/near-black backgrounds correctly
-    applied'
-  - Realistic, neutral dose-response scenario (drug dosage vs. symptom reduction via
-    an Emax pharmacological model) with genuine per-patient heterogeneity (varying
-    sensitivity and effect ceiling) — not decorative variation
-  - 'Idiomatic D3: proper data-join pattern (`selection.data(patients).join(''path'')`)
-    for the 90 ICE lines, d3 scale/axis/line generators used correctly, deterministic
-    LCG-seeded data generation per the D3 library guide''s no-browser-RNG guidance'
+  - All font sizes explicit (title 22px, axis labels 16px, ticks/legend 14px, annotation
+    12px) with a clear hierarchy, fully readable in both themes; no overlap between
+    legend, gradient swatch, bracket annotation, and data
+  - 'Correct Imprint usage: continuous sensitivity encoding uses imprint_seq (single-polarity
+    data, correct choice over imprint_div), anchored at #009E73 on the low end; PDP
+    uses palette position 2 (#C475FD); both renders theme-correct with identical data
+    hues'
+  - Realistic, neutral clinical dose-response scenario (Emax pharmacological model)
+    with genuine per-patient heterogeneity in both slope (sensitivity) and ceiling
+    (maxEffect) — not decorative variation
   weaknesses:
-  - 'Design Excellence is competent but reads as a well-configured default rather
-    than genuinely distinctive: no annotation or callout highlights the insight (e.g.,
-    labeling the divergence band or the steepest/flattest responder), so the visual
-    hierarchy relies solely on the alpha contrast between ICE lines and the PDP line'
-  - 'Library Mastery is generic — the implementation doesn''t use any D3 feature that''s
-    hard to replicate in another library. The spec explicitly suggests ''Color-coding
-    lines by a second feature can help reveal interaction effects'': mapping ICE-line
-    color to e.g. patient sensitivity via d3.scaleSequential(t.seq) would both deepen
-    the storytelling (DE-03) and showcase a distinctive D3 continuous-color technique
-    (LM-02)'
-  - Neither the centered ICE (c-ICE) variant nor a second-feature color encoding from
-    the spec's 'Notes' section is explored — both are optional but either would meaningfully
-    raise Design Excellence for a near-90 score
+  - Overall layout and typography are unchanged from Attempt 1 — the design gains
+    come entirely from the new color encoding and annotation rather than a broader
+    compositional rethink, so this reads as 'strong, thoughtful' rather than 'publication-ready/FiveThirtyEight-level'
+  - The sensitivity→color mapping is only decodable via the small (30px-wide) gradient
+    swatch in the legend; a viewer skimming the chart without reading the legend would
+    see 'a fan of blue-green lines' before recognizing it encodes a specific patient
+    covariate
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white, not dark.
-      Chrome: Bold dark title "ice-basic · javascript · d3 · anyplot.ai" centered at top, dark axis titles "Drug Dosage (mg)" / "Symptom Reduction (%)" with units, dark-gray tick labels on both axes, subtle horizontal-only gridlines, L-shaped spines (left+bottom kept). Legend box top-left with two entries ("Individual patients (ICE)", "Population average (PDP)") — all clearly readable against the light background.
-      Data: 90 thin green (#009E73) curves at low opacity fan out from near-zero at low dosage to a spread of ~50-85% symptom reduction at high dosage, revealing per-patient heterogeneity; a bold purple/lavender (#C475FD) PDP line traces the population average through the middle of the fan; a rug of short gray tick marks along the x-axis baseline shows the distribution of observed doses. First series color is #009E73 and second series is the correct next Imprint palette position.
-      Legibility verdict: PASS — no overlap, no clipping, all text crisp against the light surface.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "ice-basic · javascript · d3 · anyplot.ai" centered at top; dark axis titles "Drug Dosage (mg)" / "Symptom Reduction (%)" with units; dark-gray tick labels on both axes; subtle horizontal-only gridlines; L-shaped spines (left+bottom kept). Legend box top-left with two entries: a green-to-blue gradient swatch labeled "Individual patients (by sensitivity)" and a bold lavender swatch labeled "Population average (PDP)". A vertical bracket annotation at the right edge spans the final spread of curves, labeled "Δ49pp".
+      Data: 90 individual patient curves, each stroked in a continuous color from d3.scaleSequential mapped to patient sensitivity — green (#009E73) for low-sensitivity/slow-responding patients through blue (#4467A3) for high-sensitivity/fast-responding patients, at low opacity (0.3) to show density and overlap. A bold, opaque lavender (#C475FD) PDP line traces the population average through the middle of the fan. A faint rug of short gray tick marks along the x-axis baseline shows the distribution of observed doses. First-series/primary continuous color correctly anchors at Imprint brand green.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, annotation) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black, not light.
-      Chrome: Same title, axis titles, and tick labels now rendered in light off-white/gray tones, fully legible against the dark surface; gridlines and spines are visible but subtle; legend box top-left renders with light text.
-      Data: The ICE curves remain #009E73 and the PDP line remains #C475FD — identical hues to the light render, confirming only chrome (not data color) flips between themes. Rug marks are still visible as light-gray ticks against the dark baseline.
-      Legibility verdict: PASS — no dark-on-dark text, no black-on-black chrome; all elements clearly readable.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis titles, and tick labels now render in light off-white/gray tones, fully legible against the dark surface; gridlines and spines remain visible but subtle; legend box and bracket annotation render with light text.
+      Data: The ICE curves retain the identical green-to-blue sequential gradient and the PDP line remains the identical lavender (#C475FD) — confirming only chrome (not data color) flips between themes, per the Imprint rule.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark or black-on-black failures observed anywhere (title, axes, legend, or the "Δ49pp" annotation).
   criteria_checklist:
     visual_quality:
       score: 30
@@ -69,34 +70,36 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (22/16/14px), clear hierarchy, readable
-          in both themes, no overflow
+        comment: All font sizes explicit (22/16/14/12px), clear hierarchy, readable
+          in both themes, no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits in the empty low-dose region; no collisions with curves
-          or ticks
+        comment: Legend, gradient swatch, and bracket annotation all sit clear of
+          the data and each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 90 lines at alpha 0.18 correctly sized for medium density; PDP bold
-          at width 4 stands out
+        comment: 90 lines at alpha 0.3 correctly sized for medium density; PDP bold
+          at width 4 stands out clearly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. purple, strong contrast, CVD-safe Imprint pair
+        comment: Green-to-blue sequential fan vs. lavender PDP gives strong, CVD-safe
+          contrast; not red-green reliant
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills ~64% of canvas, balanced margins, nothing cut off
+        comment: Plot area fills a healthy majority of the canvas, balanced margins,
+          nothing cut off, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -108,33 +111,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series #C475FD (palette position 2),
-          theme-correct chrome in both renders'
+        comment: 'Continuous sensitivity encoding correctly uses imprint_seq anchored
+          at #009E73; PDP overlay uses palette position 2 (#C475FD) for contrast against
+          the fan; theme-correct chrome in both renders'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured default: correct palette and hierarchy, but no distinctive
-          design flourish'
+        passed: true
+        comment: 'Strong design: thoughtful continuous-color encoding and clear hierarchy,
+          clearly above a configured default, though the overall composition is not
+          a dramatic layout departure'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Y-only subtle grid and L-shaped spines show real refinement beyond
-          raw defaults
+        passed: true
+        comment: Subtle y-only grid, L-shaped spines, rug plot, and the new bracket
+          annotation all show real attention to detail
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Bold PDP over faint individual lines creates a clear focal point
-          / visual hierarchy, but no annotation deepens the insight
+        passed: true
+        comment: 'Excellent: color-coding by sensitivity plus the quantified divergence
+          bracket (''Δ49pp'') let the viewer immediately see both the heterogeneity
+          and its magnitude'
     spec_compliance:
       score: 15
       max: 15
@@ -150,8 +156,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Low-alpha ICE lines, bold PDP overlay, and rug plot all present;
-          c-ICE and second-feature coloring are optional per spec Notes
+        comment: Low-alpha ICE lines, bold PDP overlay, rug plot, and second-feature
+          color-coding all present; c-ICE remains optional per spec Notes
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -163,8 +169,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels correctly describe
-          both series
+        comment: Title matches the mandated format exactly; legend labels correctly
+          describe both series including the sensitivity encoding
     data_quality:
       score: 15
       max: 15
@@ -174,8 +180,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Genuine per-patient heterogeneity in slope and ceiling, plus observed-dose
-          distribution via rug
+        comment: Genuine per-patient heterogeneity in slope and ceiling, observed-dose
+          distribution via rug, and sensitivity subgroup structure via color
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -198,8 +204,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat Data -> Scales -> Draw structure; the one small LCG helper is
-          the library guide's recommended pattern for seeded randomness in the browser
+        comment: Flat Data -> Scales -> Draw structure; the LCG helper is the library
+          guide's recommended pattern for seeded randomness in the browser
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -217,7 +223,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering
+        comment: No fake UI or over-engineering; the new gradient/bracket code is
+          clean and proportionate
       - id: CQ-05
         name: Output & API
         score: 1
@@ -225,7 +232,7 @@ review:
         passed: true
         comment: Correctly follows the mount-node contract; harness handles output
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -237,21 +244,23 @@ review:
           and cleanly
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Generic line/rug/legend drawing achievable in any plotting library;
-          no D3-distinctive technique (e.g. scaleSequential color-coding, curve interpolation)
-          leveraged
-  verdict: REJECTED
+        passed: true
+        comment: d3.scaleSequential per-line continuous color encoding combined with
+          a data-bound <linearGradient> (selectAll('stop').data(...).join('stop'))
+          leverages D3's low-level SVG control in a way that isn't a one-line port
+          from another library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - custom-colormap
+  - gradient-fill

@@ -1,7 +1,7 @@
 // anyplot.ai
 // ice-basic: Individual Conditional Expectation (ICE) Plot
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-17
+// Quality: 96/100 | Created: 2026-08-17
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
