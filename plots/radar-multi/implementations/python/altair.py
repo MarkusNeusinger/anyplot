@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-multi: Multi-Series Radar Chart
 Library: altair 6.2.2 | Python 3.13.15
-Quality: 72/100 | Updated: 2026-08-17
+Quality: 90/100 | Updated: 2026-08-17
 """
 
 import importlib.util
