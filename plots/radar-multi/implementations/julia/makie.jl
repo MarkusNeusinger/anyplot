@@ -43,7 +43,7 @@ fig = Figure(resolution = (1200, 1200), fontsize = 14, backgroundcolor = PAGE_BG
 ax = Axis(
     fig[1, 1];
     title           = "radar-multi · julia · makie · anyplot.ai",
-    titlesize       = 26,
+    titlesize       = 31,
     titlecolor      = INK,
     backgroundcolor = PAGE_BG,
     aspect          = DataAspect(),
@@ -71,7 +71,7 @@ end
 label_angle = (angles[1] + angles[2]) / 2
 for ring in ring_values[1:(end - 1)]
     text!(ax, ring * cos(label_angle), ring * sin(label_angle);
-          text = string(Int(ring)), color = INK_MUTED, fontsize = 12,
+          text = string(Int(ring)), color = INK_MUTED, fontsize = 14,
           align = (:center, :center))
 end
 
@@ -81,11 +81,13 @@ for (i, category) in enumerate(categories)
     label_x, label_y = 118 * cos(a), 118 * sin(a)
     halign = cos(a) > 0.15 ? :left : (cos(a) < -0.15 ? :right : :center)
     valign = sin(a) > 0.15 ? :bottom : (sin(a) < -0.15 ? :top : :center)
-    text!(ax, label_x, label_y; text = category, color = INK, fontsize = 16,
+    text!(ax, label_x, label_y; text = category, color = INK, fontsize = 17,
           align = (halign, valign))
 end
 
-# Series polygons — filled with transparency, outlined, and vertex-marked
+# Series polygons — filled with transparency, outlined, and vertex-marked.
+# scatterlines! draws the stroke+marker vertices and connecting outline in a
+# single Makie recipe call (matplotlib needs two separate calls for this).
 for (s, series) in enumerate(series_names)
     values = scores[:, s]
     vertex_x = [values[i] * cos(angles[i]) for i in 1:n_axes]
@@ -93,10 +95,10 @@ for (s, series) in enumerate(series_names)
     color = IMPRINT_PALETTE[s]
 
     poly!(ax, Point2f.(vertex_x, vertex_y); color = (color, 0.22), strokewidth = 0)
-    lines!(ax, vcat(vertex_x, vertex_x[1]), vcat(vertex_y, vertex_y[1]);
-           color = color, linewidth = 3, label = series)
-    scatter!(ax, vertex_x, vertex_y; color = color, markersize = 10,
-             strokewidth = 1.5, strokecolor = PAGE_BG)
+    closed_x, closed_y = vcat(vertex_x, vertex_x[1]), vcat(vertex_y, vertex_y[1])
+    scatterlines!(ax, closed_x, closed_y; color = color, linewidth = 3,
+                  markersize = 10, strokewidth = 1.5, strokecolor = PAGE_BG,
+                  label = series)
 end
 
 axislegend(ax; position = :rb, framevisible = false, labelcolor = INK,
