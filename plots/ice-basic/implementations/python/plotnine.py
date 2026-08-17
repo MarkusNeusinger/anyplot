@@ -1,7 +1,7 @@
 """ anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-07
+Library: plotnine 0.15.8 | Python 3.13.15
+Quality: 92/100 | Updated: 2026-08-17
 """
 
 import os
@@ -23,6 +23,7 @@ from plotnine import (  # noqa: E402
     element_text,
     geom_line,
     geom_rug,
+    geom_vline,
     ggplot,
     labs,
     scale_x_continuous,
@@ -36,8 +37,11 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
-VERMILLION = "#C475FD"
+
+# Imprint palette — first series is always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
+PDP_COLOR = IMPRINT_PALETTE[1]
 
 # Data — synthetic housing dataset
 np.random.seed(42)
@@ -79,35 +83,51 @@ ann_idx = int(n_grid * 0.75)
 ann_x = float(area_grid[ann_idx])
 ann_y = float(pdp_df.iloc[ann_idx]["prediction"]) + 25
 
+# Largest single-step jump in the PDP curve — marks the tree-split boundary the model learned
+jump_idx = int(pdp_df["prediction"].diff().abs().idxmax())
+split_x = float(pdp_df.loc[jump_idx, "feature_value"])
+split_label_y = float(pdp_df["prediction"].max()) + 20
+
 # Plot
 anyplot_theme = theme(
-    figure_size=(16, 9),
+    figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.12),
     panel_grid_major_x=element_blank(),
     panel_grid_minor=element_blank(),
     panel_border=element_blank(),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_title=element_text(color=INK, size=10),
+    axis_text=element_text(color=INK_SOFT, size=8),
     axis_line=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=24, face="bold"),
+    plot_title=element_text(color=INK, size=12, face="bold"),
     legend_position="none",
-    plot_margin=0.025,
+    plot_margin=0.05,
 )
 
 plot = (
     ggplot(ice_df, aes(x="feature_value", y="prediction", group="observation_id"))
     + geom_line(alpha=0.12, color=BRAND, size=0.5)
+    + geom_vline(xintercept=split_x, color=INK_SOFT, alpha=0.5, linetype="dashed", size=0.4)
     + geom_line(
-        data=pdp_df, mapping=aes(x="feature_value", y="prediction"), color=VERMILLION, size=2.5, inherit_aes=False
+        data=pdp_df, mapping=aes(x="feature_value", y="prediction"), color=PDP_COLOR, size=2.5, inherit_aes=False
     )
     + geom_rug(data=rug_df, mapping=aes(x="feature_value"), color=INK_SOFT, alpha=0.4, sides="b", inherit_aes=False)
-    + annotate("text", x=ann_x, y=ann_y, label="PDP (avg effect)", color=VERMILLION, size=14)
+    + annotate("text", x=ann_x, y=ann_y, label="PDP (avg effect)", color=PDP_COLOR, size=4.0, fontweight="bold")
+    + annotate(
+        "text",
+        x=split_x,
+        y=split_label_y,
+        label=f"model split ~{split_x:.0f} sq ft",
+        color=INK_SOFT,
+        size=3.2,
+        fontstyle="italic",
+        ha="center",
+    )
     + scale_x_continuous(breaks=[1000, 1500, 2000, 2500, 3000, 3500])
     + labs(x="House Area (sq ft)", y="Predicted Price ($000s)", title="ice-basic · plotnine · anyplot.ai")
     + anyplot_theme
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
