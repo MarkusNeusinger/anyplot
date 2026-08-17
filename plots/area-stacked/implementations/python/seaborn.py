@@ -1,16 +1,18 @@
 """ anyplot.ai
 area-stacked: Stacked Area Chart
 Library: seaborn 0.13.2 | Python 3.13.15
-Quality: 92/100 | Updated: 2026-08-17
+Quality: 94/100 | Updated: 2026-08-17
 """
 
 import os
 
 import matplotlib.dates as mdates
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import seaborn.objects as so
 
 
 # Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
@@ -62,12 +64,32 @@ agriculture = (agriculture_base * growth + np.random.randn(24) * 0.5).clip(4)
 sectors = ["Industrial", "Residential", "Commercial", "Transport", "Agriculture"]
 series = [industrial, residential, commercial, transport, agriculture]
 
+# Long-form frame for the seaborn.objects interface below — ordered by size
+# (largest first) so so.Stack() lays Industrial at the baseline, per spec.
+long_df = pd.DataFrame(
+    {"month": np.tile(months, len(sectors)), "sector": np.repeat(sectors, len(months)), "value": np.concatenate(series)}
+)
+long_df["sector"] = pd.Categorical(long_df["sector"], categories=sectors, ordered=True)
+
 # Plot — see default-style-guide.md "Visual Sizing Defaults" for canvas + sizing
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-palette = sns.color_palette()
-ax.stackplot(months, *series, labels=sectors, colors=palette, alpha=0.92, edgecolor=PAGE_BG, linewidth=0.6)
+# Stacked bands via the seaborn.objects interface (so.Area + so.Stack) — the
+# genuinely seaborn-native way to build a stacked area chart, rather than
+# reaching for matplotlib's ax.stackplot(). Rendered onto our own pre-sized
+# Axes so the Step-0 canvas contract still holds.
+(
+    so.Plot(long_df, x="month", y="value", color="sector")
+    .add(so.Area(alpha=0.85, edgewidth=0.6, edgecolor=PAGE_BG), so.Stack())
+    .scale(color=IMPRINT_PALETTE[: len(sectors)])
+    .on(ax)
+    .plot()
+)
+# so.Plot always attaches its own legend to the *figure*; hide it and build an
+# axes-level legend instead so sns.move_legend (an Axes/Figure-only helper)
+# and the outside-right docking below behave exactly as on other libraries.
+fig.legends[0].set_visible(False)
 
 # A crisp ink-colored line traces the cumulative total for emphasis, drawn via
 # seaborn's own lineplot (not raw ax.plot) so the overlay is genuinely seaborn.
@@ -85,10 +107,15 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
 plt.setp(ax.xaxis.get_majorticklabels(), rotation=40, ha="right")
 
 # Legend sits outside the stacked area (fully filled top-to-bottom, no clear
-# gap to dock a legend inside) so it never occludes data. Built with seaborn's
-# move_legend — a seaborn-only convenience for repositioning/restyling a legend
-# in one call — and kept borderless for a lighter visual treatment.
-ax.legend(title="Sector")
+# gap to dock a legend inside) so it never occludes data. Handles are rebuilt
+# as flat swatches (so.Area's own legend proxies inherit its 0.85 fill alpha,
+# which reads muddier at legend-swatch size) and positioned with seaborn's
+# move_legend — a seaborn-only convenience for repositioning/restyling a
+# legend in one call — kept borderless for a lighter visual treatment.
+legend_handles = [
+    mpatches.Patch(facecolor=color, label=sector) for color, sector in zip(IMPRINT_PALETTE, sectors, strict=True)
+]
+ax.legend(handles=legend_handles, title="Sector")
 sns.move_legend(
     ax, "upper left", bbox_to_anchor=(1.01, 1.0), frameon=False, fontsize=9, title_fontsize=10, labelcolor=INK
 )
@@ -106,17 +133,21 @@ ax.spines["bottom"].set_color(INK_SOFT)
 ax.set_ylim(bottom=0)
 ax.margins(x=0)
 
-# Callout highlighting the key trend: total consumption growth over the window.
+# Callout highlighting the key trend: total consumption growth over the
+# window. Anchored close to the final data point (short, local arrow) rather
+# than sweeping across the whole width, so it can't be mistaken for a second
+# trend line following a path the data doesn't actually take.
 growth_pct = (total[-1] - total[0]) / total[0] * 100
 top = ax.get_ylim()[1]
 ax.annotate(
     f"+{growth_pct:.0f}% growth over two years",
     xy=(months[-1], total[-1]),
-    xytext=(months[2], top * 0.92),
+    xytext=(months[-9], top * 0.94),
     fontsize=9,
     color=INK,
     ha="left",
-    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "alpha": 0.7, "connectionstyle": "arc3,rad=0.15"},
+    va="bottom",
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "alpha": 0.7, "connectionstyle": "arc3,rad=0.1"},
 )
 
 plt.tight_layout()
