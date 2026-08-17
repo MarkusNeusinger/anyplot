@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 88/100 | Created: 2026-05-07
+Quality: pending | Created: 2026-08-17
 """
 
 import os
@@ -14,14 +14,18 @@ sys.path = [p for p in sys.path if p != os.path.dirname(os.path.abspath(__file__
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Theme tokens
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint sequential colormap: brand green -> blue (single-polarity magnitude)
+IMPRINT_SEQ = ["#009E73", "#4467A3"]
 
 # Data: daily average temperatures over 5 years (one revolution per year)
 np.random.seed(42)
@@ -74,13 +78,17 @@ month_label_df = pd.DataFrame(month_label_rows)
 year_label_rows = [{"x": 0.0, "y": -(BASE_R + SPACING * yi) - 0.25, "label": str(yr)} for yr, yi in year_order.items()]
 year_label_df = pd.DataFrame(year_label_rows)
 
+# Focal points: hottest and coldest day across the whole record (visual emphasis, no text)
+extreme_rows = [df.loc[df["temperature"].idxmax()], df.loc[df["temperature"].idxmin()]]
+extreme_df = pd.DataFrame(extreme_rows)
+
 # Equal-axis domain so spiral stays circular
 domain_max = label_r + 0.6
 
 # Plot layers
 grid_chart = (
     alt.Chart(grid_df)
-    .mark_line(strokeWidth=0.7, opacity=0.20)
+    .mark_line(strokeWidth=0.7, opacity=0.14)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-domain_max, domain_max]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-domain_max, domain_max]), axis=None),
@@ -91,19 +99,19 @@ grid_chart = (
 
 spiral_chart = (
     alt.Chart(df)
-    .mark_circle(size=18)
+    .mark_circle(size=22)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-domain_max, domain_max]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-domain_max, domain_max]), axis=None),
         color=alt.Color(
             "temperature:Q",
-            scale=alt.Scale(scheme="viridis"),
+            scale=alt.Scale(range=IMPRINT_SEQ),
             legend=alt.Legend(
                 title="Temp (°C)",
-                titleFontSize=18,
-                labelFontSize=16,
-                gradientLength=220,
-                gradientThickness=18,
+                titleFontSize=13,
+                labelFontSize=11,
+                gradientLength=140,
+                gradientThickness=13,
                 orient="right",
                 titleColor=INK,
                 labelColor=INK_SOFT,
@@ -117,9 +125,21 @@ spiral_chart = (
     )
 )
 
+# Focal points: emphasize the temperature extremes with a bigger, ink-stroked marker
+extreme_chart = (
+    alt.Chart(extreme_df)
+    .mark_circle(size=90, strokeWidth=1.2)
+    .encode(
+        x=alt.X("x:Q", scale=alt.Scale(domain=[-domain_max, domain_max]), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[-domain_max, domain_max]), axis=None),
+        color=alt.Color("temperature:Q", scale=alt.Scale(range=IMPRINT_SEQ), legend=None),
+        stroke=alt.value(INK),
+    )
+)
+
 month_labels_chart = (
     alt.Chart(month_label_df)
-    .mark_text(fontSize=17, fontWeight="normal", align="center", baseline="middle")
+    .mark_text(fontSize=12, fontWeight="normal", align="center", baseline="middle")
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-domain_max, domain_max]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-domain_max, domain_max]), axis=None),
@@ -130,7 +150,7 @@ month_labels_chart = (
 
 year_labels_chart = (
     alt.Chart(year_label_df)
-    .mark_text(fontSize=15, fontWeight="bold", align="center", baseline="top")
+    .mark_text(fontSize=13, fontWeight="bold", align="center", baseline="top")
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-domain_max, domain_max]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-domain_max, domain_max]), axis=None),
@@ -140,14 +160,14 @@ year_labels_chart = (
 )
 
 chart = (
-    alt.layer(grid_chart, spiral_chart, month_labels_chart, year_labels_chart)
+    alt.layer(grid_chart, spiral_chart, extreme_chart, month_labels_chart, year_labels_chart)
     .properties(
-        width=1200,
-        height=1200,
+        width=460,
+        height=460,
         background=PAGE_BG,
         title=alt.TitleParams(
-            "Daily Temperatures 2019–2023 · spiral-timeseries · altair · anyplot.ai",
-            fontSize=24,
+            "Daily Temperatures 2019–2023 · spiral-timeseries · python · altair · anyplot.ai",
+            fontSize=14,
             color=INK,
             anchor="start",
             offset=12,
@@ -158,5 +178,21 @@ chart = (
 )
 
 # Save
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# Pad the saved PNG up to the exact 2400x2400 target — never crop (see
+# prompts/library/altair.md "Canvas — hard rule").
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
