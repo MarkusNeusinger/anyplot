@@ -43,8 +43,12 @@ labels.forEach((_, i) => {
   direct.push(Math.round(1300 + i * 8 + holidayBump + noise(60)));
   organicSearch.push(Math.round(700 + i * 22 + noise(50)));
   referral.push(Math.round(380 + i * 3 + noise(30)));
-  social.push(Math.round(180 + i * 14 + noise(25)));
+  // Kept below referral's growth rate throughout the series so the largest-
+  // at-bottom stacking order never crosses over.
+  social.push(Math.round(180 + i * 6 + noise(25)));
 });
+
+const holidayIndex = 10; // Nov '23 — first holiday-season traffic bump
 
 const hexToRgba = (hex, alpha) => {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -59,6 +63,69 @@ const series = [
   { label: "Referral", data: referral, color: t.palette[2] },
   { label: "Social", data: social, color: t.palette[3] },
 ];
+
+// --- Custom plugins ------------------------------------------------------------
+// Elevated card background behind the legend, matching the Imprint
+// "callout box" treatment instead of a bare default legend row.
+const elevatedLegendBg = {
+  id: "elevatedLegendBg",
+  beforeDraw(chart) {
+    const { legend, ctx } = chart;
+    if (!legend) return;
+    const pad = 10;
+    const x = legend.left - pad;
+    const y = legend.top - pad;
+    const w = legend.right - legend.left + pad * 2;
+    const h = legend.bottom - legend.top + pad * 2;
+    const r = 8;
+    ctx.save();
+    ctx.fillStyle = t.elevatedBg;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  },
+};
+
+// Callout marking the Nov '23 holiday-season traffic bump on the top edge
+// of the stack, so the seasonal spike doesn't rely on the viewer noticing it.
+const holidayCallout = {
+  id: "holidayCallout",
+  afterDatasetsDraw(chart) {
+    const topMeta = chart.getDatasetMeta(series.length - 1);
+    const point = topMeta.data[holidayIndex];
+    if (!point) return;
+    const { x, y: yPeak } = point;
+    const yLabel = yPeak - 56;
+
+    const { ctx } = chart;
+    ctx.save();
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, yPeak - 4);
+    ctx.lineTo(x, yLabel + 14);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = t.ink;
+    ctx.beginPath();
+    ctx.arc(x, yPeak, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = "13px sans-serif";
+    ctx.fillStyle = t.inkSoft;
+    ctx.textAlign = "center";
+    ctx.fillText("Holiday traffic bump", x, yLabel);
+    ctx.restore();
+  },
+};
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -80,11 +147,13 @@ new Chart(canvas, {
       fill: i === 0 ? "origin" : "-1",
     })),
   },
+  plugins: [elevatedLegendBg, holidayCallout],
   options: {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
     interaction: { mode: "index", intersect: false },
+    layout: { padding: { right: 24 } },
     plugins: {
       title: {
         display: true,
