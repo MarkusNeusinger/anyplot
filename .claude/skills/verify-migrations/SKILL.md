@@ -16,10 +16,13 @@ indexes missing from the ORM models (fixed in the same PR).
 
 ## 0 · The `.env` trap (read first)
 
-`alembic/env.py` calls `load_dotenv()`: any alembic command run
-WITHOUT `DATABASE_URL` exported silently uses the `.env` URL — the
-shared production DB. Exported env vars win over `.env`, so ALWAYS
-run the checks with the throwaway URL exported **in the same Bash
+`alembic/env.py` calls `load_dotenv()` (and can alternatively connect
+via `INSTANCE_CONNECTION_NAME`): any alembic command run WITHOUT
+`DATABASE_URL` exported silently falls back to whatever `.env`
+holds — and in this repo's local-dev setup that is the shared
+production Cloud SQL (there is no separate local DB; see
+`/verify-api` §3). Exported env vars win over `.env`, so ALWAYS run
+the checks with the throwaway URL exported **in the same Bash
 invocation** (env does not persist between calls).
 
 ## 1 · Start a throwaway Postgres

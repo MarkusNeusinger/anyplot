@@ -19,10 +19,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 ### Added
 
 - **Three new verification skills** — `/verify-migrations` runs the Alembic chain against a
-  throwaway Postgres 18 (single-head check, `upgrade head`, `alembic check` drift, downgrade
-  roundtrip) so the shared prod DB never sees an untested revision — no CI job covers this at
-  PR time, and `alembic/env.py`'s `load_dotenv()` makes an unexported `DATABASE_URL` silently
-  target production; `/audit-licenses` sweeps tracked binaries, hidden base64/SVG payloads, git
+  throwaway Postgres (Docker, or a rootless `pgserver` fallback; single-head check,
+  `upgrade head`, `alembic check` drift, downgrade roundtrip) so the shared prod DB never sees
+  an untested revision — no CI job covers this at PR time, and with no `DATABASE_URL` exported
+  alembic silently falls back to the `.env` connection, which in this repo's local-dev setup is
+  the shared production DB; `/audit-licenses` sweeps tracked binaries, hidden base64/SVG payloads, git
   history, and font bundling for provenance violations (first run recorded a verified baseline
   and flagged `plots/bar-basic`'s two tracked plot renders as a known wart); `/write-docs` is
   the docs editing contract (layer choice, `docs/index.md` sync surfaces, cross-file sync
