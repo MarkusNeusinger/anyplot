@@ -1,6 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
-Library: pygal 3.1.0 | Python 3.13.13
+Library: pygal 3.1.3 | Python 3.13.12
 Quality: 79/100 | Created: 2026-05-07
 """
 
@@ -27,8 +27,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-ICE_COLOR = "#009E73"  # Okabe-Ito position 1 — ICE lines
-PDP_COLOR = "#C475FD"  # Okabe-Ito position 2 — PDP line
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+ICE_COLOR = IMPRINT_PALETTE[0]  # Imprint palette position 1 — ICE lines
+PDP_COLOR = IMPRINT_PALETTE[1]  # Imprint palette position 2 — PDP line
 
 # Data: house price predictions from GradientBoostingRegressor
 np.random.seed(42)
@@ -54,7 +55,7 @@ for i in range(n_obs):
 
 pdp_curve = ice_curves.mean(axis=0)
 
-# Style: ICE lines use brand green, PDP uses vermillion
+# Style: ICE lines use brand green, PDP uses lavender for contrast
 colors_tuple = (ICE_COLOR,) * n_obs + (PDP_COLOR,)
 
 custom_style = Style(
@@ -64,29 +65,33 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=colors_tuple,
-    title_font_size=28,
-    label_font_size=22,  # style-guide: 22px for pixel-based libraries
-    major_label_font_size=18,  # style-guide: 18px for pixel-based libraries
-    legend_font_size=18,
-    value_font_size=16,
-    stroke_width=3,
+    title_font_size=66,  # library-prompt canonical native-pixel sizing for 3200x1800
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
 )
 
 # Plot — cubic interpolation gives smooth ICE curves (pygal-native feature)
+# legend stays off the bottom: pygal reserves bottom margin proportional to the
+# *total* series count (all 51 lines) regardless of which ones carry a legend
+# label, so legend_at_bottom here would still reserve ~40% of canvas height for
+# a legend that only ever shows 2 rows. The default side legend only reserves
+# space for the labels actually rendered.
 chart = pygal.Line(
     style=custom_style,
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     title="ice-basic · pygal · anyplot.ai",
     x_title="Square Footage",
     y_title="Predicted Price ($ thousands)",
     show_dots=False,
-    legend_at_bottom=True,
-    legend_at_bottom_columns=2,
     show_y_guides=True,
     show_x_guides=False,
     interpolate="cubic",
     x_label_rotation=30,
+    truncate_legend=-1,  # disable truncation — only 2 legend rows are ever shown
 )
 
 # x-axis: label every 10th grid point to avoid crowding (75 total)
@@ -96,15 +101,17 @@ for idx in range(0, n_grid, step):
     x_labels[idx] = str(int(sqft_grid[idx]))
 chart.x_labels = x_labels
 
-# ICE lines — first labeled "ICE Curves" for legend entry; remaining unlabeled
-chart.add("ICE Curves", [round(float(v), 1) for v in ice_curves[0]], stroke_style={"width": 2, "opacity": 0.3})
+# ICE lines — only the first carries a legend label; the rest use title=None
+# (not "") so pygal's _legend() skips their row entirely instead of rendering
+# 49 blank entries.
+chart.add(
+    f"ICE Curves (n={n_obs})", [round(float(v), 1) for v in ice_curves[0]], stroke_style={"width": 2, "opacity": 0.3}
+)
 for i in range(1, n_obs):
-    chart.add("", [round(float(v), 1) for v in ice_curves[i]], stroke_style={"width": 2, "opacity": 0.3})
+    chart.add(None, [round(float(v), 1) for v in ice_curves[i]], stroke_style={"width": 2, "opacity": 0.3})
 
 # PDP line — bold, fully opaque, labeled
-chart.add(
-    "Partial Dependence (PDP)", [round(float(v), 1) for v in pdp_curve], stroke_style={"width": 14, "opacity": 1.0}
-)
+chart.add("PDP (average)", [round(float(v), 1) for v in pdp_curve], stroke_style={"width": 10, "opacity": 1.0})
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
