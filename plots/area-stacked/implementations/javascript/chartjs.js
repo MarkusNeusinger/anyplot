@@ -75,7 +75,8 @@ const series = [
 
 // --- Custom plugins ------------------------------------------------------------
 // Elevated card background behind the legend, matching the Imprint
-// "callout box" treatment instead of a bare default legend row.
+// "callout box" treatment instead of a bare default legend row. A hairline
+// border on the card edge separates it from the softer drop shadow alone.
 const elevatedLegendBg = {
   id: "elevatedLegendBg",
   beforeDraw(chart) {
@@ -100,17 +101,23 @@ const elevatedLegendBg = {
     ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
     ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.strokeStyle = t.grid;
+    ctx.lineWidth = 1;
+    ctx.stroke();
     ctx.restore();
   },
 };
 
-// Callout marking the Nov '23 holiday-season traffic bump on the top edge
-// of the stack, so the seasonal spike doesn't rely on the viewer noticing it.
-const holidayCallout = {
-  id: "holidayCallout",
+// Factory for the dashed-leader/dot/label callout used to surface a data
+// story directly on the chart instead of leaving it for the viewer to infer.
+// Both callouts below share this drawing logic, parameterized by which top-
+// stack point they anchor to and what label they show.
+const makeCallout = (id, pointIndex, text) => ({
+  id,
   afterDatasetsDraw(chart) {
     const topMeta = chart.getDatasetMeta(series.length - 1);
-    const point = topMeta.data[holidayIndex];
+    const point = topMeta.data[pointIndex];
     if (!point) return;
     const { x, y: yPeak } = point;
     const yLabel = yPeak - 56;
@@ -134,50 +141,25 @@ const holidayCallout = {
     ctx.font = "13px sans-serif";
     ctx.fillStyle = t.inkSoft;
     ctx.textAlign = "center";
-    ctx.fillText("Holiday traffic bump", x, yLabel);
+    ctx.fillText(text, x, yLabel);
     ctx.restore();
   },
-};
+});
 
-// Second data-story callout, same dashed-leader/dot language as the holiday
-// callout above, marking Organic Search's two-year growth rate — the
-// fastest-growing source in the stack.
-const organicGrowthCallout = {
-  id: "organicGrowthCallout",
-  afterDatasetsDraw(chart) {
-    const topMeta = chart.getDatasetMeta(series.length - 1);
-    const point = topMeta.data[organicCalloutIndex];
-    if (!point) return;
-    const { x, y: yPeak } = point;
-    const yLabel = yPeak - 56;
+// Nov '23 holiday-season traffic bump on the top edge of the stack.
+const holidayCallout = makeCallout(
+  "holidayCallout",
+  holidayIndex,
+  "Holiday traffic bump",
+);
 
-    const { ctx } = chart;
-    ctx.save();
-    ctx.strokeStyle = t.inkSoft;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 3]);
-    ctx.beginPath();
-    ctx.moveTo(x, yPeak - 4);
-    ctx.lineTo(x, yLabel + 14);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = t.ink;
-    ctx.beginPath();
-    ctx.arc(x, yPeak, 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.font = "13px sans-serif";
-    ctx.fillStyle = t.inkSoft;
-    ctx.textAlign = "center";
-    ctx.fillText(
-      `Organic Search +${organicGrowthPct}% since Jan '23`,
-      x,
-      yLabel,
-    );
-    ctx.restore();
-  },
-};
+// Organic Search's two-year growth rate — the fastest-growing source in the
+// stack.
+const organicGrowthCallout = makeCallout(
+  "organicGrowthCallout",
+  organicCalloutIndex,
+  `Organic Search +${organicGrowthPct}% since Jan '23`,
+);
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
