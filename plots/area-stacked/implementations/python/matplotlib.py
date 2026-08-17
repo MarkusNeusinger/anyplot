@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-stacked: Stacked Area Chart
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 95/100 | Updated: 2026-05-07
+Library: matplotlib 3.11.1 | Python 3.13.15
+Quality: 87/100 | Updated: 2026-08-17
 """
 
 import os
