@@ -1,7 +1,7 @@
 # anyplot.ai
 # ice-basic: Individual Conditional Expectation (ICE) Plot
-# Library: Makie.jl 0.21 | Julia 1.11
-# Quality: pending | Created: 2026-08-17
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 86/100 | Created: 2026-08-17
 
 using CairoMakie
 using Colors
