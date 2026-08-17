@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-17
@@ -8,9 +8,9 @@ import os
 
 import numpy as np
 import pandas as pd
+from matplotlib.patches import FancyBboxPatch
 from plotnine import (
     aes,
-    annotate,
     element_blank,
     element_rect,
     element_text,
@@ -88,6 +88,7 @@ compare_period = 4
 early_val = df[(df["cohort"] == "Jan 2024") & (df["period"] == compare_period)]["retention_rate"].values[0]
 later_val = df[(df["cohort"] == "Jun 2024") & (df["period"] == compare_period)]["retention_rate"].values[0]
 improvement = later_val - early_val
+cohort_trend_pp = 2.2  # per-cohort onboarding bonus baked into the synthetic retention formula above
 
 # Plot
 plot = (
@@ -95,19 +96,8 @@ plot = (
     + geom_tile(color=PAGE_BG, size=0.8)
     + geom_text(aes(label="label"), size=3.1, color="#FFFFFF", fontweight="bold")
     + scale_fill_gradient(low=SEQ_LOW_RETENTION, high=SEQ_HIGH_RETENTION, limits=(0, 100), name="Retention %")
-    + scale_x_continuous(breaks=range(n_cohorts), labels=[f"M{i}" for i in range(n_cohorts)])
+    + scale_x_continuous(breaks=range(n_cohorts), labels=[f"Month {i}" for i in range(n_cohorts)])
     + scale_y_discrete(expand=(0.06, 0))
-    + annotate("rect", xmin=n_cohorts - 3.6, xmax=n_cohorts - 0.4, ymin=1.6, ymax=3.4, fill=ELEVATED_BG, color=RULE)
-    + annotate(
-        "text",
-        x=n_cohorts - 2,
-        y=2.5,
-        label=f"Month {compare_period} retention improved\n+{improvement:.0f}pp from Jan→Jun 2024",
-        size=3.0,
-        color=INK_SOFT,
-        ha="center",
-        fontweight="bold",
-    )
     + labs(
         x="Months Since Signup",
         y="",
@@ -120,7 +110,7 @@ plot = (
         plot_title=element_text(size=12, ha="center", weight="bold", color=INK),
         plot_subtitle=element_text(size=8, ha="center", color=INK_SOFT, style="italic"),
         axis_title_x=element_text(size=10, color=INK),
-        axis_text_x=element_text(size=8, color=INK_SOFT),
+        axis_text_x=element_text(size=8, color=INK_SOFT, angle=45, ha="right"),
         axis_text_y=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=9, weight="bold", color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
@@ -133,5 +123,47 @@ plot = (
     )
 )
 
+# Render, then drop into the underlying matplotlib Figure/Axes (a capability
+# unique to plotnine's matplotlib backend, unlike R ggplot2's grid graphics) to
+# draw a rounded-corner callout that fills the empty triangle beneath the data
+# and carries two data-backed insights instead of leaving that panel space bare.
+fig = plot.draw()
+ax = fig.axes[0]
+callout_box = FancyBboxPatch(
+    (3.6, 0.6),
+    9.6 - 3.6,
+    4.4 - 0.6,
+    transform=ax.transData,
+    boxstyle="round,pad=0,rounding_size=0.25",
+    facecolor=ELEVATED_BG,
+    edgecolor=RULE,
+    linewidth=1.0,
+    zorder=5,
+)
+ax.add_patch(callout_box)
+ax.text(
+    6.6,
+    3.3,
+    f"Month {compare_period} retention improved\n+{improvement:.0f}pp from Jan → Jun 2024",
+    transform=ax.transData,
+    ha="center",
+    va="center",
+    fontsize=9,
+    color=INK,
+    fontweight="bold",
+    zorder=6,
+)
+ax.text(
+    6.6,
+    1.7,
+    f"Each newer cohort trends ~+{cohort_trend_pp:.1f}pp per\nMonth vs. the prior cohort (onboarding gains)",
+    transform=ax.transData,
+    ha="center",
+    va="center",
+    fontsize=7.5,
+    color=INK_SOFT,
+    zorder=6,
+)
+
 # Save
-plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
+fig.savefig(f"plot-{THEME}.png", dpi=400)
