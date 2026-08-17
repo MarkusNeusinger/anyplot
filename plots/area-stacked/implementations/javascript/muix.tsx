@@ -1,6 +1,7 @@
 // anyplot.ai
 // area-stacked: Stacked Area Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: MUI X Charts | React | Node 22
+// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: 92/100 | Created: 2026-08-17
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
@@ -22,30 +23,62 @@ function lcg(seed: number) {
 const rand = lcg(42);
 
 // Monthly website traffic sources, Jan 2024 – Dec 2025 (24 months)
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 const dates = Array.from({ length: 24 }, (_, i) => new Date(2024, i, 1));
 
 // Series ordered largest → smallest so the biggest source stacks at the base
 const organicSearch = dates.map((_, i) =>
-  Math.round(4200 + i * 55 + 300 * Math.sin(((i - 6) * Math.PI) / 6) + (rand() - 0.5) * 200),
+  Math.round(
+    4200 +
+      i * 55 +
+      300 * Math.sin(((i - 6) * Math.PI) / 6) +
+      (rand() - 0.5) * 200,
+  ),
 );
 const direct = dates.map((_, i) =>
-  Math.round(2100 + i * 22 + 120 * Math.sin(((i - 3) * Math.PI) / 6) + (rand() - 0.5) * 140),
+  Math.round(
+    2100 +
+      i * 22 +
+      120 * Math.sin(((i - 3) * Math.PI) / 6) +
+      (rand() - 0.5) * 140,
+  ),
 );
 const referral = dates.map((_, i) =>
-  Math.round(1150 + i * 9 + 80 * Math.sin(((i - 9) * Math.PI) / 6) + (rand() - 0.5) * 90),
+  Math.round(
+    1150 + i * 9 + 80 * Math.sin(((i - 9) * Math.PI) / 6) + (rand() - 0.5) * 90,
+  ),
 );
 const social = dates.map((_, i) =>
-  Math.round(650 + i * 30 + 150 * Math.sin((i * Math.PI) / 6) + (rand() - 0.5) * 110),
+  Math.round(
+    650 + i * 30 + 150 * Math.sin((i * Math.PI) / 6) + (rand() - 0.5) * 110,
+  ),
 );
 
 // Storytelling aids: the cumulative-total average (reference line) and the
 // fastest-growing channel's overall lift (callout), both derived from the data.
-const totals = dates.map((_, i) => organicSearch[i] + direct[i] + referral[i] + social[i]);
+const totals = dates.map(
+  (_, i) => organicSearch[i] + direct[i] + referral[i] + social[i],
+);
 const avgTotal = totals.reduce((sum, v) => sum + v, 0) / totals.length;
-const socialGrowthPct = Math.round(((social[social.length - 1] - social[0]) / social[0]) * 100);
+const socialGrowthPct = Math.round(
+  ((social[social.length - 1] - social[0]) / social[0]) * 100,
+);
 
-const TITLE = "Website Traffic Sources · area-stacked · javascript · muix · anyplot.ai";
+const TITLE =
+  "Website Traffic Sources · area-stacked · javascript · muix · anyplot.ai";
 const TITLE_H = 58;
 
 // --- Chart (default-exported component — the harness mounts it) ------------
@@ -73,12 +106,43 @@ export default function Chart() {
           pt: "10px",
         }}
       >
-        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1 }}>
+        <Typography
+          sx={{
+            color: t.ink,
+            fontSize: "22px",
+            fontWeight: 600,
+            lineHeight: 1,
+          }}
+        >
           {TITLE}
         </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Box sx={{ width: "10px", height: "10px", borderRadius: "50%", bgcolor: t.palette[3] }} />
-          <Typography sx={{ color: t.inkSoft, fontSize: "13px", fontWeight: 500, lineHeight: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            bgcolor: t.elevatedBg,
+            borderRadius: "6px",
+            px: "12px",
+            py: "6px",
+          }}
+        >
+          <Box
+            sx={{
+              width: "10px",
+              height: "10px",
+              borderRadius: "50%",
+              bgcolor: t.palette[3],
+            }}
+          />
+          <Typography
+            sx={{
+              color: t.inkSoft,
+              fontSize: "13px",
+              fontWeight: 500,
+              lineHeight: 1,
+            }}
+          >
             {`Social: fastest-growing channel, +${socialGrowthPct}% since Jan 2024`}
           </Typography>
         </Box>
@@ -89,11 +153,13 @@ export default function Chart() {
         height={height - TITLE_H}
         skipAnimation
         colors={t.palette.slice(0, 4)}
+        grid={{ horizontal: true }}
         xAxis={[
           {
             data: dates,
             scaleType: "time",
-            valueFormatter: (v: Date) => `${MONTHS[v.getMonth()]} ${v.getFullYear()}`,
+            valueFormatter: (v: Date) =>
+              `${MONTHS[v.getMonth()]} ${v.getFullYear()}`,
             tickNumber: 8,
             label: "Month",
           },
@@ -151,6 +217,7 @@ export default function Chart() {
           "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
           "& .MuiChartsAxis-label": { fontSize: "16px" },
           "& .MuiChartsLegend-label": { fontSize: "14px" },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
         slotProps={{
           legend: {
@@ -163,9 +230,20 @@ export default function Chart() {
         <ChartsReferenceLine
           y={avgTotal}
           label={`Avg total: ${(avgTotal / 1000).toFixed(1)}k`}
-          labelAlign="end"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1.5 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 12 }}
+          labelAlign="start"
+          lineStyle={{
+            stroke: t.inkSoft,
+            strokeDasharray: "4 4",
+            strokeWidth: 1.5,
+          }}
+          labelStyle={{
+            fill: t.inkSoft,
+            fontSize: 13,
+            fontWeight: 600,
+            stroke: t.pageBg,
+            strokeWidth: 5,
+            paintOrder: "stroke",
+          }}
         />
       </LineChart>
     </Box>
