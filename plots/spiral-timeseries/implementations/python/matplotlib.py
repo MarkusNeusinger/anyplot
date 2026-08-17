@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Created: 2026-05-07
+Library: matplotlib | Python 3.13
+Quality: pending | Updated: 2026-08-17
 """
 
 import os
@@ -9,6 +9,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
+from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
 
 
 # Theme tokens
@@ -16,7 +17,6 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data: Daily average temperatures over 5 years (Berlin-like climate)
 np.random.seed(42)
@@ -46,17 +46,22 @@ y = r * np.sin(theta)
 
 r_max = r0 + rev_spacing * n_years
 
-# Plot
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+# Plot — square canvas suits the radially symmetric spiral (see default-style-guide.md)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 ax.set_aspect("equal")
 
-# Spiral colored by temperature (cividis: cold=dark, warm=bright)
+# Spiral colored by temperature with the Imprint diverging colormap.
+# Temperature has a physically meaningful midpoint (freezing, 0°C) and a strong
+# domain color convention (cold→blue, hot→red), so imprint_div is oriented
+# blue→neutral→red rather than the library's default red→neutral→blue order.
+midpoint = PAGE_BG
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#4467A3", midpoint, "#AE3030"])
+norm = TwoSlopeNorm(vcenter=0.0, vmin=temperatures.min(), vmax=temperatures.max())
+
 points = np.column_stack([x, y]).reshape(-1, 1, 2)
 segments = np.concatenate([points[:-1], points[1:]], axis=1)
-t_min, t_max = temperatures.min(), temperatures.max()
-norm = plt.Normalize(t_min, t_max)
-lc = LineCollection(segments, cmap="cividis", norm=norm, linewidth=2.8, alpha=0.95)
+lc = LineCollection(segments, cmap=imprint_div, norm=norm, linewidth=2.5, alpha=0.95)
 lc.set_array(temperatures[:-1])
 ax.add_collection(lc)
 
@@ -69,9 +74,10 @@ for m in range(12):
     cos_a, sin_a = np.cos(m_angle), np.sin(m_angle)
     ha = "left" if cos_a > 0.1 else ("right" if cos_a < -0.1 else "center")
     va = "bottom" if sin_a > 0.1 else ("top" if sin_a < -0.1 else "center")
-    ax.text(label_r * cos_a, label_r * sin_a, month_names[m], ha=ha, va=va, fontsize=15, color=INK_SOFT)
+    ax.text(label_r * cos_a, label_r * sin_a, month_names[m], ha=ha, va=va, fontsize=12, color=INK_SOFT)
 
-# Concentric year-boundary rings and year labels
+# Concentric year-boundary rings and year labels, placed precisely at the Jan
+# start of each revolution (12 o'clock, straight above the ring)
 for yi in range(n_years + 1):
     ring_r = r0 + rev_spacing * yi
     ring_theta = np.linspace(0, 2 * np.pi, 500)
@@ -84,40 +90,33 @@ for yi in range(n_years + 1):
         linestyle="--",
     )
     if yi < n_years:
-        # Place year label just left of 12 o'clock where this revolution starts
         ax.text(
-            -0.18,
-            ring_r + 0.06,
-            str(start_year + yi),
-            ha="right",
-            va="bottom",
-            fontsize=14,
-            fontweight="bold",
-            color=INK,
+            0, ring_r + 0.08, str(start_year + yi), ha="center", va="bottom", fontsize=12, fontweight="bold", color=INK
         )
 
 # Colorbar
-sm = plt.cm.ScalarMappable(cmap="cividis", norm=norm)
+sm = plt.cm.ScalarMappable(cmap=imprint_div, norm=norm)
 sm.set_array([])
 cbar = fig.colorbar(sm, ax=ax, fraction=0.030, pad=0.04, aspect=25)
-cbar.set_label("Daily Temperature (°C)", fontsize=18, color=INK)
-cbar.ax.tick_params(labelsize=14, colors=INK_SOFT, labelcolor=INK_SOFT)
+cbar.set_label("Daily Temperature (°C)", fontsize=15, color=INK)
+cbar.ax.tick_params(labelsize=11, colors=INK_SOFT, labelcolor=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 plt.setp(cbar.ax.yaxis.get_ticklabels(), color=INK_SOFT)
 
 # Axis bounds, title, and cleanup
-margin = r_max + 1.5
+margin = r_max + 1.6
 ax.set_xlim(-margin, margin)
 ax.set_ylim(-margin, margin)
 ax.axis("off")
 
-ax.set_title(
-    "Seasonal Temperature Cycles  ·  spiral-timeseries  ·  matplotlib  ·  anyplot.ai",
-    fontsize=20,
-    fontweight="medium",
-    color=INK,
-    pad=16,
-)
+# Title fontsize scales with title length off the 67-char baseline (see
+# prompts/plot-generator.md). The square canvas is narrower (2400px) than the
+# landscape baseline (3200px) the 12pt default targets, so the effective
+# baseline shrinks by the same 2400/3200 width ratio.
+title = "spiral-timeseries · python · matplotlib · anyplot.ai"
+square_baseline = round(12 * 2400 / 3200)
+title_fontsize = max(8, round(square_baseline * 67 / len(title))) if len(title) > 67 else square_baseline
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=16)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
