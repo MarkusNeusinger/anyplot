@@ -1,7 +1,7 @@
 // anyplot.ai
 // ice-basic: Individual Conditional Expectation (ICE) Plot
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-17
+// Quality: 91/100 | Created: 2026-08-17
 
 const t = window.ANYPLOT_TOKENS;
 
