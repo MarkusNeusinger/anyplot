@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
-Library: seaborn 0.13.2 | Python 3.13.12
-Quality: 90/100 | Updated: 2026-08-17
+Library: seaborn 0.13.2 | Python 3.13.15
+Quality: 86/100 | Updated: 2026-08-17
 """
 
 import os
