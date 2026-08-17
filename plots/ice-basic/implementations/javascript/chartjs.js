@@ -52,26 +52,46 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// Color-code the ICE bundle by house quality (terciles) so the divergence
+// between modest and premium builds -- the interaction the spec calls out --
+// is visible directly in the fan of lines, not just in the average PDP curve.
+const QUALITY_TIERS = [
+  { label: "Lower-quality houses (ICE)", test: (q) => q < 1 / 3 },
+  { label: "Mid-quality houses (ICE)", test: (q) => q < 2 / 3 },
+  { label: "Higher-quality houses (ICE)", test: () => true },
+];
+
+function tierIndexFor(quality) {
+  return QUALITY_TIERS.findIndex((tier) => tier.test(quality));
+}
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Chart -------------------------------------------------------------------
-const iceColor = hexToRgba(t.palette[0], 0.18);
+// Group by tier (not raw house order) so the chart's first dataset -- and
+// first legend swatch -- is always the tier-0 bundle in the mandated
+// #009E73 brand green.
+const houseIndicesByTier = QUALITY_TIERS.map((_, tierIndex) =>
+  houses.map((house, i) => i).filter((i) => tierIndexFor(houses[i].quality) === tierIndex),
+);
 
-const iceDatasets = iceCurves.map((curve, i) => ({
-  label: i === 0 ? "Individual houses (ICE)" : "",
-  data: curve,
-  borderColor: iceColor,
-  borderWidth: 1.5,
-  pointRadius: 0,
-  fill: false,
-  tension: 0.3,
-}));
+const iceDatasets = houseIndicesByTier.flatMap((indices, tierIndex) =>
+  indices.map((i, j) => ({
+    label: j === 0 ? QUALITY_TIERS[tierIndex].label : "",
+    data: featureGrid.map((sqft, gridIndex) => ({ x: sqft, y: iceCurves[i][gridIndex] })),
+    borderColor: hexToRgba(t.palette[tierIndex], 0.22),
+    borderWidth: 1.5,
+    pointRadius: 0,
+    fill: false,
+    tension: 0.3,
+  })),
+);
 
 const pdpDataset = {
   label: "Average effect (PDP)",
-  data: pdpCurve,
+  data: featureGrid.map((sqft, gridIndex) => ({ x: sqft, y: pdpCurve[gridIndex] })),
   borderColor: t.ink,
   borderWidth: 4,
   pointRadius: 0,
@@ -82,7 +102,6 @@ const pdpDataset = {
 new Chart(canvas, {
   type: "line",
   data: {
-    labels: featureGrid.map((sqft) => Math.round(sqft)),
     datasets: [...iceDatasets, pdpDataset],
   },
   options: {
@@ -100,13 +119,18 @@ new Chart(canvas, {
         labels: {
           color: t.ink,
           font: { size: 16 },
+          usePointStyle: true,
+          pointStyle: "line",
           filter: (item) => item.text !== "",
         },
       },
     },
     scales: {
       x: {
-        ticks: { color: t.inkSoft, font: { size: 14 }, maxTicksLimit: 8 },
+        type: "linear",
+        min: SQFT_MIN,
+        max: SQFT_MAX,
+        ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
         title: { display: true, text: "Square Footage", color: t.ink, font: { size: 16 } },
       },
