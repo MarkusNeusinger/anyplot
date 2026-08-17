@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: ice-basic
 created: '2026-08-17T23:00:24Z'
-updated: '2026-08-17T23:05:21Z'
+updated: '2026-08-17T23:19:34Z'
 generated_by: claude-sonnet
 workflow_run: 32078058280
 issue: 5238
@@ -12,64 +12,67 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 55
 review:
   strengths:
-  - 'Correct Imprint palette usage: individual patient lines use brand green #009E73
-    at low alpha (0.16) exactly as the spec requests for showing density/overlap,
-    and the PDP curve uses the theme-adaptive neutral ink token rather than a second
-    categorical color, matching the palette''s semantic-anchor guidance for baseline/reference
-    lines.'
-  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white/near-black
+  - 'Current source (commit 314a36dde) directly addresses every weakness from the
+    prior 86/100 review: responder/non-responder lines are now color-coded (RESPONDER_COLOR/NONRESPONDER_COLOR),
+    an interquartile band!() ribbon anchors the eye against the dense line-haze, xgridvisible
+    is now false (y-axis-only grid), and the legend/labels were updated accordingly
+    — this is exactly the right repair.'
+  - 'Theme-adaptive chrome is correct in both rendered PNGs: warm off-white/near-black
     backgrounds, no dark-on-dark or light-on-light text, spines/grid/legend all flip
-    correctly while data colors stay identical between themes.'
-  - PDP overlay is bold and opaque (linewidth=5) against thin semi-transparent ICE
-    lines (linewidth=1.3, alpha=0.16), giving clean redundant encoding (thickness
-    + opacity, not hue alone) between the individual curves and the population average.
-  - Rug plot along the x-axis (vlines! at the bottom) correctly implements the spec's
-    optional suggestion to show the distribution of observed dosages.
-  - Legend is deduplicated correctly (label set only on the first ICE line via `i
-    == 1`), avoiding 80 redundant legend entries.
-  - Clean, KISS-structured, reproducible code (Random.seed!(42)), only used imports,
-    correct plot-light.png/plot-dark.png output pattern.
+    correctly, PDP line correctly uses the theme-adaptive neutral ink token rather
+    than a second categorical color.'
+  - 'Brand green #009E73 at low alpha for the ICE lines plus a bold opaque PDP overlay
+    gives clean redundant encoding (thickness + opacity) as the spec''s Notes explicitly
+    request.'
+  - Rug plot along the x-axis (vlines!) implements the spec's optional 'distribution
+    of observed feature values' suggestion.
+  - 'Code quality is clean and verifiable directly from source regardless of the render
+    issue: KISS linear structure, Random.seed!(42), only used imports (CairoMakie/Colors/Random/Statistics),
+    correct plot-$(THEME).png / px_per_unit=2 save pattern.'
   weaknesses:
-  - The two underlying patient subgroups (responders whose risk falls with dose vs.
-    non-responders who stay flat) are generated in the data but never visually distinguished
-    — every ICE line is the same green, so the heterogeneous-effects story the spec
-    calls out ('revealing... subgroup-specific behaviors') is only implicit in the
-    density cloud, not legible to a viewer. Consider color-coding by responder status
-    (spec explicitly suggests 'color-coding lines by a second feature') to surface
-    the subgroup split.
-  - 'Design storytelling is generic: the plot displays the ICE curves and PDP but
-    doesn''t otherwise guide the viewer to the insight (no annotation, no emphasis
-    on the divergence/fan pattern). Some visual hierarchy beyond line thickness (e.g.,
-    highlighting a spread band, or a short annotation calling out the responder/non-responder
-    split) would raise it above ''default''.'
-  - Grid is drawn on both axes (xgridcolor and ygridcolor both set); the default style
-    guide recommends Y-axis-only grid for line charts. The vertical gridline at x=50
-    adds a bit of visual noise without adding much information — consider `xgridvisible
-    = false`.
-  - 'Library Mastery is generic: only common Makie primitives are used (lines!, vlines!,
-    axislegend). Nothing distinctive to Makie appears (e.g., `band!` for a spread/interval
-    ribbon around the PDP, or per-line `color` vectors keyed to a continuous colormap
-    for the second-feature suggestion) — a distinctive Makie feature would raise LM-02
-    above the generic-usage floor.'
-  - With 80 overlapping semi-transparent lines the plot reads as a fairly dense haze
-    in the middle of the range; the density communicates volume but individual trajectories
-    are hard to trace — could tune alpha/linewidth further or add a subtle IQR/percentile
-    band to help the eye anchor the spread.
+  - 'CRITICAL — PIPELINE ARTIFACT MISMATCH: plot-light.png and plot-dark.png supplied
+    for this review are stale and do NOT reflect the current implementation at commit
+    314a36dde (''fix(makie): address review feedback for ice-basic''). Verified three
+    independent ways: (1) the rendered legend reads only ''Individual patients (ICE)''
+    + ''Population average (PDP)'' — the literal string ''Individual patients (ICE)''
+    does not appear anywhere in the current makie.jl, only in the OLD pre-fix version
+    (git blame confirms it was replaced by ''Responders (ICE)'' / ''Non-responders
+    (ICE)'' / ''Interquartile spread (25th-75th pct)'' in the fix commit); (2) pixel-sampling
+    the plot area across both renders finds zero non-responder blue (#4467A3) pixels,
+    even though current code color-codes ~35% of the 80 patients blue via NONRESPONDER_COLOR;
+    (3) no interquartile band or its legend entry is visible, despite current code
+    drawing one via band!() before the line loop. `git diff HEAD -- plots/ice-basic/implementations/julia/makie.jl`
+    is empty and `git show HEAD:...makie.jl` is byte-identical to the working file,
+    so this is not a stale local checkout — the CI render step for this attempt did
+    not regenerate the PNGs from the repaired source. Do not approve/merge these images;
+    the code should not be edited further for this feedback, the render step needs
+    to re-run against the current makie.jl and produce fresh plot-light.png / plot-dark.png.'
+  - Because of the artifact mismatch, SC-04 and LM-02 cannot be credited for the responder/non-responder
+    legend split or the band!() ribbon technique — those exist in source but are unverified
+    in the shipped output. Scored conservatively against what is actually visible
+    in the provided PNGs, not the source.
+  - Once regenerated, double-check the new band!() fill doesn't visually compete with
+    the PDP line or muddy the mid-range haze further, and confirm the two new legend
+    entries ('Responders (ICE)', 'Non-responders (ICE)') don't overlap 'Interquartile
+    spread (25th-75th pct)' in the top-right legend box now that it has grown from
+    2 to 4 entries.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "ice-basic · julia · makie · anyplot.ai" centered at top; dark x-axis label "Drug Dosage (mg)" and y-axis label "Predicted Relapse Risk (%)" both clearly visible; tick labels in a slightly softer dark gray, all legible; subtle horizontal + vertical gridlines at ~15% opacity; top/right spines removed, left/bottom spines kept as a soft L-frame; legend box top-right with no visible frame, showing "Individual patients (ICE)" (thin translucent green line) and "Population average (PDP)" (thick black line).
-      Data: ~80 thin, semi-transparent brand-green (#009E73) ICE lines forming a dense declining band from ~55% risk at dosage 0 down to ~45% at dosage 100, with wide spread (roughly 10%-85%) showing individual heterogeneity; a bold black PDP line traces the smooth population-average decline through the middle of the band; a rug of short vertical tick marks along the bottom shows the distribution of actually-observed dosages, clustered more densely around 20-90.
+      Chrome: Bold dark title "ice-basic · julia · makie · anyplot.ai" centered at top; dark x-axis label "Drug Dosage (mg)" and y-axis label "Predicted Relapse Risk (%)" both clearly visible; softer dark-gray tick labels, all legible; subtle horizontal + vertical gridlines at ~15% opacity; top/right spines removed, left/bottom spines kept as a soft L-frame; legend box top-right with no visible frame, showing only two entries: "Individual patients (ICE)" (thin translucent green line) and "Population average (PDP)" (thick black line).
+      Data: ~80 thin, semi-transparent brand-green (#009E73) ICE lines forming a dense declining band from ~55% risk at dosage 0 down to ~43% at dosage 100, with wide spread showing individual heterogeneity; a bold black PDP line traces the smooth population-average decline through the middle of the band; a rug of short vertical tick marks along the bottom shows the distribution of observed dosages. No color split between responders/non-responders is visible, and no interquartile band/ribbon is visible.
       Legibility verdict: PASS — all title/axis/tick/legend text is clearly readable against the light background, no overlap.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as light render but title/axis labels now near-white (#F0EFE8), tick labels/legend text a lighter soft gray (#B8B7B0), gridlines still subtle at ~15% opacity, legend box background switches to the darker elevated tone with no visible frame.
-      Data: The same brand-green (#009E73) ICE lines — identical hue and density to the light render — now read with slightly more contrast against the dark backdrop; the PDP line switches to near-white (theme-adaptive neutral ink) instead of black, remaining bold and clearly the focal curve; rug ticks render in the lighter tick-gray, still visible at the bottom.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is clearly visible against the dark background, and the brand green remains visible and identical in hue to the light render.
+      Chrome: Same layout as light render but title/axis labels near-white, tick labels/legend text a lighter soft gray, gridlines still subtle at ~15% opacity, legend box background switches to the darker elevated tone with no visible frame. Same two legend entries as the light render.
+      Data: The same brand-green (#009E73) ICE lines — identical hue and density to the light render; the PDP line switches to near-white (theme-adaptive neutral ink) instead of black, remaining bold and the clear focal curve; rug ticks render in lighter tick-gray, still visible at the bottom. No blue non-responder lines and no IQR band are present here either.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is clearly visible against the dark background, brand green is identical in hue to the light render.
+
+    IMPORTANT CAVEAT: both renders above pixel-match the PRIOR (pre-repair) attempt's images, not the current source at commit 314a36dde. The current makie.jl adds responder/non-responder color-coding (RESPONDER_COLOR / NONRESPONDER_COLOR), an interquartile band!() ribbon, and disables the x-axis grid — none of which appear in these PNGs. This description faithfully reports what is visible in the supplied artifacts; see review_weaknesses.json item 1 for the full mismatch analysis and required fix (regenerate, do not re-edit the code).
   criteria_checklist:
     visual_quality:
       score: 28
@@ -82,9 +85,8 @@ review:
         passed: true
         comment: Explicit font sizes throughout (titlesize=20, xlabelsize/ylabelsize=14,
           ticklabelsize=12), all readable in both themes; no overflow or clipping.
-          Title occupies a smaller proportion of the canvas width than the style guide's
-          ~50-70% target for a short title, slightly under-utilizing the typography
-          hierarchy.
+          Title occupies a smaller proportion of plot width than the ~50-70% guideline
+          for a short title, slightly under-utilizing the hierarchy.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -98,21 +100,21 @@ review:
         passed: true
         comment: Alpha (0.16) and linewidth (1.3) are appropriately toned down for
           80 overlapping lines and the PDP line (linewidth=5) is a clear focal point,
-          but the dense overlap still reads as a fairly muddy haze in the mid-band.
+          but the dense overlap still reads as a muddy haze in the mid-band.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green ICE lines and neutral-ink PDP line are distinguished by both
-          hue and thickness/opacity (redundant encoding), CVD-safe, no red-green reliance.
+        comment: Green ICE lines and neutral-ink PDP line are distinguished by hue
+          and thickness/opacity, CVD-safe, no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
         comment: Plot area fills the large majority of the canvas with balanced margins;
-          legend sits near the plot, not isolated; nothing is cut off.
+          legend sits near the plot; nothing is cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -124,9 +126,9 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) categorical series is #009E73; PDP correctly uses the
-          theme-adaptive neutral anchor instead of a second categorical color; backgrounds
-          are theme-correct in both renders; data colors identical between themes.'
+        comment: 'First categorical series is #009E73; PDP correctly uses the theme-adaptive
+          neutral anchor; backgrounds theme-correct in both renders; data colors identical
+          between themes.'
     design_excellence:
       score: 14
       max: 20
@@ -136,27 +138,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above a bare default: intentional alpha tuning for density, semantic
-          neutral color for the reference line, deduplicated legend — but not yet
-          publication-level polish.'
+        comment: Intentional alpha tuning for density, semantic neutral color for
+          the reference line, deduplicated legend — but not yet publication-level
+          polish as rendered.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
         comment: Top/right spines removed, subtle grid, frameless legend, generous
-          whitespace; minor ding for drawing both x- and y-axis grid on a line chart
-          where the style guide recommends y-only.
+          whitespace; minor ding for both x- and y-axis grid still visible in this
+          render (source already sets xgridvisible=false, unconfirmed in output).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy via linewidth/opacity contrast between individual
-          curves and the PDP guides the eye to the average trend, but the responder/non-responder
-          heterogeneity — the core reason to use an ICE plot — is never visually surfaced.
+        comment: Visual hierarchy via linewidth/opacity contrast guides the eye to
+          the average trend, but the responder/non-responder heterogeneity is not
+          visually surfaced in this artifact.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -171,7 +173,8 @@ review:
         max: 4
         passed: true
         comment: Low-alpha individual lines, bold opaque PDP overlay, and an x-axis
-          rug of observed values are all present.
+          rug of observed values are all present and are the spec's core requirements
+          (band/color-coding are optional 'Notes' suggestions).
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -181,12 +184,13 @@ review:
           observation_id — correct.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title exactly matches 'ice-basic · julia · makie · anyplot.ai'; legend
-          labels ('Individual patients (ICE)', 'Population average (PDP)') accurately
-          describe the two series.
+        comment: Title exactly matches the mandated format. Legend labels shown are
+          internally consistent with this artifact, but do not match the current source's
+          label strings (Responders/Non-responders/Interquartile spread) — cannot
+          certify legend matches the implementation under review.
     data_quality:
       score: 14
       max: 15
@@ -196,9 +200,8 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Data generation encodes real heterogeneity (responders vs. non-responders,
-          curvature, per-patient baseline noise), but the split isn't visually distinguishable
-          in the final render.
+        comment: Data generation encodes real heterogeneity (responders vs. non-responders),
+          but the split is not visually distinguishable in this rendered artifact.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -262,14 +265,15 @@ review:
         score: 1
         max: 5
         passed: false
-        comment: Only generic primitives used; nothing distinctive to Makie (e.g.
-          band!, colormap-mapped line colors, GridLayout) that couldn't be trivially
-          replicated in another library.
+        comment: Source now adds band!() and group-colored lines (would be distinctive),
+          but this cannot be credited until confirmed in a regenerated render — scored
+          against the visible artifact, which uses only generic primitives.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - rug-plot
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
