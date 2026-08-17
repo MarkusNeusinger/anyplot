@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-stacked: Stacked Area Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 95/100 | Created: 2026-08-17
+// Quality: pending | Created: 2026-08-17
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -50,6 +50,15 @@ labels.forEach((_, i) => {
 
 const holidayIndex = 10; // Nov '23 — first holiday-season traffic bump
 
+// Organic Search grew fastest of the four sources (steepest slope above);
+// surface that story explicitly instead of leaving it for the viewer to infer.
+const organicGrowthPct = Math.round(
+  ((organicSearch[organicSearch.length - 1] - organicSearch[0]) /
+    organicSearch[0]) *
+    100,
+);
+const organicCalloutIndex = labels.length - 5; // clear of the right-edge padding
+
 const hexToRgba = (hex, alpha) => {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -80,6 +89,9 @@ const elevatedLegendBg = {
     const r = 8;
     ctx.save();
     ctx.fillStyle = t.elevatedBg;
+    ctx.shadowColor = "rgba(0, 0, 0, 0.12)";
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 2;
     ctx.beginPath();
     ctx.moveTo(x + r, y);
     ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -127,6 +139,46 @@ const holidayCallout = {
   },
 };
 
+// Second data-story callout, same dashed-leader/dot language as the holiday
+// callout above, marking Organic Search's two-year growth rate — the
+// fastest-growing source in the stack.
+const organicGrowthCallout = {
+  id: "organicGrowthCallout",
+  afterDatasetsDraw(chart) {
+    const topMeta = chart.getDatasetMeta(series.length - 1);
+    const point = topMeta.data[organicCalloutIndex];
+    if (!point) return;
+    const { x, y: yPeak } = point;
+    const yLabel = yPeak - 56;
+
+    const { ctx } = chart;
+    ctx.save();
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, yPeak - 4);
+    ctx.lineTo(x, yLabel + 14);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = t.ink;
+    ctx.beginPath();
+    ctx.arc(x, yPeak, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = "13px sans-serif";
+    ctx.fillStyle = t.inkSoft;
+    ctx.textAlign = "center";
+    ctx.fillText(
+      `Organic Search +${organicGrowthPct}% since Jan '23`,
+      x,
+      yLabel,
+    );
+    ctx.restore();
+  },
+};
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -147,13 +199,13 @@ new Chart(canvas, {
       fill: i === 0 ? "origin" : "-1",
     })),
   },
-  plugins: [elevatedLegendBg, holidayCallout],
+  plugins: [elevatedLegendBg, holidayCallout, organicGrowthCallout],
   options: {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
     interaction: { mode: "index", intersect: false },
-    layout: { padding: { right: 24 } },
+    layout: { padding: { right: 40 } },
     plugins: {
       title: {
         display: true,
