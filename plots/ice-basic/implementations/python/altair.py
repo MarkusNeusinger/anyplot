@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: altair 6.2.2 | Python 3.13.15
 Quality: 86/100 | Updated: 2026-08-17
@@ -95,14 +95,40 @@ pdp_layer = (
     .encode(x="sqft:Q", y="price_k:Q", color=alt.Color("series:N", scale=color_scale, legend=color_legend))
 )
 
-# PDP annotation — anchored at a low-price mid-chart grid point, lifted well
-# above the local ICE band into open space and clear of the top-right legend
-pdp_sorted = pdp_df.sort_values("sqft").reset_index(drop=True)
-pdp_annotation_df = pdp_sorted.iloc[[int(len(pdp_sorted) * 0.30)]]
-pdp_annotation = (
-    alt.Chart(pdp_annotation_df)
-    .mark_text(align="center", dy=-60, fontSize=11, color=PDP_COLOR, fontWeight="bold")
-    .encode(x="sqft:Q", y="price_k:Q", text=alt.value("Partial Dependence"))
+# Divergent-observation callout — instead of repeating the legend's "Partial
+# Dependence" label, find the single point where an individual curve deviates
+# furthest from the average and name it, surfacing the heterogeneity ICE
+# plots exist to reveal.
+merged = ice_df.merge(pdp_df[["sqft", "price_k"]], on="sqft", suffixes=("", "_pdp"))
+merged["deviation"] = merged["price_k"] - merged["price_k_pdp"]
+divergent_row = merged.loc[merged["deviation"].abs().idxmax()]
+divergent_id = int(divergent_row["obs_id"])
+divergent_deviation = float(divergent_row["deviation"])
+divergent_direction = "above" if divergent_deviation > 0 else "below"
+
+divergent_df = ice_df[ice_df["obs_id"] == divergent_id]
+divergent_layer = (
+    alt.Chart(divergent_df)
+    .mark_line(strokeWidth=2.5, opacity=1.0)
+    .encode(x="sqft:Q", y="price_k:Q", color=alt.Color("series:N", scale=color_scale, legend=color_legend))
+)
+
+divergent_point_df = merged.loc[[merged["deviation"].abs().idxmax()], ["sqft", "price_k"]]
+# Keep the callout clear of the y-axis title (left edge) and the top-right
+# legend by flipping horizontal/vertical anchoring based on where the
+# divergent point actually falls on the canvas.
+sqft_mid = (sqft_grid.min() + sqft_grid.max()) / 2
+text_align = "left" if divergent_row["sqft"] < sqft_mid else "right"
+text_dx = 10 if text_align == "left" else -10
+text_dy = -8 if divergent_row["price_k"] < pdp_df["price_k"].max() * 0.85 else 16
+divergent_annotation = (
+    alt.Chart(divergent_point_df)
+    .mark_text(align=text_align, dx=text_dx, dy=text_dy, fontSize=10, color=BRAND, fontWeight="bold")
+    .encode(
+        x="sqft:Q",
+        y="price_k:Q",
+        text=alt.value(f"Obs #{divergent_id}: ${abs(divergent_deviation):.0f}K {divergent_direction} average"),
+    )
 )
 
 # Rug plot — actual observed sqft values along the x-axis
@@ -114,13 +140,13 @@ rug_layer = (
 )
 
 chart = (
-    alt.layer(ice_layer, pdp_layer, pdp_annotation, rug_layer)
+    alt.layer(ice_layer, divergent_layer, pdp_layer, divergent_annotation, rug_layer)
     .properties(
         width=VIEW_W, height=VIEW_H, background=PAGE_BG, title=alt.Title("ice-basic · altair · anyplot.ai", fontSize=16)
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
-        domainColor=INK_SOFT,
+        domain=False,
         tickColor=INK_SOFT,
         gridColor=INK,
         gridOpacity=0.10,
