@@ -42,6 +42,11 @@ cum3 = cum2 .+ referral
 cum4 = cum3 .+ social_media
 cum5 = cum4 .+ email
 
+# Callout: Organic Search visibly accelerates from ~month 10 onward.
+callout_idx = 13
+callout_x   = months[callout_idx]
+callout_y   = (cum0[callout_idx] + cum1[callout_idx]) / 2
+
 # --- Plot -------------------------------------------------------------------
 fig = Figure(
     resolution      = (1600, 900),
@@ -72,7 +77,8 @@ ax = Axis(
     leftspinecolor    = INK_SOFT,
     bottomspinecolor  = INK_SOFT,
     xgridvisible      = false,
-    ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.2),
+    yticks            = LinearTicks(7),
     xminorgridvisible = false,
     yminorgridvisible = false,
     xticks            = (months[1:3:end], month_labels[1:3:end]),
@@ -88,6 +94,16 @@ for cum in (cum1, cum2, cum3, cum4)
     lines!(ax, months, cum; color = PAGE_BG, linewidth = 2)
 end
 
+text!(
+    ax, callout_x, callout_y;
+    text     = "Organic search\naccelerating",
+    color    = PAGE_BG,
+    fontsize = 12,
+    font     = :bold,
+    align    = (:center, :center),
+    justification = :center,
+)
+
 xlims!(ax, months[1], months[end])
 ylims!(ax, 0, maximum(cum5) * 1.05)
 
@@ -95,9 +111,11 @@ Legend(
     fig[1, 2], ax;
     labelsize       = 12,
     labelcolor      = INK,
-    backgroundcolor = ELEVATED_BG,
-    framecolor      = INK_SOFT,
-    framevisible    = true,
+    backgroundcolor = (ELEVATED_BG, 0.6),
+    framevisible    = false,
+    patchsize       = (14, 14),
+    padding         = (12, 12, 10, 10),
+    rowgap          = 6,
 )
 colsize!(fig.layout, 1, Relative(0.82))
 
