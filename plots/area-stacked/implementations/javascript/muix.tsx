@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-08-17
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -38,6 +39,12 @@ const social = dates.map((_, i) =>
   Math.round(650 + i * 30 + 150 * Math.sin((i * Math.PI) / 6) + (rand() - 0.5) * 110),
 );
 
+// Storytelling aids: the cumulative-total average (reference line) and the
+// fastest-growing channel's overall lift (callout), both derived from the data.
+const totals = dates.map((_, i) => organicSearch[i] + direct[i] + referral[i] + social[i]);
+const avgTotal = totals.reduce((sum, v) => sum + v, 0) / totals.length;
+const socialGrowthPct = Math.round(((social[social.length - 1] - social[0]) / social[0]) * 100);
+
 const TITLE = "Website Traffic Sources · area-stacked · javascript · muix · anyplot.ai";
 const TITLE_H = 58;
 
@@ -56,10 +63,25 @@ export default function Chart() {
         flexDirection: "column",
       }}
     >
-      <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center", px: "40px", pt: "10px" }}>
-        <Typography sx={{ color: t.ink, fontSize: "21px", fontWeight: 500, lineHeight: 1 }}>
+      <Box
+        sx={{
+          height: TITLE_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: "40px",
+          pt: "10px",
+        }}
+      >
+        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1 }}>
           {TITLE}
         </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <Box sx={{ width: "10px", height: "10px", borderRadius: "50%", bgcolor: t.palette[3] }} />
+          <Typography sx={{ color: t.inkSoft, fontSize: "13px", fontWeight: 500, lineHeight: 1 }}>
+            {`Social: fastest-growing channel, +${socialGrowthPct}% since Jan 2024`}
+          </Typography>
+        </Box>
       </Box>
 
       <LineChart
@@ -85,6 +107,7 @@ export default function Chart() {
         ]}
         series={[
           {
+            id: "organic",
             data: organicSearch,
             label: "Organic Search",
             stack: "traffic",
@@ -93,6 +116,7 @@ export default function Chart() {
             curve: "monotoneX",
           },
           {
+            id: "direct",
             data: direct,
             label: "Direct",
             stack: "traffic",
@@ -101,6 +125,7 @@ export default function Chart() {
             curve: "monotoneX",
           },
           {
+            id: "referral",
             data: referral,
             label: "Referral",
             stack: "traffic",
@@ -109,6 +134,7 @@ export default function Chart() {
             curve: "monotoneX",
           },
           {
+            id: "social",
             data: social,
             label: "Social",
             stack: "traffic",
@@ -121,6 +147,7 @@ export default function Chart() {
         sx={{
           "& .MuiAreaElement-root": { fillOpacity: 0.82 },
           "& .MuiLineElement-root": { strokeWidth: 2 },
+          "& .MuiLineElement-series-social": { strokeWidth: 3 },
           "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
           "& .MuiChartsAxis-label": { fontSize: "16px" },
           "& .MuiChartsLegend-label": { fontSize: "14px" },
@@ -132,7 +159,15 @@ export default function Chart() {
             itemMarkHeight: 4,
           },
         }}
-      />
+      >
+        <ChartsReferenceLine
+          y={avgTotal}
+          label={`Avg total: ${(avgTotal / 1000).toFixed(1)}k`}
+          labelAlign="end"
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1.5 }}
+          labelStyle={{ fill: t.inkSoft, fontSize: 12 }}
+        />
+      </LineChart>
     </Box>
   );
 }
