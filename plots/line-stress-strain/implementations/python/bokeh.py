@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: bokeh 3.9.2 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-17
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, Span
+from bokeh.models import Arrow, BoxAnnotation, ColumnDataSource, HoverTool, Label, Legend, LegendItem, Span, VeeHead
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -85,6 +85,13 @@ uts_point_stress = uts
 fracture_point_strain = fracture_strain
 fracture_point_stress = stress_necking[-1]
 
+# Elastic-slope reference line — the ideal E*strain line extended past the
+# actual yield point, so the near-vertical elastic segment reads as a
+# deliberate slope reference rather than only a text annotation
+elastic_ref_stress_end = 320
+elastic_ref_strain = np.array([0.0, elastic_ref_stress_end / youngs_modulus])
+elastic_ref_stress = np.array([0.0, elastic_ref_stress_end])
+
 # Plot
 title = "line-stress-strain · python · bokeh · anyplot.ai"
 p = figure(
@@ -98,6 +105,19 @@ p = figure(
     min_border_left=180,
     min_border_top=110,
     min_border_right=50,
+)
+
+# Necking zone — lightly shaded background band (underlay, behind the curve)
+# so the fracture-bound region reads as the visual focal point of the story
+p.add_layout(
+    BoxAnnotation(
+        left=uts_strain,
+        right=fracture_strain,
+        fill_color=color_fracture,
+        fill_alpha=0.07,
+        line_color=None,
+        level="underlay",
+    )
 )
 
 # Subtle horizontal reference lines at yield and UTS
@@ -132,6 +152,12 @@ p.add_tools(hover)
 offset_source = ColumnDataSource(data={"strain": offset_strain_line, "stress": offset_stress_line})
 offset_line = p.line(x="strain", y="stress", source=offset_source, line_width=4, line_dash="dashed", color=color_yield)
 
+# Elastic-slope reference line — dashed, extending the E*strain line so the
+# elastic modulus has a visible slope reference in addition to the text label
+elastic_ref_line = p.line(
+    x=elastic_ref_strain, y=elastic_ref_stress, line_width=3, line_dash="dashed", line_alpha=0.55, color=color_main
+)
+
 # Key points — sized for 3200x1800 canvas
 yield_glyph = p.scatter(
     x=[yield_point_strain],
@@ -163,9 +189,23 @@ fracture_glyph = p.scatter(
     line_width=3,
 )
 
-# Region labels
+# Region labels — "Elastic" sits near the y-axis, next to the slope
+# reference line, with a leader arrow pointing at the actual (compressed)
+# near-vertical elastic segment so the label unambiguously names it
 p.add_layout(
-    Label(x=0.11, y=60, text="Elastic", text_font_size="24pt", text_color=color_region, text_font_style="italic")
+    Label(x=0.022, y=395, text="Elastic", text_font_size="24pt", text_color=color_region, text_font_style="italic")
+)
+p.add_layout(
+    Arrow(
+        end=VeeHead(size=14, fill_color=color_region, line_color=color_region),
+        x_start=0.020,
+        y_start=380,
+        x_end=0.0013,
+        y_end=225,
+        line_color=color_region,
+        line_alpha=0.7,
+        line_width=2,
+    )
 )
 
 p.add_layout(
@@ -212,11 +252,12 @@ p.add_layout(
     )
 )
 
-# Young's modulus annotation — placed above the elastic label, clear of the offset line
+# Young's modulus annotation — stacked below the "Elastic" label, beside the
+# dashed slope-reference line it describes
 p.add_layout(
     Label(
-        x=0.11,
-        y=140,
+        x=0.022,
+        y=340,
         text=f"E = {youngs_modulus // 1000} GPa",
         text_font_size="20pt",
         text_color=color_main,
@@ -228,6 +269,7 @@ p.add_layout(
 legend = Legend(
     items=[
         LegendItem(label="Stress-Strain Curve", renderers=[main_line]),
+        LegendItem(label="Elastic Slope (E)", renderers=[elastic_ref_line]),
         LegendItem(label="0.2% Offset Line", renderers=[offset_line]),
         LegendItem(label="Yield Point", renderers=[yield_glyph]),
         LegendItem(label="Ultimate Tensile Strength", renderers=[uts_glyph]),
