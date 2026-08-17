@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: pygal 3.1.3 | Python 3.13.15
-Quality: 80/100 | Updated: 2026-08-17
+Quality: 86/100 | Updated: 2026-08-17
 """
 
 import importlib

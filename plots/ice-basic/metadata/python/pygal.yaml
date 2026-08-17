@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: ice-basic
 created: '2026-05-07T16:49:49Z'
-updated: '2026-08-17T23:06:29Z'
+updated: '2026-08-17T23:15:19Z'
 generated_by: claude-sonnet
 workflow_run: 32077986575
 issue: 5238
@@ -12,47 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 86
 review:
   strengths:
+  - 'Title now correctly includes the {language} token: "ice-basic · python · pygal
+    · anyplot.ai" — the attempt-1 SC-04 defect is fixed'
+  - 'PDP average line now reads clearly even in the densest overlap band (sqft ~1875–3443,
+    price ~$540–548K): a background-colored halo (width 18) drawn beneath the bold
+    lavender PDP stroke (width 12) pixel-verified via crop to separate it cleanly
+    from the green ICE mass — directly resolves the attempt-1 VQ-03/DE-03 weakness'
   - 'Correct Imprint palette order (first series #009E73, second #C475FD) and theme-adaptive
-    chrome threaded through the pygal Style object — both renders are correctly themed
-    with no dark-on-dark or light-on-light failures'
+    chrome threaded through the pygal Style object — both renders correctly themed,
+    no dark-on-dark or light-on-light failures, data colors pixel-identical across
+    themes'
   - 'Idiomatic pygal usage: custom Style tokens, cubic interpolation for smooth ICE
-    curves, thinned x-axis tick labels to avoid crowding across 75 grid points, and
-    a None-title trick to avoid a 50-row legend'
-  - Deterministic pipeline (np.random.seed(42), sklearn random_state=42) with a realistic,
+    curves, thinned x-axis tick labels (every ~10th of 75 grid points) to avoid crowding,
+    and a None-title trick to avoid a 50-row legend'
+  - Deterministic pipeline (np.random.seed(42), random_state=42) with a realistic,
     neutral house-price-by-square-footage scenario and plausible value ranges
-  - Correct canvas (3200x1800) and correct output artifacts (plot-{theme}.png + plot-{theme}.html)
+  - Correct canvas (3200×1800, gate passed) and correct output artifacts (plot-{theme}.png
+    + plot-{theme}.html)
+  - 'No edge clipping: verified rightmost x-tick label ("3443") and top-left legend/title
+    corner both render with full margin, no chopped pixels'
   weaknesses:
-  - Title is 'ice-basic · pygal · anyplot.ai' — missing the required {language} segment;
-    per the title-format rule it should read 'ice-basic · python · pygal · anyplot.ai'
-  - The PDP overlay (stroke_width=10, opacity=1.0) is visually swallowed by the dense
-    bundle of 50 semi-transparent ICE lines in high-overlap regions (e.g. sqft > 1875
-    where many curves converge into tight bands around $545-580K) — the 'bold, opaque
-    average' focal curve the spec calls for does not read clearly against the crowd;
-    consider a halo/outline or an even bolder stroke to keep it legible where curves
-    converge
-  - Dashed grid lines are fairly prominent against an already-dense field of overlapping
-    curves — muting them further would improve visual refinement (DE-02)
+  - Dashed grid lines are still fairly prominent against the dense curve field — the
+    attempt-1 note to mute them was not addressed; consider a lighter/more subtle
+    guide color or removing y-guides in the densest bands
+  - In the very top band (price ~575–580K, the tightest cluster of converged curves)
+    individual ICE lines are indistinguishable from one another — inherent to the
+    low-alpha overlap design the spec calls for, but still limits Element Visibility
+    slightly
   - Optional spec-suggested enhancements (centered c-ICE variant, rug plot along the
-    x-axis, or color-coding by a second feature) are not implemented — not required,
-    but would deepen feature/data coverage
+    x-axis, or color-coding by a second feature) remain unimplemented — not required,
+    but would deepen Feature/Data Coverage
+  - Beyond the new PDP halo, overall aesthetic customization is still close to the
+    pygal default template (no additional visual-refinement touches like spine/frame
+    treatment or a more distinctive layout)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — no pure-white or dark contamination.
-      Chrome: Title "ice-basic · pygal · anyplot.ai" is centered, dark ink, fully legible. Axis titles "Square Footage" and "Predicted Price ($ thousands)" are dark and clearly readable. Rotated x tick labels (700, 1091, ... 3443) and y tick labels (280-580) are dark-on-light and legible. Legend swatches top-left ("ICE Curves (n=50)" in green, "PDP (average)" in lavender) are readable. Dashed horizontal gridlines are visible but slightly prominent.
-      Data: First series (50 ICE curves) rendered in brand green #009E73 at low opacity (~0.3), producing a dense translucent bundle that reveals overlap density. PDP overlay is drawn in lavender (#C475FD, Imprint position 2) at full opacity/width 10, but it is only clearly distinguishable from the green mass in a few less-crowded spots (e.g. leftmost ~x=700, and the flat band near y=546 on the right) — in high-density regions (sqft 1875-3443) it blends into the green bundle.
-      Legibility verdict: PASS (all text readable; no light-on-light issues). Note: PDP data-visibility weakness flagged separately (not a legibility/theme failure).
+      Background: warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: title "ice-basic · python · pygal · anyplot.ai" centered in dark ink and fully legible; axis titles "Square Footage" and "Predicted Price ($ thousands)" dark and legible; rotated (30°) x tick labels and y tick labels dark-on-light and fully readable, none clipped (verified rightmost "3443" label has full margin from the canvas edge). Legend top-left ("ICE Curves (n=50)" green swatch, "PDP (average)" lavender swatch) readable and does not overlap the title.
+      Data: 50 ICE curves in brand green #009E73 at low opacity (0.3) form a dense translucent bundle showing overlap/density as the spec calls for. The lavender PDP overlay (#C475FD, opacity 1.0, width 12) is drawn over a background-colored halo (width 18) — pixel-verified via a zoomed crop of the densest band (sqft ~1875–3443, price ~$540–548K) that the PDP line now stands out clearly as a distinct thin lavender line against the green mass, fixing the attempt-1 visibility problem.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — no pure-black contamination.
-      Chrome: Title, axis titles, and both axis tick label sets are rendered in light ink and are clearly legible against the dark background — no dark-on-dark failures anywhere (title, ticks, legend text all confirmed readable). Dashed gridlines are visible and appropriately subdued for the dark surface.
-      Data: Green ICE curves (#009E73) and lavender PDP curve (#C475FD) are pixel-identical in color to the light render — only the chrome (background/text/grid) flipped, as required. Same PDP-visibility issue as the light render persists in dense regions.
-      Legibility verdict: PASS (all text readable in dark theme; no dark-on-dark failures).
+      Background: warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: title, axis titles, and tick labels rendered in light ink, clearly legible against the dark surface — no dark-on-dark failures anywhere (title, axis labels, ticks, legend all confirmed readable).
+      Data: colors (green #009E73, lavender #C475FD) are pixel-identical to the light render — only chrome flipped, as required. The PDP halo/line combination remains clearly visible in the dense band in this theme too (halo color adapts to the dark background token).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -60,76 +70,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes; readable in both themes, no dark-on-dark or
-          light-on-light issues
+        comment: Explicit font sizes, all text readable in both themes, no dark-on-dark/light-on-light,
+          no clipping at canvas edges
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend, title, axis text and ticks do not collide with each other
-          or with the data
+        comment: Legend, title, axis labels and tick labels do not collide with each
+          other or with data
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: ICE lines are appropriately thin/transparent for 50-curve density,
-          but the bold PDP overlay is visually lost within the dense bundle in high-overlap
-          regions
+        comment: PDP halo fix makes the average curve clearly distinguishable in dense
+          bands (pixel-verified); the very tightest converged cluster still makes
+          individual ICE lines hard to tell apart, but that is inherent to the low-alpha
+          overlap design
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender, adequate contrast, not red-green reliant
+        comment: Green/lavender pairing is CVD-safe, not a red-green pairing, adequate
+          contrast against both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, title well-proportioned, nothing overflows
-          or clips
+        comment: Canvas gate passed (3200x1800), good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles are descriptive and include units ($ thousands)
+        comment: Descriptive axis titles with units (Square Footage, Predicted Price
+          ($ thousands))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD (Imprint position 2), correct
-          theme-adaptive backgrounds in both renders'
+        comment: 'First series #009E73, second #C475FD (correct Imprint order); backgrounds
+          #FAF8F1/#1A1A17; both renders theme-correct'
     design_excellence:
-      score: 8
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Default pygal look with competent font-size tuning but no distinctive
-          typographic/layout flourishes
+        comment: Halo-behind-PDP technique adds real polish beyond font-size tuning,
+          but overall composition still close to the pygal default template
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Dashed grid lines are fairly prominent against an already-dense curve
-          field; standard whitespace
+        comment: Dashed grid lines still fairly prominent against the dense curve
+          field; attempt-1 note to mute them was not addressed
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: PDP average line is intended as the focal point but is occluded by
-          the ICE bundle, weakening the visual hierarchy
+        passed: true
+        comment: PDP average line now reads as a clear focal point thanks to the halo,
+          resolving the attempt-1 occlusion problem
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,29 +149,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct ICE plot: one line per observation plus PDP average overlay'
+        comment: 'Correct ICE plot: one line per observation across a feature grid'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Low-alpha individual lines and bold opaque PDP overlay present; optional
-          extras (c-ICE, rug plot, color-coding) are spec 'Consider' suggestions,
-          not requirements
+        comment: Low-alpha individual lines plus bold opaque PDP overlay, as required
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=square footage, y=predicted price; full data range shown
+        comment: X = feature_value (sqft grid), Y = prediction, one line per observation_id
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title 'ice-basic · pygal · anyplot.ai' is missing the required {language}
-          token; should be 'ice-basic · python · pygal · anyplot.ai'. Legend labels
-          are correct
+        passed: true
+        comment: Title now correctly reads "ice-basic · python · pygal · anyplot.ai";
+          legend labels match the series
     data_quality:
       score: 14
       max: 15
@@ -169,20 +178,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Individual ICE curves + PDP overlay shown; optional c-ICE/rug/color-coding
-          from spec Notes omitted
+        comment: Core ICE + PDP shown; optional c-ICE/rug/second-feature-coloring
+          enhancements from the spec notes not implemented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral house-price-by-square-footage scenario via GradientBoostingRegressor
+        comment: Realistic, neutral house-price-by-square-footage scenario via GradientBoostingRegressor
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sqft 700-3600 and price $270K-580K are sensible for the domain
+        comment: Plausible price range ($270K-$580K) and square footage range (700-3600
+          sqft)
     code_quality:
       score: 10
       max: 10
@@ -192,34 +202,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and sklearn random_state=42
+        comment: np.random.seed(42) and random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; importlib/os/sys workaround is necessary due to
-          filename self-shadowing
+        comment: Only numpy, sklearn, and pygal (via importlib) used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for fitting + ICE extraction; no fake functionality
+        comment: Appropriate complexity, halo trick clearly commented, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal API
+        comment: Saves plot-{theme}.png and plot-{theme}.html correctly
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -227,24 +236,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Custom Style object, guides, x_label_rotation, truncate_legend all
+        comment: Style object, cubic interpolation, x_labels thinning, truncate_legend
           used idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Cubic interpolation and the None-title legend-skip trick are genuine
-          pygal-specific techniques
-  verdict: REJECTED
+        comment: Cubic interpolation, None-title legend-skip trick, and the halo-behind-line
+          technique are genuine pygal-specific/CSS-drawing techniques
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
   dataprep: []
   styling:
