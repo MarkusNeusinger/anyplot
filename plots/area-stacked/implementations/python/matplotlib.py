@@ -1,13 +1,17 @@
 """ anyplot.ai
 area-stacked: Stacked Area Chart
 Library: matplotlib 3.11.1 | Python 3.13.15
-Quality: 94/100 | Updated: 2026-08-17
+Quality: 92/100 | Updated: 2026-08-17
 """
 
+import datetime
 import os
 
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.path import Path
 
 
 # Theme tokens
@@ -26,6 +30,16 @@ IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 np.random.seed(42)
 n_months = 36
 t = np.arange(n_months)
+
+
+def month_add(base_date, months):
+    total = base_date.month - 1 + months
+    year = base_date.year + total // 12
+    month = total % 12 + 1
+    return datetime.date(year, month, 1)
+
+
+dates = [month_add(datetime.date(2023, 1, 1), i) for i in range(n_months)]
 
 industrial = 4200 + 15 * t + 60 * np.sin(2 * np.pi * t / 12 + np.pi) + np.random.normal(0, 30, n_months)
 commercial = 2900 + 18 * t + 280 * np.sin(2 * np.pi * t / 12) + np.random.normal(0, 45, n_months)
@@ -55,18 +69,42 @@ alphas = [0.88, 0.82, 0.76, 0.70]
 cumulative = np.cumsum(data, axis=0)
 baseline = np.zeros(n_months)
 for top, color, alpha, label in zip(cumulative, IMPRINT, alphas, categories, strict=True):
-    ax.fill_between(t, baseline, top, color=color, alpha=alpha, label=label, linewidth=0)
+    ax.fill_between(dates, baseline, top, color=color, alpha=alpha, label=label, linewidth=0)
     # Thin edge stroke at each layer boundary for stronger definition between areas
-    ax.plot(t, top, color=color, linewidth=1.3, alpha=1.0)
+    ax.plot(dates, top, color=color, linewidth=1.3, alpha=1.0)
     baseline = top
+
+# Transportation (top band) grew fastest in relative terms (small base, steep
+# slope). Rather than adding a second text callout, reinforce that story
+# visually: an alpha-ramped raster clipped to the band's own fill polygon,
+# so the layer itself visibly "heats up" left-to-right. Built with the
+# matplotlib clip_path + imshow gradient-fill recipe (a raster masked by a
+# vector Path) — a distinctly matplotlib technique with no equivalent
+# one-liner in fill_between/stackplot.
+transport_bottom, transport_top = cumulative[2], cumulative[3]
+x_num = mdates.date2num(dates)
+band_path = Path(
+    np.column_stack([np.concatenate([x_num, x_num[::-1]]), np.concatenate([transport_bottom, transport_top[::-1]])])
+)
+growth_cmap = LinearSegmentedColormap.from_list("growth_highlight", [f"{IMPRINT[3]}00", f"{IMPRINT[3]}66"])
+gradient = np.linspace(0, 1, 256).reshape(1, -1)
+growth_overlay = ax.imshow(
+    gradient,
+    extent=(x_num[0], x_num[-1], 0, cumulative[-1].max() * 1.22),
+    aspect="auto",
+    cmap=growth_cmap,
+    origin="lower",
+    zorder=2.5,
+)
+growth_overlay.set_clip_path(band_path, ax.transData)
 
 # Callout the overall growth story: total consumption across all sectors
 total = cumulative[-1]
 growth_pct = (total[-1] - total[0]) / total[0] * 100
 ax.annotate(
     f"+{growth_pct:.0f}% total consumption\nover 3 years",
-    xy=(t[-1], total[-1]),
-    xytext=(t[-1] - 9, total[-1] + total[-1] * 0.14),
+    xy=(dates[-1], total[-1]),
+    xytext=(month_add(dates[-1], -9), total[-1] + total[-1] * 0.14),
     fontsize=8.5,
     color=INK,
     ha="left",
@@ -74,11 +112,10 @@ ax.annotate(
     arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.1},
 )
 
-# X-axis formatting (quarterly-ish labels across the 3-year span)
-tick_positions = [0, 6, 12, 18, 24, 30, 35]
-tick_labels = ["Jan 2023", "Jul 2023", "Jan 2024", "Jul 2024", "Jan 2025", "Jul 2025", "Dec 2025"]
-ax.set_xticks(tick_positions)
-ax.set_xticklabels(tick_labels)
+# X-axis formatting: real date values driven by matplotlib's date locator/
+# formatter machinery, rather than hand-picked tick positions/labels.
+ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1, 7]))
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
 
 # Labels and styling
 ax.set_xlabel("Month", fontsize=10, color=INK)
@@ -104,7 +141,7 @@ if leg:
 
 # Ensure y-axis starts at zero; extra headroom above the stack for the growth callout
 ax.set_ylim(bottom=0, top=cumulative[-1].max() * 1.22)
-ax.set_xlim(0, n_months - 1)
+ax.set_xlim(dates[0], dates[-1])
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

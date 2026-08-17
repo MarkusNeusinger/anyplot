@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:38:56Z'
-updated: '2026-08-17T12:31:20Z'
+updated: '2026-08-17T12:54:46Z'
 generated_by: claude-sonnet
-workflow_run: 32028804459
+workflow_run: 32031251132
 issue: 2022
 language_version: 3.13.15
 library_version: 3.11.1
@@ -12,48 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 92
 review:
   strengths:
-  - Title now correctly reads "area-stacked · python · matplotlib · anyplot.ai" with
-    the mandatory language token, fixing the sole SC-04 blocker from attempt 1.
-  - Legend is now borderless per the Decoration Removal Checklist, and pairs with
-    a new growth-trend annotation ("+19% total consumption over 3 years") that gives
-    the chart a clear focal point beyond the alpha hierarchy.
-  - 'Correct Imprint palette in canonical order (#009E73 → #C475FD → #4467A3 → #BD8233),
-    identical data colors in both renders, fully theme-adaptive chrome, and warm off-white/near-black
-    backgrounds matching spec (#FAF8F1 / #1A1A17).'
-  - Deliberate alpha-based visual hierarchy (0.88→0.70) plus thin edge-stroke boundaries
-    between layers, and the code comment now explicitly justifies the manual cumsum+fill_between
-    approach over ax.stackplot() (per-layer alpha/edge-stroke control that stackplot's
-    uniform styling can't express).
-  - Series correctly ordered largest-at-bottom per spec, zero baseline, no overlap
-    or clipping in either render; realistic, well-scaled data (grid electricity consumption
-    by sector, 36 months, plausible seasonality and growth trend).
-  - Clean, reproducible KISS code (seeded, correct canvas dimensions, correct output
-    naming, only used imports).
+  - Per-layer alpha hierarchy (0.88→0.70) plus thin edge-stroke boundaries visually
+    reinforces the spec's "order series by size, largest at bottom" requirement
+  - 'Clear data storytelling: arrow-annotated "+19% total consumption over 3 years"
+    callout gives the viewer an immediate, unambiguous focal insight'
+  - 'Distinctive matplotlib-only technique: Path-based clip_path + imshow gradient
+    overlay to visually "heat up" the fastest-growing band — not easily replicated
+    in other libraries'
+  - Theme-adaptive chrome (background, title/axis/tick text, grid, spines, borderless
+    legend) is correctly implemented and readable in both plot-light.png and plot-dark.png
+  - Realistic, neutral data scenario (grid electricity consumption by sector) with
+    genuine seasonal cycles per sector, a steady growth trend, zero baseline, and
+    correct mandated title format
   weaknesses:
-  - 'Library Mastery is still generic: no matplotlib-distinctive feature (e.g. custom
-    transforms, colormapped fills, path effects) beyond fill_between/annotate, which
-    are common to most plotting libraries — LM-02 stays low.'
-  - The growth-trend annotation is a nice single focal point, but there is no secondary
-    storytelling device (e.g. highlighting one sector's disproportionate growth) to
-    push DE-03 further.
+  - 'VQ-07: Per-layer fill alpha (0.70–0.88) composites each Imprint color against
+    the page background, so the rendered data color visibly shifts between themes
+    — e.g. the Transportation ochre #BD8233 renders as a washed-out light tan on the
+    #FAF8F1 light background but a much darker, richer brown on the #1A1A17 dark background
+    (a ~65/255-per-channel RGB shift for the worst layer). The style guide requires
+    Imprint data colors to be identical across themes, with only chrome flipping.
+    Fix: render fills at alpha=1.0 (fully opaque) and express the scale hierarchy
+    purely through the edge-stroke/line-weight technique already in place, or pre-compute
+    a fixed, theme-independent tint/shade of each palette color in code instead of
+    relying on canvas alpha-over-background compositing.'
+  - 'CQ-01: Defines a small helper function (`month_add`) for date arithmetic, breaking
+    the KISS imports→data→plot→save structure; `pandas.date_range` or `numpy.datetime64`
+    arithmetic would produce the same month grid without introducing a function.'
+  - 'LM-01: Uses manual `ax.fill_between` + `ax.plot` in a loop instead of the library''s
+    dedicated high-level `ax.stackplot()` API for this exact chart type; the manual
+    approach was chosen specifically to enable the per-layer alpha that in turn causes
+    the VQ-07 cross-theme color-parity issue above.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
-      Chrome: Title "area-stacked · python · matplotlib · anyplot.ai" in dark ink, centered, comfortably within the canvas. Y-axis label "Electricity Consumption (GWh)" and x-axis label "Month" in dark ink; tick labels in softer grey. Borderless legend (upper-left) lists Industrial/Commercial/Residential/Transportation with matching color swatches, sitting above the colored fill with no overlap. Growth-trend annotation "+19% total consumption over 3 years" top-right with an arrow pointing to the end of the stacked total, fully inside the frame with margin to spare.
-      Data: Four stacked bands in Imprint canonical order — Industrial #009E73 (bottom, largest), Commercial #C475FD, Residential #4467A3, Transportation #BD8233 (top, smallest) — with graduated alpha (0.88→0.70) and thin same-hue edge strokes at each boundary for definition. Baseline at zero.
-      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, annotation) is clearly readable against the light background; no clipping at any edge.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "area-stacked · python · matplotlib · anyplot.ai" in dark ink, clearly visible at the top. X-axis label "Month" and y-axis label "Electricity Consumption (GWh)" in dark ink, both readable. Tick labels and legend text (Industrial/Commercial/Residential/Transportation) in a softer dark grey, all legible. Subtle horizontal y-axis gridlines barely visible against the cream background. Left/bottom spines visible in soft grey, top/right spines removed.
+      Data: Four stacked bands from bottom to top: Industrial (brand green #009E73, largest, most opaque), Commercial (lavender), Residential (blue), Transportation (ochre, thinnest, most transparent). A "+19% total consumption over 3 years" annotation with an arrow points to the final data point in the top-right. All bands visually distinct with thin edge strokes at each boundary.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
-      Chrome: Same layout, chrome flipped to light ink — title, axis labels, and tick labels in light off-white/soft grey. Legend text flips to light grey, still borderless. Growth-trend annotation text and arrow flip to light ink/soft grey, fully legible.
-      Data: The four stacked bands render in the identical Imprint hues as the light version (#009E73/#C475FD/#4467A3/#BD8233) — only the chrome (background, text, grid, legend) flipped, confirming theme-adaptive tokens were threaded through correctly.
-      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axes, ticks, legend, annotation) reads clearly against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Title, axis labels rendered in light off-white ink; tick labels and legend text in a lighter grey — all clearly legible against the dark background. Gridlines subtle but visible in light grey. Spines in soft light grey, top/right removed. No dark-on-dark failures observed.
+      Data: Same four-band stack and same layer order (Industrial/Commercial/Residential/Transportation) with the identical "+19%" annotation and arrow, positioned identically to the light render.
+      Legibility verdict: PASS for chrome/text — however, the DATA COLORS themselves are NOT fully identical to the light render: because each band is filled with alpha < 1 (0.70–0.88) composited against the very different page backgrounds, the effective on-canvas color of each band (especially Residential and Transportation, the lower-alpha layers) is visibly darker/richer here than the lighter/washed-out version seen in plot-light.png. This is flagged as a VQ-07 weakness — see review_weaknesses.json.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -61,74 +67,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, ticks, legend, annotation all explicitly sized
-          and readable in both themes
+        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks/legend
+          8pt); well-proportioned, no overflow, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits clear of the fill area; annotation and arrow don't collide
-          with any other element
+        comment: Legend sits clear of the stacked area with visible margin at every
+          point along the timeline
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Alpha hierarchy (0.88-0.70) plus edge strokes keep all four bands
-          clearly distinguishable
+        comment: 36 monthly points; bands, edge strokes, and annotation are all clearly
+          visible at this density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue/amber palette, adequate contrast, no red-green-only
-          signal
+        comment: Four perceptually distinct hue families (green/purple/blue/ochre),
+          no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas is 3200x1800; title, labels, and annotation stay within bounds
-          with no overflow
+        comment: Chart fills a large, balanced portion of the 3200x1800 canvas; legend
+          anchored near the plot, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (GWh); title matches mandated format
+        comment: Y-axis label includes units (GWh); descriptive throughout
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Canonical Imprint order starting at #009E73; correct theme-adaptive
-          backgrounds'
+        passed: false
+        comment: 'First series is #009E73 and palette order is correct, but per-layer
+          alpha (0.70-0.88) composited against the theme-dependent page background
+          makes the effective data colors visibly non-identical between light and
+          dark renders, violating the theme-parity rule for Imprint data colors'
     design_excellence:
-      score: 18
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Deliberate alpha hierarchy, edge-stroke boundaries, and growth-trend
-          callout well above defaults
+        comment: Thoughtful per-layer hierarchy and gradient-highlight technique,
+          clearly above library defaults, but the alpha-over-background approach is
+          a craftsmanship flaw that undercuts full polish
       - id: DE-02
         name: Visual Refinement
-        score: 6
-        max: 6
-        passed: true
-        comment: Top/right spines removed, grid subtle, generous whitespace, legend
-          now borderless (fixed from attempt 1)
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: New growth-trend annotation gives a clear focal point on top of the
-          alpha hierarchy; a secondary emphasis device would push this to full marks
+        comment: Spines removed top/right, subtle y-only grid, borderless legend,
+          generous whitespace via tight_layout
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: The +19% growth annotation gives the viewer an immediate, unmistakable
+          focal insight beyond raw data display
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +147,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart
+        comment: Correct cumulative stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, size-ordered stacking, legend, semi-transparent
-          fills, zero baseline all present
+        comment: Distinct series colors, largest-at-bottom ordering, legend, zero
+          baseline, semi-transparent fills all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x, stacked values on y, categories correctly labeled
+        comment: X=month, Y=stacked GWh consumption; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title fixed to include the mandatory 'python' language token; legend
-          labels match series
+        comment: Title matches mandated format exactly; legend labels match the four
+          sector categories
     data_quality:
       score: 15
       max: 15
@@ -168,84 +177,91 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Stacking, baseline, legend, layering all demonstrated
+        comment: Shows per-sector seasonality, a steady multi-year growth trend, and
+          magnitude hierarchy across all four series
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Grid electricity consumption by sector — plausible and neutral
+        comment: Grid electricity consumption by sector — real-world, comprehensible,
+          neutral business/science scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in thousands of GWh, sensible for regional grid consumption
+        comment: Sector magnitudes and monthly growth rates are plausible for regional
+          grid consumption
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes, linear script
+        comment: Defines a small `month_add` helper function instead of using pandas.date_range,
+          breaking the strict no-functions structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy, all used
+        comment: All imports (datetime, mdates, LinearSegmentedColormap, Path) are
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: No fake UI or over-engineering; the extra complexity (clip-path gradient)
+          is a single deliberate, well-justified storytelling element
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with default bbox_inches
+        comment: Saves plot-{THEME}.png with correct facecolor, no deprecated calls
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Axes-level API, but uses manual fill_between/plot loop instead
+          of the library's dedicated ax.stackplot() for this exact chart type
+      - id: LM-02
+        name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: Manual cumsum+fill_between is now explicitly justified in-code as
-          a deliberate tradeoff for per-layer alpha/edge-stroke control that stackplot
-          can't express
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: No matplotlib-distinctive feature beyond fill_between/annotate, which
-          are common across plotting libraries
+        comment: Path-based clip_path + imshow gradient overlay is a genuinely matplotlib-specific
+          technique, hard to replicate in other libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   - explicit-figure
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
+  - time-series
   styling:
   - alpha-blending
+  - gradient-fill
   - edge-highlighting
