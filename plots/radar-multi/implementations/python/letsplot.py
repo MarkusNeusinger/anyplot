@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-multi: Multi-Series Radar Chart
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 70/100 | Updated: 2026-08-17
@@ -14,7 +14,7 @@ from lets_plot import (
     element_blank,
     element_rect,
     element_text,
-    geom_line,
+    geom_path,
     geom_point,
     geom_polygon,
     geom_text,
@@ -50,6 +50,9 @@ products = {
 }
 
 n = len(categories)
+
+# Product with the highest average score gets a subtle emphasis (focal point)
+hero = max(products, key=lambda name: sum(products[name]) / len(products[name]))
 
 # Create angles for each category (evenly spaced, starting from top)
 angles = [i * 2 * math.pi / n for i in range(n)]
@@ -103,26 +106,36 @@ for cat, angle in zip(categories, angles, strict=True):
 
 label_df = pd.DataFrame(label_rows)
 
-# Create grid value labels (scale indicators on first spoke)
+# Create grid value labels (placed in the gap between the Performance and
+# Storage spokes: a near-vertical sector, so the stacked labels don't overlap
+# each other, with a low combined data range so they clear the polygons too)
+gap_angle = (angles[3] + angles[4]) / 2
 value_label_rows = []
 for val in grid_values:
-    x = val * math.cos(-math.pi / 2) + 10  # Offset right for readability
-    y = val * math.sin(-math.pi / 2)
+    x = val * math.cos(gap_angle - math.pi / 2)
+    y = val * math.sin(gap_angle - math.pi / 2)
     value_label_rows.append({"label": str(val), "x": x, "y": y})
 
 value_label_df = pd.DataFrame(value_label_rows)
 
 # Build the plot
+# Note: geom_line() connects points sorted by x, which turns a circular/radial
+# path into a chaotic zigzag; geom_path() preserves the data's own point order,
+# which is required for these polar-via-cartesian shapes.
 plot = (
     ggplot()
-    # Gridlines (concentric circles)
-    + geom_line(aes(x="x", y="y", group="radius"), data=grid_df, color=INK_SOFT, size=0.4, alpha=0.2, linetype="dashed")
+    # Gridlines (concentric circles) - thin solid low-alpha rings
+    + geom_path(aes(x="x", y="y", group="radius"), data=grid_df, color=INK_SOFT, size=0.4, alpha=0.15)
     # Spokes (radial lines)
-    + geom_line(aes(x="x", y="y", group="group"), data=spoke_df, color=INK_SOFT, size=0.4, alpha=0.3)
+    + geom_path(aes(x="x", y="y", group="group"), data=spoke_df, color=INK_SOFT, size=0.4, alpha=0.3)
     # Filled polygons for each series (lower alpha for 4 overlapping series)
     + geom_polygon(aes(x="x", y="y", fill="series", group="series"), data=df, alpha=0.2)
-    # Lines connecting points
-    + geom_line(aes(x="x", y="y", color="series", group="series"), data=df, size=1.2)
+    # Lines connecting points, in category order (not x-sorted)
+    + geom_path(aes(x="x", y="y", color="series", group="series"), data=df, size=1.2)
+    # Emphasize the top-scoring product as a focal point (thicker outline)
+    + geom_path(
+        aes(x="x", y="y", color="series", group="series"), data=df[df["series"] == hero], size=2.2, show_legend=False
+    )
     # Points at each vertex (exclude the closing point to avoid double dot)
     + geom_point(aes(x="x", y="y", color="series"), data=df[df["order"] < n], size=3.5)
     # Custom color palette (Imprint)
@@ -132,7 +145,9 @@ plot = (
     + scale_x_continuous(limits=(-160, 160))
     + scale_y_continuous(limits=(-160, 160))
     # Title and legend
-    + labs(title="Smartphone Comparison · radar-multi · letsplot · anyplot.ai", fill="Product", color="Product")
+    + labs(
+        title="Smartphone Comparison · radar-multi · python · letsplot · anyplot.ai", fill="Product", color="Product"
+    )
     # Square format for symmetric radar chart (600x600 @ scale=4 -> 2400x2400)
     + ggsize(600, 600)
     + theme(
