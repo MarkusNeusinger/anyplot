@@ -9,6 +9,7 @@
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-08-17
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -66,7 +67,7 @@ const iceCurves = Array.from({ length: N_OBSERVATIONS }, (_, houseId) => {
     return basePrice + pricePerSqft * delta + curvature * delta * delta;
   });
 
-  return { houseId, predictions };
+  return { houseId, isLuxurySubgroup, predictions };
 });
 
 const partialDependence = featureGrid.map((_, gridIndex) => {
@@ -74,12 +75,32 @@ const partialDependence = featureGrid.map((_, gridIndex) => {
   return sum / iceCurves.length;
 });
 
-const ICE_COLOR = hexToRgba(t.palette[0], 0.18);
+// Color-code the ~25% luxury subgroup (ochre) against the standard majority
+// (brand green) so the diminishing-returns interaction is visible directly
+// from line color, not only inferable from where curves happen to diverge.
+const STANDARD_COLOR = hexToRgba(t.palette[0], 0.18);
+const LUXURY_COLOR = hexToRgba(t.palette[3], 0.35);
+// Sorted standard-before-luxury so series[0] stays brand green, matching the
+// style guide's "first series is always #009E73" rule.
+const orderedCurves = [
+  ...iceCurves.filter((curve) => !curve.isLuxurySubgroup),
+  ...iceCurves.filter((curve) => curve.isLuxurySubgroup),
+];
+const firstStandardIndex = orderedCurves.findIndex((curve) => !curve.isLuxurySubgroup);
+const firstLuxuryIndex = orderedCurves.findIndex((curve) => curve.isLuxurySubgroup);
+// Reference-line x position: where the luxury subgroup's diminishing-returns
+// curvature starts to visibly pull away from the standard trend.
+const DIVERGENCE_SQFT = SQFT_MIN + 0.7 * (SQFT_MAX - SQFT_MIN);
 
 // --- Title (mandated format, fontsize scaled to length) ---------------------
 const TITLE = "House Price Predictions · ice-basic · javascript · muix · anyplot.ai";
-const TITLE_FONT_SIZE = Math.round(22 * Math.min(1, 67 / TITLE.length));
-const TITLE_ROW_HEIGHT = 44;
+// Base of 32 (vs. the generic 22px JS-library default) because this title is
+// rendered in a plain flex div, not SVG-measured MUI X chrome — the plain-div
+// layout reads visually smaller at the same fontsize than the library's own
+// title component, so it needs a larger base to hit the expected ~70-85% of
+// canvas width.
+const TITLE_FONT_SIZE = Math.round(32 * Math.min(1, 67 / TITLE.length));
+const TITLE_ROW_HEIGHT = 56;
 const FONT_FAMILY = "Roboto, Helvetica, Arial, sans-serif";
 const AXIS_LABEL_FONT_SIZE = 16;
 // MUI X positions the native yAxis label at a fixed offset from the axis
@@ -94,11 +115,15 @@ export default function Chart() {
   const chartWidth = window.ANYPLOT_SIZE.width - Y_LABEL_COLUMN_WIDTH;
 
   const series = [
-    ...iceCurves.map((curve) => ({
+    ...orderedCurves.map((curve, index) => ({
       id: `house-${curve.houseId}`,
       data: curve.predictions,
-      color: ICE_COLOR,
+      color: curve.isLuxurySubgroup ? LUXURY_COLOR : STANDARD_COLOR,
       showMark: false,
+      // Only the first curve of each subgroup carries a legend label — the
+      // other ~68 stay unlabeled so the legend shows 3 entries, not 70.
+      ...(index === firstStandardIndex ? { label: "Standard homes" } : {}),
+      ...(index === firstLuxuryIndex ? { label: "Luxury subgroup (diminishing returns)" } : {}),
     })),
     {
       id: "pdp",
@@ -167,12 +192,20 @@ export default function Chart() {
           ]}
           grid={{ horizontal: true }}
           tooltip={{ trigger: "item" }}
-          margin={{ top: 20, right: 30, bottom: 55, left: 70 }}
+          margin={{ top: 30, right: 30, bottom: 55, left: 70 }}
           sx={{
             "& .MuiChartsGrid-line": { stroke: t.grid },
             "& .MuiLineElement-series-pdp": { strokeWidth: 3.5 },
           }}
-        />
+        >
+          <ChartsReferenceLine
+            x={DIVERGENCE_SQFT}
+            label="Luxury subgroup diverges →"
+            labelAlign="start"
+            labelStyle={{ fill: t.inkSoft, fontSize: 14, fontFamily: FONT_FAMILY }}
+            lineStyle={{ stroke: t.palette[3], strokeDasharray: "6 4", strokeWidth: 1.5 }}
+          />
+        </LineChart>
       </div>
     </div>
   );
