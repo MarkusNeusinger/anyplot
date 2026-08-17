@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: bokeh 3.9.2 | Python 3.13.15
 Quality: 93/100 | Updated: 2026-08-17
@@ -60,24 +60,16 @@ sports = np.maximum(base_sports, 8)
 # Average values: Electronics (150+), Clothing (100+), Home (80+), Sports (50+)
 series_data = [("Electronics", electronics), ("Clothing", clothing), ("Home & Garden", home_garden), ("Sports", sports)]
 
-# Calculate stacked values (cumulative sums for stacking)
 x_values = np.arange(len(months))
 x_labels = [d.strftime("%b %Y") for d in months]
 
-# Stack from bottom up
-stacked = {}
-cumsum = np.zeros(len(months))
-for name, values in series_data:
-    stacked[name] = cumsum.copy()
-    cumsum += values
-
 # Total-revenue trend line, used below as a focal-point overlay tracing the
 # combined stack instead of leaving the top edge to speak for itself.
-total = cumsum
+total = sum(values for _, values in series_data)
 growth_pct = (total[-1] / total[0] - 1) * 100
 
 # Create figure
-title = "area-stacked · bokeh · anyplot.ai"
+title = "area-stacked · python · bokeh · anyplot.ai"
 p = figure(
     width=3200,
     height=1800,
@@ -93,23 +85,19 @@ p = figure(
     min_border_right=50,
 )
 
-# Plot stacked areas with HoverTool
-legend_items = []
-for idx, (name, values) in enumerate(series_data):
-    y1 = stacked[name]
-    y2 = y1 + values
-    source = ColumnDataSource(
-        data={"x": x_values, "y1": y1, "y2": y2, "month": x_labels, "value": values, "name": [name] * len(x_values)}
-    )
+# Stack the series bottom-to-top with bokeh's purpose-built varea_stack()
+# helper: it derives the running y1/y2 bounds from the source columns itself
+# and tags each renderer's `name` with the stacker column, which HoverTool's
+# special `$name` variable then resolves per-band without a manual loop.
+category_names = [name for name, _ in series_data]
+source = ColumnDataSource(data={"x": x_values, "month": x_labels, **dict(series_data)})
+renderers = p.varea_stack(stackers=category_names, x="x", color=IMPRINT, fill_alpha=0.85, source=source)
+legend_items = [(name, [renderer]) for name, renderer in zip(category_names, renderers, strict=True)]
 
-    renderer = p.varea(x="x", y1="y1", y2="y2", source=source, fill_color=IMPRINT[idx], fill_alpha=0.85)
-    legend_items.append((name, [renderer]))
-
-    # Add HoverTool for this series
-    hover = HoverTool(
-        renderers=[renderer], tooltips=[("Month", "@month"), ("Category", "@name"), ("Value", "@value{0,0} $K")]
-    )
-    p.add_tools(hover)
+hover = HoverTool(
+    renderers=renderers, tooltips=[("Month", "@month"), ("Category", "$name"), ("Value", "@$name{0,0} $K")]
+)
+p.add_tools(hover)
 
 # Total-revenue trace: a thin neutral dashed line along the stack's top edge,
 # with a marker + callout on the final month. Gives the composition a single
