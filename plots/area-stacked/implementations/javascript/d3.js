@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 110, right: 240, bottom: 80, left: 110 };
+const margin = { top: 110, right: 280, bottom: 80, left: 110 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -67,6 +67,21 @@ g.selectAll("path.layer")
   .attr("stroke-width", 1.5)
   .attr("d", area);
 
+// --- Direct end-of-series value labels (color-matched to each layer) --------
+// Distinctive-D3 touch: read each layer's final band height straight off the
+// stack datum instead of leaning on the legend alone for value lookup.
+const lastIdx = data.length - 1;
+g.selectAll("text.end-label")
+  .data(series)
+  .join("text")
+  .attr("class", "end-label")
+  .attr("x", iw + 8)
+  .attr("y", (d) => y((d[lastIdx][0] + d[lastIdx][1]) / 2) + 4)
+  .attr("fill", (d) => color(d.key))
+  .style("font-size", "13px")
+  .style("font-weight", "600")
+  .text((d) => d3.format(",")(d[lastIdx][1] - d[lastIdx][0]));
+
 // --- Axes -------------------------------------------------------------------
 const xAxis = g
   .append("g")
@@ -100,7 +115,7 @@ g.append("text")
 // --- Legend -------------------------------------------------------------
 const legend = svg
   .append("g")
-  .attr("transform", `translate(${width - margin.right + 40},${margin.top + 10})`);
+  .attr("transform", `translate(${width - margin.right + 55},${margin.top + 10})`);
 const legendItem = legend
   .selectAll("g")
   .data(sectors)
@@ -120,6 +135,37 @@ legendItem
   .style("font-size", "14px")
   .text((d) => d.label);
 
+// --- Growth annotation (data storytelling callout) ---------------------
+// Reads the total straight off the topmost stack layer so it stays correct
+// if the underlying data changes.
+const totalStart = series[series.length - 1][0][1];
+const totalEnd = series[series.length - 1][lastIdx][1];
+const growthPct = Math.round(((totalEnd - totalStart) / totalStart) * 100);
+
+const callout = g.append("g").attr("transform", "translate(8,8)");
+callout
+  .append("rect")
+  .attr("width", 300)
+  .attr("height", 58)
+  .attr("rx", 8)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid);
+callout
+  .append("text")
+  .attr("x", 16)
+  .attr("y", 24)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .text("Total energy consumption");
+callout
+  .append("text")
+  .attr("x", 16)
+  .attr("y", 46)
+  .attr("fill", t.ink)
+  .style("font-size", "16px")
+  .style("font-weight", "600")
+  .text(`${d3.format(",")(totalStart)} → ${d3.format(",")(totalEnd)} TWh (+${growthPct}%)`);
+
 // --- Title --------------------------------------------------------------
 svg
   .append("text")
@@ -127,6 +173,6 @@ svg
   .attr("y", 50)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "22px")
+  .style("font-size", "28px")
   .style("font-weight", "600")
   .text("area-stacked · javascript · d3 · anyplot.ai");
