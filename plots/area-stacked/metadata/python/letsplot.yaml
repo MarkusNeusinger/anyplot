@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:40:35Z'
-updated: '2026-08-17T12:47:07Z'
+updated: '2026-08-17T13:18:32Z'
 generated_by: claude-sonnet
-workflow_run: 32030167491
+workflow_run: 32032645097
 issue: 2022
 language_version: 3.13.15
 library_version: 4.11.0
@@ -12,46 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Full four-sided panel border and vertical gridlines from the prior review are
-    both removed — now a clean L-shaped implicit frame with subtle horizontal-only
-    gridlines
-  - Correct stacked-area chart with baseline pinned at zero and series ordered largest-to-smallest
-    bottom-to-top, exactly per spec notes
-  - 'Full theme-adaptive chrome: background, text, grid, and legend all branch correctly
-    on ANYPLOT_THEME; Imprint data colors are pixel-identical between light and dark
-    renders'
-  - Added a lets-plot-distinctive richer tooltip (layer_tooltips with formatted category/month/revenue
-    lines) directly addressing prior Library Mastery feedback
-  - Clean, idiomatic lets-plot code (geom_area + position="stack" + scale_fill_manual),
-    reproducible via np.random.seed(42), correct plot-{THEME}.png/.html output naming
-    with scale=4
-  - Title format compliant, axis labels descriptive with units, legend well placed
-    with no overlap or clipping in either render
+  - Correct stacked area chart with series ordered largest-at-bottom and a zero-anchored
+    baseline, avoiding misleading proportions
+  - Annotation font size was bumped to size=4.1 per attempt-1 feedback, now reads
+    at parity with surrounding tick/legend chrome in both renders
+  - 'Pixel-verified: legend swatches and area-fill colors are byte-identical between
+    light and dark renders (#009E73/#C475FD/#4467A3/#BD8233), confirming correct canonical
+    Imprint order and full theme-adaptive chrome'
+  - 'Distinctive lets-plot touch: layer_tooltips() builds a richer per-band tooltip
+    (bolded channel title + formatted visits) in the HTML output, beyond a generic
+    ggplot2-style port'
+  - 'Effective data storytelling: dashed vline + annotation cleanly marks the paid
+    social campaign launch, tied to the visible inflection in the Social Media band,
+    with no overlap against gridlines or tick labels'
+  - Clean, reproducible, single-pass KISS script (np.random.seed(42), no functions/classes,
+    only used imports) with correct plot-{theme}.png/.html output and exact mandated
+    title format
   weaknesses:
-  - No visual hierarchy or storytelling beyond the raw stack — all four series carry
-    equal visual weight, no focal point or emphasis calling out a specific trend (e.g.
-    the mid-2024 dip)
-  - Legend still uses a boxed frame (legend_background element_rect with visible border)
-    — consider a borderless legend or matching the plot's minimal-chrome direction
-    for a fully polished look
-  - Aesthetic sophistication is solid but not exceptional — the white/black area-boundary
-    strokes are a nice touch but the overall composition is still a fairly standard
-    ggplot2-style stacked area port
+  - 'Persistent from attempt 1: the campaign-launch vline still renders as a neutral
+    gray dashed line, not the amber semantic anchor. Pixel-sampled both renders (region
+    x=1795-1812, y=150-300) — dominant stroke color is RGB(126,126,120) in light and
+    RGB(137,136,130) in dark, not the expected ~RGB(224,208,131)/(...) blend of #DDCC77
+    at alpha=0.9. The code is correct (color=AMBER, AMBER="#DDCC77", used exactly
+    once, no override) so this looks like a lets-plot rendering quirk with geom_vline(linetype="dashed",
+    color=..., alpha=...) rather than a code defect. For the next repair attempt,
+    try isolating the variable: (a) set alpha=1.0 to rule out alpha-compositing on
+    a dashed stroke, (b) try linetype="solid" to see if dashing is the trigger, or
+    (c) switch to geom_segment with explicit y0/y1 at the campaign_start x-position
+    as a workaround if geom_vline continues to ignore the literal color.'
+  - Library Mastery still shows only one distinctive lets-plot capability (layer_tooltips);
+    attempt-1 feedback asked for a second idiomatic touch and none was added — e.g.
+    an interactive legend behavior or another lets-plot-specific configuration would
+    strengthen LM-02 without adding clutter.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches the required light-theme surface, not pure white.
-      Chrome: Bold dark title "area-stacked · python · letsplot · anyplot.ai" top-left; dark-ink axis titles "Revenue (Thousands USD)" and "Month"; soft-gray tick labels; subtle horizontal-only gridlines (no vertical gridlines, no four-sided panel border — only an implicit L-shaped left/bottom axis line); boxed "Product Category" legend on the right listing Electronics/Clothing/Home & Garden/Sports. All chrome elements clearly readable against the light background.
-      Data: Four stacked areas from bottom to top — brand green (#009E73) Electronics (largest), lavender (#C475FD) Clothing, blue (#4467A3) Home & Garden, ochre (#BD8233) Sports (smallest) — with thin off-white boundary strokes between layers, baseline pinned at 0, visible seasonal wave across the 24 months.
+      Background: Warm off-white, sampled RGB(250,248,241) — matches #FAF8F1, not pure white.
+      Chrome: Bold dark title "area-stacked · python · letsplot · anyplot.ai" top-left; y-axis title "Website Visits (Thousands)" and x-axis title "Month" in dark ink; tick labels (0-200 / Jan 2023...Aug 2024) in a softer dark gray; subtle horizontal-only gridlines (no vertical gridlines). All chrome text is clearly readable against the light background.
+      Data: Four stacked bands bottom-to-top: brand-green Organic Search (#009E73, largest, ~90-108k), lavender Direct (#C475FD), steel-blue Social Media (#4467A3, widens sharply after the campaign-launch marker), ochre Referral (#BD8233, thinnest, at top). Bands are stroked in the page-background color for clean separation. A dashed vline plus annotation text ("Paid social campaign launch") marks the inflection point, positioned cleanly between gridlines with no overlap. Legend on the right ("Acquisition Channel") with four color swatches whose pixel values exactly match the area-fill colors.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches the required dark-theme surface, not pure black.
-      Chrome: Same layout with light-ink title/axis titles, lighter-gray tick labels, gridlines still subtly visible, legend box using the dark elevated fill (#242420) with light text and a soft border. No dark-on-dark failures observed.
-      Data: The four data colors are pixel-identical to the light render (only chrome flipped); boundary strokes between area layers are now near-black instead of off-white, correctly matching the page background token in each theme. Brand green stays vivid on the dark surface.
+      Background: Warm near-black, sampled RGB(26,26,23) — matches #1A1A17, not pure black.
+      Chrome: Title, axis titles, tick labels, legend text, and the vline annotation all render in light/off-white tones (INK / INK_SOFT tokens correctly threaded through); no dark-on-dark failures found anywhere.
+      Data: Legend swatches are pixel-identical to the light render (#009E73/#C475FD/#4467A3/#BD8233 confirmed via direct RGB sampling of the legend key rectangles) — only chrome (background, text, gridlines, area-boundary strokes) flips between themes, as required.
       Legibility verdict: PASS
+
+    Note: the campaign-launch dashed vline is intended to use the amber semantic accent (#DDCC77, alpha=0.9) per the code, but pixel-sampling shows it actually renders as a neutral gray in both themes (RGB ~126,126,120 light / ~137,136,130 dark) — visually still legible and unobtrusive, but not the intended amber. See review_weaknesses.json for detail; this does not affect the PASS legibility verdicts above.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -62,73 +71,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, well-proportioned, readable in both
-          themes
+        comment: All chrome and annotation text readable in both themes; annotation
+          fontsize bumped to 4.1 per attempt-1 feedback, now at parity with surrounding
+          text
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between text, legend, or data elements
+        comment: Annotation, gridlines, legend, and tick labels have no collisions
+          (verified via crop)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Area fills and boundary strokes clearly visible and well adapted
-          to 24-month density
+        comment: Bands clearly separated by page-background strokes; thin Referral
+          band still clearly visible at this canvas scale
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe, series distinguishable by both color and
-          stack position
+        comment: Green/purple/blue/amber bands are CVD-distinguishable, no red-green
+          as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Full panel border and vertical gridlines from the prior review are
-          removed; balanced margins, nothing cut off
+        comment: 3200x1800 confirmed (no canvas-gate failure file); no clipping at
+          any edge (pixel-verified)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (Revenue in Thousands USD)
+        comment: Y-axis has units (Thousands), descriptive labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining series in canonical Imprint order,
-          theme-correct chrome in both renders'
+        comment: 'First series #009E73; canonical Imprint order confirmed by direct
+          RGB sampling of legend swatches, identical across both themes'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful palette use and boundary-stroke detail, but still a fairly
-          standard ggplot2-style composition
+        passed: true
+        comment: Custom palette, alpha blending, page-bg strokes for band definition;
+          intended amber accent for the event marker still doesn't render (see weaknesses),
+          capping this below top marks
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle single-axis grid, implicit L-shaped frame, generous whitespace;
-          legend retains a visible box border
+        comment: Panel border removed, y-only subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No visual hierarchy or emphasis beyond the raw stack; unaddressed
-          from prior review
+        passed: true
+        comment: Campaign-launch annotation gives a clear focal point tied to the
+          visible inflection
     spec_compliance:
       score: 15
       max: 15
@@ -138,26 +149,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart
+        comment: geom_area with position="stack"
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Zero baseline, largest-at-bottom ordering, semi-transparent fills,
-          legend all present
+        comment: Continuous time axis, 4 stacked series, legend, zero baseline, semi-transparent
+          fills
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: x/y correct, all series shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; legend labels match data categories
+        comment: Exact mandated title format; legend labels match channel names
     data_quality:
       score: 15
       max: 15
@@ -167,19 +178,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows seasonality, trend, and multi-series composition
+        comment: Shows ordering, stacking, transparency, zero baseline, and a narrative
+          inflection
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic monthly revenue-by-category scenario
+        comment: Plausible, neutral website-acquisition-channel scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible revenue magnitudes and proportions
+        comment: Tens-of-thousands monthly visits, sensible for a mid-size site
     code_quality:
       score: 10
       max: 10
@@ -189,7 +201,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports/data/plot/save, no functions or classes
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,13 +219,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake functionality
+        comment: Real tooltip feature, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png/.html output, current API
+        comment: plot-{theme}.png + .html, current ggsave API
     library_mastery:
       score: 7
       max: 10
@@ -223,25 +235,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic geom_area/position=stack/scale_fill_manual usage
+        comment: Idiomatic ggplot grammar, geom_area+stack, scale_fill_manual
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: layer_tooltips with formatted per-series tooltip content is a lets-plot-distinctive
-          interactive feature (not visible in static PNG, credited per fairness rules)
+        passed: false
+        comment: Only layer_tooltips() showcased; attempt-1 request for a second distinctive
+          touch was not addressed
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   - time-series
   styling:
+  - publication-ready
   - alpha-blending
-  - edge-highlighting
