@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-17
@@ -43,12 +43,16 @@ custom_style = Style(
     opacity=".85",
     opacity_hover=".95",
     colors=IMPRINT,
-    title_font_size=66,
+    title_font_size=72,
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
     stroke_width=2.5,
+    guide_stroke_dasharray="none",
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_dasharray="none",
+    major_guide_stroke_color=INK_MUTED,
 )
 
 # Create stacked area chart
@@ -56,7 +60,7 @@ chart = pygal.StackedLine(
     width=3200,
     height=1800,
     style=custom_style,
-    title="area-stacked · pygal · anyplot.ai",
+    title="area-stacked · python · pygal · anyplot.ai",
     x_title="Year",
     y_title="Electricity Consumption (TWh)",
     fill=True,
@@ -71,9 +75,6 @@ chart = pygal.StackedLine(
     legend_box_size=34,
     truncate_legend=-1,
     show_dots=False,
-    interpolate="hermite",
-    interpolation_parameters={"type": "cardinal", "c": 0.5},
-    interpolation_precision=120,
     value_formatter=lambda v: f"{v:,.0f} TWh",
     margin=60,
     margin_bottom=120,
