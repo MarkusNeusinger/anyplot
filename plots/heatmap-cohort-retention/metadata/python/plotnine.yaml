@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: heatmap-cohort-retention
 created: '2026-03-16T20:45:25Z'
-updated: '2026-08-17T19:07:14Z'
+updated: '2026-08-17T19:21:12Z'
 generated_by: claude-sonnet
 workflow_run: 32056959727
 issue: 4570
@@ -12,50 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 95
 review:
   strengths:
-  - Correctly implements the triangular cohort structure -- Jan 2024 has 10 columns
-    down to Oct 2024 with 1 column, exactly matching the spec's 'more recent cohorts
-    have fewer elapsed periods' requirement.
-  - 'Sequential Imprint colormap (imprint_seq: #009E73 high-retention to #4467A3 low-retention)
-    applied correctly to the continuous retention_rate fill, with theme-adaptive background/text/grid
-    tokens correctly threaded through both renders.'
-  - 'Strong data storytelling: an annotation callout quantifies the Jan-to-Jun Month-4
-    retention improvement (+12pp) and the subtitle calls out the Mar 2024 pricing-change
-    churn spike -- both narratives are visibly backed by the underlying data (the
-    Mar 2024 row is visibly depressed relative to its neighbors).'
-  - Cohort size is shown inline in the y-axis labels ('Jan 2024 (n=1,200)') as required
-    by the spec, and period 0 is 100% retention for every cohort.
-  - 'Clean KISS code: seeded RNG (np.random.seed(42)), no functions/classes, only
-    used imports, and correct plot.save(f''plot-{THEME}.png'', dpi=400, ...) output
-    call.'
+  - 'Both prior weaknesses are cleanly fixed: x-axis now reads "Month 0"..."Month
+    9" per spec, and the callout box was enlarged (~4x area) with a second data-backed
+    insight, eliminating the dead whitespace below the triangle.'
+  - The plot.draw() -> matplotlib Figure/Axes handoff for the callout patch is a genuine
+    plotnine-distinctive technique, directly addressing the Attempt 1 Library Mastery
+    feedback.
+  - 'Sequential Imprint colormap (imprint_seq: #009E73 -> #4467A3) correctly applied
+    to the continuous retention_rate fill, with theme-adaptive chrome correctly threaded
+    through both renders - verified pixel-identical data colors across light/dark.'
+  - No edge clipping anywhere (verified by cropping title, legend, and rotated x-axis
+    tick label regions).
+  - 'Clean KISS code: seeded RNG, only used imports, correct save call.'
   weaknesses:
-  - X-axis tick labels read 'M0'..'M9' rather than the spec-suggested 'Month 0', 'Month
-    1', etc. -- expand the abbreviation to match the spec wording (SC-02).
-  - 'Library Mastery is generic: geom_tile + geom_text + scale_fill_gradient + annotate
-    is straightforward grammar-of-graphics layering that an R ggplot2 implementation
-    would produce almost identically -- no plotnine-distinctive technique is leveraged
-    (LM-02).'
-  - Noticeable dead whitespace remains in the bottom-right of the panel below the
-    triangular heatmap, beyond what the annotation box and legend occupy -- rebalance
-    by enlarging the annotation, repositioning the legend, or tightening the panel
-    bounds to the triangle's extent (VQ-05).
+  - Title width sits close to ~89% of the square canvas - comfortable margins remain
+    and nothing clips, but there is little room left to grow if the title or subtitle
+    lengthens further.
+  - LM-02 distinctive-feature use, while legitimate, is a fairly common matplotlib-interop
+    pattern rather than a plotnine-unique grammar-of-graphics extension - still somewhat
+    generic relative to the library's deeper extension points.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Bold dark title "heatmap-cohort-retention · python · plotnine · anyplot.ai" and italic dark-gray subtitle are both fully visible with generous padding above/below, not clipped. X-axis label "Months Since Signup" and "M0"-"M9" tick labels are dark/gray and clearly legible. Y-axis cohort labels ("Jan 2024 (n=1,200)" ... "Oct 2024 (n=1,020)") are dark and readable. Legend box "Retention %" with a colorbar and 0/25/50/75/100 ticks sits to the right of the heatmap on the light background, fully legible.
-      Data: Triangular heatmap with 10 rows (Jan-Oct 2024) and up to 10 columns; cell fill runs from brand green (#009E73, high retention) through teal to blue (#4467A3, low retention). White bold percentage labels are legible in every cell, including mid-tone teal cells. An off-white annotation box in the empty lower-right area reads "Month 4 retention improved +12pp from Jan→Jun 2024" with a subtle border, not overlapping any data cells.
+      Background: warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: bold dark title and italic gray subtitle at top, fully visible with clean margins, not clipped. Y-axis cohort+size labels horizontal and readable. X-axis reads "Month 0" through "Month 9" (fixed from Attempt 1's abbreviated "M0"-"M9"), rotated 45 degrees, right-aligned, under the axis title "Months Since Signup". "Retention %" colorbar legend at right, comfortably inside the canvas with visible right margin. All chrome elements confirmed readable.
+      Data: triangular 10x10 heatmap, Jan 2024 (10 cells) at top down to Oct 2024 (1 cell) at bottom. Cell fill runs from brand green #009E73 (high retention) through teal to blue #4467A3 (low retention) - correct imprint_seq polarity. Bold white percentage labels legible in every cell against both green and blue fills. Rounded off-white callout box fills most of the previously-empty triangle area, with two data-backed insight lines.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Title and subtitle switch to light/off-white text, fully visible and not clipped. Tick labels and axis label switch to light gray/off-white and remain clearly legible against the dark background. Legend box switches to a dark elevated fill with light text, still fully readable.
-      Data: Cell fill colors are visually identical to the light render (#009E73 high-retention green through #4467A3 low-retention blue) -- only chrome flipped, confirming palette consistency. White bold percentage labels remain legible on every cell. The annotation box switches to a dark elevated background with light text and a subtle border, still clearly readable with no dark-on-dark failures observed.
+      Background: warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: title, subtitle, axis label, tick labels, cohort labels, and legend text all switch to light/off-white and remain clearly legible. No dark-on-dark failures observed anywhere.
+      Data: heatmap cell fill colors are pixel-identical to the light render (#009E73 -> #4467A3), confirming only chrome flipped. Callout box switches to dark elevated background (#242420) with light text and subtle border, fully readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,78 +56,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); all text readable in both
-          themes at full size, including white percentage labels on mid-tone teal
-          cells.
+        comment: All sizes explicit and readable in both themes; title spans ~89%
+          of square canvas width, tight but not clipped
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions; annotation box placed cleanly in empty
-          triangle space.
+        comment: No overlap anywhere, including new rotated x-axis labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tile size and spacing appropriate for a 10x10 grid; nothing crowded
-          or invisible.
+        comment: Tile fills and text labels clearly visible at density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient with white bold text gives good
-          contrast throughout; no red-green reliance.
+        comment: Good contrast, CVD-safe sequential ramp
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall proportions but noticeable dead whitespace in the panel
-          beyond the triangle, annotation, and legend.
+        comment: Enlarged callout box now fills the previously-empty triangle; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Months Since Signup'' is descriptive; y-axis categories carry
-          cohort + size context.'
+        comment: Descriptive axis title, self-labeled y-axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq stops (#009E73 / #4467A3) used correctly for continuous
-          data; theme-correct chrome in both renders.'
+        comment: imprint_seq gradient, correct theme-adaptive chrome in both renders
     design_excellence:
-      score: 16
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful brand-colored gradient, refined cohort labels, subtitle,
-          and annotation lift this above a generic default.
+        comment: Custom brand-anchored sequential gradient, refined rounded callout
+          card
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Grid removed, subtle panel border, clean tile separators via PAGE_BG
-          stroke.
+        comment: Grid removed, subtle panel border, generous whitespace, clean tile
+          separators
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Subtitle + annotation callout jointly surface two clear insights
-          (churn spike, onboarding improvement) backed by the actual data.
+        comment: Subtitle plus two-line callout surface two distinct data-backed insights
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,27 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular cohort heatmap.
+        comment: Correct triangular cohort heatmap
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All required features present except x-axis labels use 'M0'..'M9'
-          instead of the spec-suggested 'Month 0', 'Month 1', ...
+        comment: X-axis now reads Month 0..Month 9 as spec required; all other features
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=period, Y=cohort, fill=retention_rate -- correct.
+        comment: X/Y correctly assigned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend title 'Retention %'
-          matches the data.
+        comment: Title format correct, legend matches data
     data_quality:
       score: 15
       max: 15
@@ -172,21 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows decay curve, cross-cohort improvement trend, and a churn-spike
-          outlier cohort.
+        comment: Decay curve, churn spike, improving-cohort trend all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic SaaS retention scenario.
+        comment: Neutral SaaS retention scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Exponential decay, realistic cohort sizes (980-1450), values clipped
-          to a sensible 5-100 range.
+        comment: Realistic decay/retention values
     code_quality:
       score: 10
       max: 10
@@ -196,55 +179,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes.
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports.
+        comment: Only used imports including FancyBboxPatch
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex, no fake UI/functionality.
+        comment: Native patch/text annotations, not fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', ...) -- current API, correct filename.
+        comment: fig.savefig(f'plot-{THEME}.png', dpi=400)
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of geom_tile/geom_text/scale_fill_gradient/annotate/theme_minimal,
-          standard grammar-of-graphics layering.
+        comment: Idiomatic ggplot() + geom_tile + scale_fill_gradient layering
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Generic usage -- the same code structure would look nearly identical
-          in ggplot2 (R); no plotnine-specific technique leveraged.
-  verdict: REJECTED
+        passed: true
+        comment: Drops into matplotlib Figure/Axes via plot.draw() for a native callout
+          patch, closing the Attempt 1 gap vs R ggplot2
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - matplotlib
   techniques:
   - annotations
+  - patches
   - colorbar
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
