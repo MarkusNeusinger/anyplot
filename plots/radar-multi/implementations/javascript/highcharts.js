@@ -84,10 +84,16 @@ function polygonPath(fractionAt) {
 }
 
 // --- Concentric grid rings --------------------------------------------------
-RINGS.forEach((level) => {
+RINGS.forEach((level, i) => {
   chart.renderer
     .path(polygonPath(() => level / SCALE_MAX))
-    .attr({ stroke: t.grid, "stroke-width": 1, fill: "none", zIndex: 1 })
+    .attr({
+      stroke: t.grid,
+      "stroke-width": i === RINGS.length - 1 ? 1.5 : 1,
+      "stroke-linejoin": "round",
+      fill: "none",
+      zIndex: 1,
+    })
     .add();
 });
 
@@ -96,7 +102,7 @@ axes.forEach((label, i) => {
   const [tipX, tipY] = project(i, 1);
   chart.renderer
     .path(["M", centerX, centerY, "L", tipX, tipY])
-    .attr({ stroke: t.inkSoft, "stroke-width": 1, zIndex: 1 })
+    .attr({ stroke: t.inkSoft, "stroke-width": 1, "stroke-linecap": "round", zIndex: 1 })
     .add();
 
   const angle = angleFor(i);
@@ -115,9 +121,9 @@ axes.forEach((label, i) => {
 RINGS.forEach((level) => {
   const [, ringY] = project(0, level / SCALE_MAX);
   chart.renderer
-    .text(String(level), centerX + 8, ringY + 4)
+    .text(String(level), centerX + 8, ringY + 5)
     .attr({ align: "left", zIndex: 4 })
-    .css({ fontSize: "12px", color: t.inkSoft, fontFamily: "inherit" })
+    .css({ fontSize: "14px", fontWeight: "500", color: t.inkSoft, fontFamily: "inherit" })
     .add();
 });
 
@@ -139,8 +145,8 @@ models.forEach((model) => {
 
   vertices.forEach(([x, y]) => {
     chart.renderer
-      .circle(x, y, 6)
-      .attr({ fill: model.color, stroke: t.pageBg, "stroke-width": 1.5, zIndex: 4 })
+      .circle(x, y, 9)
+      .attr({ fill: model.color, stroke: t.pageBg, "stroke-width": 2, zIndex: 4 })
       .add();
   });
 
@@ -154,8 +160,8 @@ models.forEach((model) => {
       animation: false,
       marker: {
         enabled: false,
-        radius: 7,
-        states: { hover: { enabled: true, radius: 7, lineWidth: 1.5, lineColor: t.pageBg } },
+        radius: 9,
+        states: { hover: { enabled: true, radius: 9, lineWidth: 2, lineColor: t.pageBg } },
       },
       data: vertices.map(([x, y], i) => ({
         x: x - chart.plotLeft,
@@ -183,13 +189,14 @@ const legendY = chart.plotTop + chart.plotHeight + 70;
 
 models.forEach((model, i) => {
   chart.renderer
-    .rect(cursorX, legendY - swatchSize / 2, swatchSize, swatchSize, 3)
-    .attr({ fill: model.color, zIndex: 5 })
+    .rect(cursorX, legendY - swatchSize / 2, swatchSize, swatchSize, swatchSize / 3)
+    .attr({ fill: model.color, stroke: t.pageBg, "stroke-width": 1.5, zIndex: 5 })
+    .shadow({ color: t.ink, opacity: 0.12, width: 2, offsetX: 0, offsetY: 1 })
     .add();
   chart.renderer
     .text(model.name, cursorX + swatchSize + 10, legendY + swatchSize / 2 - 2)
     .attr({ align: "left", zIndex: 5 })
-    .css({ fontSize: `${legendFontSize}px`, color: t.ink, fontFamily: "inherit" })
+    .css({ fontSize: `${legendFontSize}px`, fontWeight: "500", color: t.ink, fontFamily: "inherit" })
     .add();
   cursorX += swatchSize + 10 + labelWidths[i] + itemGap;
 });
