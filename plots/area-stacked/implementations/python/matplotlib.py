@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: matplotlib 3.11.1 | Python 3.13.15
 Quality: 87/100 | Updated: 2026-08-17
@@ -47,7 +47,10 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Emphasize scale hierarchy: larger sectors read more opaque, smaller ones
-# lighter, so the eye naturally weights the areas by their magnitude.
+# lighter, so the eye naturally weights the areas by their magnitude. Built
+# manually (cumsum + fill_between) rather than ax.stackplot() so each layer
+# can carry its own alpha and an edge-stroke boundary; stackplot applies one
+# uniform style to every band and can't express that per-layer hierarchy.
 alphas = [0.88, 0.82, 0.76, 0.70]
 cumulative = np.cumsum(data, axis=0)
 baseline = np.zeros(n_months)
@@ -56,6 +59,20 @@ for top, color, alpha, label in zip(cumulative, IMPRINT, alphas, categories, str
     # Thin edge stroke at each layer boundary for stronger definition between areas
     ax.plot(t, top, color=color, linewidth=1.3, alpha=1.0)
     baseline = top
+
+# Callout the overall growth story: total consumption across all sectors
+total = cumulative[-1]
+growth_pct = (total[-1] - total[0]) / total[0] * 100
+ax.annotate(
+    f"+{growth_pct:.0f}% total consumption\nover 3 years",
+    xy=(t[-1], total[-1]),
+    xytext=(t[-1] - 9, total[-1] + total[-1] * 0.14),
+    fontsize=8.5,
+    color=INK,
+    ha="left",
+    va="bottom",
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.1},
+)
 
 # X-axis formatting (quarterly-ish labels across the 3-year span)
 tick_positions = [0, 6, 12, 18, 24, 30, 35]
@@ -66,7 +83,7 @@ ax.set_xticklabels(tick_labels)
 # Labels and styling
 ax.set_xlabel("Month", fontsize=10, color=INK)
 ax.set_ylabel("Electricity Consumption (GWh)", fontsize=10, color=INK)
-ax.set_title("area-stacked · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_title("area-stacked · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 # Grid
@@ -79,17 +96,14 @@ ax.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 
-# Legend
-leg = ax.legend(loc="upper left", fontsize=8)
+# Legend (borderless, per the Decoration Removal Checklist)
+leg = ax.legend(loc="upper left", fontsize=8, frameon=False)
 if leg:
-    leg.get_frame().set_facecolor(ELEVATED_BG)
-    leg.get_frame().set_edgecolor(INK_SOFT)
-    leg.get_frame().set_linewidth(0.8)
     for text in leg.get_texts():
         text.set_color(INK_SOFT)
 
-# Ensure y-axis starts at zero
-ax.set_ylim(bottom=0)
+# Ensure y-axis starts at zero; extra headroom above the stack for the growth callout
+ax.set_ylim(bottom=0, top=cumulative[-1].max() * 1.22)
 ax.set_xlim(0, n_months - 1)
 
 plt.tight_layout()
