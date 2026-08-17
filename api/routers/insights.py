@@ -145,6 +145,8 @@ class PlotOfTheDayResponse(BaseModel):
     language: str
     quality_score: float
     preview_url: str | None = None
+    preview_url_light: str | None = None
+    preview_url_dark: str | None = None
     image_description: str | None = None
     code: str | None = None
     library_version: str | None = None
@@ -422,7 +424,7 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
     today = date.today().isoformat()
 
     # Collect candidates: implementations with quality_score >= 90 (lightweight, no code loaded)
-    candidates: list[tuple[str, str, str, str, str, float, str]] = []
+    candidates: list[tuple[str, str, str, str, str, float, str, str | None]] = []
     for spec in all_specs:
         for impl in spec.impls:
             if impl.quality_score is not None and impl.quality_score >= 90 and impl.preview_url:
@@ -436,6 +438,7 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
                         language,
                         impl.quality_score,
                         impl.preview_url,
+                        impl.preview_url_dark,
                     )
                 )
 
@@ -445,7 +448,9 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
     # Deterministic selection based on date
     seed = int(hashlib.md5(today.encode()).hexdigest(), 16)  # noqa: S324
     idx = seed % len(candidates)
-    spec_id, spec_title, description, library_id, language, quality_score, preview_url = candidates[idx]
+    spec_id, spec_title, description, library_id, language, quality_score, preview_url, preview_url_dark = candidates[
+        idx
+    ]
 
     # Load deferred fields (code, image_description) for just this one impl
     full_impl = await impl_repo.get_by_spec_and_library(spec_id, library_id)
@@ -459,6 +464,8 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
         language=language,
         quality_score=quality_score,
         preview_url=preview_url,
+        preview_url_light=preview_url,
+        preview_url_dark=preview_url_dark,
         image_description=full_impl.review_image_description if full_impl else None,
         code=strip_noqa_comments(full_impl.code) if full_impl and full_impl.code else None,
         library_version=full_impl.library_version if full_impl else None,
