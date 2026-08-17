@@ -142,11 +142,19 @@ const totalStart = series[series.length - 1][0][1];
 const totalEnd = series[series.length - 1][lastIdx][1];
 const growthPct = Math.round(((totalEnd - totalStart) / totalStart) * 100);
 
+// Which sector drove the most absolute growth — a second layer of insight
+// beyond the aggregate total, read straight off each sector's own values.
+const topGrower = sectors.reduce((best, s) => {
+  const gain = s.values[s.values.length - 1] - s.values[0];
+  const pct = Math.round((gain / s.values[0]) * 100);
+  return gain > best.gain ? { label: s.label, gain, pct } : best;
+}, { label: "", gain: -Infinity, pct: 0 });
+
 const callout = g.append("g").attr("transform", "translate(8,8)");
 callout
   .append("rect")
-  .attr("width", 300)
-  .attr("height", 58)
+  .attr("width", 320)
+  .attr("height", 80)
   .attr("rx", 8)
   .attr("fill", t.elevatedBg)
   .attr("stroke", t.grid);
@@ -165,14 +173,21 @@ callout
   .style("font-size", "16px")
   .style("font-weight", "600")
   .text(`${d3.format(",")(totalStart)} → ${d3.format(",")(totalEnd)} TWh (+${growthPct}%)`);
+callout
+  .append("text")
+  .attr("x", 16)
+  .attr("y", 68)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .text(`${topGrower.label} led the gain: +${d3.format(",")(topGrower.gain)} TWh (+${topGrower.pct}%)`);
 
 // --- Title --------------------------------------------------------------
 svg
   .append("text")
   .attr("x", width / 2)
-  .attr("y", 50)
+  .attr("y", 52)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "28px")
+  .style("font-size", "32px")
   .style("font-weight", "600")
   .text("area-stacked · javascript · d3 · anyplot.ai");
