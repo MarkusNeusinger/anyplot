@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 90/100 | Created: 2026-05-07
+Library: seaborn 0.13.2 | Python 3.13.12
+Quality: 90/100 | Updated: 2026-08-17
 """
 
 import os
@@ -25,8 +25,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1 — ICE lines
-PDP_COLOR = "#C475FD"  # Okabe-Ito position 2 — PDP overlay
+BRAND = "#009E73"  # Imprint palette position 1 — ICE lines
+PDP_COLOR = "#C475FD"  # Imprint palette position 2 — PDP overlay
 
 sns.set_theme(
     style="ticks",
@@ -39,7 +39,7 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.12,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
@@ -75,41 +75,40 @@ obs_ids = np.repeat(np.arange(n_obs), n_grid)
 sqft_vals = np.tile(sqft_grid, n_obs)
 df_ice = pd.DataFrame({"obs_id": obs_ids, "sqft": sqft_vals, "price": ice_matrix.ravel()})
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot — 3200x1800 canvas (figsize x dpi), bbox_inches left at default (None)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # ICE lines — one per observation via seaborn lineplot with units
 n_lines_before = len(ax.lines)
-sns.lineplot(data=df_ice, x="sqft", y="price", units="obs_id", estimator=None, color=BRAND, linewidth=0.8, ax=ax)
+sns.lineplot(data=df_ice, x="sqft", y="price", units="obs_id", estimator=None, color=BRAND, linewidth=0.6, ax=ax)
 for line in ax.lines[n_lines_before:]:
     line.set_alpha(0.15)
 
-# PDP overlay — bold average marginal effect
-ax.plot(sqft_grid, pdp, color=PDP_COLOR, linewidth=4, zorder=5)
+# PDP overlay — bold average marginal effect, drawn via seaborn (not raw matplotlib)
+sns.lineplot(x=sqft_grid, y=pdp, color=PDP_COLOR, linewidth=3, ax=ax, zorder=5, label="Partial Dependence (PDP)")
 
 # Rug plot — observed sqft distribution
 sns.rugplot(x=sqft, color=INK_SOFT, alpha=0.6, height=0.03, expand_margins=False, ax=ax)
 
 # Style
-ax.set_xlabel("Square Footage (sq ft)", fontsize=20, color=INK)
-ax.set_ylabel("Predicted House Price ($K)", fontsize=20, color=INK)
-ax.set_title("House Price Predictions · ice-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+ax.set_xlabel("Square Footage (sq ft)", fontsize=10, color=INK)
+ax.set_ylabel("Predicted House Price ($K)", fontsize=10, color=INK)
+ax.set_title("ice-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
+sns.despine(ax=ax)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, color=INK)
 
-ice_handle = plt.Line2D([0], [0], color=BRAND, alpha=0.5, linewidth=2, label="ICE curves (n=100)")
-pdp_handle = plt.Line2D([0], [0], color=PDP_COLOR, linewidth=4, label="Partial Dependence (PDP)")
+ice_handle = plt.Line2D([0], [0], color=BRAND, alpha=0.5, linewidth=2, label=f"ICE curves (n={n_obs})")
+pdp_handle, pdp_label = ax.get_legend_handles_labels()
 legend = ax.legend(
-    handles=[ice_handle, pdp_handle], fontsize=16, framealpha=1.0, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
+    handles=[ice_handle] + pdp_handle, fontsize=8, framealpha=1.0, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
 )
 for text in legend.get_texts():
     text.set_color(INK)
 
 # Save
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
