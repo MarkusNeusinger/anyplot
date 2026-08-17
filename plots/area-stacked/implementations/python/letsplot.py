@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-17
@@ -41,6 +41,7 @@ RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Imprint palette (first series always #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+AMBER = "#DDCC77"  # semantic anchor for the campaign-launch event marker
 
 # Data: monthly website visits by acquisition channel, Jan 2023 - Aug 2024
 np.random.seed(42)
@@ -89,21 +90,21 @@ stack_top_at_launch = (
 )
 callout_y = stack_top_at_launch + 18
 
-# Richer tooltip: channel, month, and formatted visits (lets-plot-distinctive
+# Richer tooltip: bolded channel title plus formatted visits (lets-plot-distinctive
 # interactive feature, beyond a generic ggplot2-style port)
-area_tooltips = layer_tooltips().line("@Channel").format("@Visits", ".0f").line("Visits|@Visits k")
+area_tooltips = layer_tooltips().title("@Channel").format("@Visits", ".0f").line("Visits|@Visits k")
 
 # Create stacked area chart
 plot = (
     ggplot(df, aes(x="MonthNum", y="Visits", fill="Channel"))
     + geom_area(alpha=0.85, position="stack", size=0.5, color=PAGE_BG, tooltips=area_tooltips)
-    + geom_vline(xintercept=campaign_start, linetype="dashed", color=INK_SOFT, size=0.6, alpha=0.7)
+    + geom_vline(xintercept=campaign_start, linetype="dashed", color=AMBER, size=0.8, alpha=0.9)
     + geom_text(
-        x=campaign_start, y=callout_y, label="Paid social campaign launch", size=3.4, color=INK, hjust=0, nudge_x=0.4
+        x=campaign_start, y=callout_y, label="Paid social campaign launch", size=4.1, color=INK, hjust=0, nudge_x=0.4
     )
     + scale_fill_manual(values=IMPRINT)
     + scale_x_continuous(name="Month", breaks=[0, 6, 12, 19], labels=["Jan 2023", "Jul 2023", "Jan 2024", "Aug 2024"])
-    + scale_y_continuous(name="Website Visits (Thousands)")
+    + scale_y_continuous(name="Website Visits (Thousands)", format=",d")
     + labs(title="area-stacked · python · letsplot · anyplot.ai", fill="Acquisition Channel")
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
