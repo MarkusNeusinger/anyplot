@@ -1786,6 +1786,8 @@ class TestInsightsRouter:
         mock_impl.library_version = "3.10.0"
         mock_impl.python_version = "3.13.11"
         mock_impl.language_version = "3.13.11"
+        mock_impl.preview_url_light = TEST_IMAGE_URL
+        mock_impl.preview_url_dark = dark_url
         mock_impl_repo = MagicMock()
         mock_impl_repo.get_by_spec_and_library = AsyncMock(return_value=mock_impl)
 

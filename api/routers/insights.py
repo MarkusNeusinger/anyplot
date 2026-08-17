@@ -455,6 +455,12 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
     # Load deferred fields (code, image_description) for just this one impl
     full_impl = await impl_repo.get_by_spec_and_library(spec_id, library_id)
 
+    # Prefer preview URLs from the fresh per-impl load so they can't drift from
+    # the code/metadata below; the candidate-snapshot values are the fallback.
+    if full_impl:
+        preview_url = full_impl.preview_url_light or preview_url
+        preview_url_dark = full_impl.preview_url_dark or preview_url_dark
+
     return PlotOfTheDayResponse(
         spec_id=spec_id,
         spec_title=spec_title,
