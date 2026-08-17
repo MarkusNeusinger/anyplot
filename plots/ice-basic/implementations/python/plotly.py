@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: plotly 6.9.0 | Python 3.13.15
 Quality: 87/100 | Updated: 2026-08-17
@@ -94,6 +94,12 @@ fig.add_trace(
     )
 )
 
+# Annotate the region where house-age most strongly separates predictions
+spread = ice_preds.max(axis=0) - ice_preds.min(axis=0)
+divergence_idx = int(np.argmax(spread))
+divergence_x = sqft_grid[divergence_idx]
+divergence_y = ice_preds[:, divergence_idx].max()
+
 # Rug plot — distribution of observed square footage values
 y_range = ice_preds.max() - ice_preds.min()
 y_rug = ice_preds.min() - y_range * 0.05
@@ -141,7 +147,7 @@ fig.update_layout(
     autosize=False,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    title=dict(text="ice-basic · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"),
+    title=dict(text="ice-basic · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(
         title=dict(text="Square Footage (sq ft)", font=dict(size=12, color=INK)),
         tickfont=dict(size=10, color=INK_SOFT),
@@ -172,6 +178,21 @@ fig.update_layout(
         yanchor="top",
     ),
     margin=dict(l=70, r=110, t=60, b=50),
+)
+
+fig.add_annotation(
+    x=divergence_x,
+    y=divergence_y,
+    text="House age divergence widest here",
+    showarrow=True,
+    arrowhead=2,
+    arrowcolor=INK_SOFT,
+    ax=-120,
+    ay=50,
+    font=dict(size=10, color=INK),
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
 )
 
 # Save
