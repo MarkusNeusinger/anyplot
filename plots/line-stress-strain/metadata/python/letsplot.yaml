@@ -1,88 +1,119 @@
 library: letsplot
+language: python
 specification_id: line-stress-strain
 created: '2026-03-20T21:25:05Z'
-updated: '2026-03-20T21:53:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23363004980
+updated: '2026-08-17T20:08:47Z'
+generated_by: claude-sonnet
+workflow_run: 32062509344
 issue: 4413
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/letsplot/plot.html
-quality_score: 92
+language_version: 3.13.15
+library_version: 4.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/letsplot/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent data storytelling with colored region bands that immediately communicate
-    the three deformation phases
-  - All spec requirements fully implemented including 0.2% offset line and elastic
-    modulus annotation
-  - Textbook-accurate mild steel properties with realistic noise
-  - Strong lets-plot idiomatic usage with distinctive tooltip features
-  - Clean, well-organized code with consolidated annotation DataFrames
+  - 'Excellent spec coverage: elastic, yield (0.2% offset method), strain hardening,
+    necking, and fracture regions are all labeled and the four mechanical milestones
+    are individually annotated'
+  - Distinctive lets-plot layering — geom_rect region bands, geom_segment connector
+    lines from data points to labels, and interactive layer_tooltips() all sharing
+    a single scale_fill_manual across geom_rect and geom_point
+  - Direct labeling (region bands + connector-line annotations) replaces a legend
+    entirely, keeping the reading path close to the data
+  - 'Physically plausible mild-steel values: E ≈ 210 GPa, yield 250 MPa, UTS 400 MPa,
+    ~35% elongation with realistic necking-driven engineering-stress drop to fracture'
+  - 'Clean theme-adaptive chrome: horizontal-only grid, spines/ticks removed, both
+    renders keep #FAF8F1/#1A1A17 backgrounds with fully legible text'
+  - Title matches the mandated `line-stress-strain · python · letsplot · anyplot.ai`
+    format exactly
   weaknesses:
-  - Minor crowding of annotations in the elastic region (small area with multiple
-    labels)
-  - Red/purple color pair could be slightly improved for colorblind accessibility
-  image_description: 'The plot displays an engineering stress-strain curve for mild
-    steel on a light gray background. The x-axis shows "Engineering Strain" (0 to
-    0.35) and the y-axis shows "Engineering Stress (MPa)" (0 to 450). The main curve
-    is drawn as a thick blue line starting from the origin, rising steeply through
-    the elastic region, showing a brief yield plateau around 250 MPa, then curving
-    through strain hardening up to ~400 MPa (UTS), and finally declining through the
-    necking region to fracture at ~280 MPa. Three colored background bands distinguish
-    the regions: light blue for Elastic, light yellow for Strain Hardening, and light
-    pink for Necking, each labeled in gray italic text. Key points are marked with
-    filled circles: purple for Yield Point (250 MPa), red for UTS (400 MPa), and gray
-    for Fracture. A dashed pink line shows the 0.2% offset construction, and "E =
-    210 GPa" is annotated in blue italic. Dotted gray connector lines link points
-    to their labels. The title reads "line-stress-strain · letsplot · pyplots.ai"
-    in bold at the top. Only horizontal grid lines are shown, subtle and light.'
+  - 'Imprint position 1 (#009E73, the mandated first-series green) is never used anywhere
+    in the chart — the main curve and the Elastic region band both use IMPRINT_PALETTE[2]
+    (blue) instead. Recolor the primary data series (the stress-strain curve itself)
+    to #009E73 and shift the other role colors (regions, yield/UTS/fracture markers)
+    down the palette so the first series is Imprint green.'
+  - The Fracture point marker and its 'Fracture' label are colored with INK_SOFT,
+    a theme-adaptive chrome token, so they visibly change color between plot-light.png
+    (dark grayish) and plot-dark.png (light gray) — data-element colors must stay
+    identical across themes, only chrome (background/text/grid) should flip. Assign
+    the fracture point/label a fixed Imprint palette color instead.
+  - The 0.2% offset construction line (color_offset = INK_SOFT) has the same theme-flip
+    issue as the fracture point — give it a fixed neutral hex instead of a theme token.
+  - 'The elastic region (strain 0–0.015) is visually crowded: the near-vertical main
+    curve, the dashed 0.2% offset line, the ''E = 210 GPa'' annotation, and the yield-point
+    label all cluster in a narrow horizontal band, making that area harder to parse
+    than the rest of the plot'
+  - The 'Necking' region label sits close to the descending curve near the right edge
+    of that band — nudge it up or increase its y-offset slightly to guarantee clear
+    separation from the line in all renders
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "line-stress-strain · python · letsplot · anyplot.ai" at top, dark axis titles ("Engineering Strain" / "Engineering Stress (MPa)"), dark-gray tick labels on both axes, subtle horizontal-only gridlines. All chrome text is clearly readable against the light background.
+      Data: Three pastel-alpha region bands (blue "Elastic", tan "Strain Hardening", mauve "Necking") sit behind a thick blue (#4467A3) stress-strain curve. Key points are marked with white-ringed filled circles: lavender "Yield Point (250 MPa)", red "UTS (400 MPa)", and a dark-ink "Fracture" point, each connected to its text label by a thin dotted segment. A dashed near-vertical line marks the 0.2% offset construction line near the origin, with a small italic "E = 210 GPa" annotation. First-series Imprint green (#009E73) is not used anywhere in the chart.
+      Legibility verdict: PASS (all text readable; the elastic-region cluster near the origin is a bit dense but still legible).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title and axis titles render in off-white/light text, tick labels in light gray, gridlines subtle light gray on dark. No dark-on-dark failures — all chrome text is clearly legible against the dark background.
+      Data: Main curve, region bands, Yield-Point marker/label (lavender), and UTS marker/label (red) are pixel-identical in hue to the light render, confirming the categorical data colors do not shift with theme. However, the Fracture point marker and label flip from a dark ink tone in the light render to a light gray tone here, and the 0.2% offset dashed line similarly lightens — both are bound to the theme-adaptive INK_SOFT token rather than a fixed Imprint color, so they are NOT identical between renders (a real palette-compliance issue, noted in weaknesses).
+      Legibility verdict: PASS (no dark-on-dark text; only the two flagged data elements change color between themes, chrome itself is fully theme-correct).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All major text sizes explicitly set (title 24, axis title 20, axis
-          text 16). Annotation sizes 9-11 slightly small but readable.
+        comment: Explicit font sizes throughout, readable in both themes; elastic-region
+          annotation cluster near the origin is somewhat dense
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding in elastic region where multiple annotations are close
-          together, but all readable.
+        comment: No text unreadable, but the 'Necking' label sits close to the descending
+          curve and the origin cluster is tight
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main curve thick and visible. Key points use large filled circles
-          with white stroke. Offset line distinct.
+        comment: Line weight and marker sizes well matched to the ~260-point dataset
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, purple, red, gray, pink palette avoids red-green. Red/purple
-          pair slightly challenging for some protanopia.
+        comment: Good contrast, no red-green-only distinction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins at 1600x900 scaled 3x.
+        comment: Canvas gate passed (3200x1800), plot fills the canvas with balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Engineering Strain and Engineering Stress (MPa) - descriptive with
-          units.
+        comment: Descriptive labels with units where applicable (MPa); strain is correctly
+          unitless
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Imprint palette used but #009E73 (mandated first series) never appears;
+          Fracture point/label and offset line use theme-adaptive INK_SOFT instead
+          of a fixed color, so they are not identical between light/dark renders'
     design_excellence:
       score: 16
       max: 20
@@ -92,22 +123,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color palette, colored region bands, italic labels, connector
-          lines show design thought beyond defaults.
+        comment: Custom color roles per element, intentional region shading, clearly
+          above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Minimal theme, removed x-grid, subtle y-grid, removed ticks, custom
-          background, transparent panel.
+        comment: Spines/ticks removed, grid reduced to subtle horizontal lines, generous
+          whitespace; small deduction for the crowded elastic-region cluster
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Colored region bands communicate deformation phases. Annotated key
-          points guide viewer through material behavior.
+        comment: Region bands plus connector-line annotations create a clear guided
+          narrative from elastic through fracture
     spec_compliance:
       score: 15
       max: 15
@@ -117,26 +148,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot showing stress-strain curve.
+        comment: Correct line/curve plot for stress-strain data
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: region labels, critical points, elastic modulus, 0.2%
-          offset line.'
+        comment: Region labels, yield/UTS/fracture markers, elastic-modulus annotation,
+          and 0.2% offset line all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=strain, Y=stress correctly mapped. Axes cover full range.
+        comment: Strain on x, stress on y, full curve range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend suppressed in favor of direct annotations.
+        comment: Title format exact; no legend needed since direct labeling covers
+          all series
     data_quality:
       score: 15
       max: 15
@@ -146,21 +178,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all regions: elastic, yield plateau, strain hardening, necking
-          to fracture.'
+        comment: Elastic, yield plateau, strain hardening, and necking-to-fracture
+          all represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Mild steel with accurate properties: E=210 GPa, yield=250 MPa, UTS=400
-          MPa.'
+        comment: Neutral, plausible mild-steel tensile test
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values textbook-accurate for mild steel.
+        comment: E, yield, UTS, and elongation values are all physically consistent
+          with mild steel
     code_quality:
       score: 10
       max: 10
@@ -170,31 +202,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes.
+        comment: No functions/classes, linear imports -> data -> plot -> save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: Only numpy, pandas, lets_plot used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, clear variable names, consolidated annotations DataFrame.
+        comment: Complexity matches the number of annotated features, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_ggsave with scale=3.
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html via current
+          ggsave API
     library_mastery:
       score: 9
       max: 10
@@ -204,14 +237,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert ggplot grammar with layered geoms, aes, scales, themes.
+        comment: Idiomatic ggplot()-style layer composition
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses layer_tooltips, geom_rect, geom_segment, HTML export. Missing
-          more advanced features.
+        comment: layer_tooltips() interactive tooltips, geom_rect region bands, geom_segment
+          connectors, and a shared scale_fill_manual across geom_rect/geom_point are
+          lets-plot-distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -220,10 +254,10 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
