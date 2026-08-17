@@ -17,30 +17,56 @@ const N_HOUSES = 90;
 const N_GRID = 60;
 const SQFT_MIN = 800;
 const SQFT_MAX = 3200;
+const RANGE = SQFT_MAX - SQFT_MIN;
 
 const grid = Array.from(
   { length: N_GRID },
-  (_, i) => SQFT_MIN + (i / (N_GRID - 1)) * (SQFT_MAX - SQFT_MIN)
+  (_, i) => SQFT_MIN + (i / (N_GRID - 1)) * RANGE
 );
 
 // Each house gets its own base price, slope and curvature — a stand-in for a
-// GradientBoostingRegressor's individual conditional expectation curve.
+// GradientBoostingRegressor's individual conditional expectation curve. A
+// minority of houses plateau (renovation-capped neighborhoods) or dip
+// (oversized-for-block penalty) instead of climbing monotonically, so the
+// fan demonstrates the interaction/subgroup-detection use case, not just
+// varying slope magnitude.
 const iceCurves = [];
 const observedSqft = [];
+let highlightIndex = -1;
 for (let h = 0; h < N_HOUSES; h++) {
   const basePrice = 140000 + rand() * 90000;
   const pricePerSqft = 90 + rand() * 60;
   const curvature = -6 + rand() * 12; // diminishing vs. accelerating returns
   const noise = (rand() - 0.5) * 12000;
-  observedSqft.push(SQFT_MIN + rand() * (SQFT_MAX - SQFT_MIN));
+  observedSqft.push(SQFT_MIN + rand() * RANGE);
+
+  const isPlateau = h % 12 === 4;
+  const isDip = h % 15 === 9;
+  if (isDip && highlightIndex === -1) highlightIndex = h;
 
   const curve = grid.map((sqft) => {
     const dx = sqft - SQFT_MIN;
-    const price = basePrice + pricePerSqft * dx + curvature * 0.001 * dx * dx + noise;
+    if (isPlateau) {
+      // Price growth caps past ~55% of the range — a subgroup where extra
+      // square footage stops adding value (e.g. a HOA size cap).
+      const cappedDx = Math.min(dx, RANGE * 0.55);
+      const price = basePrice + pricePerSqft * cappedDx + curvature * 0.001 * cappedDx * cappedDx + noise;
+      return [sqft, Math.round(price)];
+    }
+    let price = basePrice + pricePerSqft * dx + curvature * 0.001 * dx * dx + noise;
+    if (isDip) {
+      // A localized dip around the upper-middle of the range — a subgroup
+      // where oversized homes read as "too big for the block" to buyers.
+      const dipCenter = RANGE * 0.68;
+      const dipWidth = RANGE * 0.22;
+      const dipDepth = pricePerSqft * RANGE * 0.4;
+      price -= dipDepth * Math.exp(-((dx - dipCenter) ** 2) / (2 * dipWidth * dipWidth));
+    }
     return [sqft, Math.round(price)];
   });
   iceCurves.push(curve);
 }
+const highlightCurve = iceCurves[highlightIndex];
 
 // Partial dependence (PDP) — the average of all ICE curves at each grid point.
 const pdp = grid.map((sqft, gi) => {
@@ -51,7 +77,9 @@ const pdp = grid.map((sqft, gi) => {
 const allPrices = iceCurves.flat().map((p) => p[1]);
 const priceMin = Math.min(...allPrices);
 const priceMax = Math.max(...allPrices);
-const rugY = priceMin - (priceMax - priceMin) * 0.03;
+const priceRange = priceMax - priceMin;
+// Keep the rug band well clear of the axis line and tick labels below it.
+const rugY = priceMin - priceRange * 0.05;
 const rug = observedSqft.map((sqft) => [sqft, rugY]);
 
 // --- Custom marker: a short vertical tick for the rug plot ------------------
@@ -71,8 +99,8 @@ Highcharts.chart("container", {
   credits: { enabled: false },
   colors: t.palette,
   title: {
-    text: "ice-basic · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    text: "House Price by Square Footage · ice-basic · javascript · highcharts · anyplot.ai",
+    style: { color: t.ink, fontSize: "18px", fontWeight: "600" },
   },
   subtitle: {
     text: "Predicted price vs. square footage — one curve per house, average in bold",
@@ -96,7 +124,7 @@ Highcharts.chart("container", {
         return "$" + Math.round(this.value / 1000) + "k";
       },
     },
-    min: priceMin - (priceMax - priceMin) * 0.08,
+    min: priceMin - priceRange * 0.14,
   },
   legend: {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
@@ -122,6 +150,16 @@ Highcharts.chart("container", {
       color: "rgba(0, 158, 115, 0.18)",
       lineWidth: 1.25,
     })),
+    {
+      type: "line",
+      name: "Divergent house (price dip)",
+      data: highlightCurve,
+      color: "#4467A3",
+      lineWidth: 2.5,
+      dashStyle: "ShortDash",
+      enableMouseTracking: true,
+      zIndex: 4,
+    },
     {
       type: "line",
       name: "Average effect (PDP)",
