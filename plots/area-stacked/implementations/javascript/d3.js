@@ -9,7 +9,7 @@ const margin = { top: 110, right: 280, bottom: 80, left: 110 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
-// --- Data: global energy consumption by sector, 2010-2024 (TWh) ------------
+// --- Data: Germany energy consumption by sector, 2010-2024 (TWh) -----------
 // Ordered largest series first so it lands at the base of the stack.
 const sectors = [
   { key: "industrial", label: "Industrial",
@@ -78,6 +78,10 @@ g.selectAll("text.end-label")
   .attr("x", iw + 8)
   .attr("y", (d) => y((d[lastIdx][0] + d[lastIdx][1]) / 2) + 4)
   .attr("fill", (d) => color(d.key))
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 3)
+  .attr("stroke-linejoin", "round")
+  .style("paint-order", "stroke")
   .style("font-size", "13px")
   .style("font-weight", "600")
   .text((d) => d3.format(",")(d[lastIdx][1] - d[lastIdx][0]));
