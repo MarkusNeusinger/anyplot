@@ -47,8 +47,16 @@ Highcharts.chart("container", {
     },
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    stackLabels: {
+      enabled: true,
+      style: { color: t.inkSoft, fontSize: "12px", fontWeight: "normal", textOutline: "none" },
+      formatter: function () {
+        return Math.round(this.total);
+      },
+    },
   },
   legend: {
+    reversed: true,
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
   },
@@ -63,10 +71,13 @@ Highcharts.chart("container", {
     },
   },
   series: [
-    { name: "Industrial", data: industrial },
-    { name: "Transportation", data: transportation },
-    { name: "Residential", data: residential },
-    { name: "Commercial", data: commercial },
-    { name: "Agriculture", data: agriculture },
+    // Highcharts stacks the last-defined series at the base of the stack, so
+    // the array runs smallest-to-largest (Agriculture first) to put the
+    // largest series (Industrial) at the bottom per the spec's guidance.
+    { name: "Agriculture", data: agriculture, color: t.palette[4] },
+    { name: "Commercial", data: commercial, color: t.palette[3] },
+    { name: "Residential", data: residential, color: t.palette[2] },
+    { name: "Transportation", data: transportation, color: t.palette[1] },
+    { name: "Industrial", data: industrial, color: t.palette[0] },
   ],
 });
