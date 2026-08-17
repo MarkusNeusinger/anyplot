@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:38:22Z'
-updated: '2026-08-17T13:05:03Z'
+updated: '2026-08-17T13:11:51Z'
 generated_by: claude-sonnet
 workflow_run: 32032295057
 issue: 2022
@@ -12,52 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/pygal/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Imprint palette applied in correct canonical order (green, lavender, blue, ochre)
-    which also happens to match the spec's 'largest series at bottom' ordering requirement
-    — nice alignment of brand order and data semantics.
-  - 'Theme-adaptive chrome is fully correct in both renders: identical data colors
-    between light/dark, correct #FAF8F1/#1A1A17 backgrounds, all title/axis/tick/legend
-    text legible with no dark-on-dark or light-on-light failures.'
-  - 'Realistic, engaging dataset: visible 2020 dip (COVID-19) across all sectors and
-    an accelerating Transportation share from 2020-2024 (EV adoption narrative) —
-    creates a genuine story without needing annotations.'
-  - Baseline correctly pinned to zero (range=(0,1400)) and semi-transparent fills
-    (opacity=.85) as the spec's notes recommend.
-  - 'Distinctive pygal usage beyond generic defaults: cardinal/hermite interpolation,
-    custom value_formatter, legend_at_bottom_columns, truncate_legend.'
-  - Clean KISS code structure, deterministic hardcoded data, correct plot-{THEME}.png/.html
-    output naming.
+  - Title now matches the exact required format "area-stacked · python · pygal · anyplot.ai"
+    (language segment added, fixing attempt 1's SC-04 deduction).
+  - Guide lines are now solid (guide_stroke_dasharray="none" / major_guide_stroke_dasharray="none")
+    instead of pygal's default dashed style, per the style guide.
+  - Hermite/cardinal interpolation was removed, so the stacked area now connects the
+    15 real annual data points directly instead of implying sub-year fluctuation that
+    wasn't in the underlying yearly measurements.
+  - Imprint palette in correct canonical order (green, lavender, blue, ochre) which
+    also matches the spec's "largest series at bottom" stacking requirement.
+  - 'Theme-adaptive chrome is fully correct in both renders: identical data colors,
+    correct #FAF8F1/#1A1A17 backgrounds, all text legible with no dark-on-dark/light-on-light
+    failures.'
+  - 'Realistic, engaging dataset: visible 2020 dip (COVID-19) and an accelerating
+    Transportation share 2020-2024 (EV adoption) create a genuine story without needing
+    annotations.'
+  - Baseline correctly pinned to zero, semi-transparent fills (opacity=.85) per the
+    spec's notes.
+  - 'Distinctive pygal usage retained: custom value_formatter, legend_at_bottom_columns,
+    legend_box_size, truncate_legend.'
   weaknesses:
-  - 'Title is missing the required language segment: currently ''area-stacked · pygal
-    · anyplot.ai'' but the spec format is ''{spec-id} · {language} · {library} · anyplot.ai''
-    — should be ''area-stacked · python · pygal · anyplot.ai''.'
-  - Grid lines render as pygal's default dashed style rather than the style guide's
-    'solid thin lines (not dashed)' — the Style object doesn't override the guide
-    stroke-dasharray, so gridlines look slightly busier than intended. Consider a
-    CSS override to force solid, subtle gridlines.
-  - Hermite/cardinal interpolation smooths between single annual data points, which
-    can visually imply sub-year fluctuation that doesn't exist in the underlying yearly
-    measurements — consider linear interpolation (or no interpolation) for this annual-cadence
-    dataset, or keep only if the smoothing is an intentional stylistic choice.
-  - Title occupies only ~40% of the plot width at the current fontsize (66) — smaller
-    than the 70-85% typically expected for this long mandated title string; not an
-    overflow issue, but a slightly larger fontsize would strengthen the title's visual
-    hierarchy as 'the first thing readers see'.
+  - Title occupies only ~55-56% of the plot width even at the increased fontsize=72,
+    still below the ~70-85% typical range for this mandated title length - a further
+    size bump would strengthen visual hierarchy, though this is not an overflow/deduction
+    case.
+  - Y-axis range=(0, 1400) leaves roughly 7% of headroom above the 2024 peak (~1305
+    TWh total) - a tighter range (e.g. 1350) would use the vertical space slightly
+    more efficiently, though this is a minor cosmetic note, not a defect.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "area-stacked · pygal · anyplot.ai" in dark ink at top, centered; rotated y-axis title "Electricity Consumption (TWh)" on the left; x-axis title "Year" below the tick labels; horizontal y-guides (dashed, light gray) at each 100 TWh increment; bottom legend with 4 color swatches (Industrial, Residential, Commercial, Transportation) in a single row of 4 columns. All text renders in dark ink (#1A1A17-family tones) and is clearly readable against the light background.
-      Data: Stacked area chart with 4 bands from a zero baseline: Industrial (green #009E73, bottom, largest), Residential (lavender #C475FD), Commercial (blue #4467A3), Transportation (ochre #BD8233, top). Bands are smoothly interpolated (hermite) across 2010-2024, with a visible dip around 2019-2020 and Transportation's band widening noticeably after 2020. First series is confirmed brand green.
-      Legibility verdict: PASS — no overlap, no clipping, all text readable.
+      Background: Warm off-white (#FAF8F1), not pure white, not dark - matches spec.
+      Chrome: Title "area-stacked · python · pygal · anyplot.ai" centered at top in dark ink, now including the required "python" language segment (fixed from attempt 1). Rotated y-axis title "Electricity Consumption (TWh)" on the left, x-axis title "Year" below the tick labels, both at consistent fontsize. Horizontal y-guides are now solid, subtle light-gray lines (previously dashed in attempt 1, now fixed). Bottom legend with 4 swatches (Industrial, Residential, Commercial, Transportation). All text renders in dark ink and is clearly readable against the light background.
+      Data: 4-band stacked area from a zero baseline - Industrial (green #009E73, bottom/largest), Residential (lavender #C475FD), Commercial (blue #4467A3), Transportation (ochre #BD8233, top). Bands now follow straight line segments between the 15 annual data points (interpolation removed per attempt 1 feedback) rather than smoothed curves, with a visible 2019-2020 dip and a widening Transportation band after 2020.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title/axis/legend layout as the light render, all text rendered in light ink (#F0EFE8-family tones) — clearly readable against the dark background. No dark-on-dark or light-on-light failures observed. Dashed gridlines still present, same subtle light-gray-on-dark tone.
-      Data: Identical 4-band stack and identical hex colors to the light render (green/lavender/blue/ochre) — only the chrome (background, text, gridlines) flipped, exactly as required. Same dip and Transportation growth pattern visible.
-      Legibility verdict: PASS — no dark-on-dark issues, all text and data bands clearly distinguishable.
+      Background: Warm near-black (#1A1A17), not pure black, not light - matches spec.
+      Chrome: Same layout as light render; all chrome text (title, axis titles, ticks, legend) flips to light ink and stays clearly readable. No dark-on-dark failures found. Guide lines are the same solid, subtle style as the light render.
+      Data: Band colors are pixel-identical to the light render (green/lavender/blue/ochre); only the chrome flipped, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -68,75 +64,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via Style; readable in both themes;
-          y-axis title wraps cleanly, no overlap
+        comment: All text readable in both themes, explicit font sizes throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No collisions between text, legend, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stroke width and area fills clearly delineate the 4 stacked bands
+        comment: Stacked bands clearly distinguishable, appropriate stroke width
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue/ochre are well distinguished, no red-green-only
-          signal
+        comment: Good contrast, CVD-safe Imprint palette, not red-green reliant
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a healthy majority of the canvas, balanced margins, nothing
-          cut off
+        comment: Correct 3200x1800 canvas, no clipping or overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Electricity Consumption (TWh)'' has units; ''Year'' is appropriately
-          generic for a temporal axis'
+        comment: Descriptive with units (TWh, Year)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for the rest, theme-correct
-          backgrounds and chrome in both renders'
+        comment: 'First series #009E73, canonical order, correct theme backgrounds'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Thoughtful palette ordering and smoothed area fills, above a bare
-          default, but not publication-tier
+        passed: true
+        comment: Thoughtful palette ordering and tuned typography, above bare defaults,
+          not publication-tier polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Generous whitespace and single-axis grid, but gridlines are pygal's
-          default dashed style rather than solid/subtle
+        passed: true
+        comment: Generous whitespace; guide lines now solid/subtle instead of attempt
+          1's dashed default
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: COVID dip and post-2020 Transportation growth are visible and create
-          a natural narrative, though not explicitly emphasized
+        comment: COVID dip and post-2020 Transportation growth create a natural narrative
+          without needing annotations
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,26 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart (StackedLine + fill=True)
+        comment: Correct stacked area via StackedLine + fill=True
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Zero baseline, semi-transparent fills, distinct colors, legend, size-ordered
-          stacking all present
+        comment: Legend, distinct colors, semi-transparent fill, zero baseline all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=years, Y=TWh, all data visible within the y-range
+        comment: X=year, Y=stacked consumption, axes show full data range
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend correct, but title omits the required language segment ('python')
+        passed: true
+        comment: Title now matches exact required format with language segment; legend
+          labels match series names
     data_quality:
       score: 15
       max: 15
@@ -173,21 +165,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows a dip, a crossover (Transportation overtakes Commercial), and
-          varied growth rates per sector
+        comment: 4 series, 15 annual points, well within spec ranges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world national electricity consumption scenario
+        comment: Plausible national electricity consumption trend, politically neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and growth trajectories are plausible for national-scale sector
-          consumption
+        comment: Sensible TWh magnitudes for the domain
     code_quality:
       score: 10
       max: 10
@@ -197,33 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> style -> chart -> save, no functions/classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Deterministic hard-coded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pygal, Style — all used
+        comment: Only os, pygal, pygal.style.Style, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately concise, no fake functionality
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png/.html output, current pygal API
+        comment: render_to_png + HTML export with theme-suffixed names
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,22 +221,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: StackedLine + fill=True + Style object is the idiomatic pygal pattern
-          for stacked area
+        comment: Idiomatic pygal StackedLine+fill pattern with thorough Style customization
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Cardinal/hermite interpolation, value_formatter, legend_at_bottom_columns,
-          truncate_legend go beyond generic usage
-  verdict: REJECTED
+        comment: value_formatter, legend_at_bottom_columns, truncate_legend go beyond
+          generic usage; lost some distinctiveness when hermite interpolation was
+          correctly removed for data honesty
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns: []
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
+  - publication-ready
   - alpha-blending
-  - grid-styling
