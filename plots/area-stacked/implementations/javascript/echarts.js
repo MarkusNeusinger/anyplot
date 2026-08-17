@@ -6,18 +6,22 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
-// US electricity consumption by sector, 2010-2024 (TWh, illustrative)
+// Electricity consumption by sector for a regional utility service area,
+// 2010-2024 (TWh, illustrative). Ranking follows real-world sector order
+// (residential and commercial are the two largest loads, industrial third);
+// transportation is the small-but-fast-growing EV-charging load.
 const years = Array.from({ length: 15 }, (_, i) => String(2010 + i));
 
-const industrial = [480, 478, 482, 485, 488, 490, 492, 495, 498, 500, 502, 505, 508, 510, 512];
-const residential = [385, 390, 388, 395, 400, 398, 405, 410, 408, 415, 420, 418, 425, 430, 428];
-const commercial = [310, 315, 318, 322, 328, 330, 335, 340, 345, 350, 355, 358, 362, 368, 372];
-const transportation = [8, 10, 13, 17, 22, 28, 35, 44, 54, 66, 80, 96, 114, 134, 156];
+const residential = [700, 695, 715, 690, 725, 735, 705, 730, 745, 738, 750, 758, 748, 765, 780];
+const commercial = [615, 620, 628, 632, 640, 645, 652, 658, 665, 670, 676, 683, 690, 697, 705];
+const industrial = [480, 475, 490, 485, 495, 488, 500, 495, 505, 498, 508, 502, 510, 505, 515];
+const transportation = [5, 6, 7, 9, 11, 14, 18, 23, 30, 39, 51, 65, 82, 98, 115];
 
+// Order largest-to-smallest so the stack reads largest-at-bottom.
 const series = [
-  { name: "Industrial", data: industrial },
   { name: "Residential", data: residential },
   { name: "Commercial", data: commercial },
+  { name: "Industrial", data: industrial },
   { name: "Transportation", data: transportation },
 ];
 
@@ -32,8 +36,8 @@ chart.setOption({
   title: {
     text: "area-stacked · javascript · echarts · anyplot.ai",
     left: "center",
-    top: 20,
-    textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+    top: 24,
+    textStyle: { color: t.ink, fontSize: 28, fontWeight: 500 },
   },
   tooltip: { trigger: "axis" },
   legend: {
@@ -42,7 +46,7 @@ chart.setOption({
     itemWidth: 18,
     itemHeight: 12,
   },
-  grid: { left: 90, right: 60, top: 100, bottom: 90 },
+  grid: { left: 90, right: 60, top: 110, bottom: 90 },
   xAxis: {
     type: "category",
     data: years,
@@ -66,16 +70,40 @@ chart.setOption({
     axisLine: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
-  series: series.map((s, i) => ({
-    name: s.name,
-    type: "line",
-    stack: "total",
-    smooth: 0.2,
-    showSymbol: false,
-    lineStyle: { width: 2, color: t.palette[i] },
-    itemStyle: { color: t.palette[i] },
-    areaStyle: { color: t.palette[i], opacity: 0.82 },
-    emphasis: { focus: "series" },
-    data: s.data,
-  })),
+  series: series.map((s, i) => {
+    const isTransportation = s.name === "Transportation";
+    return {
+      name: s.name,
+      type: "line",
+      stack: "total",
+      smooth: 0.2,
+      showSymbol: false,
+      // Transportation carries the story of this dataset (EV-charging load
+      // growing ~23x over the period) — a bolder stroke pulls the eye to it
+      // even though its absolute magnitude is the smallest of the four.
+      lineStyle: { width: isTransportation ? 3.5 : 2, color: t.palette[i] },
+      itemStyle: { color: t.palette[i] },
+      // Full opacity on the (visually thin) Transportation band keeps it crisp
+      // against the Industrial band beneath it; the other bands stay
+      // semi-transparent so the boundary lines between them read clearly.
+      areaStyle: { color: t.palette[i], opacity: isTransportation ? 1 : 0.82 },
+      emphasis: { focus: "series" },
+      data: s.data,
+      ...(isTransportation && {
+        markLine: {
+          silent: true,
+          symbol: "none",
+          lineStyle: { color: t.palette[i], type: "dashed", width: 1.5, opacity: 0.7 },
+          label: {
+            color: t.ink,
+            fontSize: 12,
+            fontWeight: 600,
+            formatter: "EV adoption accelerates",
+            position: "insideEndTop",
+          },
+          data: [{ xAxis: "2018" }],
+        },
+      }),
+    };
+  }),
 });
