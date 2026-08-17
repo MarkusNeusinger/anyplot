@@ -1,0 +1,255 @@
+library: highcharts
+language: javascript
+specification_id: ice-basic
+created: '2026-08-17T22:55:48Z'
+updated: '2026-08-17T23:12:46Z'
+generated_by: claude-sonnet
+workflow_run: 32077598542
+issue: 5238
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/highcharts/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - Repair round added plateau- and dip-shaped ICE curves (isPlateau/isDip subgroups),
+    which now genuinely demonstrate the spec's interaction/subgroup-detection use
+    case instead of just varying slope magnitude
+  - 'The dip house is pulled out into a distinct bold dashed blue series (#4467A3,
+    the correct Imprint blue), giving the chart a clear three-tier visual hierarchy:
+    faint green fan -> highlighted divergent curve -> bold PDP average'
+  - Custom Highcharts.SVGRenderer.prototype.symbols.rugtick extension for the rug
+    plot marker is a genuinely library-distinctive technique
+  - 'Rug band spacing was fixed: rugY and the yAxis min now carry explicit padding
+    (RANGE-based offsets) so the rug ticks sit clear of the x-axis line and $50k tick
+    label -- the attempt-1 ''cramped'' feedback is resolved'
+  - Descriptive title prefix ('House Price by Square Footage') was added, improving
+    title proportion and reinforcing the story over the bare spec-id title from attempt
+    1
+  - 'First categorical series is exactly #009E73 at low alpha (rgba(0,158,115,0.18))
+    for the ICE fan, matching the spec''s explicit ''individual lines should use low
+    alpha'' guidance'
+  - 'Both renders are fully theme-adaptive: identical data colors, correct #FAF8F1
+    / #1A1A17 backgrounds, PDP line correctly driven by the ink token so it flips
+    black/white with the theme'
+  - Deterministic LCG (seed=42), no imports, animation disabled on chart and series,
+    credits disabled -- clean code with correct mount-node contract
+  weaknesses:
+  - Title still fills only ~40% of plot width even with the descriptive prefix --
+    below the 50-70% comfort target, though not enough to read as overflow or squeeze,
+    so this is a stylistic nice-to-have rather than a defect
+  - The 'Individual houses (ICE)' legend swatch is very faint (it mirrors the low-alpha
+    data line color), which is accurate to the data but makes that one legend entry
+    harder to visually confirm at a glance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "House Price by Square Footage · ice-basic · javascript · highcharts · anyplot.ai" in bold dark ink; subtitle "Predicted price vs. square footage — one curve per house, average in bold" in softer dark-grey ink; axis titles "Square Footage" / "Predicted House Price" and $-formatted y-tick labels ($50k-$650k) all in dark/soft-dark ink; thin subtle horizontal gridlines only (no vertical gridlines); legend at bottom in soft-dark ink listing all four series. All fully readable, no clipping at any edge (verified via crops of all four borders).
+      Data: ~90 individual house ICE curves render as thin translucent brand-green (#009E73 at alpha 0.18) lines fanning from a tight cluster (~$150-230k at 800 sqft) to a wide spread (~$400-590k at 3200 sqft). One curve is pulled out and re-drawn as a bold dashed blue (#4467A3, the correct Imprint palette blue) "Divergent house (price dip)" series that plateaus and dips around 1600-2300 sqft before recovering -- a genuinely different curve shape, not just a different slope. A bold black "Average effect (PDP)" line runs through the fan. A rug of vertical tick marks along the bottom (between the $50k and $100k gridlines, well clear of the x-axis line and its tick labels) shows the distribution of observed square-footage values.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Same title/subtitle/axis-titles/tick-labels/legend content now renders in light/off-white ink, fully legible against the dark background -- no dark-on-dark failures anywhere. Grid lines remain subtle but visible.
+      Data: Identical to the light render -- ICE fan stays the same brand green (#009E73, alpha 0.18), the divergent-house curve stays the same blue (#4467A3) dashed line, and only the PDP line's color flips (black -> off-white) because it is driven by the theme-adaptive ink token rather than a fixed hex, exactly matching the "only chrome flips" rule. Rug ticks flip to the lighter ink-soft token and remain clearly visible and well-spaced from the axis.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit; fully readable in both themes; title proportion
+          improved with descriptive prefix
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; rug band now clear of axis line and tick
+          labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Low-alpha fan, bold PDP, distinct dashed highlight curve, and rug
+          ticks are all clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe multi-hue (green/blue/ink), no red-green
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing cut off at any edge, rug spacing fixed
+          from attempt 1
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles, $/k formatted y-tick labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is exactly #009E73; highlight curve uses correct Imprint
+          blue #4467A3; backgrounds theme-correct in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom rug-tick SVG symbol and intentional three-tier color/weight
+          hierarchy show real design intent above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle y-only grid, minimal chrome, generous margins; rug band no
+          longer cramped
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Faint fan -> highlighted divergent curve -> bold average creates
+          a clear, guided focal point that now tells the heterogeneous-effects story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct ICE plot: one line per observation plus PDP average overlay'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Low-alpha individual lines, bold opaque PDP overlay, rug plot, plus
+          a highlighted divergent curve all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: feature_value (sqft) on x, prediction (price) on y, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labels accurately
+          describe each series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Now includes plateau and dip subgroups with genuinely different curve
+          shapes, directly demonstrating the spec's interaction/subgroup-detection
+          use case
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral house-price-vs-sqft scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic price/sqft ratios for a US housing context
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/chart flow, no unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; only the Highcharts global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on chart and series,
+          credits disabled
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Highcharts.chart() config with proper axis/legend/tooltip/plotOptions
+          structure
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom SVGRenderer.prototype.symbols extension for the rug-tick marker
+          is a genuinely Highcharts-specific technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-marker-symbol
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
