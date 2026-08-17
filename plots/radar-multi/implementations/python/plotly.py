@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-multi: Multi-Series Radar Chart
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-07
+Quality: 89/100 | Updated: 2026-08-17
 """
 
 import os
@@ -15,9 +15,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
+GRID = "rgba(26, 26, 23, 0.15)" if THEME == "light" else "rgba(240, 239, 232, 0.15)"
 
-# Okabe-Ito palette (first series always #009E73)
+# Imprint palette (first series always #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Product comparison across multiple attributes
@@ -34,85 +34,81 @@ product_a_closed = product_a + [product_a[0]]
 product_b_closed = product_b + [product_b[0]]
 product_c_closed = product_c + [product_c[0]]
 
+# (name, closed r-values, line color, fill rgb, marker symbol) — symbol gives
+# a redundant, colorblind-safe cue on top of hue for the three products
+products = [
+    ("Product A (Premium)", product_a_closed, IMPRINT[0], "0, 158, 115", "circle"),
+    ("Product B (Budget)", product_b_closed, IMPRINT[1], "196, 117, 253", "diamond"),
+    ("Product C (Pro)", product_c_closed, IMPRINT[2], "68, 103, 163", "square"),
+]
+
 # Create radar chart
 fig = go.Figure()
 
-# Product A - Okabe-Ito green
-fig.add_trace(
-    go.Scatterpolar(
-        r=product_a_closed,
-        theta=categories_closed,
-        fill="toself",
-        fillcolor="rgba(0, 158, 115, 0.25)",
-        line={"color": IMPRINT[0], "width": 3},
-        name="Product A (Premium)",
-        marker={"size": 10},
+for name, values, color, rgb, symbol in products:
+    fig.add_trace(
+        go.Scatterpolar(
+            r=values,
+            theta=categories_closed,
+            fill="toself",
+            fillcolor=f"rgba({rgb}, 0.25)",
+            line={"color": color, "width": 3.5},
+            marker={"size": 12, "symbol": symbol, "line": {"color": PAGE_BG, "width": 1.5}},
+            name=name,
+            hovertemplate=f"<b>%{{theta}}</b><br>{name}: %{{r}}<extra></extra>",
+        )
     )
-)
-
-# Product B - Okabe-Ito vermillion
-fig.add_trace(
-    go.Scatterpolar(
-        r=product_b_closed,
-        theta=categories_closed,
-        fill="toself",
-        fillcolor="rgba(196, 117, 253, 0.25)",
-        line={"color": IMPRINT[1], "width": 3},
-        name="Product B (Budget)",
-        marker={"size": 10},
-    )
-)
-
-# Product C - Okabe-Ito blue
-fig.add_trace(
-    go.Scatterpolar(
-        r=product_c_closed,
-        theta=categories_closed,
-        fill="toself",
-        fillcolor="rgba(68, 103, 163, 0.25)",
-        line={"color": IMPRINT[2], "width": 3},
-        name="Product C (Pro)",
-        marker={"size": 10},
-    )
-)
 
 # Layout with theme-adaptive styling
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "radar-multi · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "radar-multi · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     polar={
+        # Straight radial spokes between category ticks (classic "spider
+        # web" look) instead of plotly's default concentric-circle grid —
+        # reads more cleanly once three overlapping polygons are stacked.
+        "gridshape": "linear",
         "radialaxis": {
             "visible": True,
             "range": [0, 100],
-            "tickfont": {"size": 18, "color": INK_SOFT},
+            "angle": 90,
+            "tickangle": 0,
+            "tickfont": {"size": 15, "color": INK_SOFT},
             "tickvals": [20, 40, 60, 80, 100],
             "gridcolor": GRID,
             "linecolor": INK_SOFT,
         },
-        "angularaxis": {"tickfont": {"size": 20, "color": INK_SOFT}, "linecolor": INK_SOFT, "gridcolor": GRID},
-        "bgcolor": PAGE_BG,
+        "angularaxis": {
+            "rotation": 90,
+            "direction": "clockwise",
+            "tickfont": {"size": 16, "color": INK},
+            "linecolor": INK_SOFT,
+            "gridcolor": GRID,
+        },
+        "bgcolor": ELEVATED_BG,
     },
     legend={
-        "font": {"size": 18, "color": INK_SOFT},
-        "x": 1.02,
-        "y": 0.5,
-        "xanchor": "left",
-        "yanchor": "middle",
+        "orientation": "h",
+        "font": {"size": 14, "color": INK_SOFT},
+        "x": 0.5,
+        "y": -0.08,
+        "xanchor": "center",
+        "yanchor": "top",
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    template="plotly_white",
-    margin={"l": 100, "r": 120, "t": 100, "b": 100},
+    margin={"l": 90, "r": 90, "t": 90, "b": 110},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
 )
 
-# Save as PNG and HTML
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Save as PNG (square — radar is a symmetric plot type) and HTML
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
