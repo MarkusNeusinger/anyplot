@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: seaborn 0.13.2 | Python 3.13.15
 Quality: 86/100 | Updated: 2026-08-17
@@ -37,13 +37,17 @@ sns.set_theme(
         "legend.edgecolor": INK_SOFT,
     },
 )
+sns.set_palette(IMPRINT_PALETTE)
 
 # Data: monthly energy consumption by sector over two years, with seasonality
 np.random.seed(42)
 months = pd.date_range("2024-01", periods=24, freq="ME")
 
-industrial_base = 48 + np.sin(np.linspace(0, 4 * np.pi, 24)) * 4
-residential_base = 34 + np.sin(np.linspace(np.pi, 5 * np.pi, 24)) * 9
+# Industrial is baseload-driven, so its seasonal swing stays flat; residential
+# is weather-driven, so its winter/summer peaks are cut sharper via a cubed wave.
+industrial_base = 48 + np.sin(np.linspace(0, 4 * np.pi, 24)) * 2.5
+residential_wave = np.sin(np.linspace(np.pi, 5 * np.pi, 24))
+residential_base = 34 + np.sign(residential_wave) * np.abs(residential_wave) ** 0.6 * 10
 commercial_base = 26 + np.sin(np.linspace(0.6, 4.6 * np.pi, 24)) * 5
 transport_base = 16 + np.sin(np.linspace(1.2, 5.2 * np.pi, 24)) * 3
 agriculture_base = 9 + np.sin(np.linspace(1.8, 5.8 * np.pi, 24)) * 2
@@ -62,11 +66,14 @@ series = [industrial, residential, commercial, transport, agriculture]
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-ax.stackplot(months, *series, labels=sectors, colors=IMPRINT_PALETTE, alpha=0.92, edgecolor=PAGE_BG, linewidth=0.6)
+palette = sns.color_palette()
+ax.stackplot(months, *series, labels=sectors, colors=palette, alpha=0.92, edgecolor=PAGE_BG, linewidth=0.6)
 
-# A crisp ink-colored line traces the cumulative total for emphasis
+# A crisp ink-colored line traces the cumulative total for emphasis, drawn via
+# seaborn's own lineplot (not raw ax.plot) so the overlay is genuinely seaborn.
 total = np.sum(series, axis=0)
-ax.plot(months, total, color=INK, linewidth=1.2, alpha=0.6, linestyle=(0, (1, 1.5)))
+total_df = pd.DataFrame({"month": months, "total": total})
+sns.lineplot(data=total_df, x="month", y="total", ax=ax, color=INK, linewidth=1.2, alpha=0.6, linestyle=(0, (1, 1.5)))
 
 ax.set_xlabel("Month", fontsize=12, color=INK)
 ax.set_ylabel("Consumption (GWh)", fontsize=12, color=INK)
@@ -78,18 +85,14 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
 plt.setp(ax.xaxis.get_majorticklabels(), rotation=40, ha="right")
 
 # Legend sits outside the stacked area (fully filled top-to-bottom, no clear
-# gap to dock a legend inside) so it never occludes data.
-legend = ax.legend(
-    loc="upper left",
-    bbox_to_anchor=(1.01, 1.0),
-    fontsize=9,
-    framealpha=0.95,
-    title="Sector",
-    title_fontsize=10,
-    labelcolor=INK,
+# gap to dock a legend inside) so it never occludes data. Built with seaborn's
+# move_legend — a seaborn-only convenience for repositioning/restyling a legend
+# in one call — and kept borderless for a lighter visual treatment.
+ax.legend(title="Sector")
+sns.move_legend(
+    ax, "upper left", bbox_to_anchor=(1.01, 1.0), frameon=False, fontsize=9, title_fontsize=10, labelcolor=INK
 )
-legend.get_frame().set_edgecolor(INK_SOFT)
-legend.get_title().set_color(INK)
+ax.get_legend().get_title().set_color(INK)
 
 # Subtle y-axis grid only, per style guide
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
@@ -102,6 +105,19 @@ ax.spines["bottom"].set_color(INK_SOFT)
 
 ax.set_ylim(bottom=0)
 ax.margins(x=0)
+
+# Callout highlighting the key trend: total consumption growth over the window.
+growth_pct = (total[-1] - total[0]) / total[0] * 100
+top = ax.get_ylim()[1]
+ax.annotate(
+    f"+{growth_pct:.0f}% growth over two years",
+    xy=(months[-1], total[-1]),
+    xytext=(months[2], top * 0.92),
+    fontsize=9,
+    color=INK,
+    ha="left",
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "alpha": 0.7, "connectionstyle": "arc3,rad=0.15"},
+)
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
