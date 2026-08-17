@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: area-stacked
 created: '2026-08-17T13:07:46Z'
-updated: '2026-08-17T13:24:03Z'
+updated: '2026-08-17T13:38:58Z'
 generated_by: claude-sonnet
 workflow_run: 32033006827
 issue: 2022
@@ -12,136 +12,133 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 87
 review:
   strengths:
-  - 'Title hierarchy fixed from attempt 1: titlesize=25 vs body 14 (~1.8x) now reads
-    clearly as the dominant element without overflowing the 3200px canvas'
-  - 'Imprint palette used in exact canonical order (positions 1-4: brand green, lavender,
-    blue, ochre), identical data hues between light and dark renders — only chrome
-    flips'
-  - Theme-adaptive chrome (INK/INK_SOFT tokens) threaded through title, axis labels,
-    tick labels, spines, and grid; both renders fully legible with no dark-on-dark
-    or light-on-light failures
-  - Series correctly ordered largest-to-smallest bottom-to-top per spec guidance,
-    and ylims!(ax, 0, nothing) forces a true zero baseline
-  - 'Clean visual refinement: L-shaped spine (top/right removed), subtle y-axis-only
-    grid at 15% opacity, frameless legend'
-  - Canvas saved at exactly 3200x1800 (landscape gate passes)
+  - 'Palette compliance is perfect: first series is exactly #009E73, and the remaining
+    3 series follow Imprint canonical order (lavender #C475FD, blue #4467A3, ochre
+    #BD8233), identical across both themes.'
+  - 'Theme-adaptive chrome is fully correct in both renders — no dark-on-dark or light-on-light
+    failures; backgrounds match #FAF8F1 (light) / #1A1A17 (dark) exactly.'
+  - True stacked-area construction via band! + lines! with a proper zero baseline
+    and largest-series-at-bottom ordering, plus an idiomatic manually-built PolyElement
+    legend matching the band alpha.
+  - Realistic, neutral retail-revenue dataset (Electronics/Home Goods/Apparel/Sporting
+    Goods) with plausible per-category growth trajectories and month-to-month noise,
+    not just parallel flat trends.
   weaknesses:
-  - 'REGRESSION from attempt 1: the new per-vertex-alpha gradient fill on the Electronics
-    band (`electronics_fill` passed to `band!`) renders as a series of visible diagonal
-    hairline seams across the ENTIRE band in both light and dark renders, not a smooth
-    left-to-right intensity ramp. CairoMakie triangulates the `band!` polygon between
-    each pair of the 24 monthly vertices and linearly interpolates color within each
-    triangle, so every vertex boundary shows up as a faint diagonal stripe/hachure
-    across the fill. This reads as a rendering glitch, not a design flourish, and
-    actively hurts polish. Fix: revert the Electronics band to a flat `(IMPRINT_PALETTE[1],
-    0.85)` color like the other three bands (matching attempt 1, which was clean),
-    and pursue the data-storytelling focal point through a different mechanism instead
-    — e.g. a `text!` end-of-line value label, a subtle stroke-weight difference, or
-    annotating the dominant series total in the legend, none of which fight CairoMakie''s
-    per-vertex color interpolation.'
-  - The gradient-fill attempt was intended as a data-storytelling and library-mastery
-    flourish, but since it doesn't read as a perceptible ramp (only the artifact seams
-    are visible), it fails to deliver the intended focal point — DE-03 remains unaddressed
-    from attempt 1's feedback.
-  - Boundary `lines!` linewidth (2-2.5) is fine, but the new diagonal seam artifacts
-    inside the Electronics fill compete visually with the real `lines!` boundary strokes,
-    making it harder to tell which lines are meaningful (series boundaries) vs. rendering
-    noise.
+  - 'The ''Electronics $Xk'' end-of-line annotation and its connector line (added
+    via lines!/text! after xlims!(ax, 0.5, 29)) render as nothing in BOTH plot-light.png
+    and plot-dark.png — verified by pixel-level inspection of the right margin (x=3020-3200
+    of the 3200x1800 canvas): zero ink-colored or ink-soft-colored pixels exist there
+    outside the axis line/tick labels. This leaves the rightmost ~14% of canvas width
+    as dead whitespace and forfeits the chart''s only intended data-storytelling element.
+    Either make the annotation actually render (check whether it is being clipped
+    by the Axis''s finalized limits/clip rect since it''s added after xlims!, and
+    confirm visually with a local render) or delete the dead code and tighten xlims!(ax,
+    0.5, 25) to reclaim that space for the data.'
+  - The Electronics (bottom, green) band shows a visible diagonal hatching/seam pattern
+    running across its entire width in both themes — thin diagonal lines recur roughly
+    once per data interval. The other three bands (Home Goods, Apparel, Sporting Goods)
+    render perfectly smooth with no such artifact. This looks like a CairoMakie band!
+    triangulation seam exposed by the semi-transparent (alpha=0.85) fill against a
+    flat zero baseline. Try alpha=1.0 on this band, render it with poly! instead,
+    or otherwise confirm the seam disappears before shipping.
+  - Title occupies only ~28% of canvas width (measured via pixel bounding box), noticeably
+    narrower than the ~50-70% guideline for a title of this length — still fully legible,
+    but there is headroom to grow titlesize a few points for better canvas utilization.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Bold dark title "area-stacked · julia · makie · anyplot.ai" centered at top (now clearly larger than body text at ~1.8x ratio), "Revenue ($ thousands)" y-axis label and "Month" x-axis label in dark ink, soft-gray tick labels (y: 0/50/100/150; rotated x: Jan 2024...Oct 2025), frameless top-left legend (Electronics / Home Goods / Apparel / Sporting Goods) — all clearly readable against the light background.
-      Data: Four stacked bands bottom-to-top: brand green (#009E73, Electronics, largest), lavender (#C475FD, Home Goods), blue (#4467A3, Apparel), ochre (#BD8233, Sporting Goods, smallest), each with a thin same-color boundary line, baseline pinned at zero. However, the Electronics (green) band shows a clearly visible set of ~20 faint diagonal hairline streaks running through the entire fill from bottom-left to top-right within each monthly segment — this is a rendering artifact from the per-vertex alpha-gradient fill technique, not an intentional pattern, and it reads as visual noise/a bug rather than the intended smooth left-to-right intensity ramp.
-      Legibility verdict: PASS (text legibility) but FAIL on fill-artifact cleanliness — the diagonal streaking in the Electronics band is a genuine visual defect that needs fixing.
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "area-stacked · julia · makie · anyplot.ai" in bold dark ink top-center (~28% of canvas width); legend top-left with 4 swatches (Electronics/Home Goods/Apparel/Sporting Goods, no box frame); X-axis "Month" with rotated (~30°) date ticks Jan 2024 - Oct 2025; Y-axis "Revenue ($ thousands)" 0-150 with subtle horizontal gridlines only (15% opacity); top/right spines removed. All chrome text clearly readable against the light background.
+      Data: 4 stacked bands, bottom-to-top: green Electronics (#009E73), lavender Home Goods (#C475FD), blue Apparel (#4467A3), ochre Sporting Goods (#BD8233), each at ~0.85 alpha with a matching-color outline. Zero baseline confirmed. The bottom green band shows a visible diagonal hatching/seam artifact across its full width (confirmed via pixel inspection); the other 3 bands are smooth. No annotation/callout text is visible anywhere in the ~14%-wide empty right margin, despite the source code adding one — verified absent via pixel scan (no ink-colored pixels found outside axis/tick elements).
+      Legibility verdict: PASS (all present chrome is readable); the coded annotation feature itself does not render at all.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: Same title/labels now in light text, tick labels in lighter soft gray, legend text light-colored — all fully readable against the dark surface, no dark-on-dark failures.
-      Data: The four band colors and boundary lines are pixel-identical to the light render, confirming only chrome (not data hue) flipped between themes. The same diagonal hairline streaking artifact is present in the Electronics band here as well (confirmed via crop inspection), so the defect is theme-independent — it comes from the fill technique itself, not a theme-token bug.
-      Legibility verdict: PASS (text legibility) but FAIL on fill-artifact cleanliness — same gradient-seam issue as the light render.
-
-    Both paragraphs confirm the theme-readability checklist passes (backgrounds correct, text legible, no dark-on-dark/light-on-light), but both also confirm a new visual defect introduced in this attempt: the per-vertex gradient fill on the Electronics band produces visible diagonal seam artifacts in both renders.
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same layout and text as light render, recolored to light ink (#F0EFE8 primary text, #B8B7B0 secondary/tick/legend text) — fully readable, no dark-on-dark failures anywhere.
+      Data: Identical 4 data colors to the light render (confirmed pixel-for-pixel same hues), only chrome flipped as expected. Same diagonal hatching artifact in the green Electronics band, isolated to that band exactly as in the light render. Same missing annotation in the right margin — confirmed absent via pixel scan.
+      Legibility verdict: PASS (all present chrome is readable, no dark-on-dark text); the coded annotation feature does not render here either.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; title hierarchy now clear at titlesize=25
-          vs body 14
+        comment: All font sizes explicitly set (titlesize, x/ylabelsize, x/yticklabelsize);
+          balanced X/Y label and tick sizes; title fits without clipping in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions
+        comment: No overlapping text; legend sits in clear headroom above the data.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Bands and boundary lines visible, but per-vertex gradient artifact
-          on Electronics band introduces spurious diagonal streaks that compete with
-          real data lines
+        comment: Band fills and boundary lines are clearly visible and appropriately
+          sized for 24 monthly points.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe hues, no red-green as sole signal
+        comment: Good contrast between adjacent bands, no red-green-only reliance,
+          boundary outlines aid separation.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Canvas exactly 3200x1800, good proportions, nothing cut off
+        passed: false
+        comment: ~14% of canvas width on the right is dead whitespace reserved for
+          an annotation that never renders, creating unbalanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units ($ thousands)
+        comment: '''Month'' and ''Revenue ($ thousands)'' — descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, correct theme backgrounds both renders
+        comment: 'First series #009E73, canonical order for series 2-4, theme-correct
+          chrome in both renders.'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 6
         max: 8
-        passed: false
-        comment: Per-vertex gradient fill on Electronics band produces visible diagonal
-          seam artifacts that read as a rendering bug rather than polish, undermining
-          the flourish's intent
+        passed: true
+        comment: Intentional Imprint palette use, layered typography hierarchy, matching-color
+          band outlines — clearly above a configured default, short of publication-ready
+          due to the two visual defects below.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: L-shaped spine and subtle grid are clean, but the streaking artifact
-          inside the primary data mark spoils overall refinement
+        passed: true
+        comment: Spines removed, subtle single-axis grid, generous whitespace — but
+          a diagonal hatching artifact in the Electronics band and unused right-margin
+          space keep this from 'every detail polished'.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: The gradient was meant to create a focal point on the Electronics
-          series, but at this scale it is imperceptible as an intensity ramp — only
-          the artifact seams are visible, so the storytelling goal from attempt 1
-          feedback is still unmet
+        comment: The coded end-of-line 'Electronics' value callout — the chart's only
+          intended storytelling/focal-point element — does not render in either theme,
+          so the delivered chart shows data without interpretation.
     spec_compliance:
       score: 15
       max: 15
@@ -151,49 +148,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart
+        comment: Correct true stacked-area chart via band!.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Zero baseline, series ordered largest-first, legend present, harmonious
-          semi-transparent fills
+        comment: Zero baseline, largest-series-at-bottom ordering, semi-transparent
+          fills, legend all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=month, Y=cumulative revenue, all data shown
+        comment: X=month (time), Y=stacked cumulative revenue, all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels match series names
+        comment: Title format exactly matches 'area-stacked · julia · makie · anyplot.ai';
+          legend labels match the 4 series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows stacking, cumulative totals, zero baseline, multi-series composition
-          over time
+        comment: 4 series with distinct growth rates, seasonal wobble, and realistic
+          noise show varied composition dynamics over 24 months.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral e-commerce revenue-by-category scenario
+        comment: Retail revenue by product category — neutral, comprehensible, real-world
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible $ thousands values and growth trend
+        comment: Monthly revenue values ($2k-$80k per category, ~$105k-$140k aggregate)
+          are plausible for a small-to-mid retailer.
     code_quality:
       score: 9
       max: 10
@@ -203,62 +203,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat top-level script
+        comment: Single top-down script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used
+        comment: CairoMakie, Colors, Random all used.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: true
-        comment: The per-vertex alpha list comprehension adds complexity that produces
-          a visible fill artifact rather than the intended effect
+        comment: The annotation lines!/text! block is dead code — it compiles and
+          runs but produces no visible output, contradicting its own explanatory comment.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via current save() API
+        comment: Saves plot-$(THEME).png via current save/px_per_unit API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: band!/lines!/axislegend used correctly for stacked area with manual
-          legend
+        comment: band! is the correct high-level Makie primitive for stacked areas;
+          axislegend with explicit PolyElement is the documented pattern for custom
+          band legends.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Per-vertex color vector on band! is a genuine Makie-specific capability,
-          but the executed result is a visible artifact rather than a working distinctive
-          flourish
-  verdict: REJECTED
+        passed: true
+        comment: Manual PolyElement legend construction is a genuine Makie-specific
+          technique, though the underlying band!/lines! stacking itself is replicable
+          elsewhere.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
-  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
+  - time-series
   styling:
   - alpha-blending
-  - gradient-fill
   - grid-styling
