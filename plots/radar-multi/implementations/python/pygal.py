@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-multi: Multi-Series Radar Chart
-Library: pygal 3.1.3 | Python 3.13.12
-Quality: pending | Updated: 2026-08-17
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 85/100 | Updated: 2026-08-17
 """
 
 import os
